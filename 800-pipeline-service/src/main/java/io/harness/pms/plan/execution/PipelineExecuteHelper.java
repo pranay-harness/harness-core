@@ -1,9 +1,9 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.connector.ConnectorResourceClient;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
@@ -64,7 +64,7 @@ public class PipelineExecuteHelper {
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
 
-    if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
+    if (hasNone(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
@@ -122,7 +122,7 @@ public class PipelineExecuteHelper {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
     String pipelineYaml;
-    if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
+    if (hasNone(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);

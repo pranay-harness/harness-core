@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.steps;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.ENVIRONMENT;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
@@ -7,7 +8,6 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.environment.beans.Environment;
@@ -66,7 +66,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
       environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
-      if (EmptyPredicate.isEmpty(environmentOverrides.getName())) {
+      if (hasNone(environmentOverrides.getName())) {
         environmentOverrides.setName(environmentOverrides.getIdentifier());
       }
     }
@@ -79,7 +79,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     if (environmentYaml == null) {
       environmentYaml = createEnvYamlFromEnvRef(pipelineInfrastructure, ambiance);
     }
-    if (EmptyPredicate.isEmpty(environmentYaml.getName())) {
+    if (hasNone(environmentYaml.getName())) {
       environmentYaml.setName(environmentYaml.getIdentifier());
     }
     EnvironmentYaml finalEnvironmentYaml =

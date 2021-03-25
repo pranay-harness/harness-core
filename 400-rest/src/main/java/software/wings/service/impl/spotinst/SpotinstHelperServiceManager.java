@@ -1,7 +1,7 @@
 package software.wings.service.impl.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -82,7 +82,7 @@ public class SpotinstHelperServiceManager {
     List<String> tagList = null;
     if (awsConfig != null) {
       String tag = awsConfig.getTag();
-      if (isNotEmpty(tag)) {
+      if (hasSome(tag)) {
         tagList = singletonList(tag);
       }
     }
@@ -96,7 +96,7 @@ public class SpotinstHelperServiceManager {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, hasSome(appId) ? appId : GLOBAL_APP_ID)
             .tags(tagList)
             .data(TaskData.builder()
                       .async(false)

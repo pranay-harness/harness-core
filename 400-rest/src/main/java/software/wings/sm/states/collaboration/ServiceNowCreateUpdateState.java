@@ -1,6 +1,7 @@
 package software.wings.sm.states.collaboration;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
@@ -10,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -100,7 +100,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
       Map<String, Object> sweepingOutputMap = new HashMap<>();
       sweepingOutputMap.put(ISSUE_ID, snowExecutionData.getIssueId());
       sweepingOutputMap.put(ISSUE_NUMBER, snowExecutionData.getIssueNumber());
-      if (EmptyPredicate.isNotEmpty(snowExecutionData.getTransformationValues())) {
+      if (hasSome(snowExecutionData.getTransformationValues())) {
         sweepingOutputMap.put(TRANSFORMATION_VALUES, snowExecutionData.getTransformationValues());
       }
       handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
@@ -182,14 +182,14 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   private void renderExpressions(ExecutionContext context, ServiceNowCreateUpdateParams params) {
     params.setIssueNumber(context.renderExpression(params.getIssueNumber()));
     Map<ServiceNowFields, String> renderedFields = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(params.fetchFields())) {
+    if (hasSome(params.fetchFields())) {
       for (Entry<ServiceNowFields, String> entry : params.fetchFields().entrySet()) {
         renderedFields.put(entry.getKey(), context.renderExpression(entry.getValue()));
       }
     }
     params.setFields(renderedFields);
     Map<String, String> renderedAdditionalFields = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(params.fetchAdditionalFields())) {
+    if (hasSome(params.fetchAdditionalFields())) {
       for (Entry<String, String> entry : params.fetchAdditionalFields().entrySet()) {
         renderedAdditionalFields.put(entry.getKey(), context.renderExpression(entry.getValue()));
       }

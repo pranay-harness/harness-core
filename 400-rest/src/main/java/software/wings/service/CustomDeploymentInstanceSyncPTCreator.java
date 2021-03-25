@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
@@ -36,7 +36,7 @@ public class CustomDeploymentInstanceSyncPTCreator implements InstanceSyncPerpet
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    if (isNotEmpty(existingPerpetualTasks)) {
+    if (hasSome(existingPerpetualTasks)) {
       if (existingPerpetualTasks.size() > 1) {
         log.error(format("More than 1 Custom Deployment Instance Sync Perpetual Tasks exist for InfraMappingId %s",
             infrastructureMapping.getUuid()));

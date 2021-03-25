@@ -6,7 +6,7 @@ import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static java.util.stream.Collectors.toSet;
@@ -199,7 +199,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
   }
 
   public GitProvider obtainWebhookSource(Set<String> headerKeys) {
-    if (isEmpty(headerKeys)) {
+    if (hasNone(headerKeys)) {
       throw new InvalidRequestException("Failed to resolve Webhook Source. Reason: HttpHeaders are empty.");
     }
 
@@ -220,7 +220,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
   }
 
   public boolean containsHeaderKey(Set<String> headerKeys, String key) {
-    if (isEmpty(headerKeys) || isBlank(key)) {
+    if (hasNone(headerKeys) || isBlank(key)) {
       return false;
     }
 

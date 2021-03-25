@@ -1,7 +1,7 @@
 package io.harness.ng.core.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
@@ -49,7 +49,7 @@ public class NGUtils {
 
   public static void validate(Object entity) {
     Set<ConstraintViolation<Object>> constraints = validator.validate(entity);
-    if (isNotEmpty(constraints)) {
+    if (hasSome(constraints)) {
       throw new JerseyViolationException(constraints, null);
     }
   }

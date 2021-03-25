@@ -1,6 +1,6 @@
 package io.harness.gcp.helpers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.network.Http;
 
@@ -53,7 +53,7 @@ public class GcpHttpTransportHelperService {
                                        .setRoutePlanner(httpRoutePlanner)
                                        .setProxyAuthenticationStrategy(ProxyAuthenticationStrategy.INSTANCE);
 
-    if (isNotEmpty(proxyUsername) && isNotEmpty(proxyPassword)) {
+    if (hasSome(proxyUsername) && hasSome(proxyPassword)) {
       CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
       credentialsProvider.setCredentials(new AuthScope(proxyHostDetails.getHostName(), proxyHostDetails.getPort()),
           new UsernamePasswordCredentials(proxyUsername, proxyPassword));

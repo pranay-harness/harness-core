@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.yaml.YamlField;
 
@@ -28,7 +29,7 @@ public class PlanCreationContext {
   }
 
   public void mergeContextFromPlanCreationResponse(PlanCreationResponse planCreationResponse) {
-    if (EmptyPredicate.isEmpty(getGlobalContext())) {
+    if (hasNone(getGlobalContext())) {
       this.setGlobalContext(new HashMap<>());
     }
     this.getGlobalContext().putAll(planCreationResponse.getContextMap());

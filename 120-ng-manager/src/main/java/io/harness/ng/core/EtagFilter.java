@@ -1,6 +1,6 @@
 package io.harness.ng.core;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -39,7 +39,7 @@ public class EtagFilter implements ContainerRequestFilter, ContainerResponseFilt
   public void filter(ContainerRequestContext requestContext) {
     String acceptEncoding = requestContext.getHeaderString(ACCEPT_ENCODING);
     List<String> acceptEncodings = emptyList();
-    if (isNotEmpty(acceptEncoding)) {
+    if (hasSome(acceptEncoding)) {
       acceptEncodings = Arrays.asList(acceptEncoding.split(COMMA));
       acceptEncodings = acceptEncodings.stream().map(String::trim).collect(Collectors.toList());
     }
@@ -59,7 +59,7 @@ public class EtagFilter implements ContainerRequestFilter, ContainerResponseFilt
         responseContext.getHeaders().add(ETAG, "W/" + response.getEntityTag());
         String ifNoneMatch = requestContext.getHeaders().getFirst(IF_NONE_MATCH);
 
-        if (isNotEmpty(ifNoneMatch) && ifNoneMatch.equals(response.getEntityTag())) {
+        if (hasSome(ifNoneMatch) && ifNoneMatch.equals(response.getEntityTag())) {
           responseContext.setStatusInfo(NOT_MODIFIED);
           responseContext.setStatus(NOT_MODIFIED.getStatusCode());
         }

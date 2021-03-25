@@ -1,6 +1,7 @@
 package io.harness.execution.export.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
@@ -8,7 +9,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.ExportExecutionsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
@@ -74,7 +75,7 @@ public class ExportExecutionsRequestService {
       @NotNull Query<WorkflowExecution> query, @NotNull ExportExecutionsUserParams userParams) {
     query = updateQuery(accountId, query);
     List<String> userGroupIds = !userParams.isNotifyOnlyTriggeringUser() && userParams.getUserGroupIds() != null
-        ? userParams.getUserGroupIds().stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList())
+        ? userParams.getUserGroupIds().stream().filter(HasPredicate::hasSome).collect(Collectors.toList())
         : null;
     ExportExecutionsRequest exportExecutionsRequest =
         ExportExecutionsRequest.builder()
@@ -83,7 +84,7 @@ public class ExportExecutionsRequestService {
                                                                : userParams.getOutputFormat())
             .query(ExportExecutionsRequestQuery.fromQuery(query))
             .notifyOnlyTriggeringUser(userParams.isNotifyOnlyTriggeringUser())
-            .userGroupIds(EmptyPredicate.isEmpty(userGroupIds) ? null : userGroupIds)
+            .userGroupIds(hasNone(userGroupIds) ? null : userGroupIds)
             .status(Status.QUEUED)
             .totalExecutions(-1)
             .expiresAt(System.currentTimeMillis() + EXPIRE_MILLIS)

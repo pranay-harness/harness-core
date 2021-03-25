@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -40,7 +40,7 @@ public class SetDummyTechStackForOldAccounts implements Migration {
         try {
           account = records.next();
           Set<TechStack> techStacks = account.getTechStacks();
-          if (isNotEmpty(techStacks)) {
+          if (hasSome(techStacks)) {
             log.info("SetDummyTechStack - skip for account {}", account.getUuid());
             continue;
           }

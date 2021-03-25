@@ -1,8 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -316,7 +316,7 @@ public class UserResource {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
     user.setUuid(userId);
-    if (isEmpty(user.getAppId())) {
+    if (hasNone(user.getAppId())) {
       user.setAppId(GLOBAL_APP_ID);
     }
     return new RestResponse<>(userService.updateUserProfile(user));
@@ -765,7 +765,7 @@ public class UserResource {
     if (user == null) {
       throw new InvalidRequestException("Invalid User");
     }
-    if (isEmpty(user.getEmail()) || !user.getEmail().endsWith("@harness.io")) {
+    if (hasNone(user.getEmail()) || !user.getEmail().endsWith("@harness.io")) {
       throw new UnauthorizedException("User not authorized.", USER);
     }
     return new RestResponse<>(userService.getUserInvitationId(email));
@@ -1211,7 +1211,7 @@ public class UserResource {
     }
 
     List<UserInvite> userInvites = pageResponse.getResponse();
-    if (isEmpty(userInvites)) {
+    if (hasNone(userInvites)) {
       return new RestResponse<>(pageResponse);
     }
     userInvites.forEach(this::setUserGroupSummary);
@@ -1235,7 +1235,7 @@ public class UserResource {
   }
 
   private List<PublicUser> getPublicUsers(List<User> users, String accountId) {
-    if (isEmpty(users)) {
+    if (hasNone(users)) {
       return Collections.emptyList();
     }
     List<PublicUser> publicUserList = new ArrayList<>();
@@ -1260,7 +1260,7 @@ public class UserResource {
 
   private boolean checkIfInvitationIsAccepted(User user, String accountId) {
     List<Account> accounts = user.getAccounts();
-    if (!(isNotEmpty(accounts) && accounts.contains(accountService.get(accountId)))) {
+    if (!(hasSome(accounts) && accounts.contains(accountService.get(accountId)))) {
       return false;
     }
     return true;

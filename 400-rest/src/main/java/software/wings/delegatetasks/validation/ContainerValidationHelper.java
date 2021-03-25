@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -39,7 +39,7 @@ public class ContainerValidationHelper {
   public String getK8sMasterUrl(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (value instanceof EncryptableSetting && !value.isDecrypted()
-        && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
+        && hasSome(containerServiceParams.getEncryptionDetails())) {
       try {
         encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
       } catch (Exception e) {

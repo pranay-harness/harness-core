@@ -3,8 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_AWS_CODE_DEPLOY_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.Collections.singletonList;
@@ -158,7 +158,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
     CodeDeployInfrastructureMapping codeDeployInfraMapping = (CodeDeployInfrastructureMapping) infraMapping;
     String region = codeDeployInfraMapping.getRegion();
 
-    if (isNotEmpty(newDeploymentSummaries)) {
+    if (hasSome(newDeploymentSummaries)) {
       newDeploymentSummaries.forEach(newDeploymentSummary -> {
         AwsCodeDeployDeploymentInfo awsCodeDeployDeploymentInfo =
             (AwsCodeDeployDeploymentInfo) newDeploymentSummary.getDeploymentInfo();
@@ -198,7 +198,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
         DeploymentSummary deploymentSummary;
-        if (isNotEmpty(instancesToBeAdded)) {
+        if (hasSome(instancesToBeAdded)) {
           deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback);
 
           instancesToBeAdded.forEach(ec2InstanceId -> {
@@ -253,7 +253,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
     AwsCodeDeployListDeploymentInstancesResponse listInstancesResponse =
         (AwsCodeDeployListDeploymentInstancesResponse) response;
     boolean success = listInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
-    boolean deleteTask = success && isEmpty(listInstancesResponse.getInstances());
+    boolean deleteTask = success && hasNone(listInstancesResponse.getInstances());
     String errorMessage = success ? null : listInstancesResponse.getErrorMessage();
 
     return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();

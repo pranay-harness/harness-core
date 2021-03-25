@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
@@ -156,7 +156,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
           @Override
           public List<NamedType> findSubtypes(Annotated a) {
             final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-            if (isNotEmpty(subtypesFromSuper)) {
+            if (hasSome(subtypesFromSuper)) {
               return subtypesFromSuper;
             }
             return emptyIfNull(subtypeResolver.findSubtypes(a));

@@ -1,7 +1,7 @@
 package io.harness.artifacts.docker.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
@@ -32,7 +32,7 @@ public class DockerImageManifestResponse {
 
       try {
         Map<String, String> labels = JsonUtils.jsonPath(v1Compatibility, "container_config.Labels");
-        if (isEmpty(labels)) {
+        if (hasNone(labels)) {
           return labels;
         }
         // NOTE: Removing labels where keys contain '.'. Storing and retrieving these keys is throwing error with
@@ -49,7 +49,7 @@ public class DockerImageManifestResponse {
 
   public Map<String, String> fetchLabels() {
     // NOTE: This method should never return null.
-    if (isEmpty(history)) {
+    if (hasNone(history)) {
       return new HashMap<>();
     }
 

@@ -1,9 +1,8 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -43,6 +42,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -154,13 +154,13 @@ public class AwsCodeDeployHelperServiceDelegateImpl
         listDeploymentInstancesRequest = new ListDeploymentInstancesRequest()
                                              .withNextToken(nextToken)
                                              .withDeploymentId(deploymentId)
-                                             .withInstanceStatusFilter(asList(InstanceStatus.Succeeded.name()));
+                                             .withInstanceStatusFilter(Arrays.asList(InstanceStatus.Succeeded.name()));
         tracker.trackCDCall("List Deployment Instances");
         listDeploymentInstancesResult = amazonCodeDeployClient.listDeploymentInstances(listDeploymentInstancesRequest);
         instanceIds.addAll(listDeploymentInstancesResult.getInstancesList());
         nextToken = listDeploymentInstancesResult.getNextToken();
       } while (nextToken != null);
-      if (isNotEmpty(instanceIds)) {
+      if (hasSome(instanceIds)) {
         Set<String> instancesIdsSet = Sets.newHashSet(instanceIds);
         List<Instance> runningInstances = awsEc2HelperServiceDelegate.listEc2Instances(awsConfig, encryptedDataDetails,
             region, awsUtils.getAwsFilters(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().build(), null),

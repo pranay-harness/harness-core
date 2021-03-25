@@ -1,7 +1,7 @@
 package software.wings.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -51,7 +51,7 @@ public class BlackListedDomainChecker {
            BufferedReader bufferedReader =
                new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
         String line = bufferedReader.readLine();
-        while (isNotEmpty(line)) {
+        while (hasSome(line)) {
           blacklistedDomains.add(line.trim().toLowerCase());
           line = bufferedReader.readLine();
         }

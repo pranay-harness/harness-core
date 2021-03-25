@@ -1,12 +1,12 @@
 package software.wings.integration;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -219,14 +219,14 @@ public class ConfigResourceIntegrationTest extends IntegrationTestBase {
         new FormDataBodyPart("relativeFilePath", configFile.getRelativeFilePath(), MediaType.MULTIPART_FORM_DATA_TYPE));
     multiPart.bodyPart(new FormDataBodyPart(
         "setAsDefault", String.valueOf(configFile.isSetAsDefault()), MediaType.MULTIPART_FORM_DATA_TYPE));
-    if (EmptyPredicate.isNotEmpty(configFile.getNotes())) {
+    if (hasSome(configFile.getNotes())) {
       multiPart.bodyPart(new FormDataBodyPart("notes", configFile.getNotes(), MediaType.MULTIPART_FORM_DATA_TYPE));
     }
-    if (EmptyPredicate.isNotEmpty(configFile.getTemplateId())) {
+    if (hasSome(configFile.getTemplateId())) {
       multiPart.bodyPart(
           new FormDataBodyPart("templateId", configFile.getTemplateId(), MediaType.MULTIPART_FORM_DATA_TYPE));
     }
-    if (EmptyPredicate.isNotEmpty(configFile.getParentConfigFileId())) {
+    if (hasSome(configFile.getParentConfigFileId())) {
       multiPart.bodyPart(new FormDataBodyPart(
           "parentConfigFileId", configFile.getParentConfigFileId(), MediaType.MULTIPART_FORM_DATA_TYPE));
     }

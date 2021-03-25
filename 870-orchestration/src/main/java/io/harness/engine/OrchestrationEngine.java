@@ -1,8 +1,8 @@
 package io.harness.engine;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
@@ -13,7 +13,6 @@ import static java.lang.String.format;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
@@ -183,7 +182,7 @@ public class OrchestrationEngine {
 
       log.info("Checking If Node should be Run with When Condition.");
       String whenCondition = nodeExecution.getNode().getWhenCondition();
-      if (EmptyPredicate.isNotEmpty(whenCondition)) {
+      if (hasSome(whenCondition)) {
         NodeRunCheck nodeRunCheck =
             OrchestrationUtils.shouldRunExecution(ambiance, whenCondition, engineExpressionService);
         if (nodeRunCheck.isSuccessful()) {
@@ -199,7 +198,7 @@ public class OrchestrationEngine {
 
       log.info("Checking If Node should be Skipped");
       String skipCondition = nodeExecution.getNode().getSkipCondition();
-      if (EmptyPredicate.isNotEmpty(skipCondition)) {
+      if (hasSome(skipCondition)) {
         SkipCheck skipCheck =
             OrchestrationUtils.shouldSkipNodeExecution(ambiance, skipCondition, engineExpressionService);
         if (skipCheck.isSuccessful()) {
@@ -359,7 +358,7 @@ public class OrchestrationEngine {
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
     PlanNodeProto node = nodeExecution.getNode();
 
-    if (isEmpty(node.getAdviserObtainmentsList())) {
+    if (hasNone(node.getAdviserObtainmentsList())) {
       endNodeExecution(nodeExecution, status, nodeExecution.getAdviserResponse());
       return;
     }
@@ -396,20 +395,20 @@ public class OrchestrationEngine {
   private List<StepOutcomeRef> handleOutcomes(
       Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos, List<StepOutcomeProto> graphOutcomesList) {
     List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
-    if (isEmpty(stepOutcomeProtos)) {
+    if (hasNone(stepOutcomeProtos)) {
       return outcomeRefs;
     }
 
     if (config.isWithPMS() || config.isPipelineService()) {
       stepOutcomeProtos.forEach(proto -> {
-        if (isNotEmpty(proto.getOutcome())) {
+        if (hasSome(proto.getOutcome())) {
           String instanceId =
               pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), false);
           outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
         }
       });
       graphOutcomesList.forEach(proto -> {
-        if (isNotEmpty(proto.getOutcome())) {
+        if (hasSome(proto.getOutcome())) {
           String instanceId =
               pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), true);
           outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
@@ -432,7 +431,7 @@ public class OrchestrationEngine {
   }
 
   public void endTransition(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
-    if (isNotEmpty(nodeExecution.getNotifyId())) {
+    if (hasSome(nodeExecution.getNotifyId())) {
       PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
@@ -494,7 +493,7 @@ public class OrchestrationEngine {
       }
 
       Map<String, byte[]> byteResponseMap = new HashMap<>();
-      if (isNotEmpty(response)) {
+      if (hasSome(response)) {
         response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
       }
       ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()

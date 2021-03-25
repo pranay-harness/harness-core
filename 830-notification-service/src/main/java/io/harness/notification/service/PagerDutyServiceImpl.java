@@ -1,7 +1,7 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.PagerDuty;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationClientConstants.HARNESS_NAME;
@@ -75,7 +75,7 @@ public class PagerDutyServiceImpl implements ChannelService {
     }
 
     List<String> pagerDutyKeys = getRecipients(notificationRequest);
-    if (isEmpty(pagerDutyKeys)) {
+    if (hasNone(pagerDutyKeys)) {
       log.info("No pagerduty integration key found in notification request {}", notificationId);
       return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }

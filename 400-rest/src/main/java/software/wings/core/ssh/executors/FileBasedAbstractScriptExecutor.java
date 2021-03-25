@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
@@ -61,7 +61,7 @@ public abstract class FileBasedAbstractScriptExecutor implements FileBasedScript
   @Override
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    if (isEmpty(fileNamesIds)) {
+    if (hasNone(fileNamesIds)) {
       saveExecutionLog("There are no artifacts to copy.");
       return CommandExecutionStatus.SUCCESS;
     }

@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -150,7 +150,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
 
   @Override
   public Map<String, List<CloudWatchMetric>> createLambdaFunctionNames(List<String> lambdaFunctions) {
-    if (isEmpty(lambdaFunctions)) {
+    if (hasNone(lambdaFunctions)) {
       return null;
     }
     Map<String, List<CloudWatchMetric>> lambdaMetrics = new HashMap<>();
@@ -161,7 +161,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Override
   public Map<String, String> getGroupNameByHost(List<String> ec2InstanceNames) {
     Map<String, String> groupNameByHost = new HashMap<>();
-    if (isEmpty(ec2InstanceNames)) {
+    if (hasNone(ec2InstanceNames)) {
       return groupNameByHost;
     }
     ec2InstanceNames.forEach(ec2InstanceName -> { groupNameByHost.put(ec2InstanceName, DEFAULT_GROUP_NAME); });
@@ -238,7 +238,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       cloudWatchMetrics =
           yamlUtils.read(CLOUDWATCH_YAML, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
       cloudWatchMetrics.forEach((awsNameSpace, metrics) -> metrics.forEach(cloudWatchMetric -> {
-        Preconditions.checkState(isNotEmpty(cloudWatchMetric.getStatistics()),
+        Preconditions.checkState(hasSome(cloudWatchMetric.getStatistics()),
             awsNameSpace + ":" + cloudWatchMetric.getMetricName() + " does not have statistics field defined");
         Preconditions.checkState(cloudWatchMetric.getUnit() != null,
             awsNameSpace + ":" + cloudWatchMetric.getMetricName() + " does not have unit field defined");
@@ -264,7 +264,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics, metricsTemplate = new HashMap<>();
     cloudWatchMetrics = fetchMetrics();
 
-    if (isNotEmpty(cloudwatchConfig.getLoadBalancerMetrics())) {
+    if (hasSome(cloudwatchConfig.getLoadBalancerMetrics())) {
       List<CloudWatchMetric> elbMetrics = cloudWatchMetrics.get(AwsNameSpace.ELB),
                              metricsForTemplate = new ArrayList<>();
 
@@ -274,7 +274,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       metricsTemplate.put(AwsNameSpace.ELB, metricsForTemplate);
     }
 
-    if (isNotEmpty(cloudwatchConfig.getEcsMetrics())) {
+    if (hasSome(cloudwatchConfig.getEcsMetrics())) {
       List<CloudWatchMetric> ecsMetrics = cloudWatchMetrics.get(AwsNameSpace.ECS),
                              metricsForTemplate = new ArrayList<>();
 
@@ -284,14 +284,14 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       metricsTemplate.put(AwsNameSpace.ECS, metricsForTemplate);
     }
 
-    if (isNotEmpty(cloudwatchConfig.getEc2Metrics())) {
+    if (hasSome(cloudwatchConfig.getEc2Metrics())) {
       List<CloudWatchMetric> ec2Metrics = cloudWatchMetrics.get(AwsNameSpace.EC2),
                              metricsForTemplate = new ArrayList<>();
       metricsForTemplate.addAll(getMetricsForTemplate(cloudwatchConfig.getEc2Metrics(), ec2Metrics));
       metricsTemplate.put(AwsNameSpace.EC2, metricsForTemplate);
     }
 
-    if (isNotEmpty(cloudwatchConfig.getLambdaFunctionsMetrics())) {
+    if (hasSome(cloudwatchConfig.getLambdaFunctionsMetrics())) {
       metricsTemplate.put(AwsNameSpace.LAMBDA, cloudWatchMetrics.get(AwsNameSpace.LAMBDA));
     }
 
@@ -300,9 +300,9 @@ public class CloudWatchServiceImpl implements CloudWatchService {
 
   @Override
   public void setStatisticsAndUnit(AwsNameSpace awsNameSpace, List<CloudWatchMetric> metrics) {
-    if (isNotEmpty(metrics)) {
+    if (hasSome(metrics)) {
       metrics.stream()
-          .filter(metric -> isEmpty(metric.getStatistics()) || metric.getUnit() == null)
+          .filter(metric -> hasNone(metric.getStatistics()) || metric.getUnit() == null)
           .forEach(cloudWatchMetric -> {
             cloudWatchMetric.setStatistics(getStatistics(awsNameSpace, cloudWatchMetric));
             cloudWatchMetric.setUnit(getUnit(awsNameSpace, cloudWatchMetric));

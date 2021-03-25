@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -354,7 +354,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       List<ManifestFile> manifestFilesByAppManifestId =
           getManifestFilesByAppManifestId(applicationManifest.getAppId(), applicationManifest.getUuid());
 
-      if (isNotEmpty(manifestFilesByAppManifestId)) {
+      if (hasSome(manifestFilesByAppManifestId)) {
         manifestFiles.addAll(manifestFilesByAppManifestId);
       }
     }
@@ -535,7 +535,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
             applicationManifest.getStoreType() + " Manifest format doesn't support poll for changes option.");
       }
       if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())
-          && isNotEmpty(applicationManifest.getHelmChartConfig().getChartVersion())) {
+          && hasSome(applicationManifest.getHelmChartConfig().getChartVersion())) {
         throw new InvalidRequestException(
             "No Helm Chart version is required when Poll for Manifest option is enabled.");
       }
@@ -588,7 +588,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     String appId = applicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
 
-    if (isEmpty(applicationManifest.getAccountId())) {
+    if (hasNone(applicationManifest.getAccountId())) {
       applicationManifest.setAccountId(accountId);
     }
 
@@ -657,7 +657,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
             .project(ManifestFileKeys.fileName, true)
             .asList();
 
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return;
     }
 
@@ -751,7 +751,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   private void deleteManifestFiles(String appId, ApplicationManifest applicationManifest, boolean isSyncFromGit) {
     List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifest.getUuid());
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return;
     }
 
@@ -961,7 +961,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
     gitFileConfigHelperService.validate(gitFileConfig);
-    if (isNotEmpty(gitFileConfig.getFilePath())) {
+    if (hasSome(gitFileConfig.getFilePath())) {
       throw new InvalidRequestException("File Path has to be empty for Git Config for Kustomize Manifests", USER);
     }
   }
@@ -1027,7 +1027,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
     gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
 
-    if (isEmpty(applicationManifest.getGitFileConfig().getFilePath())) {
+    if (hasNone(applicationManifest.getGitFileConfig().getFilePath())) {
       throw new InvalidRequestException("Template File Path can't be empty", USER);
     }
   }
@@ -1042,14 +1042,14 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Custom Source Config is mandatory for Custom type", USER);
     }
 
-    if (isEmpty(applicationManifest.getCustomSourceConfig().getPath())) {
+    if (hasNone(applicationManifest.getCustomSourceConfig().getPath())) {
       throw new InvalidRequestException("Path can't be empty", USER);
     }
   }
 
   @VisibleForTesting
   void sanitizeApplicationManifestConfigs(ApplicationManifest applicationManifest) {
-    if (isEmpty(applicationManifest.getAccountId())) {
+    if (hasNone(applicationManifest.getAccountId())) {
       applicationManifest.setAccountId(appService.getAccountIdByAppId(applicationManifest.getAppId()));
     }
     switch (applicationManifest.getStoreType()) {
@@ -1210,7 +1210,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew) {
     List<ManifestFile> manifestFiles = getManifestFilesByAppManifestId(appId, applicationManifestOld.getUuid());
 
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return;
     }
 
@@ -1226,7 +1226,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       return;
     }
     String fileContent = manifestFile.getFileContent();
-    if (isEmpty(fileContent)) {
+    if (hasNone(fileContent)) {
       return;
     }
     String[] fileContentByLine = fileContent.split("\\r?\\n");
@@ -1283,7 +1283,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public void pruneByEnvironment(String appId, String envId) {
     List<ApplicationManifest> appManifests = getAllByEnvId(appId, envId);
 
-    if (isEmpty(appManifests)) {
+    if (hasNone(appManifests)) {
       return;
     }
 
@@ -1298,7 +1298,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @VisibleForTesting
   public void doFileSizeValidation(ManifestFile manifestFile, int allowedSizeInBytes) {
-    if (isEmpty(manifestFile.getFileContent())) {
+    if (hasNone(manifestFile.getFileContent())) {
       return;
     }
     byte[] bytes;

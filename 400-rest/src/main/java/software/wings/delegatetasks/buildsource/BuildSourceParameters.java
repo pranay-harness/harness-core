@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.buildsource;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
@@ -80,7 +80,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
       return settingValue.fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (artifactStreamType.equals(ACR.name())) {
       final String default_server = "azure.microsoft.com";
-      String loginServer = isNotEmpty(artifactStreamAttributes.getRegistryHostName())
+      String loginServer = hasSome(artifactStreamAttributes.getRegistryHostName())
           ? artifactStreamAttributes.getRegistryHostName()
           : default_server;
       return Collections.singletonList(

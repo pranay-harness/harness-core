@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -76,7 +76,7 @@ public class SendInviteUrlForAllUserInvites implements Migration {
             continue;
           }
 
-          if (isEmpty(userInvite.getAccountId())) {
+          if (hasNone(userInvite.getAccountId())) {
             marketoHelper.createOrUpdateLead(null, null, userInvite.getEmail(), accessToken, null, retrofit, null);
           } else {
             Account account = accountService.get(userInvite.getAccountId());

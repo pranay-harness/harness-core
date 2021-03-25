@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -91,8 +91,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
     // any new cloudwatch configuration should go with this check.
-    if (!shouldDoLambdaVerification && !shouldDoECSClusterVerification && isEmpty(ecsMetrics) && isEmpty(ec2Metrics)
-        && isEmpty(loadBalancerMetrics)) {
+    if (!shouldDoLambdaVerification && !shouldDoECSClusterVerification && hasNone(ecsMetrics) && hasNone(ec2Metrics)
+        && hasNone(loadBalancerMetrics)) {
       results.put("No metrics provided", "No metrics provided for Verification");
     }
     return results;
@@ -124,7 +124,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     Map<String, String> lambdaFunctions = new HashMap<>();
     if (shouldDoLambdaVerification && getDeploymentType(context) == DeploymentType.AWS_LAMBDA) {
       AwsLambdaContextElement elements = context.getContextElement(ContextElementType.PARAM);
-      if (isNotEmpty(elements.getFunctionArns())) {
+      if (hasSome(elements.getFunctionArns())) {
         elements.getFunctionArns().forEach(
             contextElement -> lambdaFunctions.put(contextElement.getFunctionName(), contextElement.getFunctionArn()));
       }
@@ -149,7 +149,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
       // If shouldDoECSClusterVerification but no ecs metrics map is provided. This is to handle backword compatibility
       // in-case no ecsMetrics provided than fetch cluster details from the context and use default ecs metrics for
       // verification.
-      if (isEmpty(ecsMetrics)) {
+      if (hasNone(ecsMetrics)) {
         ContainerServiceElement containerServiceElement =
             context.getContextElement(ContextElementType.CONTAINER_SERVICE);
         String clusterName = containerServiceElement.getClusterName();
@@ -157,19 +157,19 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
       }
     }
 
-    if (isNotEmpty(loadBalancerMetrics)) {
+    if (hasSome(loadBalancerMetrics)) {
       loadBalancerMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, metrics));
     }
-    if (isNotEmpty(ecsMetrics)) {
+    if (hasSome(ecsMetrics)) {
       ecsMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ECS, metrics));
     }
     final Map<String, List<CloudWatchMetric>> lambdaMetrics =
         createLambdaMetrics(lambdaFunctions.keySet(), cloudWatchMetrics);
-    if (isNotEmpty(lambdaMetrics)) {
+    if (hasSome(lambdaMetrics)) {
       lambdaMetrics.forEach((s, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.LAMBDA, metrics));
     }
 
-    if (isNotEmpty(ec2Metrics)) {
+    if (hasSome(ec2Metrics)) {
       cloudWatchService.setStatisticsAndUnit(AwsNameSpace.EC2, ec2Metrics);
     }
     final CloudWatchDataCollectionInfo dataCollectionInfo =
@@ -208,7 +208,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .accountId(appService.get(context.getAppId()).getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(waitId)
-            .tags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
+            .tags(hasSome(dataCollectionInfo.getAwsConfig().getTag())
                     ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
                     : null)
             .data(TaskData.builder()
@@ -235,7 +235,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   private Map<String, List<CloudWatchMetric>> createECSMetrics(
       String clusterName, Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics) {
-    if (isEmpty(clusterName)) {
+    if (hasNone(clusterName)) {
       return null;
     }
     Map<String, List<CloudWatchMetric>> ecsMetrics = new HashMap<>();
@@ -261,7 +261,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   public static Map<String, List<CloudWatchMetric>> createLambdaMetrics(
       Set<String> functionNames, Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics) {
-    if (isEmpty(functionNames)) {
+    if (hasNone(functionNames)) {
       return null;
     }
     Map<String, List<CloudWatchMetric>> lambdaMetrics = new HashMap<>();
@@ -272,7 +272,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   @Override
   @Attributes(required = false, title = "Expression for Host/Container name")
   public String getHostnameTemplate() {
-    if (isEmpty(hostnameTemplate)) {
+    if (hasNone(hostnameTemplate)) {
       return "${host.ec2Instance.instanceId}";
     }
     return hostnameTemplate;
@@ -284,7 +284,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
   }
 
   public String getRegion() {
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return AWS_DEFAULT_REGION;
     }
     return region;

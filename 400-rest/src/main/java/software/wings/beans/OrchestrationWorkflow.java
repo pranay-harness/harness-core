@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.USER_GROUP;
@@ -15,7 +15,6 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -128,7 +127,7 @@ public abstract class OrchestrationWorkflow {
   @JsonIgnore
   public boolean checkTemplatized() {
     List<Variable> userVariables = getUserVariables();
-    if (isEmpty(userVariables)) {
+    if (hasNone(userVariables)) {
       return false;
     }
     return userVariables.stream().anyMatch(variable -> !variable.isFixed());
@@ -186,7 +185,7 @@ public abstract class OrchestrationWorkflow {
   //
   public void addToUserVariables(
       List<TemplateExpression> templateExpressions, String stateType, String name, State state) {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return;
     }
     for (TemplateExpression templateExpression : templateExpressions) {
@@ -233,7 +232,7 @@ public abstract class OrchestrationWorkflow {
                                               .mandatory(entityType != null);
 
         variableBuilder.parentFields(parentTemplateFields);
-        if (isNotEmpty(stateType)) {
+        if (hasSome(stateType)) {
           variableBuilder.stateType(stateType);
         }
         // Set the description
@@ -251,18 +250,18 @@ public abstract class OrchestrationWorkflow {
           variable.setMetadata(variableMetadata);
         }
         variableMetadata.put(Variable.ENTITY_TYPE, entityType);
-        if (isNotEmpty(artifactType)) {
+        if (hasSome(artifactType)) {
           variableMetadata.put(Variable.ARTIFACT_TYPE, artifactType);
         }
-        if (isNotEmpty(relatedField)) {
+        if (hasSome(relatedField)) {
           variableMetadata.put(Variable.RELATED_FIELD, relatedField);
         }
-        if (ENVIRONMENT != entityType && isNotEmpty(stateType)) {
+        if (ENVIRONMENT != entityType && hasSome(stateType)) {
           variableMetadata.put(Variable.STATE_TYPE, stateType);
         }
         variable.setMandatory(entityType != null);
         checkMultiValuesAllowed(variable, entityType);
-        if (isEmpty(parentTemplateFields)) {
+        if (hasNone(parentTemplateFields)) {
           variableMetadata.remove(Variable.PARENT_FIELDS);
         } else {
           variableMetadata.put(Variable.PARENT_FIELDS, parentTemplateFields);
@@ -314,7 +313,7 @@ public abstract class OrchestrationWorkflow {
   }
 
   public void addTemplateUuid(String templateUuid) {
-    if (EmptyPredicate.isEmpty(linkedTemplateUuids)) {
+    if (hasNone(linkedTemplateUuids)) {
       linkedTemplateUuids = new ArrayList<>();
     }
     linkedTemplateUuids.add(templateUuid);

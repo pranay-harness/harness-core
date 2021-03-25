@@ -1,6 +1,6 @@
 package software.wings.beans.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.git.model.GitFile;
 
@@ -24,6 +24,6 @@ public class GitFetchFilesResult extends GitCommandResult {
   public GitFetchFilesResult(GitCommitResult gitCommitResult, List<GitFile> gitFiles) {
     super(GitCommandType.FETCH_FILES);
     this.gitCommitResult = gitCommitResult;
-    this.files = isEmpty(gitFiles) ? Collections.EMPTY_LIST : gitFiles;
+    this.files = hasNone(gitFiles) ? Collections.EMPTY_LIST : gitFiles;
   }
 }

@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -139,7 +139,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
     GraphQLContext context = environment.getContext();
     String accountId = context.get("accountId");
 
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       throw new InvalidRequestException("accountId is null in the environment");
     }
 
@@ -220,7 +220,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
   }
 
   public void generateSqlInQuery(StringBuilder queryBuilder, Object[] values) {
-    if (isEmpty(values)) {
+    if (hasNone(values)) {
       throw new InvalidRequestException("Filter should have at least one value");
     }
 

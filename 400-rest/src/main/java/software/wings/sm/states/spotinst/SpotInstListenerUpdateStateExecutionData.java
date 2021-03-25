@@ -1,7 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -81,7 +81,7 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   private String getActiveTargetGroups() {
-    if (isEmpty(lbDetails)) {
+    if (hasNone(lbDetails)) {
       return StringUtils.EMPTY;
     }
 
@@ -105,7 +105,7 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   private String getInactiveTargetGroups() {
-    if (isEmpty(lbDetails)) {
+    if (hasNone(lbDetails)) {
       return StringUtils.EMPTY;
     }
 
@@ -129,7 +129,7 @@ public class SpotInstListenerUpdateStateExecutionData
   }
 
   private String returnTargetGroupDisplayString(List<String> tgNames) {
-    if (isEmpty(tgNames)) {
+    if (hasNone(tgNames)) {
       return StringUtils.EMPTY;
     }
 

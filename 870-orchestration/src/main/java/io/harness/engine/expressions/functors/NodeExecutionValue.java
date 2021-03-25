@@ -1,11 +1,11 @@
 package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
@@ -64,8 +64,7 @@ public class NodeExecutionValue implements LateBindingValue {
   }
 
   private boolean canAdd(NodeExecution nodeExecution) {
-    return !nodeExecution.getNode().getSkipExpressionChain()
-        && EmptyPredicate.isNotEmpty(nodeExecution.getNode().getIdentifier());
+    return !nodeExecution.getNode().getSkipExpressionChain() && hasSome(nodeExecution.getNode().getIdentifier());
   }
 
   private void addToMap(Map<String, Object> map, NodeExecution nodeExecution) {

@@ -1,6 +1,6 @@
 package software.wings.integration.setup.rest;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;
 
@@ -37,7 +37,7 @@ public class AccountResourceRestClient {
     RestResponse<PageResponse<Account>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
             .get(new GenericType<RestResponse<PageResponse<Account>>>() {});
-    return isEmpty(response.getResource()) ? null : response.getResource().get(0);
+    return hasNone(response.getResource()) ? null : response.getResource().get(0);
   }
 
   public Account createAccount(Client client, String userToken, Account account) {

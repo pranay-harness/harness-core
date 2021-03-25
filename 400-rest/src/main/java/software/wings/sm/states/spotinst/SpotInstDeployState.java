@@ -1,7 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.spotinst.model.SpotInstConstants.DELETE_NEW_ELASTI_GROUP;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
@@ -243,7 +243,7 @@ public class SpotInstDeployState extends State {
     if (spotInstDeployTaskResponse != null) {
       List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
           spotInstDeployTaskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
-      if (isNotEmpty(newInstanceElements)) {
+      if (hasSome(newInstanceElements)) {
         // These are newly launched instances, set NewInstance = true for verification service
         newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
         instanceElements.addAll(newInstanceElements);
@@ -260,7 +260,7 @@ public class SpotInstDeployState extends State {
 
       List<InstanceElement> existingInstanceElements = awsStateHelper.generateInstanceElements(
           spotInstDeployTaskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
-      if (isNotEmpty(existingInstanceElements)) {
+      if (hasSome(existingInstanceElements)) {
         // These are Existing instances for older elastiGroup, set NewInstance = false for verification service
         existingInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(false));
         instanceElements.addAll(existingInstanceElements);

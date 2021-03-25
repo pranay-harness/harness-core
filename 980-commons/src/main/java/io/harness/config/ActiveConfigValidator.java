@@ -1,13 +1,13 @@
 package io.harness.config;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.Map;
 
 public interface ActiveConfigValidator {
   default boolean isActive(Class cls, Map<String, Boolean> active) {
     boolean flag = true;
-    if (isEmpty(active)) {
+    if (hasNone(active)) {
       return flag;
     }
 

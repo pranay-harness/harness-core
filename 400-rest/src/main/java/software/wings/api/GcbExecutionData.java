@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.ExecutionDataValue.executionDataValue;
 
@@ -92,7 +92,7 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
   }
 
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       executionDetails.put("tags", executionDataValue("Tags", tags));
     }
 
@@ -100,43 +100,43 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
       executionDetails.put("status", executionDataValue("Status", buildStatus));
     }
 
-    if (isNotEmpty(name)) {
+    if (hasSome(name)) {
       executionDetails.put("name", executionDataValue("Name", name));
     }
 
-    if (isNotEmpty(createTime)) {
+    if (hasSome(createTime)) {
       executionDetails.put("createTime", executionDataValue("Created Time", createTime));
     }
 
-    if (isNotEmpty(logUrl)) {
+    if (hasSome(logUrl)) {
       executionDetails.put("logUrl", executionDataValue("Logs Url", logUrl));
     }
 
-    if (isNotEmpty(substitutions)) {
+    if (hasSome(substitutions)) {
       executionDetails.put("substitutions", executionDataValue("Substitutions", removeNullValues(substitutions)));
     }
 
-    if (isNotEmpty(buildNo)) {
+    if (hasSome(buildNo)) {
       executionDetails.put("buildNo", executionDataValue("BuildNo", buildNo));
     }
 
-    if (isNotEmpty(buildUrl)) {
+    if (hasSome(buildUrl)) {
       executionDetails.put("buildUrl", executionDataValue("Build Url", buildUrl));
     }
 
-    if (isNotEmpty(activityId)) {
+    if (hasSome(activityId)) {
       putNotNull(executionDetails, "activityId", executionDataValue("Activity Id", activityId));
     }
 
-    if (isNotEmpty(images)) {
+    if (hasSome(images)) {
       putNotNull(executionDetails, "images", executionDataValue("Images", images));
     }
 
-    if (isNotEmpty(artifactLocation)) {
+    if (hasSome(artifactLocation)) {
       putNotNull(executionDetails, "artifactLocation", executionDataValue("Artifact Location", artifactLocation));
     }
 
-    if (isNotEmpty(artifacts)) {
+    if (hasSome(artifacts)) {
       putNotNull(executionDetails, "artifacts", executionDataValue("Artifacts", artifacts));
     }
 

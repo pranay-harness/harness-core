@@ -1,7 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.TaskType.AZURE_ARM_TASK;
@@ -142,21 +142,21 @@ public class ARMRollbackState extends ARMProvisionState {
     }
 
     AzureARMPreDeploymentData preDeploymentData = preExistingTemplate.getPreDeploymentData();
-    if (isEmpty(preDeploymentData.getSubscriptionId())) {
+    if (hasNone(preDeploymentData.getSubscriptionId())) {
       validationDataBuilder.isValidData(false);
       validationDataBuilder.errorMessage(
           String.format("Skipping rollback as subscription id is empty for Provisioner - [%s]", provisioner.getName()));
       return validationDataBuilder.build();
     }
 
-    if (isEmpty(preDeploymentData.getResourceGroup())) {
+    if (hasNone(preDeploymentData.getResourceGroup())) {
       validationDataBuilder.isValidData(false);
       validationDataBuilder.errorMessage(
           String.format("Skipping rollback as resource group is empty for Provisioner - [%s]", provisioner.getName()));
       return validationDataBuilder.build();
     }
 
-    if (isEmpty(preDeploymentData.getResourceGroupTemplateJson())) {
+    if (hasNone(preDeploymentData.getResourceGroupTemplateJson())) {
       validationDataBuilder.isValidData(false);
       validationDataBuilder.errorMessage(
           String.format("Skipping rollback as no previous template found for resource group - [%s]",

@@ -1,7 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -230,7 +230,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
           break;
         }
       }
-      if (isEmpty(applicationId)) {
+      if (hasNone(applicationId)) {
         throw new WingsException("Invalid AppDynamics Application Name provided : " + applicationName);
       }
       return applicationId;
@@ -252,7 +252,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
           break;
         }
       }
-      if (isEmpty(tierId)) {
+      if (hasNone(tierId)) {
         throw new WingsException("Invalid AppDynamics Tier Name provided : " + tierName);
       }
       return tierId;
@@ -266,7 +266,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       String projectIdentifier, String appName, String tierName, String requestGuid,
       AppdynamicsMetricPackDataValidationRequest validationRequest) {
     log.info("for {} getting data for {}", projectIdentifier, validationRequest);
-    Preconditions.checkState(isNotEmpty(validationRequest.getMetricPacks()),
+    Preconditions.checkState(hasSome(validationRequest.getMetricPacks()),
         "No metric packs found for project {} with the name {}", projectIdentifier, validationRequest.getMetricPacks());
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(validationRequest.getConnector().getAccountId())

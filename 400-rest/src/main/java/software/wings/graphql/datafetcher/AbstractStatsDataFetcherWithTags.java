@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static java.util.function.Function.identity;
@@ -47,7 +47,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
 
   protected List<TA> getGroupByTag(List<G> groupByList) {
     List<TA> groupByTagList = new ArrayList<>();
-    if (isEmpty(groupByList)) {
+    if (hasNone(groupByList)) {
       return groupByTagList;
     }
 
@@ -71,7 +71,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     groupByTagList.removeIf(ta
         -> ta != null
             && (ta instanceof QLDeploymentTagAggregation && (QLDeploymentTagType.DEPLOYMENT == ta.getEntityType())));
-    if (isEmpty(groupByTagList)) {
+    if (hasNone(groupByTagList)) {
       return qlData;
     }
     TA groupByTagLevel1 = groupByTagList.get(0);
@@ -87,7 +87,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     } else if (qlData instanceof QLAggregatedData) {
       QLAggregatedData qlAggregatedData = (QLAggregatedData) qlData;
       List<QLDataPoint> dataPoints = qlAggregatedData.getDataPoints();
-      if (isEmpty(dataPoints)) {
+      if (hasNone(dataPoints)) {
         return qlData;
       }
       List<QLDataPoint> tagDataPoints = getTagDataPoints(accountId, dataPoints, groupByTagLevel1);
@@ -95,7 +95,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     } else if (qlData instanceof QLStackedData) {
       QLStackedData qlStackedData = (QLStackedData) qlData;
       List<QLStackedDataPoint> stackedDataPoints = qlStackedData.getDataPoints();
-      if (isEmpty(stackedDataPoints)) {
+      if (hasNone(stackedDataPoints)) {
         return qlData;
       }
 
@@ -122,7 +122,7 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
     } else if (qlData instanceof QLStackedTimeSeriesData) {
       QLStackedTimeSeriesData qlStackedTimeSeriesData = (QLStackedTimeSeriesData) qlData;
       List<QLStackedTimeSeriesDataPoint> stackedTimeSeriesDataPoints = qlStackedTimeSeriesData.getData();
-      if (isEmpty(stackedTimeSeriesDataPoints)) {
+      if (hasNone(stackedTimeSeriesDataPoints)) {
         return qlData;
       }
       stackedTimeSeriesDataPoints.forEach(stackedTimeSeriesDataPoint -> {
@@ -176,8 +176,8 @@ public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends
 
   protected List<EA> getGroupByEntityListFromTags(
       List<G> groupByList, List<EA> groupByEntityList, List<TA> groupByTagList, QLTimeSeriesAggregation groupByTime) {
-    int entityListSize = isEmpty(groupByEntityList) ? 0 : groupByEntityList.size();
-    int tagListSize = isEmpty(groupByTagList) ? 0 : groupByTagList.size();
+    int entityListSize = hasNone(groupByEntityList) ? 0 : groupByEntityList.size();
+    int tagListSize = hasNone(groupByTagList) ? 0 : groupByTagList.size();
     int timeSize = groupByTime == null ? 0 : 1;
 
     int totalGroupBy = entityListSize + tagListSize + timeSize;

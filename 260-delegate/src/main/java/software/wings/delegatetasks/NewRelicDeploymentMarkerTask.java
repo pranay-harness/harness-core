@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -44,7 +45,7 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     NewRelicDataCollectionInfo dataCollectionInfo = (NewRelicDataCollectionInfo) parameters;
-    if (isEmpty(dataCollectionInfo.getDeploymentMarker())) {
+    if (hasNone(dataCollectionInfo.getDeploymentMarker())) {
       throw new WingsException("Empty deployment marker body");
     }
     try {

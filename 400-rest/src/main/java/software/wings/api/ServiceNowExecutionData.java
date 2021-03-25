@@ -1,10 +1,10 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
@@ -57,7 +57,7 @@ public class ServiceNowExecutionData extends StateExecutionData implements Deleg
           ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " Url").value(issueUrl).build());
     }
 
-    if (EmptyPredicate.isNotEmpty(transformationValues)) {
+    if (hasSome(transformationValues)) {
       putNotNull(executionDetails, "transformationValues",
           ExecutionDataValue.builder()
               .displayName("Transformation Values")

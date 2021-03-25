@@ -1,6 +1,6 @@
 package io.harness.network;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -291,9 +291,9 @@ public class Http {
     if ("http".equalsIgnoreCase(proxyScheme)) {
       String httpProxyHost = System.getProperty("http.proxyHost");
       String httpProxyPort = System.getProperty("http.proxyPort");
-      if (isNotEmpty(httpProxyHost)) {
+      if (hasSome(httpProxyHost)) {
         proxyHost = httpProxyHost;
-        if (isNotEmpty(httpProxyPort)) {
+        if (hasSome(httpProxyPort)) {
           proxyPort = Integer.parseInt(httpProxyPort);
         }
         proxyScheme = "http";
@@ -301,15 +301,15 @@ public class Http {
     } else { // https by default
       String httpsProxyHost = System.getProperty("https.proxyHost");
       String httpsProxyPort = System.getProperty("https.proxyPort");
-      if (isNotEmpty(httpsProxyHost)) {
+      if (hasSome(httpsProxyHost)) {
         proxyHost = httpsProxyHost;
-        if (isNotEmpty(httpsProxyHost)) {
+        if (hasSome(httpsProxyHost)) {
           proxyPort = Integer.parseInt(httpsProxyPort);
         }
         proxyScheme = "https";
       }
     }
-    return isNotEmpty(proxyHost) ? new HttpHost(proxyHost, proxyPort, proxyScheme) : null;
+    return hasSome(proxyHost) ? new HttpHost(proxyHost, proxyPort, proxyScheme) : null;
   }
 
   public static HttpHost getHttpProxyHost(String url) {
@@ -386,7 +386,7 @@ public class Http {
     try {
       URI uri = getNormalizedURI(url);
       String hostName = uri.getHost();
-      if (isNotEmpty(hostName) && uri.getPort() > 0) {
+      if (hasSome(hostName) && uri.getPort() > 0) {
         hostName += ":" + uri.getPort();
       }
       return hostName;
@@ -435,7 +435,7 @@ public class Http {
     OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
     String user = getProxyUserName();
-    if (isNotEmpty(user)) {
+    if (hasSome(user)) {
       log.info("###Using proxy Auth");
       String password = getProxyPassword();
       builder.proxyAuthenticator((route, response) -> {
@@ -457,7 +457,7 @@ public class Http {
 
   // Need to add url encoding here
   public static String getProxyPassword() {
-    if (isNotEmpty(getProxyUserName())) {
+    if (hasSome(getProxyUserName())) {
       return System.getProperty(getProxyPrefix() + "proxyPassword");
     }
     return null;
@@ -465,7 +465,7 @@ public class Http {
 
   public static String getProxyScheme() {
     String proxyScheme = System.getProperty("proxyScheme");
-    if (isNotEmpty(proxyScheme)) {
+    if (hasSome(proxyScheme)) {
       return proxyScheme;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -69,10 +69,10 @@ public class AutoLogContext implements AutoCloseable {
 
   @Override
   public void close() {
-    if (isNotEmpty(handles)) {
+    if (hasSome(handles)) {
       handles.forEach(MDCCloseable::close);
     }
-    if (isNotEmpty(previous)) {
+    if (hasSome(previous)) {
       for (Map.Entry<String, String> entry : previous.entrySet()) {
         MDC.put(entry.getKey(), entry.getValue());
       }

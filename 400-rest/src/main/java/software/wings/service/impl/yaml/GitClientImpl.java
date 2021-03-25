@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.ADMIN;
@@ -30,7 +30,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
@@ -150,7 +149,7 @@ public class GitClientImpl implements GitClient {
     CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), gitConfig);
     try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
                        .setDirectory(new File(gitRepoDirectory))
-                       .setBranch(isEmpty(branch) ? null : branch)
+                       .setBranch(hasNone(branch) ? null : branch)
                        // if set to <code>true</code> no branch will be checked out, after the clone.
                        // This enhances performance of the clone command when there is no need for a checked out branch.
                        .setNoCheckout(noCheckout)
@@ -349,7 +348,7 @@ public class GitClientImpl implements GitClient {
 
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
       try {
-        if (isNotEmpty(gitConfig.getBranch())) {
+        if (hasSome(gitConfig.getBranch())) {
           Ref ref = git.checkout()
                         .setCreateBranch(true)
                         .setName(gitConfig.getBranch())
@@ -372,7 +371,7 @@ public class GitClientImpl implements GitClient {
     } catch (IOException | GitAPIException ex) {
       log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException(format("Unable to checkout given reference: %s",
-                                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
+                                  hasNone(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
           USER);
     }
   }
@@ -451,7 +450,7 @@ public class GitClientImpl implements GitClient {
     We do not need to specifically git add every added/modified file. git add . will take care
     of this
      */
-    if (isNotEmpty(filesToAdd)) {
+    if (hasSome(filesToAdd)) {
       try {
         git.add().addFilepattern(".").call();
       } catch (GitAPIException ex) {
@@ -623,11 +622,11 @@ public class GitClientImpl implements GitClient {
   }
 
   private void validateRequiredArgsForFilesBetweenCommit(String oldCommitId, String newCommitId) {
-    if (isEmpty(oldCommitId)) {
+    if (hasNone(oldCommitId)) {
       throw new YamlException("Old commit id can not be empty", USER_ADMIN);
     }
 
-    if (isEmpty(newCommitId)) {
+    if (hasNone(newCommitId)) {
       throw new YamlException("New commit id can not be empty", USER_ADMIN);
     }
   }
@@ -728,7 +727,7 @@ public class GitClientImpl implements GitClient {
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
 
-        if (isNotEmpty(gitFiles)) {
+        if (hasSome(gitFiles)) {
           gitFiles.forEach(gitFile -> log.info("File fetched : " + gitFile.getFilePath()));
         }
         return GitFetchFilesResult.builder()
@@ -791,7 +790,7 @@ public class GitClientImpl implements GitClient {
 
   private Predicate<Path> matchingFilesExtensions(GitFetchFilesRequest gitRequest) {
     return path -> {
-      if (isEmpty(gitRequest.getFileExtensions())) {
+      if (hasNone(gitRequest.getFileExtensions())) {
         return true;
       } else {
         for (String fileExtension : gitRequest.getFileExtensions()) {
@@ -806,15 +805,15 @@ public class GitClientImpl implements GitClient {
 
   private void validateRequiredArgs(GitFetchFilesRequest gitRequest, GitConfig gitConfig) {
     // FilePath cant empty as well as (Branch and commitId both cant be empty)
-    if (isEmpty(gitRequest.getFilePaths())) {
+    if (hasNone(gitRequest.getFilePaths())) {
       throw new InvalidRequestException("FilePaths  can not be empty", USER);
     }
 
-    if (gitRequest.isUseBranch() && isEmpty(gitRequest.getBranch())) {
+    if (gitRequest.isUseBranch() && hasNone(gitRequest.getBranch())) {
       throw new InvalidRequestException("useBranch was set but branch is not provided", USER);
     }
 
-    if (!gitRequest.isUseBranch() && isEmpty(gitRequest.getCommitId())) {
+    if (!gitRequest.isUseBranch() && hasNone(gitRequest.getCommitId())) {
       throw new InvalidRequestException("useBranch was false but CommitId was not provided", USER);
     }
 
@@ -1092,10 +1091,10 @@ public class GitClientImpl implements GitClient {
                      .getPrincipal(); // set principal as username
     }
     if (HTTP_PASSWORD == gitConfig.getAuthenticationScheme()) {
-      if (EmptyPredicate.isEmpty(username)) {
+      if (hasNone(username)) {
         log.info(String.format("The user name is null in the git config. Account id: %s", gitConfig.getAccountId()));
       }
-      if (EmptyPredicate.isEmpty(password)) {
+      if (hasNone(password)) {
         log.info(String.format("The password is null in the git config. Account id: %s", gitConfig.getAccountId()));
       }
     }

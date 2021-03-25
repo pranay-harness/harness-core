@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,7 +17,7 @@ public interface AccountStatus {
   String INACTIVE = "INACTIVE";
 
   static boolean isValid(String status) {
-    if (isEmpty(status)) {
+    if (hasNone(status)) {
       return false;
     }
 

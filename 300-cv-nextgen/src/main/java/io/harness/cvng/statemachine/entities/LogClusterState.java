@@ -1,6 +1,6 @@
 package io.harness.cvng.statemachine.entities;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
@@ -30,7 +30,7 @@ public abstract class LogClusterState extends AnalysisState {
   @Override
   public AnalysisState execute() {
     List<String> taskIds = scheduleAnalysis(getInputs());
-    if (isNotEmpty(taskIds)) {
+    if (hasSome(taskIds)) {
       if (workerTaskIds == null) {
         workerTaskIds = new HashSet<>();
       }

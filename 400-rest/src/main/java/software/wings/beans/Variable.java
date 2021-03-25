@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
@@ -70,7 +70,7 @@ public class Variable {
         .description(description)
         .mandatory(mandatory)
         .fixed(fixed)
-        .metadata(isNotEmpty(metadata) ? new HashMap<>(metadata) : new HashMap<>())
+        .metadata(hasSome(metadata) ? new HashMap<>(metadata) : new HashMap<>())
         .allowedValues(allowedValues)
         .allowedList(allowedList)
         .allowMultipleValues(allowMultipleValues)
@@ -85,7 +85,7 @@ public class Variable {
         .description(description)
         .mandatory(mandatory)
         .fixed(fixed)
-        .metadata(isNotEmpty(metadata) ? new HashMap<>(metadata) : new HashMap<>())
+        .metadata(hasSome(metadata) ? new HashMap<>(metadata) : new HashMap<>())
         .allowedValues(allowedValues)
         .allowedList(allowedList)
         .allowMultipleValues(allowMultipleValues);
@@ -259,7 +259,7 @@ public class Variable {
     }
 
     public VariableBuilder parentFields(Map<String, String> parentFields) {
-      if (!isEmpty(parentFields)) {
+      if (!hasNone(parentFields)) {
         this.metadata.put(PARENT_FIELDS, parentFields);
       }
 

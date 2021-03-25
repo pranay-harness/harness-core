@@ -1,6 +1,6 @@
 package io.harness.ng.core.entityactivity.mapper;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -85,7 +85,7 @@ public class EntityActivityProtoToRestDTOMapper {
   }
 
   private List<ErrorDetail> getErrorsList(List<EntityActivityCreateDTO.ErrorDetailProto> errorsProtoDTOs) {
-    if (isEmpty(errorsProtoDTOs)) {
+    if (hasNone(errorsProtoDTOs)) {
       return Collections.emptyList();
     }
     return errorsProtoDTOs.stream().map(this::createErrorDetail).collect(Collectors.toList());

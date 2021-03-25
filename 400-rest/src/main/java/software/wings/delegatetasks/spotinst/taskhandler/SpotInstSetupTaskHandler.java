@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -88,7 +88,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     logCallback.saveExecutionLog(format("Querying Spotinst for existing Elastigroups with prefix: [%s]", prefix));
     List<ElastiGroup> elastiGroups = spotInstHelperServiceDelegate.listAllElastiGroups(
         spotInstToken, spotInstAccountId, setupTaskParameters.getElastiGroupNamePrefix());
-    if (isNotEmpty(elastiGroups)) {
+    if (hasSome(elastiGroups)) {
       elastiGroupVersion =
           Integer.parseInt(elastiGroups.get(elastiGroups.size() - 1).getName().substring(prefix.length())) + 1;
     }
@@ -108,7 +108,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
      */
     List<ElastiGroup> groupsWithoutInstances = newArrayList();
     List<ElastiGroup> groupToDownsizeDuringDeploy = emptyList();
-    if (isNotEmpty(elastiGroups)) {
+    if (hasSome(elastiGroups)) {
       groupToDownsizeDuringDeploy = singletonList(elastiGroups.get(elastiGroups.size() - 1));
       for (int i = 0; i < elastiGroups.size() - 1; i++) {
         ElastiGroup elastigroupCurrent = elastiGroups.get(i);
@@ -238,7 +238,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
           ElastiGroupLoadBalancerConfig.builder().loadBalancers(generateLBConfigs(lbDetailList)).build());
     }
     launchSpecificationMap.put(ELASTI_GROUP_IMAGE_CONFIG, image);
-    if (isNotEmpty(userData)) {
+    if (hasSome(userData)) {
       launchSpecificationMap.put(ELASTI_GROUP_USER_DATA_CONFIG, userData);
     }
   }

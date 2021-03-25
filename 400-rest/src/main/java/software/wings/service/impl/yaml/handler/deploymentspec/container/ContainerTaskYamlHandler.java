@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -71,7 +71,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       ContainerDefinitionYamlHandler containerDefYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.CONTAINER_DEFINITION);
       List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
-      if (isNotEmpty(containerDefinitions)) {
+      if (hasSome(containerDefinitions)) {
         ContainerDefinition containerDefinition = containerDefinitions.get(0);
         ContainerDefinition.Yaml containerDefYaml =
             containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());

@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -25,14 +25,14 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return true;
     }
     String allowedChars = (String) ((ConstraintValidatorContextImpl) context)
                               .getConstraintDescriptor()
                               .getAttributes()
                               .get("charSetString");
-    if (isEmpty(allowedChars)) {
+    if (hasNone(allowedChars)) {
       allowedChars = ALLOWED_CHARS_STRING_DEFAULT;
     }
     return Sets.newHashSet(Lists.charactersOf(allowedChars)).containsAll(Lists.charactersOf(value));
@@ -40,7 +40,7 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
 
   // A static method added in case we need to do the same validation on some string w/o the annotation.
   public static boolean isValid(String value) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return true;
     }
     return ALLOWED_CHARS_SET_DEFAULT.containsAll(Sets.newHashSet(Lists.charactersOf(value)));
@@ -51,7 +51,7 @@ public class EntityNameValidator implements ConstraintValidator<EntityName, Stri
    * Must be completely kept in this class.
    */
   public static String getMappedString(String string) {
-    if (isEmpty(string)) {
+    if (hasNone(string)) {
       return string;
     }
     StringBuilder sb = new StringBuilder();

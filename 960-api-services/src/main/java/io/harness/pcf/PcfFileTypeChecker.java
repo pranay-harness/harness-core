@@ -1,6 +1,6 @@
 package io.harness.pcf;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
@@ -73,7 +73,7 @@ public class PcfFileTypeChecker {
   private boolean isApplicationManifest(Map<String, Object> map) {
     if (map.containsKey(APPLICATION_YML_ELEMENT)) {
       List<Map> applicationMaps = (List<Map>) map.get(APPLICATION_YML_ELEMENT);
-      if (isEmpty(applicationMaps)) {
+      if (hasNone(applicationMaps)) {
         return false;
       }
 

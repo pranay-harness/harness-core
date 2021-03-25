@@ -1,7 +1,7 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
 import static io.harness.persistence.GoogleDataStoreAware.readString;
@@ -143,9 +143,9 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     this.host = host;
     this.level = level;
     this.tag = tag;
-    this.groupName = isEmpty(groupName) ? DEFAULT_GROUP_NAME : groupName;
-    this.values = isEmpty(values) ? new HashMap<>() : values;
-    this.deeplinkMetadata = isEmpty(deeplinkMetadata) ? new HashMap<>() : deeplinkMetadata;
+    this.groupName = hasNone(groupName) ? DEFAULT_GROUP_NAME : groupName;
+    this.values = hasNone(values) ? new HashMap<>() : values;
+    this.deeplinkMetadata = hasNone(deeplinkMetadata) ? new HashMap<>() : deeplinkMetadata;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
 
@@ -171,10 +171,10 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
     addFieldIfNotEmpty(recordBuilder, "tag", tag, false);
     addFieldIfNotEmpty(recordBuilder, "groupName", groupName, false);
 
-    if (isNotEmpty(values)) {
+    if (hasSome(values)) {
       addFieldIfNotEmpty(recordBuilder, "values", JsonUtils.asJson(values), true);
     }
-    if (isNotEmpty(deeplinkMetadata)) {
+    if (hasSome(deeplinkMetadata)) {
       addFieldIfNotEmpty(recordBuilder, "deeplinkMetadata", JsonUtils.asJson(deeplinkMetadata), true);
     }
 
@@ -207,17 +207,17 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
             .build();
 
     final String level = readString(entity, "level");
-    if (isNotEmpty(level)) {
+    if (hasSome(level)) {
       dataRecord.setLevel(ClusterLevel.valueOf(level));
     }
 
     final String valuesJson = readString(entity, "values");
-    if (isNotEmpty(valuesJson)) {
+    if (hasSome(valuesJson)) {
       dataRecord.setValues(JsonUtils.asObject(valuesJson, new TypeReference<Map<String, Double>>() {}));
     }
 
     final String deepLinkJson = readString(entity, "deeplinkMetadata");
-    if (isNotEmpty(deepLinkJson)) {
+    if (hasSome(deepLinkJson)) {
       dataRecord.setDeeplinkMetadata(JsonUtils.asObject(deepLinkJson, new TypeReference<Map<String, String>>() {}));
     }
     return dataRecord;
@@ -238,7 +238,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
   }
 
   private void appendIfNecessary(StringBuilder keyBuilder, String value) {
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       keyBuilder.append(':').append(value);
     }
   }

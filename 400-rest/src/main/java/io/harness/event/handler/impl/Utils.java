@@ -1,7 +1,7 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -38,7 +38,7 @@ public class Utils {
   }
 
   public String getFirstName(String name, String email) {
-    if (isEmpty(name) || name.equals(email)) {
+    if (hasNone(name) || name.equals(email)) {
       return null;
     }
 
@@ -52,7 +52,7 @@ public class Utils {
   }
 
   public String getLastName(String name, String email) {
-    if (isEmpty(name) || name.equals(email)) {
+    if (hasNone(name) || name.equals(email)) {
       return null;
     }
 
@@ -76,7 +76,7 @@ public class Utils {
   }
 
   public String getErrorMsg(List<Error> errors) {
-    if (isEmpty(errors)) {
+    if (hasNone(errors)) {
       return "No error msg reported in response";
     }
 
@@ -91,7 +91,7 @@ public class Utils {
 
   public User getUser(Map<String, String> properties) {
     String email = properties.get(EMAIL_ID);
-    if (isEmpty(email)) {
+    if (hasNone(email)) {
       log.error("User email is empty");
       return null;
     }
@@ -103,7 +103,7 @@ public class Utils {
     }
 
     List<Account> accounts = user.getAccounts();
-    if (isEmpty(accounts)) {
+    if (hasNone(accounts)) {
       log.info("User {} is not assigned to any accounts", email);
       return null;
     } else {

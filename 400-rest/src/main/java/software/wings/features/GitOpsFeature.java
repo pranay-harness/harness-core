@@ -1,7 +1,7 @@
 package software.wings.features;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
@@ -57,7 +57,7 @@ public class GitOpsFeature extends AbstractUsageLimitedFeature implements Compli
     }
     @SuppressWarnings("unchecked")
     List<String> sourceReposToRetain = (List<String>) requiredInfoToLimitUsage.get("sourceReposToRetain");
-    if (!isEmpty(sourceReposToRetain)) {
+    if (!hasNone(sourceReposToRetain)) {
       settingsService.retainSelectedGitConnectorsAndDeleteRest(accountId, sourceReposToRetain);
     }
 

@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -10,7 +10,6 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.EphemeralOrchestrationGraphConverter;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -70,7 +69,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    if (isEmpty(nodeExecutions)) {
+    if (hasNone(nodeExecutions)) {
       throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
     }
 
@@ -212,7 +211,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    if (isEmpty(nodeExecutions)) {
+    if (hasNone(nodeExecutions)) {
       throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
     }
 
@@ -292,7 +291,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions) {
     return nodeExecutions.stream()
-        .filter(node -> EmptyPredicate.isEmpty(node.getParentId()) && EmptyPredicate.isEmpty(node.getPreviousId()))
+        .filter(node -> hasNone(node.getParentId()) && hasNone(node.getPreviousId()))
         .findFirst()
         .orElseThrow(() -> new InvalidRequestException("Starting node is not found"))
         .getUuid();

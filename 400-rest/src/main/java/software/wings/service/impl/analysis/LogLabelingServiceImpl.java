@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.stream.Collectors.toMap;
@@ -109,12 +109,12 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   private List<LogDataRecord> createDataRecords(
       String uuid, int timesLabelled, Map<String, Map<String, SplunkAnalysisCluster>> clusters) {
-    if (isEmpty(clusters)) {
+    if (hasNone(clusters)) {
       return null;
     }
     List<LogDataRecord> returnList = new ArrayList<>();
     for (Map.Entry<String, Map<String, SplunkAnalysisCluster>> entry : clusters.entrySet()) {
-      if (isNotEmpty(entry.getValue())) {
+      if (hasSome(entry.getValue())) {
         for (SplunkAnalysisCluster cluster : entry.getValue().values()) {
           LogDataRecord record = new LogDataRecord();
           record.setLogMessage(cluster.getText());
@@ -160,7 +160,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     List<CVFeedbackRecord> returnList =
         feedbackRecords.stream()
-            .filter(record -> isEmpty(record.getSupervisedLabel()) && !record.isDuplicate())
+            .filter(record -> hasNone(record.getSupervisedLabel()) && !record.isDuplicate())
             .collect(Collectors.toList());
 
     int toIndex = Integer.min(returnList.size(), count);
@@ -213,7 +213,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     feedbackRecords.forEach(feedbackRecord -> {
       String label = feedbackRecord.getSupervisedLabel();
-      if (isNotEmpty(label)) {
+      if (hasSome(label)) {
         if (!sampleRecords.containsKey(label)) {
           sampleRecords.put(label, new ArrayList<>());
         }
@@ -222,7 +222,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     });
 
     // randomize 2 per label.
-    if (isNotEmpty(sampleRecords)) {
+    if (hasSome(sampleRecords)) {
       sampleRecords.forEach((label, samples) -> {
         List<CVFeedbackRecord> samplesForLabel = new ArrayList<>();
         if (samples.size() <= 2) {
@@ -283,7 +283,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return false;
     }
-    if (isEmpty(feedbackRecordMap)) {
+    if (hasNone(feedbackRecordMap)) {
       return true;
     }
     List<CVFeedbackRecord> recordsToSave = new ArrayList<>();
@@ -361,18 +361,17 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
     List<LabeledLogRecord> labeledLogRecordList = dataStoreService.list(LabeledLogRecord.class, logRecordPageRequest);
     Map<String, List<String>> labelLogTextMap = new HashMap<>();
-    if (isNotEmpty(labeledLogRecordList)) {
+    if (hasSome(labeledLogRecordList)) {
       labeledLogRecordList.forEach(record -> {
         List<String> feedbacksToFetch = new ArrayList<>(), l2IdsToFetch = new ArrayList<>();
         List<String> feedbackList =
-            isNotEmpty(record.getFeedbackIds()) ? Lists.newArrayList(record.getFeedbackIds()) : new ArrayList<>();
+            hasSome(record.getFeedbackIds()) ? Lists.newArrayList(record.getFeedbackIds()) : new ArrayList<>();
         while (feedbacksToFetch.size() < feedbackList.size() && feedbacksToFetch.size() < 20) {
           feedbacksToFetch.add(feedbackList.get(random.nextInt(feedbackList.size())));
         }
 
-        List<String> l2List = isNotEmpty(record.getLogDataRecordIds())
-            ? Lists.newArrayList(record.getLogDataRecordIds())
-            : new ArrayList<>();
+        List<String> l2List = hasSome(record.getLogDataRecordIds()) ? Lists.newArrayList(record.getLogDataRecordIds())
+                                                                    : new ArrayList<>();
         while (l2IdsToFetch.size() < l2List.size() && l2IdsToFetch.size() < 20) {
           l2IdsToFetch.add(l2List.get(random.nextInt(l2List.size())));
         }
@@ -403,7 +402,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
             .build();
 
     List<LogDataRecord> logs = dataStoreService.list(LogDataRecord.class, logDataRecordPageRequest);
-    if (isNotEmpty(logs)) {
+    if (hasSome(logs)) {
       logs = logs.stream().filter(logObject -> logObject.getTimesLabeled() == 0).collect(Collectors.toList());
       List<LogDataRecord> logsToReturn = new ArrayList<>();
       while (logsToReturn.size() < 5) {
@@ -416,7 +415,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
 
   @Override
   public boolean saveLabeledL2AndFeedback(List<LabeledLogRecord> labeledLogRecords) {
-    if (isNotEmpty(labeledLogRecords)) {
+    if (hasSome(labeledLogRecords)) {
       labeledLogRecords.forEach(labeledLogRecord -> {
         String label = labeledLogRecord.getLabel();
 
@@ -427,7 +426,7 @@ public class LogLabelingServiceImpl implements LogLabelingService {
                 .addFilter(LabeledLogRecordKeys.serviceId, Operator.EQ, labeledLogRecord.getServiceId())
                 .build();
         List<LabeledLogRecord> recordList = dataStoreService.list(LabeledLogRecord.class, pageRequest);
-        if (isEmpty(recordList)) {
+        if (hasNone(recordList)) {
           recordList = new ArrayList<>();
           recordList.add(labeledLogRecord);
         } else {

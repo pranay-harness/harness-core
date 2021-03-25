@@ -71,7 +71,7 @@ public class CollectionUtils {
     return strings.stream()
         .filter(Objects::nonNull)
         .map(String::trim)
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .map(String::toLowerCase)
         .collect(toSet());
   }

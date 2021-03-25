@@ -2,6 +2,7 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -25,7 +26,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
@@ -437,7 +437,7 @@ public class InstanceFetchState extends State {
   }
 
   private List<String> getRenderedTags(ExecutionContext context) {
-    if (EmptyPredicate.isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       return tags.stream()
           .map(context::renderExpression)
           .filter(StringUtils::isNotBlank)

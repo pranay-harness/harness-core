@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -46,7 +46,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
     yaml.setDescription(bean.getDescription());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
 
-    if (isNotEmpty(bean.getVariables())) {
+    if (hasSome(bean.getVariables())) {
       NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
       List<NameValuePair.Yaml> nvpYamlList =
           bean.getVariables()
@@ -80,7 +80,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
 
     List<BlueprintProperty> blueprintProperties = null;
-    if (isNotEmpty(yaml.getProperties())) {
+    if (hasSome(yaml.getProperties())) {
       blueprintProperties =
           yaml.getProperties()
               .stream()
@@ -90,7 +90,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
                                                           .value(yamlProperty.getValue())
                                                           .valueType(yamlProperty.getValueType())
                                                           .build();
-                if (isNotEmpty(yamlProperty.getFields())) {
+                if (hasSome(yamlProperty.getFields())) {
                   List<NameValuePair> fields =
                       yamlProperty.getFields()
                           .stream()
@@ -128,7 +128,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
 
     bean.setAccountId(appService.getAccountIdByAppId(appId));
 
-    if (isNotEmpty(yaml.getVariables())) {
+    if (hasSome(yaml.getVariables())) {
       List<NameValuePair> nameValuePairList = yaml.getVariables()
                                                   .stream()
                                                   .map(nvpYaml

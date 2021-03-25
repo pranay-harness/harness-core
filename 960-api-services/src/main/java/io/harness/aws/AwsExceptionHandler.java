@@ -1,6 +1,6 @@
 package io.harness.aws;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
@@ -67,13 +67,13 @@ public class AwsExceptionHandler {
   public static void handleAmazonClientException(AmazonClientException amazonClientException) {
     log.error("AWS API Client call exception: {}", amazonClientException.getMessage());
     String errorMessage = amazonClientException.getMessage();
-    if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
+    if (hasSome(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
       throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
               + " have required permissions.",
           amazonClientException, USER);
     } else {
       log.error("Unhandled aws exception");
-      throw new InvalidRequestException(isNotEmpty(errorMessage) ? errorMessage : "Unknown Aws client exception", USER);
+      throw new InvalidRequestException(hasSome(errorMessage) ? errorMessage : "Unknown Aws client exception", USER);
     }
   }
 }

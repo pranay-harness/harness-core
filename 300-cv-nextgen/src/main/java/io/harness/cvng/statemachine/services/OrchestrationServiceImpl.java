@@ -1,7 +1,7 @@
 package io.harness.cvng.statemachine.services;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -95,7 +95,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       return;
     }
 
-    if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())
+    if (hasSome(orchestrator.getAnalysisStateMachineQueue())
         && orchestrator.getAnalysisStateMachineQueue().size() > 5) {
       log.info("For verification task ID {}, orchestrator has more than 5 tasks waiting."
               + " Please check if there is a growing backlog.",

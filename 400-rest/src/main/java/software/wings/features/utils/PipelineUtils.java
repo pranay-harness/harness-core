@@ -3,7 +3,7 @@ package software.wings.features.utils;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.baseline.WorkflowExecutionBaseline.WORKFLOW_ID_KEY;
 import static software.wings.features.utils.WorkflowUtils.hasApprovalSteps;
@@ -11,7 +11,7 @@ import static software.wings.features.utils.WorkflowUtils.hasApprovalSteps;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
@@ -44,7 +44,7 @@ public class PipelineUtils {
     return pipeline.getPipelineStages() != null
         && pipeline.getPipelineStages()
                .stream()
-               .filter(ps -> isNotEmpty(ps.getPipelineStageElements()))
+               .filter(ps -> hasSome(ps.getPipelineStageElements()))
                .anyMatch(ps -> ps.getPipelineStageElements().stream().anyMatch(predicate));
   }
 
@@ -58,7 +58,7 @@ public class PipelineUtils {
   public static PageRequest<Workflow> getPipelineWorkflowsPageRequest(Pipeline pipeline) {
     PageRequest<Workflow> workflowPageRequest = null;
     Set<String> workflowIds = getWorkflowIdsOfPipeline(pipeline);
-    if (isNotEmpty(workflowIds)) {
+    if (hasSome(workflowIds)) {
       workflowPageRequest = aPageRequest()
                                 .addFilter(WorkflowKeys.appId, EQ, pipeline.getAppId())
                                 .addFilter(WorkflowKeys.workflowType, Operator.EQ, WorkflowType.ORCHESTRATION)
@@ -70,14 +70,14 @@ public class PipelineUtils {
 
   private static Set<String> getWorkflowIdsOfPipeline(Pipeline pipeline) {
     Set<String> workflowIds = Sets.newHashSet();
-    if (isNotEmpty(pipeline.getPipelineStages())) {
+    if (hasSome(pipeline.getPipelineStages())) {
       pipeline.getPipelineStages()
           .stream()
-          .filter(ps -> isNotEmpty(ps.getPipelineStageElements()))
+          .filter(ps -> hasSome(ps.getPipelineStageElements()))
           .map(PipelineStage::getPipelineStageElements)
-          .filter(EmptyPredicate::isNotEmpty)
+          .filter(HasPredicate::hasSome)
           .forEach(pses -> pses.forEach(pse -> {
-            if (pse != null && isNotEmpty(pse.getProperties()) && pse.getProperties().containsKey(WORKFLOW_ID_KEY)) {
+            if (pse != null && hasSome(pse.getProperties()) && pse.getProperties().containsKey(WORKFLOW_ID_KEY)) {
               workflowIds.add((String) pse.getProperties().get(WORKFLOW_ID_KEY));
             }
           }));

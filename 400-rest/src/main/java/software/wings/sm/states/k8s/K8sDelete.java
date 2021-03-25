@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.sm.StateType.K8S_DELETE;
 
@@ -99,7 +99,7 @@ public class K8sDelete extends AbstractK8sState {
   }
 
   private boolean needsManifest() {
-    return isNotEmpty(filePaths);
+    return hasSome(filePaths);
   }
 
   private ExecutionResponse executeWithManifest(ExecutionContext context) {

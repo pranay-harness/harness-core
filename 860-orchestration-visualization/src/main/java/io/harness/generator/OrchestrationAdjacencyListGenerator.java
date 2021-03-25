@@ -1,6 +1,7 @@
 package io.harness.generator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.execution.ExecutionModeUtils.isChainMode;
 
 import static java.util.function.Function.identity;
@@ -15,7 +16,6 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
@@ -42,7 +42,7 @@ public class OrchestrationAdjacencyListGenerator {
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
-    if (isEmpty(startingNodeExId)) {
+    if (hasNone(startingNodeExId)) {
       log.warn("Starting node cannot be null");
       return null;
     }
@@ -121,7 +121,7 @@ public class OrchestrationAdjacencyListGenerator {
   }
 
   boolean isIdPresent(String id) {
-    return EmptyPredicate.isNotEmpty(id);
+    return hasSome(id);
   }
 
   boolean isChainNonInitialVertex(ExecutionMode mode, EdgeListInternal parentEdgeList) {
@@ -147,7 +147,7 @@ public class OrchestrationAdjacencyListGenerator {
 
   private Map<String, List<String>> obtainParentIdMap(List<NodeExecution> nodeExecutions) {
     return nodeExecutions.stream()
-        .filter(node -> EmptyPredicate.isNotEmpty(node.getParentId()) && EmptyPredicate.isEmpty(node.getPreviousId()))
+        .filter(node -> hasSome(node.getParentId()) && hasNone(node.getPreviousId()))
         .sorted(Comparator.comparingLong(NodeExecution::getCreatedAt))
         .collect(groupingBy(NodeExecution::getParentId, mapping(NodeExecution::getUuid, toList())));
   }
@@ -258,7 +258,7 @@ public class OrchestrationAdjacencyListGenerator {
 
         String nextNodeId = nodeExecution.getNextId();
         String parentNodeId = nodeExecution.getParentId();
-        if (EmptyPredicate.isNotEmpty(nextNodeId)) {
+        if (hasSome(nextNodeId)) {
           if (chainMap.containsKey(currentNodeId)) {
             chainMap.put(nextNodeId, chainMap.get(currentNodeId));
             chainMap.remove(currentNodeId);
@@ -276,7 +276,7 @@ public class OrchestrationAdjacencyListGenerator {
         }
 
         String prevNodeId = nodeExecution.getPreviousId();
-        if (EmptyPredicate.isNotEmpty(prevNodeId)) {
+        if (hasSome(prevNodeId)) {
           prevIds.add(prevNodeId);
         }
         adjacencyList.put(currentNodeId,

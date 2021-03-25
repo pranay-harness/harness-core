@@ -1,6 +1,6 @@
 package io.harness.distribution.constraint;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
@@ -233,14 +233,14 @@ public class ConstraintTest extends CategoryTest {
           }
           final List<Consumer> list =
               consumers.stream().filter(consumer -> consumer.getState() == ACTIVE).collect(Collectors.toList());
-          if (isEmpty(list)) {
+          if (hasNone(list)) {
             continue;
           }
           final Consumer consumer = list.get(random.nextInt(list.size()));
           registry.consumerFinished(constraint.getId(), unit1, consumer.getId(), null);
         } else {
           final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit1, registry);
-          if (runnableConsumers.getUsedPermits() == 0 && isEmpty(runnableConsumers.getConsumerIds())) {
+          if (runnableConsumers.getUsedPermits() == 0 && hasNone(runnableConsumers.getConsumerIds())) {
             break;
           }
 

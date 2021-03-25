@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -87,7 +87,7 @@ public class AbortHelper {
 
   private boolean markAbortingStateForNodes(
       @NotNull Interrupt interrupt, EnumSet<Status> statuses, List<NodeExecution> allNodeExecutions) {
-    if (isEmpty(allNodeExecutions)) {
+    if (hasNone(allNodeExecutions)) {
       log.warn(
           "No Node Executions could be marked as DISCONTINUING - planExecutionId: {}", interrupt.getPlanExecutionId());
       return false;
@@ -105,7 +105,7 @@ public class AbortHelper {
                                  .filter(NodeExecution::isChildSpawningMode)
                                  .map(NodeExecution::getUuid)
                                  .collect(toList());
-    if (isEmpty(parentIds)) {
+    if (hasNone(parentIds)) {
       return allInstanceIds;
     }
 

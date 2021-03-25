@@ -1,7 +1,7 @@
 package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.constants.Constants.X_AMZ_SNS_TOPIC_ARN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType.CONFIRM_TRIGGER_SUBSCRIPTION;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_FAILED;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_SUCCESSFUL;
@@ -86,7 +86,7 @@ public class TriggerWebhookConfirmationHelper {
     for (HeaderConfig headerConfig : event.getHeaders()) {
       if (headerConfig.getKey().equalsIgnoreCase(X_AMZ_SNS_TOPIC_ARN)) {
         List<String> values = headerConfig.getValues();
-        if (isNotEmpty(values) && values.size() == 1) {
+        if (hasSome(values) && values.size() == 1) {
           topicArn = values.get(0);
         }
         break;

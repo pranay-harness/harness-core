@@ -3,7 +3,7 @@ package io.harness.batch.processing.tasklet;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.populateNodePoolNameFromLabel;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
@@ -181,7 +181,7 @@ public class K8sPodInfoTasklet implements Tasklet {
 
     final Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
     Resource resourceLimit = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
-    if (!isEmpty(podInfo.getTotalResource().getLimitsMap())) {
+    if (!hasNone(podInfo.getTotalResource().getLimitsMap())) {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
 

@@ -1,6 +1,6 @@
 package io.harness.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Arrays.asList;
 
@@ -43,7 +43,7 @@ public class YamlRepresenter extends Representer {
 
     if (removeEmptyValues) {
       if (propertyValue == null || propertyValue.equals("")
-          || (propertyValue instanceof Collection<?> && isEmpty((Collection) propertyValue))) {
+          || (propertyValue instanceof Collection<?> && hasNone((Collection) propertyValue))) {
         return null;
       }
     }

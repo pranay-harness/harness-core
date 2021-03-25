@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.INDER;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -347,7 +347,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   private List<ChangeContext> getChangeSetContexts(String configFileName, String configFilePath,
       ChangeContext<ConfigFile.OverrideYaml> changeContext, boolean isEncrypted) throws IOException {
     List<ChangeContext> changeSetContext;
-    if (!isEncrypted && isNotEmpty(configFileName)) {
+    if (!isEncrypted && hasSome(configFileName)) {
       String configFileString = getYamlFile(configFileName);
       ChangeContext configFileChangeContext = getChangeContextForConfigFile(configFilePath, configFileString);
 

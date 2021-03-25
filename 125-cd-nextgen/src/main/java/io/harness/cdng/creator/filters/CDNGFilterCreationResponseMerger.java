@@ -1,6 +1,6 @@
 package io.harness.cdng.creator.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -20,19 +20,19 @@ public class CDNGFilterCreationResponseMerger implements FilterCreationResponseM
     CdFilter finalCdFilter = (CdFilter) finalResponse.getPipelineFilter();
     CdFilter currentCdFilter = (CdFilter) current.getPipelineFilter();
 
-    if (isNotEmpty(currentCdFilter.getDeploymentTypes())) {
+    if (hasSome(currentCdFilter.getDeploymentTypes())) {
       finalCdFilter.addDeploymentTypes(currentCdFilter.getDeploymentTypes());
     }
 
-    if (isNotEmpty(currentCdFilter.getInfrastructureTypes())) {
+    if (hasSome(currentCdFilter.getInfrastructureTypes())) {
       finalCdFilter.addInfrastructureTypes(currentCdFilter.getInfrastructureTypes());
     }
 
-    if (isNotEmpty(currentCdFilter.getEnvironmentNames())) {
+    if (hasSome(currentCdFilter.getEnvironmentNames())) {
       finalCdFilter.addEnvironmentNames(currentCdFilter.getEnvironmentNames());
     }
 
-    if (isNotEmpty(currentCdFilter.getServiceNames())) {
+    if (hasSome(currentCdFilter.getServiceNames())) {
       finalCdFilter.addServiceNames(currentCdFilter.getServiceNames());
     }
   }

@@ -1,6 +1,6 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
@@ -34,16 +34,16 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
   @Override
   public void transform(Template template, Map<String, Object> properties) {
     ShellScriptTemplate shellScriptTemplate = (ShellScriptTemplate) template.getTemplateObject();
-    if (isNotEmpty(shellScriptTemplate.getScriptType())) {
+    if (hasSome(shellScriptTemplate.getScriptType())) {
       properties.put(SCRIPT_TYPE, shellScriptTemplate.getScriptType());
     }
-    if (isNotEmpty(shellScriptTemplate.getScriptString())) {
+    if (hasSome(shellScriptTemplate.getScriptString())) {
       properties.put(SCRIPT_STRING, shellScriptTemplate.getScriptString());
     }
-    if (isNotEmpty(shellScriptTemplate.getOutputVars())) {
+    if (hasSome(shellScriptTemplate.getOutputVars())) {
       properties.put(OUTPUT_VARS, shellScriptTemplate.getOutputVars());
     }
-    if (isNotEmpty(shellScriptTemplate.getSecretOutputVars())) {
+    if (hasSome(shellScriptTemplate.getSecretOutputVars())) {
       properties.put(SECRET_OUTPUT_VARS, shellScriptTemplate.getSecretOutputVars());
     }
 

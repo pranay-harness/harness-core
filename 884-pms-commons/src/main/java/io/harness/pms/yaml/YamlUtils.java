@@ -1,6 +1,6 @@
 package io.harness.pms.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.exception.InvalidRequestException;
@@ -235,7 +235,7 @@ public class YamlUtils {
       return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
-    if (isEmpty(qualifiedName)) {
+    if (hasNone(qualifiedName)) {
       return getQualifiedNameList(yamlNode.getParentNode(), fieldName);
     }
     if (qualifiedName.equals(fieldName)) {
@@ -321,7 +321,7 @@ public class YamlUtils {
   }
 
   public YamlNode findParentNode(YamlNode currentNode, String parentName) {
-    if (isEmpty(currentNode.getUuid())) {
+    if (hasNone(currentNode.getUuid())) {
       return null;
     }
     YamlNode parentNode = getGivenYamlNodeFromParentPath(currentNode, parentName);

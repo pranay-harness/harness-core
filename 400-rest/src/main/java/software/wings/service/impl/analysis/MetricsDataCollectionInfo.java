@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.logging.Misc.replaceUnicodeWithDot;
 
@@ -48,7 +48,7 @@ public abstract class MetricsDataCollectionInfo extends DataCollectionInfoV2 {
 
   public final void setHostsToGroupNameMap(Map<String, String> hostsToGroupNameMap) {
     Map<String, String> updatedMap = new HashMap<>();
-    if (isEmpty(hostsToGroupNameMap)) {
+    if (hasNone(hostsToGroupNameMap)) {
       this.hostsToGroupNameMap = updatedMap;
       return;
     }

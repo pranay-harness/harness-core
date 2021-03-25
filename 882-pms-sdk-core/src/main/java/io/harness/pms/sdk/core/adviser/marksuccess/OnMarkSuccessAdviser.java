@@ -1,8 +1,8 @@
 package io.harness.pms.sdk.core.adviser.marksuccess;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -29,7 +29,7 @@ public class OnMarkSuccessAdviser implements Adviser {
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     OnMarkSuccessAdviserParameters parameters = extractParameters(advisingEvent);
     Builder builder = MarkSuccessAdvise.newBuilder();
-    if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+    if (hasSome(parameters.getNextNodeId())) {
       builder.setNextNodeId(parameters.getNextNodeId());
     }
     return AdviserResponse.newBuilder().setMarkSuccessAdvise(builder.build()).setType(AdviseType.MARK_SUCCESS).build();
@@ -39,7 +39,7 @@ public class OnMarkSuccessAdviser implements Adviser {
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     OnMarkSuccessAdviserParameters adviserParameters = extractParameters(advisingEvent);
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
+    if (failureInfo != null && !hasNone(failureInfo.getFailureTypesValueList())) {
       return !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return true;

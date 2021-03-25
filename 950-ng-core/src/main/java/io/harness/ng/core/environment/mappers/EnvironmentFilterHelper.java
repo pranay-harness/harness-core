@@ -1,6 +1,6 @@
 package io.harness.ng.core.environment.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
@@ -14,13 +14,13 @@ public class EnvironmentFilterHelper {
   public Criteria createCriteriaForGetList(
       String accountId, String orgIdentifier, String projectIdentifier, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(EnvironmentKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(EnvironmentKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(EnvironmentKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.and(EnvironmentKeys.deleted).is(deleted);

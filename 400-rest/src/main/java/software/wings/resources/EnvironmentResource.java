@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -83,7 +83,7 @@ public class EnvironmentResource {
   public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter(EnvironmentKeys.appId, IN, appIds.toArray());
     }
     if (details) {

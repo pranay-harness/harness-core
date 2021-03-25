@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.ConstraintViolationExceptionMapper;
 
@@ -144,19 +144,19 @@ public class ResourceTestRule implements TestRule {
 
       property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
 
-      if (isNotEmpty(resourceTestRule.types)) {
+      if (hasSome(resourceTestRule.types)) {
         for (Class<?> provider : resourceTestRule.types) {
           register(provider);
         }
       }
 
-      if (isNotEmpty(resourceTestRule.properties)) {
+      if (hasSome(resourceTestRule.properties)) {
         for (Map.Entry<String, Object> property : resourceTestRule.properties.entrySet()) {
           property(property.getKey(), property.getValue());
         }
       }
 
-      if (isNotEmpty(resourceTestRule.instances)) {
+      if (hasSome(resourceTestRule.instances)) {
         for (Object instance : resourceTestRule.instances) {
           register(instance);
         }

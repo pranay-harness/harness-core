@@ -1,12 +1,12 @@
 package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -189,13 +189,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       log.info("Building URI for GET_CREATE_METADATA");
       Map<String, String> queryParams = new HashMap<>();
-      if (EmptyPredicate.isNotEmpty(parameters.getCreatemetaExpandParam())) {
+      if (hasSome(parameters.getCreatemetaExpandParam())) {
         queryParams.put("expand", parameters.getCreatemetaExpandParam());
       } else {
         queryParams.put("expand", "projects.issuetypes.fields");
       }
 
-      if (EmptyPredicate.isNotEmpty(parameters.getProject())) {
+      if (hasSome(parameters.getProject())) {
         queryParams.put("projectKeys", parameters.getProject());
       }
 
@@ -353,27 +353,27 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         boolean fieldsUpdated = false;
         FluentUpdate update = issue.update();
 
-        if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
+        if (hasSome(parameters.getSummary())) {
           update.field(Field.SUMMARY, parameters.getSummary());
           fieldsUpdated = true;
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getPriority())) {
+        if (hasSome(parameters.getPriority())) {
           update.field(Field.PRIORITY, parameters.getPriority());
           fieldsUpdated = true;
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getDescription())) {
+        if (hasSome(parameters.getDescription())) {
           update.field(Field.DESCRIPTION, parameters.getDescription());
           fieldsUpdated = true;
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
+        if (hasSome(parameters.getLabels())) {
           update.field(Field.LABELS, parameters.getLabels());
           fieldsUpdated = true;
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
+        if (hasSome(parameters.getCustomFields())) {
           setCustomFieldsOnUpdate(parameters, update);
           fieldsUpdated = true;
         }
@@ -382,11 +382,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           update.execute();
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getComment())) {
+        if (hasSome(parameters.getComment())) {
           issue.addComment(parameters.getComment());
         }
 
-        if (EmptyPredicate.isNotEmpty(parameters.getStatus())) {
+        if (hasSome(parameters.getStatus())) {
           updateStatus(issue, parameters.getStatus());
         }
 
@@ -504,19 +504,19 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       Issue.FluentCreate fluentCreate = jira.createIssue(parameters.getProject(), parameters.getIssueType())
                                             .field(Field.SUMMARY, parameters.getSummary());
 
-      if (EmptyPredicate.isNotEmpty(parameters.getPriority())) {
+      if (hasSome(parameters.getPriority())) {
         fluentCreate.field(Field.PRIORITY, parameters.getPriority());
       }
 
-      if (EmptyPredicate.isNotEmpty(parameters.getDescription())) {
+      if (hasSome(parameters.getDescription())) {
         fluentCreate.field(Field.DESCRIPTION, parameters.getDescription());
       }
 
-      if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
+      if (hasSome(parameters.getLabels())) {
         fluentCreate.field(Field.LABELS, parameters.getLabels());
       }
 
-      if (EmptyPredicate.isNotEmpty(parameters.getCustomFields())) {
+      if (hasSome(parameters.getCustomFields())) {
         setCustomFieldsOnCreate(parameters, fluentCreate);
       }
 
@@ -624,13 +624,13 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     log.info("Issue fetched successfully for {}", parameters.getIssueId());
     String approvalFieldValue = null;
-    if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
+    if (hasSome(parameters.getApprovalField())) {
       Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
       approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
     }
 
     String rejectionFieldValue = null;
-    if (EmptyPredicate.isNotEmpty(parameters.getRejectionField())) {
+    if (hasSome(parameters.getRejectionField())) {
       Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getRejectionField());
       rejectionFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
     }
@@ -639,7 +639,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         parameters.getIssueId(), parameters.getApprovalField(), approvalFieldValue, parameters.getRejectionField(),
         rejectionFieldValue);
 
-    if (EmptyPredicate.isNotEmpty(approvalFieldValue)
+    if (hasSome(approvalFieldValue)
         && StringUtils.equalsIgnoreCase(approvalFieldValue, parameters.getApprovalValue())) {
       log.info("IssueId: {} Approved", parameters.getIssueId());
       return JiraExecutionData.builder()
@@ -648,7 +648,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    if (EmptyPredicate.isNotEmpty(rejectionFieldValue)
+    if (hasSome(rejectionFieldValue)
         && StringUtils.equalsIgnoreCase(rejectionFieldValue, parameters.getRejectionValue())) {
       log.info("IssueId: {} Rejected", parameters.getIssueId());
       return JiraExecutionData.builder()
@@ -716,7 +716,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       jira = getJiraClient(parameters);
       issue = jira.getIssue(parameters.getIssueId());
       String message = "Waiting for Approval on ticket: " + issue.getKey();
-      if (EmptyPredicate.isNotEmpty(parameters.getApprovalField())) {
+      if (hasSome(parameters.getApprovalField())) {
         Map<String, String> fieldMap = (Map<String, String>) issue.getField(parameters.getApprovalField());
         approvalFieldValue = fieldMap.get(JIRA_APPROVAL_FIELD_KEY);
       }

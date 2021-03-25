@@ -1,8 +1,8 @@
 package io.harness.cvng.activity.services.impl;
 
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
@@ -368,7 +368,7 @@ public class ActivityServiceImpl implements ActivityService {
             .filter(DeploymentActivityKeys.deploymentTag, deploymentTag)
             .asList();
     Preconditions.checkState(
-        isNotEmpty(deploymentActivities), "No Deployment Activities were found for deployment tag: %s", deploymentTag);
+        hasSome(deploymentActivities), "No Deployment Activities were found for deployment tag: %s", deploymentTag);
     return deploymentActivities;
   }
 
@@ -441,16 +441,16 @@ public class ActivityServiceImpl implements ActivityService {
                                         .field(ActivityKeys.activityStartTime)
                                         .lessThan(endTime);
 
-    if (isNotEmpty(environmentIdentifier)) {
+    if (hasSome(environmentIdentifier)) {
       activityQuery = activityQuery.filter(ActivityKeys.environmentIdentifier, environmentIdentifier);
     }
-    if (isNotEmpty(serviceIdentifier)) {
+    if (hasSome(serviceIdentifier)) {
       activityQuery = activityQuery.filter(ActivityKeys.serviceIdentifier, serviceIdentifier);
     }
     List<Activity> activities = activityQuery.asList();
 
     List<ActivityDashboardDTO> activityDashboardDTOList = new ArrayList<>();
-    if (isNotEmpty(activities)) {
+    if (hasSome(activities)) {
       activities.forEach(activity -> {
         ActivityVerificationSummary summary = activity.getVerificationSummary();
         if (summary == null) {
@@ -474,7 +474,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private ActivityVerificationStatus getVerificationStatus(Activity activity, ActivityVerificationSummary summary) {
-    if (isEmpty(activity.getVerificationJobInstanceIds())) {
+    if (hasNone(activity.getVerificationJobInstanceIds())) {
       return ActivityVerificationStatus.IGNORED;
     }
     return summary == null ? ActivityVerificationStatus.NOT_STARTED : summary.getAggregatedStatus();
@@ -541,7 +541,7 @@ public class ActivityServiceImpl implements ActivityService {
                                     .exists()
                                     .asList(new FindOptions().limit(limitCounter));
 
-    if (isEmpty(activities)) {
+    if (hasNone(activities)) {
       log.info("No recent activities found for org {}, project {}", orgIdentifier, projectIdentifier);
       return null;
     }
@@ -582,13 +582,13 @@ public class ActivityServiceImpl implements ActivityService {
     List<VerificationJobInstance> jobInstancesToCreate = new ArrayList<>();
     List<VerificationJob> verificationJobs = new ArrayList<>();
     Map<String, Map<String, String>> runtimeDetailsMap = new HashMap<>();
-    if (isEmpty(activity.getVerificationJobRuntimeDetails())) {
+    if (hasNone(activity.getVerificationJobRuntimeDetails())) {
       // check to see if any other jobs are currently running
       List<VerificationJobInstance> runningInstances = verificationJobInstanceService.getRunningOrQueuedJobInstances(
           activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
           activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), VerificationJobType.HEALTH,
           activity.getActivityStartTime().plus(Duration.ofMinutes(HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS)));
-      if (isNotEmpty(runningInstances)) {
+      if (hasSome(runningInstances)) {
         log.info(
             "There are verification jobs that are already running for {}, {}, {}. So we will not trigger a new one",
             activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
@@ -605,7 +605,7 @@ public class ActivityServiceImpl implements ActivityService {
             activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(), jobIdentifier);
         Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
         verificationJobs.add(verificationJob);
-        if (isNotEmpty(jobDetail.getRuntimeValues())) {
+        if (hasSome(jobDetail.getRuntimeValues())) {
           runtimeDetailsMap.put(verificationJob.getIdentifier(), jobDetail.getRuntimeValues());
         }
       });
@@ -632,7 +632,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private void validateJob(VerificationJob verificationJob) {
     List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(verificationJob);
-    Preconditions.checkState(isNotEmpty(cvConfigs),
+    Preconditions.checkState(hasSome(cvConfigs),
         "No monitoring sources with identifiers %s defined for environment %s and service %s",
         verificationJob.getMonitoringSources(), verificationJob.getEnvIdentifier(),
         verificationJob.getServiceIdentifier());

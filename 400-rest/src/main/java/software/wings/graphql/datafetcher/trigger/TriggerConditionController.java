@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.ALL;
@@ -180,17 +180,17 @@ public class TriggerConditionController {
   private QLWebhookEvent populateGithubEvent(TriggerCondition triggerCondition) {
     String action = null;
     String eventType = null;
-    if (isNotEmpty(((WebHookTriggerCondition) triggerCondition).getEventTypes())) {
+    if (hasSome(((WebHookTriggerCondition) triggerCondition).getEventTypes())) {
       eventType = ((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue();
     }
 
     if (GitHubEventType.PULL_REQUEST.getValue().equals(eventType)
         || (GitHubEventType.PACKAGE.getValue().equals(eventType))) {
-      if (!isEmpty(((WebHookTriggerCondition) triggerCondition).getActions())) {
+      if (!hasNone(((WebHookTriggerCondition) triggerCondition).getActions())) {
         action = ((WebHookTriggerCondition) triggerCondition).getActions().get(0).getValue();
       }
     } else if (GitHubEventType.RELEASE.getValue().equals(eventType)) {
-      if (!isEmpty(((WebHookTriggerCondition) triggerCondition).getReleaseActions())) {
+      if (!hasNone(((WebHookTriggerCondition) triggerCondition).getReleaseActions())) {
         action = ((WebHookTriggerCondition) triggerCondition).getReleaseActions().get(0).getValue();
       }
     }
@@ -201,7 +201,7 @@ public class TriggerConditionController {
   private QLWebhookEvent populateGitlabEvent(TriggerCondition triggerCondition) {
     List<WebhookEventType> eventTypes = ((WebHookTriggerCondition) triggerCondition).getEventTypes();
     String event = null;
-    if (isNotEmpty(eventTypes)) {
+    if (hasSome(eventTypes)) {
       event = eventTypes.get(0).getValue();
     }
     return QLWebhookEvent.builder().event(event).build();
@@ -209,7 +209,7 @@ public class TriggerConditionController {
 
   private QLWebhookEvent populateBitbucketEvent(TriggerCondition triggerCondition) {
     List<BitBucketEventType> bitBucketEvents = ((WebHookTriggerCondition) triggerCondition).getBitBucketEvents();
-    if (isEmpty(bitBucketEvents)) {
+    if (hasNone(bitBucketEvents)) {
       return QLWebhookEvent.builder().build();
     }
     String eventType;
@@ -317,7 +317,7 @@ public class TriggerConditionController {
     }
     String artifactSourceId = triggerConditionInput.getArtifactConditionInput().getArtifactSourceId();
 
-    if (isEmpty(artifactSourceId)) {
+    if (hasNone(artifactSourceId)) {
       throw new InvalidRequestException("ArtifactSource must not be null nor empty", USER);
     }
 

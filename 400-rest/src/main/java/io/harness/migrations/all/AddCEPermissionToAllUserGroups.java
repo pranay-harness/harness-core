@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -39,7 +39,7 @@ public class AddCEPermissionToAllUserGroups implements Migration {
           userGroup = userGroups.next();
           AccountPermissions accountPermissions = userGroup.getAccountPermissions();
           Set<PermissionType> accountPermissionsSet = accountPermissions.getPermissions();
-          if (isNotEmpty(accountPermissionsSet)) {
+          if (hasSome(accountPermissionsSet)) {
             accountPermissionsSet.add(PermissionType.CE_VIEWER);
             if (accountPermissionsSet.contains(PermissionType.ACCOUNT_MANAGEMENT)) {
               accountPermissionsSet.add(PermissionType.CE_ADMIN);

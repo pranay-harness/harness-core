@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Collections.emptyList;
 
@@ -75,7 +75,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
         executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             "https://container.googleapis.com/", null));
       } else {
-        if (isEmpty(masterUrl)) {
+        if (hasNone(masterUrl)) {
           executionCapabilities.add(
               ClusterMasterUrlValidationCapability.builder().containerServiceParams(this).build());
         } else {

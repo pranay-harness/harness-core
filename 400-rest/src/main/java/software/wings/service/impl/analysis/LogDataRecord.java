@@ -2,7 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readBlob;
@@ -206,7 +206,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
       dataRecord.setTimesLabeled((int) readLong(entity, LogDataRecordKeys.timesLabeled));
     } catch (ClassCastException ex) {
       String timesLabeledValue = readString(entity, LogDataRecordKeys.timesLabeled);
-      if (isNotEmpty(timesLabeledValue)) {
+      if (hasSome(timesLabeledValue)) {
         dataRecord.setTimesLabeled(Integer.parseInt(timesLabeledValue));
       }
     }
@@ -215,7 +215,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
       dataRecord.setCount((int) readLong(entity, LogDataRecordKeys.count));
     } catch (ClassCastException ex) {
       String countVal = readString(entity, LogDataRecordKeys.count);
-      if (isNotEmpty(countVal)) {
+      if (hasSome(countVal)) {
         dataRecord.setCount(Integer.parseInt(countVal));
       }
     }

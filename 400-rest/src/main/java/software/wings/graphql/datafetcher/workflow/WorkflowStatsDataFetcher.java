@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.workflow;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -37,7 +37,7 @@ public class WorkflowStatsDataFetcher
       List<QLWorkflowAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Workflow.class;
     final List<String> groupByEntityList = new ArrayList<>();
-    if (isNotEmpty(groupByList)) {
+    if (hasSome(groupByList)) {
       groupByList.forEach(groupBy -> {
         if (groupBy.getEntityAggregation() != null) {
           groupByEntityList.add(groupBy.getEntityAggregation().name());

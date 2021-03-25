@@ -1,6 +1,7 @@
 package io.harness.pms.execution.utils;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.yaml.ParameterField;
 
 import lombok.experimental.UtilityClass;
@@ -11,7 +12,7 @@ public class SkipInfoUtils {
     if (skipCondition == null) {
       return null;
     }
-    if (EmptyPredicate.isNotEmpty(skipCondition.getValue())) {
+    if (hasSome(skipCondition.getValue())) {
       return skipCondition.getValue();
     }
     return skipCondition.getExpressionValue();

@@ -1,7 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -182,7 +182,7 @@ public abstract class ArtifactStream
   protected boolean validateParameters(String... parameters) {
     boolean found = false;
     for (String parameter : parameters) {
-      if (isNotEmpty(parameter) && parameter.startsWith("${")) {
+      if (hasSome(parameter) && parameter.startsWith("${")) {
         if (!wingsVariablePattern.matcher(parameter).find()) {
           throw new InvalidRequestException(
               format("Parameterized fields should match regex: [%s]", wingsVariablePattern.toString()));

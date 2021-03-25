@@ -1,6 +1,6 @@
 package software.wings.common;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.Misc.getDurationString;
 
@@ -402,7 +402,7 @@ public class NotificationMessageResolver {
           pipelineExecutionId = workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid();
         }
 
-        if (isEmpty(pipelineExecutionId)) {
+        if (hasNone(pipelineExecutionId)) {
           String envId = "empty";
           // Direct WF execution
           if (((ExecutionContextImpl) context).getEnv() != null) {

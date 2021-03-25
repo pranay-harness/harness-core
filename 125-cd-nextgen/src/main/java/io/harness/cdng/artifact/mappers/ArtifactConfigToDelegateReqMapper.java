@@ -1,9 +1,10 @@
 package io.harness.cdng.artifact.mappers;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -23,7 +24,7 @@ public class ArtifactConfigToDelegateReqMapper {
     // If both are empty, regex is latest among all docker artifacts.
     String tagRegex = artifactConfig.getTagRegex() != null ? artifactConfig.getTagRegex().getValue() : "";
     String tag = artifactConfig.getTag() != null ? artifactConfig.getTag().getValue() : "";
-    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
+    if (hasNone(tag) && hasNone(tagRegex)) {
       tagRegex = "\\*";
     }
     return DockerArtifactDelegateRequest.builder()
@@ -41,7 +42,7 @@ public class ArtifactConfigToDelegateReqMapper {
     // If both are empty, regex is latest among all gcr artifacts.
     String tagRegex = gcrArtifactConfig.getTagRegex() != null ? gcrArtifactConfig.getTagRegex().getValue() : "";
     String tag = gcrArtifactConfig.getTag() != null ? gcrArtifactConfig.getTag().getValue() : "";
-    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
+    if (hasNone(tag) && hasNone(tagRegex)) {
       tagRegex = "\\*";
     }
     return GcrArtifactDelegateRequest.builder()
@@ -60,7 +61,7 @@ public class ArtifactConfigToDelegateReqMapper {
     // If both are empty, regex is latest among all ecr artifacts.
     String tagRegex = ecrArtifactConfig.getTagRegex() != null ? ecrArtifactConfig.getTagRegex().getValue() : "";
     String tag = ecrArtifactConfig.getTag() != null ? ecrArtifactConfig.getTag().getValue() : "";
-    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
+    if (hasNone(tag) && hasNone(tagRegex)) {
       tagRegex = "\\*";
     }
     return EcrArtifactDelegateRequest.builder()

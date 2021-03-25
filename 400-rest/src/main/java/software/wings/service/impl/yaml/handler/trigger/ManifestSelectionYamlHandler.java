@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -49,7 +49,7 @@ public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, Manifest
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceName = yaml.getServiceName();
     Service service;
-    if (EmptyPredicate.isNotEmpty(serviceName)) {
+    if (hasSome(serviceName)) {
       service = serviceResourceService.getServiceByName(appId, serviceName);
       notNullCheck(serviceName + " doesn't exist", service);
     } else {

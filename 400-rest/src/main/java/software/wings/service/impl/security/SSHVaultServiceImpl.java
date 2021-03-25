@@ -3,8 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -20,7 +20,6 @@ import static java.time.Duration.ofMillis;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
@@ -70,7 +69,7 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
 
   @Override
   public List<SecretEngineSummary> listSecretEngines(SSHVaultConfig sshVaultConfig) {
-    if (isNotEmpty(sshVaultConfig.getUuid())) {
+    if (hasSome(sshVaultConfig.getUuid())) {
       SSHVaultConfig savedVaultConfig = wingsPersistence.get(SSHVaultConfig.class, sshVaultConfig.getUuid());
       decryptVaultConfigSecretsInternal(savedVaultConfig, false);
       if (SecretString.SECRET_MASK.equals(sshVaultConfig.getAuthToken())) {
@@ -91,7 +90,7 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
 
   @Override
   public SSHVaultConfig getSSHVaultConfig(String accountId, String entityId) {
-    if (isEmpty(accountId) || isEmpty(entityId)) {
+    if (hasNone(accountId) || hasNone(entityId)) {
       return new SSHVaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
@@ -103,23 +102,23 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
   public String saveOrUpdateSSHVaultConfig(String accountId, SSHVaultConfig sshVaultConfig, boolean validate) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
-    return isEmpty(sshVaultConfig.getUuid()) ? saveVaultConfig(accountId, sshVaultConfig, validate)
+    return hasNone(sshVaultConfig.getUuid()) ? saveVaultConfig(accountId, sshVaultConfig, validate)
                                              : updateVaultConfig(accountId, sshVaultConfig, true, validate);
   }
 
   private void validateSSHVaultConfig(SSHVaultConfig sshVaultConfig) {
-    if (isEmpty(sshVaultConfig.getName())) {
+    if (hasNone(sshVaultConfig.getName())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Name can not be empty", USER);
     }
-    if (isEmpty(sshVaultConfig.getVaultUrl())) {
+    if (hasNone(sshVaultConfig.getVaultUrl())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "SSH Vault URL can not be empty", USER);
     }
-    if (isEmpty(sshVaultConfig.getSecretEngineName())) {
+    if (hasNone(sshVaultConfig.getSecretEngineName())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "SSH Secret engine name not specified", USER);
     }
     if (sshVaultConfig.getAccessType() == AccessType.APP_ROLE) {
       VaultAppRoleLoginResult loginResult = appRoleLogin(sshVaultConfig);
-      if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+      if (loginResult != null && hasSome(loginResult.getClientToken())) {
         sshVaultConfig.setAuthToken(loginResult.getClientToken());
       } else {
         String message =
@@ -190,7 +189,7 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
     UpdateOperations<SecretManagerConfig> updateOperations =
         wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
             .set(BaseVaultConfigKeys.authToken, sshVaultConfig.getAuthToken());
-    if (isNotEmpty(sshVaultConfig.getSecretId())) {
+    if (hasSome(sshVaultConfig.getSecretId())) {
       updateOperations.set(BaseVaultConfigKeys.secretId, sshVaultConfig.getSecretId());
     }
     sshVaultConfig =

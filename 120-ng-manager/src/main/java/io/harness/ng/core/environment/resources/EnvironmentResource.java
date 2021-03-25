@@ -1,7 +1,7 @@
 package io.harness.ng.core.environment.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -131,10 +131,10 @@ public class EnvironmentResource {
         EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
 
-    if (isNotEmpty(envIdentifiers)) {
+    if (hasSome(envIdentifiers)) {
       criteria.and(EnvironmentKeys.identifier).in(envIdentifiers);
     }
-    if (isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, EnvironmentKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
@@ -81,7 +81,7 @@ public class MonitoringSourcePerpetualTaskServiceImpl
             .asList();
 
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask -> {
-      if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
+      if (hasSome(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
         dataCollectionTaskService.deletePerpetualTasks(accountId, monitoringSourcePerpetualTask.getPerpetualTaskId());
       }
       hPersistence.delete(monitoringSourcePerpetualTask);
@@ -110,7 +110,7 @@ public class MonitoringSourcePerpetualTaskServiceImpl
 
   @Override
   public void resetLiveMonitoringPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask) {
-    if (isEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
+    if (hasNone(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
       return;
     }
     verificationManagerService.resetDataCollectionTask(monitoringSourcePerpetualTask.getAccountId(),
@@ -172,16 +172,16 @@ public class MonitoringSourcePerpetualTaskServiceImpl
     Query<MonitoringSourcePerpetualTask> query =
         hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority)
             .filter(MonitoringSourcePerpetualTaskKeys.accountId, accountId);
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       query.filter(MonitoringSourcePerpetualTaskKeys.orgIdentifier, orgIdentifier);
     }
 
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       query.filter(MonitoringSourcePerpetualTaskKeys.projectIdentifier, projectIdentifier);
     }
 
     List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks = query.asList();
-    if (isEmpty(monitoringSourcePerpetualTasks)) {
+    if (hasNone(monitoringSourcePerpetualTasks)) {
       return;
     }
 

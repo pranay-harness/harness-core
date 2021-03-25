@@ -1,6 +1,6 @@
 package io.harness.nexus;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 
 import static java.util.Collections.emptyMap;
@@ -38,7 +38,7 @@ public class NexusThreeClientImpl {
     }
 
     if (NexusHelper.isSuccessful(response)) {
-      if (isNotEmpty(response.body())) {
+      if (hasSome(response.body())) {
         log.info("Retrieving {} repositories success", repositoryFormat);
         final Map<String, String> repositories;
         if (repositoryFormat == null) {

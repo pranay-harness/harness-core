@@ -1,7 +1,7 @@
 package io.harness.delegate.task.executioncapability;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -50,7 +50,7 @@ public class KustomizeCapabilityCheck implements CapabilityCheck, ProtoCapabilit
   @VisibleForTesting
   static boolean doesKustomizePluginDirExist(String pluginDir) {
     String kustomizePluginPath = renderPathUsingEnvVariables(pluginDir);
-    if (isNotEmpty(kustomizePluginPath)) {
+    if (hasSome(kustomizePluginPath)) {
       try {
         kustomizePluginPath = join("/", kustomizePluginPath, KUSTOMIZE_PLUGIN_DIR_SUFFIX);
         return FileIo.checkIfFileExist(kustomizePluginPath);
@@ -62,7 +62,7 @@ public class KustomizeCapabilityCheck implements CapabilityCheck, ProtoCapabilit
   }
 
   private static String renderPathUsingEnvVariables(String kustomizePluginPath) {
-    if (isNotEmpty(kustomizePluginPath)) {
+    if (hasSome(kustomizePluginPath)) {
       try {
         return executeShellCommand(format("echo %s", kustomizePluginPath));
       } catch (Exception ex) {

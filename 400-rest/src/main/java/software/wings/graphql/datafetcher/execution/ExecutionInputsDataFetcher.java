@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -70,7 +70,7 @@ public class ExecutionInputsDataFetcher
           throw new InvalidRequestException("Unsupported execution type: " + executionType);
       }
 
-      if (isEmpty(serviceIds)) {
+      if (hasNone(serviceIds)) {
         return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
       }
       PageRequest<Service> pageRequest = aPageRequest()

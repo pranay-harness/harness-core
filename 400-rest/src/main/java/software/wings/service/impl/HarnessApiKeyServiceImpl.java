@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.validation.Validator.notNullCheck;
@@ -124,7 +124,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   public void validateHarnessClientApiRequest(ResourceInfo resourceInfo, ContainerRequestContext requestContext) {
     ClientType[] clientTypes = getClientTypesFromHarnessClientAuth(resourceInfo);
 
-    if (isNotEmpty(clientTypes)) {
+    if (hasSome(clientTypes)) {
       boolean valid = Arrays.stream(clientTypes).anyMatch(clientType -> {
         if (clientType == null) {
           return false;
@@ -144,9 +144,9 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
 
         String apiKeyFromDB = get(clientType.name());
         if (apiKeyFromHeader != null) {
-          return isNotEmpty(apiKeyFromDB) && apiKeyFromDB.equals(apiKeyFromHeader);
+          return hasSome(apiKeyFromDB) && apiKeyFromDB.equals(apiKeyFromHeader);
         } else if (apiKeyToken != null) {
-          return isNotEmpty(secretManager.verifyJWTToken(apiKeyToken, apiKeyFromDB, JWT_CATEGORY.API_KEY));
+          return hasSome(secretManager.verifyJWTToken(apiKeyToken, apiKeyFromDB, JWT_CATEGORY.API_KEY));
         } else {
           return false;
         }
@@ -167,7 +167,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     }
 
     String apiKeyFromDB = get(clientType.name());
-    return isNotEmpty(apiKeyFromDB) && apiKeyFromDB.equals(apiKey);
+    return hasSome(apiKeyFromDB) && apiKeyFromDB.equals(apiKey);
   }
 
   @Override

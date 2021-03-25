@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -29,7 +29,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.git.model.ChangeType;
 
 import software.wings.beans.Application;
@@ -111,7 +110,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public PageResponse<GitFileActivity> fetchGitSyncActivity(
       PageRequest<GitFileActivity> req, String accountId, String appId, boolean activityForFileHistory) {
-    if (isNotEmpty(appId)) {
+    if (hasSome(appId)) {
       req.addFilter(GitFileActivityKeys.appId, EQ, appId);
     }
     if (activityForFileHistory) {
@@ -134,7 +133,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private boolean whetherWeCanHaveAccountLevelFile(String appId) {
-    return isEmpty(appId) || GLOBAL_APP_ID.equals(appId);
+    return hasNone(appId) || GLOBAL_APP_ID.equals(appId);
   }
 
   private void sortGitFileActivityInProcessingOrder(List<GitFileActivity> gitFileActivities) {
@@ -152,7 +151,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private void populateConnectorNameInFileHistory(List<GitFileActivity> gitFileActivities, String accountId) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return;
     }
     List<String> connectorIdList = gitFileActivities.stream().map(GitFileActivity::getGitConnectorId).collect(toList());
@@ -167,7 +166,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   public List<GitFileActivity> getActivitiesForGitSyncErrors(final List<GitSyncError> errors, Status status) {
-    if (EmptyPredicate.isEmpty(errors)) {
+    if (hasNone(errors)) {
       return Collections.emptyList();
     }
     return errors.stream()
@@ -189,7 +188,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   public void logActivitiesForFailedChanges(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap, String accountId,
       boolean isFullSync, String commitMessage) {
-    if (isEmpty(failedYamlFileChangeMap.values())) {
+    if (hasNone(failedYamlFileChangeMap.values())) {
       return;
     }
     List<ChangeWithErrorMsg> failuresWhichArePartOfCommit = new ArrayList<>();
@@ -210,7 +209,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private void updateStatusOnProcessingFailure(List<ChangeWithErrorMsg> changeWithErrorMsgs, String accountId) {
-    if (isEmpty(changeWithErrorMsgs)) {
+    if (hasNone(changeWithErrorMsgs)) {
       return;
     }
     changeWithErrorMsgs.parallelStream().forEach(changeWithErrorMsg -> {
@@ -224,7 +223,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private void addActivityForExtraErrorsIfMessageChanged(
       List<ChangeWithErrorMsg> changesFailed, boolean isFullSync, String commitMessage, String accountId) {
-    if (isEmpty(changesFailed)) {
+    if (hasNone(changesFailed)) {
       return;
     }
     List<String> nameOfFilesProcessedInCommit = getNameOfFilesProcessed(changesFailed);
@@ -260,7 +259,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private List<String> getNameOfFilesProcessed(List<ChangeWithErrorMsg> changeWithErrorMsgs) {
-    if (isEmpty(changeWithErrorMsgs)) {
+    if (hasNone(changeWithErrorMsgs)) {
       return Collections.emptyList();
     }
     return changeWithErrorMsgs.stream()
@@ -296,8 +295,8 @@ public class GitSyncServiceImpl implements GitSyncService {
   public boolean isChangeFromGit(Change change) {
     try {
       return change.isSyncFromGit() && change instanceof GitFileChange
-          && isNotEmpty(((GitFileChange) change).getCommitId())
-          && isNotEmpty(((GitFileChange) change).getProcessingCommitId());
+          && hasSome(((GitFileChange) change).getCommitId())
+          && hasSome(((GitFileChange) change).getProcessingCommitId());
     } catch (Exception ex) {
       log.error(format("Error while checking if change is from git: %s", ex));
     }
@@ -327,7 +326,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   public List<GitDetail> fetchRepositoriesAccessibleToUser(String accountId) {
     List<YamlGitConfig> yamlGitConfigs = yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId);
 
-    if (EmptyPredicate.isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       return Collections.emptyList();
     }
 
@@ -353,7 +352,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                .project(SettingAttributeKeys.name, true)
                                                .project(SettingAttributeKeys.value, true)
                                                .asList();
-    if (isEmpty(gitConnectors)) {
+    if (hasNone(gitConnectors)) {
       return Collections.emptyMap();
     }
     return gitConnectors.stream().collect(Collectors.toMap(SettingAttribute::getUuid, Function.identity()));
@@ -361,7 +360,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private List<GitDetail> createGitDetails(
       List<YamlGitConfig> yamlGitConfigs, Map<String, SettingAttribute> gitConnectorMap) {
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       return Collections.emptyList();
     }
     return yamlGitConfigs.stream()
@@ -447,7 +446,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private void populateConnectorNameInGitFileActivitySummaries(
       List<GitFileActivitySummary> gitFileActivitySummaries, String accountId) {
-    if (isEmpty(gitFileActivitySummaries)) {
+    if (hasNone(gitFileActivitySummaries)) {
       return;
     }
     List<String> connectorIdList =
@@ -477,7 +476,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   public void logActivityForGitOperation(List<GitFileChange> changeList, Status status, boolean isGitToHarness,
       boolean isFullSync, String message, String commitId, String commitMessage) {
     try {
-      if (isEmpty(changeList)) {
+      if (hasNone(changeList)) {
         return;
       }
       String accountId = changeList.get(0).getAccountId();
@@ -529,7 +528,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public void updateStatusOfGitFileActivity(
       final String commitId, final List<String> fileNames, Status status, String message, String accountId) {
-    if (EmptyPredicate.isEmpty(fileNames)) {
+    if (hasNone(fileNames)) {
       return;
     }
     try {
@@ -552,7 +551,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       List<GitFileChange> changeList, GitDiffResult gitDiffResult, String message, String accountId) {
     List<GitFileChange> completeChangeList = new ArrayList<>(gitDiffResult.getGitFileChanges());
     completeChangeList = ListUtils.removeAll(completeChangeList, changeList);
-    if (isNotEmpty(completeChangeList)) {
+    if (hasSome(completeChangeList)) {
       updateStatusOfGitFileActivity(gitDiffResult.getCommitId(),
           completeChangeList.stream().map(gitFileChange -> gitFileChange.getFilePath()).collect(Collectors.toList()),
           Status.SKIPPED, message, accountId);
@@ -620,7 +619,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       final String commitId, final String accountId, Boolean gitToHarness, GitCommit.Status status) {
     try {
       List<GitFileActivity> gitFileActivities = getFileActivitesForCommit(commitId, accountId);
-      if (isEmpty(gitFileActivities)) {
+      if (hasNone(gitFileActivities)) {
         return;
       }
       Map<String, List<GitFileActivity>> appIdFileActivitesMap = groupFileActivitiesAccordingToAppId(gitFileActivities);
@@ -642,7 +641,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private Map<String, List<GitFileActivity>> groupFileActivitiesAccordingToAppId(
       List<GitFileActivity> gitFileActivities) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return new HashMap<>();
     }
     return gitFileActivities.stream().collect(Collectors.groupingBy(GitFileActivity::getAppId, Collectors.toList()));
@@ -650,7 +649,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private void createGitFileActivitySummaryForApp(
       String appId, List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommit.Status status) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return;
     }
     GitFileActivity gitFileActivity = gitFileActivities.get(0);
@@ -770,7 +769,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   public void createGitFileSummaryForFailedOrSkippedCommit(GitCommit gitCommit, boolean gitToHarness) {
     List<GitFileActivitySummary> gitFileActiivitySummary = new ArrayList<>();
     Set<String> appIds = yamlGitConfigService.getAppIdsForYamlGitConfig(gitCommit.getYamlGitConfigIds());
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       return;
     }
     for (String appId : appIds) {
@@ -795,7 +794,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   public void changeAppIdOfNewlyAddedFiles(
       Set<String> nameOfNewAppsInCommit, String accountId, String processingCommitId) {
-    if (EmptyPredicate.isEmpty(nameOfNewAppsInCommit)) {
+    if (hasNone(nameOfNewAppsInCommit)) {
       return;
     }
     Map<String, String> appNameAppIdMapOfNewAppsAdded = getAppNameAppIdMap(nameOfNewAppsInCommit, accountId);
@@ -821,7 +820,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private Map<String, String> getAppNameAppIdMap(Set<String> appNames, String accountId) {
-    if (isEmpty(appNames)) {
+    if (hasNone(appNames)) {
       return Collections.emptyMap();
     }
     List<Application> applications = wingsPersistence.createQuery(Application.class)

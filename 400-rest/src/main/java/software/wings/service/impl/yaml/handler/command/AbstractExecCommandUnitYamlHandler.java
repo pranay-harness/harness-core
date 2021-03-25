@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
@@ -40,7 +40,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
   }
 
   private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
-    if (isEmpty(patternEntryList)) {
+    if (hasNone(patternEntryList)) {
       return null;
     }
 
@@ -55,7 +55,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
   }
 
   protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
-    if (isEmpty(patternEntryYamlList)) {
+    if (hasNone(patternEntryYamlList)) {
       return null;
     }
 
@@ -73,7 +73,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
   protected B toBean(ChangeContext<Y> changeContext) {
     B bean = super.toBean(changeContext);
     Y yaml = changeContext.getYaml();
-    ScriptType scriptType = isEmpty(yaml.getScriptType())
+    ScriptType scriptType = hasNone(yaml.getScriptType())
         ? ScriptType.BASH
         : Utils.getEnumFromString(ScriptType.class, yaml.getScriptType());
     bean.setScriptType(scriptType);
@@ -87,7 +87,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
   public B toBean(AbstractCommandUnit.Yaml yaml) {
     B bean = super.toBean(yaml);
     final ExecCommandUnitAbstractYaml execYaml = (ExecCommandUnitAbstractYaml) yaml;
-    ScriptType scriptType = isEmpty(execYaml.getScriptType())
+    ScriptType scriptType = hasNone(execYaml.getScriptType())
         ? ScriptType.BASH
         : Utils.getEnumFromString(ScriptType.class, execYaml.getScriptType());
     bean.setScriptType(scriptType);
@@ -108,7 +108,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
     nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
 
     List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
-    if (isNotEmpty(filePatternEntryList)) {
+    if (hasSome(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
                                      .filter(Objects::nonNull)
                                      .map(TailFilePatternEntry.Yaml::getSearchPattern)

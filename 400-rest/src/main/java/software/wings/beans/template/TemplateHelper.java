@@ -1,8 +1,8 @@
 package software.wings.beans.template;
 
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeValidate;
@@ -111,7 +111,7 @@ public class TemplateHelper {
   private boolean serviceLinked(String accountId, TemplateType templateType, List<String> templateUuids) {
     if (TemplateType.CUSTOM_DEPLOYMENT_TYPE == templateType) {
       final List<Service> services = serviceResourceService.listByCustomDeploymentTypeId(accountId, templateUuids, 1);
-      if (isNotEmpty(services)) {
+      if (hasSome(services)) {
         return true;
       }
     }
@@ -122,7 +122,7 @@ public class TemplateHelper {
     if (TemplateType.CUSTOM_DEPLOYMENT_TYPE == templateType) {
       final List<InfrastructureDefinition> infraDefs =
           infrastructureDefinitionService.listByCustomDeploymentTypeIds(accountId, templateUuids, 1);
-      if (isNotEmpty(infraDefs)) {
+      if (hasSome(infraDefs)) {
         return true;
       }
     }
@@ -130,7 +130,7 @@ public class TemplateHelper {
   }
 
   public boolean templatesLinked(String accountId, TemplateType templateType, List<String> templateUuids) {
-    if (isEmpty(templateUuids)) {
+    if (hasNone(templateUuids)) {
       return false;
     }
 
@@ -191,7 +191,7 @@ public class TemplateHelper {
   public List<Variable> overrideVariables(
       List<Variable> templateVariables, List<Variable> existingVariables, boolean doNotOverride) {
     List<Variable> updatedVariables = new ArrayList<>();
-    if (isNotEmpty(templateVariables)) {
+    if (hasSome(templateVariables)) {
       for (Variable variable : templateVariables) {
         updatedVariables.add(variable.cloneInternal());
       }
@@ -203,10 +203,10 @@ public class TemplateHelper {
         // Do not override the value if it is from template
         Variable oldVariable = oldVariablesMap.get(variable.getName());
         if (doNotOverride) {
-          if (isNotEmpty(oldVariable.getValue())) {
+          if (hasSome(oldVariable.getValue())) {
             variable.setValue(oldVariable.getValue());
           }
-          if (isNotEmpty(oldVariable.getDescription())) {
+          if (hasSome(oldVariable.getDescription())) {
             variable.setDescription(oldVariable.getDescription());
           }
         }
@@ -217,9 +217,9 @@ public class TemplateHelper {
   }
 
   public boolean variablesChanged(List<Variable> updatedVariables, List<Variable> existingVariables) {
-    if (isEmpty(updatedVariables) && isEmpty(existingVariables)) {
+    if (hasNone(updatedVariables) && hasNone(existingVariables)) {
       return false;
-    } else if (isEmpty(updatedVariables) || isEmpty(existingVariables)) {
+    } else if (hasNone(updatedVariables) || hasNone(existingVariables)) {
       return true;
     }
     Map<String, Variable> oldVariablesMap = obtainVariableMap(existingVariables);
@@ -256,7 +256,7 @@ public class TemplateHelper {
   }
 
   private Map<String, Variable> obtainVariableMap(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new HashMap<>();
     }
     Map<String, Variable> map = new HashMap<>();
@@ -272,7 +272,7 @@ public class TemplateHelper {
 
   public static List<NameValuePair> convertToTemplateVariables(List<Variable> entityTemplateVariables) {
     List<NameValuePair> templateVariables = new ArrayList<>();
-    if (isNotEmpty(entityTemplateVariables)) {
+    if (hasSome(entityTemplateVariables)) {
       entityTemplateVariables.forEach(variable
           -> templateVariables.add(
               NameValuePair.builder().name(variable.getName()).value(variable.getValue()).build()));
@@ -282,7 +282,7 @@ public class TemplateHelper {
 
   public static List<Variable> convertToEntityVariables(List<NameValuePair> entityTemplateVariables) {
     List<Variable> templateVariables = new ArrayList<>();
-    if (isNotEmpty(entityTemplateVariables)) {
+    if (hasSome(entityTemplateVariables)) {
       entityTemplateVariables.forEach(
           variable -> templateVariables.add(aVariable().name(variable.getName()).value(variable.getValue()).build()));
     }
@@ -392,13 +392,13 @@ public class TemplateHelper {
 
   public static Set<String> addUserKeyWords(Set<String> keywords, Set<String> generatedKeywords) {
     Set<String> userKeywords = trimmedLowercaseSet(keywords);
-    if (isNotEmpty(userKeywords)) {
+    if (hasSome(userKeywords)) {
       generatedKeywords.addAll(userKeywords);
     }
     return trimmedLowercaseSet(generatedKeywords);
   }
   public static Map<String, Object> convertToVariableMap(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return null;
     }
     return variables.stream()

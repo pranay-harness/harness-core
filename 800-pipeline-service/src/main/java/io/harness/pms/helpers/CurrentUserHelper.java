@@ -1,10 +1,10 @@
 package io.harness.pms.helpers;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.PipelineServiceConfiguration;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
@@ -37,7 +37,7 @@ public class CurrentUserHelper {
     UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
     String userId = userPrincipal.getName();
     List<UserInfo> users = RestClientUtils.getResponse(userClient.getUsersByIds(Collections.singletonList(userId)));
-    if (EmptyPredicate.isEmpty(users)) {
+    if (hasNone(users)) {
       throw new InvalidRequestException(String.format("Invalid user: %s", userId));
     }
 

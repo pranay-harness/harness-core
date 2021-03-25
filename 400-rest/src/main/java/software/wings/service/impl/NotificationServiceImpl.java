@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
@@ -110,7 +110,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   private Notification renderAndSaveNotification(Notification notification) {
-    if (isEmpty(notification.getAccountId()) && appService.exist(notification.getAppId())) {
+    if (hasNone(notification.getAccountId()) && appService.exist(notification.getAppId())) {
       notification.setAccountId(appService.get(notification.getAppId()).getAccountId());
     }
 

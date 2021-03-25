@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -32,7 +32,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
   public void migrate() {
     log.info("Retrieving applications");
     List<Application> apps = wingsPersistence.createQuery(Application.class, excludeAuthority).asList();
-    if (isEmpty(apps)) {
+    if (hasNone(apps)) {
       log.info("No applications found");
       return;
     }

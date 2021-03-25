@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -156,7 +156,7 @@ public class LdapGroupSyncJob implements Job {
 
   private void updateRemovedGroupMembers(UserGroup userGroup, Collection<LdapUserResponse> expectedMembers,
       Map<UserGroup, Set<User>> removedGroupMembers) {
-    if (isEmpty(userGroup.getMembers())) {
+    if (hasNone(userGroup.getMembers())) {
       return;
     }
 
@@ -177,7 +177,7 @@ public class LdapGroupSyncJob implements Job {
   private void updateAddedGroupMembers(UserGroup userGroup, Collection<LdapUserResponse> expectedMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
     Set<String> existingUserEmails;
-    if (isEmpty(userGroup.getMembers())) {
+    if (hasNone(userGroup.getMembers())) {
       existingUserEmails = Sets.newHashSet();
     } else {
       existingUserEmails = userGroup.getMembers().stream().map(User::getEmail).collect(Collectors.toSet());

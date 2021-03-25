@@ -2,7 +2,8 @@ package io.harness.entities;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.EncryptDecryptException;
@@ -50,7 +51,7 @@ public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
   private String tag;
 
   public void compressAnomalies() {
-    if (isEmpty(anomalies)) {
+    if (hasNone(anomalies)) {
       return;
     }
     try {
@@ -62,7 +63,7 @@ public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
   }
 
   public void decompressAnomalies() {
-    if (isEmpty(compressedAnomalies)) {
+    if (hasNone(compressedAnomalies)) {
       return;
     }
     try {

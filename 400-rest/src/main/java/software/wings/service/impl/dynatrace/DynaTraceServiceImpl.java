@@ -1,7 +1,7 @@
 package software.wings.service.impl.dynatrace;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
@@ -84,7 +84,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
 
   @Override
   public List<DynaTraceApplication> getServices(String settingId, boolean shouldResolveAllServices) {
-    if (isEmpty(settingId)) {
+    if (hasNone(settingId)) {
       return null;
     }
     final SettingAttribute settingAttribute = settingsService.get(settingId);
@@ -103,11 +103,11 @@ public class DynaTraceServiceImpl implements DynaTraceService {
 
   @Override
   public String resolveDynatraceServiceNameToId(String settingId, String serviceName) {
-    if (isEmpty(settingId) || isEmpty(serviceName)) {
+    if (hasNone(settingId) || hasNone(serviceName)) {
       throw new DataCollectionException("Invalid SettingId or ServiceName");
     }
     List<DynaTraceApplication> dynatraceServiceList = getServices(settingId, true);
-    if (isNotEmpty(dynatraceServiceList)) {
+    if (hasSome(dynatraceServiceList)) {
       Optional<DynaTraceApplication> matchedService =
           dynatraceServiceList.stream().filter(service -> service.getDisplayName().equals(serviceName)).findFirst();
       if (matchedService.isPresent()) {
@@ -120,7 +120,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
   @Override
   public boolean validateDynatraceServiceId(String settingId, String serviceId) {
     List<DynaTraceApplication> dynatraceServiceList = getServices(settingId, true);
-    if (isNotEmpty(dynatraceServiceList)) {
+    if (hasSome(dynatraceServiceList)) {
       return dynatraceServiceList.stream().anyMatch(service -> service.getEntityId().equals(serviceId));
     }
     return false;
@@ -129,7 +129,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
   private boolean isDataPresent(List<DynaTraceMetricDataResponse> responses) {
     AtomicBoolean isDataPresent = new AtomicBoolean(false);
     responses.forEach(response -> {
-      if (isNotEmpty(response.getResult().getDataPoints())) {
+      if (hasSome(response.getResult().getDataPoints())) {
         isDataPresent.set(true);
         return;
       }

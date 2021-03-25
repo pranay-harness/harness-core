@@ -1,11 +1,12 @@
 package io.harness.ngpipeline.inputset.services.impl;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import io.harness.EntityType;
 import io.harness.beans.InputSetReference;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -213,7 +214,7 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
       throw new UnexpectedException(
           "Error while deleting the input set as was not able to check entity reference records.");
     }
-    if (EmptyPredicate.isNotEmpty(referredByEntities)) {
+    if (hasSome(referredByEntities)) {
       throw new InvalidRequestException(String.format(
           "Could not delete the Input Set %s as it is referenced by other entities - " + referredByEntities.toString(),
           inputSetIdentifier));
@@ -221,7 +222,7 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
   }
 
   private void setName(BaseInputSetEntity baseInputSetEntity) {
-    if (EmptyPredicate.isEmpty(baseInputSetEntity.getName())) {
+    if (hasNone(baseInputSetEntity.getName())) {
       baseInputSetEntity.setName(baseInputSetEntity.getIdentifier());
     }
   }

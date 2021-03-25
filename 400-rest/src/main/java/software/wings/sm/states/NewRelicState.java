@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -268,7 +268,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   }
 
   public static String getMetricTypeForMetric(String metricName) {
-    if (isEmpty(metricName)) {
+    if (hasNone(metricName)) {
       return null;
     }
     if (NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE.containsKey(metricName)) {

@@ -2,8 +2,8 @@ package software.wings.app;
 
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
@@ -375,7 +375,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Override
       public List<NamedType> findSubtypes(Annotated a) {
         final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-        if (isNotEmpty(subtypesFromSuper)) {
+        if (hasSome(subtypesFromSuper)) {
           return subtypesFromSuper;
         }
         return emptyIfNull(subtypeResolver.findSubtypes(a));
@@ -599,7 +599,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
       log.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
-      if (isEmpty(encryptedLicenseInfoBase64String)) {
+      if (hasNone(encryptedLicenseInfoBase64String)) {
         log.error("No license info is provided");
       } else {
         try {
@@ -747,12 +747,12 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerStores(MainConfiguration configuration, Injector injector) {
     final HPersistence persistence = injector.getInstance(HPersistence.class);
     if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO
-        && isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
+        && hasSome(configuration.getMongoConnectionFactory().getLocksUri())
         && !configuration.getMongoConnectionFactory().getLocksUri().equals(
             configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
     }
-    if (isNotEmpty(configuration.getEventsMongo().getUri())
+    if (hasSome(configuration.getEventsMongo().getUri())
         && !configuration.getEventsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(Store.builder().name("events").build(), configuration.getEventsMongo().getUri());
     }

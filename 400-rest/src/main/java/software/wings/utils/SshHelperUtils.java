@@ -1,7 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
 import static io.harness.shell.AccessType.KEY_SU_APP_USER;
 import static io.harness.shell.AccessType.USER_PASSWORD;
@@ -88,11 +88,11 @@ public class SshHelperUtils {
     HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) hostConnectionSetting.getValue();
 
     if (executorType == KEY_AUTH) {
-      if (isNotEmpty(hostConnectionAttributes.getKey())) {
+      if (hasSome(hostConnectionAttributes.getKey())) {
         builder.withKey(new String(hostConnectionAttributes.getKey()).toCharArray());
       }
 
-      if (isNotEmpty(hostConnectionAttributes.getPassphrase())) {
+      if (hasSome(hostConnectionAttributes.getPassphrase())) {
         builder.withKeyPassphrase(new String(hostConnectionAttributes.getPassphrase()).toCharArray());
       }
 
@@ -108,7 +108,7 @@ public class SshHelperUtils {
     } else if (KERBEROS == hostConnectionAttributes.getAuthenticationScheme()) {
       KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
 
-      if (isNotEmpty(hostConnectionAttributes.getKerberosPassword())) {
+      if (hasSome(hostConnectionAttributes.getKerberosPassword())) {
         builder.withPassword(new String(hostConnectionAttributes.getKerberosPassword()).toCharArray());
       }
 
@@ -116,7 +116,7 @@ public class SshHelperUtils {
           .withKerberosConfig(kerberosConfig)
           .withPort(hostConnectionAttributes.getSshPort());
     } else if (USER_PASSWORD == hostConnectionAttributes.getAccessType()) {
-      if (isNotEmpty(hostConnectionAttributes.getSshPassword())) {
+      if (hasSome(hostConnectionAttributes.getSshPassword())) {
         builder.withSshPassword(new String(hostConnectionAttributes.getSshPassword()).toCharArray());
       }
 
@@ -134,11 +134,11 @@ public class SshHelperUtils {
                                      .withUserName(bastionAttrs.getUserName())
                                      .withPort(bastionAttrs.getSshPort());
 
-      if (isNotEmpty(bastionAttrs.getKey())) {
+      if (hasSome(bastionAttrs.getKey())) {
         sshSessionConfig.withKey(new String(bastionAttrs.getKey()).toCharArray());
       }
 
-      if (isNotEmpty(bastionAttrs.getPassphrase())) {
+      if (hasSome(bastionAttrs.getPassphrase())) {
         sshSessionConfig.withKeyPassphrase(new String(bastionAttrs.getPassphrase()).toCharArray());
       }
 

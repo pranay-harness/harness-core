@@ -3,8 +3,8 @@ package software.wings.beans.command;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.k8s.KubernetesConvention.getBlueGreenIngressName;
@@ -369,7 +369,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         previousYamlConfig.put(AUTOSCALER_YAML, previousAutoscalerYaml);
       }
 
-      if (isNotEmpty(previousYamlConfig)) {
+      if (hasSome(previousYamlConfig)) {
         Secret yamlConfig = new SecretBuilder()
                                 .withNewMetadata()
                                 .withAnnotations(harnessAnnotations)
@@ -563,7 +563,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String ingressYaml = "";
 
     if (service != null && setupParams.isUseIngress()) {
-      int port = (service.getSpec() != null && isNotEmpty(service.getSpec().getPorts()))
+      int port = (service.getSpec() != null && hasSome(service.getSpec().getPorts()))
           ? service.getSpec().getPorts().get(0).getPort()
           : 80;
       ingressYaml = setupParams.getIngressYaml()
@@ -623,10 +623,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (primaryService != null && stageService != null && useIngress) {
       int primaryServicePort =
-          isNotEmpty(primaryService.getSpec().getPorts()) ? primaryService.getSpec().getPorts().get(0).getPort() : 80;
+          hasSome(primaryService.getSpec().getPorts()) ? primaryService.getSpec().getPorts().get(0).getPort() : 80;
 
       int stageServicePort =
-          isNotEmpty(stageService.getSpec().getPorts()) ? stageService.getSpec().getPorts().get(0).getPort() : 80;
+          hasSome(stageService.getSpec().getPorts()) ? stageService.getSpec().getPorts().get(0).getPort() : 80;
 
       ingressYaml = setupParams.getBlueGreenConfig()
                         .getIngressYaml()
@@ -731,7 +731,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           && LOAD_BALANCER.equals(service.getSpec().getType())) {
         LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
         // Keep the previous load balancer IP if it exists and a new one was not specified
-        if (isEmpty(serviceToCreate.getSpec().getLoadBalancerIP()) && loadBalancer != null
+        if (hasNone(serviceToCreate.getSpec().getLoadBalancerIP()) && loadBalancer != null
             && !loadBalancer.getIngress().isEmpty()) {
           serviceToCreate.getSpec().setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
         }
@@ -903,15 +903,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .filter(entry -> SECRET_MASK.equals(entry.getValue()))
             .collect(toMap(Entry::getKey, entry -> encodeBase64(serviceVariables.get(entry.getKey()))));
 
-    if (isNotEmpty(encryptedServiceVars)) {
+    if (hasSome(encryptedServiceVars)) {
       secretData.putAll(encryptedServiceVars);
     }
 
-    if (isNotEmpty(setupParams.getEncryptedConfigFiles())) {
+    if (hasSome(setupParams.getEncryptedConfigFiles())) {
       secretData.putAll(setupParams.getEncryptedConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
     }
 
-    if (isEmpty(secretData)) {
+    if (hasNone(secretData)) {
       secretMap = null;
     }
 
@@ -964,19 +964,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .build();
     }
 
-    if (isNotEmpty(safeDisplayServiceVariables)) {
+    if (hasSome(safeDisplayServiceVariables)) {
       configMap.getData().putAll(safeDisplayServiceVariables.entrySet()
                                      .stream()
                                      .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
                                      .collect(toMap(Entry::getKey, Entry::getValue)));
     }
 
-    if (isNotEmpty(setupParams.getPlainConfigFiles())) {
+    if (hasSome(setupParams.getPlainConfigFiles())) {
       configMap.getData().putAll(
           setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> decodeBase64ToString(sa[1]))));
     }
 
-    if (isEmpty(configMap.getData())) {
+    if (hasNone(configMap.getData())) {
       configMap = null;
     }
     if (configMap != null) {
@@ -1146,11 +1146,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .withLabels(labels)
             .endMetadata()
             .withNewSpec()
-            .withHosts(setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getHosts())
+            .withHosts(setupParams.getIstioConfig() != null && !hasNone(setupParams.getIstioConfig().getHosts())
                     ? setupParams.getIstioConfig().getHosts()
                     : singletonList(kubernetesServiceName));
 
-    if (setupParams.getIstioConfig() != null && !isEmpty(setupParams.getIstioConfig().getGateways())) {
+    if (setupParams.getIstioConfig() != null && !hasNone(setupParams.getIstioConfig().getGateways())) {
       virtualServiceSpecNested.addAllToGateways(setupParams.getIstioConfig().getGateways());
     }
 
@@ -1421,7 +1421,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                     .getStatus()
                     .getLoadBalancer();
             if (!loadBalancerStatus.getIngress().isEmpty()
-                && (isEmpty(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
+                && (hasNone(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
               return getLoadBalancerEndpoint(executionLogCallback, serviceName, loadBalancerStatus);
             }
             sleep(ofSeconds(1));
@@ -1596,7 +1596,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (secretMap != null) {
       for (String key : secretMap.getData().keySet()) {
         byte[] value = decodeBase64(secretMap.getData().get(key));
-        if (envVarPattern.matcher(key).matches() && isNotEmpty(value) && value.length <= MAX_ENV_VAR_LENGTH) {
+        if (envVarPattern.matcher(key).matches() && hasSome(value) && value.length <= MAX_ENV_VAR_LENGTH) {
           EnvVarSource varSource = new EnvVarSourceBuilder()
                                        .withNewSecretKeyRef()
                                        .withName(secretMap.getMetadata().getName())
@@ -1608,7 +1608,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           String msg = "";
           if (!envVarPattern.matcher(key).matches()) {
             msg = format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
-          } else if (isEmpty(value)) {
+          } else if (hasNone(value)) {
             msg = format("Value for [%s] from secret map is blank. Skipping as environment variable...", key);
           } else if (value.length > MAX_ENV_VAR_LENGTH) {
             msg = format(
@@ -1621,15 +1621,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     for (Container container : podTemplateSpec.getSpec().getContainers()) {
-      if (isNotEmpty(configMapEnvVars) || isNotEmpty(secretEnvVars)) {
+      if (hasSome(configMapEnvVars) || hasSome(secretEnvVars)) {
         Map<String, EnvVar> containerEnvVars = new HashMap<>();
         if (container.getEnv() != null) {
           container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
         }
-        if (isNotEmpty(configMapEnvVars)) {
+        if (hasSome(configMapEnvVars)) {
           containerEnvVars.putAll(configMapEnvVars);
         }
-        if (isNotEmpty(secretEnvVars)) {
+        if (hasSome(secretEnvVars)) {
           containerEnvVars.putAll(secretEnvVars);
         }
         container.setEnv(new ArrayList<>(containerEnvVars.values()));
@@ -1855,7 +1855,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             -> !(service.getMetadata().getName().equals(
                 getKubernetesServiceName(getStageServiceName(currentNamePrefix)))))
         .filter(
-            service -> isEmpty(kubernetesContainerService.getPods(kubernetesConfig, service.getSpec().getSelector())))
+            service -> hasNone(kubernetesContainerService.getPods(kubernetesConfig, service.getSpec().getSelector())))
         .forEach(service -> {
           String serviceName = service.getMetadata().getName();
           log.info("Deleting old service: " + serviceName);
@@ -1944,7 +1944,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void performResize(KubernetesConfig kubernetesConfig, String clusterName, String newControllerName,
       List<String[]> serviceCounts, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    if (isNotEmpty(serviceCounts)) {
+    if (hasSome(serviceCounts)) {
       for (String[] serviceCount : serviceCounts) {
         Optional<Integer> controllerPodCount =
             kubernetesContainerService.getControllerPodCount(kubernetesConfig, serviceCount[0]);

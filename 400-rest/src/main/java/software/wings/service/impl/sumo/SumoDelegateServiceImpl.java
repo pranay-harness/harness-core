@@ -1,6 +1,6 @@
 package software.wings.service.impl.sumo;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -105,11 +105,11 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
                                                            .build(),
         "1m", null, startTime, endTime, true, 5, 0, apiCallLog.copy());
 
-    if (isEmpty(responseWithoutHost) || isEmpty(hostName)) {
+    if (hasNone(responseWithoutHost) || hasNone(hostName)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder()
-                            .isLoadPresent(!isEmpty(responseWithoutHost))
+                            .isLoadPresent(!hasNone(responseWithoutHost))
                             .loadResponse(responseWithoutHost)
                             .build())
           .build();
@@ -136,10 +136,10 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       long startTime, long endTime, boolean is247Task, int maxMessageCount, int logCollectionMinute,
       ThirdPartyApiCallLog apiCallLog) {
     String searchQuery = dataCollectionInfo.getQuery();
-    if (!isEmpty(dataCollectionInfo.getHostnameField())) {
+    if (!hasNone(dataCollectionInfo.getHostnameField())) {
       searchQuery = searchQuery + "| where " + dataCollectionInfo.getHostnameField() + " = \"" + hostName + "\" ";
     }
-    if (!isEmpty(timeSlice)) {
+    if (!hasNone(timeSlice)) {
       searchQuery = searchQuery + " | timeslice " + timeSlice;
     }
 

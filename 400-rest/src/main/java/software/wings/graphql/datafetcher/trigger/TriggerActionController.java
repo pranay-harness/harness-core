@@ -1,13 +1,13 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Pipeline;
@@ -151,8 +151,7 @@ public class TriggerActionController {
 
   List<ArtifactSelection> resolveArtifactSelections(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, List<String> artifactNeededServiceIds) {
-    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null
-        || EmptyPredicate.isEmpty(artifactNeededServiceIds)) {
+    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null || hasNone(artifactNeededServiceIds)) {
       return new ArrayList<>();
     }
 
@@ -160,7 +159,7 @@ public class TriggerActionController {
         .getArtifactSelections()
         .stream()
         .map(e -> {
-          if (EmptyPredicate.isEmpty(e.getServiceId())) {
+          if (hasNone(e.getServiceId())) {
             throw new InvalidRequestException("Empty serviceId in Artifact Selection", USER);
           }
 
@@ -178,28 +177,28 @@ public class TriggerActionController {
               type = validateAndResolveFromTriggeringPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_COLLECTED:
-              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+              if (hasNone(e.getArtifactSourceId())) {
                 throw new InvalidRequestException(
                     "Artifact Source Id to select artifact from is required when using LAST_COLLECTED", USER);
               }
               type = validateAndResolveLastCollectedArtifactSelectionType(e);
               break;
             case FROM_PAYLOAD_SOURCE:
-              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+              if (hasNone(e.getArtifactSourceId())) {
                 throw new InvalidRequestException(
                     "Artifact Source Id to select artifact from is required when using FROM_PAYLOAD_SOURCE", USER);
               }
               type = validateAndResolveFromPayloadSourceArtifactSelectionType(qlCreateOrUpdateTriggerInput, e);
               break;
             case LAST_DEPLOYED_PIPELINE:
-              if (EmptyPredicate.isEmpty(e.getPipelineId())) {
+              if (hasNone(e.getPipelineId())) {
                 throw new InvalidRequestException(
                     "Pipeline Id to select artifact from is required when using LAST_DEPLOYED_PIPELINE", USER);
               }
               type = validateAndResolveLastDeployedPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_DEPLOYED_WORKFLOW:
-              if (EmptyPredicate.isEmpty(e.getWorkflowId())) {
+              if (hasNone(e.getWorkflowId())) {
                 throw new InvalidRequestException(
                     "Workflow Id to select artifact from is required when using LAST_DEPLOYED_WORKFLOW", USER);
               }
@@ -363,7 +362,7 @@ public class TriggerActionController {
   private void validateArtifactSource(QLArtifactSelectionInput qlArtifactSelectionInput) {
     String artifactSourceId = qlArtifactSelectionInput.getArtifactSourceId();
 
-    if (EmptyPredicate.isEmpty(artifactSourceId)) {
+    if (hasNone(artifactSourceId)) {
       throw new InvalidRequestException("Artifact Source must not be null", USER);
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifactSourceId);

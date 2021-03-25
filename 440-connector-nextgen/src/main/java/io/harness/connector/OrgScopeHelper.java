@@ -1,6 +1,6 @@
 package io.harness.connector;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ng.core.entities.Organization.OrganizationKeys;
 
 import io.harness.connector.entities.Connector;
@@ -24,20 +24,20 @@ public class OrgScopeHelper {
   OrganizationService organizationService;
 
   public Map<String, String> createOrgIdentifierOrgNameMap(List<String> orgIdentifierList) {
-    if (isEmpty(orgIdentifierList)) {
+    if (hasNone(orgIdentifierList)) {
       return Collections.emptyMap();
     }
     Criteria criteria = new Criteria();
     criteria.and(OrganizationKeys.identifier).in(orgIdentifierList);
     List<Organization> organizations = organizationService.list(criteria, Pageable.unpaged()).toList();
-    if (isEmpty(organizations)) {
+    if (hasNone(organizations)) {
       return Collections.emptyMap();
     }
     return organizations.stream().collect(Collectors.toMap(Organization::getIdentifier, Organization::getName));
   }
 
   public List<String> getOrgIdentifiers(List<Connector> connectors) {
-    if (isEmpty(connectors)) {
+    if (hasNone(connectors)) {
       return Collections.emptyList();
     }
     return connectors.stream().map(Connector::getOrgIdentifier).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
@@ -80,7 +80,7 @@ public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfra
   @Override
   public void applyExpressions(
       Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
-    if (isEmpty(resolvedExpressions)) {
+    if (hasNone(resolvedExpressions)) {
       throw new InvalidRequestException("Infra Provisioner Mapping inputs can't be empty");
     }
     List<Map<String, Object>> hostList = (List<Map<String, Object>>) resolvedExpressions.get("hostArrayPath");
@@ -108,12 +108,12 @@ public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfra
             host.getProperties().put(entry.getKey(), hostAttributes.get(entry.getKey()));
         }
       }
-      if (isEmpty(host.getPublicDns())) {
+      if (hasNone(host.getPublicDns())) {
         throw new InvalidRequestException("Hostname can't be empty", WingsException.USER);
       }
       hosts.add(host);
     }
-    if (isEmpty(hosts)) {
+    if (hasNone(hosts)) {
       throw new InvalidRequestException("Host list can't be empty", WingsException.USER);
     }
     setHosts(hosts);

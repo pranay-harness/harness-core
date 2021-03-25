@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -58,7 +58,7 @@ public class CommandTemplateYamlHelper {
     List<CommandUnit> commandUnitList = Lists.newArrayList();
     List<GraphLink> linkList = Lists.newArrayList();
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
-    if (isNotEmpty(commandUnitYamlList)) {
+    if (hasSome(commandUnitYamlList)) {
       GraphNode previousGraphNode = null;
       for (AbstractCommandUnit.Yaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler = getCommandUnitYamlHandler(commandUnitYaml);
@@ -84,7 +84,7 @@ public class CommandTemplateYamlHelper {
         nodeList.add(graphNode);
       }
 
-      if (isNotEmpty(linkList)) {
+      if (hasSome(linkList)) {
         graphBuilder.withLinks(linkList);
       }
       graphBuilder.withNodes(nodeList);

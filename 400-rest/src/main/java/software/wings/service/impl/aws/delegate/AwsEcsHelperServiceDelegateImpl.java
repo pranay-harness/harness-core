@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.amazonaws.services.ecs.model.ServiceField.TAGS;
 import static com.google.common.collect.Lists.newArrayList;
@@ -98,7 +98,7 @@ public class AwsEcsHelperServiceDelegateImpl
         tracker.trackECSCall("List Services");
         ListServicesResult listServicesResult = client.listServices(listServicesRequest);
         List<String> arnsBatch = listServicesResult.getServiceArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           serviceArns.addAll(arnsBatch);
         }
         nextToken = listServicesResult.getNextToken();
@@ -144,7 +144,7 @@ public class AwsEcsHelperServiceDelegateImpl
         tracker.trackECSCall("List Tasks");
         ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
         List<String> arnsBatch = listTasksResult.getTaskArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           taskArns.addAll(arnsBatch);
         }
         nextToken = listTasksResult.getNextToken();
@@ -207,7 +207,7 @@ public class AwsEcsHelperServiceDelegateImpl
         ListContainerInstancesResult listContainerInstancesResult =
             client.listContainerInstances(listContainerInstancesRequest);
         List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           containerInstanceArns.addAll(arnsBatch);
         }
         nextToken = listContainerInstancesResult.getNextToken();

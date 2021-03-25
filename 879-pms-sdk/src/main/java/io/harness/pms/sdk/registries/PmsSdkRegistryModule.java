@@ -1,9 +1,10 @@
 package io.harness.pms.sdk.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -64,7 +65,7 @@ public class PmsSdkRegistryModule extends AbstractModule {
   StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
     Map<StepType, Class<? extends Step>> engineSteps = config.getEngineSteps();
-    if (EmptyPredicate.isNotEmpty(engineSteps)) {
+    if (hasSome(engineSteps)) {
       engineSteps.forEach((k, v) -> stepRegistry.register(k, injector.getInstance(v)));
     }
     return stepRegistry;
@@ -75,11 +76,11 @@ public class PmsSdkRegistryModule extends AbstractModule {
   AdviserRegistry providesAdviserRegistry(Injector injector) {
     AdviserRegistry adviserRegistry = new AdviserRegistry();
     Map<AdviserType, Class<? extends Adviser>> engineAdvisers = config.getEngineAdvisers();
-    if (EmptyPredicate.isEmpty(engineAdvisers)) {
+    if (hasNone(engineAdvisers)) {
       engineAdvisers = new HashMap<>();
     }
     engineAdvisers.putAll(PmsSdkAdviserRegistrar.getEngineAdvisers());
-    if (EmptyPredicate.isNotEmpty(engineAdvisers)) {
+    if (hasSome(engineAdvisers)) {
       engineAdvisers.forEach((k, v) -> adviserRegistry.register(k, injector.getInstance(v)));
     }
     return adviserRegistry;
@@ -101,7 +102,7 @@ public class PmsSdkRegistryModule extends AbstractModule {
   FacilitatorRegistry providesFacilitatorRegistry(Injector injector) {
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
     Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators = config.getEngineFacilitators();
-    if (EmptyPredicate.isEmpty(engineFacilitators)) {
+    if (hasNone(engineFacilitators)) {
       engineFacilitators = new HashMap<>();
     }
     engineFacilitators.putAll(PmsSdkFacilitatorRegistrar.getEngineFacilitators());
@@ -115,7 +116,7 @@ public class PmsSdkRegistryModule extends AbstractModule {
     OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         config.getEngineEventHandlersMap();
-    if (EmptyPredicate.isNotEmpty(engineEventHandlersMap)) {
+    if (hasSome(engineEventHandlersMap)) {
       mergeEventHandlers(engineEventHandlersMap, PmsSdkOrchestrationEventRegistrars.getHandlers());
       engineEventHandlersMap.forEach((key, value) -> {
         Set<OrchestrationEventHandler> eventHandlerSet = new HashSet<>();

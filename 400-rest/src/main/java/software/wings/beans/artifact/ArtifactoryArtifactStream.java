@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -85,7 +85,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @Override
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname());
-    if (isNotEmpty(artifactPattern)) {
+    if (hasSome(artifactPattern)) {
       builder.append('/').append(getArtifactPattern());
     } else {
       builder.append('/').append(getImageName());
@@ -96,7 +96,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   // TODO: remove this method after migration of old artifact streams
   // TODO: add validations for repository type
   public String getRepositoryType() {
-    if (isEmpty(artifactPattern)) {
+    if (hasNone(artifactPattern)) {
       return RepositoryType.docker.name();
     }
     return repositoryType;
@@ -118,8 +118,8 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   private boolean repositoryServerChanged(String dockerRepositoryServer) {
-    if (isEmpty(this.dockerRepositoryServer) || isEmpty(dockerRepositoryServer)) {
-      return isNotEmpty(this.dockerRepositoryServer) || isNotEmpty(dockerRepositoryServer);
+    if (hasNone(this.dockerRepositoryServer) || hasNone(dockerRepositoryServer)) {
+      return hasSome(this.dockerRepositoryServer) || hasSome(dockerRepositoryServer);
     }
     return !this.dockerRepositoryServer.equals(dockerRepositoryServer);
   }
@@ -142,7 +142,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   @Override
   public void validateRequiredFields() {
     if (appId.equals(GLOBAL_APP_ID)) {
-      if (isEmpty(repositoryType)) {
+      if (hasNone(repositoryType)) {
         throw new InvalidRequestException("Repository Type cannot be empty", USER);
       }
     }
@@ -155,7 +155,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public boolean checkIfStreamParameterized() {
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       return validateParameters(jobname, imageName, artifactPaths.get(0), artifactPattern, dockerRepositoryServer);
     }
     return validateParameters(jobname, imageName, artifactPattern, dockerRepositoryServer);

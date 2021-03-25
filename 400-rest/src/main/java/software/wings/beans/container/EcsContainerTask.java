@@ -1,7 +1,7 @@
 package software.wings.beans.container;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static java.util.Collections.emptyList;
@@ -171,7 +171,7 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public String fetchAdvancedConfigNoComments() {
-    if (isNotEmpty(getAdvancedConfig())) {
+    if (hasSome(getAdvancedConfig())) {
       return Arrays.stream(getAdvancedConfig().split("\n"))
           .filter(line -> !commentPattern.matcher(line).matches())
           .collect(joining("\n"));
@@ -182,7 +182,7 @@ public class EcsContainerTask extends ContainerTask {
   @Override
   public void validateAdvanced() {
     // Instantiating doesn't work when service variable expressions are used so only check for placeholder
-    if (isEmpty(getAdvancedConfig())) {
+    if (hasNone(getAdvancedConfig())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args", "ECS advanced configuration is empty.");
     }
@@ -215,7 +215,7 @@ public class EcsContainerTask extends ContainerTask {
   public TaskDefinition createTaskDefinition(
       String containerName, String imageName, String executionRole, String domainName) {
     String configTemplate;
-    if (isNotEmpty(getAdvancedConfig())) {
+    if (hasSome(getAdvancedConfig())) {
       configTemplate = fetchAdvancedConfigNoComments();
     } else {
       configTemplate = fetchJsonConfig();
@@ -225,7 +225,7 @@ public class EcsContainerTask extends ContainerTask {
       executionRole = "";
     }
 
-    if (isNotEmpty(domainName)) {
+    if (hasSome(domainName)) {
       Pattern pattern = ContainerTask.compileRegexPattern(domainName);
       Matcher matcher = pattern.matcher(configTemplate);
       if (!matcher.find()) {
@@ -246,7 +246,7 @@ public class EcsContainerTask extends ContainerTask {
   public RegisterTaskDefinitionRequest createRegisterTaskDefinitionRequest(
       String containerName, String imageName, String executionRole, String domainName) {
     String configTemplate;
-    if (isNotEmpty(getAdvancedConfig())) {
+    if (hasSome(getAdvancedConfig())) {
       configTemplate = fetchAdvancedConfigNoComments();
     } else {
       configTemplate = fetchRegisterTaskDefinitionRequestJsonConfig();
@@ -256,7 +256,7 @@ public class EcsContainerTask extends ContainerTask {
       executionRole = "";
     }
 
-    if (isNotEmpty(domainName)) {
+    if (hasSome(domainName)) {
       Pattern pattern = ContainerTask.compileRegexPattern(domainName);
       Matcher matcher = pattern.matcher(configTemplate);
       if (!matcher.find()) {
@@ -317,7 +317,7 @@ public class EcsContainerTask extends ContainerTask {
   private TaskDefinition createTaskDefinition() {
     Map<String, Volume> volumeMap = new HashMap<>();
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
-      if (isNotEmpty(containerDefinition.getStorageConfigurations())) {
+      if (hasSome(containerDefinition.getStorageConfigurations())) {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
           if (isNotBlank(storageConfiguration.getHostSourcePath())) {
             String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
@@ -358,7 +358,7 @@ public class EcsContainerTask extends ContainerTask {
   private RegisterTaskDefinitionRequest createRegisterTaskDefinitionRequest() {
     Map<String, Volume> volumeMap = new HashMap<>();
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
-      if (isNotEmpty(containerDefinition.getStorageConfigurations())) {
+      if (hasSome(containerDefinition.getStorageConfigurations())) {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
           if (isNotBlank(storageConfiguration.getHostSourcePath())) {
             String volumeName = EcsConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
@@ -450,7 +450,7 @@ public class EcsContainerTask extends ContainerTask {
       }
     }
 
-    if (isNotEmpty(harnessContainerDefinition.getStorageConfigurations())) {
+    if (hasSome(harnessContainerDefinition.getStorageConfigurations())) {
       List<StorageConfiguration> harnessStorageConfigurations = harnessContainerDefinition.getStorageConfigurations();
       containerDefinition.setMountPoints(
           harnessStorageConfigurations.stream()
@@ -486,14 +486,14 @@ public class EcsContainerTask extends ContainerTask {
 
   @Override
   public void validate() {
-    if (isNotEmpty(getAdvancedConfig())) {
+    if (hasSome(getAdvancedConfig())) {
       return;
     }
 
     List<ContainerDefinition> containerDefinitions = getContainerDefinitions();
     for (ContainerDefinition containerDefinition : containerDefinitions) {
       List<PortMapping> portMappings = containerDefinition.getPortMappings();
-      if (isNotEmpty(portMappings)) {
+      if (hasSome(portMappings)) {
         List<PortMapping> portMappingList =
             portMappings.stream().filter(portMapping -> portMapping.getContainerPort() != null).collect(toList());
         containerDefinition.setPortMappings(portMappingList);

@@ -1,6 +1,6 @@
 package io.harness.cvng.alert.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -76,7 +76,7 @@ public class AlertRuleDTO {
   }
 
   public void validate() {
-    if (isEmpty(alertCondition.getServices())) {
+    if (hasNone(alertCondition.getServices())) {
       alertCondition.setAllServices(true);
     }
 
@@ -84,7 +84,7 @@ public class AlertRuleDTO {
       alertCondition.setServices(Lists.newArrayList());
     }
 
-    if (isEmpty(alertCondition.getEnvironments())) {
+    if (hasNone(alertCondition.getEnvironments())) {
       alertCondition.setAllEnvironments(true);
     }
 
@@ -92,7 +92,7 @@ public class AlertRuleDTO {
       alertCondition.setEnvironments(Lists.newArrayList());
     }
 
-    if (isEmpty(alertCondition.getVerificationsNotify().getActivityTypes())) {
+    if (hasNone(alertCondition.getVerificationsNotify().getActivityTypes())) {
       alertCondition.getVerificationsNotify().setAllActivityTpe(true);
     }
 
@@ -100,7 +100,7 @@ public class AlertRuleDTO {
       alertCondition.getVerificationsNotify().setActivityTypes(Lists.newArrayList());
     }
 
-    if (isEmpty(alertCondition.getVerificationsNotify().getVerificationStatuses())) {
+    if (hasNone(alertCondition.getVerificationsNotify().getVerificationStatuses())) {
       alertCondition.getVerificationsNotify().setAllVerificationStatuses(true);
     }
 

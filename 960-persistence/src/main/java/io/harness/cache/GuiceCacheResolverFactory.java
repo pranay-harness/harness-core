@@ -1,7 +1,7 @@
 package io.harness.cache;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -44,7 +44,7 @@ public class GuiceCacheResolverFactory implements CacheResolverFactory {
   public CacheResolver getExceptionCacheResolver(CacheMethodDetails<CacheResult> cacheMethodDetails) {
     final CacheResult cacheResultAnnotation = cacheMethodDetails.getCacheAnnotation();
     final String exceptionCacheName = cacheResultAnnotation.exceptionCacheName();
-    if (isEmpty(exceptionCacheName)) {
+    if (hasNone(exceptionCacheName)) {
       throw new IllegalArgumentException("Can only be called when CacheResult.exceptionCacheName() is specified");
     }
     Cache<?, ?> cache = Optional.ofNullable(caches.get(exceptionCacheName)).<CacheNotFoundException>orElseThrow(() -> {

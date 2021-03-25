@@ -1,11 +1,12 @@
 package io.harness.ccm.anomaly.dao;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityBuilder;
 import io.harness.ccm.anomaly.entities.TimeGranularity;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -64,17 +65,17 @@ public class AnomalyEntityDao {
   private String getUpdateQuery(AnomalyEntity anomaly) {
     UpdateQuery query = new UpdateQuery(AnomaliesDataTableSchema.table);
 
-    if (EmptyPredicate.isNotEmpty(anomaly.getId())) {
+    if (hasSome(anomaly.getId())) {
       query.addCondition(BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.id, anomaly.getId()));
     } else {
       throw new InvalidArgumentsException("Update cannot be done since given anomaly doesn't contain id");
     }
 
-    if (EmptyPredicate.isNotEmpty(anomaly.getAccountId())) {
+    if (hasSome(anomaly.getAccountId())) {
       query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, anomaly.getAccountId()));
     }
 
-    if (EmptyPredicate.isNotEmpty(anomaly.getNote())) {
+    if (hasSome(anomaly.getNote())) {
       query.addSetClause(AnomaliesDataTableSchema.note, anomaly.getNote());
     }
 

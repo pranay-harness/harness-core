@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -149,7 +149,7 @@ public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy impl
 
   boolean checkAndModifyRollbackPhaseLevelFailureStrategies(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-    if (isEmpty(rollbackWorkflowPhaseIdMap)) {
+    if (hasNone(rollbackWorkflowPhaseIdMap)) {
       return false;
     }
     List<WorkflowPhase> workflowPhases = new ArrayList<>(rollbackWorkflowPhaseIdMap.values());
@@ -172,7 +172,7 @@ public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy impl
 
   private boolean checkAndModifyPhases(List<WorkflowPhase> workflowPhases) {
     boolean modified = false;
-    if (isNotEmpty(workflowPhases)) {
+    if (hasSome(workflowPhases)) {
       for (WorkflowPhase phase : workflowPhases) {
         List<PhaseStep> phaseSteps = phase.getPhaseSteps();
         modified = checkAndModifySteps(phaseSteps);
@@ -183,7 +183,7 @@ public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy impl
 
   private boolean checkAndModifySteps(List<PhaseStep> phaseSteps) {
     boolean modified = false;
-    if (isNotEmpty(phaseSteps)) {
+    if (hasSome(phaseSteps)) {
       for (PhaseStep phaseStep : phaseSteps) {
         List<FailureStrategy> failureStrategies = phaseStep.getFailureStrategies();
         if (migrationRequired(failureStrategies)) {
@@ -200,7 +200,7 @@ public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy impl
   }
 
   boolean migrationRequired(List<FailureStrategy> originalFailureStrategies) {
-    if (isEmpty(originalFailureStrategies)) {
+    if (hasNone(originalFailureStrategies)) {
       return false;
     }
     List<RepairActionCode> manualInterventions =
@@ -208,6 +208,6 @@ public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy impl
             .map(FailureStrategy::getRepairActionCode)
             .filter(repairActionCode -> repairActionCode.equals(RepairActionCode.MANUAL_INTERVENTION))
             .collect(Collectors.toList());
-    return isNotEmpty(manualInterventions);
+    return hasSome(manualInterventions);
   }
 }

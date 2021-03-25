@@ -1,7 +1,7 @@
 package io.harness.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -118,19 +118,19 @@ public class Misc {
       elapsed.append(elapsedHours).append('h');
     }
     if (elapsedMinutes > 0) {
-      if (isNotEmpty(elapsed.toString())) {
+      if (hasSome(elapsed.toString())) {
         elapsed.append(' ');
       }
       elapsed.append(elapsedMinutes).append('m');
     }
     if (elapsedSeconds > 0) {
-      if (isNotEmpty(elapsed.toString())) {
+      if (hasSome(elapsed.toString())) {
         elapsed.append(' ');
       }
       elapsed.append(elapsedSeconds).append('s');
     }
 
-    if (isEmpty(elapsed.toString())) {
+    if (hasNone(elapsed.toString())) {
       elapsed.append("0s");
     }
 

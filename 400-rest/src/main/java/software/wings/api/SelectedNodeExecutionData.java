@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
@@ -37,7 +37,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    if (isNotEmpty(serviceInstanceList)) {
+    if (hasSome(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
           ExecutionDataValue.builder()
               .displayName("Hosts")
@@ -50,7 +50,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    if (isNotEmpty(serviceInstanceList)) {
+    if (hasSome(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
           ExecutionDataValue.builder()
               .displayName("Hosts")

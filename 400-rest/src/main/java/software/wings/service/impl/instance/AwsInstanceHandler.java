@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.function.Function.identity;
@@ -242,7 +242,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
     Map<String, Instance> instancesInDBMap = new HashMap<>();
 
     // If there are prior instances in db already
-    if (isNotEmpty(instancesInDB)) {
+    if (hasSome(instancesInDB)) {
       instancesInDB.forEach(instance -> {
         if (instance != null) {
           instancesInDBMap.put(getEc2InstanceId(instance), instance);
@@ -274,11 +274,11 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
     handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
 
     DeploymentSummary deploymentSummary;
-    if (isNotEmpty(instancesToBeAdded)) {
+    if (hasSome(instancesToBeAdded)) {
       if (isAmi) {
         // newDeploymentInfo would be null in case of sync job.
         if ((asgNameDeploymentSummaryMap == null || !asgNameDeploymentSummaryMap.containsKey(autoScalingGroupName))
-            && isNotEmpty(instancesInDB)) {
+            && hasSome(instancesInDB)) {
           Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
           if (!instanceWithExecutionInfoOptional.isPresent()) {
             log.warn("Couldn't find an instance from a previous deployment for inframapping {}",
@@ -387,7 +387,7 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
                                              .map(entry -> entry.getValue().getUuid())
                                              .collect(Collectors.toSet());
 
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }

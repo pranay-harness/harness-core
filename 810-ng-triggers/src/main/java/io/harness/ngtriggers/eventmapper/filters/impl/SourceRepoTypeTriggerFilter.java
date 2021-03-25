@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE;
 
 import static java.util.stream.Collectors.toList;
@@ -33,14 +33,14 @@ public class SourceRepoTypeTriggerFilter implements TriggerFilter {
     TriggerWebhookEvent triggerWebhookEvent = filterRequestData.getWebhookPayloadData().getOriginalEvent();
     List<TriggerDetails> filteredList = null;
 
-    if (isNotEmpty(filterRequestData.getDetails())) {
+    if (hasSome(filterRequestData.getDetails())) {
       filteredList = filterRequestData.getDetails()
                          .stream()
                          .filter(trigger -> isValidSourceRepoType(triggerWebhookEvent, trigger.getNgTriggerEntity()))
                          .collect(toList());
     }
 
-    if (isEmpty(filteredList)) {
+    if (hasNone(filteredList)) {
       String msg = String.format("No enabled trigger found for sourceRepoType {} for project: {}",
           triggerWebhookEvent.getSourceRepoType(), filterRequestData.getProjectFqn());
       log.info(msg);

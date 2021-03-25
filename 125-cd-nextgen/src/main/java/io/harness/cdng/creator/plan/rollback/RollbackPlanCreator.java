@@ -1,10 +1,12 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -38,7 +40,7 @@ public class RollbackPlanCreator {
 
     String executionNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
         stageNode.getIdentifier(), PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
-    if (EmptyPredicate.isNotEmpty(stepGroupsRollbackPlanNode.getNodes())) {
+    if (hasSome(stepGroupsRollbackPlanNode.getNodes())) {
       stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionStepsField.getNode().getUuid() + "_stepGrouprollback")
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)
@@ -48,14 +50,14 @@ public class RollbackPlanCreator {
 
     PlanCreationResponse executionRollbackPlanNode =
         ExecutionRollbackPMSPlanCreator.createExecutionRollbackPlanNode(executionRollbackSteps);
-    if (EmptyPredicate.isNotEmpty(executionRollbackPlanNode.getNodes())) {
+    if (hasSome(executionRollbackPlanNode.getNodes())) {
       stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionRollbackSteps.getNode().getUuid() + "_executionrollback")
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)
                                           .build());
     }
 
-    if (EmptyPredicate.isEmpty(stepParametersBuilder.build().getChildNodes())) {
+    if (hasNone(stepParametersBuilder.build().getChildNodes())) {
       return PlanCreationResponse.builder().build();
     }
 

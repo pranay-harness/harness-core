@@ -1,7 +1,8 @@
 package io.harness.pms.pipeline.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 
@@ -10,7 +11,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -193,7 +193,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
     pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
-    if (isNotEmpty(filtersAndStageCount.getFilters())) {
+    if (hasSome(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(
           (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
     }
@@ -213,29 +213,29 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   public Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(PipelineEntityKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgId)) {
+    if (hasSome(orgId)) {
       criteria.and(PipelineEntityKeys.orgIdentifier).is(orgId);
     }
-    if (isNotEmpty(projectId)) {
+    if (hasSome(projectId)) {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
     criteria.and(PipelineEntityKeys.deleted).is(deleted);
 
-    if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
+    if (hasSome(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
-    } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
+    } else if (hasSome(filterIdentifier) && filterProperties == null) {
       populateFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
-    } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
+    } else if (hasNone(filterIdentifier) && filterProperties != null) {
       populateFilter(criteria, filterProperties);
     }
-    if (EmptyPredicate.isNotEmpty(module)) {
+    if (hasSome(module)) {
       criteria.and(String.format("filters.%s", module)).exists(true);
     }
 
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(PipelineEntityKeys.identifier)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
@@ -262,16 +262,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private void populateFilter(Criteria criteria, @NotNull PipelineFilterPropertiesDto piplineFilter) {
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getName())) {
+    if (hasSome(piplineFilter.getName())) {
       criteria.and(PipelineEntityKeys.name).is(piplineFilter.getName());
     }
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getDescription())) {
+    if (hasSome(piplineFilter.getDescription())) {
       criteria.and(PipelineEntityKeys.description).is(piplineFilter.getDescription());
     }
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
+    if (hasSome(piplineFilter.getPipelineTags())) {
       criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());
     }
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineIdentifiers())) {
+    if (hasSome(piplineFilter.getPipelineIdentifiers())) {
       criteria.and(PipelineEntityKeys.identifier).in(piplineFilter.getPipelineIdentifiers());
     }
     if (piplineFilter.getModuleProperties() != null) {
@@ -305,7 +305,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     StepCategory stepCategory =
         calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module), accountId);
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
+      if (entry.getKey().equals(module) || hasNone(entry.getValue())) {
         continue;
       }
       stepCategory.addStepCategory(calculateStepsForCategory(entry.getKey(), entry.getValue()));
@@ -328,8 +328,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       filteredStepTypes =
           stepInfos.stream()
               .filter(stepInfo
-                  -> EmptyPredicate.isEmpty(category) || stepInfo.getStepMetaData().getCategoryList().contains(category)
-                      || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
+                  -> hasNone(category) || stepInfo.getStepMetaData().getCategoryList().contains(category)
+                      || hasNone(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
     filteredStepTypes.addAll(commonStepInfo.getCommonSteps(accountId));

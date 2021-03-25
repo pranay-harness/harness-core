@@ -1,12 +1,13 @@
 package io.harness.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
@@ -180,7 +181,7 @@ public class EngineExpressionEvaluator {
 
   public Object evaluateExpression(String expression, Map<String, Object> ctx) {
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    if (expression == null || EmptyPredicate.isEmpty(expression.trim())) {
+    if (expression == null || hasNone(expression.trim())) {
       return null;
     }
     return evaluateExpressionInternal(expression, prepareContext(ctx), MAX_DEPTH);
@@ -216,7 +217,7 @@ public class EngineExpressionEvaluator {
     String finalExpression = runStringReplacer(expression, resolver);
     ctx.addToContext(partialCtx);
     List<String> variables = findVariables(finalExpression);
-    if (EmptyPredicate.isEmpty(variables)) {
+    if (hasNone(variables)) {
       return PartialEvaluateResult.createCompleteResult(evaluateInternal(expression, ctx));
     }
 
@@ -238,7 +239,7 @@ public class EngineExpressionEvaluator {
 
   public PartialEvaluateResult partialEvaluateExpression(String expression, Map<String, Object> ctx) {
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    if (EmptyPredicate.isEmpty(expression)) {
+    if (hasNone(expression)) {
       return null;
     }
     return partialEvaluateExpressionInternal(expression, prepareContext(ctx), new HashMap<>(), MAX_DEPTH);
@@ -251,7 +252,7 @@ public class EngineExpressionEvaluator {
     String finalExpression = runStringReplacer(expression, resolver);
     ctx.addToContext(partialCtx);
     List<String> variables = findVariables(finalExpression);
-    if (EmptyPredicate.isEmpty(variables)) {
+    if (hasNone(variables)) {
       return PartialEvaluateResult.createCompleteResult(evaluateInternal(expression, ctx));
     }
 
@@ -269,7 +270,7 @@ public class EngineExpressionEvaluator {
 
   public PartialEvaluateResult partialEvaluateExpressionBlock(@NotNull String expressionBlock,
       @NotNull EngineJexlContext ctx, @NotNull Map<String, Object> partialCtx, int depth) {
-    if (EmptyPredicate.isEmpty(expressionBlock)) {
+    if (hasNone(expressionBlock)) {
       return PartialEvaluateResult.createCompleteResult(expressionBlock);
     }
 
@@ -315,7 +316,7 @@ public class EngineExpressionEvaluator {
           "Infinite loop or too deep indirection in expression interpretation", expressionBlock);
     }
 
-    if (EmptyPredicate.isEmpty(expressionBlock)) {
+    if (hasNone(expressionBlock)) {
       return expressionBlock;
     }
 
@@ -385,7 +386,7 @@ public class EngineExpressionEvaluator {
     }
     return fetchPrefixes()
         .stream()
-        .map(prefix -> EmptyPredicate.isEmpty(prefix) ? normalizedExpression : prefix + "." + normalizedExpression)
+        .map(prefix -> hasNone(prefix) ? normalizedExpression : prefix + "." + normalizedExpression)
         .collect(Collectors.toList());
   }
 
@@ -439,7 +440,7 @@ public class EngineExpressionEvaluator {
 
     Map<String, Object> clonedContext = new LateBindingMap();
     clonedContext.putAll(contextMap);
-    if (EmptyPredicate.isNotEmpty(ctx)) {
+    if (hasSome(ctx)) {
       clonedContext.putAll(ctx);
     }
     return new EngineJexlContext(this, clonedContext);
@@ -458,18 +459,18 @@ public class EngineExpressionEvaluator {
   }
 
   public static boolean matchesVariablePattern(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
+    if (hasNone(str)) {
       return false;
     }
     return VARIABLE_PATTERN.matcher(str).matches();
   }
 
   public static boolean isNotSingleExpression(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
+    if (hasNone(str)) {
       return true;
     }
     String finalExpression = runStringReplacer(str, new EmptyExpressionResolver());
-    return !EmptyPredicate.isEmpty(finalExpression);
+    return !hasNone(finalExpression);
   }
 
   public static boolean hasVariables(String str) {
@@ -489,14 +490,14 @@ public class EngineExpressionEvaluator {
   }
 
   public static boolean validVariableFieldName(String name) {
-    if (EmptyPredicate.isEmpty(name)) {
+    if (hasNone(name)) {
       return false;
     }
     return VALID_VARIABLE_FIELD_NAME_PATTERN.matcher(name).matches();
   }
 
   public static boolean validAliasName(String name) {
-    if (EmptyPredicate.isEmpty(name)) {
+    if (hasNone(name)) {
       return false;
     }
     return ALIAS_NAME_PATTERN.matcher(name).matches();
@@ -507,14 +508,14 @@ public class EngineExpressionEvaluator {
   }
 
   public static boolean hasPattern(String str, Pattern pattern) {
-    if (EmptyPredicate.isEmpty(str)) {
+    if (hasNone(str)) {
       return false;
     }
     return pattern.matcher(str).find();
   }
 
   public static List<String> findPatterns(String str, Pattern pattern) {
-    if (EmptyPredicate.isEmpty(str)) {
+    if (hasNone(str)) {
       return Collections.emptyList();
     }
 
@@ -660,7 +661,7 @@ public class EngineExpressionEvaluator {
     @Override
     public String processString(String expression) {
       PartialEvaluateResult result = expressionEvaluator.partialRenderExpression(expression);
-      if (EmptyPredicate.isNotEmpty(result.getPartialCtx())) {
+      if (hasSome(result.getPartialCtx())) {
         partialCtx.putAll(result.getPartialCtx());
       }
       if (result.isPartial()) {

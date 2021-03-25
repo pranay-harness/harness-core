@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 
@@ -109,7 +109,7 @@ public class GitChangeSetProcesser {
   }
 
   private Set<String> getNamesOfTheNewAppsAdded(List<GitFileChange> gitFileChangeList, String accountId) {
-    if (isEmpty(gitFileChangeList)) {
+    if (hasNone(gitFileChangeList)) {
       return Collections.emptySet();
     }
     Set<String> appNameSet = gitFileChangeList.stream()
@@ -118,7 +118,7 @@ public class GitChangeSetProcesser {
     // We can get null appName in case of global cloud provider
     Iterables.removeIf(appNameSet, Objects::isNull);
     Set<String> appsWhichExists = getAppNamesWhichExistsInHarness(appNameSet, accountId);
-    if (isNotEmpty(appsWhichExists)) {
+    if (hasSome(appsWhichExists)) {
       appNameSet.removeAll(appsWhichExists);
     }
     return appNameSet;
@@ -130,14 +130,14 @@ public class GitChangeSetProcesser {
                                          .field(ApplicationKeys.name)
                                          .in(appNameSet)
                                          .asList();
-    if (isEmpty(applications)) {
+    if (hasNone(applications)) {
       return Collections.emptySet();
     }
     return applications.stream().map(app -> app.getName()).collect(toSet());
   }
 
   private void addYamlChangeSetToFilesCommited(List<GitFileChange> gitFileChanges, YamlGitConfig yamlGitConfig) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
@@ -160,7 +160,7 @@ public class GitChangeSetProcesser {
   }
 
   private List<GitFileChange> getFileChangesOfCommit(List<GitFileChange> gitFileChanges) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return gitFileChanges;
     }
     return gitFileChanges.stream().filter(change -> !change.isChangeFromAnotherCommit()).collect(toList());
@@ -176,7 +176,7 @@ public class GitChangeSetProcesser {
 
   private void addProcessingCommitDetailsToChangeList(String processingCommitId, Long processingCommitTimeMs,
       String processingCommitMessage, List<GitFileChange> gitFileChanges) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> {

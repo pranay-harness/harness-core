@@ -1,5 +1,7 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
@@ -8,7 +10,6 @@ import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.KubernetesServiceSpecVisitorHelper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -46,18 +47,18 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    if (EmptyPredicate.isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       variables.forEach(ngVariable -> children.add("variables", ngVariable));
     }
 
     children.add("artifacts", artifacts);
-    if (EmptyPredicate.isNotEmpty(artifactOverrideSets)) {
+    if (hasSome(artifactOverrideSets)) {
       artifactOverrideSets.forEach(artifactOverrideSet -> children.add("artifactOverrideSets", artifactOverrideSet));
     }
-    if (EmptyPredicate.isNotEmpty(manifests)) {
+    if (hasSome(manifests)) {
       manifests.forEach(manifest -> children.add("manifests", manifest));
     }
-    if (EmptyPredicate.isNotEmpty(manifestOverrideSets)) {
+    if (hasSome(manifestOverrideSets)) {
       manifestOverrideSets.forEach(manifestOverrideSet -> children.add("manifestOverrideSets", manifestOverrideSet));
     }
     return children;

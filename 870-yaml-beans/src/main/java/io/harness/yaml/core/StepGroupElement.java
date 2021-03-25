@@ -1,6 +1,7 @@
 package io.harness.yaml.core;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.executionelement.StepGroupElementVisitorHelper;
@@ -41,10 +42,10 @@ public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visit
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    if (EmptyPredicate.isNotEmpty(steps)) {
+    if (hasSome(steps)) {
       steps.forEach(step -> children.add("steps", step));
     }
-    if (EmptyPredicate.isNotEmpty(rollbackSteps)) {
+    if (hasSome(rollbackSteps)) {
       rollbackSteps.forEach(rollbackStep -> children.add("rollbackSteps", rollbackStep));
     }
     return children;

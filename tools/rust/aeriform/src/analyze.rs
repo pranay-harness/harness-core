@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
-use crate::java_module::{modules, JavaModule};
+use crate::java_module::{JavaModule, modules};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
 enum Kind {

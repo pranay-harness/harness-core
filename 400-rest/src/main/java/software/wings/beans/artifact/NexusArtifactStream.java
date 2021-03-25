@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -86,7 +86,7 @@ public class NexusArtifactStream extends ArtifactStream {
   }
   @Override
   public String fetchArtifactDisplayName(String buildNo) {
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
     }
     if (getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
@@ -103,7 +103,7 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public String generateSourceName() {
     StringBuilder builder = new StringBuilder(getJobname());
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       builder.append('/').append(getGroupId());
       getArtifactPaths().forEach(artifactPath -> builder.append('/').append(artifactPath));
     } else {
@@ -128,8 +128,8 @@ public class NexusArtifactStream extends ArtifactStream {
     if (repositoryType != null) {
       return repositoryType;
     }
-    if (isEmpty(artifactPaths)) {
-      if (isEmpty(packageName)) {
+    if (hasNone(artifactPaths)) {
+      if (hasNone(packageName)) {
         repositoryType = RepositoryType.docker.name();
       }
     } else {
@@ -142,8 +142,8 @@ public class NexusArtifactStream extends ArtifactStream {
     if (repositoryFormat != null) {
       return repositoryFormat;
     }
-    if (isEmpty(getArtifactPaths())) {
-      if (isEmpty(getPackageName())) {
+    if (hasNone(getArtifactPaths())) {
+      if (hasNone(getPackageName())) {
         repositoryFormat = RepositoryFormat.docker.name();
       }
     } else {
@@ -162,10 +162,10 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   private boolean registryUrlChanged(String dockerRegistryUrl) {
-    if (isEmpty(this.dockerRegistryUrl) && isEmpty(dockerRegistryUrl)) {
+    if (hasNone(this.dockerRegistryUrl) && hasNone(dockerRegistryUrl)) {
       return false;
-    } else if ((isEmpty(this.dockerRegistryUrl) && isNotEmpty(dockerRegistryUrl))
-        || (isNotEmpty(this.dockerRegistryUrl) && isEmpty(dockerRegistryUrl))) {
+    } else if ((hasNone(this.dockerRegistryUrl) && hasSome(dockerRegistryUrl))
+        || (hasSome(this.dockerRegistryUrl) && hasNone(dockerRegistryUrl))) {
       return true;
     }
     return !this.dockerRegistryUrl.equals(dockerRegistryUrl);
@@ -193,7 +193,7 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public void validateRequiredFields() {
     if (appId.equals(GLOBAL_APP_ID)) {
-      if (isEmpty(repositoryFormat)) {
+      if (hasNone(repositoryFormat)) {
         throw new InvalidRequestException("Repository Format cannot be empty", USER);
       }
     }
@@ -201,14 +201,14 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @Override
   public boolean shouldValidate() {
-    return isNotEmpty(extension) || isNotEmpty(classifier);
+    return hasSome(extension) || hasSome(classifier);
   }
 
   @Override
   public boolean checkIfStreamParameterized() {
     String repoFormat = getRepositoryFormat();
     if (RepositoryFormat.maven.name().equals(repoFormat)) {
-      if (isNotEmpty(artifactPaths)) {
+      if (hasSome(artifactPaths)) {
         return validateParameters(jobname, groupId, artifactPaths.get(0), extension, classifier);
       }
       return validateParameters(jobname, groupId, extension, classifier);
@@ -223,32 +223,32 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   public List<String> fetchArtifactStreamParameters() {
     List<String> parameters = new ArrayList<>();
-    if (isNotEmpty(jobname)) {
+    if (hasSome(jobname)) {
       extractStringsMatchingPattern(jobname, parameters);
     }
     String repoFormat = getRepositoryFormat();
     if (RepositoryFormat.maven.name().equals(repoFormat)) {
-      if (isNotEmpty(groupId)) {
+      if (hasSome(groupId)) {
         extractStringsMatchingPattern(groupId, parameters);
       }
-      if (isNotEmpty(artifactPaths) && isNotEmpty(artifactPaths.get(0))) {
+      if (hasSome(artifactPaths) && hasSome(artifactPaths.get(0))) {
         extractStringsMatchingPattern(artifactPaths.get(0), parameters);
       }
-      if (isNotEmpty(extension)) {
+      if (hasSome(extension)) {
         extractStringsMatchingPattern(extension, parameters);
       }
-      if (isNotEmpty(classifier)) {
+      if (hasSome(classifier)) {
         extractStringsMatchingPattern(classifier, parameters);
       }
     } else if (RepositoryFormat.nuget.name().equals(repoFormat) || RepositoryFormat.npm.name().equals(repoFormat)) {
-      if (isNotEmpty(packageName)) {
+      if (hasSome(packageName)) {
         extractStringsMatchingPattern(packageName, parameters);
       }
     } else if (RepositoryFormat.docker.name().equals(repoFormat)) {
-      if (isNotEmpty(imageName)) {
+      if (hasSome(imageName)) {
         extractStringsMatchingPattern(imageName, parameters);
       }
-      if (isNotEmpty(dockerRegistryUrl)) {
+      if (hasSome(dockerRegistryUrl)) {
         extractStringsMatchingPattern(dockerRegistryUrl, parameters);
       }
     }
@@ -286,8 +286,8 @@ public class NexusArtifactStream extends ArtifactStream {
         this.repositoryFormat = repositoryFormat;
         return;
       }
-      if (isEmpty(getArtifactPaths())) {
-        if (isEmpty(getPackageName())) {
+      if (hasNone(getArtifactPaths())) {
+        if (hasNone(getPackageName())) {
           this.repositoryFormat = RepositoryFormat.docker.name();
         }
       } else {

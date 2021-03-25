@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
@@ -88,7 +88,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     List<BuildDetails> buildDetails =
         wrapNewBuildsWithLabels(getBuildInternal(artifactStreamAttributes, config, encryptionDetails, buildNo),
             artifactStreamAttributes, config);
-    if (isNotEmpty(buildDetails)) {
+    if (hasSome(buildDetails)) {
       return buildDetails.get(0);
     }
     return null;
@@ -209,7 +209,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public boolean validateArtifactSource(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    if (isNotEmpty(artifactStreamAttributes.getExtension()) || isNotEmpty(artifactStreamAttributes.getClassifier())) {
+    if (hasSome(artifactStreamAttributes.getExtension()) || hasSome(artifactStreamAttributes.getClassifier())) {
       return nexusService.existsVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
           artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());

@@ -1,6 +1,6 @@
 package io.harness.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceListener;
@@ -48,7 +48,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   private String getMongoUri() {
-    if (isEmpty(schedulerConfig.getMongoUri())) {
+    if (hasNone(schedulerConfig.getMongoUri())) {
       return defaultMongoUri;
     }
     return schedulerConfig.getMongoUri();

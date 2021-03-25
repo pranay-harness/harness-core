@@ -1,7 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -41,13 +41,13 @@ public class DomainWhitelistCheckerService {
   private boolean isDomainWhitelistedInternal(User user, Account account) {
     Set<String> filter = account.getWhitelistedDomains();
 
-    if (isEmpty(filter)) {
+    if (hasNone(filter)) {
       return true;
     }
 
     String email = user.getEmail();
 
-    if (isEmpty(email)) {
+    if (hasNone(email)) {
       log.warn("Empty email received from account {}", account.getUuid());
       return false;
     }

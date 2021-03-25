@@ -1,7 +1,7 @@
 package io.harness.cdng.service.steps;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
@@ -37,7 +37,6 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
@@ -124,7 +123,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
             .stepOutcome(manifestOutcome)
             .build();
 
-    if (isEmpty(artifactsWithCorrespondingOverrides)) {
+    if (hasNone(artifactsWithCorrespondingOverrides)) {
       return TaskChainResponse.builder()
           .chainEnd(true)
           .passThroughData(passThroughData)
@@ -193,7 +192,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     NGManagerLogCallback managerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
-    if (!isEmpty(responseDataMap)) {
+    if (!hasNone(responseDataMap)) {
       // Artifact task executed
       DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
       int currentIndex = serviceStepPassThroughData.getCurrentIndex();
@@ -264,7 +263,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                 serviceConfig.getServiceDefinition().getServiceSpec().getVariables(), expressionFunctorToken));
 
     List<Outcome> outcomes = stepOutcomes.stream().map(StepOutcome::getOutcome).collect(toList());
-    if (EmptyPredicate.isEmpty(outcomes)) {
+    if (hasNone(outcomes)) {
       outcomes = new LinkedList<>();
     }
     // Handle ArtifactsForkOutcome
@@ -295,7 +294,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     // Adding manifests stage overrides.
     StageOverridesOutcomeBuilder stageOverridesOutcomeBuilder = StageOverridesOutcome.builder();
-    if (manifestsOutcome != null && EmptyPredicate.isNotEmpty(manifestsOutcome.getManifestStageOverridesList())) {
+    if (manifestsOutcome != null && hasSome(manifestsOutcome.getManifestStageOverridesList())) {
       manifestsOutcome.getManifestStageOverridesList().forEach(
           manifestOutcome -> stageOverridesOutcomeBuilder.manifest(manifestOutcome.getIdentifier(), manifestOutcome));
     }
@@ -324,7 +323,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     // Adding variable stage overrides.
     List<NGVariable> stageOverrideVariables = serviceConfig.getStageOverrides().getVariables();
-    if (EmptyPredicate.isNotEmpty(stageOverrideVariables)) {
+    if (hasSome(stageOverrideVariables)) {
       stageOverridesOutcomeBuilder.variables(
           NGVariablesUtils.getMapOfVariables(stageOverrideVariables, expressionFunctorToken));
     }
@@ -338,7 +337,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, long expressionFunctorToken) {
     List<NGVariable> originalVariables = serviceConfig.getServiceDefinition().getServiceSpec().getVariables();
     Map<String, Object> mapOfVariables = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(originalVariables)) {
+    if (hasSome(originalVariables)) {
       mapOfVariables.putAll(NGVariablesUtils.getMapOfVariables(originalVariables, expressionFunctorToken));
       // original Variables
       outcomeBuilder.variables(mapOfVariables);
@@ -353,7 +352,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     }
 
     // Publishing final override originalVariables against "output" key.
-    if (EmptyPredicate.isNotEmpty(mapOfVariables)) {
+    if (hasSome(mapOfVariables)) {
       outcomeBuilder.variable(YamlTypes.OUTPUT, mapOfVariables);
     }
 
@@ -364,7 +363,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         ? new ArrayList<>()
         : variableOverrideSetWrappers.stream().map(NGVariableOverrideSetWrapper::getOverrideSet).collect(toList());
 
-    if (EmptyPredicate.isNotEmpty(variableOverrideSets)) {
+    if (hasSome(variableOverrideSets)) {
       for (NGVariableOverrideSets variableOverrideSet : variableOverrideSets) {
         outcomeBuilder.variableOverrideSet(variableOverrideSet.getIdentifier(),
             VariablesWrapperOutcome.builder()
@@ -377,10 +376,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   private void handleManifestOutcome(ManifestsOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
     List<ManifestOutcome> manifestOutcomeList =
-        isNotEmpty(outcome.getManifestOutcomeList()) ? outcome.getManifestOutcomeList() : Collections.emptyList();
+        hasSome(outcome.getManifestOutcomeList()) ? outcome.getManifestOutcomeList() : Collections.emptyList();
 
     List<ManifestOutcome> manifestOriginalList =
-        isNotEmpty(outcome.getManifestOriginalList()) ? outcome.getManifestOriginalList() : Collections.emptyList();
+        hasSome(outcome.getManifestOriginalList()) ? outcome.getManifestOriginalList() : Collections.emptyList();
 
     Map<String, Map<String, Object>> manifestsMap = new HashMap<>();
 
@@ -456,7 +455,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         ? new ArrayList<>()
         : artifactOverrideSetsWrappers.stream().map(ArtifactOverrideSetWrapper::getOverrideSet).collect(toList());
 
-    if (EmptyPredicate.isNotEmpty(artifactOverrideSets)) {
+    if (hasSome(artifactOverrideSets)) {
       managerLogCallback.saveExecutionLog("Found artifact overrides\n", LogLevel.INFO);
       for (ArtifactOverrideSets artifactOverrideSet : artifactOverrideSets) {
         ArtifactListConfig artifacts = artifactOverrideSet.getArtifacts();
@@ -516,7 +515,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
-    if (serviceConfig.getServiceRef() != null && EmptyPredicate.isNotEmpty(serviceConfig.getServiceRef().getValue())) {
+    if (serviceConfig.getServiceRef() != null && hasSome(serviceConfig.getServiceRef().getValue())) {
       String serviceIdentifier = serviceConfig.getServiceRef().getValue();
       Optional<ServiceEntity> serviceEntity =
           serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, false);

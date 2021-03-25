@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.gcs;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -92,7 +92,7 @@ public class GcsServiceImpl implements GcsService {
 
         if (listOfObjects != null) {
           nextPageToken = listOfObjects.getNextPageToken();
-          if (isNotEmpty(nextPageToken)) {
+          if (hasSome(nextPageToken)) {
             listObjects.setPageToken(nextPageToken);
           }
         }
@@ -154,14 +154,14 @@ public class GcsServiceImpl implements GcsService {
           Objects listOfObjects = listObjects.execute();
 
           // Get objects for the bucket
-          if (listOfObjects != null && isNotEmpty(listOfObjects.getItems())) {
+          if (listOfObjects != null && hasSome(listOfObjects.getItems())) {
             fillObjectSummaries(pattern, listOfObjects.getItems());
           }
 
           // Set page token to get next set of objects
           if (listOfObjects != null) {
             nextPageToken = listOfObjects.getNextPageToken();
-            if (isNotEmpty(nextPageToken)) {
+            if (hasSome(nextPageToken)) {
               listObjects.setPageToken(nextPageToken);
             }
           }
@@ -272,7 +272,7 @@ public class GcsServiceImpl implements GcsService {
 
   @Override
   public String getProject(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isNotEmpty(encryptedDataDetails)) {
+    if (hasSome(encryptedDataDetails)) {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     }
     return new JSONObject(new String(gcpConfig.getServiceAccountKeyFileContent())).get("project_id").toString();
@@ -300,12 +300,12 @@ public class GcsServiceImpl implements GcsService {
     Storage.Buckets bucketsObj;
     Buckets listOfBuckets;
     Map<String, String> bucketList = new HashMap<>();
-    if (isNotEmpty(encryptedDataDetails)) {
+    if (hasSome(encryptedDataDetails)) {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     }
 
     // List buckets for current project in service account if project is empty
-    if (isEmpty(projectId)) {
+    if (hasNone(projectId)) {
       if (gcpConfig.isUseDelegate()) {
         projectId = getProjectId(gcpConfig);
       } else {

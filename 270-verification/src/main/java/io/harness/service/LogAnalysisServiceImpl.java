@@ -3,8 +3,8 @@ package io.harness.service;
 import static io.harness.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
 import static io.harness.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -132,7 +132,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .filter(LogDataRecordKeys.clusterLevel, fromLevel)
                                      .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
 
-    if (isNotEmpty(host)) {
+    if (hasSome(host)) {
       query = query.field(LogDataRecordKeys.host).in(host);
     }
     try {
@@ -154,7 +154,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                      .field(LogDataRecordKeys.clusterLevel)
                                      .in(asList(clusterLevels))
                                      .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
-    if (isNotEmpty(host)) {
+    if (hasSome(host)) {
       query = query.field(LogDataRecordKeys.host).in(host);
     }
     wingsPersistence.delete(query);
@@ -172,7 +172,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
     }
 
-    if (isNotEmpty(host)) {
+    if (hasSome(host)) {
       query = query.filter(LogDataRecordKeys.host, host);
     }
     boolean deleted = wingsPersistence.delete(query);
@@ -189,7 +189,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         query = query.filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute);
       }
 
-      if (isNotEmpty(host)) {
+      if (hasSome(host)) {
         query = query.filter(LogDataRecordKeys.host, host);
       }
       UpdateResults updatedResults = wingsPersistence.update(query,
@@ -217,7 +217,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
       ClusterLevel clusterLevel, String delegateTaskId, List<LogElement> logData) {
     try {
-      if (isEmpty(cvConfigId) && !learningEngineService.isStateValid(appId, stateExecutionId)) {
+      if (hasNone(cvConfigId) && !learningEngineService.isStateValid(appId, stateExecutionId)) {
         log.warn(
             "State is no longer active " + stateExecutionId + ". Sending delegate abort request " + delegateTaskId);
         return false;
@@ -309,19 +309,18 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   private boolean checkIfL0AlreadyPresent(
       String appId, String cvConfigId, List<LogDataRecord> logDataRecords, String stateExecutionId) {
-    if (isEmpty(logDataRecords)) {
+    if (hasNone(logDataRecords)) {
       return true;
     }
-    String fieldNameForQuery = isEmpty(cvConfigId) ? LogDataRecordKeys.stateExecutionId : LogDataRecordKeys.cvConfigId;
-    String fieldValueForQuery = isEmpty(cvConfigId) ? stateExecutionId : cvConfigId;
+    String fieldNameForQuery = hasNone(cvConfigId) ? LogDataRecordKeys.stateExecutionId : LogDataRecordKeys.cvConfigId;
+    String fieldValueForQuery = hasNone(cvConfigId) ? stateExecutionId : cvConfigId;
 
     Set<Long> clusteredMinutes = new HashSet<>();
     logDataRecords.stream().filter(logDataRecord -> logDataRecord.getClusterLevel() == H0).forEach(logDataRecord -> {
       // Assumption: We either save all the records or none of the records in a batch.
       Set<String> hostsForMinute = getHostsForMinute(
           appId, fieldNameForQuery, fieldValueForQuery, logDataRecord.getLogCollectionMinute(), H0, H1, H2, HF);
-      if (isNotEmpty(hostsForMinute)
-          && (isEmpty(stateExecutionId) || hostsForMinute.contains(logDataRecord.getHost()))) {
+      if (hasSome(hostsForMinute) && (hasNone(stateExecutionId) || hostsForMinute.contains(logDataRecord.getHost()))) {
         clusteredMinutes.add(logDataRecord.getLogCollectionMinute());
       }
     });
@@ -341,7 +340,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       log.info("No configuration found for {} in app {}. It may have been deleted.", cvConfigId, appId);
       return false;
     }
-    if (isNotEmpty(logData)) {
+    if (hasSome(logData)) {
       List<LogDataRecord> logDataRecords = LogDataRecord.generateDataRecords(logsCVConfiguration.getStateType(), appId,
           cvConfigId, null, null, null, logsCVConfiguration.getServiceId(), clusterLevel,
           ClusterLevel.getHeartBeatLevel(clusterLevel), logData, logsCVConfiguration.getAccountId());
@@ -368,10 +367,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         deleteClusterLevel(cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
         Set<String> hosts =
             getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, ClusterLevel.L0);
-        if (isEmpty(hosts)) {
+        if (hasNone(hosts)) {
           deleteClusterLevel(cvConfigId, null, logCollectionMinute, L0, L1);
         }
-        if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0, H0))) {
+        if (hasNone(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0, H0))) {
           try {
             learningEngineService.markCompleted(logsCVConfiguration.getAccountId(), null,
                 "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute, logCollectionMinute,
@@ -437,19 +436,19 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       } else {
         eventsFromBaseline = logMLAnalysisRecord.getControl_events();
       }
-      if (isEmpty(eventsFromBaseline)) {
+      if (hasNone(eventsFromBaseline)) {
         log.info("No test events found for control data for state {} with analysisId ",
             logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
         return rv;
       }
 
       eventsFromBaseline.forEach((s, analysisClusters) -> {
-        if (isEmpty(analysisClusters)) {
+        if (hasNone(analysisClusters)) {
           return;
         }
 
         analysisClusters.forEach(analysisCluster -> {
-          if (isEmpty(analysisCluster.getMessage_frequencies())) {
+          if (hasNone(analysisCluster.getMessage_frequencies())) {
             log.error(
                 "for state {} the control analysis {} has empty message frequencies. Control data for this execution may not be correct",
                 logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
@@ -487,7 +486,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     Preconditions.checkState(
         logCollectionMinute > 0 ? startMinute <= 0 && endMinute <= 0 : startMinute >= 0 && endMinute >= 0,
         "both logCollectionMinute and start end minute set");
-    Preconditions.checkState(L0 != clusterLevel || (L0 == clusterLevel && isNotEmpty(logRequest.getNodes())),
+    Preconditions.checkState(L0 != clusterLevel || (L0 == clusterLevel && hasSome(logRequest.getNodes())),
         "for L0 -> L1 clustering nodes can not be empty, level: " + clusterLevel + " logRequest: " + logRequest);
     Set<LogDataRecord> logDataRecords = new HashSet<>();
     Query<LogDataRecord> recordQuery = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
@@ -503,7 +502,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           .lessThanOrEq(endMinute);
     }
 
-    if (isNotEmpty(logRequest.getNodes())) {
+    if (hasSome(logRequest.getNodes())) {
       recordQuery.field(LogDataRecordKeys.host).in(logRequest.getNodes());
     }
 
@@ -524,7 +523,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean deleteFeedback(String feedbackId) {
-    Preconditions.checkState(isNotEmpty(feedbackId), "empty or null feedback id set");
+    Preconditions.checkState(hasSome(feedbackId), "empty or null feedback id set");
     return deleteFeedbackHelper(feedbackId);
   }
 
@@ -587,7 +586,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         return successfulExecution;
       }
     }
-    if (isNotEmpty(successfulExecutions)) {
+    if (hasSome(successfulExecutions)) {
       return cvList.get(0).getWorkflowExecutionId();
     }
     log.warn("Could not get a successful workflow to find control nodes");
@@ -599,7 +598,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis) {
     mlAnalysisResponse.setStateType(stateType);
     boolean isAnalysisEmpty =
-        isEmpty(mlAnalysisResponse.getControl_events()) && isEmpty(mlAnalysisResponse.getTest_events());
+        hasNone(mlAnalysisResponse.getControl_events()) && hasNone(mlAnalysisResponse.getTest_events());
     mlAnalysisResponse.compressLogAnalysisRecord();
     if (!isFeedbackAnalysis.isPresent() || !isFeedbackAnalysis.get()) {
       mlAnalysisResponse.setAnalysisStatus(LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE);
@@ -624,7 +623,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   private void logAnalysisSummaryMessage(LogMLAnalysisRecord mlAnalysisResponse) {
-    if (isNotEmpty(mlAnalysisResponse.getAnalysisSummaryMessage())) {
+    if (hasSome(mlAnalysisResponse.getAnalysisSummaryMessage())) {
       cvActivityLogService
           .getLogger(mlAnalysisResponse.getAccountId(), mlAnalysisResponse.getCvConfigId(),
               mlAnalysisResponse.getLogCollectionMinute(), mlAnalysisResponse.getStateExecutionId())
@@ -648,7 +647,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                                                                      : MLAnalysisType.LOG_ML.name(),
           TimeUnit.MILLISECONDS.toSeconds(timeTaken));
     }
-    if (isNotEmpty(logsCVConfiguration.getContextId())) {
+    if (hasSome(logsCVConfiguration.getContextId())) {
       AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
       mlAnalysisResponse.setStateExecutionId(analysisContext.getStateExecutionId());
       mlAnalysisResponse.setStateType(analysisContext.getStateType());
@@ -722,7 +721,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       learningEngineService.markExpTaskCompleted(taskId.get());
     }
 
-    if (isNotEmpty(comparisonResults)) {
+    if (hasSome(comparisonResults)) {
       comparisonResults.forEach(result -> {
         result.setCvConfigId(cvConfigId);
         result.setLogCollectionMinute(mlAnalysisResponse.getLogCollectionMinute());
@@ -777,8 +776,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
     }
 
-    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
-        || !isEmpty(mlAnalysisResponse.getTest_events())) {
+    if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !hasNone(mlAnalysisResponse.getControl_events())
+        || !hasNone(mlAnalysisResponse.getTest_events())) {
       wingsPersistence.delete(
           wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
               .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, mlAnalysisResponse.getStateExecutionId())
@@ -1012,7 +1011,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
             .order(Sort.ascending(LogDataRecordKeys.logCollectionMinute));
 
-    if (isNotEmpty(host)) {
+    if (hasSome(host)) {
       query = query.filter(LogDataRecordKeys.host, host);
     }
 

@@ -2,8 +2,8 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -18,7 +18,6 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -133,7 +132,7 @@ public class SettingResource {
       @QueryParam("entityId") String entityId, @QueryParam("entityType") String entityType,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
-    if (isNotEmpty(settingVariableTypes)) {
+    if (hasSome(settingVariableTypes)) {
       pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
     if (gitSshConfigOnly) {
@@ -353,7 +352,7 @@ public class SettingResource {
   public RestResponse retainSelectedGitConnectorsAndDeleteRest(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") @NotEmpty String accountId, List<String> gitConnectorsToRetain) {
-    if (EmptyPredicate.isEmpty(gitConnectorsToRetain)) {
+    if (hasNone(gitConnectorsToRetain)) {
       // We won't delete anything if list to retain is empty
       // We expect the user to retain at least 1 Git Config
       return new RestResponse();
@@ -439,7 +438,7 @@ public class SettingResource {
   public RestResponse<Set<String>> getArtifactPaths(@PathParam("jobName") String jobName,
       @QueryParam("settingId") String settingId, @QueryParam("groupId") String groupId,
       @QueryParam("streamType") String streamType, @QueryParam("repositoryFormat") String repositoryFormat) {
-    if (isNotEmpty(repositoryFormat)) {
+    if (hasSome(repositoryFormat)) {
       return new RestResponse<>(buildSourceService.getArtifactPathsForRepositoryFormat(
           jobName, settingId, groupId, streamType, repositoryFormat));
     }
@@ -492,7 +491,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<Set<String>> getGroupIds(@PathParam("jobName") String jobName,
       @QueryParam("settingId") String settingId, @QueryParam("repositoryFormat") String repositoryFormat) {
-    if (isNotEmpty(repositoryFormat)) {
+    if (hasSome(repositoryFormat)) {
       return new RestResponse<>(
           buildSourceService.getGroupIdsForRepositoryFormat(jobName, settingId, repositoryFormat));
     }
@@ -669,7 +668,7 @@ public class SettingResource {
     if (settingId != null) {
       SettingAttribute settingAttribute = settingsService.get(settingId);
       if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
-          || isEmpty(settingsService.getFilteredSettingAttributes(
+          || hasNone(settingsService.getFilteredSettingAttributes(
               Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
         throw new InvalidRequestException("Setting attribute does not exist", USER);
       }

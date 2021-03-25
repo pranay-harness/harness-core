@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 
@@ -257,7 +257,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   @Override
   protected int getDelaySeconds(String initialDelay) {
-    if (isEmpty(initialDelay)) {
+    if (hasNone(initialDelay)) {
       initialDelay = "2m";
     }
     char lastChar = initialDelay.charAt(initialDelay.length() - 1);

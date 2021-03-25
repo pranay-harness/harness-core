@@ -1,9 +1,10 @@
 package io.harness.cdng.pipeline.plancreators;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static java.lang.String.format;
 
 import io.harness.cdng.pipeline.beans.RollbackNode;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
@@ -30,6 +31,6 @@ public class PlanCreatorHelper {
 
   public static boolean isStepGroupWithRollbacks(@Nonnull ExecutionWrapper executionWrapper) {
     return executionWrapper instanceof StepGroupElement
-        && EmptyPredicate.isNotEmpty(((StepGroupElement) executionWrapper).getRollbackSteps());
+        && hasSome(((StepGroupElement) executionWrapper).getRollbackSteps());
   }
 }

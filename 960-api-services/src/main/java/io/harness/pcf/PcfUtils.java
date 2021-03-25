@@ -1,6 +1,6 @@
 package io.harness.pcf;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
@@ -22,7 +22,7 @@ public class PcfUtils {
 
     try {
       ProcessResult processResult = processExecutor.execute();
-      appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+      appAutoscalarInstalled = hasSome(processResult.outputUTF8());
     } catch (InterruptedException e) {
       throw new PivotalClientApiException("check for App Autoscalar plugin failed", e);
     } catch (Exception e) {
@@ -35,12 +35,12 @@ public class PcfUtils {
   public static String resolvePcfPluginHome() {
     // look into java system variable
     final String sysVarPluginHome = System.getProperty(SYS_VAR_CF_PLUGIN_HOME);
-    if (isNotEmpty(sysVarPluginHome)) {
+    if (hasSome(sysVarPluginHome)) {
       return sysVarPluginHome.trim();
     }
     // env variable
     final String envVarPluginHome = System.getenv(CF_PLUGIN_HOME);
-    if (isNotEmpty(envVarPluginHome)) {
+    if (hasSome(envVarPluginHome)) {
       return envVarPluginHome.trim();
     }
     // default is user home

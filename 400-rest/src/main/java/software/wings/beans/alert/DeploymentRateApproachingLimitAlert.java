@@ -1,6 +1,6 @@
 package software.wings.beans.alert;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.alert.AlertData;
 import io.harness.limits.lib.Limit;
@@ -22,6 +22,6 @@ public class DeploymentRateApproachingLimitAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    return isEmpty(message) ? "" : message;
+    return hasNone(message) ? "" : message;
   }
 }

@@ -1,8 +1,8 @@
 package io.harness.scheduler;
 
 import static io.harness.beans.ExecutionStatus.QUEUED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASKS_METRIC_LIST;
@@ -92,7 +92,7 @@ public class ServiceGuardAccountPoller {
   @VisibleForTesting
   void recordQueuedTaskMetric() {
     String env = System.getenv("ENV");
-    if (isNotEmpty(env)) {
+    if (hasSome(env)) {
       env = env.replaceAll("-", "_").toLowerCase();
     }
     List<MLAnalysisType> analysisTasksFilters = Lists.newArrayList(LOG_ML, MLAnalysisType.TIME_SERIES);
@@ -115,7 +115,7 @@ public class ServiceGuardAccountPoller {
   }
 
   private String getMetricName(String env, String metricName) {
-    if (isEmpty(env)) {
+    if (hasNone(env)) {
       return metricName;
     }
 

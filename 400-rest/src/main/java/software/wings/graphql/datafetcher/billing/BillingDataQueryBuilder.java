@@ -2,12 +2,11 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -808,7 +807,7 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean checkFilter(Filter f) {
-    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+    return f.getOperator() != null && hasSome(f.getValues());
   }
 
   private DbColumn getFilterKey(QLBillingDataFilterType type) {
@@ -993,16 +992,16 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean isValidGroupBy(List<QLCCMEntityGroupBy> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 5;
+    return hasSome(groupBy) && groupBy.size() <= 5;
   }
 
   private boolean isValidGroupByForFilterValues(List<QLCCMEntityGroupBy> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 1;
+    return hasSome(groupBy) && groupBy.size() <= 1;
   }
 
   private List<QLBillingSortCriteria> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLBillingSortCriteria> sortCriteria, List<BillingDataMetaDataFields> fieldNames) {
-    if (isEmpty(sortCriteria)) {
+    if (hasNone(sortCriteria)) {
       return new ArrayList<>();
     }
 
@@ -1010,7 +1009,7 @@ public class BillingDataQueryBuilder {
         -> qlBillingSortCriteria.getSortOrder() == null
             || !fieldNames.contains(qlBillingSortCriteria.getSortType().getBillingMetaData()));
 
-    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+    if (hasSome(sortCriteria)) {
       sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
     }
     return sortCriteria;
@@ -1019,13 +1018,13 @@ public class BillingDataQueryBuilder {
   // For podCountDataFetcher
   private List<QLBillingSortCriteria> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLBillingSortCriteria> sortCriteria) {
-    if (isEmpty(sortCriteria)) {
+    if (hasNone(sortCriteria)) {
       return new ArrayList<>();
     }
 
     sortCriteria.removeIf(qlBillingSortCriteria -> qlBillingSortCriteria.getSortOrder() == null);
 
-    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+    if (hasSome(sortCriteria)) {
       sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
     }
     return sortCriteria;
@@ -1109,7 +1108,7 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean isGroupByNonePresent(List<QLCCMEntityGroupBy> groupByList) {
-    return isEmpty(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList));
+    return hasNone(groupByList) || (groupByList.size() == 1 && isGroupByStartTimePresent(groupByList));
   }
 
   private boolean checkForAdditionalFilterInClusterDrillDown(List<QLBillingDataFilter> filters) {
@@ -1269,7 +1268,7 @@ public class BillingDataQueryBuilder {
             for (QLBillingDataTagType tagEntityType : tagEntityTypes) {
               Set<String> entityIds =
                   tagHelper.getEntityIdsFromTags(accountId, tagFilter.getTags(), getEntityType(tagEntityType));
-              if (isNotEmpty(entityIds)) {
+              if (hasSome(entityIds)) {
                 switch (tagEntityType) {
                   case APPLICATION:
                     newList.add(QLBillingDataFilter.builder()
@@ -1350,14 +1349,14 @@ public class BillingDataQueryBuilder {
         workloadNames.add(tokenizer.nextToken());
         namespaces.add(tokenizer.nextToken());
       });
-      if (isNotEmpty(workloadNames)) {
+      if (hasSome(workloadNames)) {
         entityFilters.add(
             QLBillingDataFilter.builder()
                 .workloadName(
                     QLIdFilter.builder().operator(operator).values(workloadNames.toArray(new String[0])).build())
                 .build());
       }
-      if (isNotEmpty(namespaces)) {
+      if (hasSome(namespaces)) {
         entityFilters.add(
             QLBillingDataFilter.builder()
                 .namespace(QLIdFilter.builder().operator(operator).values(namespaces.toArray(new String[0])).build())

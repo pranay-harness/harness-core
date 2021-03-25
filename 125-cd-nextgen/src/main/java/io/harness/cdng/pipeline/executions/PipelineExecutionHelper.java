@@ -1,10 +1,10 @@
 package io.harness.cdng.pipeline.executions;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.execution.ExecutionStatus.getExecutionStatus;
 
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
 import io.harness.execution.NodeExecution;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -145,7 +145,7 @@ public class PipelineExecutionHelper {
       artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
+    if (hasSome(serviceOutcome.getArtifactsResult().getSidecars())) {
       artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
                                            .getSidecars()
                                            .values()

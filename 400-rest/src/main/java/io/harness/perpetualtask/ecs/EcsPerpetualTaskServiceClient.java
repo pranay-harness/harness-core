@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.ecs;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -93,7 +93,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
                   .parameters(new Object[] {awsEcsRequest})
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
-        .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
+        .tags(hasSome(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
         .build();
   }
 }

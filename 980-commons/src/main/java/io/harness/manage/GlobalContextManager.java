@@ -1,6 +1,6 @@
 package io.harness.manage;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.context.GlobalContext;
@@ -127,7 +127,7 @@ public class GlobalContextManager {
   public static GlobalContext obtainGlobalContext() {
     GlobalContext globalContext = contextThreadLocal.get();
     final Map<String, String> mdc = MDC.getCopyOfContextMap();
-    if (isNotEmpty(mdc)) {
+    if (hasSome(mdc)) {
       if (globalContext == null) {
         globalContext = new GlobalContext();
       }
@@ -139,7 +139,7 @@ public class GlobalContextManager {
   public static GlobalContext obtainGlobalContextCopy() {
     GlobalContext globalContext = new GlobalContext(contextThreadLocal.get());
     final Map<String, String> mdc = MDC.getCopyOfContextMap();
-    if (isNotEmpty(mdc)) {
+    if (hasSome(mdc)) {
       if (globalContext == null) {
         globalContext = new GlobalContext();
       }

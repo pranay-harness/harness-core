@@ -1,11 +1,11 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
@@ -75,7 +75,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
         handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasksForNewDeployment(
             deploymentSummaries, existingTasks, infrastructureMapping);
 
-    if (EmptyPredicate.isNotEmpty(newPerpetualTaskIds)) {
+    if (hasSome(newPerpetualTaskIds)) {
       save(infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), newPerpetualTaskIds);
     }
   }
@@ -161,8 +161,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   }
 
   private void save(String accountId, String infrastructureMappingId, List<String> perpetualTaskIds) {
-    Preconditions.checkArgument(
-        EmptyPredicate.isNotEmpty(perpetualTaskIds), "perpetualTaskIds must not be empty or null");
+    Preconditions.checkArgument(hasSome(perpetualTaskIds), "perpetualTaskIds must not be empty or null");
     Optional<InstanceSyncPerpetualTaskInfo> infoOptional =
         getByAccountIdAndInfrastructureMappingId(accountId, infrastructureMappingId);
     if (!infoOptional.isPresent()) {

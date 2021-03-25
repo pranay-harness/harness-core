@@ -1,6 +1,6 @@
 package io.harness.pms.sdk;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.engine.StepTypeLookupService;
 import io.harness.exception.InvalidRequestException;
@@ -17,13 +17,13 @@ public class StepTypeLookupServiceImpl implements StepTypeLookupService {
   @Override
   public String findNodeExecutionServiceName(NodeExecutionProto nodeExecution) {
     Map<String, List<StepType>> map = pmsSdkInstanceService.getInstanceNameToSupportedStepTypes();
-    if (isEmpty(map)) {
+    if (hasNone(map)) {
       throw new InvalidRequestException("Step type map is empty");
     }
     StepType stepType = nodeExecution.getNode().getStepType();
     for (Map.Entry<String, List<StepType>> entry : map.entrySet()) {
       List<StepType> stepTypes = entry.getValue();
-      if (isEmpty(stepTypes)) {
+      if (hasNone(stepTypes)) {
         continue;
       }
 

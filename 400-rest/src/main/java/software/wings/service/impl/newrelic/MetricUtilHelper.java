@@ -1,6 +1,6 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
@@ -71,7 +71,7 @@ public class MetricUtilHelper {
             1. metricNames is empty - we add all metrics present in the YAML to the metricMap in this case
             2. metricNames is non-empty - we only add metrics which are present in the list
              */
-            if (metric != null && (isEmpty(metricNames) || metricNamesSet.contains(metric.getMetricName()))) {
+            if (metric != null && (hasNone(metricNames) || metricNamesSet.contains(metric.getMetricName()))) {
               if (metric.getTags() == null) {
                 metric.setTags(new HashSet<>());
               }
@@ -87,7 +87,7 @@ public class MetricUtilHelper {
       If metricNames is non-empty but metricMap is, it means that all
       metric names were spelt incorrectly.
        */
-      if (!isEmpty(metricNames) && metricMap.isEmpty()) {
+      if (!hasNone(metricNames) && metricMap.isEmpty()) {
         log.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
         throw new WingsException("Incorrect Metric Names received.");
       }

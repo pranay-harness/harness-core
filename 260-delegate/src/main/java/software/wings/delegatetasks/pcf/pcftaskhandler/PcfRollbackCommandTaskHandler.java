@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -18,7 +20,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
@@ -213,7 +214,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (commandRollbackRequest.isStandardBlueGreenWorkflow()
-        || EmptyPredicate.isEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
+        || hasNone(commandRollbackRequest.getAppsToBeDownSized())) {
       return;
     }
 
@@ -223,11 +224,11 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       pcfRequestConfig.setApplicationName(pcfAppSetupTimeDetails.getApplicationName());
       ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
 
-      if (EmptyPredicate.isEmpty(pcfAppSetupTimeDetails.getUrls())) {
+      if (hasNone(pcfAppSetupTimeDetails.getUrls())) {
         return;
       }
 
-      if (EmptyPredicate.isEmpty(applicationDetail.getUrls())
+      if (hasNone(applicationDetail.getUrls())
           || !pcfAppSetupTimeDetails.getUrls().containsAll(applicationDetail.getUrls())) {
         pcfCommandTaskHelper.mapRouteMaps(pcfAppSetupTimeDetails.getApplicationName(), pcfAppSetupTimeDetails.getUrls(),
             pcfRequestConfig, executionLogCallback);

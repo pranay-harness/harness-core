@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
@@ -163,7 +163,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     String accountId = tag.getAccountId();
-    boolean isRestrictedTag = isNotEmpty(tag.getAllowedValues());
+    boolean isRestrictedTag = hasSome(tag.getAllowedValues());
     if (!tagsFeature.isAvailableForAccount(accountId) && isRestrictedTag) {
       throw new InvalidRequestException(String.format("Operation not permitted for account [%s].", accountId), USER);
     }
@@ -195,7 +195,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     Map<String, Object> keyValuePairsToAdd = new HashMap<>();
     Set<String> fieldsToRemove = new HashSet<>();
-    if (isNotEmpty(tag.getAllowedValues())) {
+    if (hasSome(tag.getAllowedValues())) {
       keyValuePairsToAdd.put(HarnessTagKeys.allowedValues, tag.getAllowedValues());
     } else {
       fieldsToRemove.add(HarnessTagKeys.allowedValues);
@@ -219,12 +219,12 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void validateAllowedValuesUpdate(HarnessTag harnessTag) {
     Set<String> inUseValues = getInUseValues(harnessTag.getAccountId(), harnessTag.getKey());
 
-    if (isEmpty(inUseValues)) {
+    if (hasNone(inUseValues)) {
       return;
     }
 
-    if (isEmpty(harnessTag.getAllowedValues()) || !harnessTag.getAllowedValues().containsAll(inUseValues)) {
-      if (isNotEmpty(harnessTag.getAllowedValues())) {
+    if (hasNone(harnessTag.getAllowedValues()) || !harnessTag.getAllowedValues().containsAll(inUseValues)) {
+      if (hasSome(harnessTag.getAllowedValues())) {
         inUseValues.removeAll(harnessTag.getAllowedValues());
       }
 
@@ -270,7 +270,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     PageResponse<HarnessTag> response = list(request);
 
     List<HarnessTag> tags = response.getResponse();
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return response;
     }
 
@@ -391,7 +391,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       response = filteredResourcesWithTag.subList(offset, endIdx);
     }
 
-    if (isNotEmpty(response)) {
+    if (hasSome(response)) {
       for (HarnessTagLink harnessTagLink : response) {
         try {
           String entityName =
@@ -431,7 +431,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   private void sanitizeAndValidateHarnessTag(HarnessTag tag, boolean allowExpressions) {
     tag.setKey(validateTagKey(tag.getKey(), allowExpressions));
 
-    if (isNotEmpty(tag.getAllowedValues())) {
+    if (hasSome(tag.getAllowedValues())) {
       Set<String> sanitizedAllowedValues = new HashSet<>();
       for (String value : tag.getAllowedValues()) {
         sanitizedAllowedValues.add(validateTagValue(value, allowExpressions));
@@ -555,7 +555,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       return;
     }
 
-    if (isNotEmpty(existingTag.getAllowedValues()) && !existingTag.getAllowedValues().contains(value)) {
+    if (hasSome(existingTag.getAllowedValues()) && !existingTag.getAllowedValues().contains(value)) {
       throw new InvalidRequestException(
           String.format("'%s' is not in allowedValues:%s for Tag:%s", value, existingTag.getAllowedValues(), key));
     }
@@ -768,7 +768,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
                                       .filter(HarnessTagLinkKeys.accountId, accountId)
                                       .filter(HarnessTagLinkKeys.entityType, entityType.name())
                                       .filter(HarnessTagLinkKeys.key, key);
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       query.field(HarnessTagLinkKeys.value).equal(value);
     }
 

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
@@ -221,7 +221,7 @@ public class HelmTaskHelper {
   public List<FileData> getFilteredFiles(List<FileData> files, List<String> filesToBeFetched) {
     List<FileData> filteredFiles = new ArrayList<>();
 
-    if (isEmpty(files)) {
+    if (hasNone(files)) {
       log.info("Files list is empty");
       return filteredFiles;
     }
@@ -462,13 +462,13 @@ public class HelmTaskHelper {
   private List<HelmChart> parseHelmVersionFetchOutput(
       String commandOutput, HelmChartCollectionParams manifestCollectionParams) throws IOException {
     String errorMessage = "No chart with the given name found. Chart might be deleted at source";
-    if (isEmpty(commandOutput) || commandOutput.contains("No results found")) {
+    if (hasNone(commandOutput) || commandOutput.contains("No results found")) {
       throw new InvalidRequestException(errorMessage);
     }
 
     CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
     List<CSVRecord> records = CSVParser.parse(commandOutput, csvFormat).getRecords();
-    if (isEmpty(records)) {
+    if (hasNone(records)) {
       throw new InvalidRequestException(errorMessage);
     }
     List<HelmChart> charts =
@@ -492,7 +492,7 @@ public class HelmTaskHelper {
                        .build())
             .collect(Collectors.toList());
 
-    if (isEmpty(charts)) {
+    if (hasNone(charts)) {
       throw new InvalidRequestException(errorMessage);
     }
 

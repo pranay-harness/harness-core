@@ -1,6 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.List;
 import lombok.Builder;
@@ -20,15 +20,15 @@ public class AppdynamicsMetricData implements Comparable<AppdynamicsMetricData> 
 
   @Override
   public int compareTo(AppdynamicsMetricData o) {
-    if (isEmpty(metricValues) && isEmpty(o.metricValues)) {
+    if (hasNone(metricValues) && hasNone(o.metricValues)) {
       return metricName.compareTo(o.metricName);
     }
 
-    if (!isEmpty(metricValues) && isEmpty(o.metricValues)) {
+    if (!hasNone(metricValues) && hasNone(o.metricValues)) {
       return -1;
     }
 
-    if (isEmpty(metricValues) && !isEmpty(o.metricValues)) {
+    if (hasNone(metricValues) && !hasNone(o.metricValues)) {
       return 1;
     }
 

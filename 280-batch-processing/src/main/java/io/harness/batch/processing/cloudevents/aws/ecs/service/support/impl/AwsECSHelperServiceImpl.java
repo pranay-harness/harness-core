@@ -1,6 +1,6 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.support.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.amazonaws.services.ecs.model.ServiceField.TAGS;
 import static com.google.common.collect.Lists.newArrayList;
@@ -74,7 +74,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         listServicesRequest.setNextToken(nextToken);
         ListServicesResult listServicesResult = amazonECSClient.listServices(listServicesRequest);
         List<String> arnsBatch = listServicesResult.getServiceArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           serviceArns.addAll(arnsBatch);
         }
         nextToken = listServicesResult.getNextToken();
@@ -115,7 +115,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         ListContainerInstancesResult listContainerInstancesResult =
             amazonECSClient.listContainerInstances(listContainerInstancesRequest);
         List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           containerInstanceArns.addAll(arnsBatch);
         }
         nextToken = listContainerInstancesResult.getNextToken();
@@ -162,7 +162,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
         }
         ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
         List<String> arnsBatch = listTasksResult.getTaskArns();
-        if (isNotEmpty(arnsBatch)) {
+        if (hasSome(arnsBatch)) {
           taskArns.addAll(arnsBatch);
         }
         nextToken = listTasksResult.getNextToken();

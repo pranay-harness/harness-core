@@ -1,6 +1,6 @@
 package io.harness.mongo.queue;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.returnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -164,7 +164,7 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
 
   private Query<T> createQuery() {
     final Query<T> query = persistence.createQuery(klass);
-    if (isNotEmpty(topics)) {
+    if (hasSome(topics)) {
       query.field(QueuableKeys.topic).in(topics);
     } else {
       query.field(QueuableKeys.topic).doesNotExist();

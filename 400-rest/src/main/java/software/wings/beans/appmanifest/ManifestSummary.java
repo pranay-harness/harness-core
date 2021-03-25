@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 
@@ -23,7 +23,7 @@ public class ManifestSummary {
     ManifestSummaryBuilder manifestSummaryBuilder =
         ManifestSummary.builder().uuid(helmChart.getUuid()).versionNo(helmChart.getVersion()).name(helmChart.getName());
     Map<String, String> metadata = helmChart.getMetadata();
-    if (EmptyPredicate.isNotEmpty(helmChart.getMetadata())) {
+    if (hasSome(helmChart.getMetadata())) {
       manifestSummaryBuilder.source(metadata.get(ApplicationManifestServiceImpl.CHART_URL));
     }
     return manifestSummaryBuilder.build();

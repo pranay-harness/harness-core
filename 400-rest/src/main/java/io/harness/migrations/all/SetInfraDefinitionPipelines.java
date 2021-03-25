@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -83,7 +83,7 @@ public class SetInfraDefinitionPipelines {
         continue;
       }
 
-      if (isEmpty(stageElement.getWorkflowVariables())) {
+      if (hasNone(stageElement.getWorkflowVariables())) {
         log.info("No workflow variables, so no migration needed");
         continue;
       }
@@ -140,7 +140,7 @@ public class SetInfraDefinitionPipelines {
       workflowCache.put(workflowId, workflow);
     }
 
-    if (isEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
+    if (hasNone(workflow.getOrchestrationWorkflow().getUserVariables())) {
       log.info(
           "[INFRA_MIGRATION_INFO] Skipping migration. Pipeline stage has workflow variables but workflow does not have userVariables.PipelineId: "
           + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
@@ -156,7 +156,7 @@ public class SetInfraDefinitionPipelines {
       }
     }
 
-    if (isEmpty(infraUserVariables)) {
+    if (hasNone(infraUserVariables)) {
       log.info(
           "[INFRA_MIGRATION_INFO] Pipeline stage with workflow where infraMapping not templatised. skipping migration. PipelineId: "
           + pipeline.getUuid() + " pipelineStageId: " + stageElement.getUuid());
@@ -197,7 +197,7 @@ public class SetInfraDefinitionPipelines {
         }
 
         String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
-        if (isEmpty(infraDefId)) {
+        if (hasNone(infraDefId)) {
           log.error(
               "[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for pipeline. Pipeline:  " + pipeline.getUuid()
               + "infraMappingId: " + infraMappingId + " pipelineStageId: " + stageElement.getUuid());

@@ -1,7 +1,7 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -89,13 +89,13 @@ public class CloudWatchCVConfigurationYamlHandler
     String settingId = cloudWatchConnector.getUuid();
     String region = yaml.getRegion();
 
-    if (isEmpty(yaml.getLoadBalancerMetrics()) && isEmpty(yaml.getEc2InstanceNames())
-        && isEmpty(yaml.getLambdaFunctionsMetrics()) && isEmpty(yaml.getEcsMetrics())) {
+    if (hasNone(yaml.getLoadBalancerMetrics()) && hasNone(yaml.getEc2InstanceNames())
+        && hasNone(yaml.getLambdaFunctionsMetrics()) && hasNone(yaml.getEcsMetrics())) {
       throw new WingsException("No metric provided in Configuration");
     }
 
     List<String> ec2InstanceNames = yaml.getEc2InstanceNames();
-    if (isNotEmpty(ec2InstanceNames)) {
+    if (hasSome(ec2InstanceNames)) {
       Map<String, String> validInstances = cloudWatchService.getEC2Instances(settingId, region);
       Set<String> validInstanceNames = validInstances.keySet();
       ec2InstanceNames.forEach(instance -> {
@@ -106,7 +106,7 @@ public class CloudWatchCVConfigurationYamlHandler
     }
 
     Map<String, List<CloudWatchMetric>> ecsMetrics = yaml.getEcsMetrics();
-    if (isNotEmpty(ecsMetrics)) {
+    if (hasSome(ecsMetrics)) {
       List<String> validEcsClusters = cloudWatchService.getECSClusterNames(settingId, region);
       ecsMetrics.keySet().forEach(cluster -> {
         if (!validEcsClusters.contains(cluster)) {
@@ -116,7 +116,7 @@ public class CloudWatchCVConfigurationYamlHandler
     }
 
     Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics = yaml.getLambdaFunctionsMetrics();
-    if (isNotEmpty(lambdaFunctionsMetrics)) {
+    if (hasSome(lambdaFunctionsMetrics)) {
       List<String> validLambdaFunctions = cloudWatchService.getLambdaFunctionsNames(settingId, region);
       lambdaFunctionsMetrics.keySet().forEach(lambdaFunction -> {
         if (!validLambdaFunctions.contains(lambdaFunction)) {
@@ -126,7 +126,7 @@ public class CloudWatchCVConfigurationYamlHandler
     }
 
     Map<String, List<CloudWatchMetric>> loadBalancerMetrics = yaml.getLoadBalancerMetrics();
-    if (isNotEmpty(loadBalancerMetrics)) {
+    if (hasSome(loadBalancerMetrics)) {
       Set<String> validLoadBalancers = cloudWatchService.getLoadBalancerNames(settingId, region);
       loadBalancerMetrics.keySet().forEach(loadBalancer -> {
         if (!validLoadBalancers.contains(loadBalancer)) {

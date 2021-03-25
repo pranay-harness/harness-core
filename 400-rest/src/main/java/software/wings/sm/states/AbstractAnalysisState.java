@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.noop;
 
 import static software.wings.beans.AccountType.COMMUNITY;
@@ -190,7 +190,7 @@ public abstract class AbstractAnalysisState extends State {
   @Attributes(title = "Predictive history in Minutes")
   @DefaultValue("30")
   public String getPredictiveHistoryMinutes() {
-    if (isEmpty(predictiveHistoryMinutes)) {
+    if (hasNone(predictiveHistoryMinutes)) {
       return String.valueOf(PREDECTIVE_HISTORY_MINUTES);
     }
     return predictiveHistoryMinutes;
@@ -386,7 +386,7 @@ public abstract class AbstractAnalysisState extends State {
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     timeDuration = getTimeDuration(context);
-    if (!isEmpty(timeDuration)) {
+    if (!hasNone(timeDuration)) {
       return 60 * 1000 * (Integer.parseInt(timeDuration) + TIMEOUT_BUFFER);
     }
     return DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS;
@@ -481,7 +481,7 @@ public abstract class AbstractAnalysisState extends State {
     if (checkFieldTemplatized(fieldName, templateExpressions)) {
       return false;
     }
-    if (isEmpty(fieldValue)) {
+    if (hasNone(fieldValue)) {
       return false;
     }
     int expressions = StringUtils.countMatches(fieldValue, "$");
@@ -496,9 +496,9 @@ public abstract class AbstractAnalysisState extends State {
             .stateExecutionInstanceId(context.getStateExecutionId())
             .serverConfigId(context.getAnalysisServerConfigId())
             .baselineExecutionId(context.getPrevWorkflowExecutionId())
-            .canaryNewHostNames(isEmpty(context.getTestNodes()) ? Collections.emptySet()
+            .canaryNewHostNames(hasNone(context.getTestNodes()) ? Collections.emptySet()
                                                                 : new HashSet<>(context.getTestNodes().keySet()))
-            .lastExecutionNodes(isEmpty(context.getControlNodes()) ? Collections.emptySet()
+            .lastExecutionNodes(hasNone(context.getControlNodes()) ? Collections.emptySet()
                                                                    : new HashSet<>(context.getControlNodes().keySet()))
             .correlationId(context.getCorrelationId())
             .query(context.getQuery())
@@ -601,7 +601,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getResolvedConnectorId(ExecutionContext context, String fieldName, String fieldValue) {
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), fieldName);
       if (configIdExpression != null) {
@@ -634,7 +634,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected String getResolvedFieldValue(ExecutionContext context, String fieldName, String fieldValue) {
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression fieldExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), fieldName);
       if (fieldExpression != null) {
@@ -668,7 +668,7 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context) {
-    String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
+    String hostNameTemplate = hasNone(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
     Set<String> controlNodes, testNodes;
     Optional<Integer> newNodesTrafficShift;
     boolean skipVerification;
@@ -695,7 +695,7 @@ public abstract class AbstractAnalysisState extends State {
     if (!skipVerification) {
       if (!isEmptyTestNodesAllowed()) {
         // this is part of the contract with CDP team to always have test node if skipVerification is false.
-        Preconditions.checkState(isNotEmpty(testNodes), "Could not find newly deployed instances.");
+        Preconditions.checkState(hasSome(testNodes), "Could not find newly deployed instances.");
       }
     }
     return CVInstanceApiResponse.builder()

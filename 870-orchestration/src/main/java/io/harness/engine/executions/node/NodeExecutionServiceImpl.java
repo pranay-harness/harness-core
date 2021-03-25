@@ -1,8 +1,8 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
@@ -98,7 +98,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       String planExecutionId, EnumSet<Status> statuses) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
-    if (isNotEmpty(statuses)) {
+    if (hasSome(statuses)) {
       query.addCriteria(where(NodeExecutionKeys.status).in(statuses));
     }
     return mongoTemplate.find(query, NodeExecution.class);
@@ -306,7 +306,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   private void extractChildList(
       Map<String, List<NodeExecution>> parentChildrenMap, String parentId, List<NodeExecution> finalList) {
     List<NodeExecution> children = parentChildrenMap.get(parentId);
-    if (isEmpty(children)) {
+    if (hasNone(children)) {
       return;
     }
     finalList.addAll(children);

@@ -1,7 +1,7 @@
 package io.harness.steps.section.chain;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -37,7 +37,7 @@ public class SectionChainStep implements ChildChainExecutable<SectionChainStepPa
   @Override
   public ChildChainExecutableResponse executeFirstChild(
       Ambiance ambiance, SectionChainStepParameters sectionChainStepParameters, StepInputPackage inputPackage) {
-    if (isEmpty(sectionChainStepParameters.getChildNodeIds())) {
+    if (hasNone(sectionChainStepParameters.getChildNodeIds())) {
       return ChildChainExecutableResponse.newBuilder().setSuspend(true).build();
     }
 

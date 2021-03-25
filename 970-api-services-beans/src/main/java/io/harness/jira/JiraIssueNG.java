@@ -1,9 +1,9 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.jira.deserializer.JiraIssueDeserializer;
@@ -48,7 +48,7 @@ public class JiraIssueNG {
   }
 
   private void addKey(String key, JsonNode nameNode, JsonNode schemaNode, JsonNode valueNode) {
-    if (EmptyPredicate.isEmpty(key)) {
+    if (hasNone(key)) {
       return;
     }
 

@@ -4,8 +4,8 @@ package io.harness.delegate.task.citasks.cik8handler;
  * Delegate task handler to delete CI build setup pod on a K8 cluster.
  */
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.getSecretName;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -73,7 +73,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
 
   private boolean deletePods(KubernetesClient kubernetesClient, String namespace, List<String> podNameList) {
     boolean isSuccess = true;
-    if (isEmpty(podNameList)) {
+    if (hasNone(podNameList)) {
       log.warn("No pods to delete");
       return isSuccess;
     }
@@ -105,7 +105,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   private boolean deleteSecrets(
       KubernetesClient kubernetesClient, String namespace, List<String> podNameList, List<String> containerNames) {
     boolean isSuccess = true;
-    if (isEmpty(podNameList)) {
+    if (hasNone(podNameList)) {
       log.warn("Empty pod list, Failed to delete secrets");
       return false;
     }
@@ -117,7 +117,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
         isSuccess = false;
       }
 
-      if (isNotEmpty(containerNames)) {
+      if (hasSome(containerNames)) {
         for (String containerName : containerNames) {
           String containerSecretName = format("%s-image-%s", podName, containerName);
           Boolean isDeletedContainerImageSecret =

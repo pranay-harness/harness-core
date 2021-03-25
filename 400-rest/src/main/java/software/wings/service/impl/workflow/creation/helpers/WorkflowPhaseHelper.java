@@ -1,7 +1,7 @@
 package software.wings.service.impl.workflow.creation.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -84,7 +84,7 @@ public class WorkflowPhaseHelper {
   public boolean addPhaseIfStepsGenerated(Workflow workflow, WorkflowPhase workflowPhase) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     // No need to generate phase steps if it's already created
-    if (isNotEmpty(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+    if (hasSome(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
       return true;
     } else {

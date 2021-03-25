@@ -14,7 +14,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_D
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_NAME;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -274,7 +274,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
                                            .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
                                            .filter(LogAnalysisResultKeys.analysisEndTime, endTime)
                                            .get();
-    if (isNotEmpty(unexpectedClusters)) {
+    if (hasSome(unexpectedClusters)) {
       double score = Math.max(analysis.getOverallMetricScores().values().stream().mapToDouble(s -> s).max().orElse(0.0),
           analysisResult.getOverallRisk());
       analysisResult.setOverallRisk(score);

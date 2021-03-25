@@ -1,12 +1,13 @@
 package software.wings.resources.template;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 
@@ -122,7 +123,7 @@ public class TemplateGalleryResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, TemplateFolder templateFolder) {
     templateFolder.setAppId(appId);
     templateFolder.setAccountId(accountId);
-    if (EmptyPredicate.isEmpty(templateFolder.getParentId())) {
+    if (hasNone(templateFolder.getParentId())) {
       throw new WingsException("Root folder can not be added. Only one root folder supported ", WingsException.USER);
     }
     // TODO: UI needs to send gallery ID while saving folder. For now making account gallery as default if not set.

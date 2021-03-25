@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -51,7 +51,7 @@ public class AwsRoute53HelperServiceDelegateImpl
       tracker.trackR53Call("List Hosted Zones");
       ListHostedZonesResult listHostedZonesResult = client.listHostedZones();
       List<HostedZone> hostedZones = listHostedZonesResult.getHostedZones();
-      if (isNotEmpty(hostedZones)) {
+      if (hasSome(hostedZones)) {
         return hostedZones.stream()
             .map(zone
                 -> AwsRoute53HostedZoneData.builder().hostedZoneId(zone.getId()).hostedZoneName(zone.getName()).build())

@@ -1,6 +1,6 @@
 package io.harness.ng.core.gitsync;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.EntityType;
 import io.harness.exception.UnsupportedOperationException;
@@ -18,7 +18,7 @@ public class GitChangeSetHandler {
 
   // todo(abhinav): change void to gitProcessing result after merge
   void process(GitSyncChanges gitSyncChanges) {
-    if (gitSyncChanges == null || isEmpty(gitSyncChanges.getGitSyncEntitiesList())) {
+    if (gitSyncChanges == null || hasNone(gitSyncChanges.getGitSyncEntitiesList())) {
       return;
     }
     gitChangeProcessorService.sort(gitSyncChanges.getGitSyncEntitiesList());

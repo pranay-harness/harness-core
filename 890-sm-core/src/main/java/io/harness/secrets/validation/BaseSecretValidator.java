@@ -5,7 +5,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.FILE_SIZE_EXCEEDS_LIMIT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -100,13 +100,13 @@ public class BaseSecretValidator implements SecretValidator {
   }
 
   private void encryptedTextEmptyCheck(SecretText secretText) {
-    if (!secretText.isReferencedSecret() && !secretText.isParameterizedSecret() && isEmpty(secretText.getValue())) {
+    if (!secretText.isReferencedSecret() && !secretText.isParameterizedSecret() && hasNone(secretText.getValue())) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Cannot create empty secret", USER);
     }
   }
 
   private void validateSecretName(String name) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret name cannot be empty", USER);
     }
     String[] parts = name.split(ILLEGAL_CHARACTERS, 2);
@@ -117,7 +117,7 @@ public class BaseSecretValidator implements SecretValidator {
   }
 
   private void validateFileIsNotEmpty(byte[] fileContent) {
-    if (isEmpty(fileContent)) {
+    if (hasNone(fileContent)) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Encrypted file is empty", USER);
     }
   }

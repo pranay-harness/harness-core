@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -19,21 +20,21 @@ public class PlanCreationResponseBlobHelper {
 
   public PlanCreationBlobResponse toBlobResponse(PlanCreationResponse planCreationResponse) {
     PlanCreationBlobResponse.Builder finalBlobResponseBuilder = PlanCreationBlobResponse.newBuilder();
-    if (EmptyPredicate.isNotEmpty(planCreationResponse.getNodes())) {
+    if (hasSome(planCreationResponse.getNodes())) {
       Map<String, PlanNodeProto> newNodes = new HashMap<>();
       planCreationResponse.getNodes().forEach(
           (k, v) -> newNodes.put(k, planNodeProtoMapper.toPlanNodeProtoWithDecoratedFields(v)));
       finalBlobResponseBuilder.putAllNodes(newNodes);
     }
-    if (EmptyPredicate.isNotEmpty(planCreationResponse.getDependencies())) {
+    if (hasSome(planCreationResponse.getDependencies())) {
       for (Map.Entry<String, YamlField> dependency : planCreationResponse.getDependencies().entrySet()) {
         finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
-    if (EmptyPredicate.isNotEmpty(planCreationResponse.getStartingNodeId())) {
+    if (hasSome(planCreationResponse.getStartingNodeId())) {
       finalBlobResponseBuilder.setStartingNodeId(planCreationResponse.getStartingNodeId());
     }
-    if (EmptyPredicate.isNotEmpty(planCreationResponse.getContextMap())) {
+    if (hasSome(planCreationResponse.getContextMap())) {
       for (Map.Entry<String, PlanCreationContextValue> dependency : planCreationResponse.getContextMap().entrySet()) {
         finalBlobResponseBuilder.putContext(dependency.getKey(), dependency.getValue());
       }

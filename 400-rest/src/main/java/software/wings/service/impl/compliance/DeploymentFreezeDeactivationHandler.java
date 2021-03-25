@@ -1,6 +1,7 @@
 package software.wings.service.impl.compliance;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
 import static java.time.Duration.ofHours;
@@ -9,7 +10,6 @@ import static java.time.Duration.ofSeconds;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.GovernanceFreezeConfig;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -91,7 +91,7 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
 
     entity.getTimeRangeBasedFreezeConfigs().forEach(
         freezeWindow -> log.info("Deactivation time for freeze window: {}", freezeWindow.fetchEndTime()));
-    if (EmptyPredicate.isEmpty(governanceFreezeConfigs)) {
+    if (hasNone(governanceFreezeConfigs)) {
       log.warn("No deployment freeze windows found within 5 minutes of the current time: " + iteratorTime);
       return;
     }

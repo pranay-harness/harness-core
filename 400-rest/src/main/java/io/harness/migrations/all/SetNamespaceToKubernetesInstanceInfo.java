@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -94,7 +94,7 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
                   }
 
                   KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) instanceInfo;
-                  if (isNotEmpty(kubernetesContainerInfo.getNamespace())) {
+                  if (hasSome(kubernetesContainerInfo.getNamespace())) {
                     log.error("namespace is not null in instance info for instance {}", instance.getUuid());
                     return;
                   }

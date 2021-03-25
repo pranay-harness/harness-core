@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Base.ACCOUNT_ID_KEY2;
@@ -224,7 +224,7 @@ public class DeleteAccountHelper {
     deletePerpetualTasksForAccount(accountId);
     delegateService.deleteByAccountId(accountId);
     List<String> entitiesRemainingForDeletion = deleteAllEntities(accountId);
-    if (isEmpty(entitiesRemainingForDeletion)) {
+    if (hasNone(entitiesRemainingForDeletion)) {
       log.info("Deleting account entry {}", accountId);
       hPersistence.delete(Account.class, accountId);
       upsertDeletedEntity(accountId, CURRENT_DELETION_ALGO_NUM);

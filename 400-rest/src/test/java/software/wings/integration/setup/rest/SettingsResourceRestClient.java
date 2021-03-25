@@ -1,6 +1,6 @@
 package software.wings.integration.setup.rest;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.shell.AccessType.KEY;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -56,7 +56,7 @@ public class SettingsResourceRestClient {
     RestResponse<PageResponse<SettingAttribute>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
             .get(new GenericType<RestResponse<PageResponse<SettingAttribute>>>() {});
-    return isEmpty(response.getResource()) ? null : response.getResource().get(0);
+    return hasNone(response.getResource()) ? null : response.getResource().get(0);
   }
 
   public SettingAttribute seedDataCenter(Client client) {

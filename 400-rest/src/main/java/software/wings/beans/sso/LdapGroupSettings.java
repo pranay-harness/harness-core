@@ -1,9 +1,9 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapGroupConfig;
@@ -32,7 +32,7 @@ public class LdapGroupSettings implements LdapGroupConfig {
   @JsonIgnore
   public String getFilter(String additionalFilter) {
     String filterString;
-    if (EmptyPredicate.isEmpty(additionalFilter)) {
+    if (hasNone(additionalFilter)) {
       filterString = String.format("%s", searchFilter);
     } else {
       filterString = String.format("(&(cn=%s)%s)", additionalFilter, searchFilter);

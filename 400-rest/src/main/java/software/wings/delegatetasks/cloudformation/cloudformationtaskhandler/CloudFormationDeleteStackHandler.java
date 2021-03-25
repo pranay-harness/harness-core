@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofSeconds;
@@ -8,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -59,7 +59,7 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       long stackEventsTs = System.currentTimeMillis();
       executionLogCallback.saveExecutionLog(String.format("# Starting to delete stack: %s", stackName));
       DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
-      if (EmptyPredicate.isNotEmpty(cloudFormationDeleteStackRequest.getCloudFormationRoleArn())) {
+      if (hasSome(cloudFormationDeleteStackRequest.getCloudFormationRoleArn())) {
         deleteStackRequest.withRoleARN(cloudFormationDeleteStackRequest.getCloudFormationRoleArn());
       } else {
         executionLogCallback.saveExecutionLog(

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
@@ -45,7 +45,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
     try {
       List<ExecutionCapability> executionCapabilities = getExecutionCapabilities();
 
-      if (isEmpty(executionCapabilities)) {
+      if (hasNone(executionCapabilities)) {
         executionCapabilities =
             Arrays.stream(getParameters())
                 .filter(param -> param instanceof ExecutionCapabilityDemander)
@@ -95,7 +95,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
   public List<String> getCriteria() {
     List<ExecutionCapability> executionCapabilities = getExecutionCapabilities();
 
-    if (isEmpty(executionCapabilities)) {
+    if (hasNone(executionCapabilities)) {
       executionCapabilities =
           Arrays.stream(getParameters())
               .filter(param -> param instanceof ExecutionCapabilityDemander)
@@ -114,7 +114,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
       List<CapabilityResponse> checkResponses) {
     List<DelegateConnectionResult> delegateConnectionResults = new ArrayList<>();
 
-    if (isNotEmpty(checkResponses)) {
+    if (hasSome(checkResponses)) {
       checkResponses.forEach(checkResponse -> {
         delegateConnectionResults.add(DelegateConnectionResult.builder()
                                           .validated(checkResponse.isValidated())

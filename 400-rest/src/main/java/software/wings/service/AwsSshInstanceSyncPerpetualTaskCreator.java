@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -38,7 +38,7 @@ public class AwsSshInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    if (isEmpty(existingPerpetualTasks)) {
+    if (hasNone(existingPerpetualTasks)) {
       return createPerpetualTaskInternal(
           infrastructureMapping.getAccountId(), infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     }

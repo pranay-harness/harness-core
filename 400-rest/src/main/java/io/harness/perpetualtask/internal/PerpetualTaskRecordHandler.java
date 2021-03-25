@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.internal;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -218,7 +218,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   }
 
   protected DelegateTask getValidationTask(PerpetualTaskRecord taskRecord) {
-    if (isNotEmpty(taskRecord.getClientContext().getClientParams())) {
+    if (hasSome(taskRecord.getClientContext().getClientParams())) {
       PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
       return client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
     }
@@ -238,7 +238,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
     List<Capability> capabilityList = perpetualTaskExecutionBundle.getCapabilitiesList();
-    if (isNotEmpty(capabilityList)) {
+    if (hasSome(capabilityList)) {
       executionCapabilityList = capabilityList.stream()
                                     .map(capability
                                         -> (ExecutionCapability) kryoSerializer.asInflatedObject(

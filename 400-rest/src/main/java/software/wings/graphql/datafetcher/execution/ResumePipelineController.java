@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notBlankCheck;
 import static io.harness.validation.Validator.notNullCheck;
@@ -60,10 +60,10 @@ public class ResumePipelineController {
 
     List<ArtifactVariable> artifactVariables = new ArrayList<>();
     List<Artifact> artifacts = new ArrayList<>();
-    if (isEmpty(parameter.getServiceInputs()) && isNotEmpty(finalDeploymentMetadata.getArtifactRequiredServiceIds())) {
+    if (hasNone(parameter.getServiceInputs()) && hasSome(finalDeploymentMetadata.getArtifactRequiredServiceIds())) {
       throw new InvalidRequestException("Services requires but no service was provided", USER);
     }
-    if (isNotEmpty(finalDeploymentMetadata.getArtifactRequiredServiceIds())) {
+    if (hasSome(finalDeploymentMetadata.getArtifactRequiredServiceIds())) {
       executionController.getArtifactsFromServiceInputs(parameter.getServiceInputs(), appId,
           finalDeploymentMetadata.getArtifactRequiredServiceIds(), artifacts, artifactVariables);
     }

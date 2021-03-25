@@ -1,8 +1,8 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.aws.AwsElbListenerRuleData.AwsElbListenerRuleDataBuilder;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -27,7 +27,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListener.AwsElbListenerBuilder;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
@@ -272,7 +271,7 @@ public class AwsElbHelperServiceDelegateImpl
       DescribeTargetGroupsResult describeTargetGroupsResult =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
 
-      if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
+      if (hasSome(describeTargetGroupsResult.getTargetGroups())) {
         if (describeTargetGroupsResult.getTargetGroups().get(0).getTargetGroupArn().equalsIgnoreCase(targetGroupArn)) {
           return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
         }
@@ -299,7 +298,7 @@ public class AwsElbHelperServiceDelegateImpl
       DescribeTargetGroupsResult describeTargetGroupsResult =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
 
-      if (EmptyPredicate.isNotEmpty(describeTargetGroupsResult.getTargetGroups())) {
+      if (hasSome(describeTargetGroupsResult.getTargetGroups())) {
         return Optional.of(describeTargetGroupsResult.getTargetGroups().get(0));
       }
     } catch (AmazonServiceException amazonServiceException) {
@@ -328,7 +327,7 @@ public class AwsElbHelperServiceDelegateImpl
       DescribeLoadBalancersResult describeLoadBalancersResult =
           amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
 
-      if (EmptyPredicate.isNotEmpty(describeLoadBalancersResult.getLoadBalancers())) {
+      if (hasSome(describeLoadBalancersResult.getLoadBalancers())) {
         return Optional.of(describeLoadBalancersResult.getLoadBalancers().get(0));
       }
     } catch (AmazonServiceException amazonServiceException) {
@@ -373,14 +372,14 @@ public class AwsElbHelperServiceDelegateImpl
   boolean allInstancesDeRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
-    if (isEmpty(instanceIds)) {
+    if (hasNone(instanceIds)) {
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
     tracker.trackClassicELBCall("Describe Instance Health");
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return true;
     }
     Set<String> instanceIdsInService =
@@ -423,14 +422,14 @@ public class AwsElbHelperServiceDelegateImpl
   boolean allInstancesRegistered(
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> instanceIds, String classicLB, ExecutionLogCallback logCallback) {
-    if (isEmpty(instanceIds)) {
+    if (hasNone(instanceIds)) {
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
     tracker.trackClassicELBCall("Describe Instance Healths");
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return false;
     }
     Set<String> instanceIdsInService = instances.stream()
@@ -475,14 +474,14 @@ public class AwsElbHelperServiceDelegateImpl
   @VisibleForTesting
   boolean allTargetsDeRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
-    if (isEmpty(targetIds)) {
+    if (hasNone(targetIds)) {
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
     tracker.trackELBCall("Describe Target Health");
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
-    if (isEmpty(healthDescriptions)) {
+    if (hasNone(healthDescriptions)) {
       return true;
     }
     Set<String> instanceIdsStillRegistered = healthDescriptions.stream()
@@ -526,14 +525,14 @@ public class AwsElbHelperServiceDelegateImpl
   @VisibleForTesting
   boolean allTargetsRegistered(AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient,
       List<String> targetIds, String targetGroupARN, ExecutionLogCallback logCallback) {
-    if (isEmpty(targetIds)) {
+    if (hasNone(targetIds)) {
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
     tracker.trackELBCall("Describe Target Health");
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
-    if (isEmpty(healthDescriptions)) {
+    if (hasNone(healthDescriptions)) {
       return false;
     }
     Set<String> instanceIdsRegistered =
@@ -584,7 +583,7 @@ public class AwsElbHelperServiceDelegateImpl
     do {
       tracker.trackELBCall("Describe Listener Rules");
       DescribeRulesResult result = amazonElasticLoadBalancingClient.describeRules(request);
-      if (EmptyPredicate.isNotEmpty(result.getRules())) {
+      if (hasSome(result.getRules())) {
         listenerRules.addAll(result.getRules());
       }
       nextMarker = result.getNextMarker();
@@ -610,7 +609,7 @@ public class AwsElbHelperServiceDelegateImpl
     do {
       tracker.trackELBCall("Describe Listener Rules");
       DescribeRulesResult result = amazonElasticLoadBalancingClient.describeRules(request);
-      if (EmptyPredicate.isNotEmpty(result.getRules())) {
+      if (hasSome(result.getRules())) {
         listenerRules.addAll(result.getRules());
       }
       nextMarker = result.getNextMarker();
@@ -633,7 +632,7 @@ public class AwsElbHelperServiceDelegateImpl
 
     tracker.trackELBCall("Describe Load Balancers");
     DescribeLoadBalancersResult result = amazonElasticLoadBalancingClient.describeLoadBalancers(request);
-    if (EmptyPredicate.isEmpty(result.getLoadBalancers())) {
+    if (hasNone(result.getLoadBalancers())) {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "Invalid Load Balancer Name Provided. Could not be found", WingsException.USER)
           .addParam("message", "Invalid Load Balancer Name Provided. Could not be found");
@@ -649,12 +648,12 @@ public class AwsElbHelperServiceDelegateImpl
       describeListenersRequest.setMarker(nextMarker);
       tracker.trackELBCall("Describe Listeners");
       DescribeListenersResult describeListenersResult = client.describeListeners(describeListenersRequest);
-      if (EmptyPredicate.isNotEmpty(describeListenersResult.getListeners())) {
+      if (hasSome(describeListenersResult.getListeners())) {
         listeners.addAll(describeListenersResult.getListeners());
       }
       nextMarker = describeListenersResult.getNextMarker();
     } while (nextMarker != null);
-    if (EmptyPredicate.isEmpty(listeners)) {
+    if (hasNone(listeners)) {
       return Collections.emptyList();
     }
 
@@ -675,14 +674,14 @@ public class AwsElbHelperServiceDelegateImpl
         tracker.trackELBCall("Describe Rules");
         DescribeRulesResult describeRulesResult = client.describeRules(describeRulesRequest);
         List<Rule> currentRules = describeRulesResult.getRules();
-        if (EmptyPredicate.isNotEmpty(currentRules)) {
+        if (hasSome(currentRules)) {
           currentRules.forEach(currentRule -> {
             AwsElbListenerRuleDataBuilder ruleDataBuilder = AwsElbListenerRuleData.builder();
             ruleDataBuilder.ruleArn(currentRule.getRuleArn());
             ruleDataBuilder.rulePriority(currentRule.getPriority());
             ruleDataBuilder.isDefault(currentRule.isDefault());
             List<Action> currentRuleActions = currentRule.getActions();
-            if (EmptyPredicate.isNotEmpty(currentRuleActions)) {
+            if (hasSome(currentRuleActions)) {
               ruleDataBuilder.ruleTargetGroupArn(currentRuleActions.get(0).getTargetGroupArn());
             }
             rules.add(ruleDataBuilder.build());
@@ -705,7 +704,7 @@ public class AwsElbHelperServiceDelegateImpl
     tracker.trackELBCall("Describe Listener");
     DescribeListenersResult listenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
-    if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
+    if (hasNone(listenerResult.getListeners())) {
       throw new WingsException(
           ErrorCode.INVALID_ARGUMENT, "Invalid ListenerArn. Listener could not be found", WingsException.USER)
           .addParam("message", "Invalid ListenerArn. Listener could not be found");
@@ -731,7 +730,7 @@ public class AwsElbHelperServiceDelegateImpl
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
       DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
       List<TargetGroup> targetGroups = describeTargetGroupsResult.getTargetGroups();
-      if (isEmpty(targetGroups)) {
+      if (hasNone(targetGroups)) {
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "TargetGroupArn to be cloned from could not be Found", WingsException.USER)
             .addParam("message", "TargetGroupArn to be cloned from could not be Found");
@@ -849,7 +848,7 @@ public class AwsElbHelperServiceDelegateImpl
       tracker.trackELBCall("Describe Rules");
       DescribeRulesResult describeRulesResult = amazonElasticLoadBalancingClient.describeRules(describeRulesRequest);
       List<Rule> currentRules = describeRulesResult.getRules();
-      if (EmptyPredicate.isNotEmpty(currentRules)) {
+      if (hasSome(currentRules)) {
         Optional<Rule> defaultRule = currentRules.stream().filter(rule -> rule.isDefault()).findFirst();
         if (defaultRule.isPresent()) {
           if (defaultRule.get().getRuleArn().equalsIgnoreCase(listenerRuleArn)) {
@@ -1022,7 +1021,7 @@ public class AwsElbHelperServiceDelegateImpl
     Optional<Action> action = listener.getDefaultActions()
                                   .stream()
                                   .filter(listenerAction
-                                      -> isNotEmpty(listenerAction.getTargetGroupArn())
+                                      -> hasSome(listenerAction.getTargetGroupArn())
                                           && FORWARD_LISTENER_ACTION.equalsIgnoreCase(listenerAction.getType()))
                                   .findFirst();
 
@@ -1083,7 +1082,7 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       List<AwsElbListenerRuleData> rules = listener.getRules();
-      if (isEmpty(rules)) {
+      if (hasNone(rules)) {
         String errorMessage = format("Did not find any rules for Listener: [%s]", listener.getListenerArn());
         logCallback.saveExecutionLog(errorMessage, ERROR);
         throw new InvalidRequestException(errorMessage);
@@ -1127,13 +1126,13 @@ public class AwsElbHelperServiceDelegateImpl
       DescribeRulesResult describeRulesResult =
           client.describeRules(new DescribeRulesRequest().withRuleArns(originalLbDetails.getRuleArn()));
       List<Rule> rules = describeRulesResult.getRules();
-      if (isEmpty(rules)) {
+      if (hasNone(rules)) {
         String errorMessage = format("Did not find any rule with Arn: [%s]", originalLbDetails.getRuleArn());
         logCallback.saveExecutionLog(errorMessage, ERROR);
         throw new InvalidRequestException(errorMessage);
       }
       List<Action> actions = rules.get(0).getActions();
-      if (isEmpty(actions)) {
+      if (hasNone(actions)) {
         String errorMessage = format("Did not find any action with Arn: [%s]", originalLbDetails.getRuleArn());
         logCallback.saveExecutionLog(errorMessage, ERROR);
         throw new InvalidRequestException(errorMessage);

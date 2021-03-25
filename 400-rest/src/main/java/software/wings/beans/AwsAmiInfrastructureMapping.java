@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
@@ -11,7 +12,6 @@ import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.annotation.Blueprint;
@@ -121,10 +121,10 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
         }
       }
     }
-    if (EmptyPredicate.isEmpty(getRegion())) {
+    if (hasNone(getRegion())) {
       throw new InvalidRequestException("Region is required");
     }
-    if (EmptyPredicate.isEmpty(getAutoScalingGroupName())) {
+    if (hasNone(getAutoScalingGroupName())) {
       throw new InvalidRequestException("Base Asg is required");
     }
   }

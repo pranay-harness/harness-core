@@ -4,8 +4,8 @@ import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Objects.isNull;
 
@@ -94,7 +94,7 @@ public class CEPerpetualTaskManager {
   public boolean createPerpetualTasks(Account account, String clusterType) {
     List<ClusterRecord> clusterRecords = clusterRecordService.list(account.getUuid(), clusterType);
     clusterRecords.stream()
-        .filter(clusterRecord -> isEmpty(clusterRecord.getPerpetualTaskIds()))
+        .filter(clusterRecord -> hasNone(clusterRecord.getPerpetualTaskIds()))
         .forEach(this::createPerpetualTasks);
     return true;
   }
@@ -102,7 +102,7 @@ public class CEPerpetualTaskManager {
   public boolean deletePerpetualTasks(Account account, String clusterType) {
     List<ClusterRecord> clusterRecords = clusterRecordService.list(account.getUuid(), clusterType);
     clusterRecords.stream()
-        .filter(clusterRecord -> isNotEmpty(clusterRecord.getPerpetualTaskIds()))
+        .filter(clusterRecord -> hasSome(clusterRecord.getPerpetualTaskIds()))
         .forEach(this::deletePerpetualTasks);
     return true;
   }

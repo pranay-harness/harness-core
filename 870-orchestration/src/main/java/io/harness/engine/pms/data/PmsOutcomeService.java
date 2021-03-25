@@ -1,6 +1,7 @@
 package io.harness.engine.pms.data;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
@@ -16,14 +17,14 @@ public interface PmsOutcomeService {
 
   default String consume(
       @NotNull Ambiance ambiance, @NotNull String name, String value, String groupName, boolean isGraphOutcome) {
-    if (EmptyPredicate.isEmpty(groupName)) {
+    if (hasNone(groupName)) {
       return consumeInternal(ambiance, name, value, -1, isGraphOutcome);
     }
     if (groupName.equals(ResolverUtils.GLOBAL_GROUP_SCOPE)) {
       return consumeInternal(ambiance, name, value, 0, isGraphOutcome);
     }
 
-    if (EmptyPredicate.isEmpty(ambiance.getLevelsList())) {
+    if (hasNone(ambiance.getLevelsList())) {
       throw new GroupNotFoundException(groupName);
     }
 

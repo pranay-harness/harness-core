@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.RepairActionCode;
@@ -64,10 +64,10 @@ public interface WorkflowState {
           .build();
     }
 
-    if (isNotEmpty(disableAssertion)) {
+    if (hasSome(disableAssertion)) {
       try {
         if (context.getStateExecutionInstance() != null
-            && isNotEmpty(context.getStateExecutionInstance().getContextElements())) {
+            && hasSome(context.getStateExecutionInstance().getContextElements())) {
           WorkflowStandardParams stdParams =
               (WorkflowStandardParams) context.getStateExecutionInstance().getContextElements().get(0);
           if (stdParams.getWorkflowElement() != null) {

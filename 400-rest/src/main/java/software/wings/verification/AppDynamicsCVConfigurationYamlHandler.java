@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -45,7 +45,7 @@ public class AppDynamicsCVConfigurationYamlHandler
           yaml.setTierName(appdynamicsTier.getName());
         }
       }
-      if (isEmpty(yaml.getAppDynamicsApplicationName()) || isEmpty(yaml.getTierName())) {
+      if (hasNone(yaml.getAppDynamicsApplicationName()) || hasNone(yaml.getTierName())) {
         final String errMsg = String.format(
             "AppDynamics ApplicationName or TierName is empty during conversion to yaml. ApplicationId %s, tierID %s",
             bean.getAppDynamicsApplicationId(), bean.getTierId());
@@ -124,7 +124,7 @@ public class AppDynamicsCVConfigurationYamlHandler
           }
         }
       }
-      if (isEmpty(bean.getAppDynamicsApplicationId()) || isEmpty(bean.getTierId())) {
+      if (hasNone(bean.getAppDynamicsApplicationId()) || hasNone(bean.getTierId())) {
         final String errMsg = String.format(
             "AppDynamics ApplicationName or TierName is incorrect during edit from yaml. ApplicationName %s, tierName %s",
             yaml.getAppDynamicsApplicationName(), yaml.getTierName());

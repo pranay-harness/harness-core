@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -129,14 +129,14 @@ public class WorkflowExecutionController {
       }
     }
 
-    if (isNotEmpty(workflowExecution.getTags())) {
+    if (hasSome(workflowExecution.getTags())) {
       tags = workflowExecution.getTags()
                  .stream()
                  .map(tag -> QLDeploymentTag.builder().name(tag.getName()).value(tag.getValue()).build())
                  .collect(Collectors.toList());
     }
 
-    if (isNotEmpty(workflowExecution.getArtifacts())) {
+    if (hasSome(workflowExecution.getArtifacts())) {
       artifacts = workflowExecution.getArtifacts()
                       .stream()
                       .map(artifact -> {
@@ -147,7 +147,7 @@ public class WorkflowExecutionController {
                       .collect(Collectors.toList());
     }
 
-    if (isNotEmpty(workflowExecution.getRollbackArtifacts())) {
+    if (hasSome(workflowExecution.getRollbackArtifacts())) {
       rollbackArtifacts = workflowExecution.getRollbackArtifacts()
                               .stream()
                               .map(artifact -> {
@@ -219,7 +219,7 @@ public class WorkflowExecutionController {
         populateWorkflowExecution(workflowExecution, executionBuilder);
 
         String warningMessage = null;
-        if (isNotEmpty(extraVariables)) {
+        if (hasSome(extraVariables)) {
           warningMessage = "Ignoring values for variables: [" + StringUtils.join(extraVariables, ",")
               + "] as they don't exist in workflow. Workflow Might be modified";
         }
@@ -234,7 +234,7 @@ public class WorkflowExecutionController {
   }
 
   private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
-    if (triggerExecutionInput.isTargetToSpecificHosts() && isEmpty(triggerExecutionInput.getSpecificHosts())) {
+    if (triggerExecutionInput.isTargetToSpecificHosts() && hasNone(triggerExecutionInput.getSpecificHosts())) {
       throw new InvalidRequestException(
           "Host list can't be empty when Target To Specific Hosts option is enabled", USER);
     }
@@ -249,7 +249,7 @@ public class WorkflowExecutionController {
     // Fetch the service
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
-    if (isEmpty(artifactNeededServiceIds)) {
+    if (hasNone(artifactNeededServiceIds)) {
       return new ArrayList<>();
     }
 
@@ -262,7 +262,7 @@ public class WorkflowExecutionController {
   public Map<String, String> validateAndResolveWorkflowVariables(Workflow workflow,
       List<QLVariableInput> variableInputs, String envId, List<String> extraVariablesInAPI, boolean isTriggerFlow) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(workflowVariables)) {
+    if (hasNone(workflowVariables)) {
       List<String> extraVariables = variableInputs.stream().map(t -> t.getName()).collect(Collectors.toList());
       extraVariablesInAPI.addAll(extraVariables);
       return new HashMap<>();
@@ -310,7 +310,7 @@ public class WorkflowExecutionController {
 
   private void validateFixedVarValueUnchanged(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
     List<Variable> fixedVariables = workflowVariables.stream().filter(Variable::isFixed).collect(Collectors.toList());
-    if (isEmpty(fixedVariables)) {
+    if (hasNone(fixedVariables)) {
       return;
     }
     for (Variable var : fixedVariables) {
@@ -416,7 +416,7 @@ public class WorkflowExecutionController {
             appId, workflow, variableValues, null, null, false, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
         if (finalDeploymentMetadata != null) {
           List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
-          if (isNotEmpty(artifactNeededServiceIds)) {
+          if (hasSome(artifactNeededServiceIds)) {
             return artifactNeededServiceIds;
           }
         }

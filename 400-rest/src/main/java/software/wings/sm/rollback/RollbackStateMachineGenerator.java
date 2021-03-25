@@ -1,7 +1,7 @@
 package software.wings.sm.rollback;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -95,7 +95,7 @@ public class RollbackStateMachineGenerator {
       phase.setPhaseSteps(Collections.singletonList(
           getRollbackStagingPhaseStep(appId, canaryOrchestrationWorkflow, successfulExecutionId)));
       WorkflowPhase rollbackPhase = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phase.getUuid());
-      if (isNotEmpty(rollbackPhase.getPhaseSteps())) {
+      if (hasSome(rollbackPhase.getPhaseSteps())) {
         PhaseStep rollbackPhaseStep = rollbackPhase.getPhaseSteps().get(0);
         rollbackPhaseStep.getSteps().add(
             0, getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));

@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.common;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
@@ -31,7 +31,7 @@ public class NGPipelineObjectMapperHelper {
       @Override
       public List<NamedType> findSubtypes(Annotated a) {
         final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-        if (isNotEmpty(subtypesFromSuper)) {
+        if (hasSome(subtypesFromSuper)) {
           return subtypesFromSuper;
         }
         return emptyIfNull(subtypeResolver.findSubtypes(a));

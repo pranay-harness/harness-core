@@ -1,8 +1,8 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.FILE;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
@@ -110,7 +110,7 @@ public class SecretSpecBuilder {
 
   public Map<String, SecretParams> decryptCustomSecretVariables(List<SecretVariableDetails> secretVariableDetails) {
     Map<String, SecretParams> data = new HashMap<>();
-    if (isNotEmpty(secretVariableDetails)) {
+    if (hasSome(secretVariableDetails)) {
       for (SecretVariableDetails secretVariableDetail : secretVariableDetails) {
         log.info("Decrypting custom variable name:[{}], type:[{}], secretRef:[{}]",
             secretVariableDetail.getSecretVariableDTO().getName(),
@@ -151,7 +151,7 @@ public class SecretSpecBuilder {
 
   public Map<String, SecretParams> decryptConnectorSecretVariables(Map<String, ConnectorDetails> connectorDetailsMap) {
     Map<String, SecretParams> secretData = new HashMap<>();
-    if (isEmpty(connectorDetailsMap)) {
+    if (hasNone(connectorDetailsMap)) {
       return secretData;
     }
 
@@ -255,7 +255,7 @@ public class SecretSpecBuilder {
 
         String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
             secretKeyAccessKeyDTO.getAccessKey(), secretKeyAccessKeyDTO.getAccessKeyRef());
-        if (isEmpty(accessKey)) {
+        if (hasNone(accessKey)) {
           throw new CIStageExecutionException(
               "AwsCodeCommit connector should have not empty accessKey and accessKeyRef");
         }
@@ -266,7 +266,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("AwsCodeCommit connector should have not empty secretKeyRef");
         }
         String secretKey = String.valueOf(secretKeyAccessKeyDTO.getSecretKeyRef().getDecryptedValue());
-        if (isEmpty(secretKey)) {
+        if (hasNone(secretKey)) {
           throw new CIStageExecutionException("AwsCodeCommit connector should have not empty secretKeyRef");
         }
         secretData.put(DRONE_AWS_SECRET_KEY,
@@ -359,7 +359,7 @@ public class SecretSpecBuilder {
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
             githubUsernamePasswordDTO.getUsername(), githubUsernamePasswordDTO.getUsernameRef());
-        if (isEmpty(username)) {
+        if (hasNone(username)) {
           throw new CIStageExecutionException("Github connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
@@ -369,7 +369,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("Github connector should have not empty passwordRef");
         }
         String password = String.valueOf(githubUsernamePasswordDTO.getPasswordRef().getDecryptedValue());
-        if (isEmpty(password)) {
+        if (hasNone(password)) {
           throw new CIStageExecutionException(
               "Unsupported github connector auth" + gitConfigDTO.getAuthentication().getAuthType());
         }
@@ -382,7 +382,7 @@ public class SecretSpecBuilder {
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
             githubUsernameTokenDTO.getUsername(), githubUsernameTokenDTO.getUsernameRef());
-        if (isEmpty(username)) {
+        if (hasNone(username)) {
           throw new CIStageExecutionException("Github connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
@@ -392,7 +392,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("Github connector should have not empty tokenRef");
         }
         String token = String.valueOf(githubUsernameTokenDTO.getTokenRef().getDecryptedValue());
-        if (isEmpty(token)) {
+        if (hasNone(token)) {
           throw new CIStageExecutionException("Github connector should have not empty token");
         }
         secretData.put(DRONE_NETRC_PASSWORD,
@@ -411,7 +411,7 @@ public class SecretSpecBuilder {
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
       log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
-      if (key == null || isEmpty(key.getDecryptedValue())) {
+      if (key == null || hasNone(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Github connector should have not empty sshKey");
       }
       char[] sshKey = key.getDecryptedValue();
@@ -488,7 +488,7 @@ public class SecretSpecBuilder {
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
             gitlabHttpCredentialsSpecDTO.getUsername(), gitlabHttpCredentialsSpecDTO.getUsernameRef());
-        if (isEmpty(username)) {
+        if (hasNone(username)) {
           throw new CIStageExecutionException("Gitlab connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
@@ -498,7 +498,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("Gitlab connector should have not empty passwordRef");
         }
         String password = String.valueOf(gitlabHttpCredentialsSpecDTO.getPasswordRef().getDecryptedValue());
-        if (isEmpty(password)) {
+        if (hasNone(password)) {
           throw new CIStageExecutionException(
               "Unsupported gitlab connector auth" + gitConfigDTO.getAuthentication().getAuthType());
         }
@@ -511,7 +511,7 @@ public class SecretSpecBuilder {
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
             gitlabUsernameTokenDTO.getUsername(), gitlabUsernameTokenDTO.getUsernameRef());
-        if (isEmpty(username)) {
+        if (hasNone(username)) {
           throw new CIStageExecutionException("Gitlab connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
@@ -521,7 +521,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("Gitlab connector should have not empty tokenRef");
         }
         String token = String.valueOf(gitlabUsernameTokenDTO.getTokenRef().getDecryptedValue());
-        if (isEmpty(token)) {
+        if (hasNone(token)) {
           throw new CIStageExecutionException("Gitlab connector should have not empty token");
         }
         secretData.put(DRONE_NETRC_PASSWORD,
@@ -538,7 +538,7 @@ public class SecretSpecBuilder {
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
       log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
-      if (key == null || isEmpty(key.getDecryptedValue())) {
+      if (key == null || hasNone(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Gitlab connector should have not empty sshKey");
       }
       char[] sshKey = key.getDecryptedValue();
@@ -611,7 +611,7 @@ public class SecretSpecBuilder {
 
         String username = getSecretAsStringFromPlainTextOrSecretRef(
             bitbucketHttpCredentialsSpecDTO.getUsername(), bitbucketHttpCredentialsSpecDTO.getUsernameRef());
-        if (isEmpty(username)) {
+        if (hasNone(username)) {
           throw new CIStageExecutionException("Bitbucket connector should have not empty username");
         }
         secretData.put(DRONE_NETRC_USERNAME,
@@ -621,7 +621,7 @@ public class SecretSpecBuilder {
           throw new CIStageExecutionException("Bitbucket connector should have not empty passwordRef");
         }
         String password = String.valueOf(bitbucketHttpCredentialsSpecDTO.getPasswordRef().getDecryptedValue());
-        if (isEmpty(password)) {
+        if (hasNone(password)) {
           throw new CIStageExecutionException(
               "Unsupported bitbucket connector auth" + gitConfigDTO.getAuthentication().getAuthType());
         }
@@ -635,7 +635,7 @@ public class SecretSpecBuilder {
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
       log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
-      if (key == null || isEmpty(key.getDecryptedValue())) {
+      if (key == null || hasNone(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Bitbucket connector should have not empty sshKey");
       }
       char[] sshKey = key.getDecryptedValue();

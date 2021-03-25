@@ -1,8 +1,8 @@
 package io.harness.k8s;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getHomeDir;
 import static io.harness.govern.Switch.noop;
@@ -180,7 +180,7 @@ public class KubernetesHelperService {
 
   public Config getConfig(KubernetesConfig kubernetesConfig, String apiVersion) {
     // Disable SSL validation (trust certs) if CA Certificate is missing in k8s configuration
-    ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(isEmpty(kubernetesConfig.getCaCert()));
+    ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(hasNone(kubernetesConfig.getCaCert()));
     if (isNotBlank(kubernetesConfig.getNamespace())) {
       configBuilder.withNamespace(kubernetesConfig.getNamespace().trim());
     }
@@ -242,7 +242,7 @@ public class KubernetesHelperService {
   public static void printVirtualServiceRouteWeights(
       IstioResource virtualService, String controllerPrefix, LogCallback logCallback) {
     VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+    if (hasSome(virtualServiceSpec.getHttp().get(0).getRoute())) {
       List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
       sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset())));
       for (DestinationWeight destinationWeight : sorted) {
@@ -373,7 +373,7 @@ public class KubernetesHelperService {
         }
       }
 
-      if (isNotEmpty(config.getUserAgent())) {
+      if (hasSome(config.getUserAgent())) {
         httpClientBuilder.addNetworkInterceptor(new Interceptor() {
           @Override
           public Response intercept(Chain chain) throws IOException {

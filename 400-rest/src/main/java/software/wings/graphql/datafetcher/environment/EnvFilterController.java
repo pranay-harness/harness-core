@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.schema.type.QLEnvFilterType.PRODUCTION_ENVIRONMENTS;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -55,10 +55,10 @@ public class EnvFilterController {
     if (envFilter == null) {
       throw new InvalidRequestException("The app filter cannot be null");
     }
-    if (isEmpty(envFilter.getEnvId()) && envFilter.getFilterType() == null) {
+    if (hasNone(envFilter.getEnvId()) && envFilter.getFilterType() == null) {
       throw new InvalidRequestException("No envId or filterType provided in the env filter");
     }
-    if (isNotEmpty(envFilter.getEnvId()) && envFilter.getFilterType() != null) {
+    if (hasSome(envFilter.getEnvId()) && envFilter.getFilterType() != null) {
       throw new InvalidRequestException("Cannot set both envId and filterType in the env filter");
     }
     if (envFilter.getEnvId() != null) {
@@ -78,7 +78,7 @@ public class EnvFilterController {
   }
 
   public EnvFilter createEnvFilter(QLEnvScopeFilter envFilter) {
-    if (isEmpty(envFilter.getEnvId())) {
+    if (hasNone(envFilter.getEnvId())) {
       String filterType = PROD;
       if (envFilter.getFilterType() == QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS) {
         filterType = NON_PROD;
@@ -92,7 +92,7 @@ public class EnvFilterController {
   }
 
   public void checkEnvExists(Set<String> envIds, String accountId) {
-    if (isEmpty(envIds)) {
+    if (hasNone(envIds)) {
       return;
     }
     PageRequest<Environment> req = aPageRequest()
@@ -107,7 +107,7 @@ public class EnvFilterController {
   }
 
   public QLEnvFilter createEnvFilterOutput(EnvFilter envPermissions) {
-    if (isEmpty(envPermissions.getIds())) {
+    if (hasNone(envPermissions.getIds())) {
       EnumSet<QLEnvFilterType> filterTypes = EnumSet.noneOf(QLEnvFilterType.class);
       if (envPermissions.getFilterTypes().contains(PROD)) {
         filterTypes.add(PRODUCTION_ENVIRONMENTS);

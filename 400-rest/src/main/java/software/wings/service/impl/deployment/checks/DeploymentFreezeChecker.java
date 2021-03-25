@@ -1,7 +1,7 @@
 package software.wings.service.impl.deployment.checks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -70,7 +70,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
     }
 
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
-      if (isEmpty(deploymentCtx.getEnvIds())) {
+      if (hasNone(deploymentCtx.getEnvIds())) {
         checkIfAppFrozen(governanceConfig, accountId);
       }
       checkIfEnvFrozen(accountId, governanceConfig);
@@ -87,7 +87,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
 
   // Checks if the app is completely frozen then sends notification to all windows that freeze the app
   private void checkIfAppFrozen(GovernanceConfig governanceConfig, String accountId) {
-    if (isEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+    if (hasNone(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
       return;
     }
     List<GovernanceFreezeConfig> blockingWindows =
@@ -95,7 +95,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
             .stream()
             .filter(freezeWindow -> freezeWindow.checkIfActive() && containsApplication(freezeWindow))
             .collect(Collectors.toList());
-    if (isNotEmpty(blockingWindows)) {
+    if (hasSome(blockingWindows)) {
       throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
           blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
           blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
@@ -105,7 +105,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
 
   // To check if a freeze window freezes that particular application completely
   private boolean containsApplication(TimeRangeBasedFreezeConfig freezeWindow) {
-    if (isEmpty(freezeWindow.getAppSelections())) {
+    if (hasNone(freezeWindow.getAppSelections())) {
       return false;
     }
     return freezeWindow.getAppSelections()
@@ -119,7 +119,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   void checkIfEnvFrozen(String accountId, GovernanceConfig governanceConfig) {
     Map<String, Set<String>> frozenEnvsByWindow =
         governanceConfigService.getFrozenEnvIdsForApp(accountId, deploymentCtx.getAppId(), governanceConfig);
-    if (isNotEmpty(deploymentCtx.getEnvIds()) && isNotEmpty(frozenEnvsByWindow)) {
+    if (hasSome(deploymentCtx.getEnvIds()) && hasSome(frozenEnvsByWindow)) {
       // In case of pipeline with multiple envIds, we just check for the first stage environment(s). If any of the
       // successive environments are frozen, pipeline is rejected at that stage
       Set<String> allBlockedEnvs =
@@ -136,7 +136,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
               .filter(Objects::nonNull)
               .collect(Collectors.toList());
 
-      if (isNotEmpty(blockingWindows)) {
+      if (hasSome(blockingWindows)) {
         throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
             blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
             blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
@@ -146,7 +146,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   }
 
   private GovernanceFreezeConfig getFreezeWindow(String freezeId, GovernanceConfig governanceConfig) {
-    if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+    if (hasSome(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
       return governanceConfig.getTimeRangeBasedFreezeConfigs()
           .stream()
           .filter(freeze -> freezeId.equals(freeze.getUuid()))

@@ -4,8 +4,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.CollectionUtils.collectionToStream;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
@@ -62,7 +62,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -306,7 +305,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     final PageResponse<InfrastructureDefinition> response =
         wingsPersistence.query(InfrastructureDefinition.class, pageRequest);
-    if (isNotEmpty(response.getResponse())) {
+    if (hasSome(response.getResponse())) {
       customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(
           response.getResponse(), response.getResponse().get(0).getAccountId());
     }
@@ -323,7 +322,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @VisibleForTesting
   public void applyServiceFilter(PageRequest<InfrastructureDefinition> pageRequest, List<String> serviceIds) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return;
     }
     if (!pageRequest.getUriInfo().getQueryParameters().containsKey("appId")) {
@@ -339,7 +338,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     List<String> serviceIdsInScope = new ArrayList<>();
     Set<String> customDeploymentTemplateIds = new HashSet<>();
     for (String serviceId : serviceIds) {
-      if (isEmpty(serviceId) || ExpressionEvaluator.containsVariablePattern(serviceId)) {
+      if (hasNone(serviceId) || ExpressionEvaluator.containsVariablePattern(serviceId)) {
         continue;
       }
       Service service = serviceResourceService.get(appId, serviceId);
@@ -357,22 +356,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       serviceIdsInScope.add(serviceId);
     }
 
-    if (isNotEmpty(deploymentType)) {
+    if (hasSome(deploymentType)) {
       if (deploymentType.size() > 1 || customDeploymentTemplateIds.size() > 1) {
         throw new InvalidRequestException(
             "Cannot load infra for different deployment type services " + serviceNames, USER);
       }
-      if (isEmpty(pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata"))) {
+      if (hasNone(pageRequest.getUriInfo().getQueryParameters().get("deploymentTypeFromMetadata"))) {
         pageRequest.addFilter(
             InfrastructureDefinitionKeys.deploymentType, Operator.EQ, deploymentType.iterator().next().name());
       }
-      if (isNotEmpty(customDeploymentTemplateIds)) {
+      if (hasSome(customDeploymentTemplateIds)) {
         pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentTypeTemplateId, Operator.EQ,
             customDeploymentTemplateIds.iterator().next());
       }
     }
 
-    if (isNotEmpty(serviceIdsInScope)) {
+    if (hasSome(serviceIdsInScope)) {
       SearchFilter op1 = SearchFilter.builder()
                              .fieldName(InfrastructureDefinitionKeys.scopedToServices)
                              .op(Operator.NOT_EXISTS)
@@ -393,7 +392,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                                   .addFilter(InfrastructureDefinitionKeys.appId, Operator.EQ, appId)
                                   .addFilter(InfrastructureDefinitionKeys.envId, Operator.EQ, envId)
                                   .build();
-    if (EmptyPredicate.isNotEmpty(serviceId)) {
+    if (hasSome(serviceId)) {
       Service service = serviceResourceService.get(appId, serviceId);
       if (service == null) {
         throw new InvalidRequestException(format("No service exists for id : [%s]", serviceId));
@@ -499,7 +498,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final SetView<String> difference =
         Sets.difference(collectionToStream(infraVariables).map(NameValuePair::getName).collect(Collectors.toSet()),
             collectionToStream(templateVariables).map(Variable::getName).collect(Collectors.toSet()));
-    if (isNotEmpty(difference)) {
+    if (hasSome(difference)) {
       throw new InvalidRequestException(
           format(
               "Following variables are present in the infrastructure definition but not in the deployment template %s",
@@ -511,7 +510,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   List<NameValuePair> filterNonOverridenVariables(
       List<Variable> templateVariables, List<NameValuePair> infraVariables) {
-    if (isEmpty(infraVariables)) {
+    if (hasNone(infraVariables)) {
       return new ArrayList<>();
     }
     final List<NameValuePair> variables = new ArrayList<>(infraVariables);
@@ -574,10 +573,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
             "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
       }
     }
-    if (isNotEmpty(infraDefinition.getProvisionerId())) {
+    if (hasSome(infraDefinition.getProvisionerId())) {
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
-      if (isEmpty(expressions)) {
+      if (hasNone(expressions)) {
         throw new InvalidRequestException("Expressions can't be empty with provisioner");
       }
       validateMandatoryFields(infraDefinition.getInfrastructure());
@@ -631,10 +630,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAzureWebAppInfraWithProvisioner(AzureWebAppInfra infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(AzureWebAppInfraKeys.subscriptionId))) {
+    if (hasNone(expressions.get(AzureWebAppInfraKeys.subscriptionId))) {
       throw new InvalidRequestException("Subscription Id is required");
     }
-    if (isEmpty(expressions.get(AzureWebAppInfraKeys.resourceGroup))) {
+    if (hasNone(expressions.get(AzureWebAppInfraKeys.resourceGroup))) {
       throw new InvalidRequestException("Resource Group is required");
     }
   }
@@ -642,26 +641,26 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAwsEcsInfraWithProvisioner(AwsEcsInfrastructure infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.region))) {
+    if (hasNone(expressions.get(AwsEcsInfrastructureKeys.region))) {
       throw new InvalidRequestException("Region is required.");
     }
-    if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.clusterName))) {
+    if (hasNone(expressions.get(AwsEcsInfrastructureKeys.clusterName))) {
       throw new InvalidRequestException("Cluster Name is required.");
     }
-    if (isEmpty(infra.getLaunchType())) {
+    if (hasNone(infra.getLaunchType())) {
       throw new InvalidRequestException("Launch Type can't be empty");
     }
     if (StringUtils.equals(infra.getLaunchType(), LaunchType.FARGATE.toString())) {
-      if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.executionRole))) {
+      if (hasNone(expressions.get(AwsEcsInfrastructureKeys.executionRole))) {
         throw new InvalidRequestException("execution role is required with Fargate Launch Type.");
       }
-      if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.vpcId))) {
+      if (hasNone(expressions.get(AwsEcsInfrastructureKeys.vpcId))) {
         throw new InvalidRequestException("vpc-id is required with Fargate Launch Type.");
       }
-      if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.securityGroupIds))) {
+      if (hasNone(expressions.get(AwsEcsInfrastructureKeys.securityGroupIds))) {
         throw new InvalidRequestException("security-groupIds are required with Fargate Launch Type.");
       }
-      if (isEmpty(expressions.get(AwsEcsInfrastructureKeys.subnetIds))) {
+      if (hasNone(expressions.get(AwsEcsInfrastructureKeys.subnetIds))) {
         throw new InvalidRequestException("subnet-ids are required with Fargate Launch Type.");
       }
     }
@@ -670,10 +669,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validatePhysicalInfraWithProvisioner(PhysicalInfra infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(PhysicalInfra.hostArrayPath))) {
+    if (hasNone(expressions.get(PhysicalInfra.hostArrayPath))) {
       throw new InvalidRequestException("Host Array Path can't be empty");
     }
-    if (isEmpty(expressions.get(PhysicalInfra.hostname))) {
+    if (hasNone(expressions.get(PhysicalInfra.hostname))) {
       throw new InvalidRequestException("Hostname can't be empty");
     }
   }
@@ -681,10 +680,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateGoogleKubernetesEngineInfraWithProvisioner(GoogleKubernetesEngine infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(GoogleKubernetesEngineKeys.clusterName))) {
+    if (hasNone(expressions.get(GoogleKubernetesEngineKeys.clusterName))) {
       throw new InvalidRequestException("Cluster name can't be empty");
     }
-    if (isEmpty(expressions.get(GoogleKubernetesEngineKeys.namespace))) {
+    if (hasNone(expressions.get(GoogleKubernetesEngineKeys.namespace))) {
       throw new InvalidRequestException("Namespace can't be empty");
     }
   }
@@ -692,7 +691,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAwsLambdaInfraWithProvisioner(AwsLambdaInfrastructure infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(AwsLambdaInfrastructureKeys.region))) {
+    if (hasNone(expressions.get(AwsLambdaInfrastructureKeys.region))) {
       throw new InvalidRequestException("Region is mandatory");
     }
     if (StringUtils.isEmpty(expressions.get(AwsLambdaInfrastructureKeys.role))) {
@@ -704,14 +703,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public void validateAwsInstanceInfraWithProvisioner(AwsInstanceInfrastructure infra) {
     Map<String, String> expressions = infra.getExpressions();
     if (infra.isProvisionInstances()) {
-      if (isEmpty(expressions.get(AwsInstanceInfrastructureKeys.autoScalingGroupName))) {
+      if (hasNone(expressions.get(AwsInstanceInfrastructureKeys.autoScalingGroupName))) {
         throw new InvalidArgumentsException(Pair.of("args", "Auto Scaling group Name must not be empty"));
       }
       if (infra.isSetDesiredCapacity() && infra.getDesiredCapacity() <= 0) {
         throw new InvalidArgumentsException(Pair.of("args", "Desired count must be greater than zero."));
       }
     } else {
-      if (isEmpty(expressions.get(AwsInstanceFilterKeys.tags))) {
+      if (hasNone(expressions.get(AwsInstanceFilterKeys.tags))) {
         throw new InvalidArgumentsException(Pair.of("args", "Tags must not be empty with AWS Instance Filter"));
       }
     }
@@ -720,11 +719,11 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAwsAmiInfraWithProvisioner(AwsAmiInfrastructure infra) {
     Map<String, String> expressions = infra.getExpressions();
-    if (isEmpty(expressions.get(AwsAmiInfrastructureKeys.region))) {
+    if (hasNone(expressions.get(AwsAmiInfrastructureKeys.region))) {
       throw new InvalidRequestException("Region is mandatory");
     }
     String baseAsgName = expressions.get(AwsAmiInfrastructureKeys.autoScalingGroupName);
-    if (AmiDeploymentType.AWS_ASG == infra.getAmiDeploymentType() && isEmpty(baseAsgName)) {
+    if (AmiDeploymentType.AWS_ASG == infra.getAmiDeploymentType() && hasNone(baseAsgName)) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }
@@ -901,7 +900,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final ExpressionReflectionUtils.Functor safeExpressionResolver =
         buildSecretSafeFunctor(context, expressionEvaluator);
 
-    if (isEmpty(infrastructureDefinition.getProvisionerId())) {
+    if (hasNone(infrastructureDefinition.getProvisionerId())) {
       for (Entry<String, Object> entry : fieldMapForClass.entrySet()) {
         if (entry.getValue() instanceof String
             && ExpressionEvaluator.containsVariablePattern((String) entry.getValue())) {
@@ -1008,12 +1007,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (infrastructureDefinition == null) {
       return false;
     }
-    return isNotEmpty(infrastructureDefinition.getProvisionerId());
+    return hasSome(infrastructureDefinition.getProvisionerId());
   }
 
   @Override
   public List<String> fetchCloudProviderIds(String appId, List<String> infraDefinitionIds) {
-    if (isNotEmpty(infraDefinitionIds)) {
+    if (hasSome(infraDefinitionIds)) {
       List<InfrastructureDefinition> infrastructureDefinitions =
           wingsPersistence.createQuery(InfrastructureDefinition.class)
               .project(InfrastructureDefinitionKeys.appId, true)
@@ -1068,13 +1067,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   private void validateInputs(String appId, String serviceId, String infraDefinitionId) {
-    if (isEmpty(appId)) {
+    if (hasNone(appId)) {
       throw new InvalidRequestException("App Id can't be empty");
     }
-    if (isEmpty(serviceId)) {
+    if (hasNone(serviceId)) {
       throw new InvalidRequestException("Service Id can't be empty");
     }
-    if (isEmpty(infraDefinitionId)) {
+    if (hasNone(infraDefinitionId)) {
       throw new InvalidRequestException("Infra Definition Id can't be empty");
     }
   }
@@ -1082,7 +1081,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Override
   public List<InfrastructureDefinition> getInfraStructureDefinitionByUuids(
       String appId, List<String> infraDefinitionIds) {
-    if (isNotEmpty(infraDefinitionIds)) {
+    if (hasSome(infraDefinitionIds)) {
       return wingsPersistence.createQuery(InfrastructureDefinition.class)
           .filter(InfrastructureDefinitionKeys.appId, appId)
           .field(InfrastructureDefinitionKeys.uuid)
@@ -1292,7 +1291,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     String region = extractRegionFromInfrastructureProvider(provider);
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return Collections.emptyList();
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
@@ -1308,7 +1307,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     String region = extractRegionFromInfrastructureProvider(provider);
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return Collections.emptyMap();
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
@@ -1329,7 +1328,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     notNullCheck("InfraDefinition", infrastructureDefinition);
     InfraMappingInfrastructureProvider infrastructureProvider = infrastructureDefinition.getInfrastructure();
     String region = extractRegionFromInfrastructureProvider(infrastructureProvider);
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return Collections.EMPTY_LIST;
     }
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureProvider.getCloudProviderId());
@@ -1375,7 +1374,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       String appId, String infraDefinitionId, String serviceId, String serviceNameExpression) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infra Definition not found", infrastructureDefinition);
-    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+    if (hasSome(infrastructureDefinition.getProvisionerId())) {
       return "0";
     }
     InfrastructureMapping infrastructureMapping = infrastructureDefinition.getInfraMapping();
@@ -1387,7 +1386,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
     if (provider instanceof PhysicalInfra) {
       PhysicalInfra physicalInfra = (PhysicalInfra) provider;
-      if (EmptyPredicate.isNotEmpty(physicalInfra.getHosts())) {
+      if (hasSome(physicalInfra.getHosts())) {
         return physicalInfra.getHosts();
       }
       List<String> hostNames = physicalInfra.getHostNames()
@@ -1496,9 +1495,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return hostDisplayNames;
     } else if (infrastructureDefinition.getInfrastructure() instanceof AzureInstanceInfrastructure) {
       List<Host> hosts = listHosts(infrastructureDefinition);
-      if (isNotEmpty(hosts)) {
+      if (hasSome(hosts)) {
         hosts.forEach(host -> {
-          String hostname = isEmpty(host.getPublicDns()) ? host.getHostName() : host.getPublicDns();
+          String hostname = hasNone(host.getPublicDns()) ? host.getHostName() : host.getPublicDns();
           hostDisplayNames.add(hostname);
         });
       }
@@ -1580,7 +1579,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     List<String> refPipelines =
         pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(appId, infraDefinitionId);
-    if (isNotEmpty(refPipelines)) {
+    if (hasSome(refPipelines)) {
       throw new InvalidRequestException(
           format("Infrastructure Definition %s is referenced by %d %s [%s] as a workflow variable", infraDefinitionName,
               refPipelines.size(), plural("pipeline", refPipelines.size()),
@@ -1589,7 +1588,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
 
     List<String> refTriggers = triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(appId, infraDefinitionId);
-    if (isNotEmpty(refTriggers)) {
+    if (hasSome(refTriggers)) {
       throw new InvalidRequestException(
           format("Infrastructure Definition %s is referenced by %d %s [%s] as a workflow variable", infraDefinitionName,
               refTriggers.size(), plural("trigger", refTriggers.size()), HarnessStringUtils.join(", ", refTriggers)),
@@ -1741,7 +1740,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                           .field(InfrastructureDefinitionKeys.envId)
                           .in(envIds);
 
-    if (EmptyPredicate.isNotEmpty(projections)) {
+    if (hasSome(projections)) {
       projections.forEach(projection -> baseQuery.project(projection, true));
     }
     return baseQuery.asList();
@@ -1752,7 +1751,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       String appId, String infraDefinitionId, String serviceId) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("InfraStructure Definition", infrastructureDefinition);
-    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+    if (hasSome(infrastructureDefinition.getProvisionerId())) {
       // case that could happen since we support dynamic infra for Ami Asg
       return AwsAsgGetRunningCountData.builder()
           .asgName(DEFAULT_AMI_ASG_NAME)
@@ -1846,7 +1845,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     List<ElastiGroup> groups =
         listElastiGroups(appId, ((AwsAmiInfrastructure) infrastructure).getSpotinstCloudProvider());
-    if (isEmpty(groups)) {
+    if (hasNone(groups)) {
       return SpotinstElastigroupRunningCountData.builder()
           .elastigroupMin(DEFAULT_ELASTIGROUP_MIN_INSTANCES)
           .elastigroupMax(DEFAULT_ELASTIGROUP_MAX_INSTANCES)
@@ -1861,7 +1860,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     Service service = serviceResourceService.get(appId, serviceId);
 
     String elastigroupName;
-    if (isEmpty(elastigroupNameExpression)) {
+    if (hasNone(elastigroupNameExpression)) {
       elastigroupName = ServiceVersionConvention.getPrefix(app.getName(), service.getName(), env.getName());
     } else {
       Map<String, Object> context = new HashMap<>();
@@ -1889,7 +1888,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
               })
               .sorted(Comparator.comparingInt(g -> Integer.parseInt(g.getName().substring(prefix.length()))))
               .collect(toList());
-      if (isEmpty(groupsWithNames)) {
+      if (hasNone(groupsWithNames)) {
         group = Optional.empty();
       } else {
         group = Optional.of(groupsWithNames.get(groupsWithNames.size() - 1));
@@ -1970,7 +1969,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @VisibleForTesting
   boolean containsExpression(String value) {
-    return isEmpty(value) || value.startsWith("${");
+    return hasNone(value) || value.startsWith("${");
   }
 
   @Override
@@ -2220,7 +2219,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   private String getRegion(InfrastructureDefinition infrastructureDefinition, AwsEcsInfrastructure provider) {
-    if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+    if (hasSome(infrastructureDefinition.getProvisionerId())) {
       return provider.getExpressions().get(REGION);
     } else {
       return provider.getRegion();

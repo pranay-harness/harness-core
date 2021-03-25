@@ -1,8 +1,10 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static java.lang.String.format;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -73,7 +75,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     try {
       Map<String, YamlFieldBlob> dependencyBlobs = request.getDependenciesMap();
       Map<String, YamlField> initialDependencies = new HashMap<>();
-      if (EmptyPredicate.isNotEmpty(dependencyBlobs)) {
+      if (hasSome(dependencyBlobs)) {
         try {
           for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
             initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
@@ -85,7 +87,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
       PlanCreationResponse finalResponse =
           createPlanForDependenciesRecursive(initialDependencies, request.getContextMap());
-      if (EmptyPredicate.isNotEmpty(finalResponse.getErrorMessages())) {
+      if (hasSome(finalResponse.getErrorMessages())) {
         planCreationResponse =
             io.harness.pms.contracts.plan.PlanCreationResponse.newBuilder()
                 .setErrorResponse(ErrorResponse.newBuilder().addAllMessages(finalResponse.getErrorMessages()).build())
@@ -110,7 +112,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       Map<String, YamlField> initialDependencies, Map<String, PlanCreationContextValue> context) {
     // TODO: Add patch version before sending the response back
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
-    if (EmptyPredicate.isEmpty(planCreators) || EmptyPredicate.isEmpty(initialDependencies)) {
+    if (hasNone(planCreators) || hasNone(initialDependencies)) {
       return finalResponse;
     }
 
@@ -121,7 +123,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       initialDependencies.keySet().forEach(dependencies::remove);
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
+    if (hasSome(finalResponse.getDependencies())) {
       initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
     }
     return finalResponse;
@@ -129,7 +131,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
   private void createPlanForDependencies(
       PlanCreationContext ctx, PlanCreationResponse finalResponse, Map<String, YamlField> dependencies) {
-    if (EmptyPredicate.isEmpty(dependencies)) {
+    if (hasNone(dependencies)) {
       return;
     }
 
@@ -172,12 +174,11 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
     try {
       List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(2, TimeUnit.MINUTES);
-      List<String> errorMessages =
-          planCreationResponses.stream()
-              .filter(resp -> resp != null && EmptyPredicate.isNotEmpty(resp.getErrorMessages()))
-              .flatMap(resp -> resp.getErrorMessages().stream())
-              .collect(Collectors.toList());
-      if (EmptyPredicate.isNotEmpty(errorMessages)) {
+      List<String> errorMessages = planCreationResponses.stream()
+                                       .filter(resp -> resp != null && hasSome(resp.getErrorMessages()))
+                                       .flatMap(resp -> resp.getErrorMessages().stream())
+                                       .collect(Collectors.toList());
+      if (hasSome(errorMessages)) {
         finalResponse.setErrorMessages(errorMessages);
         return;
       }
@@ -194,7 +195,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         finalResponse.mergeContext(response.getContextMap());
         finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         finalResponse.mergeStartingNodeId(response.getStartingNodeId());
-        if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
+        if (hasSome(response.getDependencies())) {
           for (YamlField childField : response.getDependencies().values()) {
             dependencies.put(childField.getNode().getUuid(), childField);
           }

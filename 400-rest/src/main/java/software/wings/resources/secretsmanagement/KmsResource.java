@@ -1,6 +1,6 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
@@ -105,8 +105,8 @@ public class KmsResource {
     if (!featureFlagService.isEnabled(FeatureName.AWS_SM_ASSUME_IAM_ROLE, accountId)) {
       // none of the below values should be set if Feature is not enabled
       boolean usingAssumeRoleFeatures = kmsConfig.isAssumeIamRoleOnDelegate() || kmsConfig.isAssumeStsRoleOnDelegate()
-          || isNotEmpty(kmsConfig.getDelegateSelectors()) || isNotEmpty(kmsConfig.getRoleArn())
-          || isNotEmpty(kmsConfig.getExternalName());
+          || hasSome(kmsConfig.getDelegateSelectors()) || hasSome(kmsConfig.getRoleArn())
+          || hasSome(kmsConfig.getExternalName());
       if (usingAssumeRoleFeatures) {
         throw new SecretManagementException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR,
             "Feature flag " + FeatureName.AWS_SM_ASSUME_IAM_ROLE + " is not enabled for account:" + accountId,

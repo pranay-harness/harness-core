@@ -1,9 +1,9 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
@@ -24,13 +24,13 @@ public class JiraTimeTrackingFieldNG {
   }
 
   public void setOriginalEstimate(String originalEstimate) {
-    if (EmptyPredicate.isNotEmpty(originalEstimate)) {
+    if (hasSome(originalEstimate)) {
       this.originalEstimate = originalEstimate;
     }
   }
 
   public void setRemainingEstimate(String remainingEstimate) {
-    if (EmptyPredicate.isNotEmpty(remainingEstimate)) {
+    if (hasSome(remainingEstimate)) {
       this.remainingEstimate = remainingEstimate;
     }
   }

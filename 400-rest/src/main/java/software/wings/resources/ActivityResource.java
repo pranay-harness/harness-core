@@ -5,8 +5,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
@@ -93,7 +93,7 @@ public class ActivityResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    if (isNotEmpty(envId)) {
+    if (hasSome(envId)) {
       request.addFilter("environmentId", EQ, envId);
     }
     if (request.getPageSize() > ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
@@ -139,7 +139,7 @@ public class ActivityResource {
     if (dataStoreService instanceof GoogleDataStoreServiceImpl) {
       if (request.getUriInfo() != null && request.getUriInfo().getQueryParameters() != null) {
         List<SortOrder> orders = populateSortOrder(request.getUriInfo().getQueryParameters());
-        if (isNotEmpty(request.getOrders())) {
+        if (hasSome(request.getOrders())) {
           orders.addAll(request.getOrders());
         }
         request.setOrders(orders);
@@ -200,7 +200,7 @@ public class ActivityResource {
       request.addFilter(CreatedAtAware.CREATED_AT_KEY, LT_EQ, endTime);
     }
 
-    if (isEmpty(request.getOrders())) {
+    if (hasNone(request.getOrders())) {
       request.setOrders(asList(aSortOrder().withField(ThirdPartyApiCallLog.CREATED_AT_KEY, DESC).build()));
     }
     PageResponse<ThirdPartyApiCallLog> response =

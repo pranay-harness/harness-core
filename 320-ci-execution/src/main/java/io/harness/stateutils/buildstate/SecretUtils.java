@@ -1,7 +1,7 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveSecretRefWithDefaultValue;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -75,7 +75,7 @@ public class SecretUtils {
         SecretVariableDTO.builder().name(secretVariable.getName()).secret(secretRefData).type(secretType).build();
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
     List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
-    if (isEmpty(encryptionDetails)) {
+    if (hasNone(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
 
@@ -114,7 +114,7 @@ public class SecretUtils {
 
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
     List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
-    if (isEmpty(encryptionDetails)) {
+    if (hasNone(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
 
@@ -167,7 +167,7 @@ public class SecretUtils {
         "Getting secret encryption details for secret type:[{}] ref:[{}]", secretDTOV2.getType(), secretIdentifier);
     List<EncryptedDataDetail> encryptionDetails =
         secretManagerClientService.getEncryptionDetails(ngAccess, credentialSpecDTO);
-    if (isEmpty(encryptionDetails)) {
+    if (hasNone(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
 

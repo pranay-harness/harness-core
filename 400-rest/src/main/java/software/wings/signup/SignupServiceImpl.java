@@ -1,7 +1,7 @@
 package software.wings.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
 import static io.harness.eraro.ErrorCode.PASSWORD_STRENGTH_CHECK_FAILED;
@@ -124,7 +124,7 @@ public class SignupServiceImpl implements SignupService {
   @Override
   public UserInvite getUserInviteByEmail(String email) {
     UserInvite userInvite = null;
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       userInvite = wingsPersistence.createQuery(UserInvite.class).filter(UserInviteKeys.email, email).get();
     }
     return userInvite;

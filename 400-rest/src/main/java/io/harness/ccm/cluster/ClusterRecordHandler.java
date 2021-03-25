@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -123,7 +123,7 @@ public class ClusterRecordHandler
         break;
     }
 
-    if (isNotEmpty(clusterRecords)) {
+    if (hasSome(clusterRecords)) {
       for (ClusterRecord clusterRecord : clusterRecords) {
         clusterRecordService.upsert(clusterRecord);
       }

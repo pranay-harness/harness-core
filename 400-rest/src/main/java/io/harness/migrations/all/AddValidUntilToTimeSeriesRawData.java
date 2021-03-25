@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SortOrder.OrderType.ASC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
@@ -40,7 +40,7 @@ public class AddValidUntilToTimeSeriesRawData implements Migration {
                                                          .addOrder(TimeSeriesRawDataKeys.createdAt, ASC)
                                                          .build();
         PageResponse<TimeSeriesRawData> response = dataStoreService.list(TimeSeriesRawData.class, pageRequest);
-        if (isEmpty(response.getResponse())) {
+        if (hasNone(response.getResponse())) {
           log.info("No more documents left to update!");
           break;
         }

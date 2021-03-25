@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -59,7 +59,7 @@ public class AsyncStrategy implements ExecuteStrategy {
 
   private void handleResponse(NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
     PlanNodeProto node = nodeExecution.getNode();
-    if (isEmpty(response.getCallbackIdsList())) {
+    if (hasNone(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");

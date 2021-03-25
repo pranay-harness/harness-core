@@ -1,7 +1,7 @@
 
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -44,7 +44,7 @@ public class AddCommitTimeToGitSyncError implements Migration {
       while (records.hasNext()) {
         GitSyncError syncError = records.next();
         try {
-          if (isNotEmpty(syncError.getGitCommitId()) && syncError.getCommitTime() == null) {
+          if (hasSome(syncError.getGitCommitId()) && syncError.getCommitTime() == null) {
             Long commitCreatedAtTime = getCreationTimeOfCommit(syncError.getAccountId(), syncError.getGitCommitId());
             if (commitCreatedAtTime != null) {
               syncError.setCommitTime(commitCreatedAtTime);

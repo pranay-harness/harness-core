@@ -3,8 +3,8 @@ package software.wings.service.impl.yaml;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -657,7 +657,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
 
     // if governance config exists
-    if (isNotEmpty(governanceConfig.getUuid())) {
+    if (hasSome(governanceConfig.getUuid())) {
       parentFolder.addChild(new AccountLevelYamlNode(accountId, governanceConfig.getUuid(), yamlFileName,
           GovernanceConfig.class, cpPath.add(yamlFileName), yamlGitSyncService, Type.GOVERNANCE_CONFIG));
     }
@@ -746,7 +746,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         allowedAppIds = appPermissionSummaryMap.keySet();
       }
 
-      if (isEmpty(allowedAppIds)) {
+      if (hasNone(allowedAppIds)) {
         return applicationsFolder;
       }
     }
@@ -757,7 +757,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         continue;
       }
 
-      if (isNotEmpty(appId) && app.getUuid().equals(appId)) {
+      if (hasSome(appId) && app.getUuid().equals(appId)) {
         doApplication(appId, applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
       } else {
         DirectoryPath appPath = directoryPath.clone();
@@ -791,7 +791,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         allowedAppIds = appPermissionSummaryMap.keySet();
       }
 
-      if (isEmpty(allowedAppIds) || !allowedAppIds.contains(applicationId)) {
+      if (hasNone(allowedAppIds) || !allowedAppIds.contains(applicationId)) {
         return applicationsFolder;
       }
     }
@@ -835,7 +835,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
       if (envPermissions != null) {
         Set<EnvInfo> envInfos = envPermissions.get(Action.READ);
-        if (isEmpty(envInfos)) {
+        if (hasNone(envInfos)) {
           envSet = emptySet();
         } else {
           envSet = envInfos.stream().map(EnvInfo::getEnvId).collect(Collectors.toSet());
@@ -962,7 +962,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         allowedAppIds = appPermissionSummaryMap.keySet();
       }
 
-      if (isEmpty(allowedAppIds)) {
+      if (hasNone(allowedAppIds)) {
         return applicationsFolder;
       }
     }
@@ -981,7 +981,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode servicesFolder = new FolderNode(accountId, SERVICES_FOLDER, Service.class,
         directoryPath.add(SERVICES_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedServices)) {
+    if (applyPermissions && hasNone(allowedServices)) {
       return servicesFolder;
     }
     PageRequest<Service> pageRequest = aPageRequest()
@@ -1215,7 +1215,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (appManifest.getStoreType() == StoreType.Local) {
       List<ManifestFile> manifestFiles =
           applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), appManifest.getUuid());
-      if (isNotEmpty(manifestFiles)) {
+      if (hasSome(manifestFiles)) {
         ManifestFile valuesFile = manifestFiles.get(0);
         folder.addChild(new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(), service.getUuid(),
             valuesFile.getFileName(), ManifestFile.class, folderPath.clone().add(valuesFile.getFileName()),
@@ -1297,7 +1297,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     processManifestFiles(manifestFiles, map, manifestFilesDirectUnderFiles);
 
-    if (isNotEmpty(map)) {
+    if (hasSome(map)) {
       for (Map.Entry<String, YamlManifestFileNode> entry : map.entrySet()) {
         addYamlDirectoryNode(
             accountId, service.getAppId(), service.getUuid(), manifestFileFolder, entry.getValue(), manifestFilePath);
@@ -1360,7 +1360,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private void processManifestFiles(List<ManifestFile> manifestFiles, Map<String, YamlManifestFileNode> map,
       List<YamlManifestFileNode> fileNodesUnderFiles) {
-    if (isNotEmpty(manifestFiles)) {
+    if (hasSome(manifestFiles)) {
       sortManifestFiles(manifestFiles);
 
       manifestFiles.forEach(manifestFile -> {
@@ -1419,7 +1419,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode environmentsFolder = new FolderNode(accountId, ENVIRONMENTS_FOLDER, Environment.class,
         directoryPath.add(ENVIRONMENTS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedEnvs)) {
+    if (applyPermissions && hasNone(allowedEnvs)) {
       return environmentsFolder;
     }
     PageRequest<Environment> pageRequestEnv = aPageRequest()
@@ -1594,7 +1594,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), appManifestKind);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1620,7 +1620,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1646,7 +1646,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), HELM_CHART_OVERRIDE);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1676,7 +1676,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
         env.getAppId(), env.getUuid(), AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1705,7 +1705,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
         env.getAppId(), env.getUuid(), AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1740,7 +1740,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ManifestFile> manifestFiles =
             applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
 
-        if (isNotEmpty(manifestFiles)) {
+        if (hasSome(manifestFiles)) {
           for (ManifestFile manifestFile : manifestFiles) {
             folderNode.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class, directoryPath.clone().add(manifestFile.getFileName()),
@@ -1756,7 +1756,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), overrideManifestKind);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1798,7 +1798,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), appManifestKind);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1827,7 +1827,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1853,7 +1853,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateEnvServiceSpecificHelmOverridesFolder(
       String accountId, Environment env, DirectoryPath valuesPath, List<ApplicationManifest> applicationManifests) {
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return null;
     }
 
@@ -1896,7 +1896,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ManifestFile> manifestFiles =
             applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
 
-        if (isNotEmpty(manifestFiles)) {
+        if (hasSome(manifestFiles)) {
           for (ManifestFile manifestFile : manifestFiles) {
             valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class, valuesPath.clone().add(manifestFile.getFileName()),
@@ -1918,7 +1918,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         List<ManifestFile> manifestFiles =
             applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
 
-        if (isNotEmpty(manifestFiles)) {
+        if (hasSome(manifestFiles)) {
           for (ManifestFile manifestFile : manifestFiles) {
             valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class,
@@ -1936,7 +1936,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode workflowsFolder = new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class,
         directoryPath.add(WORKFLOWS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedWorkflows)) {
+    if (applyPermissions && hasNone(allowedWorkflows)) {
       return workflowsFolder;
     }
 
@@ -1970,7 +1970,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode pipelinesFolder = new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class,
         directoryPath.add(PIPELINES_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedPipelines)) {
+    if (applyPermissions && hasNone(allowedPipelines)) {
       return pipelinesFolder;
     }
 
@@ -2025,7 +2025,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode provisionersFolder = new FolderNode(accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class,
         directoryPath.add(PROVISIONERS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    if (applyPermissions && isEmpty(allowedProvisioners)) {
+    if (applyPermissions && hasNone(allowedProvisioners)) {
       return provisionersFolder;
     }
 
@@ -2056,7 +2056,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (applyPermissions) {
       if (accountPermissionSummary != null) {
         Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
-        if (isNotEmpty(accountPermissions)) {
+        if (hasSome(accountPermissions)) {
           if (!accountPermissions.contains(PermissionType.ACCOUNT_MANAGEMENT)) {
             return false;
           }
@@ -2288,7 +2288,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
 
-    if (isNotEmpty(notificationGroups)) {
+    if (hasSome(notificationGroups)) {
       // iterate over notification groups
       notificationGroups.forEach(notificationGroup -> {
         DirectoryPath notificationGroupPath = directoryPath.clone();

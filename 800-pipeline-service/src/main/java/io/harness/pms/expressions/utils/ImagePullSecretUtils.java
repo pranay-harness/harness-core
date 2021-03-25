@@ -1,5 +1,6 @@
 package io.harness.pms.expressions.utils;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 
 import static java.lang.String.format;
@@ -9,7 +10,6 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -72,7 +72,7 @@ public class ImagePullSecretUtils {
             String.format("Unknown Artifact Config type: [%s]", artifactOutcome.getArtifactType()));
     }
     ImageDetails imageDetails = imageDetailsBuilder.build();
-    if (EmptyPredicate.isNotEmpty(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
+    if (hasSome(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
       return getArtifactRegistryCredentials(imageDetails);
     }

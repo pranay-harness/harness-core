@@ -1,7 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.exception.WingsException.USER;
 
@@ -83,7 +83,7 @@ public class TriggerAuthHandler {
   }
 
   void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId, boolean existing) {
-    if (isEmpty(workflowOrPipelineId) && existing) {
+    if (hasNone(workflowOrPipelineId) && existing) {
       return;
     }
     deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowOrPipelineId);

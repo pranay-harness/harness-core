@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -70,9 +70,9 @@ public class HelmCommandHelper {
         if (map.containsKey(HARNESS)) {
           Map harnessDataMap = (Map) map.get(HARNESS);
 
-          if (isNotEmpty(harnessDataMap) && harnessDataMap.containsKey(HELM)) {
+          if (hasSome(harnessDataMap) && harnessDataMap.containsKey(HELM)) {
             Map harnessHelmDataMap = (Map) harnessDataMap.get(HELM);
-            if (isNotEmpty(harnessHelmDataMap) && harnessHelmDataMap.containsKey(CHART)) {
+            if (hasSome(harnessHelmDataMap) && harnessHelmDataMap.containsKey(CHART)) {
               Map harnessHelmChartDataMap = (Map) harnessHelmDataMap.get(CHART);
               HelmDeployChartSpec helmDeployChartSpec = HelmDeployChartSpec.builder()
                                                             .url((String) harnessHelmChartDataMap.get(URL))

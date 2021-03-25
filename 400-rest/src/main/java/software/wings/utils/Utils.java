@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -75,7 +75,7 @@ public class Utils {
   }
 
   public static List<NameValuePair.Yaml> getSortedNameValuePairYamlList(List<NameValuePair.Yaml> yamlList) {
-    if (isEmpty(yamlList)) {
+    if (hasNone(yamlList)) {
       return yamlList;
     }
 
@@ -229,7 +229,7 @@ public class Utils {
 
   private static boolean validateFilePath(String value, String originalValue) {
     // expressions like <${valid}, ${missingValue}> could lead to result like <value, null>
-    if (isEmpty(value) || value.equals("null")) {
+    if (hasNone(value) || value.equals("null")) {
       throw new InvalidRequestException(
           "Invalid file path '" + value + "' after resolving value '" + originalValue + "'");
     }

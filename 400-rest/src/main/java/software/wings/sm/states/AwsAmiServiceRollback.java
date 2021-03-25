@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
@@ -81,7 +81,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     int newAsgFinalDesiredCount;
     if (rollbackAllPhasesAtOnce) {
       AwsAmiPreDeploymentData preDeploymentData = serviceSetupElement.getPreDeploymentData();
-      if (isNotEmpty(preDeploymentData.getOldAsgName())) {
+      if (hasSome(preDeploymentData.getOldAsgName())) {
         oldAsgCounts.add(AwsAmiResizeData.builder()
                              .asgName(preDeploymentData.getOldAsgName())
                              .desiredCount(preDeploymentData.getPreDeploymentDesiredCapacity())
@@ -91,7 +91,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
       newAsgFinalDesiredCount = 0;
     } else {
       List<ContainerServiceData> oldData = amiServiceDeployElement.getOldInstanceData();
-      if (isNotEmpty(oldData)) {
+      if (hasSome(oldData)) {
         oldData.forEach(data -> {
           oldAsgCounts.add(
               AwsAmiResizeData.builder().asgName(data.getName()).desiredCount(data.getPreviousCount()).build());

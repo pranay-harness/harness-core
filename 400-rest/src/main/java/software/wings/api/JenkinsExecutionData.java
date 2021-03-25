@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -54,12 +54,12 @@ public class JenkinsExecutionData extends StateExecutionData implements Delegate
     putNotNull(
         executionDetails, "jobName", ExecutionDataValue.builder().displayName("Job Name").value(jobName).build());
 
-    if (isNotEmpty(jobParameters)) {
+    if (hasSome(jobParameters)) {
       putNotNull(executionDetails, "jobParameters",
           ExecutionDataValue.builder().displayName("Job Parameters").value(removeNullValues(jobParameters)).build());
     }
 
-    if (isNotEmpty(envVars)) {
+    if (hasSome(envVars)) {
       putNotNull(executionDetails, "envVars",
           ExecutionDataValue.builder().displayName("Environment Variables").value(removeNullValues(envVars)).build());
     }
@@ -81,7 +81,7 @@ public class JenkinsExecutionData extends StateExecutionData implements Delegate
         ExecutionDataValue.builder().displayName("Description").value(description).build());
     putNotNull(
         executionDetails, "build", ExecutionDataValue.builder().displayName("Build Url").value(buildUrl).build());
-    if (isNotEmpty(metadata)) {
+    if (hasSome(metadata)) {
       putNotNull(executionDetails, "metadata",
           ExecutionDataValue.builder()
               .displayName("Meta-Data")

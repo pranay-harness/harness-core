@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -154,14 +154,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     String envId = getEnvId(context);
 
     List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
-    Map<String, List<APMMetricInfo>> apmMetricInfos = isNotEmpty(canaryMetricInfos)
-        ? new HashMap<>()
-        : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
+    Map<String, List<APMMetricInfo>> apmMetricInfos =
+        hasSome(canaryMetricInfos) ? new HashMap<>() : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
         context.getStateExecutionInstanceId(), null,
         metricDefinitions(
-            isNotEmpty(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
+            hasSome(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
     APMVerificationConfig apmConfig = getApmVerificationConfig(context);
     return CustomAPMDataCollectionInfo.builder()
         .connectorId(
@@ -190,11 +189,11 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
 
     boolean isHistorical = true;
-    if (isNotEmpty(metricCollectionInfos)) {
+    if (hasSome(metricCollectionInfos)) {
       for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
-        if ((isNotEmpty(metricCollectionInfo.getCollectionUrl())
+        if ((hasSome(metricCollectionInfo.getCollectionUrl())
                 && metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER))
-            || (isNotEmpty(metricCollectionInfo.getCollectionBody())
+            || (hasSome(metricCollectionInfo.getCollectionBody())
                 && metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER))) {
           isHistorical = false;
         }
@@ -207,12 +206,12 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(metricCollectionInfos)) {
+    if (hasNone(metricCollectionInfos)) {
       invalidFields.put("Metric Collection Info", "Metric collection info should not be empty");
       return invalidFields;
     }
 
-    if (isNotEmpty(initialAnalysisDelay)) {
+    if (hasSome(initialAnalysisDelay)) {
       int delaySeconds = getDelaySeconds(initialAnalysisDelay);
       if (delaySeconds > 5 * 60) {
         invalidFields.put("initialAnalysisDelay", "Initial Delay can be 5mins at most");
@@ -220,26 +219,26 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
     AtomicBoolean hasBaselineUrl = new AtomicBoolean(false);
     metricCollectionInfos.forEach(metricCollectionInfo -> {
-      if (isEmpty(metricCollectionInfo.getMetricName())) {
+      if (hasNone(metricCollectionInfo.getMetricName())) {
         invalidFields.put("metricName", "MetricName is empty");
         return;
       }
 
-      if (isEmpty(metricCollectionInfo.getCollectionUrl())) {
+      if (hasNone(metricCollectionInfo.getCollectionUrl())) {
         invalidFields.put(
             "collectionUrl", "Metric Collection URL is empty for metric " + metricCollectionInfo.getMetricName());
         return;
       }
 
       if (!metricCollectionInfo.getCollectionUrl().contains("${host}")) {
-        if (isEmpty(metricCollectionInfo.getCollectionBody())
+        if (hasNone(metricCollectionInfo.getCollectionBody())
             || !metricCollectionInfo.getCollectionBody().contains("${host}")) {
           invalidFields.put("collectionUrl", "MetricCollection URL or body should contain ${host}");
         }
       }
       if (!metricCollectionInfo.getCollectionUrl().contains("${start_time}")
           && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
-        if (isEmpty(metricCollectionInfo.getCollectionBody())
+        if (hasNone(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
                 && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
           invalidFields.put(
@@ -249,7 +248,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
       if (!metricCollectionInfo.getCollectionUrl().contains("${end_time}")
           && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
-        if (isEmpty(metricCollectionInfo.getCollectionBody())
+        if (hasNone(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
                 && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
           invalidFields.put(
@@ -265,19 +264,19 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
       ResponseMapping mapping = metricCollectionInfo.getResponseMapping();
 
-      if (isEmpty(mapping.getMetricValueJsonPath())) {
+      if (hasNone(mapping.getMetricValueJsonPath())) {
         invalidFields.put("metricValueJsonPath/timestampJsonPath",
             "Metric value path is empty for " + metricCollectionInfo.getMetricName());
         return;
       }
 
-      if (isEmpty(mapping.getTxnNameFieldValue()) && isEmpty(mapping.getTxnNameJsonPath())) {
+      if (hasNone(mapping.getTxnNameFieldValue()) && hasNone(mapping.getTxnNameJsonPath())) {
         invalidFields.put("transactionName", "Transaction Name is empty for " + metricCollectionInfo.getMetricName());
         return;
       }
 
       if (metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
-          && isNotEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+          && hasSome(metricCollectionInfo.getBaselineCollectionUrl())) {
         invalidFields.put("collectionUrl",
             "for " + metricCollectionInfo.getMetricName() + " the collection url has " + VERIFICATION_HOST_PLACEHOLDER
                 + " and baseline collection url as well");
@@ -291,7 +290,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
         return;
       }
 
-      if (isNotEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+      if (hasSome(metricCollectionInfo.getBaselineCollectionUrl())) {
         hasBaselineUrl.set(true);
         if (AnalysisComparisonStrategy.COMPARE_WITH_CURRENT != getComparisonStrategy()) {
           invalidFields.put("collectionUrl",
@@ -366,14 +365,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
 
     List<APMMetricInfo> canaryMetricInfos = getCanaryMetricInfos(context);
-    Map<String, List<APMMetricInfo>> apmMetricInfos = isNotEmpty(canaryMetricInfos)
-        ? new HashMap<>()
-        : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
+    Map<String, List<APMMetricInfo>> apmMetricInfos =
+        hasSome(canaryMetricInfos) ? new HashMap<>() : buildMetricInfoMap(metricCollectionInfos, Optional.of(context));
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
         context.getStateExecutionInstanceId(), null,
         metricDefinitions(
-            isNotEmpty(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
+            hasSome(canaryMetricInfos) ? Collections.singletonList(canaryMetricInfos) : apmMetricInfos.values()));
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     String accountId = appService.get(context.getAppId()).getAccountId();
     final APMDataCollectionInfo dataCollectionInfo =
@@ -493,7 +491,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   }
 
   private static String renderExpressionIfNotEmpty(ExecutionContext context, String fieldValue) {
-    if (isNotEmpty(fieldValue)) {
+    if (hasSome(fieldValue)) {
       fieldValue = context.renderExpression(fieldValue);
     }
     return fieldValue;
@@ -543,7 +541,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
         metricCollectionInfo.setCollectionUrl(canaryCollectionUrls[0]);
         metricCollectionInfo.setBaselineCollectionUrl(canaryCollectionUrls[1]);
       }
-      if (isEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
+      if (hasNone(metricCollectionInfo.getBaselineCollectionUrl())) {
         continue;
       }
       String testUrl = context.renderExpression(metricCollectionInfo.getCollectionUrl());
@@ -586,23 +584,22 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     List<String> txnRegex =
         responseMapping.getTxnNameRegex() == null ? null : Lists.newArrayList(responseMapping.getTxnNameRegex());
     ResponseMapper txnNameResponseMapper = ResponseMapper.builder().fieldName("txnName").regexs(txnRegex).build();
-    if (!isEmpty(responseMapping.getTxnNameFieldValue())) {
+    if (!hasNone(responseMapping.getTxnNameFieldValue())) {
       txnNameResponseMapper.setFieldValue(responseMapping.getTxnNameFieldValue());
     } else {
       txnNameResponseMapper.setJsonPath(responseMapping.getTxnNameJsonPath());
     }
     // Set the host details (if exists) in the responseMapper
-    if (!isEmpty(responseMapping.getHostJsonPath())) {
+    if (!hasNone(responseMapping.getHostJsonPath())) {
       String hostJson = responseMapping.getHostJsonPath();
       List<String> hostRegex =
-          isEmpty(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
+          hasNone(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
       ResponseMapper hostResponseMapper =
           ResponseMapper.builder().fieldName("host").regexs(hostRegex).jsonPath(hostJson).build();
       responseMappers.put("host", hostResponseMapper);
     }
     responseMappers.put("txnName", txnNameResponseMapper);
-    if (isNotEmpty(responseMapping.getTimestampJsonPath())
-        && isNotEmpty(responseMapping.getTimestampJsonPath().trim())) {
+    if (hasSome(responseMapping.getTimestampJsonPath()) && hasSome(responseMapping.getTimestampJsonPath().trim())) {
       responseMappers.put("timestamp",
           ResponseMapper.builder()
               .fieldName("timestamp")
@@ -642,7 +639,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     }
 
     public String getBaselineCollectionUrl() {
-      if (isEmpty(baselineCollectionUrl)) {
+      if (hasNone(baselineCollectionUrl)) {
         return null;
       }
       try {

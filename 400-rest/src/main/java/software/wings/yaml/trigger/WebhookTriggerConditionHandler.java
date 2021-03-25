@@ -1,13 +1,14 @@
 package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
@@ -84,7 +85,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
             .filePaths(webhookConditionYaml.getFilePaths())
             .build();
 
-    if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
+    if (hasSome(webhookConditionYaml.getRepositoryType())) {
       if (webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
         webHookTriggerCondition.setActions(getPRActionTypes(webhookConditionYaml.getAction(),
             webhookConditionYaml.getRepositoryType(), webhookConditionYaml.getEventType()));
@@ -108,7 +109,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private WebhookSource getBeanWebhookSource(String webhookSource) {
-    if (EmptyPredicate.isEmpty(webhookSource)) {
+    if (hasNone(webhookSource)) {
       return null;
     }
     if (webhookSource.equals("GITLAB")) {
@@ -139,15 +140,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<WebhookEventType> getBeansEventTypes(List<String> eventTypes) {
-    if (EmptyPredicate.isEmpty(eventTypes)) {
+    if (hasNone(eventTypes)) {
       return null;
     }
     return eventTypes.stream().map(WebhookEventType::find).collect(Collectors.toList());
   }
 
   private List<GithubAction> getPRActionTypes(List<String> actions, String webhookSource, List<String> eventType) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals(GITHUB.name())) {
+    if (hasSome(actions) && hasSome(webhookSource) && webhookSource.equals(GITHUB.name())) {
       if (eventType != null && eventType.contains("package")) {
         return actions.stream().map(action -> GithubAction.find(PACKAGE_STRING + action)).collect(Collectors.toList());
       }
@@ -158,8 +158,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<ReleaseAction> getReleaseActionTypes(List<String> actions, String webhookSource) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals(GITHUB.name())) {
+    if (hasSome(actions) && hasSome(webhookSource) && webhookSource.equals(GITHUB.name())) {
       return actions.stream().map(ReleaseAction::find).collect(Collectors.toList());
     } else {
       return null;
@@ -167,8 +166,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals("BITBUCKET")) {
+    if (hasSome(actions) && hasSome(webhookSource) && webhookSource.equals("BITBUCKET")) {
       return actions.stream().map(BitBucketEventType::find).collect(Collectors.toList());
     } else {
       return null;
@@ -176,7 +174,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<String> getYAMLEventTypes(List<WebhookEventType> eventTypes) {
-    if (EmptyPredicate.isNotEmpty(eventTypes)) {
+    if (hasSome(eventTypes)) {
       return eventTypes.stream().map(WebhookEventType::getValue).collect(Collectors.toList());
     } else {
       return null;
@@ -186,7 +184,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == GITHUB) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
+      if (hasSome(webHookTriggerCondition.getActions())) {
         if (webHookTriggerCondition.getEventTypes() != null
             && webHookTriggerCondition.getEventTypes().contains(WebhookEventType.PACKAGE)) {
           List<String> yamlActions = new ArrayList<>();
@@ -203,7 +201,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       }
     } else if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == WebhookSource.BITBUCKET) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
+      if (hasSome(webHookTriggerCondition.getBitBucketEvents())) {
         return webHookTriggerCondition.getBitBucketEvents()
             .stream()
             .map(BitBucketEventType::getValue)
@@ -219,7 +217,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   private List<String> getYAMLReleaseActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == GITHUB) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getReleaseActions())) {
+      if (hasSome(webHookTriggerCondition.getReleaseActions())) {
         return webHookTriggerCondition.getReleaseActions()
             .stream()
             .map(ReleaseAction::getValue)

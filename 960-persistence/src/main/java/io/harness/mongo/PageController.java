@@ -7,8 +7,8 @@ import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 
 import static java.util.Arrays.asList;
@@ -29,7 +29,6 @@ import io.harness.persistence.HQuery;
 
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -128,9 +127,9 @@ public class PageController {
     List<String> fieldsIncluded = req.getFieldsIncluded();
     List<String> fieldsExcluded = req.getFieldsExcluded();
 
-    if (isNotEmpty(fieldsIncluded)) {
+    if (hasSome(fieldsIncluded)) {
       query.retrievedFields(true, fieldsIncluded.toArray(new String[0]));
-    } else if (isNotEmpty(fieldsExcluded)) {
+    } else if (hasSome(fieldsExcluded)) {
       query.retrievedFields(false, fieldsExcluded.toArray(new String[0]));
     }
 
@@ -139,7 +138,7 @@ public class PageController {
 
   private static <T> Query<T> applySearchFilters(
       Datastore datastore, Query<T> query, List<SearchFilter> filters, Class<T> cls, Mapper mapper) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return query;
     }
     for (SearchFilter filter : filters) {
@@ -159,8 +158,8 @@ public class PageController {
             SearchFilter opSearchFilter = (SearchFilter) opFilter;
             if (opSearchFilter.getOp() == OR || opSearchFilter.getOp() == AND
                 || opSearchFilter.getOp() == ELEMENT_MATCH) {
-              Query<T> tQuery = applySearchFilters(datastore, datastore.createQuery(cls).disableValidation(),
-                  Arrays.asList(opSearchFilter), cls, mapper);
+              Query<T> tQuery = applySearchFilters(
+                  datastore, datastore.createQuery(cls).disableValidation(), asList(opSearchFilter), cls, mapper);
               criteria.addAll(((HQuery) tQuery).getChildren());
             } else {
               criteria.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
@@ -193,7 +192,7 @@ public class PageController {
   }
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
-    if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && isEmpty(filter.getFieldValues())) {
+    if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && hasNone(filter.getFieldValues())) {
       throw new InvalidRequestException("Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
@@ -250,7 +249,7 @@ public class PageController {
         return fieldEnd.doesNotExist();
 
       case HAS_ALL:
-        return fieldEnd.hasAllOf(Arrays.asList(filter.getFieldValues()));
+        return fieldEnd.hasAllOf(asList(filter.getFieldValues()));
 
       default:
         unhandled(op);
@@ -259,7 +258,7 @@ public class PageController {
   }
 
   private static void assertNone(Object[] values) {
-    if (isNotEmpty(values)) {
+    if (hasSome(values)) {
       log.error(
           "Unexpected number of arguments {} in expression when none are expected", values.length, new Exception(""));
     }

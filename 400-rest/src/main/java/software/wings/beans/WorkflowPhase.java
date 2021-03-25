@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -299,7 +299,7 @@ public class WorkflowPhase implements UuidAccess {
     if (phaseSteps != null) {
       List<String> invalidChildren =
           phaseSteps.stream().filter(phaseStep -> !phaseStep.validate()).map(PhaseStep::getName).collect(toList());
-      if (isNotEmpty(invalidChildren)) {
+      if (hasSome(invalidChildren)) {
         valid = false;
         validationMessage = format(PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
       }
@@ -381,7 +381,7 @@ public class WorkflowPhase implements UuidAccess {
   }
 
   public TemplateExpression fetchServiceTemplateExpression() {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return null;
     }
     return templateExpressions.stream()
@@ -391,7 +391,7 @@ public class WorkflowPhase implements UuidAccess {
   }
 
   private TemplateExpression fetchInfraMappingTemplateExpression() {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return null;
     }
     return templateExpressions.stream()
@@ -401,7 +401,7 @@ public class WorkflowPhase implements UuidAccess {
   }
 
   public TemplateExpression fetchInfraDefinitonTemplateExpression() {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return null;
     }
     return templateExpressions.stream()

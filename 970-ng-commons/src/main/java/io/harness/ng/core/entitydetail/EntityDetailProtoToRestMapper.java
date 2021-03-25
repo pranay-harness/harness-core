@@ -1,7 +1,7 @@
 package io.harness.ng.core.entitydetail;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.INPUT_SETS;
 
 import io.harness.EntityType;
@@ -35,7 +35,7 @@ public class EntityDetailProtoToRestMapper {
   }
 
   public List<EntityDetail> createEntityDetailsDTO(List<EntityDetailProtoDTO> entityDetails) {
-    if (isEmpty(entityDetails)) {
+    if (hasNone(entityDetails)) {
       return Collections.emptyList();
     }
     return entityDetails.stream().map(this::createEntityDetailDTO).collect(Collectors.toList());

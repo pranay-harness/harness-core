@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -168,7 +168,7 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
 
   private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {
     Step<?> step = stepRegistry.obtain(stepType);
-    if (isEmpty(stepParameters)) {
+    if (hasNone(stepParameters)) {
       return null;
     }
     return RecastOrchestrationUtils.fromDocumentJson(stepParameters, step.getStepParametersClass());

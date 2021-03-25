@@ -1,6 +1,6 @@
 package io.harness.connector.heartbeat;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorInfoDTO;
@@ -24,7 +24,7 @@ public class NexusValidationParamsProvider implements ConnectorValidationParamsP
     final NexusConnectorDTO connectorConfig = (NexusConnectorDTO) connectorInfoDTO.getConnectorConfig();
     List<DecryptableEntity> decryptableEntities = connectorConfig.getDecryptableEntities();
     DecryptableEntity decryptableEntity = null;
-    if (isNotEmpty(decryptableEntities)) {
+    if (hasSome(decryptableEntities)) {
       decryptableEntity = decryptableEntities.get(0);
     }
     final List<EncryptedDataDetail> encryptionDetail =

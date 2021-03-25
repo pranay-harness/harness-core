@@ -1,8 +1,8 @@
 package io.harness.pms.sdk.core.variables.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.yaml.YamlField;
@@ -21,7 +21,7 @@ public class VariableCreationResponse {
   @Singular Map<String, YamlField> dependencies;
 
   public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
-    if (EmptyPredicate.isEmpty(resolvedDependencies)) {
+    if (hasNone(resolvedDependencies)) {
       return;
     }
     resolvedDependencies.values().forEach(this::addResolvedDependency);
@@ -41,7 +41,7 @@ public class VariableCreationResponse {
   }
 
   public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       return;
     }
     fields.values().forEach(this::addDependency);
@@ -62,7 +62,7 @@ public class VariableCreationResponse {
   }
 
   public void addYamlProperties(Map<String, YamlProperties> yamlProperties) {
-    if (EmptyPredicate.isEmpty(yamlProperties)) {
+    if (hasNone(yamlProperties)) {
       return;
     }
     yamlProperties.forEach(this::addYamlProperty);
@@ -83,19 +83,19 @@ public class VariableCreationResponse {
   public VariablesCreationBlobResponse toBlobResponse() {
     VariablesCreationBlobResponse.Builder finalBuilder = VariablesCreationBlobResponse.newBuilder();
 
-    if (isNotEmpty(dependencies)) {
+    if (hasSome(dependencies)) {
       for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
         finalBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
 
-    if (isNotEmpty(resolvedDependencies)) {
+    if (hasSome(resolvedDependencies)) {
       for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
         finalBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
 
-    if (isNotEmpty(yamlProperties)) {
+    if (hasSome(yamlProperties)) {
       for (Map.Entry<String, YamlProperties> yamlPropertiesEntry : yamlProperties.entrySet()) {
         finalBuilder.putYamlProperties(yamlPropertiesEntry.getKey(), yamlPropertiesEntry.getValue());
       }

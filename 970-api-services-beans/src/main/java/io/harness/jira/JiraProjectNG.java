@@ -1,9 +1,9 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.jira.deserializer.JiraProjectDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -53,7 +53,7 @@ public class JiraProjectNG extends JiraProjectBasicNG {
   }
 
   public void updateProjectStatuses(List<JiraIssueTypeNG> projectStatuses) {
-    if (EmptyPredicate.isEmpty(projectStatuses)) {
+    if (hasNone(projectStatuses)) {
       return;
     }
 

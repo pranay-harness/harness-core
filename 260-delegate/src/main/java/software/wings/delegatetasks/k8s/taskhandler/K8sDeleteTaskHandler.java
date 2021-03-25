@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getResourcesInStringFormat;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Delete;
@@ -89,9 +90,9 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
         new ExecutionLogCallback(delegateLogService, k8sDeleteTaskParameters.getAccountId(),
             k8sDeleteTaskParameters.getAppId(), k8sDeleteTaskParameters.getActivityId(), Delete);
 
-    if (isEmpty(k8sDeleteTaskParameters.getResources())) {
+    if (hasNone(k8sDeleteTaskParameters.getResources())) {
       return executeDeleteUsingFiles(k8sDeleteTaskParameters, k8sDelegateTaskParams, executionLogCallback);
-    } else if (!isEmpty(k8sDeleteTaskParameters.getFilePaths())) {
+    } else if (!hasNone(k8sDeleteTaskParameters.getFilePaths())) {
       executionLogCallback.saveExecutionLog("Both resources and files are present, giving priority to resources.");
     }
     return executeDeleteUsingResources(k8sDeleteTaskParameters, k8sDelegateTaskParams, executionLogCallback);
@@ -129,7 +130,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.FAILURE);
     }
-    if (isEmpty(resourceIdsToDelete)) {
+    if (hasNone(resourceIdsToDelete)) {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
     }
@@ -188,7 +189,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       kubernetesConfig =
           containerDeploymentDelegateHelper.getKubernetesConfig(k8sDeleteTaskParameters.getK8sClusterConfig(), false);
 
-      if (isEmpty(k8sDeleteTaskParameters.getFilePaths())) {
+      if (hasNone(k8sDeleteTaskParameters.getFilePaths())) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         executionLogCallback.saveExecutionLog("\nSuccess.", INFO, SUCCESS);
         return true;
@@ -198,7 +199,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
                                          .filter(StringUtils::isNotBlank)
                                          .collect(Collectors.toList());
 
-      if (isEmpty(deleteFilePaths)) {
+      if (hasNone(deleteFilePaths)) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         executionLogCallback.saveExecutionLog("\nSuccess.", INFO, SUCCESS);
         return true;

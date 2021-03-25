@@ -1,11 +1,12 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.support.impl;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static com.amazonaws.regions.Regions.GovCloud;
 import static com.amazonaws.regions.Regions.US_GOV_EAST_1;
 
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairBuilder;
@@ -28,7 +29,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Override
   public List<NameValuePair> getAwsRegions() {
     Map<String, String> awsRegionIdToName = batchMainConfig.getAwsRegionIdToName();
-    if (EmptyPredicate.isEmpty(awsRegionIdToName)) {
+    if (hasNone(awsRegionIdToName)) {
       awsRegionIdToName = new LinkedHashMap<>();
     }
     List<NameValuePair> awsRegions = new ArrayList<>();

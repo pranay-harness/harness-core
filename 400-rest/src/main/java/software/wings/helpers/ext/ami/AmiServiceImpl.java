@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.ami;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -98,11 +98,11 @@ public class AmiServiceImpl implements AmiService {
     filters.add(new Filter("is-public").withValues("false"));
     filters.add(new Filter("state").withValues("available"));
 
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
     }
 
-    if (isNotEmpty(filterMap)) {
+    if (hasSome(filterMap)) {
       filterMap.entrySet()
           .stream()
           .filter(entry -> isNotBlank(entry.getKey()))

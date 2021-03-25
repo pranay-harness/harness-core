@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
@@ -43,7 +43,7 @@ public class EcrClassicServiceImpl implements EcrClassicService {
       listImagesResult = awsHelperService.listEcrImages(ecrConfig, encryptionDetails, listImagesRequest);
       listImagesResult.getImageIds()
           .stream()
-          .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
+          .filter(imageIdentifier -> imageIdentifier != null && hasSome(imageIdentifier.getImageTag()))
           .forEach(imageIdentifier
               -> buildDetails.add(BuildDetails.Builder.aBuildDetails()
                                       .withNumber(imageIdentifier.getImageTag())

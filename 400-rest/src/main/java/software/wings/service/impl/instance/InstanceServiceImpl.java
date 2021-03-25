@@ -2,8 +2,8 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.nullCheck;
@@ -254,7 +254,7 @@ public class InstanceServiceImpl implements InstanceService {
       queryDeletedAlready.project("_id", true);
       List<Instance> deletedInstances = queryDeletedAlready.asList();
 
-      if (isNotEmpty(deletedInstances)) {
+      if (hasSome(deletedInstances)) {
         final List<String> idList = deletedInstances.stream().map(Instance::getUuid).collect(Collectors.toList());
         log.error("Found some deleted instances that are being deleted again. accountId: [{}], instanceIds:[{}]",
             deletedInstances.get(0).getAccountId(), idList);
@@ -297,7 +297,7 @@ public class InstanceServiceImpl implements InstanceService {
                         .project(InstanceKeys.deletedAt, true)
                         .order(InstanceKeys.deletedAt);
             final List<Instance> instances = query.asList(new FindOptions().limit(500));
-            if (isEmpty(instances)) {
+            if (hasNone(instances)) {
               break;
             }
             final Instance instance = instances.get(instances.size() - 1);

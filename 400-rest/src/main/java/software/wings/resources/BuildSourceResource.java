@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -80,7 +80,7 @@ public class BuildSourceResource {
     if (isBlank(serviceId)) {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, streamType));
     }
-    if (isNotEmpty(repositoryFormat)) {
+    if (hasSome(repositoryFormat)) {
       return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryFormat));
     }
     return new RestResponse<>(buildSourceService.getPlans(appId, settingId, serviceId, streamType, repositoryType));
@@ -132,7 +132,7 @@ public class BuildSourceResource {
       @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId,
       @QueryParam("groupId") String groupId, @QueryParam("streamType") String streamType,
       @QueryParam("repositoryFormat") String repositoryFormat) {
-    if (isNotEmpty(repositoryFormat)) {
+    if (hasSome(repositoryFormat)) {
       return new RestResponse<>(
           buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId, streamType, repositoryFormat));
     }
@@ -182,7 +182,7 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<Set<String>> getGroupIds(@QueryParam("appId") String appId, @PathParam("jobName") String jobName,
       @QueryParam("settingId") String settingId, @QueryParam("repositoryFormat") String repositoryFormat) {
-    if (isNotEmpty(repositoryFormat)) {
+    if (hasSome(repositoryFormat)) {
       return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId, repositoryFormat));
     }
     return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId));

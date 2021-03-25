@@ -1,7 +1,7 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
@@ -87,7 +87,7 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   public void encryptFields(SecretManager secretManager) {
     if (!connectionSettings.getBindPassword().equals(LdapConstants.MASKED_STRING)) {
       String oldEncryptedBindPassword = connectionSettings.getEncryptedBindPassword();
-      if (isNotEmpty(oldEncryptedBindPassword)) {
+      if (hasSome(oldEncryptedBindPassword)) {
         secretManager.deleteSecret(accountId, oldEncryptedBindPassword, new HashMap<>(), false);
       }
       SecretText secretText = SecretText.builder()

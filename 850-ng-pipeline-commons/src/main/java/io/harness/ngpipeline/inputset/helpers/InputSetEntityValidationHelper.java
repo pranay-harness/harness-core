@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.inputset.helpers;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
@@ -39,7 +40,7 @@ public class InputSetEntityValidationHelper {
 
   public Map<String, String> validateOverlayInputSetEntity(OverlayInputSetEntity overlayInputSetEntity) {
     List<String> allReferencesList = overlayInputSetEntity.getInputSetReferences();
-    if (EmptyPredicate.isEmpty(allReferencesList)) {
+    if (hasNone(allReferencesList)) {
       throw new InvalidRequestException("Input Set References List should not be empty");
     }
     Set<String> allReferencesInOverlaySet = new HashSet<>(allReferencesList);

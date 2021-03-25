@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.servicenow.ServiceNowFields.CHANGE_REQUEST_NUMBER;
 
@@ -37,7 +37,7 @@ public class ServiceNowStepCompletionYamlValidator implements StepCompletionYaml
   }
 
   private void validateParamsAreInPlace(Map<String, Object> snowParams) {
-    if (isEmpty(snowParams)) {
+    if (hasNone(snowParams)) {
       throw new IncompleteStateException(
           "\"serviceNowCreateUpdateParams\" could not be empty. Please provide the values.");
     }
@@ -93,7 +93,7 @@ public class ServiceNowStepCompletionYamlValidator implements StepCompletionYaml
     if (isBlank(serviceNowCreateUpdateParams.getTicketType())) {
       throw new IncompleteStateException("\"ticketType\" could not be empty or null.");
     }
-    if (isEmpty(serviceNowCreateUpdateParams.fetchFields())) {
+    if (hasNone(serviceNowCreateUpdateParams.fetchFields())) {
       throw new IncompleteStateException("\"fields\" could not be empty or null.");
     }
     if (isBlank(serviceNowCreateUpdateParams.fetchFields().get(ServiceNowFields.DESCRIPTION))) {

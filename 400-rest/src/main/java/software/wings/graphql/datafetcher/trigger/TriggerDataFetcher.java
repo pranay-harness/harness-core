@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -45,11 +45,11 @@ public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLT
         return null;
       }
     } else if (parameters.getTriggerName() != null) {
-      if (EmptyPredicate.isEmpty(parameters.getApplicationId())) {
+      if (hasNone(parameters.getApplicationId())) {
         throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
       }
 
-      if (EmptyPredicate.isEmpty(parameters.getTriggerName())) {
+      if (hasNone(parameters.getTriggerName())) {
         throw new InvalidRequestException(EMPTY_TRIGGER_NAME, WingsException.USER);
       }
       trigger = persistence.createQuery(Trigger.class)

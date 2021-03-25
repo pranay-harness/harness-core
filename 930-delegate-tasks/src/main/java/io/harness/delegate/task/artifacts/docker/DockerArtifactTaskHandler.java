@@ -1,9 +1,10 @@
 package io.harness.delegate.task.artifacts.docker;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.docker.service.DockerRegistryService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.DockerRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
@@ -84,6 +85,6 @@ public class DockerArtifactTaskHandler extends DelegateArtifactTaskHandler<Docke
   }
 
   boolean isRegex(DockerArtifactDelegateRequest artifactDelegateRequest) {
-    return EmptyPredicate.isNotEmpty(artifactDelegateRequest.getTagRegex());
+    return hasSome(artifactDelegateRequest.getTagRegex());
   }
 }

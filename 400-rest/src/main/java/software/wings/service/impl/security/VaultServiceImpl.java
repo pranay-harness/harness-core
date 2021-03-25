@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
@@ -20,7 +20,6 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -67,7 +66,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
   @Override
   public VaultConfig getVaultConfigByName(String accountId, String name) {
-    if (isEmpty(accountId) || isEmpty(name)) {
+    if (hasNone(accountId) || hasNone(name)) {
       return new VaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
@@ -116,7 +115,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
     }
     String configId = secretManagerConfigService.save(savedVaultConfig);
-    if (isNotEmpty(configId)) {
+    if (hasSome(configId)) {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, getRenewalAlert(oldConfigForAudit));
     }
     return configId;
@@ -147,7 +146,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
         wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
             .set(BaseVaultConfigKeys.authToken, vaultConfig.getAuthToken());
 
-    if (isNotEmpty(vaultConfig.getSecretId())) {
+    if (hasSome(vaultConfig.getSecretId())) {
       updateOperations.set(BaseVaultConfigKeys.secretId, vaultConfig.getSecretId());
     }
 
@@ -163,7 +162,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath =
-        isEmpty(vaultConfig.getBasePath()) ? VaultConfig.DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
+        hasNone(vaultConfig.getBasePath()) ? VaultConfig.DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
     vaultConfig.setAccountId(accountId);
 
@@ -174,7 +173,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
     checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(vaultConfig);
 
-    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validateBySavingTestSecret)
+    return hasNone(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validateBySavingTestSecret)
                                           : updateVaultConfig(accountId, vaultConfig, true, validateBySavingTestSecret);
   }
 
@@ -217,7 +216,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
   @Override
   public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
-    if (isNotEmpty(vaultConfig.getUuid())) {
+    if (hasSome(vaultConfig.getUuid())) {
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
       decryptVaultConfigSecrets(vaultConfig.getAccountId(), savedVaultConfig, false);
       if (SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())) {
@@ -255,20 +254,20 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
   }
 
   private void validateVaultFields(VaultConfig vaultConfig) {
-    if (isEmpty(vaultConfig.getName())) {
+    if (hasNone(vaultConfig.getName())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Name can not be empty", USER);
     }
-    if (isEmpty(vaultConfig.getVaultUrl())) {
+    if (hasNone(vaultConfig.getVaultUrl())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Vault URL can not be empty", USER);
     }
-    if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
+    if (hasNone(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
       throw new SecretManagementException(
           VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);
     }
     // Need to try using Vault AppRole login to generate a client token if configured so
     if (vaultConfig.getAccessType() == APP_ROLE) {
       VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
-      if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+      if (loginResult != null && hasSome(loginResult.getClientToken())) {
         vaultConfig.setAuthToken(loginResult.getClientToken());
       } else {
         String message =
@@ -299,7 +298,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
   @Override
   public Optional<SecretManagerConfig> updateRuntimeCredentials(
       SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters, boolean shouldUpdateVaultConfig) {
-    if (isEmpty(secretManagerConfig.getTemplatizedFields()) || isEmpty(runtimeParameters)) {
+    if (hasNone(secretManagerConfig.getTemplatizedFields()) || hasNone(runtimeParameters)) {
       return Optional.empty();
     }
 

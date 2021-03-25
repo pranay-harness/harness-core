@@ -115,8 +115,8 @@
 
         <module name="io.harness.checks.ExclusiveStaticImportCheck">
             <property name="staticImports" value="java.util.Arrays.asList"/>
-            <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isEmpty"/>
-            <property name="staticImports" value="io.harness.data.structure.EmptyPredicate.isNotEmpty"/>
+            <property name="staticImports" value="io.harness.data.structure.HasPredicate.isEmpty"/>
+            <property name="staticImports" value="io.harness.data.structure.HasPredicate.isNotEmpty"/>
 
             <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isBlank"/>
             <property name="staticImports" value="org.apache.commons.lang3.StringUtils.isNotBlank"/>

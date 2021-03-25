@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -79,7 +79,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @DefaultValue("host")
   @Attributes(required = true, title = "Field name for Host/Container")
   public String getHostnameField() {
-    if (isEmpty(hostnameField)) {
+    if (hasNone(hostnameField)) {
       return "host";
     }
     return hostnameField;

@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -26,7 +26,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -368,14 +367,14 @@ public class CommandState extends State {
         if (connectionType == null || connectionType == ConnectionType.SSH) {
           deploymentType = DeploymentType.SSH;
 
-          if (!isEmpty(getTemplateExpressions())) {
+          if (!hasNone(getTemplateExpressions())) {
             TemplateExpression sshConfigExp =
                 templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
             if (sshConfigExp != null) {
               sshKeyRef = templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp);
             }
           }
-          if (isEmpty(sshKeyRef)) {
+          if (hasNone(sshKeyRef)) {
             throw new ShellScriptException("SSH Connection Attribute not provided in Command Step",
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
@@ -410,14 +409,14 @@ public class CommandState extends State {
 
         } else if (connectionType == ConnectionType.WINRM) {
           deploymentType = DeploymentType.WINRM;
-          if (!isEmpty(getTemplateExpressions())) {
+          if (!hasNone(getTemplateExpressions())) {
             TemplateExpression winRmConfigExp =
                 templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
             if (winRmConfigExp != null) {
               connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
             }
           }
-          if (isEmpty(connectionAttributes)) {
+          if (hasNone(connectionAttributes)) {
             throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
@@ -579,7 +578,7 @@ public class CommandState extends State {
             format("Unable to find artifact for service %s", service.getName()), null, null, WingsException.USER);
       }
     } else {
-      if (isNotEmpty(multiArtifacts)) {
+      if (hasSome(multiArtifacts)) {
         getMultiArtifactDetails(
             context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
       } else if (command.isArtifactNeeded()) {
@@ -672,13 +671,13 @@ public class CommandState extends State {
   }
 
   private void flattenTemplateVariables(Command command, Map<String, String> artifactTemplateVariables) {
-    if (isNotEmpty(command.getTemplateVariables())) {
+    if (hasSome(command.getTemplateVariables())) {
       for (Variable var : command.getTemplateVariables()) {
         if (var.getType() == VariableType.ARTIFACT) {
           artifactTemplateVariables.put(var.getName(), var.getValue());
         }
       }
-      if (isNotEmpty(command.getCommandUnits())) {
+      if (hasSome(command.getCommandUnits())) {
         for (CommandUnit cu : command.getCommandUnits()) {
           if (cu instanceof Command) {
             flattenTemplateVariables((Command) cu, artifactTemplateVariables);
@@ -769,7 +768,7 @@ public class CommandState extends State {
     commandExecutionContextBuilder.multiArtifactMap(map);
     Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap = new HashMap<>();
     Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap = new HashMap<>();
-    if (isNotEmpty(map)) {
+    if (hasSome(map)) {
       for (Entry<String, Artifact> entry : map.entrySet()) {
         Artifact artifact = entry.getValue();
         log.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
@@ -819,7 +818,7 @@ public class CommandState extends State {
       CommandExecutionContext.Builder commandExecutionContextBuilder) {
     artifactFileName = resolveArtifactFileName(multiArtifactMap, artifactStreamAttributesMap);
     // add $ARTIFACT_FILE_NAME to context
-    if (isNotEmpty(artifactFileName)) {
+    if (hasSome(artifactFileName)) {
       commandExecutionContextBuilder.artifactFileName(artifactFileName);
     }
   }
@@ -838,14 +837,14 @@ public class CommandState extends State {
           throw new InvalidRequestException(
               format("ArtifactStreamAttributes not found for artifact: %s", artifactVariableName));
         }
-        if (isNotEmpty(artifact.getArtifactFiles())) {
+        if (hasSome(artifact.getArtifactFiles())) {
           String name = artifact.getArtifactFiles().get(0).getName();
-          if (isNotEmpty(name)) {
+          if (hasSome(name)) {
             artifactFileName = name;
           }
         } else if (artifactStreamAttributes.getMetadata() != null) {
           String value = artifactStreamAttributes.getMetadata().get(ArtifactMetadataKeys.artifactFileName);
-          if (isNotEmpty(value)) {
+          if (hasSome(value)) {
             artifactFileName = value;
           }
         }
@@ -856,7 +855,7 @@ public class CommandState extends State {
 
   private void getHostConnectionDetails(
       ExecutionContext context, Host host, CommandExecutionContext.Builder commandExecutionContextBuilder) {
-    if (isNotEmpty(host.getHostConnAttr())) {
+    if (hasSome(host.getHostConnAttr())) {
       SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
       commandExecutionContextBuilder.hostConnectionAttributes(hostConnectionAttribute);
       commandExecutionContextBuilder.hostConnectionCredentials(
@@ -869,14 +868,14 @@ public class CommandState extends State {
                 ((HostConnectionAttributes) hostConnectionAttribute.getValue()).getSshVaultConfigId()));
       }
     }
-    if (isNotEmpty(host.getBastionConnAttr())) {
+    if (hasSome(host.getBastionConnAttr())) {
       SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
       commandExecutionContextBuilder.bastionConnectionAttributes(bastionConnectionAttribute);
       commandExecutionContextBuilder.bastionConnectionCredentials(
           secretManager.getEncryptionDetails((EncryptableSetting) bastionConnectionAttribute.getValue(),
               context.getAppId(), context.getWorkflowExecutionId()));
     }
-    if (isNotEmpty(host.getWinrmConnAttr())) {
+    if (hasSome(host.getWinrmConnAttr())) {
       WinRmConnectionAttributes winrmConnectionAttribute =
           (WinRmConnectionAttributes) settingsService.get(host.getWinrmConnAttr()).getValue();
       commandExecutionContextBuilder.winRmConnectionAttributes(winrmConnectionAttribute);
@@ -889,7 +888,7 @@ public class CommandState extends State {
   private List<String> getDelegateSelectors(ExecutionContext context) {
     List<String> renderedSelectorsSet = new ArrayList<>();
 
-    if (EmptyPredicate.isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       for (String selector : delegateSelectors) {
         renderedSelectorsSet.add(context.renderExpression(selector));
       }
@@ -986,7 +985,7 @@ public class CommandState extends State {
 
       if (commandUnit instanceof ScpCommandUnit) {
         ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
-        if (isNotEmpty(scpCommandUnit.getDestinationDirectoryPath())) {
+        if (hasSome(scpCommandUnit.getDestinationDirectoryPath())) {
           scpCommandUnit.setDestinationDirectoryPath(
               context.renderExpression(scpCommandUnit.getDestinationDirectoryPath(),
                   StateExecutionContext.builder()
@@ -998,7 +997,7 @@ public class CommandState extends State {
 
       if (commandUnit instanceof CopyConfigCommandUnit) {
         CopyConfigCommandUnit copyConfigCommandUnit = (CopyConfigCommandUnit) commandUnit;
-        if (isNotEmpty(copyConfigCommandUnit.getDestinationParentPath())) {
+        if (hasSome(copyConfigCommandUnit.getDestinationParentPath())) {
           copyConfigCommandUnit.setDestinationParentPath(
               context.renderExpression(copyConfigCommandUnit.getDestinationParentPath(),
                   StateExecutionContext.builder()
@@ -1012,15 +1011,15 @@ public class CommandState extends State {
         continue;
       }
       ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
-      if (isNotEmpty(execCommandUnit.getCommandPath())) {
+      if (hasSome(execCommandUnit.getCommandPath())) {
         execCommandUnit.setCommandPath(context.renderExpression(execCommandUnit.getCommandPath(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
-      if (isNotEmpty(execCommandUnit.getCommandString())) {
+      if (hasSome(execCommandUnit.getCommandString())) {
         execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
-      if (isNotEmpty(execCommandUnit.getTailPatterns())) {
+      if (hasSome(execCommandUnit.getTailPatterns())) {
         renderTailFilePattern(context, commandStateExecutionData, artifact, execCommandUnit);
       }
     }
@@ -1050,7 +1049,7 @@ public class CommandState extends State {
 
       if (commandUnit instanceof ScpCommandUnit) {
         ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
-        if (isNotEmpty(scpCommandUnit.getDestinationDirectoryPath())) {
+        if (hasSome(scpCommandUnit.getDestinationDirectoryPath())) {
           StateExecutionContextBuilder stateExecutionContextBuilder =
               StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
           if (artifactFileName != null) {
@@ -1063,7 +1062,7 @@ public class CommandState extends State {
 
       if (commandUnit instanceof CopyConfigCommandUnit) {
         CopyConfigCommandUnit copyConfigCommandUnit = (CopyConfigCommandUnit) commandUnit;
-        if (isNotEmpty(copyConfigCommandUnit.getDestinationParentPath())) {
+        if (hasSome(copyConfigCommandUnit.getDestinationParentPath())) {
           StateExecutionContextBuilder stateExecutionContextBuilder =
               StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
           if (artifactFileName != null) {
@@ -1078,7 +1077,7 @@ public class CommandState extends State {
         continue;
       }
       ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
-      if (isNotEmpty(execCommandUnit.getCommandPath())) {
+      if (hasSome(execCommandUnit.getCommandPath())) {
         StateExecutionContextBuilder stateExecutionContextBuilder =
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
         if (artifactFileName != null) {
@@ -1087,13 +1086,13 @@ public class CommandState extends State {
         execCommandUnit.setCommandPath(
             context.renderExpression(execCommandUnit.getCommandPath(), stateExecutionContextBuilder.build()));
       }
-      if (isNotEmpty(execCommandUnit.getCommandString())) {
+      if (hasSome(execCommandUnit.getCommandString())) {
         StateExecutionContextBuilder stateExecutionContextBuilder =
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData);
         execCommandUnit.setCommandString(
             context.renderExpression(execCommandUnit.getCommandString(), stateExecutionContextBuilder.build()));
       }
-      if (isNotEmpty(execCommandUnit.getTailPatterns())) {
+      if (hasSome(execCommandUnit.getTailPatterns())) {
         renderTailFilePattern(context, commandStateExecutionData, execCommandUnit);
       }
     }
@@ -1103,11 +1102,11 @@ public class CommandState extends State {
       ExecutionContext context, CommandStateExecutionData commandStateExecutionData, ExecCommandUnit execCommandUnit) {
     List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
-      if (isNotEmpty(filePatternEntry.getFilePath())) {
+      if (hasSome(filePatternEntry.getFilePath())) {
         filePatternEntry.setFilePath(context.renderExpression(filePatternEntry.getFilePath(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build()));
       }
-      if (isNotEmpty(filePatternEntry.getPattern())) {
+      if (hasSome(filePatternEntry.getPattern())) {
         filePatternEntry.setPattern(context.renderExpression(filePatternEntry.getPattern(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build()));
       }
@@ -1119,11 +1118,11 @@ public class CommandState extends State {
       Artifact artifact, ExecCommandUnit execCommandUnit) {
     List<TailFilePatternEntry> filePatternEntries = execCommandUnit.getTailPatterns();
     for (TailFilePatternEntry filePatternEntry : filePatternEntries) {
-      if (isNotEmpty(filePatternEntry.getFilePath())) {
+      if (hasSome(filePatternEntry.getFilePath())) {
         filePatternEntry.setFilePath(context.renderExpression(filePatternEntry.getFilePath(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
-      if (isNotEmpty(filePatternEntry.getPattern())) {
+      if (hasSome(filePatternEntry.getPattern())) {
         filePatternEntry.setPattern(context.renderExpression(filePatternEntry.getPattern(),
             StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).artifact(artifact).build()));
       }
@@ -1236,7 +1235,7 @@ public class CommandState extends State {
     CommandExecutionResult commandExecutionResult = (CommandExecutionResult) notifyResponseData;
     String activityId = response.keySet().iterator().next();
 
-    if (commandExecutionResult.getStatus() != SUCCESS && isNotEmpty(commandExecutionResult.getErrorMessage())) {
+    if (commandExecutionResult.getStatus() != SUCCESS && hasSome(commandExecutionResult.getErrorMessage())) {
       handleCommandException(context, activityId, appId);
     }
 
@@ -1321,7 +1320,7 @@ public class CommandState extends State {
   }
 
   private void expandCommand(ServiceInstance serviceInstance, Command command, String serviceId, String envId) {
-    if (isNotEmpty(command.getReferenceId())) {
+    if (hasSome(command.getReferenceId())) {
       Command referredCommand = Optional
                                     .ofNullable(serviceResourceService.getCommandByName(
                                         serviceInstance.getAppId(), serviceId, envId, command.getReferenceId()))
@@ -1378,11 +1377,11 @@ public class CommandState extends State {
       CommandUnit commandUnit = command.getCommandUnits().get(i);
       if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         List<Variable> variables = ((Command) commandUnit).getTemplateVariables();
-        if (isNotEmpty(referencedTemplateList)) {
+        if (hasSome(referencedTemplateList)) {
           ReferencedTemplate referencedTemplate = referencedTemplateList.get(i);
           if (referencedTemplate != null) {
             Map<String, Variable> variableMapping = referencedTemplate.getVariableMapping();
-            if (isNotEmpty(variables) && isNotEmpty(variableMapping)) {
+            if (hasSome(variables) && hasSome(variableMapping)) {
               for (Variable variable : variables) {
                 if (variableMapping.containsKey(variable.getName())) {
                   Variable mappedVariable = variableMapping.get(variable.getName());
@@ -1402,7 +1401,7 @@ public class CommandState extends State {
   }
 
   private String getTopLevelTemplateVariableValue(List<Variable> variables, String lookupVariable) {
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       for (Variable variable : variables) {
         if (variable.getName().equals(lookupVariable)) {
           return variable.getValue();

@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.InfrastructureMapping.SERVICE_ID_KEY;
@@ -53,7 +53,7 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
                                  .exists()
                                  .asList();
 
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       log.info("Completed migrating service helm values. No service with helm values found");
       return;
     }
@@ -92,6 +92,6 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
             .filter(SERVICE_ID_KEY, serviceId)
             .asList();
 
-    return isNotEmpty(infrastructureMappings);
+    return hasSome(infrastructureMappings);
   }
 }

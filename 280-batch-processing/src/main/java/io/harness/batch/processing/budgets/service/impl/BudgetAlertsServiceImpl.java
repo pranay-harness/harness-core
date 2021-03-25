@@ -3,7 +3,7 @@ package io.harness.batch.processing.budgets.service.impl;
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.budget.AlertThresholdBase.FORECASTED_COST;
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
@@ -97,7 +97,7 @@ public class BudgetAlertsServiceImpl {
     List<String> userGroupIds = Arrays.asList(Optional.ofNullable(budget.getUserGroupIds()).orElse(new String[0]));
     emailAddresses.addAll(getEmailsForUserGroup(budget.getAccountId(), userGroupIds));
     CESlackWebhook slackWebhook = ceSlackWebhookService.getByAccountId(budget.getAccountId());
-    if (slackWebhook == null && isEmpty(emailAddresses) && isEmpty(userGroupIds)) {
+    if (slackWebhook == null && hasNone(emailAddresses) && hasNone(userGroupIds)) {
       log.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
       return;
     }

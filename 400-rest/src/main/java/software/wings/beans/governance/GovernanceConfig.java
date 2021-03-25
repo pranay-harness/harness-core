@@ -1,5 +1,7 @@
 package software.wings.beans.governance;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
@@ -7,7 +9,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.iterator.PersistentCronIterable;
@@ -86,7 +87,7 @@ public class GovernanceConfig
 
   @Override
   public List<Long> recalculateNextIterations(String fieldName, boolean skipMissing, long throttled) {
-    if (EmptyPredicate.isEmpty(timeRangeBasedFreezeConfigs)) {
+    if (hasNone(timeRangeBasedFreezeConfigs)) {
       nextIterations = new ArrayList();
       nextCloseIterations = new ArrayList();
       return new ArrayList<>();
@@ -121,9 +122,9 @@ public class GovernanceConfig
   @Override
   public Long obtainNextIteration(String fieldName) {
     if (GovernanceConfigKeys.nextIterations.equals(fieldName)) {
-      return EmptyPredicate.isEmpty(nextIterations) ? null : nextIterations.get(0);
+      return hasNone(nextIterations) ? null : nextIterations.get(0);
     }
-    return EmptyPredicate.isEmpty(nextCloseIterations) ? null : nextCloseIterations.get(0);
+    return hasNone(nextCloseIterations) ? null : nextCloseIterations.get(0);
   }
 
   @Override

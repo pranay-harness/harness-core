@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
@@ -57,7 +57,7 @@ public class AuditViewerPermissionMigration implements Migration {
 
         // userGroup had accountLevelPermission but permission list was empty. Assign permissionList having only
         // AUDIT_VIEWER permission
-        if (isEmpty(accountLevelPermissions.getPermissions())) {
+        if (hasNone(accountLevelPermissions.getPermissions())) {
           accountLevelPermissions.setPermissions(newAccPermissions);
         }
 

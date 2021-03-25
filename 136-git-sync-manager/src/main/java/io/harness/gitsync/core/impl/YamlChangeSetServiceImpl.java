@@ -1,7 +1,7 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
@@ -94,7 +94,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   private List<YamlGitConfigDTO> getYamlGitConfigForGitToHarness(YamlChangeSet yamlChangeSet) {
     final List<YamlGitConfigDTO> yamlGitConfigs =
         yamlGitService.getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       throw NoResultFoundException.newBuilder()
           .message(format(
               "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
@@ -231,7 +231,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     // TODO(abhinav): add persistent locker
-    if (isEmpty(yamlChangeSetIds)) {
+    if (hasNone(yamlChangeSetIds)) {
       return true;
     }
 
@@ -254,7 +254,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     // TODO(abhinav): add persistent locker
 
-    if (isEmpty(yamlChangeSetIds)) {
+    if (hasNone(yamlChangeSetIds)) {
       return true;
     }
 

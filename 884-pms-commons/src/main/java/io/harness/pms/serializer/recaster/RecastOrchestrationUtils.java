@@ -1,8 +1,9 @@
 package io.harness.pms.serializer.recaster;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.core.Recast;
 import io.harness.core.Recaster;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
 import io.harness.serializer.recaster.ParameterFieldRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoEnumRecastTransformer;
@@ -32,7 +33,7 @@ public class RecastOrchestrationUtils {
   }
 
   public Document toDocumentFromJson(String json) {
-    if (EmptyPredicate.isEmpty(json)) {
+    if (hasNone(json)) {
       return null;
     }
 
@@ -44,7 +45,7 @@ public class RecastOrchestrationUtils {
   }
 
   public <T> T fromDocumentJson(String json, Class<T> entityClass) {
-    if (EmptyPredicate.isEmpty(json)) {
+    if (hasNone(json)) {
       return null;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_PROJECT;
 
 import static java.util.stream.Collectors.toList;
@@ -35,7 +35,7 @@ public class ProjectTriggerFilter implements TriggerFilter {
         ngTriggerService.listEnabledTriggersForCurrentProject(triggerWebhookEvent.getAccountId(),
             triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier());
 
-    if (isEmpty(triggersForCurrentProject)) {
+    if (hasNone(triggersForCurrentProject)) {
       String errorMsg = "No enabled trigger found for project:" + filterRequestData.getProjectFqn();
       log.info(errorMsg);
       builder.failedToFindTrigger(true).webhookEventResponse(WebhookEventResponseHelper.toResponse(

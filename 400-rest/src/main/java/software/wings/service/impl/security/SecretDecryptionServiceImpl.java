@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
@@ -30,7 +30,7 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
 
   @Override
   public DecryptableEntity decrypt(DecryptableEntity object, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return object;
     }
     for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {

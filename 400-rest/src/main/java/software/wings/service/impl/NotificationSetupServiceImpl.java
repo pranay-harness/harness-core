@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -75,7 +75,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
       if (notificationChannelType.getSettingVariableTypes() != null) {
         List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(
             accountId, notificationChannelType.getSettingVariableTypes().name());
-        if (isNotEmpty(settingAttributes)) {
+        if (hasSome(settingAttributes)) {
           supportedChannelTypeDetails.put(notificationChannelType, new Object());
           // Put more details for the given notificationChannelType, else leave it as blank object.
         }
@@ -193,7 +193,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
             }
           }
         });
-    if (isNotEmpty(inUse)) {
+    if (hasSome(inUse)) {
       throw new InvalidRequestException(format("'%s' is in use by %d workflow%s: '%s'", notificationGroup.getName(),
           inUse.size(), plural("workflow", inUse.size()), join("', '", inUse)));
     }
@@ -231,7 +231,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   private void checkIfChangeInDefaultNotificationGroup(NotificationGroup notificationGroup) {
     List<NotificationGroup> notificationGroups = null;
     if (notificationGroup.isDefaultNotificationGroupForAccount()
-        && isNotEmpty(notificationGroups = listDefaultNotificationGroup(notificationGroup.getAccountId()))) {
+        && hasSome(notificationGroups = listDefaultNotificationGroup(notificationGroup.getAccountId()))) {
       NotificationGroup previousDefaultNotificationGroup = notificationGroups.get(0);
       // make sure, previous and current one being saved/updated is not the same
       if (!previousDefaultNotificationGroup.getName().equals(notificationGroup.getName())) {
@@ -248,7 +248,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<String> getUserEmailAddressFromNotificationGroups(
       String accountId, List<NotificationGroup> notificationGroups) {
-    if (isEmpty(notificationGroups)) {
+    if (hasNone(notificationGroups)) {
       return asList();
     }
 
@@ -279,7 +279,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
       for (Entry<NotificationChannelType, List<String>> entry :
           notificationGroup.getAddressesByChannelType().entrySet()) {
-        if (entry.getKey() == NotificationChannelType.EMAIL && isNotEmpty(entry.getValue())) {
+        if (entry.getKey() == NotificationChannelType.EMAIL && hasSome(entry.getValue())) {
           for (String emailAddress : entry.getValue()) {
             if (isNotBlank(emailAddress)) {
               emailAddresses.add(emailAddress);

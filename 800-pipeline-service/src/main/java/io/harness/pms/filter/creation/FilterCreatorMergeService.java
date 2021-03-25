@@ -1,9 +1,8 @@
 package io.harness.pms.filter.creation;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -84,7 +83,7 @@ public class FilterCreatorMergeService {
 
   @VisibleForTesting
   public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
-    if (isNotEmpty(response.getDependenciesMap())) {
+    if (hasSome(response.getDependenciesMap())) {
       throw new InvalidRequestException(
           PmsExceptionUtils.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
     }
@@ -97,16 +96,16 @@ public class FilterCreatorMergeService {
     FilterCreationBlobResponse.Builder responseBuilder =
         FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
 
-    if (isEmpty(services) || isEmpty(dependencies)) {
+    if (hasNone(services) || hasNone(dependencies)) {
       return responseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    for (int i = 0; i < MAX_DEPTH && hasSome(responseBuilder.getDependenciesMap()); i++) {
       FilterCreationBlobResponse currIterResponse =
           obtainFiltersPerIteration(services, responseBuilder.getDependenciesMap(), filters, setupMetadata);
 
       FilterCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, currIterResponse);
-      if (isNotEmpty(responseBuilder.getDependenciesMap())) {
+      if (hasSome(responseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
             PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
       }
@@ -164,7 +163,7 @@ public class FilterCreatorMergeService {
                            .filter(resp -> resp != null && resp.getErrorResponse() != null)
                            .map(FilterCreationResponseWrapper::getErrorResponse)
                            .collect(Collectors.toList());
-      if (EmptyPredicate.isEmpty(errorResponses)) {
+      if (hasNone(errorResponses)) {
         filterCreationResponseWrappers.forEach(
             response -> FilterCreationBlobResponseUtils.mergeResponses(currentIteration, response, filters));
       }

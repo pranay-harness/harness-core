@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -148,7 +148,7 @@ public class ScpCommandUnit extends SshCommandUnit {
                 (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(),
                 artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes,
                 artifactStreamAttributes.getMetadata(), false);
-            if (isEmpty(fileInfos)) {
+            if (hasNone(fileInfos)) {
               return SUCCESS;
             }
 
@@ -170,7 +170,7 @@ public class ScpCommandUnit extends SshCommandUnit {
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.JENKINS.name())) {
-            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+            if (hasNone(artifactStreamAttributes.getArtifactFileMetadata())) {
               saveExecutionLog(context, WARN, "There are no artifacts to copy");
               return SUCCESS;
             }
@@ -204,7 +204,7 @@ public class ScpCommandUnit extends SshCommandUnit {
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.BAMBOO.name())) {
-            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+            if (hasNone(artifactStreamAttributes.getArtifactFileMetadata())) {
               saveExecutionLog(context, WARN, "There are no artifacts to copy");
               return SUCCESS;
             }
@@ -237,7 +237,7 @@ public class ScpCommandUnit extends SshCommandUnit {
             List<EncryptedDataDetail> encryptionDetails =
                 artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
 
-            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+            if (hasNone(artifactStreamAttributes.getArtifactFileMetadata())) {
               // Try once more of to get download url
               try {
                 List<BuildDetails> buildDetailsList;
@@ -254,7 +254,7 @@ public class ScpCommandUnit extends SshCommandUnit {
                       artifactStreamAttributes.getMetadata().get("buildNo")));
                 }
 
-                if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
+                if (hasNone(buildDetailsList) || hasNone(buildDetailsList.get(0).getArtifactFileMetadataList())) {
                   saveExecutionLog(context, WARN, "There are no artifacts to copy");
                   return SUCCESS;
                 } else {
@@ -276,10 +276,10 @@ public class ScpCommandUnit extends SshCommandUnit {
               // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
               // No op for non-parameterized artifact stream because we have already filtered artifactFileMetadata
               // before we reach here
-              if ((isNotEmpty(artifactStreamAttributes.getExtension())
+              if ((hasSome(artifactStreamAttributes.getExtension())
                       && !artifactFileMetadata.getFileName().endsWith(
                           PERIOD_DELIMITER + artifactStreamAttributes.getExtension()))
-                  || (isNotEmpty(artifactStreamAttributes.getClassifier())
+                  || (hasSome(artifactStreamAttributes.getClassifier())
                       && !artifactFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))) {
                 continue;
               }
@@ -306,7 +306,7 @@ public class ScpCommandUnit extends SshCommandUnit {
           }
         } else {
           if (context.isMultiArtifact()) {
-            if (artifact != null && isNotEmpty(artifact.getArtifactFiles())) {
+            if (artifact != null && hasSome(artifact.getArtifactFiles())) {
               artifact.getArtifactFiles().forEach(
                   artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
             } else {

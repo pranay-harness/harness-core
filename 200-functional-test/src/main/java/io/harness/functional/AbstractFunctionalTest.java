@@ -2,8 +2,8 @@ package io.harness.functional;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
@@ -223,7 +223,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             .filter(StateExecutionInstanceKeys.status, ExecutionStatus.FAILED)
             .asList();
 
-    if (isEmpty(stateExecutionInstances)) {
+    if (hasNone(stateExecutionInstances)) {
       log.info("No FAILED state execution instances found for workflow {}", workflowExecution.getUuid());
       return;
     }
@@ -236,7 +236,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
                 || stateExecutionData.getStatus() == ExecutionStatus.ERROR)
         .forEach(stateExecutionData -> {
           log.info("Analyzing failed state: {}", stateExecutionData.getStateName());
-          if (isNotEmpty(stateExecutionData.getErrorMsg())) {
+          if (hasSome(stateExecutionData.getErrorMsg())) {
             log.info(
                 "State: {} failed with error: {}", stateExecutionData.getStateName(), stateExecutionData.getErrorMsg());
           } else {

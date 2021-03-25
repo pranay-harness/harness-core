@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -41,7 +41,7 @@ public class PipelineVariableConnectionDataFetcher
       String appId = parameters.getApplicationId();
       Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
-      if (isEmpty(pipeline.getPipelineVariables())) {
+      if (hasNone(pipeline.getPipelineVariables())) {
         log.info("No non-fixed variables present in pipeline: " + pipelineId);
         return new ArrayList<>();
       }

@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.adviser.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -44,7 +44,7 @@ public class OnFailAdviser implements Adviser {
     }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+    if (failureInfo != null && !hasNone(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }

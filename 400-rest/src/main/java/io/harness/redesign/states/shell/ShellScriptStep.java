@@ -2,8 +2,8 @@ package io.harness.redesign.states.shell;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -138,7 +138,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     if (!stepParameters.isExecuteOnDelegate()) {
       if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.SSH) {
         String sshKeyRef = stepParameters.getSshKeyRef();
-        if (isEmpty(sshKeyRef)) {
+        if (hasNone(sshKeyRef)) {
           throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
         }
@@ -191,10 +191,10 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     List<String> tags = stepParameters.getTags();
     List<String> allTags = newArrayList();
     List<String> renderedTags = newArrayList();
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       allTags.addAll(tags);
     }
-    if (isNotEmpty(allTags)) {
+    if (hasSome(allTags)) {
       renderedTags = trimStrings(renderedTags);
     }
 
@@ -356,7 +356,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   private WinRmConnectionAttributes setupWinrmCredentials(Ambiance ambiance, String connectionAttributes) {
     WinRmConnectionAttributes winRmConnectionAttributes = null;
 
-    if (isEmpty(connectionAttributes)) {
+    if (hasNone(connectionAttributes)) {
       throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
     }

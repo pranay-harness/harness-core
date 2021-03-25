@@ -1,6 +1,6 @@
 package io.harness.executionplan.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 
 import io.harness.exception.NoResultFoundException;
@@ -30,7 +30,7 @@ public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorServ
     final ExecutionPlanCreationContext executionPlanCreationContext =
         ExecutionPlanCreationContextImpl.builder().accountId(accountId).build();
 
-    if (isNotEmpty(contextAttributes)) {
+    if (hasSome(contextAttributes)) {
       for (Map.Entry<String, Object> entry : contextAttributes.entrySet()) {
         executionPlanCreationContext.addAttribute(entry.getKey(), entry.getValue());
       }

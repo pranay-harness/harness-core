@@ -2,8 +2,8 @@ package io.harness.cdng.k8s;
 
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequest;
@@ -389,7 +389,7 @@ public class K8sStepHelper {
       case HTTP_HELM_REPO:
         HttpHelmConnectorDTO httpHelmConnectorDTO = (HttpHelmConnectorDTO) connectorDTO.getConnectorConfig();
         List<DecryptableEntity> decryptableEntities = httpHelmConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(decryptableEntities)) {
+        if (hasSome(decryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
         } else {
           return Collections.emptyList();
@@ -398,7 +398,7 @@ public class K8sStepHelper {
       case AWS:
         AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTO.getConnectorConfig();
         List<DecryptableEntity> awsDecryptableEntities = awsConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(awsDecryptableEntities)) {
+        if (hasSome(awsDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
         } else {
           return Collections.emptyList();
@@ -407,7 +407,7 @@ public class K8sStepHelper {
       case GCP:
         GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
         List<DecryptableEntity> gcpDecryptableEntities = gcpConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(gcpDecryptableEntities)) {
+        if (hasNone(gcpDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
         } else {
           return Collections.emptyList();
@@ -465,7 +465,7 @@ public class K8sStepHelper {
 
   public List<String> renderValues(
       ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> valuesFileContents) {
-    if (isEmpty(valuesFileContents) || ManifestType.Kustomize.equals(manifestOutcome.getType())) {
+    if (hasNone(valuesFileContents) || ManifestType.Kustomize.equals(manifestOutcome.getType())) {
       return Collections.emptyList();
     }
 
@@ -565,7 +565,7 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
-    if (isEmpty(manifestOutcomeMap) || isEmpty(manifestOutcomeMap.keySet())) {
+    if (hasNone(manifestOutcomeMap) || hasNone(manifestOutcomeMap.keySet())) {
       throw new InvalidRequestException("Manifests can't be empty");
     }
 
@@ -585,7 +585,7 @@ public class K8sStepHelper {
         ? getOpenshiftParamManifests(new LinkedList<>(manifestOutcomeMap.values()))
         : Collections.emptyList();
 
-    if (isEmpty(aggregatedValuesManifests) && isEmpty(openshiftParamManifests)) {
+    if (hasNone(aggregatedValuesManifests) && hasNone(openshiftParamManifests)) {
       return k8sStepExecutor.executeK8sTask(
           k8sManifestOutcome, ambiance, k8sStepParameters, Collections.emptyList(), infrastructureOutcome);
     }
@@ -607,7 +607,7 @@ public class K8sStepHelper {
         manifestOutcomes.stream()
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
             .collect(Collectors.toList());
-    if (isEmpty(k8sManifests)) {
+    if (hasNone(k8sManifests)) {
       throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", USER);
     }
 
@@ -627,7 +627,7 @@ public class K8sStepHelper {
             .map(manifestOutcome -> (ValuesManifestOutcome) manifestOutcome)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(serviceValuesManifests)) {
+    if (hasSome(serviceValuesManifests)) {
       aggregateValuesManifests.addAll(serviceValuesManifests);
     }
     return aggregateValuesManifests;
@@ -644,7 +644,7 @@ public class K8sStepHelper {
             .map(manifestOutcome -> (OpenshiftParamManifestOutcome) manifestOutcome)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(serviceParamsManifests)) {
+    if (hasSome(serviceParamsManifests)) {
       openshiftParamManifests.addAll(serviceParamsManifests);
     }
     return openshiftParamManifests;
@@ -658,7 +658,7 @@ public class K8sStepHelper {
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests,
       List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
-    if (isNotEmpty(aggregatedValuesManifests)) {
+    if (hasSome(aggregatedValuesManifests)) {
       return aggregatedValuesManifests.stream().anyMatch(
           valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
     } else {
@@ -748,7 +748,7 @@ public class K8sStepHelper {
   }
 
   public static int getTimeout(K8sStepParameters stepParameters) {
-    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+    String timeout = stepParameters.getTimeout() == null || hasNone(stepParameters.getTimeout().getValue())
         ? StepConstants.defaultTimeout
         : stepParameters.getTimeout().getValue();
 

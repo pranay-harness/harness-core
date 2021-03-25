@@ -1,6 +1,6 @@
 package io.harness.cvng.activity.source.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -92,7 +92,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
               .addToSet(KubernetesActivityKeys.activities, activity),
           new FindAndModifyOptions().upsert(true));
       List<String> verificationJobInstances = activityService.createVerificationJobInstancesForActivity(savedActivity);
-      if (isNotEmpty(verificationJobInstances)) {
+      if (hasSome(verificationJobInstances)) {
         savedActivity.setVerificationJobInstanceIds(verificationJobInstances);
         hPersistence.save(savedActivity);
       }

@@ -1,7 +1,7 @@
 package software.wings.expression;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
@@ -12,7 +12,6 @@ import static java.lang.String.format;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.encoding.EncodingUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.encryption.SecretRefData;
@@ -98,7 +97,7 @@ public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManage
         BaseNGAccess.builder().accountIdentifier(accountId).orgIdentifier(orgId).projectIdentifier(projectId).build(),
         secretVariableDTO);
 
-    if (EmptyPredicate.isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       throw new InvalidRequestException("No secret found with identifier + [" + secretIdentifier + "]", USER);
     }
 
@@ -108,7 +107,7 @@ public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManage
                 -> encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(localEncryptedDetails)) {
+    if (hasSome(localEncryptedDetails)) {
       // ToDo Vikas said that we can have decrypt here for now. Later on it will be moved to proper service.
       decryptLocal(secretVariableDTO, localEncryptedDetails);
       String value = new String(secretVariableDTO.getSecret().getDecryptedValue());
@@ -145,7 +144,7 @@ public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManage
   }
 
   private void decryptLocal(DecryptableEntity decryptableEntity, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return;
     }
 

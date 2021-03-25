@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.trim;
 
@@ -33,7 +33,7 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
 
   public LambdaSpecification cloneInternal() {
     List<FunctionSpecification> clonedFunctions = new ArrayList<>();
-    if (isNotEmpty(this.getFunctions())) {
+    if (hasSome(this.getFunctions())) {
       for (FunctionSpecification functionSpecification : this.getFunctions()) {
         clonedFunctions.add(functionSpecification.cloneInternal());
       }

@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -104,7 +104,7 @@ public class ServiceResource {
   public RestResponse<PageResponse<Service>> list(@QueryParam("appId") List<String> appIds,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }
     if (!details) {

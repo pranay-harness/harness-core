@@ -1,7 +1,7 @@
 package io.harness.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
@@ -104,7 +104,7 @@ public class ArtifactCollectionResponseHandler {
   private void handleCollection(ArtifactStream artifactStream, BuildSourceResponse buildSourceResponse) {
     List<BuildDetails> builds = buildSourceResponse.getBuildDetails();
     List<Artifact> artifacts = artifactCollectionUtils.processBuilds(artifactStream, builds);
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return;
     }
 

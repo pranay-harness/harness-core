@@ -1,6 +1,6 @@
 package io.harness.cvng.migration.list;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -46,7 +46,7 @@ public class UpdateCvConfigPerpetualTasksMigration implements CVNGMigration {
             hPersistence.createUpdateOperations(CVConfig.class)
                 .set(CVConfigKeys.dataCollectionTaskIteration,
                     Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()));
-        if (isNotEmpty(cvConfig.getPerpetualTaskId())) {
+        if (hasSome(cvConfig.getPerpetualTaskId())) {
           verificationManagerService.deletePerpetualTask(cvConfig.getAccountId(), cvConfig.getPerpetualTaskId());
         }
         hPersistence.update(cvConfig,

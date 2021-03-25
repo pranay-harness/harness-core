@@ -1,6 +1,7 @@
 package io.harness.ng.core.entitysetupusage.mapper;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.EntityDetail;
@@ -41,7 +42,7 @@ public class EntitySetupUsageEventDTOMapper {
     final List<EntityDetail> referredEntities =
         entityDetailProtoToRestMapper.createEntityDetailsDTO(setupUsageEventsDTO.getReferredEntitiesList());
 
-    return EmptyPredicate.isEmpty(referredEntities)
+    return hasNone(referredEntities)
         ? Collections.singletonList(EntitySetupUsage.builder()
                                         .accountIdentifier(setupUsageEventsDTO.getAccountIdentifier())
                                         .referredByEntity(referredByEntity)

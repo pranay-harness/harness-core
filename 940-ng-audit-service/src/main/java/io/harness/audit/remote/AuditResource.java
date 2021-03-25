@@ -2,7 +2,7 @@ package io.harness.audit.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
@@ -65,7 +65,7 @@ public class AuditResource {
   public ResponseDTO<PageResponse<AuditEventDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @BeanParam PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    if (isEmpty(pageRequest.getSortOrders())) {
+    if (hasNone(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField(AuditEventKeys.timestamp, DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }

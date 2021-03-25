@@ -1,7 +1,7 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -183,13 +183,13 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             .listAllApplicationsByNameFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationName);
     List<NewRelicApplication> newRelicApplications =
         requestExecutor.executeRequest(apiCallLog, request).getApplications();
-    if (isEmpty(newRelicApplications)) {
+    if (hasNone(newRelicApplications)) {
       throw new WingsException(
           "Application Name " + newRelicApplicationName + " could not be resolved to a valid NewRelic Application.");
     }
     if (newRelicApplications.size() > 1) {
       for (NewRelicApplication application : newRelicApplications) {
-        if (isNotEmpty(newRelicApplicationName) && newRelicApplicationName.equals(application.getName())) {
+        if (hasSome(newRelicApplicationName) && newRelicApplicationName.equals(application.getName())) {
           return application;
         }
       }
@@ -197,7 +197,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           "Application Name " + newRelicApplicationName + " matched more than one NewRelic Application.");
     }
 
-    if (isNotEmpty(newRelicApplicationName) && !newRelicApplicationName.equals(newRelicApplications.get(0).getName())) {
+    if (hasSome(newRelicApplicationName) && !newRelicApplicationName.equals(newRelicApplications.get(0).getName())) {
       throw new WingsException(
           "Application Name " + newRelicApplicationName + " does not match a NewRelic Application.");
     }
@@ -215,7 +215,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
             .listAllApplicationsByIdFilter(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId);
     List<NewRelicApplication> newRelicApplications =
         requestExecutor.executeRequest(apiCallLog, request).getApplications();
-    if (isEmpty(newRelicApplications)) {
+    if (hasNone(newRelicApplications)) {
       throw new WingsException(
           "Application ID " + newRelicApplicationId + " could not be resolved to a valid NewRelic Application.");
     }
@@ -232,7 +232,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     List<NewRelicApplication> rv = new ArrayList<>();
     List<NewRelicApplication> largeApps = validateApplications(newRelicConfig, encryptedDataDetails, 5);
-    if (!isEmpty(largeApps)) {
+    if (!hasNone(largeApps)) {
       rv.add(NewRelicApplication.builder().id(-1).build());
       return rv;
     }
@@ -249,7 +249,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           getNewRelicRestClient(newRelicConfig)
               .listAllApplications(getApiKey(newRelicConfig, encryptedDataDetails), pageCount);
       List<NewRelicApplication> apps = callAndParseApplicationAPI(request, newRelicConfig, apiCallLog);
-      if (isEmpty(apps)) {
+      if (hasNone(apps)) {
         break;
       }
       rv.addAll(apps);
@@ -282,7 +282,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
       List<NewRelicApplication> applications = response.body().getApplications();
       delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-      if (isEmpty(applications)) {
+      if (hasNone(applications)) {
         return null;
       } else {
         return applications;
@@ -331,7 +331,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
         List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
         delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        if (isEmpty(applicationInstances)) {
+        if (hasNone(applicationInstances)) {
           break;
         } else {
           rv.addAll(applicationInstances);
@@ -395,7 +395,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           if (response.isSuccessful()) {
             apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
             List<NewRelicMetric> metrics = response.body().getMetrics();
-            if (isNotEmpty(metrics)) {
+            if (hasSome(metrics)) {
               metrics.forEach(metric -> {
                 if (metric.getName().startsWith(txnName)) {
                   newRelicMetrics.add(metric);
@@ -595,7 +595,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     try {
       List<NewRelicMetric> txnsWithData = getTxnsWithData(newRelicConfig, encryptedDataDetails,
           setupTestNodeData.getNewRelicAppId(), checkNotAllowedStrings, apiCallLog);
-      if (isEmpty(txnsWithData)) {
+      if (hasNone(txnsWithData)) {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
             .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
@@ -614,7 +614,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           NewRelicMetricData newRelicMetricData =
               getMetricData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), instanceId,
                   metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, true);
-          if (isNotEmpty(newRelicMetricData.getMetrics_found())) {
+          if (hasSome(newRelicMetricData.getMetrics_found())) {
             return VerificationNodeDataSetupResponse.builder()
                 .providerReachable(true)
                 .dataForNode(newRelicMetricData)

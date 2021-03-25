@@ -1,13 +1,12 @@
 package io.harness.functional.nas;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.AADITI;
 
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
@@ -175,7 +174,7 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
     // get artifact variables from deployment metadata for given workflow
     List<ArtifactVariable> artifactVariables = workflowGenerator.getArtifactVariablesFromDeploymentMetadataForWorkflow(
         application.getUuid(), workflow.getUuid());
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         if (artifactVariable.getAllowedList().contains(artifactStream.getUuid())) {
           artifactVariable.setArtifactStreamMetadata(ArtifactStreamMetadata.builder()
@@ -249,11 +248,11 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
             .name(name)
             .appId(application.getAppId())
             .workflowType(ORCHESTRATION)
-            .artifactSelections(asList(ArtifactSelection.builder()
-                                           .type(WEBHOOK_VARIABLE)
-                                           .serviceId(service.getUuid())
-                                           .artifactStreamId(artifactStream.getUuid())
-                                           .build()))
+            .artifactSelections(Arrays.asList(ArtifactSelection.builder()
+                                                  .type(WEBHOOK_VARIABLE)
+                                                  .serviceId(service.getUuid())
+                                                  .artifactStreamId(artifactStream.getUuid())
+                                                  .build()))
             .condition(WebHookTriggerCondition.builder().webHookToken(WebHookToken.builder().build()).build())
             .build();
     RestResponse<Trigger> savedTriggerResponse = Setup.portal()

@@ -2,8 +2,8 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.alert.services.api.AlertRuleService;
@@ -204,7 +204,7 @@ public class HeatMapServiceImpl implements HeatMapService {
             CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(accountId, orgIdentifier,
                 projectIdentifier, service.getIdentifier(), envToServicesDTO.getEnvironment().getIdentifier());
 
-            if (categoryRisk != null && isNotEmpty(categoryRisk.getCategoryRisks())) {
+            if (categoryRisk != null && hasSome(categoryRisk.getCategoryRisks())) {
               Integer risk = Collections.max(
                   categoryRisk.getCategoryRisks().stream().map(CategoryRisk::getRisk).collect(Collectors.toList()));
               serviceRisks.add(ServiceRisk.builder()
@@ -214,7 +214,7 @@ public class HeatMapServiceImpl implements HeatMapService {
                                    .build());
             }
           });
-          if (isNotEmpty(serviceRisks)) {
+          if (hasSome(serviceRisks)) {
             Collections.sort(serviceRisks, Comparator.comparing(ServiceRisk::getServiceName));
             riskDTOS.add(EnvServiceRiskDTO.builder()
                              .envIdentifier(envToServicesDTO.getEnvironment().getIdentifier())
@@ -263,7 +263,7 @@ public class HeatMapServiceImpl implements HeatMapService {
         CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(
             accountId, orgIdentifier, projectIdentifier, service, envIdentifier, category, endTime);
 
-        if (categoryRisk != null && isNotEmpty(categoryRisk.getCategoryRisks())) {
+        if (categoryRisk != null && hasSome(categoryRisk.getCategoryRisks())) {
           Integer risk = Collections.max(
               categoryRisk.getCategoryRisks().stream().map(CategoryRisk::getRisk).collect(Collectors.toList()));
           if (risk >= RISK_THRESHOLD) {
@@ -275,7 +275,7 @@ public class HeatMapServiceImpl implements HeatMapService {
           maxRisk[0] = Math.max(maxRisk[0], risk);
         }
       });
-      if (isNotEmpty(serviceRisks)) {
+      if (hasSome(serviceRisks)) {
         envServiceRiskDTOList.add(EnvServiceRiskDTO.builder()
                                       .envIdentifier(envIdentifier)
                                       .orgIdentifier(orgIdentifier)
@@ -319,15 +319,15 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public CategoryRisksDTO getCategoryRiskScores(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier) {
-    if (isNotEmpty(serviceIdentifier) && isEmpty(envIdentifier)) {
+    if (hasSome(serviceIdentifier) && hasNone(envIdentifier)) {
       throw new UnsupportedOperationException("Illeagal state in getCategoryRiskScores. EnvIdentifier is null but"
           + "serviceIdentifier is not null");
     }
 
-    if (isEmpty(envIdentifier) && isEmpty(serviceIdentifier)) {
+    if (hasNone(envIdentifier) && hasNone(serviceIdentifier)) {
       serviceIdentifier = null;
       envIdentifier = null;
-    } else if (isEmpty(serviceIdentifier)) {
+    } else if (hasNone(serviceIdentifier)) {
       serviceIdentifier = null;
     }
     return getCategoryRiskScoresForSpecificServiceEnv(
@@ -343,7 +343,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   private CategoryRisksDTO getCategoryRiskScoresForSpecificServiceEnv(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier,
       @Nullable CVMonitoringCategory cvMonitoringCategory, @Nullable Instant endTime) {
-    if (isEmpty(cvConfigService.getConfigsOfProductionEnvironments(
+    if (hasNone(cvConfigService.getConfigsOfProductionEnvironments(
             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, cvMonitoringCategory))) {
       return CategoryRisksDTO.builder().hasConfigsSetup(false).build();
     }

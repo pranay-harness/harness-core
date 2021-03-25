@@ -1,6 +1,6 @@
 package io.harness.logstreaming;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
 import static org.apache.commons.lang3.StringUtils.replaceEach;
@@ -14,7 +14,7 @@ public class LogStreamingSanitizer {
   private final Set<String> secrets;
 
   public void sanitizeLogMessage(LogLine logLine) {
-    if (isEmpty(secrets)) {
+    if (hasNone(secrets)) {
       return;
     }
 

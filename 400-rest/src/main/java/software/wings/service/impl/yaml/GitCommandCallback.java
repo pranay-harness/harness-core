@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -162,7 +162,7 @@ public class GitCommandCallback implements NotifyCallback {
           try {
             GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
 
-            if (isNotEmpty(gitDiffResult.getGitFileChanges())) {
+            if (hasSome(gitDiffResult.getGitFileChanges())) {
               addActiveGitSyncErrorsToProcessAgain(gitDiffResult, accountId);
             } else {
               log.info("No file changes found in git diff. Skip adding active errors for processing");
@@ -195,7 +195,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private void addYamlChangeSetToFilesCommited(List<GitFileChange> gitFileChanges, YamlGitConfig yamlGitConfig) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> gitFileChange.setYamlGitConfig(yamlGitConfig));
@@ -253,7 +253,7 @@ public class GitCommandCallback implements NotifyCallback {
     log.info("Active git sync error files =[{}]",
         activeGitSyncErrorFiles.stream().map(GitFileChange::getFilePath).collect(Collectors.toList()));
 
-    if (isNotEmpty(activeGitSyncErrorFiles)) {
+    if (hasSome(activeGitSyncErrorFiles)) {
       final Set<String> filesAlreadyInDiffSet =
           gitDiffResult.getGitFileChanges().stream().map(GitFileChange::getFilePath).collect(Collectors.toSet());
 
@@ -323,7 +323,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   protected void updateChangeSetFailureStatusSafely() {
-    if (isNotEmpty(changeSetId) && (COMMIT_AND_PUSH == gitCommandType || DIFF == gitCommandType)) {
+    if (hasSome(changeSetId) && (COMMIT_AND_PUSH == gitCommandType || DIFF == gitCommandType)) {
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
   }
@@ -346,7 +346,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private void handleDiffCommandFailure(ErrorCode errorCode, String accountId) {
-    if (isNotEmpty(changeSetId)) {
+    if (hasSome(changeSetId)) {
       final YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
       if (yamlChangeSet == null) {
         log.error("no changeset found with id =[{}]", changeSetId);
@@ -371,9 +371,9 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   private boolean isValid(GitWebhookRequestAttributes gitWebhookRequestAttributes) {
-    return gitWebhookRequestAttributes != null && isNotEmpty(gitWebhookRequestAttributes.getHeadCommitId())
-        && isNotEmpty(gitWebhookRequestAttributes.getBranchName())
-        && isNotEmpty(gitWebhookRequestAttributes.getGitConnectorId());
+    return gitWebhookRequestAttributes != null && hasSome(gitWebhookRequestAttributes.getHeadCommitId())
+        && hasSome(gitWebhookRequestAttributes.getBranchName())
+        && hasSome(gitWebhookRequestAttributes.getGitConnectorId());
   }
   private GitCommit saveFailedCommitFromGit(String commitId, List<String> yamlGitConfigIds, String accountId,
       GitCommit.Status gitCommitStatus, String gitConnectorId, String repositoryName, String branchName) {
@@ -401,7 +401,7 @@ public class GitCommandCallback implements NotifyCallback {
   List<GitFileChange> getAllFilesSuccessFullyProccessed(
       List<GitFileChange> fileChangesPartOfYamlChangeSet, List<GitFileChange> filesCommited) {
     List<GitFileChange> allFilesProcessed = new ArrayList<>(fileChangesPartOfYamlChangeSet);
-    if (isEmpty(filesCommited)) {
+    if (hasNone(filesCommited)) {
       return allFilesProcessed;
     }
     Set<String> nameOfFilesProcessed =

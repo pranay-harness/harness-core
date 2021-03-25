@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -406,7 +406,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     private void setHostIdsIfNecessary() throws IOException {
-      if (!dataCollectionInfo.isNodeIdsMapped() && isNotEmpty(dataCollectionInfo.getHosts())) {
+      if (!dataCollectionInfo.isNodeIdsMapped() && hasSome(dataCollectionInfo.getHosts())) {
         final Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig,
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
             ThirdPartyApiCallLog.fromDetails(createApiCallLog(dataCollectionInfo.getStateExecutionId())),

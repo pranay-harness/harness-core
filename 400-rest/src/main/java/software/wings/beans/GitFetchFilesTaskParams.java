@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -39,7 +39,7 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
 
-    if (isNotEmpty(gitFetchFilesConfigMap)) {
+    if (hasSome(gitFetchFilesConfigMap)) {
       for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
         executionCapabilities.add(GitConnectionCapability.builder()

@@ -16,8 +16,8 @@
 package io.harness.stream.redisson;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.redis.RedisConfig;
@@ -72,7 +72,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
     if (redissonClient == null) {
       redissonClient = RedissonFactory.getRedissonClient(redisAtmosphereConfig);
     }
-    String broadcasterNamespace = isEmpty(redisAtmosphereConfig.getEnvNamespace())
+    String broadcasterNamespace = hasNone(redisAtmosphereConfig.getEnvNamespace())
         ? BROADCASTER_PREFIX
         : redisAtmosphereConfig.getEnvNamespace().concat(":").concat(BROADCASTER_PREFIX);
     String topicName = String.format("%s:%s", broadcasterNamespace, getID());
@@ -91,7 +91,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
   }
 
   private synchronized void addMessageListener() {
-    if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null && topic != null) {
+    if (hasSome(getAtmosphereResources()) && messageListenerRegistrationId == null && topic != null) {
       messageListenerRegistrationId =
           topic.addListener(Object.class, (channel, message) -> broadcastReceivedMessage(message));
       log.info("Added message listener to topic");
@@ -99,7 +99,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
   }
 
   private synchronized void removeMessageListener() {
-    if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
+    if (hasNone(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
       topic.removeListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
       log.info("Removed message listener from topic");

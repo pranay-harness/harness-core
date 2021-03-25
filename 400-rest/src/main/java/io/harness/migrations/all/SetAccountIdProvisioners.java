@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -46,10 +46,10 @@ public class SetAccountIdProvisioners implements Migration {
                                  .fetch())) {
       for (InfrastructureProvisioner provisioner : provisioners) {
         String appId = provisioner.getAppId();
-        if (isNotEmpty(appId)) {
+        if (hasSome(appId)) {
           try {
             String accountId = appService.getAccountIdByAppId(appId);
-            if (isNotEmpty(accountId)) {
+            if (hasSome(accountId)) {
               updateAccountId.put(InfrastructureProvisionerKeys.accountId, accountId);
               wingsPersistence.updateFields(InfrastructureProvisioner.class, provisioner.getUuid(), updateAccountId);
               log.info(join(SPACE, DEBUG_LINE,

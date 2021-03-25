@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -189,7 +189,7 @@ public class InstanceHelper {
 
         for (ElementExecutionSummary summary : phaseStepExecutionData.getElementStatusSummary()) {
           List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
-          if (isEmpty(instanceStatusSummaries)) {
+          if (hasNone(instanceStatusSummaries)) {
             log.info("No instances to process");
             return;
           }
@@ -235,7 +235,7 @@ public class InstanceHelper {
         List<DeploymentSummary> deploymentSummaries = instanceHandler.getDeploymentSummariesForEvent(phaseExecutionData,
             phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
 
-        if (isNotEmpty(deploymentSummaries)) {
+        if (hasSome(deploymentSummaries)) {
           deploymentEventQueue.send(
               DeploymentEvent.builder()
                   .deploymentSummaries(deploymentSummaries)
@@ -442,7 +442,7 @@ public class InstanceHelper {
     try {
       List<DeploymentSummary> deploymentSummaries = deploymentEvent.getDeploymentSummaries();
 
-      if (isEmpty(deploymentSummaries)) {
+      if (hasNone(deploymentSummaries)) {
         log.error("Deployment Summaries can not be empty or null");
         return;
       }
@@ -492,7 +492,7 @@ public class InstanceHelper {
 
   private void processDeploymentSummaries(
       List<DeploymentSummary> deploymentSummaries, boolean isRollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 

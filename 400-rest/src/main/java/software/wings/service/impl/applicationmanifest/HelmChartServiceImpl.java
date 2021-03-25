@@ -1,7 +1,8 @@
 package software.wings.service.impl.applicationmanifest;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
@@ -12,7 +13,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
@@ -113,12 +113,12 @@ public class HelmChartServiceImpl implements HelmChartService {
     List<HelmChart> newHelmCharts = manifestsCollected.stream()
                                         .filter(helmChart -> !versionsPresent.contains(helmChart.getVersion()))
                                         .collect(toList());
-    if (EmptyPredicate.isEmpty(newHelmCharts)) {
+    if (hasNone(newHelmCharts)) {
       return true;
     }
 
     List<String> savedHelmCharts = wingsPersistence.save(newHelmCharts);
-    return isNotEmpty(savedHelmCharts);
+    return hasSome(savedHelmCharts);
   }
 
   @Override

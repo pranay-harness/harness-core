@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -43,14 +43,14 @@ public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHa
     try {
       DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest();
       String stackId = cloudFormationListStacksRequest.getStackId();
-      if (isNotEmpty(stackId)) {
+      if (hasSome(stackId)) {
         describeStacksRequest.withStackName(stackId);
       }
       executionLogCallback.saveExecutionLog("Sending list stacks call to Aws");
       List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, awsConfig);
       executionLogCallback.saveExecutionLog("Completed list stacks call to Aws");
       List<StackSummaryInfo> summaryInfos = Collections.emptyList();
-      if (isNotEmpty(stacks)) {
+      if (hasSome(stacks)) {
         summaryInfos = stacks.stream()
                            .map(stack
                                -> StackSummaryInfo.builder()

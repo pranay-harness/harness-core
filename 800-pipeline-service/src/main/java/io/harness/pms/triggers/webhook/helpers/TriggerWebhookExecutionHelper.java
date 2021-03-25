@@ -1,6 +1,7 @@
 package io.harness.pms.triggers.webhook.helpers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
@@ -10,7 +11,6 @@ import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.GIT;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
@@ -62,7 +62,7 @@ public class TriggerWebhookExecutionHelper {
     if (!webhookEventMappingResponse.isFailedToFindTrigger()) {
       log.info("Preparing for pipeline execution request");
       resultBuilder.mappedToTriggers(true);
-      if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
+      if (hasSome(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
               getTriggerPayload(webhookEventMappingResponse, triggerWebhookEvent.getPayload())));
@@ -156,12 +156,12 @@ public class TriggerWebhookExecutionHelper {
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       String pipelineYaml;
-      if (EmptyPredicate.isEmpty(runtimeInputYaml)) {
+      if (hasNone(runtimeInputYaml)) {
         pipelineYaml = pipelineEntityToExecute.get().getYaml();
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
         String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
-        if (EmptyPredicate.isEmpty(sanitizedRuntimeInputYaml)) {
+        if (hasNone(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
           executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);

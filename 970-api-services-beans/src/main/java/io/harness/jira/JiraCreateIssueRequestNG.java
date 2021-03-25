@@ -1,11 +1,11 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Collections.singletonMap;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.jira.deserializer.JiraIssueTypeDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -42,7 +42,7 @@ public class JiraCreateIssueRequestNG {
     this.fields.put(JiraConstantsNG.PROJECT_KEY, singletonMap("key", project.getKey()));
     this.fields.put(JiraConstantsNG.ISSUE_TYPE_KEY, singletonMap("id", issueType.getId()));
 
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       return;
     }
 
@@ -71,7 +71,7 @@ public class JiraCreateIssueRequestNG {
 
     String originalEstimate = fields.get(JiraConstantsNG.ORIGINAL_ESTIMATE_NAME);
     String remainingEstimate = fields.get(JiraConstantsNG.REMAINING_ESTIMATE_NAME);
-    if (EmptyPredicate.isEmpty(originalEstimate) && EmptyPredicate.isEmpty(remainingEstimate)) {
+    if (hasNone(originalEstimate) && hasNone(remainingEstimate)) {
       return;
     }
 
@@ -79,7 +79,7 @@ public class JiraCreateIssueRequestNG {
   }
 
   private void addKey(String key, JiraFieldNG field, String value) {
-    if (key == null || field == null || EmptyPredicate.isEmpty(value)) {
+    if (key == null || field == null || hasNone(value)) {
       return;
     }
 
@@ -125,7 +125,7 @@ public class JiraCreateIssueRequestNG {
   }
 
   private static Object convertOptionToFinalValue(JiraFieldNG field, String value) {
-    if (EmptyPredicate.isEmpty(field.getAllowedValues())) {
+    if (hasNone(field.getAllowedValues())) {
       return null;
     }
     return field.getAllowedValues().stream().filter(av -> av.matchesValue(value)).findFirst().orElse(null);

@@ -1,11 +1,11 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvocationHelper;
@@ -84,7 +84,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   @Override
   public void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds) {
-    if (EmptyPredicate.isNotEmpty(callbackIds)) {
+    if (hasSome(callbackIds)) {
       NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
     }
@@ -122,7 +122,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
 
   private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {
     Step<?> step = stepRegistry.obtain(stepType);
-    if (isEmpty(stepParameters)) {
+    if (hasNone(stepParameters)) {
       return null;
     }
     return RecastOrchestrationUtils.fromDocumentJson(stepParameters, step.getStepParametersClass());

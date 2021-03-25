@@ -1,8 +1,8 @@
 package io.harness.scope;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.AccountScope;
@@ -30,17 +30,17 @@ public class ResourceScope {
 
   @JsonIgnore
   public boolean isOrgScoped() {
-    return isNotEmpty(accountIdentifier) && isNotEmpty(orgIdentifier) && isEmpty(projectIdentifier);
+    return hasSome(accountIdentifier) && hasSome(orgIdentifier) && hasNone(projectIdentifier);
   }
 
   @JsonIgnore
   public boolean isProjectScoped() {
-    return isNotEmpty(accountIdentifier) && isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier);
+    return hasSome(accountIdentifier) && hasSome(orgIdentifier) && hasSome(projectIdentifier);
   }
 
   @JsonIgnore
   public boolean isAccountScoped() {
-    return isNotEmpty(accountIdentifier) && isEmpty(orgIdentifier) && isEmpty(projectIdentifier);
+    return hasSome(accountIdentifier) && hasNone(orgIdentifier) && hasNone(projectIdentifier);
   }
 
   public static ResourceScope fromResourceScope(io.harness.ng.core.ResourceScope resourceScope) {

@@ -1,6 +1,6 @@
 package io.harness.iterator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
@@ -255,7 +255,7 @@ public class PersistenceIrregularIteratorTest extends PersistenceTestBase {
             persistence.createUpdateOperations(TestIrregularIterableEntity.class)
                 .removeFirst(TestIrregularIterableEntityKeys.nextIterations),
             HPersistence.returnNewOptions);
-        if (isEmpty(testIrregularIterableEntity.getNextIterations())) {
+        if (hasNone(testIrregularIterableEntity.getNextIterations())) {
           break;
         }
       } while (true);

@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -32,7 +32,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
       if (params.get("NONE") != null) {
         return new HashMap<>();
       }
-      if (isEmpty(serviceId)) {
+      if (hasNone(serviceId)) {
         services =
             serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true, false, null)
                 .getResponse();

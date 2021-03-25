@@ -1,6 +1,6 @@
 package io.harness.expression;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.InvalidRequestException.USER;
 
 import io.harness.exception.InvalidArgumentsException;
@@ -124,7 +124,7 @@ public class ExpressionEvaluator {
 
   public static void isValidVariableName(String name) {
     // Verify variable name should not contain any special character
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return;
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
@@ -139,7 +139,7 @@ public class ExpressionEvaluator {
    * @return
    */
   public static String getName(String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return expression;
     }
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
@@ -150,21 +150,21 @@ public class ExpressionEvaluator {
   }
 
   public static boolean matchesVariablePattern(String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).matches();
   }
 
   public static boolean containsVariablePattern(String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
   }
 
   public static boolean isEmptyCustomExpression(String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return ExpressionEvaluator.emptyCustomExpression.matcher(expression).matches();

@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 
@@ -34,7 +34,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
   }
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
-    if (isEmpty(interrupt.getNodeExecutionId())) {
+    if (hasNone(interrupt.getNodeExecutionId())) {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for MARK_EXPIRED interrupt");
     }
 

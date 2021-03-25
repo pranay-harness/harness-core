@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.readBlob;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
@@ -157,7 +157,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
   public static ThirdPartyApiCallLog createApiCallLog(String accountId, String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(accountId)
-        .stateExecutionId(isEmpty(stateExecutionId) ? NO_STATE_EXECUTION_ID : stateExecutionId)
+        .stateExecutionId(hasNone(stateExecutionId) ? NO_STATE_EXECUTION_ID : stateExecutionId)
         .build();
   }
 
@@ -185,15 +185,15 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
                       .setExcludeFromIndexes(true)
                       .build())
               .set(CREATED_AT_KEY, currentTimeMillis());
-      if (isNotEmpty(getAccountId())) {
+      if (hasSome(getAccountId())) {
         logEntityBuilder.set(ThirdPartyApiCallLogKeys.accountId,
             StringValue.newBuilder(getAccountId()).setExcludeFromIndexes(true).build());
       }
-      if (isNotEmpty(getDelegateId())) {
+      if (hasSome(getDelegateId())) {
         logEntityBuilder.set(ThirdPartyApiCallLogKeys.delegateId,
             StringValue.newBuilder(getDelegateId()).setExcludeFromIndexes(true).build());
       }
-      if (isNotEmpty(getDelegateTaskId())) {
+      if (hasSome(getDelegateTaskId())) {
         logEntityBuilder.set(ThirdPartyApiCallLogKeys.delegateTaskId,
             StringValue.newBuilder(getDelegateTaskId()).setExcludeFromIndexes(true).build());
       }
@@ -221,12 +221,12 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
             .build();
     try {
       byte[] requestBlob = readBlob(entity, ThirdPartyApiCallLogKeys.request);
-      if (isNotEmpty(requestBlob)) {
+      if (hasSome(requestBlob)) {
         apiCallLog.setRequest(
             JsonUtils.asObject(deCompressString(requestBlob), new TypeReference<List<ThirdPartyApiCallField>>() {}));
       }
       byte[] responseBlob = readBlob(entity, ThirdPartyApiCallLogKeys.response);
-      if (isNotEmpty(responseBlob)) {
+      if (hasSome(responseBlob)) {
         apiCallLog.setResponse(
             JsonUtils.asObject(deCompressString(responseBlob), new TypeReference<List<ThirdPartyApiCallField>>() {}));
       }

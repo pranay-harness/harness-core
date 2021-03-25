@@ -1,8 +1,8 @@
 package software.wings.features.utils;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
@@ -53,7 +53,7 @@ public class WorkflowUtils {
   public static final Predicate<GraphNode> SERVICENOW_USAGE_PREDICATE =
       gn -> Objects.equals(StateType.SERVICENOW_CREATE_UPDATE.name(), gn.getType());
 
-  public static final Predicate<Workflow> TEMPLATE_USAGE_PREDICATE = wf -> isNotEmpty(wf.getLinkedTemplateUuids());
+  public static final Predicate<Workflow> TEMPLATE_USAGE_PREDICATE = wf -> hasSome(wf.getLinkedTemplateUuids());
 
   public static final Predicate<GraphNode> FLOW_CONTROL_USAGE_PREDICATE = gn
       -> Arrays.stream(StateType.values())
@@ -90,7 +90,7 @@ public class WorkflowUtils {
 
   private static boolean hasApprovalSteps(
       String type, Map<String, Object> props, Collection<ApprovalStateType> approvalStepTypes) {
-    if (!StateType.APPROVAL.name().equals(type) && isEmpty(props)) {
+    if (!StateType.APPROVAL.name().equals(type) && hasNone(props)) {
       return false;
     }
 
@@ -138,11 +138,11 @@ public class WorkflowUtils {
   private static boolean checkWorkflowViolation(
       Map<String, WorkflowPhase> workflowPhaseMap, Predicate<GraphNode> graphNodePredicate) {
     boolean hasViolation = false;
-    if (isNotEmpty(workflowPhaseMap)) {
+    if (hasSome(workflowPhaseMap)) {
       hasViolation =
           workflowPhaseMap.values()
               .stream()
-              .filter(wp -> isNotEmpty(wp.getPhaseSteps()))
+              .filter(wp -> hasSome(wp.getPhaseSteps()))
               .anyMatch(
                   wp -> wp.getPhaseSteps().stream().anyMatch(ps -> checkWorkflowViolation(ps, graphNodePredicate)));
     }

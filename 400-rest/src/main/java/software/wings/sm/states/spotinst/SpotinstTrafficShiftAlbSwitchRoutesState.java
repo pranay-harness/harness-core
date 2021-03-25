@@ -2,7 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -220,7 +220,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(newElastigroupWeightExpr)) {
+    if (hasNone(newElastigroupWeightExpr)) {
       invalidFields.put("newElastigroupWeightExpr", "New Elastigroup weight is needed");
     }
     return invalidFields;

@@ -1,6 +1,6 @@
 package io.harness.k8s.manifest;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
@@ -191,7 +191,7 @@ public class ManifestHelper {
 
     for (String spec : specs) {
       List<KubernetesResource> resourcesFromSpec = getKubernetesResourcesFromSpec(spec);
-      if (isNotEmpty(resourcesFromSpec)) {
+      if (hasSome(resourcesFromSpec)) {
         resources.addAll(resourcesFromSpec);
       }
     }

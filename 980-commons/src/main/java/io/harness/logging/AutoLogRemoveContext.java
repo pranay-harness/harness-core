@@ -1,6 +1,6 @@
 package io.harness.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class AutoLogRemoveContext implements AutoCloseable {
 
   @Override
   public void close() {
-    if (isEmpty(originals)) {
+    if (hasNone(originals)) {
       return;
     }
     for (Entry<String, String> entry : originals.entrySet()) {

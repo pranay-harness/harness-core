@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.NotificationConstants.WHITE_COLOR;
 import static software.wings.service.impl.SlackNotificationServiceImpl.SLACK_WEBHOOK_URL_PREFIX;
@@ -60,7 +60,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
       payload.setText(processText(message));
     }
 
-    if (isNotEmpty(slackChannel)) {
+    if (hasSome(slackChannel)) {
       if (slackChannel.charAt(0) != '#') {
         slackChannel = "#" + slackChannel;
       }

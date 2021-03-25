@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
 
@@ -52,7 +52,7 @@ public class ArtifactVariable extends Variable {
         return this.getEntityId();
       case ENVIRONMENT:
       case WORKFLOW:
-        if (isEmpty(this.getOverriddenArtifactVariables())) {
+        if (hasNone(this.getOverriddenArtifactVariables())) {
           return null;
         }
 

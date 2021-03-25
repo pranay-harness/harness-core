@@ -1,6 +1,6 @@
 package software.wings.service.impl.splunk;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -67,7 +67,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
                 setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null, startTime, endTime,
                 apiCallLog, 0, setupTestNodeData.isAdvancedQuery());
-    if (isEmpty(responseWithoutHost)) {
+    if (hasNone(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())

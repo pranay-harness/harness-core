@@ -1,6 +1,6 @@
 package software.wings.service.impl.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.CommandCategory.CommandUnit;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -70,17 +70,17 @@ public class CommandHelper {
       }
     }
 
-    if (isNotEmpty(scripts)) {
+    if (hasSome(scripts)) {
       categories.add(
           CommandCategory.builder().type(SCRIPTS).displayName(SCRIPTS.getDisplayName()).commandUnits(scripts).build());
     }
 
-    if (isNotEmpty(copyUnits)) {
+    if (hasSome(copyUnits)) {
       categories.add(
           CommandCategory.builder().type(COPY).displayName(COPY.getDisplayName()).commandUnits(copyUnits).build());
     }
 
-    if (isNotEmpty(commands)) {
+    if (hasSome(commands)) {
       categories.add(CommandCategory.builder()
                          .type(COMMANDS)
                          .displayName(COMMANDS.getDisplayName())

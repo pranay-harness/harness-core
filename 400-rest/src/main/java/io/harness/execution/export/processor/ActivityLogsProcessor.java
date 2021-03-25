@@ -2,8 +2,8 @@ package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
@@ -94,7 +94,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
         activityIdsVisitor.getActivityIdToNodeMetadataMap();
     newActivityIdToNodeMetadataMap =
         updateWithShellScriptApprovalMetadata(executionMetadata, newActivityIdToNodeMetadataMap);
-    if (isEmpty(newActivityIdToNodeMetadataMap)) {
+    if (hasNone(newActivityIdToNodeMetadataMap)) {
       return;
     }
 
@@ -107,17 +107,17 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
       ExecutionMetadata executionMetadata, Map<String, ExecutionDetailsMetadata> existingMap) {
     List<ApprovalMetadata> shellScriptApprovalMetadataList =
         SubCommandsProcessor.getShellScriptApprovalMetadataList(executionMetadata);
-    if (isEmpty(shellScriptApprovalMetadataList)) {
+    if (hasNone(shellScriptApprovalMetadataList)) {
       return existingMap;
     }
 
     Map<String, ApprovalMetadata> shellScriptApprovalMetadataMap =
         shellScriptApprovalMetadataList.stream().collect(toMap(ApprovalMetadata::getActivityId, Function.identity()));
-    if (isEmpty(shellScriptApprovalMetadataMap)) {
+    if (hasNone(shellScriptApprovalMetadataMap)) {
       return existingMap;
     }
 
-    if (isEmpty(existingMap)) {
+    if (hasNone(existingMap)) {
       existingMap = new HashMap<>();
     }
     existingMap.putAll(shellScriptApprovalMetadataMap);
@@ -125,12 +125,12 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
   }
 
   public void process() {
-    if (isEmpty(activityIdToExecutionDetailsMap)) {
+    if (hasNone(activityIdToExecutionDetailsMap)) {
       return;
     }
 
     List<Log> logs = getAllLogs();
-    if (isEmpty(logs)) {
+    if (hasNone(logs)) {
       return;
     }
 
@@ -155,12 +155,12 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
   private void updateExecutionDetailsMetadata(
       ExecutionDetailsMetadata executionDetailsMetadata, List<Log> logs, String executionId) throws IOException {
     String folderName = folderNamesMap.get(executionId);
-    if (executionDetailsMetadata == null || isEmpty(logs) || folderName == null) {
+    if (executionDetailsMetadata == null || hasNone(logs) || folderName == null) {
       return;
     }
 
     List<ActivityCommandUnitMetadata> commandUnits = executionDetailsMetadata.getSubCommands();
-    if (isEmpty(commandUnits)) {
+    if (hasNone(commandUnits)) {
       return;
     }
 
@@ -251,7 +251,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
       pageRequest.setOffset(String.valueOf(currIdx * LOGS_BATCH_SIZE));
       pageRequest.setLimit(String.valueOf(LOGS_BATCH_SIZE));
       PageResponse<Log> pageResponse = logService.list(Application.GLOBAL_APP_ID, pageRequest);
-      if (pageResponse == null || isEmpty(pageResponse.getResponse())) {
+      if (pageResponse == null || hasNone(pageResponse.getResponse())) {
         break;
       }
 
@@ -300,14 +300,14 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
 
     public void visitGraphNode(GraphNodeMetadata nodeMetadata) {
       addExecutionDetailsMetadata(nodeMetadata);
-      if (nodeMetadata != null && isNotEmpty(nodeMetadata.getExecutionHistory())) {
+      if (nodeMetadata != null && hasSome(nodeMetadata.getExecutionHistory())) {
         nodeMetadata.getExecutionHistory().forEach(this::addExecutionDetailsMetadata);
       }
     }
 
     private void addExecutionDetailsMetadata(ExecutionDetailsMetadata executionDetailsMetadata) {
       if (executionDetailsMetadata != null && executionDetailsMetadata.getActivityId() != null
-          && isNotEmpty(executionDetailsMetadata.getSubCommands())) {
+          && hasSome(executionDetailsMetadata.getSubCommands())) {
         activityIdToNodeMetadataMap.put(executionDetailsMetadata.getActivityId(), executionDetailsMetadata);
       }
     }

@@ -1,6 +1,7 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -20,25 +21,25 @@ public class PlanCreatorUtils {
   public final String ANY_TYPE = "__any__";
 
   public boolean supportsField(Map<String, Set<String>> supportedTypes, YamlField field) {
-    if (EmptyPredicate.isEmpty(supportedTypes)) {
+    if (hasNone(supportedTypes)) {
       return false;
     }
 
     String fieldName = field.getName();
     Set<String> types = supportedTypes.get(fieldName);
-    if (EmptyPredicate.isEmpty(types)) {
+    if (hasNone(types)) {
       return false;
     }
 
     String fieldType = field.getNode().getType();
-    if (EmptyPredicate.isEmpty(fieldType)) {
+    if (hasNone(fieldType)) {
       fieldType = ANY_TYPE;
     }
     return types.contains(fieldType);
   }
 
   public YamlField getStageConfig(YamlField yamlField, String stageIdentifier) {
-    if (EmptyPredicate.isEmpty(stageIdentifier)) {
+    if (hasNone(stageIdentifier)) {
       return null;
     }
     if (yamlField.getName().equals(YAMLFieldNameConstants.PIPELINE)
@@ -99,7 +100,7 @@ public class PlanCreatorUtils {
           }
         } else if (yamlField.getName().equals(YAMLFieldNameConstants.PARALLEL)) {
           List<YamlField> stepGroupFields = getStepGroupInParallelSectionHavingRollback(yamlField);
-          if (EmptyPredicate.isEmpty(stepGroupFields)) {
+          if (hasNone(stepGroupFields)) {
             return false;
           }
           for (YamlField stepGroupField : stepGroupFields) {

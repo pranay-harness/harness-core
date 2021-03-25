@@ -1,6 +1,6 @@
 package io.harness.ng.core.service.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
@@ -14,13 +14,13 @@ public class ServiceFilterHelper {
   public Criteria createCriteriaForGetList(
       String accountId, String orgIdentifier, String projectIdentifier, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(ServiceEntityKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(ServiceEntityKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(ServiceEntityKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.and(ServiceEntityKeys.deleted).is(deleted);

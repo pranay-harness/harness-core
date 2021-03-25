@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
 import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -187,7 +187,7 @@ public class EcsServiceRollback extends State {
     } else {
       List<AwsAutoScalarConfig> awsAutoScalarConfigs =
           deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs();
-      if (isNotEmpty(awsAutoScalarConfigs)) {
+      if (hasSome(awsAutoScalarConfigs)) {
         rollbackAllPhases = true;
       }
       return rollbackAllPhases;

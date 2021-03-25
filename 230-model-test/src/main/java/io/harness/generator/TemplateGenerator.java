@@ -1,6 +1,6 @@
 package io.harness.generator;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.HARNESS_COMMAND_LIBRARY;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_PCF_COMMANDS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SERVICE_COMMANDS;
@@ -354,7 +354,7 @@ public class TemplateGenerator {
     } else {
       builder.folderId(parentFolder.getUuid());
     }
-    if (template != null && isNotEmpty(template.getVariables())) {
+    if (template != null && hasSome(template.getVariables())) {
       builder.variables(template.getVariables());
     } else {
       builder.variables(Arrays.asList(aVariable().type(TEXT).name("var1").mandatory(true).build()));

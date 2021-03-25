@@ -2,7 +2,7 @@ package io.harness.ccm;
 
 import static io.harness.beans.FeatureName.SIDE_NAVIGATION;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.ccm.cluster.ClusterRecordObserver;
@@ -76,7 +76,7 @@ public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecor
 
   @Override
   public boolean onUpserted(ClusterRecord clusterRecord) {
-    if (isEmpty(clusterRecord.getPerpetualTaskIds())) {
+    if (hasNone(clusterRecord.getPerpetualTaskIds())) {
       if (!clusterRecord.getCluster().getClusterType().equals(DIRECT_KUBERNETES)
           && ccmSettingService.isCloudCostEnabled(clusterRecord)) {
         String accountId = clusterRecord.getAccountId();

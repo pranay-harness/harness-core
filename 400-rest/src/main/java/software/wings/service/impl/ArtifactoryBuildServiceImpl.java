@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
@@ -101,7 +101,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     log.info("[Artifactory Delegate Selection] Get artifact paths for job name {} and delegate selectors - {}", jobName,
         config.getDelegateSelectors());
-    if (isEmpty(groupId)) {
+    if (hasNone(groupId)) {
       log.info("Retrieving {} repo paths.", jobName);
       List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
       log.info("Retrieved {} repo paths.", repoPaths.size());

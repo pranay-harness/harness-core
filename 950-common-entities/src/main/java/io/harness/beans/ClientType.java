@@ -1,6 +1,6 @@
 package io.harness.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 public enum ClientType {
   SALESFORCE(AuthType.API_KEY_HEADER),
@@ -19,7 +19,7 @@ public enum ClientType {
   }
 
   public static boolean isValid(String clientType) {
-    if (isEmpty(clientType)) {
+    if (hasNone(clientType)) {
       return false;
     }
     if (SALESFORCE.name().equalsIgnoreCase(clientType) || PROMETHEUS.name().equalsIgnoreCase(clientType)

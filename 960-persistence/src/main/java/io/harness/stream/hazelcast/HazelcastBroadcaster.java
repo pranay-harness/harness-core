@@ -1,7 +1,7 @@
 package io.harness.stream.hazelcast;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
@@ -48,7 +48,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   }
 
   private synchronized void addMessageListener() {
-    if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null) {
+    if (hasSome(getAtmosphereResources()) && messageListenerRegistrationId == null) {
       messageListenerRegistrationId =
           topic.addMessageListener(message -> broadcastReceivedMessage(message.getMessageObject()));
       log.info("Added message listener to topic");
@@ -56,7 +56,7 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   }
 
   private synchronized void removeMessageListener() {
-    if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
+    if (hasNone(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
       topic.removeMessageListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
       log.info("Removed message listener from topic");

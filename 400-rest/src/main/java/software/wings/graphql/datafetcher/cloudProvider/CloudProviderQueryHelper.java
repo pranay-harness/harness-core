@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -31,7 +31,7 @@ public class CloudProviderQueryHelper {
   @Inject protected DataFetcherUtils utils;
 
   public void setQuery(List<QLCloudProviderFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 
@@ -52,7 +52,7 @@ public class CloudProviderQueryHelper {
         if (operator != QLEnumOperator.EQUALS) {
           throw new WingsException("Unknown Enum operator " + operator);
         }
-        if (isEmpty(ceEnabledFilter.getValues())) {
+        if (hasNone(ceEnabledFilter.getValues())) {
           throw new WingsException("Value cannot be empty");
         }
         Boolean[] booleanFilterValues = ceEnabledFilter.getValues();

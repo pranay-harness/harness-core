@@ -1,7 +1,7 @@
 package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 
@@ -103,7 +103,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     }
 
     DockerImageTagResponse dockerImageTagResponse = response.body();
-    if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
+    if (dockerImageTagResponse == null || hasNone(dockerImageTagResponse.getTags())) {
       log.warn("There are no tags available for the imageName {}", imageName);
       return buildDetails;
     }
@@ -129,7 +129,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       }
       dockerImageTagResponse = response.body();
-      if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
+      if (dockerImageTagResponse == null || hasNone(dockerImageTagResponse.getTags())) {
         log.info("There are no more tags available for the imageName {}. Returning tags", imageName);
         return buildDetails;
       }
@@ -266,7 +266,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
           "Could not reach Docker Registry at : " + dockerConfig.getDockerRegistryUrl(), USER);
     }
     if (dockerConfig.hasCredentials()) {
-      if (isEmpty(dockerConfig.getPassword())) {
+      if (hasNone(dockerConfig.getPassword())) {
         throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
       }
       DockerRegistryRestClient registryRestClient = null;

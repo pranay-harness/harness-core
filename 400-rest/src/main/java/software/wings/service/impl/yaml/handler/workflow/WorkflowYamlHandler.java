@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -325,7 +325,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
   private List<FailureStrategy> getFailureStrategiesFromYaml(ChangeContext<Y> changeContext,
       List<ChangeContext> changeContextList, List<FailureStrategy.Yaml> failureStrategyYaml) {
-    if (isEmpty(failureStrategyYaml)) {
+    if (hasNone(failureStrategyYaml)) {
       return emptyList();
     }
     FailureStrategyYamlHandler failureStrategyYamlHandler =
@@ -344,7 +344,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
   private List<StepSkipStrategy> getStepSkipStrategiesFromYaml(ChangeContext<Y> changeContext,
       List<ChangeContext> changeContextList, List<StepSkipStrategy.Yaml> stepSkipStrategyYaml, PhaseStep phaseStep) {
-    if (isEmpty(stepSkipStrategyYaml)) {
+    if (hasNone(stepSkipStrategyYaml)) {
       return emptyList();
     }
 

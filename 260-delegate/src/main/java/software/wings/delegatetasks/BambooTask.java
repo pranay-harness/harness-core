@@ -1,7 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
@@ -72,7 +73,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
     String errorMessage = null;
     try {
       Map<String, String> evaluatedParameters = Maps.newLinkedHashMap();
-      if (isNotEmpty(parameterEntries)) {
+      if (hasSome(parameterEntries)) {
         parameterEntries.forEach(
             parameterEntry -> evaluatedParameters.put(parameterEntry.getKey(), parameterEntry.getValue()));
       }

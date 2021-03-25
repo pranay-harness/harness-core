@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
@@ -107,7 +107,7 @@ public class CatalogResource {
   private Map<String, Object> getCatalogs(List<String> catalogTypes, String appId) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
-    if (isEmpty(catalogTypes)) {
+    if (hasNone(catalogTypes)) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());

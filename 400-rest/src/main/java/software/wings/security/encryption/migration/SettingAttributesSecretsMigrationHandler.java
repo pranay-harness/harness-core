@@ -1,7 +1,8 @@
 package software.wings.security.encryption.migration;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
@@ -20,7 +21,6 @@ import io.harness.beans.Encryptable;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.ff.FeatureFlagService;
@@ -131,7 +131,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
     }
 
     List<Field> encryptedFields = EncryptionReflectUtils.getEncryptedFields(settingValue.getClass());
-    if (EmptyPredicate.isEmpty(encryptedFields)) {
+    if (hasNone(encryptedFields)) {
       return true;
     }
     boolean isMigrationSuccess = true;
@@ -193,7 +193,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
           .stream()
           .filter(keyValues
               -> keyValues.isEncrypted() && APMVerificationConfig.MASKED_STRING.equals(keyValues.getValue())
-                  && isNotEmpty(keyValues.getEncryptedValue()))
+                  && hasSome(keyValues.getEncryptedValue()))
           .forEach(keyValues -> {
             isMigrated.compareAndSet(
                 true, migrateSecret(keyValues.getEncryptedValue(), "header." + keyValues.getKey(), settingAttribute));
@@ -206,7 +206,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
           .stream()
           .filter(keyValues
               -> keyValues.isEncrypted() && APMVerificationConfig.MASKED_STRING.equals(keyValues.getValue())
-                  && isNotEmpty(keyValues.getEncryptedValue()))
+                  && hasSome(keyValues.getEncryptedValue()))
           .forEach(keyValues -> {
             isMigrated.compareAndSet(
                 true, migrateSecret(keyValues.getEncryptedValue(), "option." + keyValues.getKey(), settingAttribute));

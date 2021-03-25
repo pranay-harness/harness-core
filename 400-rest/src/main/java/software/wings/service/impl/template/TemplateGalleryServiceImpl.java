@@ -1,7 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
@@ -130,8 +130,8 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     UpdateOperations<TemplateGallery> operations = wingsPersistence.createUpdateOperations(TemplateGallery.class);
 
     Set<String> userKeywords = trimmedLowercaseSet(templateGallery.getKeywords());
-    if (isNotEmpty(templateGallery.getDescription())) {
-      if (isNotEmpty(userKeywords)) {
+    if (hasSome(templateGallery.getDescription())) {
+      if (hasSome(userKeywords)) {
         userKeywords.remove(savedGallery.getDescription().toLowerCase());
       }
       operations.set("description", templateGallery.getDescription());

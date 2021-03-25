@@ -1,10 +1,10 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
@@ -96,13 +96,12 @@ public class JiraClient {
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
       String projectKey, String issueType, String expand, boolean fetchStatus) {
     JiraIssueCreateMetadataNG createMetadata =
-        executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
-                        EmptyPredicate.isEmpty(issueType) ? null : issueType,
-                        EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
+        executeCall(restClient.getIssueCreateMetadata(hasNone(projectKey) ? null : projectKey,
+                        hasNone(issueType) ? null : issueType, hasNone(expand) ? "projects.issuetypes.fields" : expand),
             "fetching create meta");
 
     if (fetchStatus) {
-      if (EmptyPredicate.isEmpty(projectKey)) {
+      if (hasNone(projectKey)) {
         // If project key is not present, we get all possible statuses for the jira instance and add them to each issue
         // type. This means in the ui dropdown we might show statuses which at runtime will fail because they are not
         // part of the runtime project and issue type.

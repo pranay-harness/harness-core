@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -105,17 +105,17 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
   @Override
   public void validateRequiredFields() {
     if (GLOBAL_APP_ID.equals(appId)) {
-      if (isEmpty(feed)) {
+      if (hasNone(feed)) {
         throw new InvalidRequestException("Feed cannot be empty", USER);
       }
-      if (isEmpty(packageId)) {
+      if (hasNone(packageId)) {
         throw new InvalidRequestException("Package cannot be empty", USER);
       }
 
-      if (isEmpty(protocolType)) {
+      if (hasNone(protocolType)) {
         throw new InvalidRequestException("Protocol type cannot be empty", USER);
       } else if (ProtocolType.maven.name().equals(protocolType) || ProtocolType.nuget.name().equals(protocolType)) {
-        if (isEmpty(packageName)) {
+        if (hasNone(packageName)) {
           throw new InvalidRequestException("Package name cannot be empty", USER);
         }
       } else {
@@ -130,8 +130,8 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
   }
 
   private boolean strChanged(String oldStr, String newStr) {
-    if (isEmpty(oldStr) || isEmpty(newStr)) {
-      return isNotEmpty(oldStr) || isNotEmpty(newStr);
+    if (hasNone(oldStr) || hasNone(newStr)) {
+      return hasSome(oldStr) || hasSome(newStr);
     }
     return !oldStr.equals(newStr);
   }

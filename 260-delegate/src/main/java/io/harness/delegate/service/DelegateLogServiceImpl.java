@@ -1,7 +1,7 @@
 package io.harness.delegate.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -148,7 +148,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   @Override
   public synchronized void save(String accountId, Log logObject) {
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       logObject.setAccountId(accountId);
     }
 
@@ -244,7 +244,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
     for (Log logObject : commandLogs) {
       if (logObject.getLogLevel() != batchLogLevel) {
-        if (isNotEmpty(batch)) {
+        if (hasSome(batch)) {
           batchedLogs.add(batch);
           batch = new ArrayList<>();
         }
@@ -252,7 +252,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       }
       batch.add(logObject);
     }
-    if (isNotEmpty(batch)) {
+    if (hasSome(batch)) {
       batchedLogs.add(batch);
     }
 
@@ -297,7 +297,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     logs.stream()
         .collect(groupingBy(ThirdPartyApiCallLog::getStateExecutionId, toList()))
         .forEach((activityId, logsList) -> {
-          if (isEmpty(logsList)) {
+          if (hasNone(logsList)) {
             return;
           }
           String stateExecutionId = logsList.get(0).getStateExecutionId();
@@ -331,7 +331,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       return;
     }
     logs.stream().collect(groupingBy(CVNGLogDTO::getTraceableId, toList())).forEach((activityId, logsList) -> {
-      if (isEmpty(logsList)) {
+      if (hasNone(logsList)) {
         return;
       }
       String traceableId = logsList.get(0).getTraceableId();

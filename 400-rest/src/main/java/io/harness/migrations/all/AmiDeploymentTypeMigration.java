@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
@@ -52,13 +52,13 @@ public class AmiDeploymentTypeMigration implements Migration {
       pageRequest.addFilter("appId", Operator.EQ, appId);
       PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
       List<InfrastructureMapping> infraMappingList = response.getResponse();
-      if (isEmpty(infraMappingList)) {
+      if (hasNone(infraMappingList)) {
         log.info("Done with Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
       List<InfrastructureMapping> aminfraMappingList =
           infraMappingList.stream().filter(mapping -> mapping instanceof AwsAmiInfrastructureMapping).collect(toList());
-      if (isEmpty(aminfraMappingList)) {
+      if (hasNone(aminfraMappingList)) {
         log.info("Done with Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
@@ -98,7 +98,7 @@ public class AmiDeploymentTypeMigration implements Migration {
       infraDefRequest.addFilter("appId", Operator.EQ, appId);
       PageResponse<InfrastructureDefinition> infraDefResponse = definitionService.list(infraDefRequest);
       List<InfrastructureDefinition> infraDefList = infraDefResponse.getResponse();
-      if (isEmpty(infraDefList)) {
+      if (hasNone(infraDefList)) {
         log.info("Done with Infra Def Ami Deployment Type migration for app: [{}]", appId);
         return;
       }
@@ -139,13 +139,13 @@ public class AmiDeploymentTypeMigration implements Migration {
   public void migrate() {
     PageRequest<Account> accountPageRequest = aPageRequest().addFieldsIncluded("_id").build();
     List<Account> accounts = accountService.list(accountPageRequest);
-    if (isEmpty(accounts)) {
+    if (hasNone(accounts)) {
       return;
     }
     accounts.forEach(account -> {
       try {
         List<String> appIds = appService.getAppIdsByAccountId(account.getUuid());
-        if (isEmpty(appIds)) {
+        if (hasNone(appIds)) {
           return;
         }
         appIds.forEach(appId -> {

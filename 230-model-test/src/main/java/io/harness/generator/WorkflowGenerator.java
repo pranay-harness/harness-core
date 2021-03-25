@@ -3,7 +3,7 @@ package io.harness.generator;
 import static io.harness.beans.SweepingOutputInstance.Scope.PHASE;
 import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.ResourceConstraintGenerator.ResourceConstraints.GENERIC_ASAP_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
@@ -632,7 +632,7 @@ public class WorkflowGenerator {
       builder.infraMappingId(workflow.getInfraMappingId());
     }
 
-    if (isNotEmpty(workflow.getInfraDefinitionId())) {
+    if (hasSome(workflow.getInfraDefinitionId())) {
       builder.infraDefinitionId(workflow.getInfraDefinitionId());
     }
     if (workflow.getCreatedBy() != null) {

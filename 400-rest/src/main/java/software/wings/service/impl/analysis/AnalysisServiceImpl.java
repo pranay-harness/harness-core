@@ -2,8 +2,8 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
@@ -272,7 +272,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
-    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+    if (!hasNone(feedback.getLogMLFeedbackId())) {
       deleteFeedbackHelper(feedback.getLogMLFeedbackId());
     }
 
@@ -335,7 +335,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean addToBaseline(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
-    if (isNotEmpty(feedbackRecord.getUuid())) {
+    if (hasSome(feedbackRecord.getUuid())) {
       feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.ADD_TO_BASELINE);
     }
@@ -349,7 +349,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean removeFromBaseline(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
-    if (isNotEmpty(feedbackRecord.getUuid())) {
+    if (hasSome(feedbackRecord.getUuid())) {
       feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.REMOVE_FROM_BASELINE);
     }
@@ -363,7 +363,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean updateFeedbackPriority(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord) {
     CVFeedbackRecord feedbackRecordFromDataStore = feedbackRecord;
-    if (isNotEmpty(feedbackRecord.getUuid())) {
+    if (hasSome(feedbackRecord.getUuid())) {
       feedbackRecordFromDataStore = dataStoreService.getEntity(CVFeedbackRecord.class, feedbackRecord.getUuid());
       checkIfActionIsAllowed(feedbackRecordFromDataStore, FeedbackAction.UPDATE_PRIORITY);
     }
@@ -401,18 +401,18 @@ public class AnalysisServiceImpl implements AnalysisService {
   private boolean saveLogFeedback(String accountId, String cvConfigId, String stateExecutionId,
       CVFeedbackRecord feedbackRecord, FeedbackAction feedbackAction) {
     Preconditions.checkState(
-        isNotEmpty(feedbackRecord.getLogMessage()), "Log Message cannot be empty while saving a feedback");
-    if (isNotEmpty(cvConfigId)) {
+        hasSome(feedbackRecord.getLogMessage()), "Log Message cannot be empty while saving a feedback");
+    if (hasSome(cvConfigId)) {
       CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
       feedbackRecord.setServiceId(cvConfiguration.getServiceId());
       feedbackRecord.setEnvId(cvConfiguration.getEnvId());
       feedbackRecord.setCvConfigId(cvConfigId);
-    } else if (isNotEmpty(stateExecutionId)) {
+    } else if (hasSome(stateExecutionId)) {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
               .filter(StateExecutionInstanceKeys.uuid, stateExecutionId)
               .asList();
-      if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
+      if (hasSome(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
         StateExecutionInstance stateExecutionInstance = stateExecutionInstances.get(0);
         feedbackRecord.setStateExecutionId(stateExecutionId);
 
@@ -455,7 +455,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public String createCollaborationFeedbackTicket(String accountId, String appId, String cvConfigId,
       String stateExecutionId, CVCollaborationProviderParameters cvJiraParameters) {
-    if (cvJiraParameters == null || isEmpty(cvJiraParameters.getCollaborationProviderConfigId())
+    if (cvJiraParameters == null || hasNone(cvJiraParameters.getCollaborationProviderConfigId())
         || cvJiraParameters.getJiraTaskParameters() == null) {
       String errMsg = String.format(
           "Empty Jira parameters sent in createCollaborationFeedbackTicket for cvConfigId/StateExecutionId %s, %s",
@@ -472,7 +472,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
     String jiraLink = jiraExecutionData.getIssueUrl();
 
-    if (isEmpty(cvJiraParameters.getCvFeedbackRecord().getUuid())) {
+    if (hasNone(cvJiraParameters.getCvFeedbackRecord().getUuid())) {
       log.error(
           "Creating a jira before giving user feedback or priority. This is not allowed. cvCOnfigId: {}", cvConfigId);
       throw new VerificationOperationException(
@@ -489,18 +489,18 @@ public class AnalysisServiceImpl implements AnalysisService {
   public List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId, boolean isDemoPath) {
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest = PageRequestBuilder.aPageRequest().build();
     String serviceId = null, envId = null;
-    if (isNotEmpty(cvConfigId)) {
+    if (hasSome(cvConfigId)) {
       CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
       serviceId = cvConfiguration.getServiceId();
       envId = cvConfiguration.getEnvId();
 
-    } else if (isNotEmpty(stateExecutionId)) {
+    } else if (hasSome(stateExecutionId)) {
       List<StateExecutionInstance> stateExecutionInstances =
           wingsPersistence.createQuery(StateExecutionInstance.class, excludeAuthority)
               .filter(StateExecutionInstanceKeys.uuid, stateExecutionId)
               .asList();
 
-      if (isNotEmpty(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
+      if (hasSome(stateExecutionInstances) && stateExecutionInstances.size() == 1) {
         StateExecutionInstance instance = stateExecutionInstances.get(0);
         serviceId = getServiceIdFromStateExecutionInstance(instance);
         WorkflowExecution execution =
@@ -522,7 +522,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId) {
-    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+    if (!hasNone(feedback.getLogMLFeedbackId())) {
       deleteFeedbackHelper(feedback.getLogMLFeedbackId());
     }
     LogMLAnalysisSummary analysisSummary =
@@ -773,8 +773,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       analysisSummary.setAnalysisComparisonStrategy(analysisContext.getComparisonStrategy());
       analysisSummary.setTimeDuration(analysisContext.getTimeDuration());
       analysisSummary.setNewVersionNodes(
-          isEmpty(analysisContext.getTestNodes()) ? Collections.emptySet() : analysisContext.getTestNodes().keySet());
-      analysisSummary.setPreviousVersionNodes(isEmpty(analysisContext.getControlNodes())
+          hasNone(analysisContext.getTestNodes()) ? Collections.emptySet() : analysisContext.getTestNodes().keySet());
+      analysisSummary.setPreviousVersionNodes(hasNone(analysisContext.getControlNodes())
               ? Collections.emptySet()
               : analysisContext.getControlNodes().keySet());
     }
@@ -786,7 +786,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     assignUserFeedback(analysisSummary, mlUserFeedbacks);
 
     RiskLevel riskLevel = RiskLevel.NA;
-    String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
+    String analysisSummaryMsg = hasNone(analysisRecord.getAnalysisSummaryMessage())
         ? analysisSummary.getControlClusters().isEmpty() ? "No baseline data for the given query was found."
             : analysisSummary.getTestClusters().isEmpty()
             ? "No new data for the given queries. Showing baseline data if any."
@@ -799,7 +799,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId, isDemoPath);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {
-        if (isNotEmpty(cvFeedbackRecord.getStateExecutionId())
+        if (hasSome(cvFeedbackRecord.getStateExecutionId())
             && cvFeedbackRecord.getStateExecutionId().equals(stateExecutionId)) {
           CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
           if (!clusterTypeRecordMap.containsKey(type)) {
@@ -820,7 +820,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
     int lowRiskClusters = 0;
-    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+    if (hasSome(analysisSummary.getUnknownClusters())) {
       for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
         if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
           ++highRiskClusters;
@@ -868,9 +868,9 @@ public class AnalysisServiceImpl implements AnalysisService {
   public void updateClustersWithFeedback(Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap,
       CLUSTER_TYPE type, List<LogMLClusterSummary> clusterList) {
     // first set all the feedback data for which the logMLFeedbackId is already present.
-    if (isNotEmpty(clusterList)) {
+    if (hasSome(clusterList)) {
       clusterList.forEach(cluster -> {
-        if (isNotEmpty(cluster.getLogMLFeedbackId())) {
+        if (hasSome(cluster.getLogMLFeedbackId())) {
           CVFeedbackRecord feedbackRecord =
               dataStoreService.getEntity(CVFeedbackRecord.class, cluster.getLogMLFeedbackId());
           addFeedbackDataToCluster(cluster, feedbackRecord);
@@ -921,7 +921,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     long maxAnalyzedMinute = getLogRecordMinute(
         analysisContext.getAppId(), analysisContext.getStateExecutionId(), ClusterLevel.HF, OrderType.DESC);
     if (AnalysisComparisonStrategy.PREDICTIVE == analysisContext.getComparisonStrategy()) {
-      if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
+      if (hasSome(analysisContext.getPredictiveCvConfigId())) {
         LogsCVConfiguration logsCVConfiguration =
             wingsPersistence.get(LogsCVConfiguration.class, analysisContext.getPredictiveCvConfigId());
         analysisSummary.setBaselineStartTime(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
@@ -1161,7 +1161,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private Map<Integer, Integer> getFrequencyMap(SplunkAnalysisCluster analysisCluster) {
     Map<Integer, Integer> frequencyMap = new HashMap<>();
-    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+    if (hasNone(analysisCluster.getMessage_frequencies())) {
       return frequencyMap;
     }
     int count;
@@ -1184,7 +1184,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private Map<Integer, Integer> getFrequencyMapV2(List<Integer> frequencies) {
     Map<Integer, Integer> frequencyMap = new HashMap<>();
-    if (isEmpty(frequencies)) {
+    if (hasNone(frequencies)) {
       return frequencyMap;
     }
     AtomicInteger counter = new AtomicInteger(0);
@@ -1194,7 +1194,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private int computeCountFromFrequencies(SplunkAnalysisCluster analysisCluster) {
     int count = 0;
-    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+    if (hasNone(analysisCluster.getMessage_frequencies())) {
       return count;
     }
     for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
@@ -1206,7 +1206,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private List<Integer> getFrequencies(SplunkAnalysisCluster analysisCluster) {
     List<Integer> counts = new ArrayList<>();
-    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+    if (hasNone(analysisCluster.getMessage_frequencies())) {
       return counts;
     }
     for (MessageFrequency frequency : analysisCluster.getMessage_frequencies()) {
@@ -1219,7 +1219,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
     int unexpectedFrequency = 0;
-    if (isEmpty(testClusters)) {
+    if (hasNone(testClusters)) {
       return unexpectedFrequency;
     }
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {

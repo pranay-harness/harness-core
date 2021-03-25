@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.tag;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
@@ -44,12 +44,12 @@ public class TagHelper {
 
   // Returns set of all unique entity ids that match the tags for given entity type
   public Set<String> getEntityIdsFromTags(String accountId, List<QLTagInput> tags, EntityType entityType) {
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       Set<String> entityIds = new HashSet<>();
       tags.forEach(tag -> {
         Set<String> entityIdsForTag =
             tagService.getEntityIdsWithTag(accountId, tag.getName(), entityType, tag.getValue());
-        if (isNotEmpty(entityIdsForTag)) {
+        if (hasSome(entityIdsForTag)) {
           entityIds.addAll(entityIdsForTag);
         }
       });
@@ -59,12 +59,12 @@ public class TagHelper {
   }
 
   public Set<String> getWorkExecutionsWithTags(String accountId, List<QLTagInput> tags) {
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       Set<String> entityIds = new HashSet<>();
       tags.forEach(tag -> {
         Set<String> workflowExecutionsWithTags =
             workflowExecutionService.getWorkflowExecutionsWithTag(accountId, tag.getName(), tag.getValue());
-        if (isNotEmpty(workflowExecutionsWithTags)) {
+        if (hasSome(workflowExecutionsWithTags)) {
           entityIds.addAll(workflowExecutionsWithTags);
         }
       });
@@ -111,7 +111,7 @@ public class TagHelper {
         throw new InvalidRequestException(format(INVALID_ENTITY_TYPE, entityType.name()));
     }
 
-    if (EmptyPredicate.isEmpty(appId)) {
+    if (hasNone(appId)) {
       throw new InvalidRequestException(format(INVALID_ENTITY_ERROR, entityId, entityType.name()));
     }
 

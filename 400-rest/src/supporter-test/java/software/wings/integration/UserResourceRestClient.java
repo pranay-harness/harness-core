@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.network.Localhost.getLocalHostName;
 
 import static software.wings.beans.Account.Builder.anAccount;
@@ -76,7 +76,7 @@ public class UserResourceRestClient {
     } catch (Exception e) {
       // ignore
     }
-    if (user == null || user.getToken() == null || isEmpty(user.getAccounts()) || user.getAccounts().get(0) == null
+    if (user == null || user.getToken() == null || hasNone(user.getAccounts()) || user.getAccounts().get(0) == null
         || user.getAccounts().get(0).getUuid() == null) {
       Account account = setupAccountUserFirstTime();
       user = loginUser(client, adminUserEmail, new String(adminPassword));
@@ -145,7 +145,7 @@ public class UserResourceRestClient {
       }
     } else {
       Account finalAccount = account;
-      if (isEmpty(user.getAccounts())
+      if (hasNone(user.getAccounts())
           || !user.getAccounts().stream().anyMatch(account1 -> finalAccount.getUuid().equals(account1.getUuid()))) {
         persistence.update(user, persistence.createUpdateOperations(User.class).addToSet(UserKeys.accounts, account));
       }

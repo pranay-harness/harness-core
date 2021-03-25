@@ -1,8 +1,8 @@
 package io.harness.service;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -810,7 +810,7 @@ public class LogMLAnalysisServiceTest extends VerificationBase {
     assertThat(logMLAnalysisRecord.getUnknown_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getTest_clusters()).isNull();
     assertThat(logMLAnalysisRecord.getIgnore_clusters()).isNull();
-    assertThat(isNotEmpty(logMLAnalysisRecord.getProtoSerializedAnalyisDetails())).isTrue();
+    assertThat(hasSome(logMLAnalysisRecord.getProtoSerializedAnalyisDetails())).isTrue();
     assertThat(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()).isNull();
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
@@ -1926,7 +1926,7 @@ public class LogMLAnalysisServiceTest extends VerificationBase {
 
     assertThat(created).isFalse();
     assertThat(feedbackRecord).isNull();
-    assertThat(isEmpty(records)).isTrue();
+    assertThat(hasNone(records)).isTrue();
   }
 
   @Test

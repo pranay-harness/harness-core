@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
@@ -126,7 +126,7 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
 
   private List<AppdynamicsMetricData> getTierBTMetricData(@Nullable String hostName, String btName) {
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + appdynamicsTier.getName() + "|" + btName + "|"
-        + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
+        + (hasNone(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
     log.info("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest = getAppDynamicsRestClient().getMetricDataTimeRange(
         getHeaderWithCredentials(), dataCollectionInfo.getAppDynamicsApplicationId(), metricPath,
@@ -167,17 +167,17 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
       for (AppdynamicsMetricData appdynamicsMetricData : appDynamicsMetricDataList.get()) {
         String[] appdynamicsPathPieces = appdynamicsMetricData.getMetricPath().split(Pattern.quote("|"));
         String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
-        String nodeName = isEmpty(host) ? tierName : appdynamicsPathPieces[5];
-        if (isNotEmpty(host) && !dataCollectionInfo.getHosts().contains(nodeName)) {
+        String nodeName = hasNone(host) ? tierName : appdynamicsPathPieces[5];
+        if (hasSome(host) && !dataCollectionInfo.getHosts().contains(nodeName)) {
           log.info("skipping: {}", nodeName);
           continue;
         }
         String txnName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
-        String metricName = isNotEmpty(host) ? parseAppdynamicsInternalName(appdynamicsPathPieces, 6)
-                                             : parseAppdynamicsInternalName(appdynamicsPathPieces, 4);
+        String metricName = hasSome(host) ? parseAppdynamicsInternalName(appdynamicsPathPieces, 6)
+                                          : parseAppdynamicsInternalName(appdynamicsPathPieces, 4);
 
-        if ((isEmpty(host) && !REJECTED_METRICS_24X7.contains(metricName))
-            || (isNotEmpty(host) && !REJECTED_METRICS_WORKFLOW.contains(metricName))) {
+        if ((hasNone(host) && !REJECTED_METRICS_24X7.contains(metricName))
+            || (hasSome(host) && !REJECTED_METRICS_WORKFLOW.contains(metricName))) {
           appdynamicsMetricData.getMetricValues().forEach(metricValue -> {
             MetricElement metricElement;
             long timestamp = metricValue.getStartTimeInMillis();
@@ -190,7 +190,7 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
                                   .groupName(tierName)
                                   .values(new HashMap<>())
                                   .build();
-              if (isNotEmpty(host)) {
+              if (hasSome(host)) {
                 metricElement.setHost(host);
               }
             }

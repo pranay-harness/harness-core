@@ -1,6 +1,7 @@
 package io.harness.verificationclient;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -41,7 +42,7 @@ public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceC
 
   @Override
   public CVNextGenServiceClient get() {
-    if (isEmpty(baseUrl)) {
+    if (hasNone(baseUrl)) {
       return null;
     }
     ObjectMapper objectMapper = new ObjectMapper();

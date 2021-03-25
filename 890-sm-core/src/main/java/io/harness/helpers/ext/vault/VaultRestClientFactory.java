@@ -1,7 +1,7 @@
 package io.harness.helpers.ext.vault;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
@@ -77,7 +77,7 @@ public class VaultRestClientFactory {
   }
 
   public static String getFullPath(String basePath, String secretName, SettingVariableTypes settingVariableType) {
-    if (isEmpty(basePath)) {
+    if (hasNone(basePath)) {
       return DEFAULT_BASE_PATH + PATH_SEPARATOR + settingVariableType + PATH_SEPARATOR + secretName;
     } else {
       String fullPath = StringUtils.stripStart(basePath, PATH_SEPARATOR);
@@ -91,7 +91,7 @@ public class VaultRestClientFactory {
    * /foo/bar/MySecret#MyKeyName
    */
   public static String getFullPath(String basePath, String secretPath) {
-    if (isEmpty(basePath)) {
+    if (hasNone(basePath)) {
       return DEFAULT_BASE_PATH + PATH_SEPARATOR + secretPath;
     } else {
       String fullPath = StringUtils.stripStart(basePath, PATH_SEPARATOR);

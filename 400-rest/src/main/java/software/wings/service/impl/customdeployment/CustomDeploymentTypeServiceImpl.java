@@ -1,11 +1,11 @@
 package software.wings.service.impl.customdeployment;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.CustomDeploymentTypeNotFoundException;
 
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
@@ -96,7 +96,7 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
 
   private String fetchCustomDeploymentTypeName(String deploymentTypeTemplateId) {
     try {
-      if (isNotEmpty(deploymentTypeTemplateId)) {
+      if (hasSome(deploymentTypeTemplateId)) {
         final Template template = templateService.get(deploymentTypeTemplateId);
         return template.getName();
       }
@@ -116,7 +116,7 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
   @Override
   public void putCustomDeploymentTypeNameIfApplicable(
       List<? extends CustomDeploymentTypeAware> entities, @NotBlank final String accountId) {
-    if (isEmpty(entities) || isEmpty(accountId)) {
+    if (hasNone(entities) || hasNone(accountId)) {
       return;
     }
     try {
@@ -124,12 +124,12 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
           templateService.batchGet(entities.stream()
                                        .filter(Objects::nonNull)
                                        .map(CustomDeploymentTypeAware::getDeploymentTypeTemplateId)
-                                       .filter(EmptyPredicate::isNotEmpty)
+                                       .filter(HasPredicate::hasSome)
                                        .distinct()
                                        .collect(Collectors.toList()),
               accountId);
 
-      if (isNotEmpty(templates)) {
+      if (hasSome(templates)) {
         final Map<String, String> templateIdToNameMap =
             templates.stream().collect(Collectors.toMap(Template::getUuid, Template::getName));
         entities.forEach(

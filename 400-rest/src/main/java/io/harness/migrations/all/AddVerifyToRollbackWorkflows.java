@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -42,7 +42,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest, excludeAuthority);
 
     List<Application> apps = pageResponse.getResponse();
-    if (pageResponse.isEmpty() || isEmpty(apps)) {
+    if (pageResponse.isEmpty() || hasNone(apps)) {
       log.info("No applications found");
       return;
     }
@@ -81,7 +81,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
       if (rollbackPhase == null) {
         continue;
       }
-      if (isEmpty(rollbackPhase.getPhaseSteps())) {
+      if (hasNone(rollbackPhase.getPhaseSteps())) {
         continue;
       }
       if (rollbackPhase.getPhaseSteps().stream().anyMatch(step -> step.getPhaseStepType() == VERIFY_SERVICE)) {

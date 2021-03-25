@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -134,7 +134,7 @@ public class EcsInfraMappingYamlHandler
   }
 
   private String getIds(List<String> ids) {
-    if (isEmpty(ids)) {
+    if (hasNone(ids)) {
       return StringUtils.EMPTY;
     }
 

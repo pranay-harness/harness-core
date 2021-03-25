@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.FeatureName.AZURE_WEBAPP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -82,7 +82,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     AzureWebAppInfrastructureMapping infrastructureMapping = getInfraMapping(appId, infraMappingId);
     Multimap<String, Instance> appNameAndSlotNameToInstancesInDbMap = getCurrentInstancesInDb(appId, infraMappingId);
-    if (isEmpty(appNameAndSlotNameToInstancesInDbMap.keySet())) {
+    if (hasNone(appNameAndSlotNameToInstancesInDbMap.keySet())) {
       return;
     }
     appNameAndSlotNameToInstancesInDbMap.keys().forEach(appNameAndSlotName -> {
@@ -108,7 +108,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   private Multimap<String, Instance> getCurrentInstancesInDb(String appId, String infraMappingId) {
     Multimap<String, Instance> appNameToInstancesMap = ArrayListMultimap.create();
     List<Instance> instances = getInstances(appId, infraMappingId);
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       instances.forEach(instance -> {
         InstanceInfo instanceInfo = instance.getInstanceInfo();
         if (instanceInfo instanceof AzureWebAppInstanceInfo) {
@@ -143,7 +143,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   @Override
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 
@@ -161,7 +161,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     log.info("Getting keys for new deployment, appNameAndSlotNameToInstanceInDbMapKeys: {},  allSlotWebAppKeys: {}",
         getSetKeys(appNameAndSlotNameToInstanceInDbMap.keySet()), getSetKeys(allSlotWebAppKeys));
 
-    if (isNotEmpty(allSlotWebAppKeys)) {
+    if (hasSome(allSlotWebAppKeys)) {
       allSlotWebAppKeys.forEach(appNameAndSlotName -> {
         Map<String, AzureAppDeploymentData> latestSlotWebAppInstances =
             getLatestSlotWebAppInstances(infrastructureMapping, appId, appNameAndSlotName);
@@ -246,7 +246,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
       Set<String> instanceIdsToBeAdded =
           difference(latestSlotWebAppInstances.keySet(), latestSlotWebAppInstancesInDb.keySet());
 
-      if (isEmpty(instanceIdsToBeAdded)) {
+      if (hasNone(instanceIdsToBeAdded)) {
         return;
       }
 
@@ -305,7 +305,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   }
 
   private Map<String, Instance> getInstanceIdToInstanceInDbMap(Collection<Instance> currentInstancesInDb) {
-    if (isEmpty(currentInstancesInDb)) {
+    if (hasNone(currentInstancesInDb)) {
       return emptyMap();
     }
 
@@ -334,7 +334,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
         instanceIdsToBeDeleted.add(instance.getUuid());
       }
     });
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
     log.info("Instances to be deleted {}", getSetKeys(instanceIdsToBeDeleted));
@@ -348,7 +348,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
         instanceIdsToBeDeleted.add(instance.getUuid());
       }
     });
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }
@@ -365,7 +365,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   public Optional<DeploymentSummary> getDeploymentSummary(DeploymentSummary deploymentSummary,
       Map<String, Instance> latestSlotWebAppInstancesInDb, Collection<Instance> currentInstancesInDb,
       boolean rollback) {
-    if (deploymentSummary == null && isNotEmpty(latestSlotWebAppInstancesInDb)) {
+    if (deploymentSummary == null && hasSome(latestSlotWebAppInstancesInDb)) {
       Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
       return instanceWithExecutionInfoOptional.map(this::getDeploymentSummaryFromPrevious);
     } else {
@@ -443,7 +443,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     List<AzureAppDeploymentData> deploymentData = listWebAppInstancesResponse.getDeploymentData();
 
     boolean success = SUCCESS == azureTaskExecutionResponse.getCommandExecutionStatus();
-    boolean deleteTask = success && isEmpty(deploymentData);
+    boolean deleteTask = success && hasNone(deploymentData);
     String errorMessage = success ? null : azureTaskExecutionResponse.getErrorMessage();
     return Status.builder().success(success).errorMessage(errorMessage).retryable(!deleteTask).build();
   }

@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -136,10 +136,10 @@ public class DatadogState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> validateFields = new HashMap<>();
-    if (isNotEmpty(customMetrics)) {
+    if (hasSome(customMetrics)) {
       validateFields.putAll(validateDatadogCustomMetrics(customMetrics));
     }
-    if (isNotEmpty(metrics)) {
+    if (hasSome(metrics)) {
       List<String> metricList = Arrays.asList(metrics.split(","));
       metricList.forEach(metric -> {
         if (metric.startsWith("trace.")) {
@@ -279,9 +279,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
       if (matchedMetric.isPresent()) {
         return matchedMetric.get().getMlMetricType();
       }
-      if (cvConfig != null && isNotEmpty(cvConfig.getCustomMetrics())) {
+      if (cvConfig != null && hasSome(cvConfig.getCustomMetrics())) {
         for (Entry<String, Set<Metric>> customMetricEntry : cvConfig.getCustomMetrics().entrySet()) {
-          if (isNotEmpty(customMetricEntry.getValue())) {
+          if (hasSome(customMetricEntry.getValue())) {
             for (Metric metric : customMetricEntry.getValue()) {
               if (metricName.equals(metric.getDisplayName())) {
                 return metric.getMlMetricType();
@@ -389,7 +389,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
             // update the response mapper with the transaction/group name.
             Map<String, ResponseMapper> responseMapperMap = metricInfo.responseMapperMap();
             String txnName = "Transaction Group 1";
-            if (isNotEmpty(metric.getTxnName())) {
+            if (hasSome(metric.getTxnName())) {
               txnName = metric.getTxnName();
             }
             responseMapperMap.put("txnName", ResponseMapper.builder().fieldName("txnName").fieldValue(txnName).build());
@@ -422,13 +422,13 @@ public class DatadogState extends AbstractMetricAnalysisState {
       String metricUrl, Optional<DeploymentType> deploymentType, Metric metric) {
     if (deploymentType.isPresent()) {
       // workflow based deployment
-      if (isEmpty(metric.getTransformation())) {
+      if (hasNone(metric.getTransformation())) {
         metricUrl = metricUrl.replace("${transformUnits}", "");
       } else {
         metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation());
       }
     } else {
-      if (isEmpty(metric.getTransformation24x7())) {
+      if (hasNone(metric.getTransformation24x7())) {
         metricUrl = metricUrl.replace("${transformUnits}", "");
       } else {
         metricUrl = metricUrl.replace("${transformUnits}", metric.getTransformation24x7());
@@ -503,12 +503,12 @@ public class DatadogState extends AbstractMetricAnalysisState {
             metric.getTags().add(entry.getKey());
 
             // transformation24x7 needs to use application filter in transformation metric as well.
-            if (applicationFilter.isPresent() && isNotEmpty(metric.getTransformation24x7())) {
+            if (applicationFilter.isPresent() && hasSome(metric.getTransformation24x7())) {
               metric.setTransformation24x7(
                   metric.getTransformation24x7().replace("${applicationFilter}", applicationFilter.get()));
             }
             if (hostFilter.isPresent() && metric.getDatadogMetricType().equals("Docker")
-                && isNotEmpty(metric.getTransformation())) {
+                && hasSome(metric.getTransformation())) {
               metric.setTransformation(metric.getTransformation().replace("${hostFilter}", hostFilter.get()));
             }
 
@@ -560,7 +560,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
    * @return
    */
   public static Map<String, String> validateDatadogCustomMetrics(Map<String, Set<Metric>> customMetrics) {
-    if (isNotEmpty(customMetrics)) {
+    if (hasSome(customMetrics)) {
       Map<String, String> invalidFields = new HashMap<>();
       // group the metrics by txn.
       Map<String, Set<Metric>> txnMetricMap = new HashMap<>();

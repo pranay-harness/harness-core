@@ -1,7 +1,7 @@
 package software.wings.metrics;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readBlob;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
@@ -166,7 +166,7 @@ public class TimeSeriesDataRecord
   }
 
   public void decompress() {
-    if (isEmpty(valuesBytes)) {
+    if (hasNone(valuesBytes)) {
       return;
     }
 
@@ -180,7 +180,7 @@ public class TimeSeriesDataRecord
             values.put(txnName, metricName, value);
           }));
 
-      if (isNotEmpty(txnMetricValues.getDeeplinkMetadataMap())) {
+      if (hasSome(txnMetricValues.getDeeplinkMetadataMap())) {
         txnMetricValues.getDeeplinkMetadataMap().forEach(
             (txnName, deeplinks) -> deeplinks.getMetricDeeplinksMap().forEach((metricName, deepLink) -> {
               deeplinkMetadata.put(txnName, metricName, deepLink);
@@ -225,7 +225,7 @@ public class TimeSeriesDataRecord
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.createdAt, createdAt, true);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.lastUpdatedAt, lastUpdatedAt, true);
 
-    if (isNotEmpty(valuesBytes)) {
+    if (hasSome(valuesBytes)) {
       addFieldIfNotEmpty(recordBuilder, TimeSeriesMetricRecordKeys.valuesBytes, Blob.copyFrom(valuesBytes), true);
     }
 
@@ -258,12 +258,12 @@ public class TimeSeriesDataRecord
             .build();
 
     final String level = readString(entity, TimeSeriesMetricRecordKeys.level);
-    if (isNotEmpty(level)) {
+    if (hasSome(level)) {
       dataRecord.setLevel(ClusterLevel.valueOf(level));
     }
 
     final String stateType = readString(entity, TimeSeriesMetricRecordKeys.stateType);
-    if (isNotEmpty(stateType)) {
+    if (hasSome(stateType)) {
       dataRecord.setStateType(StateType.valueOf(stateType));
     }
 
@@ -286,7 +286,7 @@ public class TimeSeriesDataRecord
   }
 
   private void appendIfNecessary(StringBuilder keyBuilder, String value) {
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       keyBuilder.append(CONNECTOR).append(value);
     }
   }
@@ -316,7 +316,7 @@ public class TimeSeriesDataRecord
       HashBasedTable<String, String, Double> values = HashBasedTable.create();
       HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
       metric.getValues().forEach((metricName, value) -> values.put(metric.getName(), metricName, value));
-      if (isNotEmpty(metric.getDeeplinkMetadata())) {
+      if (hasSome(metric.getDeeplinkMetadata())) {
         metric.getDeeplinkMetadata().forEach(
             (metricName, deepLink) -> deeplinkMetadata.put(metric.getName(), metricName, deepLink));
       }

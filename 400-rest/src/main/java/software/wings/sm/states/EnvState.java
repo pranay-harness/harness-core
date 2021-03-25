@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -165,7 +165,7 @@ public class EnvState extends State implements WorkflowState {
           .build();
     }
 
-    if (isNotEmpty(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
+    if (hasSome(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
       ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, log);
       if (response != null) {
         return response;
@@ -257,7 +257,7 @@ public class EnvState extends State implements WorkflowState {
       DeploymentExecutionContext context, WorkflowStandardParams workflowStandardParams) {
     List<ArtifactVariable> artifactVariables;
     List<ServiceArtifactVariableElement> artifactVariableElements = context.getArtifactVariableElements();
-    if (isEmpty(artifactVariableElements)) {
+    if (hasNone(artifactVariableElements)) {
       artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
       return artifactVariables == null ? new ArrayList<>() : artifactVariables;
     }
@@ -340,7 +340,7 @@ public class EnvState extends State implements WorkflowState {
           artifactVariables.stream()
               .filter(artifactVariable -> artifactVariable.getName().equals(name))
               .collect(Collectors.toList());
-      if (isNotEmpty(overriddenArtifactVariables)) {
+      if (hasSome(overriddenArtifactVariables)) {
         artifactVariables.removeIf(artifactVariable -> artifactVariable.getName().equals(name));
       }
 
@@ -421,7 +421,7 @@ public class EnvState extends State implements WorkflowState {
   private void saveArtifactElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
     List<Artifact> artifacts =
         executionService.getArtifactsCollected(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return;
     }
 
@@ -444,7 +444,7 @@ public class EnvState extends State implements WorkflowState {
   private void saveArtifactVariableElements(ExecutionContext context, EnvStateExecutionData stateExecutionData) {
     List<StateExecutionInstance> allStateExecutionInstances =
         executionService.getStateExecutionInstances(context.getAppId(), stateExecutionData.getWorkflowExecutionId());
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       return;
     }
 

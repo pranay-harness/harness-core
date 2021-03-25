@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.datafetcher.AbstractStatsDataFetcher.MAX_RETRY;
 import static software.wings.graphql.datafetcher.instance.Constants.COMPLETE_AGGREGATION_INTERVAL;
@@ -90,10 +90,10 @@ public class InstanceTimeSeriesDataHelper {
           .append(" AS GRP_BY_TIME, ENTITY_ID FROM (SELECT ")
           .append(groupByFieldName)
           .append(" AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE ");
-      if (isNotEmpty(filters)) {
+      if (hasSome(filters)) {
         filters.forEach(filter -> {
           String sqlFilter = getSqlFilter(filter);
-          if (isNotEmpty(sqlFilter)) {
+          if (hasSome(sqlFilter)) {
             queryBuilder.append(sqlFilter);
             queryBuilder.append(" AND ");
           }
@@ -213,10 +213,10 @@ public class InstanceTimeSeriesDataHelper {
           .append(tableName)
           .append(" WHERE ");
 
-      if (isNotEmpty(filters)) {
+      if (hasSome(filters)) {
         filters.forEach(filter -> {
           String sqlFilter = getSqlFilter(filter);
-          if (isNotEmpty(sqlFilter)) {
+          if (hasSome(sqlFilter)) {
             queryBuilder.append(sqlFilter);
             queryBuilder.append(" AND ");
           }
@@ -287,7 +287,7 @@ public class InstanceTimeSeriesDataHelper {
     String from = null;
     String to = null;
 
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       for (QLInstanceFilter filter : filters) {
         QLTimeFilter createdAt = filter.getCreatedAt();
         if (createdAt == null) {
@@ -312,14 +312,14 @@ public class InstanceTimeSeriesDataHelper {
       }
     }
 
-    if (isEmpty(from) && isEmpty(to)) {
+    if (hasNone(from) && hasNone(to)) {
       log.info("No time filter set in Instance time series stats query. Setting default to 7 days");
       Instant now = Instant.now();
       from = now.minus(7, ChronoUnit.DAYS).toString();
       to = now.toString();
-    } else if (isEmpty(from)) {
+    } else if (hasNone(from)) {
       from = Instant.parse(to).minus(7, ChronoUnit.DAYS).toString();
-    } else if (isEmpty(to)) {
+    } else if (hasNone(to)) {
       to = Instant.parse(from).plus(7, ChronoUnit.DAYS).toString();
     }
     return new String[] {from, to};
@@ -329,7 +329,7 @@ public class InstanceTimeSeriesDataHelper {
     Instant from = null;
     Instant to = null;
 
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       for (QLInstanceFilter filter : filters) {
         QLTimeFilter createdAt = filter.getCreatedAt();
         if (createdAt == null) {
@@ -420,10 +420,10 @@ public class InstanceTimeSeriesDataHelper {
       queryBuilder.append(timeQuerySegment)
           .append(
               " AS GRP_BY_TIME FROM (SELECT REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE ");
-      if (isNotEmpty(filters)) {
+      if (hasSome(filters)) {
         filters.forEach(filter -> {
           String sqlFilter = getSqlFilter(filter);
-          if (isNotEmpty(sqlFilter)) {
+          if (hasSome(sqlFilter)) {
             queryBuilder.append(sqlFilter);
             queryBuilder.append(" AND ");
           }

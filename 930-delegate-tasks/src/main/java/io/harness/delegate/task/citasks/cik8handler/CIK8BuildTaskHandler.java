@@ -5,7 +5,7 @@ package io.harness.delegate.task.citasks.cik8handler;
  * git secrets.
  */
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.getSecretName;
@@ -214,13 +214,13 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       Map<String, ConnectorDetails> connectorDetailsMap =
           containerParams.getContainerSecrets().getConnectorDetailsMap();
 
-      if (isNotEmpty(secretVariableDetails)) {
+      if (hasSome(secretVariableDetails)) {
         Map<String, String> customVarSecretData =
             getAndUpdateCustomVariableSecretData(secretVariableDetails, containerParams, secretName);
         secretData.putAll(customVarSecretData);
       }
 
-      if (isNotEmpty(connectorDetailsMap)) {
+      if (hasSome(connectorDetailsMap)) {
         switch (containerParams.getContainerType()) {
           case LITE_ENGINE:
           case PLUGIN:
@@ -243,7 +243,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     Map<String, String> gitSecretData = getAndUpdateGitSecretData(gitConnectorDetails, containerParamsList, secretName);
     secretData.putAll(gitSecretData);
 
-    if (isNotEmpty(secretData)) {
+    if (hasSome(secretData)) {
       log.info("Creating k8 secret for pod name: {}", podParams.getName());
       kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
       log.info("k8 secret creation is complete for pod name: {}", podParams.getName());
@@ -253,7 +253,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   private Map<String, String> getAndUpdateConnectorSecretData(
       Map<String, ConnectorDetails> pluginConnectors, CIK8ContainerParams containerParams, String secretName) {
     Map<String, SecretParams> secretData = kubeCtlHandler.fetchConnectorsSecretKeyMap(pluginConnectors);
-    if (isNotEmpty(secretData)) {
+    if (hasSome(secretData)) {
       updateContainer(containerParams, secretName, secretData);
       return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     } else {
@@ -265,7 +265,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       List<SecretVariableDetails> secretVariableDetails, CIK8ContainerParams containerParams, String secretName) {
     Map<String, SecretParams> customVarSecretData =
         kubeCtlHandler.fetchCustomVariableSecretKeyMap(secretVariableDetails);
-    if (isNotEmpty(customVarSecretData)) {
+    if (hasSome(customVarSecretData)) {
       updateContainer(containerParams, secretName, customVarSecretData);
       return customVarSecretData.values().stream().collect(
           Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
@@ -289,7 +289,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   private Map<String, String> getAndUpdateGitSecretData(
       ConnectorDetails gitConnector, List<CIK8ContainerParams> containerParamsList, String secretName) {
     Map<String, SecretParams> gitSecretData = secretSpecBuilder.decryptGitSecretVariables(gitConnector);
-    if (isNotEmpty(gitSecretData)) {
+    if (hasSome(gitSecretData)) {
       for (CIK8ContainerParams containerParams : containerParamsList) {
         updateContainer(containerParams, secretName, gitSecretData);
       }

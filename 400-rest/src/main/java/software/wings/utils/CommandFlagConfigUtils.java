@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.HelmCommandFlagConstants.getHelmSubCommands;
@@ -26,7 +26,7 @@ public class CommandFlagConfigUtils {
         if (!helmSubCommands.contains(k)) {
           throw new InvalidRequestException(String.format("Invalid subCommand [%s] provided", k), USER);
         }
-        if (isEmpty(v)) {
+        if (hasNone(v)) {
           throw new InvalidRequestException("Command flag provided is null", USER);
         }
       });

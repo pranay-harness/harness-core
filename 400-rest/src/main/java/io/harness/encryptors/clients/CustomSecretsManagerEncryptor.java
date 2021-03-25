@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -51,7 +51,7 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
   @Override
   public boolean validateReference(
       String accountId, Set<EncryptedDataParams> params, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(
+    return hasSome(
         fetchSecretValue(accountId, EncryptedRecordData.builder().parameters(params).build(), encryptionConfig));
   }
 
@@ -87,7 +87,7 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     }
     ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
     String result = shellExecutionData.getSweepingOutputEnvVariables().get(OUTPUT_VARIABLE);
-    if (isEmpty(result) || result.equals("null")) {
+    if (hasNone(result) || result.equals("null")) {
       String errorMessage = "Empty or null value returned by custom shell script for the given parameters";
       throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR, errorMessage, USER);
     }

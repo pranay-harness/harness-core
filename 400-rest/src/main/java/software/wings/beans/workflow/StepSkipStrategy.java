@@ -1,11 +1,10 @@
 package software.wings.beans.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.BaseYaml;
 
@@ -46,11 +45,11 @@ public class StepSkipStrategy {
       return true;
     }
 
-    return isNotEmpty(stepIds) && stepIds.contains(stepId);
+    return hasSome(stepIds) && stepIds.contains(stepId);
   }
 
   public static void validateStepSkipStrategies(Collection<StepSkipStrategy> stepSkipStrategies) {
-    if (isEmpty(stepSkipStrategies)) {
+    if (hasNone(stepSkipStrategies)) {
       return;
     }
 
@@ -58,14 +57,14 @@ public class StepSkipStrategy {
     Set<String> stepIds = new HashSet<>();
     for (StepSkipStrategy stepSkipStrategy : stepSkipStrategies) {
       if (stepSkipStrategy.getScope() == StepSkipStrategy.Scope.ALL_STEPS) {
-        if (EmptyPredicate.isNotEmpty(stepIds)) {
+        if (hasSome(stepIds)) {
           throw new InvalidRequestException("Cannot skip all steps as a skip condition already exists");
         }
 
         hasAllStepsStrategy = true;
-      } else if (hasAllStepsStrategy && EmptyPredicate.isNotEmpty(stepSkipStrategy.getStepIds())) {
+      } else if (hasAllStepsStrategy && hasSome(stepSkipStrategy.getStepIds())) {
         throw new InvalidRequestException("Cannot add a skip condition as a skip all condition already exists");
-      } else if (EmptyPredicate.isNotEmpty(stepSkipStrategy.getStepIds())) {
+      } else if (hasSome(stepSkipStrategy.getStepIds())) {
         for (String stepId : stepSkipStrategy.getStepIds()) {
           if (stepIds.contains(stepId)) {
             throw new InvalidRequestException("Multiple skip conditions for the same step");

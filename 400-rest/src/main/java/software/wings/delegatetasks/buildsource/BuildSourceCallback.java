@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -135,7 +135,7 @@ public class BuildSourceCallback implements NotifyCallback {
         log.warn(
             "Collected {} artifacts in single collection artifactStreamId:[{}]", artifacts.size(), artifactStreamId);
       }
-      if (isNotEmpty(artifacts)) {
+      if (hasSome(artifacts)) {
         artifacts.stream().limit(MAX_LOGS).forEach(artifact -> {
           try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
                AutoLogContext ignore2 = new ArtifactStreamLogContext(
@@ -236,7 +236,7 @@ public class BuildSourceCallback implements NotifyCallback {
   }
 
   private List<Artifact> processBuilds(ArtifactStream artifactStream) {
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       return new ArrayList<>();
     }
     if (artifactStream == null) {

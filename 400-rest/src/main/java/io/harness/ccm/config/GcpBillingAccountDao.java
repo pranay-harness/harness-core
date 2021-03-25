@@ -1,6 +1,6 @@
 package io.harness.ccm.config;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -24,7 +24,7 @@ public class GcpBillingAccountDao {
   public List<GcpBillingAccount> list(String accountId, String organizationSettingId) {
     Query<GcpBillingAccount> query =
         persistence.createQuery(GcpBillingAccount.class).field(GcpBillingAccountKeys.accountId).equal(accountId);
-    if (isNotEmpty(organizationSettingId)) {
+    if (hasSome(organizationSettingId)) {
       query.field(GcpBillingAccountKeys.organizationSettingId).equal(organizationSettingId);
     }
     return query.asList();
@@ -35,13 +35,13 @@ public class GcpBillingAccountDao {
   }
 
   public boolean delete(String accountId, String organizationSettingId, String billingAccountId) {
-    checkArgument(isNotEmpty(organizationSettingId));
+    checkArgument(hasSome(organizationSettingId));
     Query<GcpBillingAccount> query = persistence.createQuery(GcpBillingAccount.class)
                                          .field(GcpBillingAccountKeys.accountId)
                                          .equal(accountId)
                                          .field(GcpBillingAccountKeys.organizationSettingId)
                                          .equal(organizationSettingId);
-    if (isNotEmpty(billingAccountId)) {
+    if (hasSome(billingAccountId)) {
       query.field(GcpBillingAccountKeys.uuid).equal(new ObjectId(billingAccountId));
     }
     return persistence.delete(query);

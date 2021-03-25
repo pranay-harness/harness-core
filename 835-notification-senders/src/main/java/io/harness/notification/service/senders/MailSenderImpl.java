@@ -1,6 +1,6 @@
 package io.harness.notification.service.senders;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.notification.constant.NotificationClientConstants.HARNESS_NAME;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -37,7 +37,7 @@ public class MailSenderImpl {
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
 
-      if (!isEmpty(smtpConfig.getPassword())) {
+      if (!hasNone(smtpConfig.getPassword())) {
         email.setAuthenticator(
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -49,7 +49,7 @@ public class DeleteServiceGuardAlertMigration implements Migration {
     List<Alert> dataCollectionAlertList = pageResponse.getResponse();
 
     Set<String> deletedCVConfigs = new HashSet<>();
-    if (isNotEmpty(dataCollectionAlertList)) {
+    if (hasSome(dataCollectionAlertList)) {
       log.info("Going through {} alerts to find which ones to delete", dataCollectionAlertList.size());
       dataCollectionAlertList.forEach(alert -> {
         CVConfiguration cvConfigurationInAlert = null;

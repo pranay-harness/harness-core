@@ -1,8 +1,8 @@
 package io.harness.migrations;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -97,7 +97,7 @@ public class HelmConnectorPathMigration implements Migration {
     try {
       if (applicationManifest.getHelmChartConfig() != null
           && applicationManifest.getHelmChartConfig().getConnectorId() != null) {
-        if (isNotEmpty(applicationManifest.getHelmChartConfig().getBasePath())) {
+        if (hasSome(applicationManifest.getHelmChartConfig().getBasePath())) {
           log.info(format("%s Found existing base path %s for Application Manifest Id: %s , skipping", DEBUG_LINE,
               applicationManifest.getHelmChartConfig().getBasePath(), applicationManifest.getUuid()));
           return;
@@ -106,7 +106,7 @@ public class HelmConnectorPathMigration implements Migration {
         String connectorId = applicationManifest.getHelmChartConfig().getConnectorId();
         String folderPath = "";
 
-        if (isEmpty(connectorId)) {
+        if (hasNone(connectorId)) {
           // Helm inline scenario
           return;
         }

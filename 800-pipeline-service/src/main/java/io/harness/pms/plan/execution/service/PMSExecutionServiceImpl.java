@@ -1,11 +1,12 @@
 package io.harness.pms.plan.execution.service;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -53,27 +54,27 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, ExecutionStatus status, boolean myDeployments) {
     Criteria criteria = new Criteria();
-    if (EmptyPredicate.isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(accountId);
     }
-    if (EmptyPredicate.isNotEmpty(orgId)) {
+    if (hasSome(orgId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.orgIdentifier).is(orgId);
     }
-    if (EmptyPredicate.isNotEmpty(projectId)) {
+    if (hasSome(projectId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.projectIdentifier).is(projectId);
     }
-    if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
+    if (hasSome(pipelineIdentifier)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
     if (status != null) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).is(status);
     }
 
-    if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
+    if (hasSome(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
-    } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
+    } else if (hasSome(filterIdentifier) && filterProperties == null) {
       populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
-    } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
+    } else if (hasNone(filterIdentifier) && filterProperties != null) {
       populatePipelineFilter(criteria, filterProperties);
     }
 
@@ -85,12 +86,12 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
                   .build());
     }
 
-    if (EmptyPredicate.isNotEmpty(moduleName)) {
+    if (hasSome(moduleName)) {
       criteria.orOperator(
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria =
           new Criteria().orOperator(where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier)
                                         .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
@@ -117,10 +118,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   private void populatePipelineFilter(Criteria criteria, @NotNull PipelineExecutionFilterPropertiesDTO piplineFilter) {
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineName())) {
+    if (hasSome(piplineFilter.getPipelineName())) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.name).is(piplineFilter.getPipelineName());
     }
-    if (EmptyPredicate.isNotEmpty(piplineFilter.getStatus())) {
+    if (hasSome(piplineFilter.getStatus())) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
     }
     if (piplineFilter.getModuleProperties() != null) {
@@ -159,7 +160,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   @Override
   public OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId) {
-    if (EmptyPredicate.isEmpty(stageNodeId)) {
+    if (hasNone(stageNodeId)) {
       return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
     }
     return graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(stageNodeId, planExecutionId);

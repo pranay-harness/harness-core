@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -43,28 +43,28 @@ public class ArtifactStreamHelper {
   }
 
   private void resolveRuntimeValuesForNpmNuGet(NexusArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (isNotEmpty(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
+    if (hasSome(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
       artifactStream.setJobname((String) evaluator.evaluate(artifactStream.getJobname(), runtimeValues));
     }
-    if (isNotEmpty(artifactStream.getPackageName()) && artifactStream.getPackageName().startsWith("${")) {
+    if (hasSome(artifactStream.getPackageName()) && artifactStream.getPackageName().startsWith("${")) {
       artifactStream.setPackageName((String) evaluator.evaluate(artifactStream.getPackageName(), runtimeValues));
     }
   }
 
   private void resolveRuntimeValuesForMaven(NexusArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (isNotEmpty(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
+    if (hasSome(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
       artifactStream.setJobname((String) evaluator.evaluate(artifactStream.getJobname(), runtimeValues));
     }
-    if (isNotEmpty(artifactStream.getGroupId()) && artifactStream.getGroupId().startsWith("${")) {
+    if (hasSome(artifactStream.getGroupId()) && artifactStream.getGroupId().startsWith("${")) {
       artifactStream.setGroupId((String) evaluator.evaluate(artifactStream.getGroupId(), runtimeValues));
     }
-    if (isNotEmpty(artifactStream.getExtension()) && artifactStream.getExtension().startsWith("${")) {
+    if (hasSome(artifactStream.getExtension()) && artifactStream.getExtension().startsWith("${")) {
       artifactStream.setExtension((String) evaluator.evaluate(artifactStream.getExtension(), runtimeValues));
     }
-    if (isNotEmpty(artifactStream.getClassifier()) && artifactStream.getClassifier().startsWith("${")) {
+    if (hasSome(artifactStream.getClassifier()) && artifactStream.getClassifier().startsWith("${")) {
       artifactStream.setClassifier((String) evaluator.evaluate(artifactStream.getClassifier(), runtimeValues));
     }
-    if (isNotEmpty(artifactStream.getArtifactPaths())) {
+    if (hasSome(artifactStream.getArtifactPaths())) {
       List<String> artifactPaths = artifactStream.getArtifactPaths();
       List<String> resolvedPaths = new ArrayList<>();
       for (String artifactPath : artifactPaths) {

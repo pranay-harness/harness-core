@@ -1,10 +1,10 @@
 package io.harness.pms.sdk.core.adviser.rollback;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -56,7 +56,7 @@ public class RollbackCustomAdviser implements Adviser {
     }
 
     NextStepAdvise.Builder builder = NextStepAdvise.newBuilder();
-    if (EmptyPredicate.isNotEmpty(nextNodeId)) {
+    if (hasSome(nextNodeId)) {
       builder.setNextNodeId(nextNodeId);
     }
     return AdviserResponse.newBuilder().setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
@@ -70,7 +70,7 @@ public class RollbackCustomAdviser implements Adviser {
     }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+    if (failureInfo != null && !hasNone(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(
               rollbackOutcome.getRollbackInfo().getFailureTypes(), failureInfo.getFailureTypesList());

@@ -4,8 +4,8 @@
 
 package software.wings.common;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
@@ -75,25 +75,25 @@ public interface PartitionProcessor {
    * @return the list
    */
   default List<PartitionElement> partitions(Logger logger, String... breakdownsParams) {
-    if (isNotEmpty(breakdownsParams)) {
+    if (hasSome(breakdownsParams)) {
       setBreakdowns(asList(breakdownsParams));
     }
 
     List<ContextElement> elements = elements();
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return null;
     }
 
     List<String> breakdowns = getBreakdowns();
     List<String> percentages = getPercentages();
     List<String> counts = getCounts();
-    if (isEmpty(breakdowns) && isEmpty(percentages) && isEmpty(counts)) {
+    if (hasNone(breakdowns) && hasNone(percentages) && hasNone(counts)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "breakdowns, percentages, counts");
     }
     List<Integer> finalCounts = null;
     try {
       finalCounts = computeCounts(elements.size());
-      if (isEmpty(finalCounts)) {
+      if (hasNone(finalCounts)) {
         throw new InvalidRequestException("Incorrect partition breakdown expressions- breakdowns:"
             + breakdowns.toString() + "percentages:" + percentages.toString() + ", counts:" + counts.toString());
       }
@@ -137,7 +137,7 @@ public interface PartitionProcessor {
     List<Integer> finalCounts = new ArrayList<>();
 
     // highest priority to the breakdown
-    if (isNotEmpty(breakdowns)) {
+    if (hasSome(breakdowns)) {
       for (String val : breakdowns) {
         finalCounts.add(pctCountValue(total, val));
       }
@@ -145,14 +145,14 @@ public interface PartitionProcessor {
     }
 
     // second priority to the percentages
-    if (isNotEmpty(percentages)) {
+    if (hasSome(percentages)) {
       for (String val : percentages) {
         finalCounts.add(pctCountValue(total, val));
       }
       return finalCounts;
     }
     // second priority to the percentages
-    if (isNotEmpty(counts)) {
+    if (hasSome(counts)) {
       for (String val : counts) {
         finalCounts.add(pctCountValue(total, val));
       }

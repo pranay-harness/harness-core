@@ -1,6 +1,7 @@
 package io.harness.yaml.utils;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
 
@@ -13,7 +14,7 @@ import lombok.experimental.UtilityClass;
 public class NGVariablesUtils {
   public Map<String, Object> getMapOfVariables(List<NGVariable> variables, long expressionFunctorToken) {
     Map<String, Object> mapOfVariables = new HashMap<>();
-    if (EmptyPredicate.isEmpty(variables)) {
+    if (hasNone(variables)) {
       return mapOfVariables;
     }
     for (NGVariable variable : variables) {
@@ -33,7 +34,7 @@ public class NGVariablesUtils {
 
   public Map<String, Object> applyVariableOverrides(
       Map<String, Object> originalVariablesMap, List<NGVariable> overrideVariables) {
-    if (EmptyPredicate.isEmpty(overrideVariables)) {
+    if (hasNone(overrideVariables)) {
       return originalVariablesMap;
     }
     overrideVariables.forEach(

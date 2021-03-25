@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.executions.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import static java.lang.String.format;
@@ -101,7 +101,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     if (pipelineExecutionSummaryFilter == null) {
       return criteria;
     }
-    if (!isEmpty(pipelineExecutionSummaryFilter.getExecutionStatuses())) {
+    if (!hasNone(pipelineExecutionSummaryFilter.getExecutionStatuses())) {
       criteria.and(PipelineExecutionSummaryKeys.executionStatus)
           .in(pipelineExecutionSummaryFilter.getExecutionStatuses());
     }
@@ -115,18 +115,18 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     if (!isNull(pipelineExecutionSummaryFilter.getEndTime())) {
       criteria.and(PipelineExecutionSummaryKeys.endedAt).lte(pipelineExecutionSummaryFilter.getEndTime());
     }
-    if (isNotEmpty(pipelineExecutionSummaryFilter.getEnvIdentifiers())) {
+    if (hasSome(pipelineExecutionSummaryFilter.getEnvIdentifiers())) {
       criteria.and(PipelineExecutionSummaryKeys.envIdentifiers).in(pipelineExecutionSummaryFilter.getEnvIdentifiers());
     }
-    if (isNotEmpty(pipelineExecutionSummaryFilter.getPipelineIdentifiers())) {
+    if (hasSome(pipelineExecutionSummaryFilter.getPipelineIdentifiers())) {
       criteria.and(PipelineExecutionSummaryKeys.pipelineIdentifier)
           .in(pipelineExecutionSummaryFilter.getPipelineIdentifiers());
     }
-    if (isNotEmpty(pipelineExecutionSummaryFilter.getServiceIdentifiers())) {
+    if (hasSome(pipelineExecutionSummaryFilter.getServiceIdentifiers())) {
       criteria.and(PipelineExecutionSummaryKeys.serviceIdentifiers)
           .in(pipelineExecutionSummaryFilter.getServiceIdentifiers());
     }
-    if (isNotEmpty(pipelineExecutionSummaryFilter.getSearchTerm())) {
+    if (hasSome(pipelineExecutionSummaryFilter.getSearchTerm())) {
       criteria.orOperator(Criteria.where(PipelineExecutionSummaryKeys.pipelineName)
                               .regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"),
           Criteria.where(PipelineExecutionSummaryKeys.tags).regex(pipelineExecutionSummaryFilter.getSearchTerm(), "i"));
@@ -167,7 +167,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   public PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageIdentifier) {
     PipelineExecutionDetailBuilder pipelineExecutionDetailBuilder = PipelineExecutionDetail.builder();
 
-    if (isNotEmpty(stageIdentifier)) {
+    if (hasSome(stageIdentifier)) {
       OrchestrationGraphDTO orchestrationGraph =
           graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
       @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);

@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
@@ -179,7 +179,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public List<String> extractSelectors(DelegateTask task) {
     Set<String> selectors = new HashSet<>();
 
-    if (isNotEmpty(task.getExecutionCapabilities())) {
+    if (hasSome(task.getExecutionCapabilities())) {
       Set<String> selectorsCapability = task.getExecutionCapabilities()
                                             .stream()
                                             .filter(c -> c instanceof SelectorCapability)
@@ -188,7 +188,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       selectors.addAll(selectorsCapability);
     }
 
-    if (isNotEmpty(task.getTags())) {
+    if (hasSome(task.getTags())) {
       selectors.addAll(task.getTags());
     }
 
@@ -235,9 +235,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     List<DelegateProfileScopingRule> delegateProfileScopingRules = delegateProfile.getScopingRules();
 
-    if (isEmpty(delegateProfileScopingRules)) {
+    if (hasNone(delegateProfileScopingRules)) {
       return true;
-    } else if (isEmpty(taskSetupAbstractions)) {
+    } else if (hasNone(taskSetupAbstractions)) {
       log.warn(
           "No setup abstractions have been passed in from delegate task, while there are some profile scoping rules. Considering this delegate profile NOT matched");
       return false;
@@ -320,7 +320,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       String envId, String infraMappingId, TaskGroup taskGroup) {
     List<DelegateScope> includeScopes = new ArrayList<>();
 
-    if (isNotEmpty(delegate.getIncludeScopes())) {
+    if (hasSome(delegate.getIncludeScopes())) {
       includeScopes = delegate.getIncludeScopes().stream().filter(Objects::nonNull).collect(toList());
     }
 
@@ -338,7 +338,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     List<DelegateScope> excludeScopes = new ArrayList<>();
-    if (isNotEmpty(delegate.getExcludeScopes())) {
+    if (hasSome(delegate.getExcludeScopes())) {
       excludeScopes = delegate.getExcludeScopes().stream().filter(Objects::nonNull).collect(toList());
     }
 
@@ -355,7 +355,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   private boolean canAssignSelectors(
       BatchDelegateSelectionLog batch, Delegate delegate, List<ExecutionCapability> executionCapabilities) {
-    if (isEmpty(executionCapabilities)) {
+    if (hasNone(executionCapabilities)) {
       return true;
     }
 
@@ -364,13 +364,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                                                            .map(c -> (SelectorCapability) c)
                                                            .collect(Collectors.toList());
 
-    if (isEmpty(selectorsCapabilityList)) {
+    if (hasNone(selectorsCapabilityList)) {
       return true;
     }
 
     Set<String> delegateSelectors = trimmedLowercaseSet(delegateService.retrieveDelegateSelectors(delegate));
 
-    if (isEmpty(delegateSelectors)) {
+    if (hasNone(delegateSelectors)) {
       delegateSelectionLogsService.logMissingAllSelectors(batch, delegate.getAccountId(), delegate.getUuid());
       return false;
     }
@@ -400,7 +400,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
     boolean match = true;
 
-    if (isNotEmpty(scope.getEnvironmentTypes()) && !shouldFollowWildcardScope(appId, accountId)
+    if (hasSome(scope.getEnvironmentTypes()) && !shouldFollowWildcardScope(appId, accountId)
         && !shouldFollowWildcardScope(envId, accountId)) {
       if (isNotBlank(appId) && isNotBlank(envId)) {
         Environment environment = environmentService.get(appId, envId, false);
@@ -412,28 +412,28 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         match = false;
       }
     }
-    if (match && isNotEmpty(scope.getTaskTypes())) {
+    if (match && hasSome(scope.getTaskTypes())) {
       match = scope.getTaskTypes().contains(taskGroup);
     }
-    if (match && isNotEmpty(scope.getApplications())) {
+    if (match && hasSome(scope.getApplications())) {
       match =
           shouldFollowWildcardScope(appId, accountId) || (isNotBlank(appId) && scope.getApplications().contains(appId));
     }
-    if (match && isNotEmpty(scope.getEnvironments())) {
+    if (match && hasSome(scope.getEnvironments())) {
       match =
           shouldFollowWildcardScope(envId, accountId) || (isNotBlank(envId) && scope.getEnvironments().contains(envId));
     }
 
-    if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
+    if (hasSome(scope.getInfrastructureDefinitions()) || hasSome(scope.getServices())) {
       if (!shouldFollowWildcardScope(appId, accountId) && !shouldFollowWildcardScope(infraMappingId, accountId)) {
         InfrastructureMapping infrastructureMapping =
             isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
         if (infrastructureMapping != null) {
-          if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
+          if (match && hasSome(scope.getInfrastructureDefinitions())) {
             match =
                 scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
           }
-          if (match && isNotEmpty(scope.getServices())) {
+          if (match && hasSome(scope.getServices())) {
             match = scope.getServices().contains(infrastructureMapping.getServiceId());
           }
         } else {
@@ -441,7 +441,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         }
       }
     } else {
-      if (match && isNotEmpty(scope.getServiceInfrastructures())) {
+      if (match && hasSome(scope.getServiceInfrastructures())) {
         match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
       }
     }
@@ -502,7 +502,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
           if (shouldValidateCriteria(result, currentTimeMillis())
               || (!retrieveActiveDelegates(task.getAccountId(), null).contains(delegateId)
-                  && isEmpty(connectedWhitelistedDelegates(task)))) {
+                  && hasNone(connectedWhitelistedDelegates(task)))) {
             return true;
           }
         } else {
@@ -530,7 +530,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       delegateSelectionLogsService.save(batch);
 
       List<String> criteria = fetchCriteria(task);
-      if (isEmpty(criteria)) {
+      if (hasNone(criteria)) {
         return connectedEligibleDelegates;
       }
 
@@ -555,7 +555,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   protected List<String> fetchCriteria(DelegateTask task) {
-    if (isEmpty(task.getExecutionCapabilities())) {
+    if (hasNone(task.getExecutionCapabilities())) {
       return emptyList();
     }
 
@@ -655,7 +655,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     List<DelegateSelectionLogParams> delegateSelectionLogs =
         delegateSelectionLogsService.fetchTaskSelectionLogs(delegateTask.getAccountId(), delegateTask.getUuid());
 
-    if (reason != EXPIRED && isNotEmpty(delegateSelectionLogs)) {
+    if (reason != EXPIRED && hasSome(delegateSelectionLogs)) {
       return delegateSelectionLogs.stream()
           .map(selectionLog
               -> String.format(String.format(ERROR_MESSAGE, selectionLog.getDelegateId(),
@@ -698,7 +698,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             msg.append('\n');
           }
         }
-        String taskTagsMsg = isNotEmpty(delegateTask.getTags()) ? " Task tags: " + delegateTask.getTags() : "";
+        String taskTagsMsg = hasSome(delegateTask.getTags()) ? " Task tags: " + delegateTask.getTags() : "";
         errorMessage =
             "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
       } else if (delegateTask.getDelegateId() != null) {
@@ -788,10 +788,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
       Set<String> disconnectedDelegateIds = delegatesMap.get(DelegateActivity.DISCONNECTED)
                                                 .stream()
-                                                .filter(a -> isEmpty(a.getDelegateGroupName()))
+                                                .filter(a -> hasNone(a.getDelegateGroupName()))
                                                 .map(Delegate::getUuid)
                                                 .collect(Collectors.toSet());
-      if (isNotEmpty(disconnectedDelegateIds)) {
+      if (hasSome(disconnectedDelegateIds)) {
         delegateSelectionLogsService.logDisconnectedDelegate(batch, accountId, disconnectedDelegateIds);
       }
     }
@@ -800,7 +800,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
       disconnectedScalingGroup = delegatesMap.get(DelegateActivity.DISCONNECTED)
                                      .stream()
-                                     .filter(a -> isNotEmpty(a.getDelegateGroupName()))
+                                     .filter(a -> hasSome(a.getDelegateGroupName()))
                                      .map(Delegate::getDelegateGroupName)
                                      .collect(Collectors.toSet());
     }
@@ -809,7 +809,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.ACTIVE) != null) {
       connectedScalingGroup = delegatesMap.get(DelegateActivity.ACTIVE)
                                   .stream()
-                                  .filter(a -> isNotEmpty(a.getDelegateGroupName()))
+                                  .filter(a -> hasSome(a.getDelegateGroupName()))
                                   .map(Delegate::getDelegateGroupName)
                                   .collect(Collectors.toSet());
     }
@@ -838,7 +838,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         this.connectedWhitelistedDelegates(retryDelegate.getDelegateTask())
             .stream()
             .filter(item -> !retryDelegate.getDelegateId().equals(item))
-            .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
+            .filter(item -> hasNone(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
             .collect(toList());
 
     if (!remainingConnectedDelegates.isEmpty()) {

@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -193,7 +193,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(retryObserverSubject.fireProcess(any(), any())).thenReturn(retryDelegate);
 
     Thread thread = new Thread(() -> {
-      await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateSyncService.syncTaskWaitMap));
+      await().atMost(5L, TimeUnit.SECONDS).until(() -> hasSome(delegateSyncService.syncTaskWaitMap));
       DelegateTask task =
           persistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
 

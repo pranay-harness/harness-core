@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
@@ -46,7 +46,7 @@ class LateBindingEnvironmentVariables implements LateBindingValue {
 
     executionContext.prepareServiceVariables(ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_META);
 
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       serviceVariables.forEach(serviceVariable -> {
         executionContext.prepareVariables(ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE, serviceVariable,
             variables, adoptDelegateDecryption, expressionFunctorToken);

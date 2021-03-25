@@ -1,6 +1,7 @@
 package io.harness.walktree.visitor.mergeinputset;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.walktree.beans.LevelNode;
@@ -158,7 +159,7 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
           VisitorErrorResponseWrapper errorResponseWrapper = MergeInputSetHelperUtils.isLeafInputSetFieldValid(
               currentElementField, inputSetElement.getInputSetIdentifier(), inputSetFieldValue,
               currentElementFieldValue, visitorFieldRegistry);
-          if (EmptyPredicate.isNotEmpty(errorResponseWrapper.getErrors())) {
+          if (hasSome(errorResponseWrapper.getErrors())) {
             String uuid = VisitorResponseUtils.addUUIDValueToGivenField(
                 this.getContextMap(), dummyElement, visitorFieldRegistry, currentElementField, useFQN);
             VisitorResponseUtils.addToVisitorResponse(

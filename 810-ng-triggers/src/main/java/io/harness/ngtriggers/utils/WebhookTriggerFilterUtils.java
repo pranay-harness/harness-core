@@ -2,7 +2,7 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.beans.WebhookEvent.Type.BRANCH;
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
@@ -63,7 +63,7 @@ public class WebhookTriggerFilterUtils {
       WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
     List<WebhookAction> actions = webhookTriggerConfigSpec.getActions();
     // No filter means any actions is valid for trigger invocation
-    if (isEmpty(actions)) {
+    if (hasNone(actions)) {
       return true;
     }
 
@@ -96,7 +96,7 @@ public class WebhookTriggerFilterUtils {
 
   public boolean checkIfPayloadConditionsMatch(
       WebhookPayloadData webhookPayloadData, List<WebhookCondition> payloadConditions) {
-    if (isEmpty(payloadConditions)) {
+    if (hasNone(payloadConditions)) {
       return true;
     }
 
@@ -165,7 +165,7 @@ public class WebhookTriggerFilterUtils {
   }
 
   public boolean checkIfCustomPayloadConditionsMatch(String payload, WebhookTriggerSpec triggerSpec) {
-    if (triggerSpec == null || isEmpty(triggerSpec.getPayloadConditions())) {
+    if (triggerSpec == null || hasNone(triggerSpec.getPayloadConditions())) {
       return true;
     }
 
@@ -189,7 +189,7 @@ public class WebhookTriggerFilterUtils {
   }
 
   public boolean checkIfCustomHeaderConditionsMatch(List<HeaderConfig> headers, WebhookTriggerSpec triggerSpec) {
-    if (triggerSpec == null || isEmpty(triggerSpec.getHeaderConditions())) {
+    if (triggerSpec == null || hasNone(triggerSpec.getHeaderConditions())) {
       return true;
     }
 

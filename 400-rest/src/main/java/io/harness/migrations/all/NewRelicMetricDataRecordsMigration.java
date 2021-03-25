@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -41,7 +41,7 @@ public class NewRelicMetricDataRecordsMigration implements Migration {
 
       String uuId = (String) next.get("_id");
       String appId = (String) next.get("applicationId");
-      if (isEmpty(appId)) {
+      if (hasNone(appId)) {
         continue;
       }
       bulkWriteOperation

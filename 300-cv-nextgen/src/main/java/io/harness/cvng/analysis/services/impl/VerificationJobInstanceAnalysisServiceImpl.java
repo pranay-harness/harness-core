@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -194,10 +194,10 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
     Map<String, HostSummaryInfo> controlMap = new HashMap<>();
     Map<String, HostSummaryInfo> testMap = new HashMap<>();
 
-    if (isNotEmpty(deploymentTimeSeriesAnalysisList)) {
+    if (hasSome(deploymentTimeSeriesAnalysisList)) {
       populatePrimaryAndCanaryHostInfoForTimeseries(deploymentTimeSeriesAnalysisList, controlMap, testMap);
     }
-    if (isNotEmpty(deploymentLogAnalysisList)) {
+    if (hasSome(deploymentLogAnalysisList)) {
       populatePrimaryAndCanaryHostInfoForLogs(deploymentLogAnalysisList, controlMap, testMap, oldHosts);
     }
 

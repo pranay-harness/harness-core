@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -177,7 +177,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @VisibleForTesting
   public void applyProvisionerVariables(Map<String, Object> resolvedBlueprints) {
-    if (isNotEmpty(resolvedBlueprints)) {
+    if (hasSome(resolvedBlueprints)) {
       for (Map.Entry<String, Object> entry : resolvedBlueprints.entrySet()) {
         switch (entry.getKey()) {
           case "autoScalingGroupName":
@@ -209,10 +209,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         }
       }
     }
-    if (isEmpty(getRegion())) {
+    if (hasNone(getRegion())) {
       throw new InvalidRequestException("Region is required");
     }
-    if (isProvisionInstances() && isEmpty(getAutoScalingGroupName())) {
+    if (isProvisionInstances() && hasNone(getAutoScalingGroupName())) {
       throw new InvalidRequestException("Auto scaling group is required");
     }
   }
@@ -354,17 +354,17 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Override
   public String getDefaultName() {
     List<String> parts = new ArrayList();
-    if (isNotEmpty(customName)) {
+    if (hasSome(customName)) {
       parts.add(customName);
     }
 
-    if (isNotEmpty(getComputeProviderName())) {
+    if (hasSome(getComputeProviderName())) {
       parts.add(getComputeProviderName().toLowerCase());
     }
 
     parts.add("AWS");
 
-    if (isNotEmpty(getRegion())) {
+    if (hasSome(getRegion())) {
       parts.add(getRegion());
     }
 

@@ -1,7 +1,7 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -103,7 +103,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
                                            .build();
 
     // check for validity of name
-    if (isEmpty(dto.getName()) || containsIllegalCharacters(dto.getName())) {
+    if (hasNone(dto.getName()) || containsIllegalCharacters(dto.getName())) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           "Encrypted file name/identifier should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
     }

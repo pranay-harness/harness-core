@@ -1,6 +1,7 @@
 package software.wings.beans;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -63,7 +64,7 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
 
   public Map<String, String> headersMap() {
     Map<String, String> headerMap = new HashMap<>();
-    if (!EmptyPredicate.isEmpty(authToken)) {
+    if (!hasNone(authToken)) {
       headerMap.put("Authorization", "token " + new String(authToken));
     } else {
       headerMap.put("Authorization", "token ${authToken}");

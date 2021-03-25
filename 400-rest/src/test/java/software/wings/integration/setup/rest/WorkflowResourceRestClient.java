@@ -1,6 +1,6 @@
 package software.wings.integration.setup.rest;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
@@ -102,7 +102,7 @@ public class WorkflowResourceRestClient {
     RestResponse<PageResponse<Workflow>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
             .get(new GenericType<RestResponse<PageResponse<Workflow>>>() {});
-    return isEmpty(response.getResource()) ? null : response.getResource().get(0);
+    return hasNone(response.getResource()) ? null : response.getResource().get(0);
   }
 
   public Workflow getWorkflow(Client client, String userToken, String appId, String workflowId) {

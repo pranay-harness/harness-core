@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.validation.Validator.ensureType;
 
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
@@ -85,14 +85,14 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
 
   @Override
   public String getReleaseName() {
-    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
+    return hasNone(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
 
   @SchemaIgnore
   @Override
   public String getDefaultName() {
     return Utils.normalize(
-        format("%s (GCP/Kubernetes::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+        format("%s (GCP/Kubernetes::%s) %s", hasNone(this.getProvisionerId()) ? this.getClusterName() : "",
             Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
             Optional.ofNullable(this.getNamespace()).orElse("default")));
   }

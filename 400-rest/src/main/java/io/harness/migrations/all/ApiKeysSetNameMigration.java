@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -41,7 +41,7 @@ public class ApiKeysSetNameMigration implements Migration {
       String uuId = (String) next.get("_id");
       String name = (String) next.get("name");
       String accountId = (String) next.get("accountId");
-      if (isNotEmpty(name)) {
+      if (hasSome(name)) {
         continue;
       }
 

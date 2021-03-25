@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static javax.ws.rs.client.Entity.entity;
@@ -156,7 +156,7 @@ public class AccountExportImportIntegrationTest extends IntegrationTestBase {
   private byte[] exportAccountData(String accountId) {
     WebTarget target = client.target(API_BASE + "/account/export?accountId=" + accountId);
     byte[] responseZip = getRequestBuilderWithAuthHeader(target).get(new GenericType<byte[]>() {});
-    assertThat(isNotEmpty(responseZip)).isTrue();
+    assertThat(hasSome(responseZip)).isTrue();
 
     return responseZip;
   }
@@ -165,7 +165,7 @@ public class AccountExportImportIntegrationTest extends IntegrationTestBase {
     WebTarget target = client.target(API_BASE + "/account/export?accountId=" + accountId
         + "&mode=" + ExportMode.SPECIFIC + "&entityTypes=" + entityType);
     byte[] responseZip = getRequestBuilderWithAuthHeader(target).get(new GenericType<byte[]>() {});
-    assertThat(isNotEmpty(responseZip)).isTrue();
+    assertThat(hasSome(responseZip)).isTrue();
 
     return responseZip;
   }

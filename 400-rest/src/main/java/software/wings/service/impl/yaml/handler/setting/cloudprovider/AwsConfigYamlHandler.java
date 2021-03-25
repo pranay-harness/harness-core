@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -21,7 +21,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    String secretValueYamlRef = isNotEmpty(awsConfig.getEncryptedSecretKey())
+    String secretValueYamlRef = hasSome(awsConfig.getEncryptedSecretKey())
         ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey())
         : null;
     boolean useEncryptedAccessKey = awsConfig.isUseEncryptedAccessKey();
@@ -58,7 +58,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    if (isNotEmpty(yaml.getAccessKey()) && isNotEmpty(yaml.getAccessKeySecretId())) {
+    if (hasSome(yaml.getAccessKey()) && hasSome(yaml.getAccessKeySecretId())) {
       throw new InvalidRequestException("Cannot set both value and secret reference for accessKey field", USER);
     }
 

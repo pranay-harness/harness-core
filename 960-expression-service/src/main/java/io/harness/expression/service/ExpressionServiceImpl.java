@@ -1,6 +1,6 @@
 package io.harness.expression.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -31,7 +31,7 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
     ExpressionResponse.Builder responseBuilder = ExpressionResponse.newBuilder();
     List<ExpressionQuery> expressionQueries = request.getQueriesList();
 
-    if (isEmpty(request.getQueriesList())) {
+    if (hasNone(request.getQueriesList())) {
       responseBuilder.addValues(ExpressionValue.newBuilder()
                                     .setStatusCode(ExpressionValue.EvaluationStatus.ERROR)
                                     .setErrorMessage("Expression queries should not be empty")

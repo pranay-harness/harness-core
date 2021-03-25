@@ -1,7 +1,7 @@
 package software.wings.beans.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
@@ -220,7 +220,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   }
 
   private boolean hasMember(String userId) {
-    return isNotEmpty(memberIds) && memberIds.contains(userId);
+    return hasSome(memberIds) && memberIds.contains(userId);
   }
 
   public boolean hasMember(User user) {

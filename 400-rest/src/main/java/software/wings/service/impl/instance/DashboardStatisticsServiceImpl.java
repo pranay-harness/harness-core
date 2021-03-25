@@ -7,8 +7,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
@@ -330,7 +330,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       final List<ResponseMessage> responseMessageList =
           ExceptionLogger.getResponseMessageList(noResultFoundException, ReportTarget.LOG_SYSTEM);
 
-      if (isNotEmpty(responseMessageList)) {
+      if (hasSome(responseMessageList)) {
         ResponseMessage responseMessage = responseMessageList.get(0);
         if (responseMessage.getCode() != ErrorCode.NO_APPS_ASSIGNED) {
           log.error("Unable to get instance stats", exception);
@@ -370,7 +370,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
     }
 
-    if (isNotEmpty(instanceList)) {
+    if (hasSome(instanceList)) {
       HashSet<Instance> instanceSet = new HashSet<>(instanceList);
       log.info("Instances reported {}, set count {}", counter, instanceSet.size());
     } else {
@@ -549,7 +549,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<InstanceStatsByEnvironment> constructInstanceStatsForService(
       String serviceId, List<ServiceAggregationInfo> serviceAggregationInfoList) {
-    if (isEmpty(serviceAggregationInfoList)) {
+    if (hasNone(serviceAggregationInfoList)) {
       return Lists.newArrayList();
     }
 
@@ -686,7 +686,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         InstanceStatsByEnvironment.builder()
             .environmentSummary(builder.build())
             .instanceStatsByArtifactList(currentArtifactList);
-    if (isNotEmpty(syncStatusList)) {
+    if (hasSome(syncStatusList)) {
       boolean hasSyncIssues = hasSyncIssues(syncStatusList);
       instanceStatsByEnvironmentBuilder.infraMappingSyncStatusList(syncStatusList);
       instanceStatsByEnvironmentBuilder.hasSyncIssues(hasSyncIssues);
@@ -972,7 +972,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<WorkflowExecution> workflowExecutionList =
         workflowExecutionService.listExecutions(pageRequest, false).getResponse();
 
-    if (isEmpty(workflowExecutionList)) {
+    if (hasNone(workflowExecutionList)) {
       return deploymentExecutionHistoryList;
     }
 
@@ -1001,7 +1001,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       Integer instancesCount = null;
       List<ElementExecutionSummary> serviceExecutionSummaries = workflowExecution.getServiceExecutionSummaries();
 
-      if (isNotEmpty(serviceExecutionSummaries)) {
+      if (hasSome(serviceExecutionSummaries)) {
         // we always have one execution summary per workflow
         ElementExecutionSummary elementExecutionSummary = serviceExecutionSummaries.get(0);
         instancesCount = elementExecutionSummary.getInstancesCount();
@@ -1055,7 +1055,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         executionStatus = status.name();
       }
 
-      if (isNotEmpty(artifacts)) {
+      if (hasSome(artifacts)) {
         for (Artifact artifact : artifacts) {
           if (artifact == null) {
             continue;
@@ -1094,7 +1094,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       ArtifactSummary artifactSummary) {
     List<String> envIdList = workflowExecution.getEnvIds();
     List<EntitySummary> envList = null;
-    if (isNotEmpty(envIdList)) {
+    if (hasSome(envIdList)) {
       PageRequest<Environment> envPageRequest = aPageRequest()
                                                     .addFilter("_id", IN, envIdList.toArray())
                                                     .addFilter("appId", EQ, appId)
@@ -1104,7 +1104,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       PageResponse<Environment> pageResponse = environmentService.list(envPageRequest, false, null);
 
       List<Environment> environmentList = pageResponse.getResponse();
-      if (isNotEmpty(environmentList)) {
+      if (hasSome(environmentList)) {
         envList = environmentList.stream()
                       .map(env
                           -> EntitySummary.builder()
@@ -1118,7 +1118,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     List<EntitySummary> serviceInfraList = null;
     List<String> infraMappingIdList = workflowExecution.getInfraMappingIds();
-    if (isNotEmpty(infraMappingIdList)) {
+    if (hasSome(infraMappingIdList)) {
       PageRequest<InfrastructureMapping> envPageRequest = aPageRequest()
                                                               .addFilter("_id", IN, infraMappingIdList.toArray())
                                                               .addFilter("serviceId", EQ, serviceId)
@@ -1129,7 +1129,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       PageResponse<InfrastructureMapping> pageResponse = infraMappingService.list(envPageRequest);
 
       List<InfrastructureMapping> infraList = pageResponse.getResponse();
-      if (isNotEmpty(infraList)) {
+      if (hasSome(infraList)) {
         serviceInfraList = infraList.stream()
                                .map(infraMapping
                                    -> EntitySummary.builder()
@@ -1174,7 +1174,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getInstanceQuery(
       String accountId, List<String> appIds, boolean includeDeleted, long timestamp) {
     Query query = wingsPersistence.createQuery(Instance.class);
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       query.field("appId").in(appIds);
     } else {
       User user = UserThreadLocal.get();
@@ -1185,13 +1185,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
           if (includeDeleted && userService.isAccountAdmin(accountId)) {
             Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamp);
-            if (isNotEmpty(deletedAppIds)) {
+            if (hasSome(deletedAppIds)) {
               allowedAppIds = Sets.newHashSet(allowedAppIds);
               allowedAppIds.addAll(deletedAppIds);
             }
           }
 
-          if (isNotEmpty(allowedAppIds)) {
+          if (hasSome(allowedAppIds)) {
             // This is an optimization. Instead of a large IN() Query, if the user has access to all apps,
             // we could just pull it using accountId. For example, QA has 500 apps in our account.
             if (userRequestContext.getUserPermissionInfo().isHasAllAppAccess()) {

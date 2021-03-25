@@ -3,7 +3,7 @@ package io.harness.cdng.pipeline.plancreators;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_ROLLBACK_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.ROLLBACK_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.STEP_GROUPS_ROLLBACK_PLAN_CREATOR;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -60,7 +60,7 @@ public class DeploymentStageRollbackPlanCreator extends AbstractPlanCreatorWithC
       context.removeAttribute("stageIdentifier");
     }
 
-    if (isNotEmpty(deploymentStage.getExecution().getRollbackSteps())) {
+    if (hasSome(deploymentStage.getExecution().getRollbackSteps())) {
       ExecutionPlanCreatorResponse executionRollbackPlan =
           createPlanForExecutionRollback(deploymentStage.getExecution(), context);
       childrenPlanMap.put("EXECUTION_ROLLBACK", singletonList(executionRollbackPlan));

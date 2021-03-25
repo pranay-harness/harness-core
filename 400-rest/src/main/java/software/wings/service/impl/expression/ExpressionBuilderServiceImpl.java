@@ -1,7 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -84,7 +84,7 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
       expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     }
     Account account = accountService.getAccountWithDefaults(application.getAccountId());
-    if (account != null && isNotEmpty(account.getDefaults())) {
+    if (account != null && hasSome(account.getDefaults())) {
       expressions.addAll(
           account.getDefaults().keySet().stream().map(s -> "account.defaults." + s).collect(Collectors.toSet()));
     }

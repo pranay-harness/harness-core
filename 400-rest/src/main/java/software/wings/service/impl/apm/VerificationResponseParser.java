@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.WingsException;
 import io.harness.expression.RegexFunctor;
@@ -137,10 +137,10 @@ public class VerificationResponseParser {
     if (!iterator.hasNext()) {
       for (int i = 0; i < node.value.size(); ++i) {
         Object evaluatedBody = body;
-        if (isNotEmpty(node.regex) && isNotEmpty(node.regex.get(i))) {
+        if (hasSome(node.regex) && hasSome(node.regex.get(i))) {
           for (String expr : node.regex.get(i)) {
             String extractedValue = regexFunctor.extract(expr, (String) evaluatedBody);
-            if (isNotEmpty(extractedValue)) {
+            if (hasSome(extractedValue)) {
               evaluatedBody = extractedValue;
               result.put(node.value.get(i), evaluatedBody);
             }

@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
@@ -13,7 +15,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -78,7 +79,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
       final String workingDirCanonicalPath = dirCanonicalPath(workingDirectory);
 
       // save the files in the directory
-      if (EmptyPredicate.isNotEmpty(pluginCommandRequest.getFileDataList())) {
+      if (hasSome(pluginCommandRequest.getFileDataList())) {
         saveFilesInWorkingDirectory(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
       }
       //  insert working directory in script path
@@ -154,7 +155,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
 
   @VisibleForTesting
   void saveFilesInWorkingDirectory(final List<FileData> fileDataList, final String workingDirectoryCanonicalPath) {
-    if (EmptyPredicate.isNotEmpty(fileDataList)) {
+    if (hasSome(fileDataList)) {
       fileDataList.forEach(file -> {
         try {
           final Path filePath = Paths.get(workingDirectoryCanonicalPath, canonicalise(file.getFilePath()));

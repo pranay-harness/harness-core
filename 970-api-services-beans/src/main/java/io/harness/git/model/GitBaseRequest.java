@@ -1,6 +1,6 @@
 package io.harness.git.model;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import lombok.Data;
 import lombok.ToString;
@@ -22,10 +22,10 @@ public class GitBaseRequest {
   private GitRepositoryType repoType;
 
   public boolean useBranch() {
-    return isNotEmpty(branch);
+    return hasSome(branch);
   }
 
   public boolean useCommitId() {
-    return isNotEmpty(commitId);
+    return hasSome(commitId);
   }
 }

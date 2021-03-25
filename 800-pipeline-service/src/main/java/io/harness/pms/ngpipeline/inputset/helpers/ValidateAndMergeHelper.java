@@ -1,10 +1,10 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -35,7 +35,7 @@ public class ValidateAndMergeHelper {
   public InputSetErrorWrapperDTOPMS validateInputSet(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
     String identifier = PMSInputSetElementMapper.getStringField(yaml, "identifier", "inputSet");
-    if (EmptyPredicate.isEmpty(identifier)) {
+    if (hasNone(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
     confirmPipelineIdentifier(yaml, pipelineIdentifier);
@@ -57,7 +57,7 @@ public class ValidateAndMergeHelper {
 
   public Map<String, String> validateOverlayInputSet(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, InputSetEntity entity) {
-    if (EmptyPredicate.isEmpty(entity.getIdentifier())) {
+    if (hasNone(entity.getIdentifier())) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
     List<String> inputSetReferences = entity.getInputSetReferences();

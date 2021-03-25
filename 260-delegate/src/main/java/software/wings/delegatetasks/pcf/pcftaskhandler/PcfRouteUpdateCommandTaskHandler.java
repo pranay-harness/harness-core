@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
@@ -166,7 +167,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     String appNameBeingDownsized = null;
 
     List<PcfAppSetupTimeDetails> existingApplicationDetails = pcfRouteUpdateConfigData.getExistingApplicationDetails();
-    if (isNotEmpty(existingApplicationDetails)) {
+    if (hasSome(existingApplicationDetails)) {
       try {
         PcfAppSetupTimeDetails existingAppDetails = existingApplicationDetails.get(0);
         appNameBeingDownsized = existingAppDetails.getApplicationName();
@@ -257,7 +258,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   private void updateRoutesForExistingApplication(PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback, PcfRouteUpdateRequestConfigData data)
       throws PivotalClientApiException {
-    if (isNotEmpty(data.getExistingApplicationNames())) {
+    if (hasSome(data.getExistingApplicationNames())) {
       List<String> mapRouteForExistingApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
       List<String> unmapRouteForExistingApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
       for (String existingAppName : data.getExistingApplicationNames()) {

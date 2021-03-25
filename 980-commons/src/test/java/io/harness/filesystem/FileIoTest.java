@@ -1,6 +1,6 @@
 package io.harness.filesystem;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
@@ -141,7 +141,7 @@ public class FileIoTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetHomeDir() {
     String homeDir = getHomeDir();
-    assertThat(isEmpty(homeDir)).isFalse();
+    assertThat(hasNone(homeDir)).isFalse();
   }
 
   @Test

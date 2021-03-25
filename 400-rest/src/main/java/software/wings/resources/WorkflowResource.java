@@ -6,8 +6,8 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
@@ -122,13 +122,13 @@ public class WorkflowResource {
       @QueryParam("details") @DefaultValue("true") boolean details,
       @QueryParam("withArtifactStreamSummary") @DefaultValue("false") boolean withArtifactStreamSummary,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
-    if ((isEmpty(workflowTypes))
+    if ((hasNone(workflowTypes))
         && (pageRequest.getFilters() == null
             || pageRequest.getFilters().stream().noneMatch(
                 searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
       pageRequest.addFilter("workflowType", EQ, WorkflowType.ORCHESTRATION);
     }
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 
@@ -139,7 +139,7 @@ public class WorkflowResource {
     PageResponse<Workflow> pageResponse =
         workflowService.listWorkflows(pageRequest, previousExecutionsCount, withTags, tagFilter);
     if (withArtifactStreamSummary) {
-      if (pageResponse != null && isNotEmpty(pageResponse.getResponse())) {
+      if (pageResponse != null && hasSome(pageResponse.getResponse())) {
         for (Workflow workflow : pageResponse.getResponse()) {
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
@@ -605,7 +605,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
-    if (isEmpty(strStateType)) {
+    if (hasNone(strStateType)) {
       return new RestResponse<>();
     }
     return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.gitdiff;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -181,7 +181,7 @@ public class GitChangeSetHandler {
     List<GitFileChange> gitFileChangeList = new ArrayList<>();
     Map<String, YamlGitConfig> appMap = new HashMap<>();
 
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return gitFileChangeList;
     }
 
@@ -235,7 +235,7 @@ public class GitChangeSetHandler {
 
   // TODO: Change it as a part of ContextThreadLocal
   private void applySyncFromGit(List<GitFileChange> gitFileChangeList) {
-    if (isEmpty(gitFileChangeList)) {
+    if (hasNone(gitFileChangeList)) {
       return;
     }
 

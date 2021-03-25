@@ -1,6 +1,6 @@
 package io.harness.testframework.framework.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class SecretsUtils {
   public static boolean isVaultAvailable(List<VaultConfig> vaultList, String vaultName) {
-    if (isEmpty(vaultList)) {
+    if (hasNone(vaultList)) {
       return false;
     }
     for (VaultConfig vaultConfig : vaultList) {
@@ -63,7 +63,7 @@ public class SecretsUtils {
   }
 
   public static boolean isSecretAvailable(List<EncryptedData> secretList, String secretName) {
-    if (isEmpty(secretList)) {
+    if (hasNone(secretList)) {
       return false;
     }
 

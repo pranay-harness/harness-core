@@ -1,10 +1,10 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -61,7 +61,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     }
 
     // Add Steps Node
-    if (EmptyPredicate.isNotEmpty(dependencyNodeIdsList)) {
+    if (hasSome(dependencyNodeIdsList)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
       PlanNode stepsNode = getStepsPlanNode(stepsField, dependencyNodeIdsList.get(0).getNode().getUuid());

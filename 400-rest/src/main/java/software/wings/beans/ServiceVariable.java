@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 
@@ -227,7 +227,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
                                           .build();
 
     serviceVariable.setAppId(getAppId());
-    if (isNotEmpty(getAllowedList())) {
+    if (hasSome(getAllowedList())) {
       serviceVariable.setAllowedList(new ArrayList<>(getAllowedList()));
     }
     return serviceVariable;

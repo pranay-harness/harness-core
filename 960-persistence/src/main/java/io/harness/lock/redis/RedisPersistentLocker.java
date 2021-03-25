@@ -1,6 +1,7 @@
 package io.harness.lock.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.SRE;
@@ -9,7 +10,6 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.PersistentLockException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -58,8 +58,8 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
     this.client = Redisson.create(config);
     log.info("Started redis client");
     String envNamespace = redisLockConfig.getEnvNamespace();
-    this.lockNamespace = EmptyPredicate.isEmpty(envNamespace) ? LOCK_PREFIX.concat(":")
-                                                              : String.format("%s:%s:", envNamespace, LOCK_PREFIX);
+    this.lockNamespace =
+        hasNone(envNamespace) ? LOCK_PREFIX.concat(":") : String.format("%s:%s:", envNamespace, LOCK_PREFIX);
   }
 
   private String getLockName(String name) {

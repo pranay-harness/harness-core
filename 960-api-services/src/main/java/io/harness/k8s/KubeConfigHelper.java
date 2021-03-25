@@ -1,6 +1,6 @@
 package io.harness.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.kubernetes.client.util.KubeConfig;
 import java.util.Iterator;
@@ -17,7 +17,7 @@ public class KubeConfigHelper {
 
   @Nullable
   public static Map<String, Object> findObject(List<Object> list, String name) {
-    if (isEmpty(list)) {
+    if (hasNone(list)) {
       return null;
     }
 

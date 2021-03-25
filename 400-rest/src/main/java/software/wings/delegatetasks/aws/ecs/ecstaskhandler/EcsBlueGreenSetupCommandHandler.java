@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -291,7 +291,7 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
   AwsElbListener getListenerByArn(
       List<AwsElbListener> listeners, String listenerArn, String loadBalancerName, ExecutionLogCallback logCallback) {
-    if (isEmpty(listeners)) {
+    if (hasNone(listeners)) {
       String message =
           format("Did not find any listeners for load balancer: [%s] with arn: [%s]", loadBalancerName, listenerArn);
       log.error(message);

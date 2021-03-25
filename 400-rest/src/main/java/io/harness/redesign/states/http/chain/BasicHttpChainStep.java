@@ -1,6 +1,6 @@
 package io.harness.redesign.states.http.chain;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -86,7 +86,7 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
 
   @NotNull
   private BasicHttpChainStepParameters obtainBasicHttpChainStepParameters(BasicHttpChainStepParameters parameters) {
-    if (isEmpty(parameters.getLinkParameters())) {
+    if (hasNone(parameters.getLinkParameters())) {
       throw new InvalidRequestException("No Chain Links Present");
     }
     return parameters;

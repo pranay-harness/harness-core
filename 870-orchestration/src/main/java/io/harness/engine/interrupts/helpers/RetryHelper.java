@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -57,7 +57,7 @@ public class RetryHelper {
     if (parameters != null) {
       newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
     }
-    List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
+    List<String> retryIds = hasNone(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
     InterruptConfig newInterruptConfig =
         InterruptConfig.newBuilder()

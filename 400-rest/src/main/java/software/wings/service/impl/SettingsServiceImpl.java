@@ -6,8 +6,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -64,7 +64,6 @@ import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.ccm.setup.service.support.intfc.AzureCEConfigValidationService;
 import io.harness.data.parser.CsvParser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -316,13 +315,13 @@ public class SettingsServiceImpl implements SettingsService {
                 .collect(Collectors.toList());
       }
 
-      if (withArtifactStreamCount && isNotEmpty(filteredSettingAttributes)) {
+      if (withArtifactStreamCount && hasSome(filteredSettingAttributes)) {
         filteredSettingAttributes = filterSettingsAndArtifactStreamsWithCount(
             accountId, artifactStreamSearchString, maxArtifactStreams, artifactType, filteredSettingAttributes);
       }
 
       List<SettingAttribute> resp;
-      if (isEmpty(filteredSettingAttributes)) {
+      if (hasNone(filteredSettingAttributes)) {
         resp = Collections.emptyList();
       } else {
         int total = filteredSettingAttributes.size();
@@ -358,7 +357,7 @@ public class SettingsServiceImpl implements SettingsService {
                                                       .project(ArtifactStreamKeys.name, true)
                                                       .project(ArtifactStreamKeys.sourceName, true)
                                                       .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
-      if (isNotEmpty(artifactStreamSearchString)) {
+      if (hasSome(artifactStreamSearchString)) {
         artifactStreamQuery.field(ArtifactStreamKeys.name).containsIgnoreCase(artifactStreamSearchString);
       }
 
@@ -368,7 +367,7 @@ public class SettingsServiceImpl implements SettingsService {
         continue;
       }
       List<ArtifactStream> artifactStreams = artifactStreamQuery.asList(new FindOptions().limit(maxArtifactStreams));
-      if (isEmpty(artifactStreams)) {
+      if (hasNone(artifactStreams)) {
         continue;
       }
 
@@ -394,21 +393,21 @@ public class SettingsServiceImpl implements SettingsService {
    */
   Map<String, SecretState> extractAllSecretIdsWithState(Collection<SettingAttribute> settingAttributes,
       String accountId, String appIdFromRequest, String envIdFromRequest) {
-    if (isEmpty(settingAttributes)) {
+    if (hasNone(settingAttributes)) {
       return Collections.emptyMap();
     }
     Set<String> allSecrets = new HashSet<>(settingAttributes.size() + 1);
     // Collect all secrets in a single collection so that they can be filtered in batch fashion.
     for (SettingAttribute settingAttribute : settingAttributes) {
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttribute);
-      if (!isEmpty(usedSecretIds)) {
+      if (!hasNone(usedSecretIds)) {
         allSecrets.addAll(usedSecretIds);
       }
     }
 
     List<SecretMetadata> secretMetadataList =
         secretManager.filterSecretIdsByReadPermission(allSecrets, accountId, appIdFromRequest, envIdFromRequest);
-    if (!isEmpty(secretMetadataList)) {
+    if (!hasNone(secretMetadataList)) {
       return secretMetadataList.stream().collect(
           Collectors.toMap(SecretMetadata::getSecretId, SecretMetadata::getSecretState));
     }
@@ -422,7 +421,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (inputSettingAttributes == null) {
       return Collections.emptyList();
     }
-    if (isEmpty(inputSettingAttributes)) {
+    if (hasNone(inputSettingAttributes)) {
       return inputSettingAttributes;
     }
 
@@ -481,7 +480,7 @@ public class SettingsServiceImpl implements SettingsService {
       List<SettingAttribute> filteredSettingAttributes, Map<String, Set<String>> appEnvMapFromUserPermissions,
       UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap,
       Set<SettingAttribute> helmRepoSettingAttributes) {
-    if (isNotEmpty(helmRepoSettingAttributes)) {
+    if (hasSome(helmRepoSettingAttributes)) {
       Set<String> cloudProviderIds = new HashSet<>();
 
       helmRepoSettingAttributes.forEach(settingAttribute -> {
@@ -527,7 +526,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
-      if (isNotEmpty(usedSecretIds)) {
+      if (hasSome(usedSecretIds)) {
         if (featureFlagService.isEnabled(FeatureName.SETTING_API_BATCH_RBAC, accountId)) {
           // Returning false only on SecretState.CANNOT_READ. Which means SecretState.CAN_READ, SecretState.NOT_FOUND
           // are both allowed. This allows settings with mis matching/deleted secret Ids, this is done to
@@ -713,7 +712,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute.getValue() instanceof AwsConfig) {
       selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());
     }
-    return isEmpty(selectors) ? new ArrayList<>()
+    return hasNone(selectors) ? new ArrayList<>()
                               : selectors.stream().filter(StringUtils::isNotBlank).distinct().collect(toList());
   }
 
@@ -968,7 +967,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute.getValue() instanceof GitConfig) {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
-      if (gitConfig.isGenerateWebhookUrl() && isEmpty(gitConfig.getWebhookToken())) {
+      if (gitConfig.isGenerateWebhookUrl() && hasNone(gitConfig.getWebhookToken())) {
         gitConfig.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
       }
 
@@ -1339,7 +1338,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public boolean retainSelectedGitConnectorsAndDeleteRest(String accountId, List<String> selectedGitConnectors) {
-    if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
+    if (hasSome(selectedGitConnectors)) {
       // Delete git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
                                   .filter(SettingAttributeKeys.accountId, accountId)
@@ -1379,7 +1378,7 @@ public class SettingsServiceImpl implements SettingsService {
     final List<ApplicationManifest> manifestsWithConnector = applicationManifestService.getAllByConnectorId(
         settingAttribute.getAccountId(), settingAttribute.getUuid(), EnumSet.of(StoreType.HelmChartRepo));
 
-    if (isNotEmpty(manifestsWithConnector)) {
+    if (hasSome(manifestsWithConnector)) {
       final List<String> serviceIds =
           manifestsWithConnector.stream()
               .filter(manifest -> isNotBlank(manifest.getServiceId()) && isBlank(manifest.getEnvId()))
@@ -1393,14 +1392,14 @@ public class SettingsServiceImpl implements SettingsService {
       final List<String> envNames = envService.getNames(accountId, envIds);
       final StringBuilder errorMsgBuilder = new StringBuilder(64);
       errorMsgBuilder.append(format("Helm Connector [%s] is referenced ", settingAttribute.getName()));
-      if (isNotEmpty(serviceNames)) {
+      if (hasSome(serviceNames)) {
         errorMsgBuilder.append(
             format("by [%d] service(s) %s ", serviceNames.size(), trimList(serviceNames, entityNamesLimit)));
         errorMsgBuilder.append(serviceNames.size() > entityNamesLimit
                 ? format(" and [%d] more..", serviceNames.size() - entityNamesLimit)
                 : "");
       }
-      if (isNotEmpty(envNames)) {
+      if (hasSome(envNames)) {
         errorMsgBuilder.append(format(
             "and by [%d] override in environment(s) %s ", envNames.size(), trimList(envNames, entityNamesLimit)));
         errorMsgBuilder.append(
@@ -1417,7 +1416,7 @@ public class SettingsServiceImpl implements SettingsService {
   private void ensureSettingSafeToDelete(SettingAttribute settingAttribute) {
     List<String> infraDefinitionNames = infrastructureDefinitionService.listNamesByConnectionAttr(
         settingAttribute.getAccountId(), settingAttribute.getUuid());
-    if (isNotEmpty(infraDefinitionNames)) {
+    if (hasSome(infraDefinitionNames)) {
       throw new InvalidRequestException(format("Attribute [%s] is referenced by %d "
               + " %s "
               + "[%s].",
@@ -1471,7 +1470,7 @@ public class SettingsServiceImpl implements SettingsService {
 
         List<Rejection> rejections = manipulationSubject.fireApproveFromAll(
             SettingsServiceManipulationObxxxxxxxx:settingsServiceDeleting, connectorSetting);
-        if (isNotEmpty(rejections)) {
+        if (hasSome(rejections)) {
           throw new InvalidRequestException(
               format("[%s]", join("\n", rejections.stream().map(Rejection::message).collect(toList()))), USER);
         }
@@ -1485,7 +1484,7 @@ public class SettingsServiceImpl implements SettingsService {
     String accountId = cloudProviderSetting.getAccountId();
     List<String> infraDefinitionNames =
         infrastructureDefinitionService.listNamesByComputeProviderId(accountId, cloudProviderSetting.getUuid());
-    if (isNotEmpty(infraDefinitionNames)) {
+    if (hasSome(infraDefinitionNames)) {
       throw new InvalidRequestException(
           format("Cloud provider [%s] is referenced by %d Infrastructure  %s [%s].", cloudProviderSetting.getName(),
               infraDefinitionNames.size(), plural("Definition", infraDefinitionNames.size()),
@@ -1513,7 +1512,7 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
-    if (isEmpty(artifactStreams)) {
+    if (hasNone(artifactStreams)) {
       return;
     }
 
@@ -1534,7 +1533,7 @@ public class SettingsServiceImpl implements SettingsService {
             .filter(CVConfigurationKeys.connectorId, settingAttribute.getUuid())
             .asList();
 
-    if (isNotEmpty(cvConfigurations)) {
+    if (hasSome(cvConfigurations)) {
       List<String> cvConfigNames = cvConfigurations.stream().map(CVConfiguration::getName).collect(toList());
       throw new InvalidRequestException(
           format("Connector %s is referenced by %d Service Guard(s). %s [%s].", settingAttribute.getName(),
@@ -1800,7 +1799,7 @@ public class SettingsServiceImpl implements SettingsService {
     List<ServiceVariable> serviceVariables =
         artifactStreamServiceBindingService.fetchArtifactServiceVariableByArtifactStreamId(
             artifactStream.getAccountId(), artifactStream.getUuid());
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       for (ServiceVariable serviceVariable : serviceVariables) {
         List<String> allowedList = serviceVariable.getAllowedList();
         allowedList.remove(artifactStream.getUuid());
@@ -1811,10 +1810,10 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     List<Workflow> workflows = artifactStreamServiceBindingService.listWorkflows(artifactStream.getUuid());
-    if (isNotEmpty(workflows)) {
+    if (hasSome(workflows)) {
       for (Workflow workflow : workflows) {
         if (workflow.getOrchestrationWorkflow() != null
-            && isNotEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
+            && hasSome(workflow.getOrchestrationWorkflow().getUserVariables())) {
           List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
           List<Variable> updatedUserVariables = new ArrayList<>();
           for (Variable userVariable : userVariables) {

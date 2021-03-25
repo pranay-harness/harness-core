@@ -1,11 +1,11 @@
 package software.wings.features;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.security.UserGroup;
 import software.wings.features.api.FeatureRestrictions;
@@ -55,6 +55,6 @@ public class PagerDutyNotificationFeature extends AbstractNotificationFeature {
 
   private static boolean hasPagerDuty(UserGroup userGroup) {
     return userGroup.getNotificationSettings() != null
-        && !EmptyPredicate.isEmpty(userGroup.getNotificationSettings().getPagerDutyIntegrationKey());
+        && !hasNone(userGroup.getNotificationSettings().getPagerDutyIntegrationKey());
   }
 }

@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -36,7 +36,7 @@ public class AddIsDefaultToExistingNotificationGroups implements Migration {
         wingsPersistence.query(NotificationGroup.class, pageRequest, excludeAuthority);
 
     List<NotificationGroup> notificationGroups = pageResponse.getResponse();
-    if (pageResponse.isEmpty() || isEmpty(notificationGroups)) {
+    if (pageResponse.isEmpty() || hasNone(notificationGroups)) {
       log.info("No NotificationGroups found");
       return;
     }

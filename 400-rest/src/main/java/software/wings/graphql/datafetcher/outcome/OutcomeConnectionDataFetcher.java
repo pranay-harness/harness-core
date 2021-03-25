@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.outcome;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -50,7 +50,7 @@ public class OutcomeConnectionDataFetcher
 
     QLPageInfoBuilder pageInfoBuilder = QLPageInfo.builder().hasMore(false).offset(0).limit(0).total(0);
 
-    if (isNotEmpty(execution.getServiceExecutionSummaries())) {
+    if (hasSome(execution.getServiceExecutionSummaries())) {
       pageInfoBuilder.total(execution.getServiceExecutionSummaries().size())
           .limit(execution.getServiceExecutionSummaries().size());
 

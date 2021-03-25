@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 
@@ -83,7 +83,7 @@ public class PreferenceServiceImpl implements PreferenceService {
   public PageResponse<Preference> list(PageRequest<Preference> pageRequest, String userId) {
     pageRequest.addFilter(USER_ID_KEY, EQ, userId);
     PageResponse<Preference> preferences = wingsPersistence.query(Preference.class, pageRequest);
-    if (preferences != null && isNotEmpty(preferences.getResponse())) {
+    if (preferences != null && hasSome(preferences.getResponse())) {
       for (Preference preference : preferences.getResponse()) {
         if (preference instanceof DeploymentPreference) {
           ((DeploymentPreference) preference)
@@ -143,7 +143,7 @@ public class PreferenceServiceImpl implements PreferenceService {
                                                .asList();
 
     Map<String, ResourceLookup> lookupMap = new HashMap<>();
-    if (isNotEmpty(resourceLookups)) {
+    if (hasSome(resourceLookups)) {
       resourceLookups.forEach(resourceLookup -> lookupMap.put(resourceLookup.getResourceId(), resourceLookup));
     }
 
@@ -151,7 +151,7 @@ public class PreferenceServiceImpl implements PreferenceService {
   }
 
   private void addToSet(Set<String> ids, List<String> input) {
-    if (isNotEmpty(input)) {
+    if (hasSome(input)) {
       ids.addAll(input);
     }
   }
@@ -231,9 +231,9 @@ public class PreferenceServiceImpl implements PreferenceService {
     if (harnessTagFilter != null) {
       List<TagFilterCondition> conditions = harnessTagFilter.getConditions();
       StringBuilder stringBuilder = new StringBuilder();
-      if (isNotEmpty(conditions)) {
+      if (hasSome(conditions)) {
         stringBuilder.append(conditions.get(0).getName());
-        if (isNotEmpty(conditions.get(0).getValues())) {
+        if (hasSome(conditions.get(0).getValues())) {
           stringBuilder.append(':');
           stringBuilder.append(conditions.get(0).getValues().get(0));
         }

@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -57,7 +57,7 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
     List<Environment> environments =
         wingsPersistence.createQuery(Environment.class, excludeAuthority).field(HELM_VALUE_YAML_KEY).exists().asList();
 
-    if (isEmpty(environments)) {
+    if (hasNone(environments)) {
       return;
     }
 
@@ -82,7 +82,7 @@ public class HelmValuesYamlToManifestFileMigration implements Migration {
                                          .exists()
                                          .asList();
 
-    if (isEmpty(environments)) {
+    if (hasNone(environments)) {
       return;
     }
 

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -66,7 +66,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       List<ChangeContext> changeSetContext) throws HarnessException;
 
   protected String getEncryptedYamlRef(String accountId, String secretId) {
-    if (isEmpty(accountId) || isEmpty(secretId)) {
+    if (hasNone(accountId) || hasNone(secretId)) {
       return null;
     }
     return secretManager.getEncryptedYamlRef(accountId, secretId);

@@ -1,6 +1,8 @@
 package io.harness.cdng.artifact.steps;
 
 import static io.harness.cdng.service.steps.ServiceStep.SERVICE_STEP_COMMAND_UNIT;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -12,7 +14,6 @@ import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -125,7 +126,7 @@ public class ArtifactStep {
     if (stepParameters.getArtifactStageOverride() != null) {
       artifactList.add(stepParameters.getArtifactStageOverride());
     }
-    if (EmptyPredicate.isEmpty(artifactList)) {
+    if (hasNone(artifactList)) {
       throw new InvalidArgumentsException("No Artifact details defined.");
     }
     ArtifactConfig resultantArtifact = artifactList.get(0);
@@ -161,7 +162,7 @@ public class ArtifactStep {
 
   public void mapArtifactsToIdentifier(Map<String, ArtifactStepParametersBuilder> artifactsMap,
       List<ArtifactConfig> artifactsList, BiConsumer<ArtifactStepParametersBuilder, ArtifactConfig> consumer) {
-    if (EmptyPredicate.isNotEmpty(artifactsList)) {
+    if (hasSome(artifactsList)) {
       for (ArtifactConfig artifact : artifactsList) {
         String key = ArtifactUtils.getArtifactKey(artifact);
         if (artifactsMap.containsKey(key)) {

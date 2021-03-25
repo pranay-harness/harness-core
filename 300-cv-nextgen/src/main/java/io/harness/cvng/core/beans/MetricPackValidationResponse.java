@@ -1,6 +1,6 @@
 package io.harness.cvng.core.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 
@@ -29,7 +29,7 @@ public class MetricPackValidationResponse {
             .filter(metricValidationResponse
                 -> metricValidationResponse.getStatus().equals(ThirdPartyApiResponseStatus.SUCCESS))
             .collect(Collectors.toList());
-    if (isEmpty(itemsWithData)) {
+    if (hasNone(itemsWithData)) {
       overallStatus = ThirdPartyApiResponseStatus.NO_DATA;
     }
   }

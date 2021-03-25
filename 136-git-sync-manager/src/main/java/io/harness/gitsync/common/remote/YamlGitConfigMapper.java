@@ -1,7 +1,7 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
@@ -75,7 +75,7 @@ public class YamlGitConfigMapper {
   }
 
   private static List<YamlGitConfigDTO.RootFolder> toRootFolders(List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOS) {
-    if (isEmpty(gitSyncFolderConfigDTOS)) {
+    if (hasNone(gitSyncFolderConfigDTOS)) {
       return null;
     }
     return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(Collectors.toList());
@@ -83,7 +83,7 @@ public class YamlGitConfigMapper {
 
   private static YamlGitConfigDTO.RootFolder getDefaultRootFolder(
       List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOS) {
-    if (isEmpty(gitSyncFolderConfigDTOS)) {
+    if (hasNone(gitSyncFolderConfigDTOS)) {
       return null;
     }
     Optional<GitSyncFolderConfigDTO> gitSyncFolderDTO =
@@ -115,7 +115,7 @@ public class YamlGitConfigMapper {
 
   private static List<GitSyncFolderConfigDTO> toGitSyncFolderDTO(
       List<YamlGitConfigDTO.RootFolder> rootFolders, YamlGitConfigDTO.RootFolder defaultRootFolder) {
-    if (isEmpty(rootFolders)) {
+    if (hasNone(rootFolders)) {
       return null;
     }
     return rootFolders.stream()

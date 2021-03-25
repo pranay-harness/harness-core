@@ -1,8 +1,8 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -112,7 +112,7 @@ public class SecretManagementResource {
   @Path("/list-values")
   public RestResponse<Collection<SettingAttribute>> listEncryptedSettingAttributes(
       @QueryParam("accountId") final String accountId, @QueryParam("category") String category) {
-    if (isEmpty(category)) {
+    if (hasNone(category)) {
       return new RestResponse<>(secretManager.listEncryptedSettingAttributes(accountId));
     } else {
       return new RestResponse<>(
@@ -250,7 +250,7 @@ public class SecretManagementResource {
     }
     BaseSecretValidator.validateFileWithinSizeLimit(
         request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
-    AdditionalMetadata additionalMetadataObj = isNotEmpty(additionalMetadata)
+    AdditionalMetadata additionalMetadataObj = hasSome(additionalMetadata)
         ? JsonUtils.asObject(additionalMetadata, AdditionalMetadata.class)
         : AdditionalMetadata.builder().build();
     SecretFile secretFile =
@@ -287,7 +287,7 @@ public class SecretManagementResource {
     }
     BaseSecretValidator.validateFileWithinSizeLimit(
         request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
-    AdditionalMetadata additionalMetadataObj = isNotEmpty(additionalMetadata)
+    AdditionalMetadata additionalMetadataObj = hasSome(additionalMetadata)
         ? JsonUtils.asObject(additionalMetadata, AdditionalMetadata.class)
         : AdditionalMetadata.builder().build();
     SecretFile secretFile =

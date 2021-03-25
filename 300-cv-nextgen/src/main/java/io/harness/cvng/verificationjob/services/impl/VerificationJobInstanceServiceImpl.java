@@ -8,8 +8,8 @@ import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.E
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ORG_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.PROJECT_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.SERVICE_IDENTIFIER_KEY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -142,7 +142,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   @Override
   public List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
-    if (isEmpty(verificationJobInstanceIds)) {
+    if (hasNone(verificationJobInstanceIds)) {
       return Collections.emptyList();
     }
     return hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
@@ -152,7 +152,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   public List<VerificationJobInstance> getHealthVerificationJobInstances(List<String> verificationJobInstanceIds) {
-    if (isEmpty(verificationJobInstanceIds)) {
+    if (hasNone(verificationJobInstanceIds)) {
       return Collections.emptyList();
     }
     return get(verificationJobInstanceIds)
@@ -243,7 +243,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJob);
-    Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
+    Preconditions.checkState(hasSome(cvConfigs), "No config is matching the criteria");
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
     markRunning(verificationJobInstance.getUuid(), cvConfigs);
   }
@@ -347,7 +347,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(
       List<String> verificationJobInstanceIds) {
     List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    Preconditions.checkState(isNotEmpty(verificationJobInstances), "No VerificationJobInstance found with IDs %s",
+    Preconditions.checkState(hasSome(verificationJobInstances), "No VerificationJobInstance found with IDs %s",
         verificationJobInstanceIds.toString());
     List<VerificationJobInstance> postDeploymentVerificationJobInstances =
         getPostDeploymentVerificationJobInstances(verificationJobInstances);
@@ -424,7 +424,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private void addDeploymentVerificationJobInstanceSummaries(List<VerificationJobInstance> verificationJobInstances,
       List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
-    if (!isEmpty(verificationJobInstances)) {
+    if (!hasNone(verificationJobInstances)) {
       verificationJobInstances.forEach(verificationJobInstance -> {
         deploymentVerificationJobInstanceSummaries.add(
             getDeploymentVerificationJobInstanceSummary(verificationJobInstance));
@@ -490,7 +490,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Nullable
   public ActivityVerificationSummary getActivityVerificationSummary(
       List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
+    if (hasNone(verificationJobInstances)) {
       return null;
     }
     VerificationJobInstance minVerificationInstanceJob =
@@ -580,7 +580,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Override
   public DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
       List<String> verificationJobInstanceIds) {
-    Preconditions.checkState(isNotEmpty(verificationJobInstanceIds), "Should have at least one element");
+    Preconditions.checkState(hasSome(verificationJobInstanceIds), "Should have at least one element");
     // TODO:  Currently taking just first element to respond. We need to talk to UX and create mocks to show the full
     // details in case of multiple verificationJobInstances.
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceIds.get(0));
@@ -618,7 +618,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Nullable
   private DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary deploymentPopoverSummary(
       List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
+    if (hasNone(verificationJobInstances)) {
       return null;
     }
 

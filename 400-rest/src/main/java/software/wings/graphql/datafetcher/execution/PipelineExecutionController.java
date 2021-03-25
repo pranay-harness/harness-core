@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -132,7 +132,7 @@ public class PipelineExecutionController {
     }
 
     List<QLDeploymentTag> tags = new ArrayList<>();
-    if (isNotEmpty(workflowExecution.getTags())) {
+    if (hasSome(workflowExecution.getTags())) {
       tags = workflowExecution.getTags()
                  .stream()
                  .map(tag -> QLDeploymentTag.builder().name(tag.getName()).value(tag.getValue()).build())
@@ -274,7 +274,7 @@ public class PipelineExecutionController {
       populatePipelineExecution(workflowExecution, executionBuilder);
 
       String warningMessage = null;
-      if (isNotEmpty(extraVariables)) {
+      if (hasSome(extraVariables)) {
         warningMessage = "Ignoring values for variables: [" + StringUtils.join(extraVariables, ",")
             + "] as they don't exist in Pipeline. Might be modified";
       }
@@ -288,7 +288,7 @@ public class PipelineExecutionController {
   }
 
   private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
-    if (triggerExecutionInput.isTargetToSpecificHosts() || isNotEmpty(triggerExecutionInput.getSpecificHosts())) {
+    if (triggerExecutionInput.isTargetToSpecificHosts() || hasSome(triggerExecutionInput.getSpecificHosts())) {
       throw new InvalidRequestException(
           "Hosts can't be overridden for pipeline,Target to specific hosts is only available in a Workflow Execution",
           USER);
@@ -345,7 +345,7 @@ public class PipelineExecutionController {
     // Fetch the service
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
-    if (isEmpty(artifactNeededServiceIds)) {
+    if (hasNone(artifactNeededServiceIds)) {
       return new ArrayList<>();
     }
 
@@ -358,7 +358,7 @@ public class PipelineExecutionController {
   public Map<String, String> resolvePipelineVariables(Pipeline pipeline, List<QLVariableInput> variableInputs,
       String envId, List<String> extraVariables, boolean isTriggerFlow) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
-    if (isEmpty(pipelineVariables)) {
+    if (hasNone(pipelineVariables)) {
       return new HashMap<>();
     }
 
@@ -430,7 +430,7 @@ public class PipelineExecutionController {
                                            .filter(variable -> stageVariables.contains(variable.getName()))
 
                                            .collect(Collectors.toList());
-    if (isEmpty(pipelineVariables)) {
+    if (hasNone(pipelineVariables)) {
       return new HashMap<>();
     }
     validateRuntimeReqVars(variableInputs, pipelineVariables);
@@ -441,7 +441,7 @@ public class PipelineExecutionController {
   public Map<String, String> validateAndResolvePipelineVariables(Pipeline pipeline,
       List<QLVariableInput> variableInputs, String envId, List<String> extraVariables, boolean isTriggerFlow) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
-    if (isEmpty(pipelineVariables)) {
+    if (hasNone(pipelineVariables)) {
       return new HashMap<>();
     }
     validateRequiredVarsPresent(variableInputs, pipelineVariables);
@@ -468,7 +468,7 @@ public class PipelineExecutionController {
           } else {
             envIdForInfra = variable.obtainEnvIdField();
           }
-          if (isNotEmpty(envIdForInfra)) {
+          if (hasSome(envIdForInfra)) {
             if (value.contains(",")) {
               return handleMultiInfra(appId, envIdForInfra, value, variable);
             }
@@ -562,7 +562,7 @@ public class PipelineExecutionController {
             pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
         if (finalDeploymentMetadata != null) {
           List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
-          if (isNotEmpty(artifactNeededServiceIds)) {
+          if (hasSome(artifactNeededServiceIds)) {
             return artifactNeededServiceIds;
           }
         }

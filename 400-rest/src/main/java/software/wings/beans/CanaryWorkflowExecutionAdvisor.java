@@ -6,8 +6,8 @@ import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.LOG_APP_DEFAULTS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
 
@@ -136,7 +136,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           && executionEvent.getExecutionStatus() == SUCCESS) {
         // ready for rolling deploy
 
-        if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getWorkflowPhases())) {
+        if (orchestrationWorkflow == null || hasNone(orchestrationWorkflow.getWorkflowPhases())) {
           return null;
         }
         WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
@@ -187,7 +187,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             List<InfrastructureMapping> resolvedInfraMappings;
             resolvedInfraMappings = infrastructureMappingService.getInfraStructureMappingsByUuids(
                 workflow.getAppId(), workflowExecution.getInfraMappingIds());
-            if (isEmpty(resolvedInfraMappings)) {
+            if (hasNone(resolvedInfraMappings)) {
               return anExecutionEventAdvice()
                   .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
                   .withNextStateName(((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
@@ -207,7 +207,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               infrastructureMappingService.selectServiceInstances(context.getAppId(), infraMappingId,
                   context.getWorkflowExecutionId(), selectionParams.withCount(1).build());
 
-          if (isEmpty(serviceInstances)) {
+          if (hasNone(serviceInstances)) {
             return null;
           }
           return anExecutionEventAdvice()
@@ -299,7 +299,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (state.getParentId() != null) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
 
-        if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
+        if (phaseStep != null && hasSome(phaseStep.getFailureStrategies())) {
           FailureStrategy failureStrategy = selectTopMatchingStrategy(phaseStep.getFailureStrategies(),
               executionEvent.getFailureTypes(), state.getName(), phaseElement, FailureStrategyLevel.STEP);
 
@@ -377,7 +377,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             : orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseElement.getUuid());
       }
 
-      if (phase == null || isEmpty(phase.getPhaseSteps())) {
+      if (phase == null || hasNone(phase.getPhaseSteps())) {
         return null;
       }
 
@@ -396,7 +396,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @VisibleForTesting
   public static ExecutionEventAdvice shouldSkipStep(
       ExecutionContextImpl context, PhaseStep phaseStep, State state, FeatureFlagService featureFlagService) {
-    if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
+    if (phaseStep == null || hasNone(phaseStep.getStepSkipStrategies())) {
       return null;
     }
 
@@ -441,7 +441,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       Application app = context.getApp();
       if (app != null) {
         Map<String, String> appDefaults = app.getDefaults();
-        if (isEmpty(appDefaults)) {
+        if (hasNone(appDefaults)) {
           log.info(DEBUG_APP_DEFAULTS + " - There no defaults found");
         } else {
           log.info(DEBUG_APP_DEFAULTS + " : " + appDefaults);
@@ -463,7 +463,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   boolean isExecutionHostsPresent(ExecutionContextImpl context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
-    if (workflowStandardParams != null && isNotEmpty(workflowStandardParams.getExecutionHosts())) {
+    if (workflowStandardParams != null && hasSome(workflowStandardParams.getExecutionHosts())) {
       log.info("Not generating rolling  phases when execution hosts are present");
       return true;
     }
@@ -562,8 +562,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         if (stateExecutionDataHistory == null || stateExecutionDataHistory.size() < failureStrategy.getRetryCount()) {
           int waitInterval = 0;
           List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
-          if (isNotEmpty(retryIntervals)) {
-            if (isEmpty(stateExecutionDataHistory)) {
+          if (hasSome(retryIntervals)) {
+            if (hasNone(stateExecutionDataHistory)) {
               waitInterval = retryIntervals.get(0);
             } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
               waitInterval = retryIntervals.get(retryIntervals.size() - 1);
@@ -673,17 +673,17 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     Map<String, Object> properties = node1.getProperties();
-    if (isNotEmpty(state.getTemplateVariables())) {
+    if (hasSome(state.getTemplateVariables())) {
       properties.put("templateVariables", state.getTemplateVariables());
     }
-    if (isNotEmpty(state.getTemplateUuid())) {
+    if (hasSome(state.getTemplateUuid())) {
       properties.put("templateUuid", state.getTemplateUuid());
     }
-    if (isNotEmpty(state.getTemplateVersion())) {
+    if (hasSome(state.getTemplateVersion())) {
       properties.put("templateVersion", state.getTemplateVersion());
     }
     if (executionEvent != null && executionEvent.getContext() != null
-        && isNotEmpty(executionEvent.getContext().getAccountId())) {
+        && hasSome(executionEvent.getContext().getAccountId())) {
       properties.put("accountId", executionEvent.getContext().getAccountId());
     }
     return properties;
@@ -793,7 +793,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     final FailureStrategy failureStrategy =
         selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName, phaseElement, level);
 
-    if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
+    if (failureStrategy != null && hasSome(failureStrategy.getFailureTypes()) && hasNone(failureTypes)) {
       log.error("Defaulting to accepting the action. "
               + "the propagated failure types for state {} are unknown. ",
           stateName);
@@ -804,7 +804,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   private static FailureStrategy selectTopMatchingStrategyInternal(List<FailureStrategy> failureStrategies,
       EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement, FailureStrategyLevel level) {
-    if (isEmpty(failureStrategies)) {
+    if (hasNone(failureStrategies)) {
       return null;
     }
 
@@ -812,11 +812,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         failureStrategies.stream()
             .filter(failureStrategy -> {
               // we need at least one specific failure else we assume that we should apply in every case
-              if (isEmpty(failureStrategy.getFailureTypes())) {
+              if (hasNone(failureStrategy.getFailureTypes())) {
                 return true;
               }
               // we need at least one failure type returned from the error to filter out
-              if (isEmpty(failureTypes)) {
+              if (hasNone(failureTypes)) {
                 return true;
               }
               return !disjoint(failureTypes, failureStrategy.getFailureTypes());
@@ -825,7 +825,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
     filteredFailureStrategies = filteredFailureStrategies.stream()
                                     .filter(failureStrategy
-                                        -> isEmpty(failureStrategy.getSpecificSteps())
+                                        -> hasNone(failureStrategy.getSpecificSteps())
                                             || failureStrategy.getSpecificSteps().contains(stateName))
                                     .collect(toList());
 

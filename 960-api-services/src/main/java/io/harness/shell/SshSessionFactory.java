@@ -1,6 +1,6 @@
 package io.harness.shell;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
@@ -116,7 +116,7 @@ public class SshSessionFactory {
       if (!new File(keyPath).isFile()) {
         throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
       }
-      if (isEmpty(config.getKeyPassphrase())) {
+      if (hasNone(config.getKeyPassphrase())) {
         jsch.addIdentity(keyPath);
       } else {
         jsch.addIdentity(keyPath, EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
@@ -126,7 +126,7 @@ public class SshSessionFactory {
       log.info("SSH using Vault SSH secret engine");
 
       final char[] copyOfKey = getCopyOfKey(config);
-      if (isEmpty(config.getKeyPassphrase())) {
+      if (hasNone(config.getKeyPassphrase())) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
             EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8), null);
       } else {

@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -17,7 +17,6 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
@@ -95,7 +94,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
 
   private String updateGcpSecretsManagerConfig(
       String accountId, GcpSecretsManagerConfig gcpSecretsManagerConfig, boolean validate) {
-    if (isEmpty(gcpSecretsManagerConfig.getUuid())) {
+    if (hasNone(gcpSecretsManagerConfig.getUuid())) {
       String message = "Cannot have id as empty when updating secret manager configuration";
       throw new SecretManagementException(GCP_SECRET_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
@@ -159,7 +158,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
     GcpSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(GcpSecretsManagerConfig.class, configId);
     checkNotNull(secretsManagerConfig, "No Gcp Secrets Manager configuration found with id " + configId);
 
-    if (isNotEmpty(secretsManagerConfig.getUuid())) {
+    if (hasSome(secretsManagerConfig.getUuid())) {
       wingsPersistence.delete(EncryptedData.class, String.valueOf(secretsManagerConfig.getCredentials()));
       log.info("Deleted encrypted auth token record {} associated with Gcp Secrets Manager '{}'",
           secretsManagerConfig.getUuid(), secretsManagerConfig.getName());
@@ -201,13 +200,13 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
 
   private void validateUserInput(GcpSecretsManagerConfig gcpSecretsManagerConfig) {
     Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
-    if (EmptyPredicate.isEmpty(gcpSecretsManagerConfig.getName())
+    if (hasNone(gcpSecretsManagerConfig.getName())
         || !nameValidator.matcher(gcpSecretsManagerConfig.getName()).find()) {
       String message =
           "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(GCP_SECRET_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
-    if (EmptyPredicate.isEmpty(gcpSecretsManagerConfig.getCredentials())) {
+    if (hasNone(gcpSecretsManagerConfig.getCredentials())) {
       String message = "Credentials file is not uploaded.";
       throw new SecretManagementException(GCP_SECRET_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
@@ -273,7 +272,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
 
   private String getSecretManagerUuid(GcpSecretsManagerConfig gcpSecretsManagerConfig) {
     String secretManagerConfigUuid;
-    if (!isEmpty(gcpSecretsManagerConfig.getUuid())) {
+    if (!hasNone(gcpSecretsManagerConfig.getUuid())) {
       secretManagerConfigUuid = gcpSecretsManagerConfig.getUuid();
     } else {
       gcpSecretsManagerConfig.setCredentials(null);
@@ -328,7 +327,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
 
   private EncryptedData getEncryptedDataForSecretField(
       GcpSecretsManagerConfig gcpSecretsManagerConfig, char[] credentials) {
-    EncryptedData encryptedData = isNotEmpty(credentials) ? encryptLocal(credentials) : null;
+    EncryptedData encryptedData = hasSome(credentials) ? encryptLocal(credentials) : null;
     if (gcpSecretsManagerConfig != null && encryptedData != null) {
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
       query.criteria(EncryptedDataKeys.accountId)

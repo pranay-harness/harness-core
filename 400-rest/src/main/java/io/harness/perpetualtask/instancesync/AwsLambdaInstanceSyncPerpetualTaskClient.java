@@ -2,7 +2,7 @@ package io.harness.perpetualtask.instancesync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
@@ -84,7 +84,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
 
     return DelegateTask.builder()
         .accountId(accountId)
-        .tags(isNotEmpty(perpetualTaskData.getAwsConfig().getTag())
+        .tags(hasSome(perpetualTaskData.getAwsConfig().getTag())
                 ? singletonList(perpetualTaskData.getAwsConfig().getTag())
                 : null)
         .data(TaskData.builder()

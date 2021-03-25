@@ -1,7 +1,7 @@
 package software.wings.service.impl.security.auth;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -303,7 +303,7 @@ public class AuthHandlerTest extends WingsBaseTest {
         .hasSize(4)
         .hasSameElementsAs(accountPermissionTypes);
 
-    assertThat(isEmpty(userPermissionInfo.getAppPermissionMap())).isTrue();
+    assertThat(hasNone(userPermissionInfo.getAppPermissionMap())).isTrue();
   }
 
   @Test

@@ -1,8 +1,8 @@
 package io.harness.k8s;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
@@ -595,7 +595,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name, String apiVersion) {
-    if (KUBERNETES_V1.getVersionName().equals(apiVersion) || isEmpty(apiVersion)) {
+    if (KUBERNETES_V1.getVersionName().equals(apiVersion) || hasNone(apiVersion)) {
       return kubernetesHelperService.hpaOperations(kubernetesConfig).withName(name).get();
     } else {
       return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, apiVersion).withName(name).get();
@@ -826,8 +826,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private boolean inSteadyState(Pod pod) {
     List<PodCondition> conditions = pod.getStatus().getConditions();
-    return isNotEmpty(conditions)
-        && conditions.stream().allMatch(podCondition -> "True".equals(podCondition.getStatus()));
+    return hasSome(conditions) && conditions.stream().allMatch(podCondition -> "True".equals(podCondition.getStatus()));
   }
 
   private boolean isRunning(Pod pod) {
@@ -1273,7 +1272,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return 0;
     }
     VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+    if (hasNone(virtualServiceSpec.getHttp()) || hasNone(virtualServiceSpec.getHttp().get(0).getRoute())) {
       return 0;
     }
 
@@ -1297,7 +1296,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
+    if (hasNone(virtualServiceSpec.getHttp()) || hasNone(virtualServiceSpec.getHttp().get(0).getRoute())) {
       return new HashMap<>();
     }
     List<DestinationWeight> destinationWeights = virtualServiceSpec.getHttp().get(0).getRoute();
@@ -1631,12 +1630,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                   .filter(evt -> DateTime.parse(evt.getLastTimestamp()).getMillis() > startTime)
                                   .collect(toList());
 
-      if (isNotEmpty(newEvents)) {
+      if (hasSome(newEvents)) {
         executionLogCallback.saveExecutionLog("\n****  Kubernetes Pod Events  ****");
         podNames.forEach(podName -> {
           List<Event> podEvents =
               newEvents.stream().filter(evt -> evt.getInvolvedObject().getName().equals(podName)).collect(toList());
-          if (isNotEmpty(podEvents)) {
+          if (hasSome(podEvents)) {
             executionLogCallback.saveExecutionLog("  Pod: " + podName);
             podEvents.forEach(evt -> executionLogCallback.saveExecutionLog("   - " + evt.getMessage()));
           }
@@ -1663,7 +1662,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                   .filter(evt -> DateTime.parse(evt.getLastTimestamp()).getMillis() > startTime)
                                   .collect(toList());
 
-      if (isNotEmpty(newEvents)) {
+      if (hasSome(newEvents)) {
         executionLogCallback.saveExecutionLog("\n****  Kubernetes Controller Events  ****");
         executionLogCallback.saveExecutionLog("  Controller: " + controllerName);
         newEvents.forEach(evt -> executionLogCallback.saveExecutionLog("   - " + evt.getMessage()));
@@ -1860,18 +1859,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return generateKubeConfigStringForOpenID(config, oidcTokenRequestData);
     }
 
-    String insecureSkipTlsVerify = isEmpty(config.getCaCert()) ? "insecure-skip-tls-verify: true" : "";
+    String insecureSkipTlsVerify = hasNone(config.getCaCert()) ? "insecure-skip-tls-verify: true" : "";
     String certificateAuthorityData =
-        isNotEmpty(config.getCaCert()) ? "certificate-authority-data: " + new String(config.getCaCert()) : "";
+        hasSome(config.getCaCert()) ? "certificate-authority-data: " + new String(config.getCaCert()) : "";
     String clientCertData =
-        isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
+        hasSome(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
     String clientKeyData =
-        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
-    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
-    String username = isNotEmpty(config.getUsername()) ? "username: " + new String(config.getUsername()) : "";
-    String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() : "";
+        hasSome(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
+    String password = hasSome(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
+    String username = hasSome(config.getUsername()) ? "username: " + new String(config.getUsername()) : "";
+    String namespace = hasSome(config.getNamespace()) ? "namespace: " + config.getNamespace() : "";
     String serviceAccountTokenData =
-        isNotEmpty(config.getServiceAccountToken()) ? "token: " + new String(config.getServiceAccountToken()) : "";
+        hasSome(config.getServiceAccountToken()) ? "token: " + new String(config.getServiceAccountToken()) : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
         .replace("${INSECURE_SKIP_TLS_VERIFY}", insecureSkipTlsVerify)
@@ -1891,7 +1890,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private char[] getEncodedChars(char[] chars) {
-    if (isEmpty(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
+    if (hasNone(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
       return chars;
     }
     return encodeBase64(chars).toCharArray();
@@ -1903,21 +1902,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         oidcTokenRetriever.retrieveOpenIdAccessToken(oidcTokenRequestData);
 
     String clientIdData =
-        isNotEmpty(oidcTokenRequestData.getClientId()) ? CLIENT_ID_KEY + oidcTokenRequestData.getClientId() : EMPTY;
-    String clientSecretData = isNotEmpty(oidcTokenRequestData.getClientSecret())
+        hasSome(oidcTokenRequestData.getClientId()) ? CLIENT_ID_KEY + oidcTokenRequestData.getClientId() : EMPTY;
+    String clientSecretData = hasSome(oidcTokenRequestData.getClientSecret())
         ? CLIENT_SECRET_KEY + oidcTokenRequestData.getClientSecret()
         : EMPTY;
-    String idToken = isNotEmpty(openIdOAuth2AccessToken.getOpenIdToken())
+    String idToken = hasSome(openIdOAuth2AccessToken.getOpenIdToken())
         ? ID_TOKEN_KEY + openIdOAuth2AccessToken.getOpenIdToken()
         : EMPTY;
-    String providerUrl = isNotEmpty(oidcTokenRequestData.getProviderUrl())
-        ? ISSUER_URL_KEY + oidcTokenRequestData.getProviderUrl()
-        : EMPTY;
-    String refreshToken = isNotEmpty(openIdOAuth2AccessToken.getRefreshToken())
+    String providerUrl =
+        hasSome(oidcTokenRequestData.getProviderUrl()) ? ISSUER_URL_KEY + oidcTokenRequestData.getProviderUrl() : EMPTY;
+    String refreshToken = hasSome(openIdOAuth2AccessToken.getRefreshToken())
         ? REFRESH_TOKEN + openIdOAuth2AccessToken.getRefreshToken()
         : EMPTY;
     String authConfigName = NAME + OIDC_AUTH_NAME_VAL;
-    String namespace = isNotEmpty(config.getNamespace()) ? NAMESPACE_KEY + config.getNamespace() : EMPTY;
+    String namespace = hasSome(config.getNamespace()) ? NAMESPACE_KEY + config.getNamespace() : EMPTY;
 
     return KUBE_CONFIG_OIDC_TEMPLATE.replace(MASTER_URL, config.getMasterUrl())
         .replace(NAMESPACE, namespace)

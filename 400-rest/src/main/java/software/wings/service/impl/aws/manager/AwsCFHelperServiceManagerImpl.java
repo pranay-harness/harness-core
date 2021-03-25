@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 
@@ -66,7 +66,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
       Boolean useBranch, String repoName) {
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
     List<EncryptedDataDetail> details =
-        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
+        secretManager.getEncryptionDetails(awsConfig, hasSome(appId) ? appId : GLOBAL_APP_ID, null);
     GitConfig gitConfig = GitConfig.builder().build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().build();
     if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
@@ -76,11 +76,11 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
       gitFileConfig.setFilePath(templatePath);
       gitFileConfig.setRepoName(repoName);
 
-      if (isNotEmpty(sourceRepoBranch)) {
+      if (hasSome(sourceRepoBranch)) {
         gitConfig.setBranch(sourceRepoBranch);
         gitFileConfig.setBranch(sourceRepoBranch);
       }
-      if (isNotEmpty(commitId)) {
+      if (hasSome(commitId)) {
         gitConfig.setReference(commitId);
         gitFileConfig.setCommitId(commitId);
       }
@@ -106,8 +106,8 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, hasSome(appId) ? appId : GLOBAL_APP_ID)
+            .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.AWS_CF_TASK.name())

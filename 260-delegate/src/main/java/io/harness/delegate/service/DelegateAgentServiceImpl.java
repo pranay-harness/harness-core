@@ -1,7 +1,7 @@
 package io.harness.delegate.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
@@ -609,7 +609,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       if (delegateLocalConfigService.isLocalConfigPresent()) {
         Map<String, String> localSecrets = delegateLocalConfigService.getLocalDelegateSecrets();
-        if (isNotEmpty(localSecrets)) {
+        if (hasSome(localSecrets)) {
           delegateLogService.registerLogSanitizer(new GenericLogSanitizer(new HashSet<>(localSecrets.values())));
         }
       }
@@ -1250,7 +1250,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             ()
                 -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
             15L, TimeUnit.SECONDS, true);
-        if (isNotEmpty(taskEvents)) {
+        if (hasSome(taskEvents)) {
           log.info("Processing DelegateTaskEvents {}", taskEvents);
           for (DelegateTaskEvent taskEvent : taskEvents) {
             try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
@@ -1757,7 +1757,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       TaskData taskData = delegateTaskPackage.getData();
-      if (isEmpty(delegateTaskPackage.getDelegateId())) {
+      if (hasNone(delegateTaskPackage.getDelegateId())) {
         // Not whitelisted. Perform validation.
         // TODO: Remove this once TaskValidation does not use secrets
 
@@ -1929,7 +1929,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String activityId = null;
 
     if (logStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
-        && !isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
+        && !hasNone(delegateTaskPackage.getLogStreamingAbstractions())) {
       logStreamingConfigPresent = true;
     }
 
@@ -1982,7 +1982,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private Optional<LogSanitizer> getLogSanitizer(Pair<String, Set<String>> activitySecrets) {
     // Create log sanitizer only if activityId and secrets are present
-    if (isNotBlank(activitySecrets.getLeft()) && isNotEmpty(activitySecrets.getRight())) {
+    if (isNotBlank(activitySecrets.getLeft()) && hasSome(activitySecrets.getRight())) {
       return Optional.of(new ActivityBasedLogSanitizer(activitySecrets.getLeft(), activitySecrets.getRight()));
     } else {
       return Optional.empty();
@@ -2015,7 +2015,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         // Shell Script Provision
         ShellScriptProvisionParameters shellScriptProvisionParameters = (ShellScriptProvisionParameters) parameters[0];
         Map<String, EncryptedDataDetail> encryptedVariables = shellScriptProvisionParameters.getEncryptedVariables();
-        if (isNotEmpty(encryptedVariables)) {
+        if (hasSome(encryptedVariables)) {
           for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
             secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
           }
@@ -2072,7 +2072,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static Set<String> secretsFromMaskedVariables(
       Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables) {
     Set<String> secrets = new HashSet<>();
-    if (isNotEmpty(serviceVariables) && isNotEmpty(safeDisplayServiceVariables)) {
+    if (hasSome(serviceVariables) && hasSome(safeDisplayServiceVariables)) {
       for (Map.Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
         if (SECRET_MASK.equals(entry.getValue())) {
           secrets.add(serviceVariables.get(entry.getKey()));
@@ -2208,7 +2208,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       File scriptFile = new File(fileName);
       String script = delegateScripts.getScriptByName(fileName);
 
-      if (isNotEmpty(script)) {
+      if (hasSome(script)) {
         try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
           writer.write(script, 0, script.length());
           writer.flush();
@@ -2422,7 +2422,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   void applyDelegateSecretFunctor(DelegateTaskPackage delegateTaskPackage) {
     Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
     Map<String, SecretDetail> secretDetails = delegateTaskPackage.getSecretDetails();
-    if (isEmpty(encryptionConfigs) || isEmpty(secretDetails)) {
+    if (hasNone(encryptionConfigs) || hasNone(secretDetails)) {
       return;
     }
     List<EncryptedRecord> encryptedRecordList = new ArrayList<>();

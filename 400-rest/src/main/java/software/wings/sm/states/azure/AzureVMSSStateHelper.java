@@ -2,8 +2,8 @@ package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -254,7 +254,7 @@ public class AzureVMSSStateHelper {
 
   public int renderExpressionOrGetDefault(String expr, ExecutionContext context, int defaultValue) {
     int retVal = defaultValue;
-    if (isNotEmpty(expr)) {
+    if (hasSome(expr)) {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
       } catch (NumberFormatException e) {
@@ -267,7 +267,7 @@ public class AzureVMSSStateHelper {
 
   public double renderDoubleExpression(String expr, ExecutionContext context, double defaultValue) {
     double retVal = defaultValue;
-    if (isNotEmpty(expr)) {
+    if (hasSome(expr)) {
       try {
         retVal = Double.parseDouble(context.renderExpression(expr));
       } catch (NumberFormatException e) {
@@ -361,7 +361,7 @@ public class AzureVMSSStateHelper {
   }
 
   public void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
-    if (isNotEmpty(instanceElements)) {
+    if (hasSome(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails =
           azureSweepingOutputServiceHelper.generateAzureVMSSInstanceDetails(instanceElements);
@@ -371,7 +371,7 @@ public class AzureVMSSStateHelper {
 
   public void saveAzureAppInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements,
       List<AzureAppDeploymentData> appDeploymentData) {
-    if (isNotEmpty(appDeploymentData)) {
+    if (hasSome(appDeploymentData)) {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails =
           azureSweepingOutputServiceHelper.generateAzureAppServiceInstanceDetails(appDeploymentData);
@@ -561,14 +561,14 @@ public class AzureVMSSStateHelper {
   }
 
   public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
-    if (isEmpty(appSettings)) {
+    if (hasNone(appSettings)) {
       return;
     }
     List<String> appSettingNames =
         appSettings.stream().map(AzureAppServiceApplicationSetting::getName).collect(Collectors.toList());
     Set<String> duplicateAppSettingNames = getDuplicateItems(appSettingNames);
 
-    if (isNotEmpty(duplicateAppSettingNames)) {
+    if (hasSome(duplicateAppSettingNames)) {
       String duplicateAppSettingNamesStr = String.join(",", duplicateAppSettingNames);
       throw new InvalidRequestException(format("Duplicate application string names [%s]", duplicateAppSettingNamesStr));
     }
@@ -585,14 +585,14 @@ public class AzureVMSSStateHelper {
   }
 
   public void validateConnStrings(List<AzureAppServiceConnectionString> connStrings) {
-    if (isEmpty(connStrings)) {
+    if (hasNone(connStrings)) {
       return;
     }
     List<String> connStringNames =
         connStrings.stream().map(AzureAppServiceConnectionString::getName).collect(Collectors.toList());
     Set<String> duplicateConnStringNames = getDuplicateItems(connStringNames);
 
-    if (isNotEmpty(duplicateConnStringNames)) {
+    if (hasSome(duplicateConnStringNames)) {
       String duplicateConnStringNamesStr = String.join(",", duplicateConnStringNames);
       throw new InvalidRequestException(format("Duplicate connection string names [%s]", duplicateConnStringNamesStr));
     }

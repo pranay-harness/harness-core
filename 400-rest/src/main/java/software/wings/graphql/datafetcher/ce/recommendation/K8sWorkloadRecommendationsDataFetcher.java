@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.ce.recommendation;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Optional.ofNullable;
 
@@ -200,7 +200,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
   }
 
   private List<QLResourceEntry> entityToDto(Map<String, String> resourceEntryMap) {
-    if (isEmpty(resourceEntryMap)) {
+    if (hasNone(resourceEntryMap)) {
       return Collections.emptyList();
     }
     return resourceEntryMap.entrySet()
@@ -212,7 +212,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
 
   @Override
   protected void populateFilters(List<QLK8sWorkloadFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
     for (QLK8sWorkloadFilter filter : filters) {

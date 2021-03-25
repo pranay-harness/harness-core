@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -33,7 +33,7 @@ public class RetryInterruptHandler implements InterruptHandler {
   }
 
   private Interrupt validateAndSave(Interrupt interrupt) {
-    if (isEmpty(interrupt.getNodeExecutionId())) {
+    if (hasNone(interrupt.getNodeExecutionId())) {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for RETRY interrupt");
     }
     NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());

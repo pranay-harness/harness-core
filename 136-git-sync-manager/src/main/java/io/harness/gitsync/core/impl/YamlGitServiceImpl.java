@@ -1,7 +1,7 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.git.GitCommandType.DIFF;
 import static io.harness.exception.WingsException.USER;
@@ -123,9 +123,9 @@ public class YamlGitServiceImpl implements YamlGitService {
     final String branchName = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getBranchName();
     final String repo = gitToHarnessChangeSet.getGitWebhookRequestAttributes().getRepo();
 
-    checkState(isNotEmpty(gitConnectorId), "gitConnectorId should not be empty");
-    checkState(isNotEmpty(branchName), "branchName should not be empty");
-    checkState(isNotEmpty(repo), "repo should not be empty");
+    checkState(hasSome(gitConnectorId), "gitConnectorId should not be empty");
+    checkState(hasSome(branchName), "branchName should not be empty");
+    checkState(hasSome(repo), "repo should not be empty");
 
     return yamlGitConfigService.getByConnectorRepoAndBranch(gitConnectorId, repo, branchName, accountId);
   }
@@ -145,7 +145,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       log.info(
           GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
 
-      if (isNotEmpty(headCommitId)
+      if (hasSome(headCommitId)
           && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repo, branchName)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), YamlChangeSet.Status.SKIPPED);

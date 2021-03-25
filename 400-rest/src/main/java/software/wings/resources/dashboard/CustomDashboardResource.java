@@ -1,6 +1,6 @@
 package software.wings.resources.dashboard;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -173,7 +173,7 @@ public class CustomDashboardResource {
     }
     Set<String> allowedDashboardSettingIds = dashboardAuthHandler.getAllowedDashboardSettingIds();
 
-    if (isEmpty(allowedDashboardSettingIds)) {
+    if (hasNone(allowedDashboardSettingIds)) {
       return new RestResponse<>(
           PageResponseBuilder.aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build());
     }

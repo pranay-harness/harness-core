@@ -1,6 +1,6 @@
 package io.harness.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static io.harness.security.encryption.SecretManagerType.KMS;
@@ -32,14 +32,14 @@ public class SecretUpdateData {
 
     if (updatedSecret instanceof SecretText) {
       SecretText newSecretText = (SecretText) updatedSecret;
-      this.valueChanged = isNotEmpty(newSecretText.getValue()) && !newSecretText.getValue().equals(SECRET_MASK);
+      this.valueChanged = hasSome(newSecretText.getValue()) && !newSecretText.getValue().equals(SECRET_MASK);
       Set<EncryptedDataParams> parameters =
           newSecretText.getParameters() == null ? new HashSet<>() : newSecretText.getParameters();
       this.parametersChanged = !Objects.equals(parameters, existingRecord.getParameters());
       this.referenceChanged = !Objects.equals(newSecretText.getPath(), existingRecord.getPath());
     } else if (updatedSecret instanceof SecretFile) {
       SecretFile newSecretFile = (SecretFile) updatedSecret;
-      this.valueChanged = isNotEmpty(newSecretFile.getFileContent());
+      this.valueChanged = hasSome(newSecretFile.getFileContent());
       this.parametersChanged = false;
       this.referenceChanged = false;
     } else {

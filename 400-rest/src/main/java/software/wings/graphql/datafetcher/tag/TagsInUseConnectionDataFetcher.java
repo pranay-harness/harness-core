@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.tag;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -148,7 +148,7 @@ public class TagsInUseConnectionDataFetcher
         throw new WingsException("Operator cannot be null");
       }
 
-      if (isEmpty(entityTypeFilter.getValues())) {
+      if (hasNone(entityTypeFilter.getValues())) {
         throw new WingsException("Filter Values cannot be empty");
       }
 
@@ -176,7 +176,7 @@ public class TagsInUseConnectionDataFetcher
   }
 
   private void setQuery(List<QLTagInUseFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

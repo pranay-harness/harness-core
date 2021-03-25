@@ -1,8 +1,8 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -92,14 +92,14 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
       // todo(abhinav): refactor when webhook is finalised
       List<ConnectorInfoDTO> connectors = getGitConnectors(accountId);
 
-      if (isEmpty(connectors)) {
+      if (hasNone(connectors)) {
         log.info(GIT_YAML_LOG_PREFIX + "Git connector not found for account");
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
 
       String gitConnectorId = getGitConnectorIdByWebhookToken(connectors, webhookToken);
 
-      if (isEmpty(gitConnectorId)) {
+      if (hasNone(gitConnectorId)) {
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
 
@@ -119,7 +119,7 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
 
       final String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
 
-      if (isEmpty(branchName)) {
+      if (hasNone(branchName)) {
         log.info(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
             webhookToken, yamlWebHookPayload, headers);
         throw new InvalidRequestException("Branch not found from webhook payload", USER);
@@ -128,7 +128,7 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
       List<YamlGitConfigDTO> yamlGitConfigs =
           yamlGitConfigService.getByConnectorRepoAndBranch(gitConnectorId, repoName.get(), branchName, accountId);
 
-      if (isEmpty(yamlGitConfigs)) {
+      if (hasNone(yamlGitConfigs)) {
         log.info(
             GIT_YAML_LOG_PREFIX + "No git sync configured for repo = [{}], branch =[{}]", repoName.get(), branchName);
         throw new InvalidRequestException("No git sync configured for the repo and branch.", USER);
@@ -136,7 +136,7 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
 
       String headCommitId = obtainCommitIdFromPayload(yamlWebHookPayload, headers);
 
-      if (isNotEmpty(headCommitId)
+      if (hasSome(headCommitId)
           && gitCommitService.isCommitAlreadyProcessed(accountId, headCommitId, repoName.get(), branchName)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         return "Commit already processed";

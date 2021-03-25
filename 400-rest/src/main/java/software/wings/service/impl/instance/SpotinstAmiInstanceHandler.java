@@ -3,8 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_AWS_AMI_SPOT_INST_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_SPOT_INST_DEPLOYMENTS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -85,7 +85,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
 
     Multimap<String, Instance> elastigroupIdToInstancesInDbMap = getCurrentInstancesInDb(appId, infraMappingId);
     Set<String> elastigroupIds = elastigroupIdToInstancesInDbMap.keySet();
-    if (isEmpty(elastigroupIds)) {
+    if (hasNone(elastigroupIds)) {
       return;
     }
 
@@ -124,7 +124,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
   @Override
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 
@@ -147,7 +147,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
     allElastigroupIds.addAll(deploymentSummaries.stream()
                                  .map(summary -> summary.getSpotinstAmiDeploymentKey().getElastigroupId())
                                  .collect(toSet()));
-    if (isNotEmpty(allElastigroupIds)) {
+    if (hasSome(allElastigroupIds)) {
       allElastigroupIds.forEach(elastigroupId -> {
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceIdToEc2InstanceMap =
             getLatestEc2InstanceIdToEc2InstanceMap(elastigroupId, awsConfig, awsEncryptedDataDetails, spotinstConfig,
@@ -187,7 +187,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
         (SpotInstListElastigroupInstancesResponse) spotInstTaskExecutionResponse.getSpotInstTaskResponse();
 
     boolean success = spotInstTaskExecutionResponse.getCommandExecutionStatus() == SUCCESS;
-    boolean deleteTask = success && isEmpty(listElastigroupInstancesResponse.getElastigroupInstances());
+    boolean deleteTask = success && hasNone(listElastigroupInstancesResponse.getElastigroupInstances());
     String errorMessage = success ? null : spotInstTaskExecutionResponse.getErrorMessage();
 
     return Status.builder().success(success).errorMessage(errorMessage).retryable(!deleteTask).build();
@@ -208,9 +208,9 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
 
     Set<String> ec2InstanceIdsToBeAdded =
         difference(latestEc2InstanceIdToEc2InstanceMap.keySet(), ec2InstanceIdToInstanceInDbMap.keySet());
-    if (isNotEmpty(ec2InstanceIdsToBeAdded)) {
+    if (hasSome(ec2InstanceIdsToBeAdded)) {
       DeploymentSummary finalDeploymentSummary;
-      if (deploymentSummary == null && isNotEmpty(currentInstancesInDb)) {
+      if (deploymentSummary == null && hasSome(currentInstancesInDb)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
           log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
@@ -245,7 +245,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
   }
 
   private Map<String, Instance> getEc2InstanceIdToInstanceInDbMap(Collection<Instance> currentInstancesInDb) {
-    if (isEmpty(currentInstancesInDb)) {
+    if (hasNone(currentInstancesInDb)) {
       return emptyMap();
     }
 
@@ -266,7 +266,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
       String appId) {
     List<com.amazonaws.services.ec2.model.Instance> instances = spotinstHelperServiceManager.listElastigroupInstances(
         spotInstConfig, spotinstEncryptedDataDetails, awsConfig, awsEncryptedDataDetails, region, appId, elastigroupId);
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return emptyMap();
     }
     return instances.stream().collect(toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
@@ -287,7 +287,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
   private Multimap<String, Instance> getCurrentInstancesInDb(String appId, String infraMappingId) {
     Multimap<String, Instance> elastigroupIdToInstancesMap = ArrayListMultimap.create();
     List<Instance> instances = getInstances(appId, infraMappingId);
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       instances.forEach(instance -> {
         InstanceInfo instanceInfo = instance.getInstanceInfo();
         if (instanceInfo instanceof SpotinstAmiInstanceInfo) {
@@ -313,13 +313,13 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler implements Insta
       if (stepExecutionSummaryOptional.isPresent()) {
         SpotinstDeployExecutionSummary summary = (SpotinstDeployExecutionSummary) stepExecutionSummaryOptional.get();
         List<DeploymentInfo> infos = newArrayList();
-        if (isNotEmpty(summary.getOldElastigroupId())) {
+        if (hasSome(summary.getOldElastigroupId())) {
           infos.add(SpotinstAmiDeploymentInfo.builder()
                         .elastigroupId(summary.getOldElastigroupId())
                         .elastigroupName(summary.getOldElastigroupName())
                         .build());
         }
-        if (isNotEmpty(summary.getNewElastigroupId())) {
+        if (hasSome(summary.getNewElastigroupId())) {
           infos.add(SpotinstAmiDeploymentInfo.builder()
                         .elastigroupId(summary.getNewElastigroupId())
                         .elastigroupName(summary.getNewElastigroupName())

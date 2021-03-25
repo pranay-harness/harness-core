@@ -1,7 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -161,7 +161,7 @@ public class CIK8CtlHandler {
     String errMsg;
     // If pod's container status list is non-empty, reason for pod not to be in running state is in waiting container's
     // status message. Else reason is present in pod conditions.
-    if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
+    if (hasSome(pod.getStatus().getContainerStatuses())) {
       List<String> containerErrs =
           pod.getStatus()
               .getContainerStatuses()
@@ -240,11 +240,11 @@ public class CIK8CtlHandler {
   }
 
   private String getContainerErrMsg(String reason, String message) {
-    if (isEmpty(message)) {
+    if (hasNone(message)) {
       return reason;
     }
 
-    if (isEmpty(reason)) {
+    if (hasNone(reason)) {
       return message;
     } else {
       return format("%s: %s", reason, message);

@@ -1,10 +1,10 @@
 package io.harness.pms.inputset.helpers;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
 import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -32,7 +32,7 @@ public class MergeHelper {
     String pipelineComp = getPipelineComponent(inputSetYaml);
     String templateYaml = createTemplateFromPipeline(pipelineYaml);
     Set<FQN> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, pipelineComp);
-    if (EmptyPredicate.isEmpty(invalidFQNs)) {
+    if (hasNone(invalidFQNs)) {
       return null;
     }
 

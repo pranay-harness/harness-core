@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
@@ -12,7 +14,6 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
@@ -49,7 +50,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
                                       .pipelineName(bean.getPipelineName())
                                       .build();
 
-    if (EmptyPredicate.isNotEmpty(bean.getArtifactStreamId())) {
+    if (hasSome(bean.getArtifactStreamId())) {
       yaml.setArtifactStreamName(yamlHelper.getArtifactStreamName(appId, bean.getArtifactStreamId()));
     }
 
@@ -68,11 +69,11 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
     String serviceName = yaml.getServiceName();
     String artifactStreamName = yaml.getArtifactStreamName();
     ArtifactStream artifactStream = null;
-    if (EmptyPredicate.isNotEmpty(artifactStreamName) && EmptyPredicate.isNotEmpty(serviceName)) {
+    if (hasSome(artifactStreamName) && hasSome(serviceName)) {
       artifactStream = yamlHelper.getArtifactStreamWithName(appId, serviceName, artifactStreamName);
     }
     String serviceId = null;
-    if (EmptyPredicate.isNotEmpty(serviceName)) {
+    if (hasSome(serviceName)) {
       Service service = serviceResourceService.getServiceByName(appId, serviceName);
       notNullCheck(serviceName + " doesnot exist", service);
       serviceId = service.getUuid();
@@ -117,7 +118,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
   }
 
   private Type getArtifactSelectionType(String type) {
-    if (EmptyPredicate.isEmpty(type)) {
+    if (hasNone(type)) {
       return null;
     }
 

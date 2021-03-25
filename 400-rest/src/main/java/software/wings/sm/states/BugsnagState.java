@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -243,11 +243,11 @@ public class BugsnagState extends AbstractLogAnalysisState {
   public static Map<String, Map<String, ResponseMapper>> constructLogDefinitions(
       String projectId, String releaseStage) {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
-    if (isEmpty(projectId)) {
+    if (hasNone(projectId)) {
       throw new WingsException("ProjectID is empty in Bugsnag State. Unable to fetch data");
     }
     String eventsUrl = FETCH_EVENTS_URL.replace(":projectId:", projectId);
-    if (isNotEmpty(releaseStage)) {
+    if (hasSome(releaseStage)) {
       eventsUrl += "&filters[app.release_stage][][type]=eq&filters[app.release_stage][][value]=" + releaseStage;
     }
     logDefinition.put(eventsUrl, new HashMap<>());

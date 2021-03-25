@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -142,7 +142,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
               "Your license type does not support running this verification. Skipping Analysis");
         }
 
-        if (!isEmpty(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
+        if (!hasNone(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
           return generateAnalysisResponse(
               analysisContext, ExecutionStatus.SUCCESS, "Time duration cannot be more than 4 hours. Skipping Analysis");
         }
@@ -181,7 +181,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
         if (isAwsECSState(context)) {
           CloudWatchState cloudWatchState = (CloudWatchState) this;
-          if (isNotEmpty(cloudWatchState.fetchEcsMetrics())) {
+          if (hasSome(cloudWatchState.fetchEcsMetrics())) {
             for (String clusterName : cloudWatchState.fetchEcsMetrics().keySet()) {
               canaryNewHostNames.put(clusterName, DEFAULT_GROUP_NAME);
             }
@@ -190,7 +190,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         }
         if (getStateType().equals(StateType.CLOUD_WATCH.name())) {
           CloudWatchState cloudWatchState = (CloudWatchState) this;
-          if (isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())) {
+          if (hasSome(cloudWatchState.fetchLoadBalancerMetrics())) {
             for (String lbName : cloudWatchState.fetchLoadBalancerMetrics().keySet()) {
               canaryNewHostNames.put(lbName, DEFAULT_GROUP_NAME);
             }
@@ -206,7 +206,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         }
 
         Map<String, String> lastExecutionNodes = analysisContext.getControlNodes();
-        if (isEmpty(lastExecutionNodes) && !isAwsLambdaState(context)) {
+        if (hasNone(lastExecutionNodes) && !isAwsLambdaState(context)) {
           if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
             getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
             return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
@@ -239,7 +239,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
           baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(context.getAppId(),
               context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
-          if (isEmpty(baselineWorkflowExecutionId)) {
+          if (hasNone(baselineWorkflowExecutionId)) {
             responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
             getLogger().info(responseMessage);
             baselineWorkflowExecutionId =
@@ -380,7 +380,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = metricAnalysisService.getMetricsAnalysis(
         context.getStateExecutionId(), Optional.empty(), Optional.empty(), false);
-    if (deploymentTimeSeriesAnalysis == null || isEmpty(deploymentTimeSeriesAnalysis.getMetricAnalyses())) {
+    if (deploymentTimeSeriesAnalysis == null || hasNone(deploymentTimeSeriesAnalysis.getMetricAnalyses())) {
       getLogger().info("for {} No analysis summary.", context.getStateExecutionId());
       executionStatus = isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.FAILED
                                                                                          : ExecutionStatus.SUCCESS;

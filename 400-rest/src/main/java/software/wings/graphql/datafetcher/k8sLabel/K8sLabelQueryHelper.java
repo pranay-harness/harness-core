@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.k8sLabel;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -22,7 +22,7 @@ public class K8sLabelQueryHelper {
   @Inject protected DataFetcherUtils utils;
 
   public void setQuery(List<QLK8sLabelFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

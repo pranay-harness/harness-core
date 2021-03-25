@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.bamboo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -146,7 +146,7 @@ public class BambooServiceImpl implements BambooService {
           return null;
         }
         List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-        if (isNotEmpty(artifactPaths)) {
+        if (hasSome(artifactPaths)) {
           for (String artifactPath : artifactPaths) {
             artifactFileMetadata.addAll(
                 getArtifactFileMetadata(bambooConfig, encryptionDetails, planKey, buildNumber.asText(), artifactPath));
@@ -288,7 +288,7 @@ public class BambooServiceImpl implements BambooService {
             if (resultNode != null) {
               resultNode.elements().forEachRemaining(jsonNode -> {
                 List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-                if (isNotEmpty(artifactPaths)) {
+                if (hasSome(artifactPaths)) {
                   for (String artifactPath : artifactPaths) {
                     artifactFileMetadata.addAll(getArtifactFileMetadata(
                         bambooConfig, encryptionDetails, planKey, jsonNode.get("buildNumber").asText(), artifactPath));
@@ -459,7 +459,7 @@ public class BambooServiceImpl implements BambooService {
   private List<ArtifactFileMetadata> getArtifactFileMetadata(BambooConfig bambooConfig,
       List<EncryptedDataDetail> encryptionDetails, String planKey, String buildNumber, String artifactPathRegex) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isNotEmpty(artifactPathRegex.trim())) {
+    if (hasSome(artifactPathRegex.trim())) {
       Map<String, Artifact> artifactPathMap =
           getBuildArtifactsUrlMap(bambooConfig, encryptionDetails, planKey, buildNumber);
       Set<Entry<String, Artifact>> artifactPathSet = artifactPathMap.entrySet();
@@ -478,7 +478,7 @@ public class BambooServiceImpl implements BambooService {
         log.info("Artifact Path regex {} matching with artifact path {}", artifactPathRegex, value);
         String link = value.getLink();
         String artifactFileName = link.substring(link.lastIndexOf('/') + 1);
-        if (isNotEmpty(artifactFileName)) {
+        if (hasSome(artifactFileName)) {
           artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(link).build());
         }
       } else { // It is not matching  direct url, so just prepare the url
@@ -522,11 +522,11 @@ public class BambooServiceImpl implements BambooService {
       List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
       String buildNumber, String delegateId, String taskId, String accountId, ListNotifyResponseData res) {
     List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
-    if (isEmpty(artifactFileMetadata)) {
+    if (hasNone(artifactFileMetadata)) {
       artifactFileMetadata = new ArrayList<>();
       // for backward compatibility, get all artifact paths
       List<String> artifactPaths = artifactStreamAttributes.getArtifactPaths();
-      if (isNotEmpty(artifactPaths)) {
+      if (hasSome(artifactPaths)) {
         for (String artifactPathRegex : artifactPaths) {
           artifactFileMetadata.addAll(getArtifactFileMetadata(
               bambooConfig, encryptionDetails, artifactStreamAttributes.getJobName(), buildNumber, artifactPathRegex));
@@ -534,7 +534,7 @@ public class BambooServiceImpl implements BambooService {
       }
     }
     // use artifact file metadata from artifact stream attributes and download
-    if (isNotEmpty(artifactFileMetadata)) {
+    if (hasSome(artifactFileMetadata)) {
       for (ArtifactFileMetadata fileMetadata : artifactFileMetadata) {
         downloadAnArtifact(bambooConfig, encryptionDetails, fileMetadata, delegateId, taskId, accountId, res);
       }

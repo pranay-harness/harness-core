@@ -1,12 +1,15 @@
 package software.wings.graphql.instrumentation;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import static com.google.common.base.Strings.nullToEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.network.Localhost;
@@ -73,7 +76,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
         populateAuditHeaderDetails(httpServletRequest, Builder.anAuditHeader(), accountId);
     final AuditHeader auditHeader = auditHelper.create(auditHeaderBuilder.build());
 
-    getGraphqlQueryString(graphQLContext).filter(EmptyPredicate::isNotEmpty).ifPresent(queryStr -> {
+    getGraphqlQueryString(graphQLContext).filter(HasPredicate::hasSome).ifPresent(queryStr -> {
       uploadRequestPayload(auditHeader, IOUtils.toInputStream(queryStr, StandardCharsets.UTF_8));
     });
     return auditHeader;
@@ -124,7 +127,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
         int statusCode = 200;
         if (executionResult != null) {
           resultStr = JsonUtils.asJson(executionResult.toSpecification());
-          if (EmptyPredicate.isNotEmpty(executionResult.getErrors())) {
+          if (hasSome(executionResult.getErrors())) {
             statusCode = 500;
           }
         } else if (throwable != null) {
@@ -164,7 +167,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
   }
 
   private ApiKeyAuditDetails getApiKeyAuditDetails(final String headerValue, final String accountId) {
-    if (EmptyPredicate.isEmpty(headerValue)) {
+    if (hasNone(headerValue)) {
       return null;
     }
     final ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(headerValue, accountId, false);

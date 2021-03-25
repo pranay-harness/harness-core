@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -38,7 +38,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate) {
-    if (isEmpty(records)) {
+    if (hasNone(records)) {
       return;
     }
     if (ignoreDuplicate) {
@@ -71,7 +71,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   public <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest) {
     PageResponse<T> response = wingsPersistence.query(clazz, pageRequest, excludeAuthority);
 
-    if (isNotEmpty(pageRequest.getLimit()) && pageRequest.getLimit().equals(UNLIMITED)) {
+    if (hasSome(pageRequest.getLimit()) && pageRequest.getLimit().equals(UNLIMITED)) {
       int previousOffset = 0;
       List<T> responseList = new ArrayList<>();
       while (!response.isEmpty()) {

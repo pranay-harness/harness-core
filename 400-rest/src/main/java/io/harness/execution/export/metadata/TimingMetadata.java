@@ -1,7 +1,7 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.ExportExecutionsUtils;
@@ -46,7 +46,7 @@ public class TimingMetadata {
   }
 
   static TimingMetadata extractFromExecutionDetails(Map<String, ExecutionDataValue> executionDetailsMap) {
-    if (isEmpty(executionDetailsMap)) {
+    if (hasNone(executionDetailsMap)) {
       return null;
     }
 

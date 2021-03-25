@@ -1,7 +1,7 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -110,14 +110,14 @@ public class AlertCheckJob implements Job {
     log.info("Checking account " + accountId + " for alert conditions.");
     List<Delegate> delegates = getDelegatesForAccount(accountId);
 
-    if (isEmpty(delegates)) {
+    if (hasNone(delegates)) {
       Account account = wingsPersistence.get(Account.class, accountId);
       if (account == null) {
         jobScheduler.deleteJob(accountId, GROUP);
         return;
       }
     }
-    if (isEmpty(delegates)) {
+    if (hasNone(delegates)) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
           NoInstalledDelegatesAlert.builder().accountId(accountId).build());
     } else if (delegates.stream().allMatch(
@@ -158,7 +158,7 @@ public class AlertCheckJob implements Job {
       if (primaryConnections.contains(delegate.getUuid())) {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
       } else {
-        if (isEmpty(delegate.getDelegateGroupName())) {
+        if (hasNone(delegate.getDelegateGroupName())) {
           alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
         }
       }
@@ -172,7 +172,7 @@ public class AlertCheckJob implements Job {
       String accountId, List<Delegate> delegates, Set<String> primaryConnections) {
     Set<String> connectedScalingGroups = new HashSet<>();
     for (Delegate delegate : delegates) {
-      if (primaryConnections.contains(delegate.getUuid()) && isNotEmpty(delegate.getDelegateGroupName())) {
+      if (primaryConnections.contains(delegate.getUuid()) && hasSome(delegate.getDelegateGroupName())) {
         String delegateGroupName = delegate.getDelegateGroupName();
         closeDelegateScalingGroupDownAlert(accountId, delegateGroupName);
         connectedScalingGroups.add(delegateGroupName);
@@ -180,7 +180,7 @@ public class AlertCheckJob implements Job {
     }
 
     Set<String> allScalingGroups = delegates.stream()
-                                       .filter(x -> isNotEmpty(x.getDelegateGroupName()))
+                                       .filter(x -> hasSome(x.getDelegateGroupName()))
                                        .map(Delegate::getDelegateGroupName)
                                        .collect(Collectors.toSet());
 

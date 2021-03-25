@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -159,7 +159,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     String envId = resolveEnvironmentId(yaml, appId, properties, workflow);
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isNotEmpty(yaml.getWorkflowVariables()) && isNotEmpty(workflowVariables)) {
+    if (hasSome(yaml.getWorkflowVariables()) && hasSome(workflowVariables)) {
       for (WorkflowVariable variable : yaml.getWorkflowVariables()) {
         String variableName = variable.getName();
         Variable variableOrg =
@@ -180,7 +180,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
   private List<String> getUserGroupUuids(
       List<String> userGroupNameList, String accountId, Map<String, Object> yamlProperties) {
-    if (isEmpty(userGroupNameList)) {
+    if (hasNone(userGroupNameList)) {
       if (yamlProperties.get("templateExpressions") == null) {
         throw new InvalidRequestException("user groups cannot be empty in non templatized approval");
       }
@@ -208,7 +208,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       log.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
           workflow.getUuid(), workflow.getEnvId());
 
-      if (isNotEmpty(yaml.getWorkflowVariables())) {
+      if (hasSome(yaml.getWorkflowVariables())) {
         WorkflowVariable workflowEnvVariable =
             yaml.getWorkflowVariables()
                 .stream()
@@ -326,7 +326,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     notNullCheck("Pipeline stage element is null", workflowVariables, USER);
 
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(userVariables)) {
+    if (hasNone(userVariables)) {
       userVariables = new ArrayList<>();
     }
     Map<String, Variable> nameVariableMap =
@@ -359,7 +359,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   }
 
   private boolean shouldBeIgnored(String name) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return true;
     }
 

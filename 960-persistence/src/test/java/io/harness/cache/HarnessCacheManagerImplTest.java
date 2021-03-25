@@ -2,7 +2,7 @@ package io.harness.cache;
 
 import static io.harness.cache.CacheBackend.REDIS;
 import static io.harness.cache.HarnessCacheManagerImpl.CACHE_PREFIX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,7 +51,7 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
                                   .disabledCaches(Collections.singleton(DISABLED_CACHE_NAME))
                                   .build();
     this.harnessCacheManager = new HarnessCacheManagerImpl(cacheManager, cacheConfig);
-    this.cacheNamespace = isEmpty(cacheConfig.getCacheNamespace())
+    this.cacheNamespace = hasNone(cacheConfig.getCacheNamespace())
         ? CACHE_PREFIX
         : cacheConfig.getCacheNamespace().concat("/").concat(CACHE_PREFIX);
   }

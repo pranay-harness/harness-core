@@ -1,12 +1,13 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
@@ -48,7 +49,7 @@ public class TerraformIsTemplatizedMigration implements Migration {
             provisioner.setTemplatized(false);
           }
 
-          if (EmptyPredicate.isEmpty(provisioner.getSourceRepoBranch())) {
+          if (hasNone(provisioner.getSourceRepoBranch())) {
             SettingAttribute gitSettingAttribute = settingsService.get(provisioner.getSourceRepoSettingId());
             if (gitSettingAttribute != null && gitSettingAttribute.getValue() instanceof GitConfig) {
               GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
@@ -56,7 +57,7 @@ public class TerraformIsTemplatizedMigration implements Migration {
             }
           }
 
-          if (EmptyPredicate.isNotEmpty(provisioner.getSourceRepoBranch()) && provisioner.getPath() != null) {
+          if (hasSome(provisioner.getSourceRepoBranch()) && provisioner.getPath() != null) {
             infrastructureProvisionerService.update(provisioner);
           }
         } catch (Exception ex) {

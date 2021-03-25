@@ -1,6 +1,6 @@
 package io.harness.capability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.iterator.PersistentFibonacciIterable;
@@ -43,7 +43,7 @@ public class CapabilityTaskSelectionDetails implements PersistentEntity, Persist
   @Override
   public Long obtainNextIteration(String fieldName) {
     if (CapabilityTaskSelectionDetailsKeys.blockingCheckIterations.equals(fieldName)) {
-      return isEmpty(blockingCheckIterations) ? null : blockingCheckIterations.get(0);
+      return hasNone(blockingCheckIterations) ? null : blockingCheckIterations.get(0);
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);

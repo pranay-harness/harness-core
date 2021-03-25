@@ -1,15 +1,14 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 
@@ -30,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +51,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
   public Template process(Template template) {
     template.setType(getTemplateType().name());
     Set<String> keywords = generateKeyword(template);
-    if (EmptyPredicate.isNotEmpty(keywords)) {
+    if (hasSome(keywords)) {
       template.setKeywords(keywords);
     }
 
@@ -70,7 +70,7 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
   private void ensureDefaults(Template template) {
     ArtifactSourceTemplate artifactSourceTemplate = (ArtifactSourceTemplate) template.getTemplateObject();
     if (artifactSourceTemplate.getArtifactSource() instanceof CustomArtifactSourceTemplate) {
-      if (isEmpty(((CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource()).getTimeoutSeconds())
+      if (hasNone(((CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource()).getTimeoutSeconds())
           || ((CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource())
                  .getTimeoutSeconds()
                  .equals("0")) {
@@ -130,12 +130,12 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
               (CustomArtifactSourceTemplate) artifactSourceTemplate.getArtifactSource();
           CustomArtifactStream customArtifactStream =
               CustomArtifactStream.builder()
-                  .scripts(
-                      asList(CustomArtifactStream.Script.builder()
-                                 .scriptString(customArtifactSourceTemplate.getScript())
-                                 .timeout(customArtifactSourceTemplate.getTimeoutSeconds())
-                                 .customRepositoryMapping(customArtifactSourceTemplate.getCustomRepositoryMapping())
-                                 .build()))
+                  .scripts(Arrays.asList(
+                      CustomArtifactStream.Script.builder()
+                          .scriptString(customArtifactSourceTemplate.getScript())
+                          .timeout(customArtifactSourceTemplate.getTimeoutSeconds())
+                          .customRepositoryMapping(customArtifactSourceTemplate.getCustomRepositoryMapping())
+                          .build()))
                   .build();
           customArtifactStream.setTemplateUuid(template.getUuid());
           customArtifactStream.setTemplateVersion(String.valueOf(template.getVersion()));

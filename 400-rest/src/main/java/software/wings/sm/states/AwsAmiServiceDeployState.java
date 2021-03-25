@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -272,18 +272,18 @@ public class AwsAmiServiceDeployState extends State {
 
     List<String> oldAsgNames = serviceSetupElement.getOldAsgNames();
     List<String> gpNames = newArrayList();
-    if (isNotEmpty(oldAsgNames) && !blueGreen) {
+    if (hasSome(oldAsgNames) && !blueGreen) {
       gpNames.addAll(oldAsgNames);
     }
     String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
-    if (isNotEmpty(newAutoScalingGroupName)) {
+    if (hasSome(newAutoScalingGroupName)) {
       gpNames.add(newAutoScalingGroupName);
     }
 
     Map<String, Integer> existingDesiredCapacities = awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(
         awsConfig, encryptionDetails, region, gpNames, infrastructureMapping.getAppId());
 
-    int newAutoScalingGroupDesiredCapacity = isNotEmpty(newAutoScalingGroupName)
+    int newAutoScalingGroupDesiredCapacity = hasSome(newAutoScalingGroupName)
         ? awsStateHelper.fetchRequiredAsgCapacity(existingDesiredCapacities, newAutoScalingGroupName)
         : 0;
     int totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
@@ -402,7 +402,7 @@ public class AwsAmiServiceDeployState extends State {
                       .parameters(new Object[] {request})
                       .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
                       .build())
-            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, amiResizeTaskRequestData.getEnvironmentType().name())
             .build();
@@ -416,7 +416,7 @@ public class AwsAmiServiceDeployState extends State {
         context.prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(),
         SweepingOutputInstance.Scope.WORKFLOW);
 
-    if (isNotEmpty(sweepingOutputs)) {
+    if (hasSome(sweepingOutputs)) {
       List<InstanceInfoVariables> instanceInfoVariableDeployed = sweepingOutputs.stream()
                                                                      .map(InstanceInfoVariables.class ::cast)
                                                                      .filter(InstanceInfoVariables::isDeployStateInfo)
@@ -427,7 +427,7 @@ public class AwsAmiServiceDeployState extends State {
               .flatMap(instanceInfoVars -> instanceInfoVars.getInstanceDetails().stream())
               .collect(toList());
 
-      if (isNotEmpty(listInstanceDetails)) {
+      if (hasSome(listInstanceDetails)) {
         Set<String> instanceIds = listInstanceDetails.stream()
                                       .map(instanceDetail -> instanceDetail.getAws().getInstanceId())
                                       .collect(toSet());
@@ -592,7 +592,7 @@ public class AwsAmiServiceDeployState extends State {
 
     List<Instance> ec2InstancesAdded = amiServiceDeployResponse.getInstancesAdded();
     List<InstanceElement> instanceElements = new ArrayList<>();
-    if (isNotEmpty(ec2InstancesAdded)) {
+    if (hasSome(ec2InstancesAdded)) {
       String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
 
       instanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesAdded(), context,
@@ -601,7 +601,7 @@ public class AwsAmiServiceDeployState extends State {
 
     List<InstanceElement> allInstanceElements = new ArrayList<>();
     allInstanceElements.addAll(instanceElements);
-    if (isNotEmpty(amiServiceDeployResponse.getInstancesExisting())) {
+    if (hasSome(amiServiceDeployResponse.getInstancesExisting())) {
       String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
       allInstanceElements.addAll(generateInstanceElements(amiServiceDeployResponse.getInstancesExisting(), context,
           phaseElement, infrastructureMapping, serviceTemplateKey, serviceTemplateId, false));
@@ -625,7 +625,7 @@ public class AwsAmiServiceDeployState extends State {
   private List<InstanceElement> generateInstanceElements(List<Instance> instances, ExecutionContext context,
       PhaseElement phaseElement, AwsAmiInfrastructureMapping infrastructureMapping,
       Key<ServiceTemplate> serviceTemplateKey, String serviceTemplateId, boolean isUpsize) {
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return emptyList();
     }
 
@@ -673,7 +673,7 @@ public class AwsAmiServiceDeployState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && isEmpty(getInstanceCount())) {
+    if (!isRollback() && hasNone(getInstanceCount())) {
       invalidFields.put("instanceCount", "Instance count must be greater than 0");
     }
     if (getCommandName() == null) {

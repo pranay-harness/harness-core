@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
@@ -40,7 +40,7 @@ public class EcsSwapRoutesCommandTaskHelper {
 
   public void upsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
       String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout) {
-    if (isEmpty(serviceName)) {
+    if (hasNone(serviceName)) {
       executionLogCallback.saveExecutionLog("No service needs to be upsized");
       return;
     }
@@ -132,7 +132,7 @@ public class EcsSwapRoutesCommandTaskHelper {
 
   public void downsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
       String cluster, String serviceName, ExecutionLogCallback logCallback, Integer timeout) {
-    if (isNotEmpty(serviceName)) {
+    if (hasSome(serviceName)) {
       logCallback.saveExecutionLog("Downsizing Green Service: " + serviceName);
 
       UpdateServiceCountRequestData updateCountServiceRequestData =

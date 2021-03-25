@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import static software.wings.service.impl.FileServiceUtils.verifyFileIntegrity;
@@ -233,7 +233,7 @@ public class MongoFileServiceImpl implements FileService {
         new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
 
     Map<String, Object> updateMap = new HashMap<>();
-    if (isNotEmpty(others)) {
+    if (hasSome(others)) {
       updateMap.putAll(others);
     }
 

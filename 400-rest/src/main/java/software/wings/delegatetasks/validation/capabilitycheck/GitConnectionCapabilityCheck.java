@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -36,7 +36,7 @@ public class GitConnectionCapabilityCheck implements CapabilityCheck {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     gitConfig.setSshSettingAttribute(capability.getSettingAttribute());
-    if (isNotEmpty(gitClient.validate(gitConfig))) {
+    if (hasSome(gitClient.validate(gitConfig))) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     return CapabilityResponse.builder().delegateCapability(capability).validated(true).build();

@@ -1,7 +1,7 @@
 package software.wings.features.utils;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -23,7 +23,7 @@ public class ServiceUtils {
   }
 
   public static boolean isTemplateLibraryUsed(Service service) {
-    return service != null && isNotEmpty(service.getServiceCommands())
+    return service != null && hasSome(service.getServiceCommands())
         && service.getServiceCommands().stream().anyMatch(sc -> StringUtils.isNotBlank(sc.getTemplateUuid()));
   }
 
@@ -35,7 +35,7 @@ public class ServiceUtils {
     PageRequestBuilder pageRequestBuilder =
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(Service.ACCOUNT_ID_KEY2, Operator.EQ, accountId);
 
-    if (isNotEmpty(serviceIdList)) {
+    if (hasSome(serviceIdList)) {
       pageRequestBuilder.addFilter(Service.ID, Operator.IN, serviceIdList.toArray());
     }
 

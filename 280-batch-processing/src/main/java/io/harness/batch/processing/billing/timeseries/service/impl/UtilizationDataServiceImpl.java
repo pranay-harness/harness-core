@@ -1,6 +1,6 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
@@ -46,7 +46,7 @@ public class UtilizationDataServiceImpl {
 
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
-    if (timeScaleDBService.isValid() && isNotEmpty(instanceUtilizationDataList)) {
+    if (timeScaleDBService.isValid() && hasSome(instanceUtilizationDataList)) {
       log.info("Util data size {}", instanceUtilizationDataList.size());
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {

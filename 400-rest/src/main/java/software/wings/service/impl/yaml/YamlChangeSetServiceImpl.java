@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 
@@ -147,7 +147,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @NotNull
   private YamlGitConfig getYamlGitConfigForGitToHarness(YamlChangeSet yamlChangeSet) {
     final List<YamlGitConfig> yamlGitConfigs = yamlGitService.getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       throw NoResultFoundException.newBuilder()
           .message(format(
               "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
@@ -311,7 +311,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                .build())
             .getResponse();
 
-    return isNotEmpty(changeSetsWithCompletedStatus) ? changeSetsWithCompletedStatus.get(0) : null;
+    return hasSome(changeSetsWithCompletedStatus) ? changeSetsWithCompletedStatus.get(0) : null;
   }
 
   @Override
@@ -386,7 +386,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              YamlChangeSet.class, accountId, Duration.ofMinutes(1), Duration.ofSeconds(10))) {
-      if (isEmpty(yamlChangeSetIds)) {
+      if (hasNone(yamlChangeSetIds)) {
         return true;
       }
 
@@ -410,7 +410,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              YamlChangeSet.class, accountId, Duration.ofMinutes(1), Duration.ofSeconds(10))) {
-      if (isEmpty(yamlChangeSetIds)) {
+      if (hasNone(yamlChangeSetIds)) {
         return true;
       }
 
@@ -465,7 +465,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                                     .withLimit(batchSize);
 
         List<YamlChangeSet> yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
-        if (isNotEmpty(yamlChangeSets)) {
+        if (hasSome(yamlChangeSets)) {
           List<String> ids = yamlChangeSets.stream().map(Base::getUuid).collect(Collectors.toList());
           wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class).field("_id").in(ids));
           deletedCount = deletedCount + Integer.parseInt(batchSize);
@@ -481,7 +481,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public <T> YamlChangeSet saveChangeSet(String accountId, List<GitFileChange> gitFileChanges, T entity) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return null;
     }
 

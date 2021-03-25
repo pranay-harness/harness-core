@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
@@ -43,7 +43,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
   private int secretEngineVersion;
 
   public AccessType getAccessType() {
-    return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    return hasSome(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
   }
 
   @Override

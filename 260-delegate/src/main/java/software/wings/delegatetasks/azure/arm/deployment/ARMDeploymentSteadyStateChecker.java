@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -100,7 +101,7 @@ public class ARMDeploymentSteadyStateChecker {
         String resourceType = properties.targetResource().resourceType();
         String resourceName = properties.targetResource().resourceName();
         String resourceId = String.format("%s - %s", resourceType, resourceName);
-        String status = isEmpty(properties.provisioningState()) ? "Not Available" : properties.provisioningState();
+        String status = hasNone(properties.provisioningState()) ? "Not Available" : properties.provisioningState();
         logCallback.saveExecutionLog(String.format("%s :: [%s]", resourceId, status), hasFailed(status) ? ERROR : INFO);
 
         Object statusMessage = properties.statusMessage();

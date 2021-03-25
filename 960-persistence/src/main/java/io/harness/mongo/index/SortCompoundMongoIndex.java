@@ -1,6 +1,6 @@
 package io.harness.mongo.index;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.atmosphere.annotation.AnnotationUtil.logger;
 
@@ -30,7 +30,7 @@ public class SortCompoundMongoIndex implements MongoIndex {
 
   @Override
   public IndexCreatorBuilder createBuilder(String id) {
-    Preconditions.checkState(isNotEmpty(name), name);
+    Preconditions.checkState(hasSome(name), name);
     Preconditions.checkState(!sortFields.isEmpty(), name);
     Preconditions.checkState(!fields.isEmpty(), name);
 

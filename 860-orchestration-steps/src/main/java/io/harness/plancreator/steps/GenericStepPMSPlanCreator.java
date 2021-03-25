@@ -1,5 +1,6 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.FAILURE_STRATEGIES;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
@@ -9,7 +10,6 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -93,7 +93,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     Set<String> stepTypes = getSupportedStepTypes();
-    if (EmptyPredicate.isEmpty(stepTypes)) {
+    if (hasNone(stepTypes)) {
       return Collections.emptyMap();
     }
     return Collections.singletonMap(STEP, stepTypes);
@@ -114,7 +114,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (((WithRollbackInfo) stepElement.getStepSpecType()).validateStageFailureStrategy()) {
         // Failure strategy should be present.
         List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
-        if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+        if (hasNone(stageFailureStrategies)) {
           throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
         }
 
@@ -183,7 +183,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   protected String getName(StepElementConfig stepElement) {
     String nodeName;
-    if (EmptyPredicate.isEmpty(stepElement.getName())) {
+    if (hasNone(stepElement.getName())) {
       nodeName = stepElement.getIdentifier();
     } else {
       nodeName = stepElement.getName();

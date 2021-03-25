@@ -1,7 +1,7 @@
 package io.harness.accesscontrol.roles.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.accesscontrol.roles.Role;
 
@@ -26,13 +26,13 @@ public class RoleValidator implements ConstraintValidator<ValidRole, Role> {
       context.buildConstraintViolationWithTemplate("managed roles should start with _").addConstraintViolation();
       return false;
     }
-    if (!value.isManaged() && isEmpty(value.getScopeIdentifier())) {
+    if (!value.isManaged() && hasNone(value.getScopeIdentifier())) {
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("custom roles cannot be created without a scope.")
           .addConstraintViolation();
       return false;
     }
-    if (value.isManaged() && isNotEmpty(value.getScopeIdentifier())) {
+    if (value.isManaged() && hasSome(value.getScopeIdentifier())) {
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("managed roles should not have a scope.").addConstraintViolation();
       return false;

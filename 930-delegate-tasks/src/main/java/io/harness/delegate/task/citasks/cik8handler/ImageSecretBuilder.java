@@ -2,7 +2,7 @@ package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.aws.AwsExceptionHandler.handleAmazonClientException;
 import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -76,7 +76,7 @@ public class ImageSecretBuilder {
       String registryUrl = dockerConfig.getDockerRegistryUrl();
       String username = dockerUserNamePasswordDTO.getUsername();
       if (dockerUserNamePasswordDTO == null || dockerUserNamePasswordDTO.getPasswordRef() == null
-          || isEmpty(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
+          || hasNone(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
         throw new InvalidArgumentsException(
             format("Password should not be empty for docker connector: %s", connectorDetails.getIdentifier()),
             WingsException.USER);
@@ -131,7 +131,7 @@ public class ImageSecretBuilder {
 
     String password = String.valueOf(credentialConfig.getSecretKeyRef().getDecryptedValue());
     String username = GCR_USERNAME;
-    if (isEmpty(password)) {
+    if (hasNone(password)) {
       throw new InvalidArgumentsException(
           format("Password should not be empty for gcp connector %s", connectorDetails.getIdentifier()),
           WingsException.USER);
@@ -185,19 +185,19 @@ public class ImageSecretBuilder {
   }
 
   private void validateDecodedDockerCredentials(String username, String password, String connectorId) {
-    if (isEmpty(username)) {
+    if (hasNone(username)) {
       throw new InvalidArgumentsException(
           format("Username should not be empty for docker connector %s", connectorId), WingsException.USER);
     }
 
-    if (isEmpty(password)) {
+    if (hasNone(password)) {
       throw new InvalidArgumentsException(
           format("Password should not be empty for docker connector %s", connectorId), WingsException.USER);
     }
   }
 
   private void validateDecodedDockerRegistryUrl(String registryUrl, String connectorId) {
-    if (isEmpty(registryUrl)) {
+    if (hasNone(registryUrl)) {
       throw new InvalidArgumentsException(
           format("Registry url should not be empty for docker connector %s", connectorId), WingsException.USER);
     }

@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -13,7 +13,7 @@ public class TrimmedValidatorForString implements ConstraintValidator<Trimmed, S
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return true;
     }
 

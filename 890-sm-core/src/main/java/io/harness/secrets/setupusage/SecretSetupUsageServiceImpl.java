@@ -1,7 +1,7 @@
 package io.harness.secrets.setupusage;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -124,7 +124,7 @@ public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
               String.format("Could not find secret with id %s", secretTextId), USER_SRE);
         });
 
-    if (isEmpty(encryptedData.getParents())) {
+    if (hasNone(encryptedData.getParents())) {
       return Collections.emptySet();
     }
 
@@ -145,7 +145,7 @@ public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
               String.format("Could not find secret with id %s", secretTextId), USER_SRE);
         });
 
-    if (isEmpty(encryptedData.getParents())) {
+    if (hasNone(encryptedData.getParents())) {
       return Collections.emptyMap();
     }
     return buildAppEnvMapFromParents(accountId, secretTextId, encryptedData.getParents());

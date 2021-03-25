@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
@@ -11,7 +11,6 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -88,7 +87,7 @@ public class EcsDeployCommandTaskHelper {
   public void deregisterAutoScalarsIfExists(ContextData contextData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
     if (resizeParams.isPreviousEcsAutoScalarsAlreadyRemoved()
-        || isEmpty(resizeParams.getPreviousAwsAutoScalarConfigs())) {
+        || hasNone(resizeParams.getPreviousAwsAutoScalarConfigs())) {
       return;
     }
 
@@ -106,7 +105,7 @@ public class EcsDeployCommandTaskHelper {
                 .withScalableDimension(target.getScalableDimension()));
 
         // If Target exists, delete it
-        if (isNotEmpty(result.getScalableTargets())) {
+        if (hasSome(result.getScalableTargets())) {
           executionLogCallback.saveExecutionLog("De-registering Scalable Target :" + target.getResourceId());
           awsAppAutoScalingService.deregisterScalableTarget(resizeParams.getRegion(), contextData.getAwsConfig(),
               contextData.getEncryptedDataDetails(),
@@ -142,7 +141,7 @@ public class EcsDeployCommandTaskHelper {
             .withServiceNamespace(ServiceNamespace.Ecs)
             .withResourceIds(Arrays.asList(resourceId)));
 
-    if (isEmpty(targetsResult.getScalableTargets())) {
+    if (hasNone(targetsResult.getScalableTargets())) {
       return;
     }
 
@@ -165,7 +164,7 @@ public class EcsDeployCommandTaskHelper {
     // This is for services those are being upsized in Rollback
     List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
 
-    if (isEmpty(awsAutoScalarConfigs)) {
+    if (hasNone(awsAutoScalarConfigs)) {
       executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
       return;
     }
@@ -184,11 +183,11 @@ public class EcsDeployCommandTaskHelper {
                 .withScalableDimension(scalableTarget.getScalableDimension())
                 .withServiceNamespace(ServiceNamespace.Ecs));
 
-        if (isEmpty(result.getScalableTargets())) {
+        if (hasNone(result.getScalableTargets())) {
           ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
               awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
-          if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+          if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
             for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
               ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
                   scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
@@ -215,7 +214,7 @@ public class EcsDeployCommandTaskHelper {
     // This is for services those are being upsized in Rollbak
     List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
 
-    if (isEmpty(awsAutoScalarConfigs)) {
+    if (hasNone(awsAutoScalarConfigs)) {
       executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
       return;
     }
@@ -234,11 +233,11 @@ public class EcsDeployCommandTaskHelper {
                 .withScalableDimension(scalableTarget.getScalableDimension())
                 .withServiceNamespace(ServiceNamespace.Ecs));
 
-        if (isEmpty(result.getScalableTargets())) {
+        if (hasNone(result.getScalableTargets())) {
           ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
               awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
-          if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+          if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
             for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
               ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
                   scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
@@ -254,7 +253,7 @@ public class EcsDeployCommandTaskHelper {
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
     if (resizeParams.getAwsAutoScalarConfigForNewService() == null
-        || isEmpty(resizeParams.getAwsAutoScalarConfigForNewService())) {
+        || hasNone(resizeParams.getAwsAutoScalarConfigForNewService())) {
       executionLogCallback.saveExecutionLog("No Autoscalar config provided.");
       return;
     }
@@ -273,7 +272,7 @@ public class EcsDeployCommandTaskHelper {
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
-        if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+        if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
           for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
@@ -305,7 +304,7 @@ public class EcsDeployCommandTaskHelper {
     }
 
     if (resizeParams.getAwsAutoScalarConfigForNewService() == null
-        || isEmpty(resizeParams.getAwsAutoScalarConfigForNewService())) {
+        || hasNone(resizeParams.getAwsAutoScalarConfigForNewService())) {
       executionLogCallback.saveExecutionLog("No Autoscalar config provided.");
       return;
     }
@@ -324,7 +323,7 @@ public class EcsDeployCommandTaskHelper {
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
-        if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+        if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
           for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
@@ -396,7 +395,7 @@ public class EcsDeployCommandTaskHelper {
             .withPlacementConstraints(runTaskDefinition.getPlacementConstraints())
             .withVolumes(runTaskDefinition.getVolumes());
 
-    if (isNotEmpty(runTaskDefinition.getExecutionRoleArn())) {
+    if (hasSome(runTaskDefinition.getExecutionRoleArn())) {
       registerTaskDefinitionRequest.withExecutionRoleArn(runTaskDefinition.getExecutionRoleArn());
     }
 
@@ -419,7 +418,7 @@ public class EcsDeployCommandTaskHelper {
       SettingAttribute cloudProviderSetting, RegisterTaskDefinitionRequest registerTaskDefinitionRequest,
       String launchType, String region, List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback) {
-    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+    if (hasNone(registerTaskDefinitionRequest.getExecutionRoleArn())) {
       registerTaskDefinitionRequest.withExecutionRoleArn(null);
     }
 
@@ -614,7 +613,7 @@ public class EcsDeployCommandTaskHelper {
   public List<Task> getTasksFromTaskArn(AwsConfig awsConfig, String clusterName, String region,
       List<String> taskDefinitionArns, List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback) {
-    if (EmptyPredicate.isNotEmpty(taskDefinitionArns)) {
+    if (hasSome(taskDefinitionArns)) {
       return awsHelperService
           .describeTasks(region, awsConfig, encryptedDataDetails,
               new DescribeTasksRequest().withCluster(clusterName).withTasks(taskDefinitionArns), false)
@@ -658,7 +657,7 @@ public class EcsDeployCommandTaskHelper {
     taskArns.addAll(runningTaskArns);
     taskArns.addAll(stoppedTaskArns);
 
-    if (EmptyPredicate.isNotEmpty(taskArns)) {
+    if (hasSome(taskArns)) {
       executionLogCallback.saveExecutionLog(
           format("%d tasks were found in task family %s, %d are stopped and %d are running", taskArns.size(),
               runTaskFamilyName, stoppedTaskArns.size(), runningTaskArns.size()));
@@ -681,14 +680,13 @@ public class EcsDeployCommandTaskHelper {
 
   public void logContainerInfos(List<ContainerInfo> containerInfos, ExecutionLogCallback executionLogCallback) {
     try {
-      if (isNotEmpty(containerInfos)) {
+      if (hasSome(containerInfos)) {
         containerInfos.sort(Comparator.comparing(ContainerInfo::isNewContainer).reversed());
         executionLogCallback.saveExecutionLog("\nContainer IDs:");
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
-                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getIp()) ? ""
-                                                                                             : " - " + info.getIp())
-                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getContainerId())
+                + (hasSome(info.getHostName()) && info.getHostName().equals(info.getIp()) ? "" : " - " + info.getIp())
+                + (hasSome(info.getHostName()) && info.getHostName().equals(info.getContainerId())
                         ? ""
                         : " - " + info.getContainerId())
                 + (info.isNewContainer() ? " (new)" : "")));

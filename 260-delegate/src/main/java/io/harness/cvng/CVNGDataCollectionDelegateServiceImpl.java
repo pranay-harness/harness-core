@@ -1,6 +1,7 @@
 package io.harness.cvng;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -33,7 +34,7 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
   @Override
   public String getDataCollectionResult(
       String accountId, DataCollectionRequest dataCollectionRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isNotEmpty(dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities())) {
+    if (hasSome(dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities())) {
       DecryptableEntity decryptableEntity =
           dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities().get(0);
       secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetails);

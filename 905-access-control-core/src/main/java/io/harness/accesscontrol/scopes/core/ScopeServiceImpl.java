@@ -1,8 +1,8 @@
 package io.harness.accesscontrol.scopes.core;
 
 import static io.harness.accesscontrol.scopes.core.Scope.PATH_DELIMITER;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -43,7 +43,7 @@ public class ScopeServiceImpl implements ScopeService {
     Map<String, String> params = scopeParams.getParams();
     ScopeLevel rootScopeLevel = scopeLevelsByRank.get(0);
     String rootInstanceId = params.get(rootScopeLevel.getParamName());
-    if (isEmpty(rootInstanceId)) {
+    if (hasNone(rootInstanceId)) {
       throw new InvalidRequestException(
           String.format("The %s is not provided in the scope parameters", rootScopeLevel.getParamName()));
     }
@@ -52,7 +52,7 @@ public class ScopeServiceImpl implements ScopeService {
       ScopeLevel scopeLevel = scopeLevelsByRank.get(currentLevel);
       if (scopeLevel != null) {
         String instanceId = params.get(scopeLevel.getParamName());
-        if (isNotEmpty(instanceId)) {
+        if (hasSome(instanceId)) {
           scope = Scope.builder().level(scopeLevel).instanceId(instanceId).parentScope(scope).build();
         }
       }
@@ -69,7 +69,7 @@ public class ScopeServiceImpl implements ScopeService {
     String instanceId = scopeIdentifierElements.get(scopeIdentifierElements.size() - 1);
     ScopeLevel scopeLevel =
         scopeLevelsByResourceType.get(scopeIdentifierElements.get(scopeIdentifierElements.size() - 2));
-    if (isEmpty(instanceId)) {
+    if (hasNone(instanceId)) {
       throw new InvalidArgumentsException("The instance id is invalid or empty in the scopeIdentifier");
     }
     if (scopeLevel == null) {

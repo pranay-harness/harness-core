@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.checkpointToProto;
@@ -142,7 +143,7 @@ public class K8sMetricCollector {
   private void collectPodMetricsAndContainerStates() {
     List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().list().getObject().getItems();
     for (PodMetrics podMetrics : podMetricsList) {
-      if (!isEmpty(podMetrics.getContainers())) {
+      if (!hasNone(podMetrics.getContainers())) {
         long podCpuNano = 0;
         long podMemoryBytes = 0;
         for (PodMetrics.Container container : podMetrics.getContainers()) {

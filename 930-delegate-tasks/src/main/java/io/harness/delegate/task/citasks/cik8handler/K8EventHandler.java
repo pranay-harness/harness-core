@@ -1,6 +1,6 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.k8s.apiclient.ApiClientFactory;
@@ -70,7 +70,7 @@ public class K8EventHandler {
   private void logWatchEvents(Watch<V1Event> watch, ILogStreamingTaskClient logStreamingTaskClient) throws IOException {
     try {
       for (Watch.Response<V1Event> item : watch) {
-        if (item != null && item.object != null && isNotEmpty(item.object.getMessage())) {
+        if (item != null && item.object != null && hasSome(item.object.getMessage())) {
           streamLogLine(logStreamingTaskClient, getLogLevel(item.object.getType()), item.object.getMessage());
           log.info(
               "{}: Event- {}, Reason - {}", item.object.getType(), item.object.getMessage(), item.object.getReason());

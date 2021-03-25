@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.internal;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -85,7 +85,7 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   @Override
   public Long obtainNextIteration(String fieldName) {
     if (PerpetualTaskRecordKeys.assignerIterations.equals(fieldName)) {
-      return isEmpty(assignerIterations) ? null : assignerIterations.get(0);
+      return hasNone(assignerIterations) ? null : assignerIterations.get(0);
     }
     if (PerpetualTaskRecordKeys.rebalanceIteration.equals(fieldName)) {
       return rebalanceIteration;

@@ -2,7 +2,7 @@ package software.wings.features;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -80,7 +80,7 @@ public class RbacFeature extends AbstractUsageLimitedFeature implements Complian
     } else {
       @SuppressWarnings("unchecked")
       List<String> userGroupsToRetain = (List<String>) requiredInfoToLimitUsage.get("userGroupsToRetain");
-      if (!isEmpty(userGroupsToRetain)) {
+      if (!hasNone(userGroupsToRetain)) {
         userGroupService.deleteUserGroupsByName(accountId, userGroupsToRetain);
       }
     }

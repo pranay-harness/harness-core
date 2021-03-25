@@ -1,6 +1,6 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -82,12 +82,12 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     template = super.process(template);
     validateTemplate(template);
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
-    if (isNotEmpty(sshCommandTemplate.getCommands())) {
+    if (hasSome(sshCommandTemplate.getCommands())) {
       template.setTemplateObject(convertYamlCommandToCommandUnits(template));
     }
     List<Variable> templateVariables = template.getVariables();
     List<ReferencedTemplate> referencedTemplateList = new ArrayList<>();
-    if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
+    if (hasSome(sshCommandTemplate.getCommandUnits())) {
       for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
         ReferencedTemplateBuilder referencedTemplateBuilder = ReferencedTemplate.builder();
         if (commandUnit.getCommandUnitType() == CommandUnitType.COMMAND) {
@@ -99,7 +99,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
               // Check if variable's value already defined in top-level template variables i.e. variable references
               // another variable
               String variable = ExpressionEvaluator.getName(commandVariable.getValue());
-              if (isNotEmpty(variable) && variable.equals(commandVariable.getValue())) {
+              if (hasSome(variable) && variable.equals(commandVariable.getValue())) {
                 variable = commandVariable.getName();
               }
               Variable parentVariable = getTopLevelTemplateVariable(templateVariables, variable);
@@ -117,7 +117,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   }
 
   private Variable getTopLevelTemplateVariable(List<Variable> variables, String lookupVariable) {
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       for (Variable variable : variables) {
         if (variable.getName().equals(lookupVariable)) {
           return variable;
@@ -134,7 +134,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     Map<String, String> fixedValueMap = new HashMap<>();
 
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
-    if (isNotEmpty(sshCommandTemplate.getCommandUnits())) {
+    if (hasSome(sshCommandTemplate.getCommandUnits())) {
       for (CommandUnit commandUnit : sshCommandTemplate.getCommandUnits()) {
         if (commandUnit.getCommandUnitType() == CommandUnitType.COMMAND) {
           validateTemplateReference(parentScope, template.getAppId(), (Command) commandUnit);
@@ -144,7 +144,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             String value = ExpressionEvaluator.getName(commandVariable.getValue());
             // if value is a fixed value check if the current variable is not already defined with another fixed value
             // in a prior command unit
-            if (isNotEmpty(value)) {
+            if (hasSome(value)) {
               if (value.equals(commandVariable.getValue())) {
                 if (fixedValueMap.containsKey(commandVariable.getName())
                     && !fixedValueMap.get(commandVariable.getName()).equals(value)) {

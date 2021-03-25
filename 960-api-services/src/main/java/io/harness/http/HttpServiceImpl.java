@@ -1,6 +1,6 @@
 package io.harness.http;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
@@ -89,7 +89,7 @@ public class HttpServiceImpl implements HttpService {
 
       HttpHost proxyHost = Http.getHttpProxyHost();
       if (proxyHost != null) {
-        if (isNotEmpty(Http.getProxyUserName())) {
+        if (hasSome(Http.getProxyUserName())) {
           httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
           BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
           credsProvider.setCredentials(new AuthScope(proxyHost),
@@ -107,7 +107,7 @@ public class HttpServiceImpl implements HttpService {
     HttpUriRequest httpUriRequest = getMethodSpecificHttpRequest(
         toUpperCase(httpInternalConfig.getMethod()), httpInternalConfig.getUrl(), httpInternalConfig.getBody());
 
-    if (isNotEmpty(httpInternalConfig.getHeaders())) {
+    if (hasSome(httpInternalConfig.getHeaders())) {
       for (KeyValuePair header : httpInternalConfig.getHeaders()) {
         httpUriRequest.addHeader(header.getKey(), header.getValue());
       }

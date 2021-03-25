@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
@@ -146,7 +146,7 @@ public class AuditRecordMigration implements Migration {
   }
 
   private boolean auditRecordDoesNotNeedUpdate(AuditHeader auditHeader) {
-    if (isEmpty(auditHeader.getEntityAuditRecords())) {
+    if (hasNone(auditHeader.getEntityAuditRecords())) {
       return true;
     }
 
@@ -155,7 +155,7 @@ public class AuditRecordMigration implements Migration {
     List<EntityAuditRecord> recordList =
         auditHeader.getEntityAuditRecords().stream().filter(this::recordNeedsUpdateForGlobalAppId).collect(toList());
 
-    if (isNotEmpty(recordList)) {
+    if (hasSome(recordList)) {
       recordList.forEach(record -> record.setAppId(Application.GLOBAL_APP_ID));
       unchanged = false;
     }
@@ -166,7 +166,7 @@ public class AuditRecordMigration implements Migration {
                      .filter(record -> "HELM_REPO".equals(record.getAffectedResourceType()))
                      .collect(toList());
 
-    if (isNotEmpty(recordList)) {
+    if (hasSome(recordList)) {
       recordList.forEach(record -> record.setAffectedResourceType(ResourceType.ARTIFACT_SERVER.name()));
       unchanged = false;
     }
@@ -176,7 +176,7 @@ public class AuditRecordMigration implements Migration {
                      .stream()
                      .filter(record -> "CONNECTOR".equals(record.getAffectedResourceType()))
                      .collect(toList());
-    if (isNotEmpty(recordList)) {
+    if (hasSome(recordList)) {
       recordList.forEach(this::updateRequiredForConnectorToNewCategory);
       unchanged = false;
     }

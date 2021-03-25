@@ -1,7 +1,7 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.Slack;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationServiceConstants.TEST_SLACK_TEMPLATE;
@@ -66,7 +66,7 @@ public class SlackServiceImpl implements ChannelService {
     }
 
     List<String> slackWebhookUrls = getRecipients(notificationRequest);
-    if (isEmpty(slackWebhookUrls)) {
+    if (hasNone(slackWebhookUrls)) {
       log.info("No slackWebhookUrls found in notification request {}", notificationId);
       return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }

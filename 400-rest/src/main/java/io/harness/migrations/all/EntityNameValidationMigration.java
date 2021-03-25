@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -225,7 +225,7 @@ public abstract class EntityNameValidationMigration implements Migration {
       try {
         log.info("Migrating Service: " + service.getUuid());
         String newName = getValidName(namesAlreadyTaken, service.getName());
-        if (isNotEmpty(newName) && !newName.equals(service.getName())) {
+        if (hasSome(newName) && !newName.equals(service.getName())) {
           wingsPersistence.updateField(Service.class, service.getUuid(), "name", newName);
         }
         migrateArtifactStreamsOfService(service.getUuid(), appId);
@@ -265,7 +265,7 @@ public abstract class EntityNameValidationMigration implements Migration {
       try {
         log.info("Migrating Artifact Stream: " + artifactStream.getUuid());
         String newName = getValidName(namesAlreadyTaken, artifactStream.getName());
-        if (isNotEmpty(newName) && !newName.equals(artifactStream.getName())) {
+        if (hasSome(newName) && !newName.equals(artifactStream.getName())) {
           wingsPersistence.updateField(ArtifactStream.class, artifactStream.getUuid(), "name", newName);
         }
         log.info("Done with Artifact Stream: " + artifactStream.getUuid());
@@ -345,7 +345,7 @@ public abstract class EntityNameValidationMigration implements Migration {
       try {
         log.info("Migrating Infrastructure Mapping: " + infrastructureMapping.getUuid());
         String newName = getValidName(namesAlreadyTaken, infrastructureMapping.getName());
-        if (isNotEmpty(newName) && !newName.equals(infrastructureMapping.getName())) {
+        if (hasSome(newName) && !newName.equals(infrastructureMapping.getName())) {
           wingsPersistence.updateField(InfrastructureMapping.class, infrastructureMapping.getUuid(), "name", newName);
         }
         log.info("Done with Infrastructure Mapping: " + infrastructureMapping.getUuid());

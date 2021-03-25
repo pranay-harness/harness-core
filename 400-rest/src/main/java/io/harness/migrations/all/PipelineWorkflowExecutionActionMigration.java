@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -37,10 +37,10 @@ public class PipelineWorkflowExecutionActionMigration implements Migration {
              wingsPersistence.createQuery(UserGroup.class).field(UserGroupKeys.appPermissions).exists().fetch())) {
       while (userGroupHIterator.hasNext()) {
         UserGroup userGroup = userGroupHIterator.next();
-        if (isNotEmpty(userGroup.getAppPermissions())) {
+        if (hasSome(userGroup.getAppPermissions())) {
           Set<AppPermission> appPermissions = new HashSet<>();
           for (AppPermission appPermission : userGroup.getAppPermissions()) {
-            if (isNotEmpty(appPermission.getActions())
+            if (hasSome(appPermission.getActions())
                 && (appPermission.getPermissionType() == ALL_APP_ENTITIES
                     || appPermission.getPermissionType() == DEPLOYMENT)) {
               Set<Action> actionSet = new HashSet<>();

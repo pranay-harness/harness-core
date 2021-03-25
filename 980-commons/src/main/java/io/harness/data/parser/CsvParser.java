@@ -1,6 +1,6 @@
 package io.harness.data.parser;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,12 +17,12 @@ public class CsvParser {
 
   public static List<String> parse(String input) {
     List<String> list = new ArrayList<>();
-    if (isEmpty(input)) {
+    if (hasNone(input)) {
       return list;
     }
     try (CSVParser csvParser = CSVParser.parse(input, csvFormat)) {
       final List<CSVRecord> records = csvParser.getRecords();
-      if (isEmpty(records)) {
+      if (hasNone(records)) {
         return list;
       }
       CSVRecord record = records.get(0);

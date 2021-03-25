@@ -1,8 +1,8 @@
 package io.harness.yaml.schema;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -52,7 +52,7 @@ public class JacksonClassHelper {
     List<Class<?>> classes = new ArrayList<>();
     classes.add(aClass);
     ApiModel annotation = aClass.getAnnotation(ApiModel.class);
-    if (annotation != null && isNotEmpty(annotation.subTypes())) {
+    if (annotation != null && hasSome(annotation.subTypes())) {
       Collections.addAll(classes, annotation.subTypes());
     }
 
@@ -110,7 +110,7 @@ public class JacksonClassHelper {
   private void processSubtypeMappings(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
       Set<FieldSubtypeData> fieldSubtypeDataList, Field declaredField) {
     Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
-    if (isEmpty(mapOfSubtypes)) {
+    if (hasNone(mapOfSubtypes)) {
       return;
     }
     for (SubtypeClassMap subtype : mapOfSubtypes) {

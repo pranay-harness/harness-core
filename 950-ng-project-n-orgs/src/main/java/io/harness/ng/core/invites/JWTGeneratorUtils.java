@@ -1,7 +1,7 @@
 package io.harness.ng.core.invites;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -43,7 +43,7 @@ public class JWTGeneratorUtils {
       if (validityDurationInMillis != null) {
         jwtBuilder.withExpiresAt(new Date(System.currentTimeMillis() + validityDurationInMillis));
       }
-      if (!isEmpty(claims)) {
+      if (!hasNone(claims)) {
         claims.forEach(jwtBuilder::withClaim);
       }
       return jwtBuilder.sign(algorithm);

@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.utils.IdentifierRefHelper.getFullyQualifiedIdentifierRefString;
@@ -85,7 +85,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
       }
     }
 
-    if (isEmpty(eligibleTriggers)) {
+    if (hasNone(eligibleTriggers)) {
       String msg = format("No trigger found for repoUrl: %s for Project %s",
           webhookPayloadData.getRepository().getLink(), filterRequestData.getProjectFqn());
       log.info(msg);

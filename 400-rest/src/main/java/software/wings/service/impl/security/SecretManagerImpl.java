@@ -2,8 +2,8 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
@@ -191,7 +191,7 @@ public class SecretManagerImpl implements SecretManager {
       return Optional.empty();
     }
 
-    if (encryptionConfig.isTemplatized() && isNotEmpty(workflowExecutionId)) {
+    if (encryptionConfig.isTemplatized() && hasSome(workflowExecutionId)) {
       encryptionConfig = updateRuntimeParametersAndGetConfig(workflowExecutionId, encryptionConfig);
     }
 
@@ -308,7 +308,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void updateUsageLogsForSecretText(String workflowExecutionId, EncryptedData encryptedData) {
-    if (isNotEmpty(workflowExecutionId)) {
+    if (hasSome(workflowExecutionId)) {
       WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
       if (workflowExecution == null) {
         log.warn("No workflow execution with id {} found.", workflowExecutionId);
@@ -333,7 +333,7 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(os.toByteArray())).array());
     }
 
-    if (isNotEmpty(encryptedData.getBackupEncryptedValue())
+    if (hasSome(encryptedData.getBackupEncryptedValue())
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getBackupEncryptionType())) {
       ByteArrayOutputStream os = new ByteArrayOutputStream();
       fileService.downloadToStream(String.valueOf(encryptedData.getBackupEncryptedValue()), os, CONFIGS);
@@ -377,7 +377,7 @@ public class SecretManagerImpl implements SecretManager {
     List<String> secretIds = getSecretIds(accountId, Lists.newArrayList(entityId), variableType);
     // PL-3298: Some setting attribute doesn't have encrypted fields and therefore no secret Ids associated with it.
     // E.g. PHYSICAL_DATA_CENTER config. An empty response will be returned.
-    if (isEmpty(secretIds)) {
+    if (hasNone(secretIds)) {
       return new PageResponse<>(pageRequest);
     }
 
@@ -385,7 +385,7 @@ public class SecretManagerImpl implements SecretManager {
     pageRequest.addFilter(SecretChangeLogKeys.accountId, Operator.EQ, accountId);
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
-      if (isNotEmpty(secretUsageLog.getWorkflowExecutionId())) {
+      if (hasSome(secretUsageLog.getWorkflowExecutionId())) {
         WorkflowExecution workflowExecution =
             wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
         if (workflowExecution != null) {
@@ -447,7 +447,7 @@ public class SecretManagerImpl implements SecretManager {
     // HAR-7150: Retrieve version history/changelog from Vault if secret text is a path reference.
     if (variableType == SettingVariableTypes.SECRET_TEXT && encryptedData != null) {
       EncryptionType encryptionType = encryptedData.getEncryptionType();
-      if (encryptionType == EncryptionType.VAULT && isNotEmpty(encryptedData.getPath())) {
+      if (encryptionType == EncryptionType.VAULT && hasSome(encryptedData.getPath())) {
         VaultConfig vaultConfig = (VaultConfig) secretManagerConfigService.getSecretManager(
             accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
         secretChangeLogs.addAll(vaultService.getVaultSecretChangeLogs(encryptedData, vaultConfig));
@@ -564,7 +564,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String getEncryptedYamlRef(String accountId, String secretId) {
-    if (isEmpty(accountId) || isEmpty(secretId)) {
+    if (hasNone(accountId) || hasNone(secretId)) {
       return null;
     }
     return secretYamlHandler.toYaml(accountId, secretId);
@@ -572,7 +572,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef, String accountId) {
-    checkState(isNotEmpty(encryptedYamlRef), ENCRYPT_DECRYPT_ERROR, "Null encrypted YAML reference");
+    checkState(hasSome(encryptedYamlRef), ENCRYPT_DECRYPT_ERROR, "Null encrypted YAML reference");
     return secretYamlHandler.fromYaml(accountId, encryptedYamlRef);
   }
 
@@ -850,7 +850,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void fillInDetails(String accountId, List<EncryptedData> encryptedDataList) throws IllegalAccessException {
-    if (isEmpty(encryptedDataList)) {
+    if (hasNone(encryptedDataList)) {
       return;
     }
 

@@ -1,7 +1,7 @@
 package software.wings.service.impl.compliance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
@@ -12,7 +12,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
 import io.harness.exception.InvalidRequestException;
@@ -184,10 +183,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       governanceConfig = get(accountId);
     }
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
-      if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      if (hasSome(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
         Map<String, Set<String>> envIdsByWindow = new HashMap<>();
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
-          if (isNotEmpty(freezeConfig.getAppSelections()) && freezeConfig.checkIfActive()) {
+          if (hasSome(freezeConfig.getAppSelections()) && freezeConfig.checkIfActive()) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
               if (appSelection.getFilterType() == BlackoutWindowFilterType.ALL
                   || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
@@ -210,7 +209,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   public List<GovernanceFreezeConfig> getGovernanceFreezeConfigs(String accountId, List<String> deploymentFreezeIds) {
     GovernanceConfig governanceConfig = get(accountId);
-    if (governanceConfig != null && EmptyPredicate.isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+    if (governanceConfig != null && hasSome(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
       return governanceConfig.getTimeRangeBasedFreezeConfigs()
           .stream()
           .filter(freeze -> deploymentFreezeIds.contains(freeze.getUuid()))
@@ -241,12 +240,12 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
       Set<String> allEnvFrozenApps = new HashSet<>();
       Map<String, Set<String>> appEnvs = new HashMap<>();
-      if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      if (hasSome(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
-          if (isNotEmpty(freezeConfig.getAppSelections()) && isActive(freezeConfig)) {
+          if (hasSome(freezeConfig.getAppSelections()) && isActive(freezeConfig)) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
               Map<String, Set<String>> appEnvMap = getAppEnvMapForAppSelection(accountId, appSelection);
-              if (isNotEmpty(appEnvMap)) {
+              if (hasSome(appEnvMap)) {
                 appEnvMap.forEach((app, envSet) -> appEnvs.merge(app, envSet, (prevEnvSet, newEnvSet) -> {
                   prevEnvSet.addAll(newEnvSet);
                   return prevEnvSet;
@@ -307,7 +306,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       default:
         throw new InvalidRequestException("Invalid app selection");
     }
-    if (EmptyPredicate.isEmpty(appEnvMap)) {
+    if (hasNone(appEnvMap)) {
       log.info("No applications and environments matching the given app selection: {}, environment selection type: {}",
           appSelection.getFilterType(), appSelection.getEnvSelection().getFilterType());
     }
@@ -327,7 +326,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   private void validateDeploymentFreezeInput(List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs,
       String accountId, GovernanceConfig oldGovernanceConfig) {
-    if (EmptyPredicate.isEmpty(timeRangeBasedFreezeConfigs)) {
+    if (hasNone(timeRangeBasedFreezeConfigs)) {
       return;
     }
 
@@ -340,7 +339,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     });
 
     timeRangeBasedFreezeConfigs.stream()
-        .filter(freeze -> EmptyPredicate.isNotEmpty(freeze.getAppSelections()))
+        .filter(freeze -> hasSome(freeze.getAppSelections()))
         .forEach(deploymentFreeze -> {
           validateName(deploymentFreeze.getName());
           validateAppEnvFilter(deploymentFreeze);
@@ -349,7 +348,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   }
 
   private void validateUserGroups(List<String> userGroups, String accountId) {
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       throw new InvalidRequestException("User Groups cannot be empty");
     }
     for (String userGroupId : userGroups) {
@@ -380,12 +379,12 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         entry.setUuid(oldWindow.getUuid());
 
         // if no timezone(update from YAML) then fetch from db
-        if (isEmpty(entry.getTimeRange().getTimeZone())) {
+        if (hasNone(entry.getTimeRange().getTimeZone())) {
           entry.setTimeRange(new TimeRange(
               entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(), oldWindow.getTimeRange().getTimeZone()));
         }
 
-        if (isEmpty(entry.getDescription())) {
+        if (hasNone(entry.getDescription())) {
           entry.setDescription(null);
         }
 

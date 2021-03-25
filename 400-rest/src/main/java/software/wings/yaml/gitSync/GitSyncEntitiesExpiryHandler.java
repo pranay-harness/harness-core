@@ -1,7 +1,7 @@
 package software.wings.yaml.gitSync;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static software.wings.beans.Account.AccountKeys;
@@ -124,7 +124,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(expiredCommits)) {
+    if (hasSome(expiredCommits)) {
       boolean deleted = gitSyncService.deleteGitCommits(expiredCommits, account.getUuid());
       if (deleted) {
         log.info(
@@ -166,7 +166,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
             .flatMap(List::stream)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(expiredActivities)) {
+    if (hasSome(expiredActivities)) {
       boolean deleted = gitSyncService.deleteGitActivity(expiredActivities, account.getUuid());
       if (deleted) {
         log.info("Deleted {} expired Git File Activity for account {}. Expired Ids are: {} ", expiredActivities.size(),
@@ -183,7 +183,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
           wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, account.getUuid());
       query.criteria(GitSyncError.CREATED_AT_KEY).lessThan(expiryMillis);
       List<GitSyncError> gitSyncErrorToBeDeleted = query.asList(new FindOptions().limit(1000));
-      if (isEmpty(gitSyncErrorToBeDeleted)) {
+      if (hasNone(gitSyncErrorToBeDeleted)) {
         return;
       }
       errorIds = gitSyncErrorToBeDeleted.stream().map(GitSyncError::getUuid).collect(Collectors.toList());
@@ -192,7 +192,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
         log.info("Deleted {} expired Git Sync Error for account {}. Expired Ids are: {} ", errorIds.size(),
             account.getUuid());
       }
-    } while (isNotEmpty(errorIds));
+    } while (hasSome(errorIds));
   }
 
   @VisibleForTesting
@@ -220,7 +220,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
           }
         }
       }
-      if (isEmpty(gitCommitsToBeDeleted)) {
+      if (hasNone(gitCommitsToBeDeleted)) {
         return;
       }
       gitCommitIds = gitCommitsToBeDeleted.stream().map(GitCommit::getUuid).collect(Collectors.toList());
@@ -231,6 +231,6 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
       if (deleted) {
         log.info("Deleted expired Git Commit for account {}. Expired Ids are: {} ", account.getUuid(), gitCommitIds);
       }
-    } while (isNotEmpty(gitCommitIds));
+    } while (hasSome(gitCommitIds));
   }
 }

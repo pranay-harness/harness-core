@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -100,7 +100,7 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public void batchedSave(List<Log> logs) {
-    if (isNotEmpty(logs)) {
+    if (hasSome(logs)) {
       logs = logs.stream().filter(Objects::nonNull).collect(toList());
       dataStoreService.save(Log.class, logs, false);
 

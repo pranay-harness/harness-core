@@ -1,7 +1,7 @@
 package io.harness.delegate.task.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GIT;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.exception.WingsException.USER;
@@ -338,7 +338,7 @@ public class K8sTaskHelperBase {
       V1Service service = kubernetesContainerService.getService(kubernetesConfig, serviceName, namespace);
       if (service.getStatus() != null && service.getStatus().getLoadBalancer() != null) {
         V1LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
-        if (isNotEmpty(loadBalancerStatus.getIngress())) {
+        if (hasSome(loadBalancerStatus.getIngress())) {
           return service;
         }
       }
@@ -431,7 +431,7 @@ public class K8sTaskHelperBase {
 
   public void setNamespaceToKubernetesResourcesIfRequired(
       List<KubernetesResource> kubernetesResources, String namespace) {
-    if (isEmpty(kubernetesResources)) {
+    if (hasNone(kubernetesResources)) {
       return;
     }
 
@@ -444,7 +444,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetails(
       KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
-    if (isEmpty(releaseName)) {
+    if (hasNone(releaseName)) {
       return Collections.emptyList();
     }
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
@@ -544,7 +544,7 @@ public class K8sTaskHelperBase {
   }
 
   private String getHostFromRoute(List<DestinationWeight> routes) {
-    if (isEmpty(routes)) {
+    if (hasNone(routes)) {
       throw new InvalidRequestException("No routes exist in VirtualService", USER);
     }
 
@@ -568,12 +568,12 @@ public class K8sTaskHelperBase {
     List<TCPRoute> tcp = virtualService.getSpec().getTcp();
     List<TLSRoute> tls = virtualService.getSpec().getTls();
 
-    if (isEmpty(http)) {
+    if (hasNone(http)) {
       throw new InvalidRequestException(
           "Http route is not present in VirtualService. Only Http routes are allowed", USER);
     }
 
-    if (isNotEmpty(tcp) || isNotEmpty(tls)) {
+    if (hasSome(tcp) || hasSome(tls)) {
       throw new InvalidRequestException("Only Http routes are allowed in VirtualService for Traffic split", USER);
     }
 
@@ -589,7 +589,7 @@ public class K8sTaskHelperBase {
     executionLogCallback.saveExecutionLog("\nUpdating VirtualService with destination weights");
 
     List<HTTPRoute> http = virtualService.getSpec().getHttp();
-    if (isNotEmpty(http)) {
+    if (hasSome(http)) {
       String host = getHostFromRoute(http.get(0).getRoute());
       PortSelector portSelector = getPortSelectorFromRoute(http.get(0).getRoute());
       http.get(0).setRoute(generateDestinationWeights(istioDestinationWeights, host, portSelector));
@@ -606,7 +606,7 @@ public class K8sTaskHelperBase {
             .filter(KubernetesResource::isManaged)
             .collect(toList());
 
-    if (isEmpty(virtualServiceResources)) {
+    if (hasNone(virtualServiceResources)) {
       return null;
     }
 
@@ -653,7 +653,7 @@ public class K8sTaskHelperBase {
             .filter(KubernetesResource::isManaged)
             .collect(toList());
 
-    if (isEmpty(destinationRuleResources)) {
+    if (hasNone(destinationRuleResources)) {
       return null;
     }
 
@@ -680,7 +680,7 @@ public class K8sTaskHelperBase {
   }
 
   private String getPodContainerId(K8sPod pod) {
-    return isEmpty(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
+    return hasNone(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
   }
 
   private List<K8sPod> getHelmPodDetails(
@@ -713,7 +713,7 @@ public class K8sTaskHelperBase {
         resources.stream()
             .filter(kubernetesResource -> openshiftResources.contains(kubernetesResource.getResourceId().getKind()))
             .collect(Collectors.toList());
-    if (isEmpty(openshiftResourcesList)) {
+    if (hasNone(openshiftResourcesList)) {
       return client;
     }
 
@@ -1238,7 +1238,7 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
       K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
       boolean denoteOverallSuccess) throws Exception {
-    if (isEmpty(resourceIds)) {
+    if (hasNone(resourceIds)) {
       return true;
     }
 
@@ -1418,7 +1418,7 @@ public class K8sTaskHelperBase {
       }
     }
 
-    if (isNotEmpty(skippedFilesList)) {
+    if (hasSome(skippedFilesList)) {
       executionLogCallback.saveExecutionLog("Following manifest files are skipped for applying");
       for (String file : skippedFilesList) {
         executionLogCallback.saveExecutionLog(color(file, Yellow, Bold));
@@ -1511,7 +1511,7 @@ public class K8sTaskHelperBase {
   public List<FileData> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
       List<FileData> manifestFiles, List<String> valuesFiles, LogCallback executionLogCallback, long timeoutInMillis)
       throws Exception {
-    if (isEmpty(valuesFiles)) {
+    if (hasNone(valuesFiles)) {
       executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
     }
@@ -1588,13 +1588,13 @@ public class K8sTaskHelperBase {
         : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
-    if (isEmpty(releaseHistory.getReleases())) {
+    if (hasNone(releaseHistory.getReleases())) {
       return emptyList();
     }
 
     Map<String, KubernetesResourceId> kubernetesResourceIdMap = new HashMap<>();
     for (Release release : releaseHistory.getReleases()) {
-      if (isNotEmpty(release.getResources())) {
+      if (hasSome(release.getResources())) {
         release.getResources().forEach(
             resource -> kubernetesResourceIdMap.put(generateResourceIdentifier(resource), resource));
       }
@@ -1621,12 +1621,12 @@ public class K8sTaskHelperBase {
   }
 
   private boolean releaseHistoryPresent(V1ConfigMap configMap) {
-    return configMap != null && isNotEmpty(configMap.getData())
+    return configMap != null && hasSome(configMap.getData())
         && isNotBlank(configMap.getData().get(ReleaseHistoryKeyName));
   }
 
   private boolean releaseHistoryPresent(V1Secret secret) {
-    return secret != null && isNotEmpty(secret.getData())
+    return secret != null && hasSome(secret.getData())
         && ArrayUtils.isNotEmpty(secret.getData().get(ReleaseHistoryKeyName));
   }
 
@@ -1662,7 +1662,7 @@ public class K8sTaskHelperBase {
       long timeoutInMillis) throws Exception {
     List<KubernetesResourceId> resourceIds =
         resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
-    if (isEmpty(resourceIds)) {
+    if (hasNone(resourceIds)) {
       return true;
     }
 
@@ -1745,7 +1745,7 @@ public class K8sTaskHelperBase {
   public void checkSteadyStateCondition(List<KubernetesResource> customWorkloads) {
     for (KubernetesResource customWorkload : customWorkloads) {
       String steadyCondition = customWorkload.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
-      if (isEmpty(steadyCondition)) {
+      if (hasNone(steadyCondition)) {
         throw new InvalidArgumentsException(
             Pair.of(HarnessAnnotations.steadyStateCondition, "Metadata annotation not provided."));
       }
@@ -1801,7 +1801,7 @@ public class K8sTaskHelperBase {
 
       evaluatorResponseContext.put("response", result.outputUTF8());
       String steadyResult = delegateExpressionEvaluator.substitute(steadyCondition, evaluatorResponseContext);
-      if (isNotEmpty(steadyResult)) {
+      if (hasSome(steadyResult)) {
         boolean steady = Boolean.parseBoolean(steadyResult);
         if (steady) {
           return true;
@@ -1838,7 +1838,7 @@ public class K8sTaskHelperBase {
     String releaseHistoryData =
         kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
 
-    if (isEmpty(releaseHistoryData)) {
+    if (hasNone(releaseHistoryData)) {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
     }
 
@@ -1945,7 +1945,7 @@ public class K8sTaskHelperBase {
       throws Exception {
     List<FileData> manifestFiles = renderTemplateForGivenFiles(k8sDelegateTaskParams, manifestDelegateConfig,
         manifestFilesDirectory, filesList, valuesFiles, releaseName, namespace, logCallback, timeoutInMin);
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return new ArrayList<>();
     }
 

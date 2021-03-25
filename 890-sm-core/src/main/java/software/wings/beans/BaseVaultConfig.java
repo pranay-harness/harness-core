@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -77,7 +77,7 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
   @JsonIgnore
   @SchemaIgnore
   public AccessType getAccessType() {
-    return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    return hasSome(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
   }
 
   @Override

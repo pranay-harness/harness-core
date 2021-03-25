@@ -1,7 +1,7 @@
 package software.wings.api.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -31,7 +31,7 @@ public class PcfDeployExecutionSummary extends StepExecutionSummary implements D
 
   @Override
   public Optional<List<DeploymentInfo>> extractDeploymentInfo() {
-    if (isEmpty(instaceData)) {
+    if (hasNone(instaceData)) {
       log.warn(
           "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance");
       return Optional.empty();

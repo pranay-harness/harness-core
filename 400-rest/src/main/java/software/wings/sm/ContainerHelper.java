@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.deployment.InstanceDetails.InstanceType.K8s;
 
 import io.harness.container.ContainerInfo;
@@ -17,7 +17,7 @@ import lombok.experimental.UtilityClass;
 public final class ContainerHelper {
   @Nonnull
   public static List<InstanceDetails> generateInstanceDetails(List<ContainerInfo> containerInfos) {
-    if (isNotEmpty(containerInfos)) {
+    if (hasSome(containerInfos)) {
       return containerInfos.stream()
           .filter(Objects::nonNull)
           .map(containerInfo

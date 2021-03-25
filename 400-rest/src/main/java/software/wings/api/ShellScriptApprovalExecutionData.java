@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -59,7 +59,7 @@ public class ShellScriptApprovalExecutionData extends StateExecutionData impleme
           ExecutionDataValue.builder().displayName("Execution Status").value(executionStatus.name()).build());
     }
 
-    if (isNotEmpty(sweepingOutputEnvVariables)) {
+    if (hasSome(sweepingOutputEnvVariables)) {
       putNotNull(executionDetails, "sweepingOutputEnvVariables",
           ExecutionDataValue.builder()
               .displayName("Script Output")

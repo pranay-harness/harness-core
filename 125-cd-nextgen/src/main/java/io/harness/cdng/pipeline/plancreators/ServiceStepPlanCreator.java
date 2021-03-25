@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.util.Collections.singletonList;
@@ -16,7 +17,6 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
@@ -65,7 +65,7 @@ public class ServiceStepPlanCreator
     final String serviceNodeUid = generateUuid();
     ServiceYaml serviceYaml = serviceConfig.getService();
 
-    if (EmptyPredicate.isEmpty(serviceYaml.getName())) {
+    if (hasNone(serviceYaml.getName())) {
       serviceYaml.setName(serviceYaml.getIdentifier());
     }
 

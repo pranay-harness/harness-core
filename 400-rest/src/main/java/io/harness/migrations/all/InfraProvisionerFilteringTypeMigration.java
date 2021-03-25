@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
@@ -33,11 +33,11 @@ public class InfraProvisionerFilteringTypeMigration implements Migration {
     PageRequest<InfrastructureProvisioner> request = aPageRequest().withLimit(UNLIMITED).build();
     List<InfrastructureProvisioner> provisioners =
         wingsPersistence.query(InfrastructureProvisioner.class, request).getResponse();
-    if (isNotEmpty(provisioners)) {
+    if (hasSome(provisioners)) {
       provisioners.forEach(provisioner -> {
         try {
           List<InfrastructureMappingBlueprint> blueprints = provisioner.getMappingBlueprints();
-          if (isNotEmpty(blueprints)) {
+          if (hasSome(blueprints)) {
             blueprints.forEach(blueprint -> { blueprint.setNodeFilteringType(AWS_INSTANCE_FILTER); });
             wingsPersistence.saveAndGet(InfrastructureProvisioner.class, provisioner);
           }

@@ -1,6 +1,6 @@
 package io.harness.event.reconciliation.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.time.Duration.ofMinutes;
@@ -114,7 +114,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         boolean statusMismatchDetected;
 
         List<String> executionIDs = checkForDuplicates(accountId, durationStartTs, durationEndTs);
-        if (isNotEmpty(executionIDs)) {
+        if (hasSome(executionIDs)) {
           duplicatesDetected = true;
           log.warn("Duplicates detected for accountId:[{}] in duration:[{}-{}], executionIDs:[{}]", accountId,
               new Date(durationStartTs), new Date(durationEndTs), executionIDs);

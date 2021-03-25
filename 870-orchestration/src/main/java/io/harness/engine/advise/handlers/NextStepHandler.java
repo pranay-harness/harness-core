@@ -1,9 +1,9 @@
 package io.harness.engine.advise.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -29,7 +29,7 @@ public class NextStepHandler implements AdviserResponseHandler {
     if (advise.getToStatus() != Status.NO_OP) {
       nodeExecutionService.updateStatus(nodeExecution.getUuid(), advise.getToStatus());
     }
-    if (EmptyPredicate.isNotEmpty(advise.getNextNodeId())) {
+    if (hasSome(advise.getNextNodeId())) {
       PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
           nodeExecution.getAmbiance().getPlanExecutionId(), advise.getNextNodeId()));
       engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);

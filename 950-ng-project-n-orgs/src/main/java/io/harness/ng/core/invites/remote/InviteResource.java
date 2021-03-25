@@ -1,6 +1,6 @@
 package io.harness.ng.core.invites.remote;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -83,7 +83,7 @@ public class InviteResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
-    if (isEmpty(pageRequest.getSortOrders())) {
+    if (hasNone(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(InviteKeys.createdAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));

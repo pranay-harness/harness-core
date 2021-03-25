@@ -1,6 +1,6 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
@@ -61,7 +61,7 @@ public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidatio
   @VisibleForTesting
   GcpValidationTaskResponse validateInternal(GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      if (isNotEmpty(gcpRequest.getDelegateSelectors())) {
+      if (hasSome(gcpRequest.getDelegateSelectors())) {
         gcpClient.validateDefaultCredentials();
         ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
                                                                   .status(ConnectivityStatus.SUCCESS)

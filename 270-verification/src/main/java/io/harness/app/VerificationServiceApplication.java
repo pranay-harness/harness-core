@@ -1,6 +1,7 @@
 package io.harness.app;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -315,7 +316,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private void registerGaugeMetric(String metricName, String[] labels) {
     harnessMetricRegistry.registerGaugeMetric(metricName, labels, getDataAnalysisMetricHelpDocument());
     String env = System.getenv("ENV");
-    if (isNotEmpty(env)) {
+    if (hasSome(env)) {
       env = env.replaceAll("-", "_").toLowerCase();
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, getDataAnalysisMetricHelpDocument());
     }

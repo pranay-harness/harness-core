@@ -1,7 +1,7 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.MSTeam;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationConstants.ABORTED_COLOR;
@@ -98,7 +98,7 @@ public class MSTeamsServiceImpl implements ChannelService {
     }
 
     List<String> microsoftTeamsWebhookUrls = getRecipients(notificationRequest);
-    if (isEmpty(microsoftTeamsWebhookUrls)) {
+    if (hasNone(microsoftTeamsWebhookUrls)) {
       log.info("No microsoft teams webhook url found in notification request {}", notificationId);
       return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -38,7 +38,7 @@ public class MigrateCVMetadataApplicationId implements Migration {
     while (!cvMetadataResponse.isEmpty()) {
       List<ContinuousVerificationExecutionMetaData> cvList = cvMetadataResponse.getResponse();
       for (ContinuousVerificationExecutionMetaData cvMetadata : cvList) {
-        if (isEmpty(cvMetadata.getAppId())) {
+        if (hasNone(cvMetadata.getAppId())) {
           cvMetadata.setAppId(cvMetadata.getApplicationId());
           UpdateOperations<ContinuousVerificationExecutionMetaData> op =
               wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class);

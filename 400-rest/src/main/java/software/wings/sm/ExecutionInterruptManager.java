@@ -21,7 +21,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
@@ -363,7 +363,7 @@ public class ExecutionInterruptManager {
 
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (isEmpty(pageResponse)) {
+    if (hasNone(pageResponse)) {
       log.error("No StateExecutionInstance found for sendNotification");
       return null;
     }
@@ -382,7 +382,7 @@ public class ExecutionInterruptManager {
 
   private ExecutionInterrupt getExecutionInterrupt(
       PageResponse<ExecutionInterrupt> res, ExecutionInterruptType eventType) {
-    if (isEmpty(res)) {
+    if (hasNone(res)) {
       return null;
     }
     for (ExecutionInterrupt evt : res) {
@@ -404,7 +404,7 @@ public class ExecutionInterruptManager {
   }
 
   public List<ExecutionInterrupt> listByIdsUsingSecondary(Collection<String> ids) {
-    if (isEmpty(ids)) {
+    if (hasNone(ids)) {
       return Collections.emptyList();
     }
 
@@ -415,7 +415,7 @@ public class ExecutionInterruptManager {
   }
 
   public List<ExecutionInterrupt> listByStateExecutionIdsUsingSecondary(Collection<String> stateExecutionIds) {
-    if (isEmpty(stateExecutionIds)) {
+    if (hasNone(stateExecutionIds)) {
       return Collections.emptyList();
     }
 

@@ -1,7 +1,7 @@
 package io.harness.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -26,7 +26,7 @@ public class YamlSdkInitHelper {
     YamlSnippetHelper yamlSnippetHelper = injector.getInstance(YamlSnippetHelper.class);
     YamlSchemaValidator yamlSchemaValidator = injector.getInstance(YamlSchemaValidator.class);
     YamlSchemaHelper yamlSchemaHelper = injector.getInstance(YamlSchemaHelper.class);
-    if (isEmpty(schemas)) {
+    if (hasNone(schemas)) {
       return;
     }
     if (yamlSdkConfiguration.isRequireSnippetInit()) {

@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -320,7 +320,7 @@ public abstract class InstanceHandler {
       }
     });
 
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
       log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }

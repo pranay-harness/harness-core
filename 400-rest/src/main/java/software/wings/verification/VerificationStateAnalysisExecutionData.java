@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.dl.WingsPersistence;
@@ -70,7 +70,7 @@ public class VerificationStateAnalysisExecutionData extends StateExecutionData {
   }
 
   private void removeCrypticHostNames(Set<String> hostNames) {
-    if (isEmpty(hostNames)) {
+    if (hasNone(hostNames)) {
       return;
     }
 

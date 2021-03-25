@@ -1,6 +1,6 @@
 package io.harness.yaml.core.deserializer;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -47,7 +47,7 @@ public abstract class TypeAwarePolymorphicDeserializer<T> extends StdDeserialize
     if (root.has(getTypePropertyName())) {
       JsonNode typeNode = root.findValue(getTypePropertyName());
       String type = typeNode.asText();
-      if (typeNode.isNull() || isEmpty(type)) {
+      if (typeNode.isNull() || hasNone(type)) {
         throw ctxt.mappingException("Type property: '" + getTypePropertyName() + "' is empty");
       }
 

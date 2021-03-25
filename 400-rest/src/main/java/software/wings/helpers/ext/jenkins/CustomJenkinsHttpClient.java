@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.jenkins;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
@@ -32,7 +32,7 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
 
   public CustomJenkinsHttpClient(URI uri, String username, String password, HttpClientBuilder builder) {
     super(uri, addAuthentication(builder, uri, username, password));
-    if (isNotEmpty(username)) {
+    if (hasSome(username)) {
       BasicHttpContext basicHttpContext = new BasicHttpContext();
       basicHttpContext.setAttribute("preemptive-auth", new BasicScheme());
       setLocalContext(basicHttpContext);
@@ -50,7 +50,7 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
     CredentialsProvider credsProvider = new BasicCredentialsProvider();
 
     setProxyAuthForClient(uri.getHost(), builder, credsProvider);
-    if (isNotEmpty(username)) {
+    if (hasSome(username)) {
       AuthScope scope = new AuthScope(uri.getHost(), uri.getPort());
       UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(username, password);
       credsProvider.setCredentials(scope, credentials);
@@ -63,7 +63,7 @@ public class CustomJenkinsHttpClient extends JenkinsHttpClient {
 
   private static void setProxyAuthForClient(String host, HttpClientBuilder builder, CredentialsProvider credsProvider) {
     builder.setProxy(Http.getHttpProxyHost(host));
-    if (isNotEmpty(Http.getProxyUserName())) {
+    if (hasSome(Http.getProxyUserName())) {
       builder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
       credsProvider.setCredentials(new AuthScope(Http.getProxyHostName(), Integer.parseInt(Http.getProxyPort())),
           new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));

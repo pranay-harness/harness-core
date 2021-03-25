@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.Integer.max;
 
@@ -72,11 +72,11 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
   private int aggregateRiskOfRecord(TimeSeriesMLAnalysisRecord mlAnalysisRecord) {
     mlAnalysisRecord.decompress(false);
     int aggregatedRisk = -1;
-    if (isEmpty(mlAnalysisRecord.getTransactions())) {
+    if (hasNone(mlAnalysisRecord.getTransactions())) {
       return aggregatedRisk;
     }
     for (TimeSeriesMLTxnSummary txn : mlAnalysisRecord.getTransactions().values()) {
-      if (txn != null && isNotEmpty(txn.getMetrics())) {
+      if (txn != null && hasSome(txn.getMetrics())) {
         for (TimeSeriesMLMetricSummary metric : txn.getMetrics().values()) {
           if (metric != null) {
             aggregatedRisk = max(aggregatedRisk, metric.getMax_risk());

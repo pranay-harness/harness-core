@@ -5,8 +5,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
@@ -314,7 +314,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   }
 
   private TemplateExpression fetchEnvTemplateExpression() {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return null;
     }
     return templateExpressions.stream()
@@ -324,7 +324,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   }
 
   public TemplateExpression fetchServiceTemplateExpression() {
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       return null;
     }
     return templateExpressions.stream()
@@ -376,7 +376,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
     if (orchestrationWorkflow != null) {
       keywords.add(orchestrationWorkflow.getOrchestrationWorkflowType().name());
-      if (isNotEmpty(orchestrationWorkflow.getLinkedTemplateUuids())) {
+      if (hasSome(orchestrationWorkflow.getLinkedTemplateUuids())) {
         keywords.addAll(orchestrationWorkflow.getLinkedTemplateUuids());
       }
     }

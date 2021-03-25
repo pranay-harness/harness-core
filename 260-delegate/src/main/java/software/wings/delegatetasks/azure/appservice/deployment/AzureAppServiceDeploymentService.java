@@ -14,7 +14,8 @@ import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFI
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -185,7 +186,7 @@ public class AzureAppServiceDeploymentService {
 
   private void deleteDeploymentSlotAppSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceApplicationSetting> appSettingsToRemove, LogCallback configurationLogCallback) {
-    if (isEmpty(appSettingsToRemove)) {
+    if (hasNone(appSettingsToRemove)) {
       return;
     }
     String appSettingKeysStr = Arrays.toString(appSettingsToRemove.keySet().toArray(new String[0]));
@@ -197,7 +198,7 @@ public class AzureAppServiceDeploymentService {
 
   private void updateDeploymentSlotAppSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceApplicationSetting> appSettings, LogCallback configurationLogCallback) {
-    if (isEmpty(appSettings)) {
+    if (hasNone(appSettings)) {
       return;
     }
 
@@ -210,7 +211,7 @@ public class AzureAppServiceDeploymentService {
 
   private void deleteDeploymentSlotConnectionSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettingsToRemove, LogCallback configurationLogCallback) {
-    if (isEmpty(connSettingsToRemove)) {
+    if (hasNone(connSettingsToRemove)) {
       return;
     }
 
@@ -223,7 +224,7 @@ public class AzureAppServiceDeploymentService {
 
   private void updateDeploymentSlotConnectionSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettings, LogCallback configurationLogCallback) {
-    if (isEmpty(connSettings)) {
+    if (hasNone(connSettings)) {
       return;
     }
     String connSettingKeysStr = Arrays.toString(connSettings.keySet().toArray(new String[0]));

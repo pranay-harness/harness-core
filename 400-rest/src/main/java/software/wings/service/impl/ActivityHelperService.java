@@ -2,13 +2,13 @@ package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
@@ -60,25 +60,24 @@ public class ActivityHelperService {
     WorkflowStandardParams workflowStandardParams =
         Objects.requireNonNull(executionContext.getContextElement(ContextElementType.STANDARD));
 
-    ActivityBuilder activityBuilder =
-        Activity.builder()
-            .appId(app.getUuid())
-            .applicationName(app.getName())
-            .type(activityType)
-            .workflowExecutionId(executionContext.getWorkflowExecutionId())
-            .workflowType(executionContext.getWorkflowType())
-            .workflowId(executionContext.getWorkflowId())
-            .workflowExecutionName(executionContext.getWorkflowExecutionName())
-            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-            .status(ExecutionStatus.RUNNING)
-            .commandName(commandName)
-            .commandType(commandUnitType)
-            .commandUnits(EmptyPredicate.isEmpty(commandUnits) ? new ArrayList<>() : commandUnits)
-            .triggeredBy(TriggeredBy.builder()
-                             .email(workflowStandardParams.getCurrentUser().getEmail())
-                             .name(workflowStandardParams.getCurrentUser().getName())
-                             .build());
+    ActivityBuilder activityBuilder = Activity.builder()
+                                          .appId(app.getUuid())
+                                          .applicationName(app.getName())
+                                          .type(activityType)
+                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                                          .workflowType(executionContext.getWorkflowType())
+                                          .workflowId(executionContext.getWorkflowId())
+                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                                          .status(ExecutionStatus.RUNNING)
+                                          .commandName(commandName)
+                                          .commandType(commandUnitType)
+                                          .commandUnits(hasNone(commandUnits) ? new ArrayList<>() : commandUnits)
+                                          .triggeredBy(TriggeredBy.builder()
+                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
+                                                           .name(workflowStandardParams.getCurrentUser().getName())
+                                                           .build());
 
     if (artifact != null) {
       activityBuilder.artifactStreamId(artifact.getArtifactStreamId())

@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
@@ -188,7 +188,7 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public AuditHeaderYamlResponse fetchAuditEntityYamls(String headerId, String entityId, String accountId) {
-    if (isEmpty(entityId)) {
+    if (hasNone(entityId)) {
       throw new WingsException("EntityId is needed.").addParam("message", "EntityId is needed.");
     }
 
@@ -205,7 +205,7 @@ public class AuditServiceImpl implements AuditService {
     AuditHeaderYamlResponseBuilder builder =
         AuditHeaderYamlResponse.builder().auditHeaderId(headerId).entityId(entityId);
 
-    if (isEmpty(header.getEntityAuditRecords())) {
+    if (hasNone(header.getEntityAuditRecords())) {
       return builder.build();
     }
 
@@ -228,7 +228,7 @@ public class AuditServiceImpl implements AuditService {
                                                      .filter(record -> entityId.equals(record.getEntityId()))
                                                      .collect(Collectors.toList());
 
-    if (isEmpty(entityAuditRecords)) {
+    if (hasNone(entityAuditRecords)) {
       return builder.build();
     }
 
@@ -247,13 +247,13 @@ public class AuditServiceImpl implements AuditService {
     yamlIds.add(entityOldYamlRecordId);
     yamlIds.add(entityNewYamlRecordId);
 
-    if (isNotEmpty(yamlIds)) {
+    if (hasSome(yamlIds)) {
       Query<EntityYamlRecord> query = wingsPersistence.createQuery(EntityYamlRecord.class)
                                           .filter(EntityYamlRecordKeys.accountId, accountId)
                                           .field(EntityYamlRecordKeys.uuid)
                                           .in(yamlIds);
       List<EntityYamlRecord> entityAuditYamls = query.asList();
-      if (isNotEmpty(entityAuditYamls)) {
+      if (hasSome(entityAuditYamls)) {
         entityAuditYamls.forEach(yaml -> {
           if (yaml.getUuid().equals(entityOldYamlRecordId)) {
             builder.oldYaml(yaml.getYamlContent());
@@ -361,7 +361,7 @@ public class AuditServiceImpl implements AuditService {
                                                .field(AuditHeaderKeys.createdAt)
                                                .lessThan(currentTimeMillis() - retentionMillis)
                                                .asList(new FindOptions().limit(limit).batchSize(batchSize));
-          if (isEmpty(auditHeaders)) {
+          if (hasNone(auditHeaders)) {
             log.info("No more audit records older than {} days", days);
             return true;
           }
@@ -382,14 +382,14 @@ public class AuditServiceImpl implements AuditService {
                 .remove(new BasicDBObject(
                     ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
 
-            if (isNotEmpty(requestPayloadIds)) {
+            if (hasSome(requestPayloadIds)) {
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", requestPayloadIds.toArray())));
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
             }
 
-            if (isNotEmpty(requestPayloadIds)) {
+            if (hasSome(requestPayloadIds)) {
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", responsePayloadIds.toArray())));
               wingsPersistence.getCollection(DEFAULT_STORE, "audits.chunks")

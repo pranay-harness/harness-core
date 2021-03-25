@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -24,8 +24,8 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.data.structure.HasPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.FileBucket;
@@ -199,7 +199,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                                                  .equal(appId)
                                                  .field(InfrastructureProvisioner.NAME_KEY)
                                                  .equal(name);
-    if (isNotEmpty(uuid)) {
+    if (hasSome(uuid)) {
       query.field(InfrastructureProvisioner.ID).notEqual(uuid);
     }
     return query.count() > 0;
@@ -211,7 +211,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void ensureNoDuplicateVars(List<NameValuePair> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return;
     }
 
@@ -250,7 +250,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (GIT == provisioner.getSourceType()) {
       notNullCheck("Git File Config is NULL", provisioner.getGitFileConfig());
     } else if (TEMPLATE_BODY == provisioner.getSourceType()) {
-      if (isEmpty(provisioner.getTemplateBody())) {
+      if (hasNone(provisioner.getTemplateBody())) {
         throw new InvalidRequestException("Template Body is empty");
       }
     } else {
@@ -294,7 +294,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   public void trimInfrastructureProvisionerVariables(InfrastructureProvisioner infrastructureProvisioner) {
-    if (isEmpty(infrastructureProvisioner.getVariables())) {
+    if (hasNone(infrastructureProvisioner.getVariables())) {
       return;
     }
     infrastructureProvisioner.getVariables().forEach(var -> var.setName(var.getName().trim()));
@@ -365,7 +365,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   Map<String, Service> getIdToServiceMapping(String appId, Set<String> servicesIds) {
-    if (isEmpty(servicesIds)) {
+    if (hasNone(servicesIds)) {
       return Collections.emptyMap();
     }
     PageRequest<Service> servicePageRequest = new PageRequest<>();
@@ -382,7 +382,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   Map<String, SettingAttribute> getIdToSettingAttributeMapping(String accountId, Set<String> settingAttributeIds) {
-    if (isEmpty(settingAttributeIds)) {
+    if (hasNone(settingAttributeIds)) {
       return Collections.emptyMap();
     }
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
@@ -462,7 +462,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     List<String> infraDefinitionNames =
         infrastructureDefinitionService.listNamesByProvisionerId(appId, infrastructureProvisionerId);
-    if (isNotEmpty(infraDefinitionNames)) {
+    if (hasSome(infraDefinitionNames)) {
       throw new InvalidRequestException(format("Infrastructure provisioner [%s] is not safe to "
               + "delete."
               + "Referenced "
@@ -532,7 +532,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         contextMap, infraRefactor, infraProvisionerTypeKey);
 
     for (BlueprintProperty property : properties) {
-      if (isNotEmpty(property.getFields())) {
+      if (hasSome(property.getFields())) {
         String propertyName = property.getName();
         Object evaluatedValue = propertyNameEvaluatedMap.get(propertyName);
         if (evaluatedValue == null) {
@@ -564,7 +564,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       boolean infraRefactor, String infrastructureProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
-      if (isEmpty(property.getValue())) {
+      if (hasNone(property.getValue())) {
         continue;
       }
       if (infraRefactor && !property.getValue().contains("$")) {
@@ -615,7 +615,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     try {
       String infraMappingId = getInfraMappingId(context);
       String infraDefinitionId = getInfraDefinitionId(context);
-      if (isEmpty(infraMappingId) && isNotEmpty(infraDefinitionId)) {
+      if (hasNone(infraMappingId) && hasSome(infraDefinitionId)) {
         // Inside deployment phase, but mapping not yet generated
         InfrastructureDefinition infrastructureDefinition =
             infrastructureDefinitionService.get(appId, infraDefinitionId);
@@ -662,10 +662,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       String data, String appId, String sourceRepoSettingId, String sourceRepoBranch, String templatePath,
       String commitId, Boolean useBranch, String repoName) {
     if (type.equalsIgnoreCase(CloudFormationSourceType.GIT.name())) {
-      if (isEmpty(sourceRepoSettingId) || (isEmpty(sourceRepoBranch) && isEmpty(commitId))) {
+      if (hasNone(sourceRepoSettingId) || (hasNone(sourceRepoBranch) && hasNone(commitId))) {
         throw new InvalidRequestException("Empty Fields Connector Id or both Branch and commitID");
       }
-    } else if (isEmpty(data)) {
+    } else if (hasNone(data)) {
       throw new InvalidRequestException("Empty Data Field, Template body or Template url");
     }
     return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region, appId, sourceRepoSettingId,
@@ -734,10 +734,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void validateBranchCommitId(String sourceRepoBranch, String commitId) {
-    if (isEmpty(sourceRepoBranch) && isEmpty(commitId)) {
+    if (hasNone(sourceRepoBranch) && hasNone(commitId)) {
       throw new InvalidRequestException("Either sourceRepoBranch or commitId should be specified", USER);
     }
-    if (isNotEmpty(sourceRepoBranch) && isNotEmpty(commitId)) {
+    if (hasSome(sourceRepoBranch) && hasSome(commitId)) {
       throw new InvalidRequestException("Cannot specify both sourceRepoBranch and commitId", USER);
     }
   }
@@ -806,20 +806,20 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
-    return (isNotEmpty(infrastructureProvisioner.getSourceRepoBranch())
+    return (hasSome(infrastructureProvisioner.getSourceRepoBranch())
                && infrastructureProvisioner.getSourceRepoBranch().charAt(0) == '$')
-        || (isNotEmpty(infrastructureProvisioner.getPath()) && infrastructureProvisioner.getPath().charAt(0) == '$');
+        || (hasSome(infrastructureProvisioner.getPath()) && infrastructureProvisioner.getPath().charAt(0) == '$');
   }
 
   private void validateTerraformProvisioner(TerraformInfrastructureProvisioner terraformProvisioner) {
     validateBranchCommitId(terraformProvisioner.getSourceRepoBranch(), terraformProvisioner.getCommitId());
     if (terraformProvisioner.getPath() == null) {
       throw new InvalidRequestException("Provisioner path cannot be null");
-    } else if (isEmpty(terraformProvisioner.getSourceRepoSettingId())) {
+    } else if (hasNone(terraformProvisioner.getSourceRepoSettingId())) {
       throw new InvalidRequestException("Provisioner should have a source repo");
     }
     GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
-    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(terraformProvisioner.getRepoName())) {
+    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && hasNone(terraformProvisioner.getRepoName())) {
       throw new InvalidRequestException("Repo name cannot be empty for account level git connector");
     }
 
@@ -857,7 +857,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   private boolean areKeysMongoCompliant(List<NameValuePair>... variables) {
     Predicate<String> terraformVariableNameCheckFail = value -> value.contains(".") || value.contains("$");
     return Stream.of(variables)
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .flatMap(Collection::stream)
         .map(NameValuePair::getName)
         .noneMatch(terraformVariableNameCheckFail);
@@ -888,7 +888,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public Map<String, String> extractUnresolvedTextVariables(List<NameValuePair> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return Collections.emptyMap();
     }
     return variables.stream()
@@ -899,7 +899,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public Map<String, String> extractTextVariables(List<NameValuePair> variables, ExecutionContext context) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return Collections.emptyMap();
     }
     return variables.stream()
@@ -910,7 +910,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return Collections.emptyMap();
     }
     String accountId = appService.getAccountIdByAppId(appId);
@@ -962,7 +962,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
       properties.forEach(property -> {
         property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
-        if (isNotEmpty(property.getFields())) {
+        if (hasSome(property.getFields())) {
           property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
         }
       });

@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -198,7 +198,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       Map response = artifactoryResponse.parseBody(Map.class);
       if (response != null) {
         images = (List<String>) response.get("repositories");
-        if (isEmpty(images)) {
+        if (hasNone(images)) {
           log.info("No docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
           images = new ArrayList<>();
         }
@@ -233,7 +233,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       Map response = artifactoryResponse.parseBody(Map.class);
       if (response != null) {
         List<String> tags = (List<String>) response.get("tags");
-        if (isEmpty(tags)) {
+        if (hasNone(tags)) {
           log.info("No  docker tags for repoKey {} imageName {} success ", repoKey, imageName);
           return buildDetails;
         }
@@ -467,7 +467,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         return folderPaths;
       }
       List<LinkedHashMap<String, Object>> results = (List<LinkedHashMap<String, Object>>) response.get("children");
-      if (isEmpty(results)) {
+      if (hasNone(results)) {
         return folderPaths;
       }
       for (LinkedHashMap<String, Object> result : results) {
@@ -533,7 +533,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     List<BuildDetails> filePaths =
         getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
 
-    if (isEmpty(filePaths)) {
+    if (hasNone(filePaths)) {
       prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
     }
     log.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
@@ -588,7 +588,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       builder.setUrl(getBaseUrl(artifactoryConfig));
       if (artifactoryConfig.hasCredentials()) {
-        if (isEmpty(artifactoryConfig.getPassword())) {
+        if (hasNone(artifactoryConfig.getPassword())) {
           throw new ArtifactoryServerException(
               "Password is a required field along with Username", ErrorCode.INVALID_ARTIFACT_SERVER, USER);
         }
@@ -695,7 +695,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       ArtifactoryErrorResponse errorResponse = artifactoryResponse.parseBody(ArtifactoryErrorResponse.class);
       String errorMessage =
           "Request to server failed with status code: " + artifactoryResponse.getStatusLine().getStatusCode();
-      if (isNotEmpty(errorResponse.getErrors())) {
+      if (hasSome(errorResponse.getErrors())) {
         errorMessage +=
             " with message - " + errorResponse.getErrors().stream().map(ArtifactoryError::getMessage).findFirst().get();
       }

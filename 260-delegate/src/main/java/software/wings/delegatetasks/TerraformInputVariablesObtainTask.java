@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -73,10 +73,10 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   private TerraformInputVariablesTaskResponse run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
-      if (isNotEmpty(parameters.getSourceRepoBranch())) {
+      if (hasSome(parameters.getSourceRepoBranch())) {
         gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
-      if (isNotEmpty(parameters.getCommitId())) {
+      if (hasSome(parameters.getCommitId())) {
         gitConfig.setReference(parameters.getCommitId());
       }
 

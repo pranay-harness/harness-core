@@ -14,7 +14,7 @@ import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_DEFAULT;
 import static io.harness.azure.model.AzureConstants.VMSS_AUTH_TYPE_SSH_PUBLIC_KEY;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.azure.utility.AzureResourceUtility.getRevisionFromTag;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -176,7 +176,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   @Nullable
   private VirtualMachineScaleSet logAndGetMostRecentActiveVMSS(
       List<VirtualMachineScaleSet> harnessVMSSSortedByCreationTimeReverse, ExecutionLogCallback setupLogCallback) {
-    if (isEmpty(harnessVMSSSortedByCreationTimeReverse)) {
+    if (hasNone(harnessVMSSSortedByCreationTimeReverse)) {
       return null;
     }
     setupLogCallback.saveExecutionLog(
@@ -252,7 +252,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
 
   private void downsizeLatestOlderVersions(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
       List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs, VirtualMachineScaleSet mostRecentActiveVMSS) {
-    if (isEmpty(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
+    if (hasNone(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
       markCommandUnitLoggingAsComplete(setupTaskParameters);
       return;
     }
@@ -268,7 +268,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
             .limit(versionsToKeep)
             .collect(toList());
 
-    if (isEmpty(scaleSetWithNonZeroCapacity)) {
+    if (hasNone(scaleSetWithNonZeroCapacity)) {
       markCommandUnitLoggingAsComplete(setupTaskParameters);
       return;
     }
@@ -310,7 +310,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   private void deleteVMSSsOlderThenLatestVersionsToKeep(AzureConfig azureConfig,
       List<VirtualMachineScaleSet> sortedHarnessManagedVMSSs, VirtualMachineScaleSet mostRecentActiveVMSS,
       AzureVMSSSetupTaskParameters azureVMSSTaskParameters) {
-    if (isEmpty(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
+    if (hasNone(sortedHarnessManagedVMSSs) || mostRecentActiveVMSS == null) {
       createAndFinishEmptyExecutionLog(
           azureVMSSTaskParameters, DELETE_OLD_VIRTUAL_MACHINE_SCALE_SETS_COMMAND_UNIT, NO_VMSS_FOR_DELETION);
       return;

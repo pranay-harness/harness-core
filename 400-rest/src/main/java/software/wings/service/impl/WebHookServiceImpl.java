@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
@@ -13,7 +13,6 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -315,7 +314,7 @@ public class WebHookServiceImpl implements WebHookService {
         String artifactStreamName = (String) artifact.get("artifactSourceName");
         Map<String, Object> parameterMap = null;
         parameterMap = (Map<String, Object>) artifact.get("artifactVariables");
-        if (isNotEmpty(parameterMap)) {
+        if (hasSome(parameterMap)) {
           parameterMap.put("buildNo", buildNumber);
         }
 
@@ -328,7 +327,7 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          if (isNotEmpty(parameterMap)) {
+          if (hasSome(parameterMap)) {
             serviceArtifactMapping.put(service.getUuid(),
                 ArtifactSummary.builder()
                     .name(artifactStreamName)
@@ -397,7 +396,7 @@ public class WebHookServiceImpl implements WebHookService {
 
     String branchName = webhookEventUtils.obtainBranchName(webhookSource, httpHeaders, payLoadMap);
     String storedBranchRegex = webhookTriggerCondition.getBranchRegex();
-    if (EmptyPredicate.isNotEmpty(storedBranchRegex) && EmptyPredicate.isNotEmpty(branchName)) {
+    if (hasSome(storedBranchRegex) && hasSome(branchName)) {
       validateBranchWithRegex(storedBranchRegex, branchName);
     }
     validateWebHook(webhookSource, trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
@@ -415,7 +414,7 @@ public class WebHookServiceImpl implements WebHookService {
       String param = entry.getKey();
       String paramValue = entry.getValue();
       try {
-        if (isNotEmpty(paramValue)) {
+        if (hasSome(paramValue)) {
           Object evalutedValue = expressionEvaluator.substitute(paramValue, payLoadMap);
           if (evalutedValue != null) {
             resolvedParameters.put(param, String.valueOf(evalutedValue));

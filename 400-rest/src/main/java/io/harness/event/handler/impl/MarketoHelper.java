@@ -1,8 +1,8 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -56,7 +56,7 @@ public class MarketoHelper {
     if (existingLeadResponse != null) {
       if (existingLeadResponse.isSuccess()) {
         List<Result> resultList = existingLeadResponse.getResult();
-        if (isNotEmpty(resultList)) {
+        if (hasSome(resultList)) {
           Result result = resultList.get(0);
           existingLeadId = result.getId();
         }
@@ -139,7 +139,7 @@ public class MarketoHelper {
     lead.setLastName(utils.getLastName(userName, email));
 
     if (account != null) {
-      if (isNotEmpty(oauthProvider)) {
+      if (hasSome(oauthProvider)) {
         // In case of sso, make the company name null because it's populated by harness using email.
         lead.setCompany(null);
       } else {
@@ -155,11 +155,11 @@ public class MarketoHelper {
       lead.setCompany(userInvite.getCompanyName());
     }
 
-    if (isNotEmpty(userInviteUrl)) {
+    if (hasSome(userInviteUrl)) {
       lead.setFreemium_Invite_URL__c(userInviteUrl);
     }
 
-    if (isNotEmpty(oauthProvider)) {
+    if (hasSome(oauthProvider)) {
       lead.setSSO_Freemium_Type__c(oauthProvider);
     }
 
@@ -171,7 +171,7 @@ public class MarketoHelper {
       lead.setUTM__c(utmInfo.getUtmCampaign());
     }
 
-    if (userInvite != null && isNotEmpty(userInvite.getFreemiumProducts())) {
+    if (userInvite != null && hasSome(userInvite.getFreemiumProducts())) {
       lead.setFreemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ";"));
     }
 
@@ -209,7 +209,7 @@ public class MarketoHelper {
     }
 
     List<Response.Result> results = leadResponse.getResult();
-    if (isEmpty(results)) {
+    if (hasNone(results)) {
       log.error("Marketo http response reported empty result while creating lead");
       return marketoLeadId;
     }
@@ -219,7 +219,7 @@ public class MarketoHelper {
     String status = result.getStatus();
     if (!("updated".equalsIgnoreCase(status) || "created".equalsIgnoreCase(status))) {
       List<Error> reasons = result.getReasons();
-      if (isEmpty(reasons)) {
+      if (hasNone(reasons)) {
         log.error("Marketo reported status {} for lead creation. No error reported in response", status);
       } else {
         Error error = reasons.get(0);

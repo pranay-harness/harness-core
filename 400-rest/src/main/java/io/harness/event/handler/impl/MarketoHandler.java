@@ -1,7 +1,7 @@
 package io.harness.event.handler.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
@@ -191,7 +191,7 @@ public class MarketoHandler implements EventHandler {
 
       Map<String, String> properties = eventData.getProperties();
 
-      if (isEmpty(properties)) {
+      if (hasNone(properties)) {
         log.error("Event data properties are null");
         return;
       }
@@ -200,7 +200,7 @@ public class MarketoHandler implements EventHandler {
 
       if (NEW_TRIAL_SIGNUP == eventType) {
         String email = properties.get(EMAIL_ID);
-        if (isEmpty(email)) {
+        if (hasNone(email)) {
           log.error("User email is empty");
           return;
         }
@@ -220,7 +220,7 @@ public class MarketoHandler implements EventHandler {
       }
 
       String accountId = properties.get(ACCOUNT_ID);
-      if (isEmpty(accountId)) {
+      if (hasNone(accountId)) {
         log.error("Account is empty");
         return;
       }
@@ -268,7 +268,7 @@ public class MarketoHandler implements EventHandler {
 
   private void reportToAllUsers(Account account, String accessToken, EventType eventType) throws IOException {
     List<User> usersOfAccount = userService.getUsersOfAccount(account.getUuid());
-    if (isEmpty(usersOfAccount)) {
+    if (hasNone(usersOfAccount)) {
       return;
     }
 
@@ -281,7 +281,7 @@ public class MarketoHandler implements EventHandler {
 
   private void updateAllUsersInMarketo(Account account, String accessToken) {
     List<User> usersOfAccount = userService.getUsersOfAccount(account.getUuid());
-    if (isEmpty(usersOfAccount)) {
+    if (hasNone(usersOfAccount)) {
       return;
     }
 
@@ -369,7 +369,7 @@ public class MarketoHandler implements EventHandler {
 
   public boolean reportCampaignEvent(EventType eventType, String accessToken, List<Id> leadIdList) throws IOException {
     log.info("Reporting campaign for event {} with leads {}", eventType, leadIdList);
-    if (isEmpty(leadIdList)) {
+    if (hasNone(leadIdList)) {
       log.error("No Leads reported for event {}", eventType);
       return false;
     }

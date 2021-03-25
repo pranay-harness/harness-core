@@ -1,7 +1,7 @@
 package software.wings.resources.template;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -51,7 +51,7 @@ public class TemplateResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Template> pageRequest, @QueryParam("galleryKeys") List<String> galleryKeys,
       @QueryParam("defaultVersion") boolean defaultVersion) {
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter(TemplateKeys.appId, IN, appIds.toArray());
     }
     return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId, defaultVersion));

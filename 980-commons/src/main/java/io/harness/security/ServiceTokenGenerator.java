@@ -1,7 +1,7 @@
 package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
@@ -37,8 +37,8 @@ public class ServiceTokenGenerator {
   }
 
   public String getVerificationServiceToken() {
-    Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
-        "could not read verification secret from system or env properties");
+    Preconditions.checkState(
+        hasSome(VERIFICATION_SERVICE_SECRET.get()), "could not read verification secret from system or env properties");
     return createNewToken(VERIFICATION_SERVICE_SECRET.get());
   }
 
@@ -47,7 +47,7 @@ public class ServiceTokenGenerator {
   }
 
   public String getServiceTokenWithDuration(String secretKey, Duration duration, Principal principal) {
-    if (isNotEmpty(secretKey)) {
+    if (hasSome(secretKey)) {
       return createNewToken(secretKey, duration, principal);
     }
     throw new InvalidArgumentsException("secretKey cannot be empty", null);

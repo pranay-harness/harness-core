@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -53,7 +53,7 @@ public class ScriptStateExecutionData extends StateExecutionData implements Dele
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
     putNotNull(executionDetails, "name", ExecutionDataValue.builder().displayName("Name").value(name).build());
-    if (isNotEmpty(sweepingOutputEnvVariables)) {
+    if (hasSome(sweepingOutputEnvVariables)) {
       putNotNull(executionDetails, "sweepingOutputEnvVariables",
           ExecutionDataValue.builder()
               .displayName("Script Output")

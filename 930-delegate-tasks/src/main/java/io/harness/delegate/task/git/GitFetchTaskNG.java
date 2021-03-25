@@ -1,9 +1,9 @@
 package io.harness.delegate.task.git;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.WARN;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
@@ -131,7 +131,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     executionLogCallback.saveExecutionLog(fetchTypeInfo);
 
     List<String> filePathsToFetch = null;
-    if (EmptyPredicate.isNotEmpty(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths())) {
+    if (hasSome(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths())) {
       filePathsToFetch = gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths();
       executionLogCallback.saveExecutionLog("\nFetching following Files :");
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);

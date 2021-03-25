@@ -2,6 +2,7 @@ package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -13,7 +14,6 @@ import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
@@ -128,7 +128,7 @@ public class DockerPublicRegistryProcessor {
     String nextPageNum = nextPageUrl == null ? null : nextPageUrl.queryParameter("page");
 
     // process rest of pages
-    while (EmptyPredicate.isNotEmpty(nextPageNum)) {
+    while (hasSome(nextPageNum)) {
       Response<DockerPublicImageTagResponse> pageResponse =
           registryRestClient.listPublicImageTags(imageName, Integer.valueOf(nextPageNum), limit).execute();
 
@@ -153,7 +153,7 @@ public class DockerPublicRegistryProcessor {
 
   private List<BuildDetailsInternal> processPage(
       DockerPublicImageTagResponse publicImageTags, DockerInternalConfig dockerConfig, String imageName) {
-    if (publicImageTags != null && EmptyPredicate.isNotEmpty(publicImageTags.getResults())) {
+    if (publicImageTags != null && hasSome(publicImageTags.getResults())) {
       return publicImageTags.getResults()
           .stream()
           .map(tag -> processSingleResultResponse(tag, imageName, dockerConfig))

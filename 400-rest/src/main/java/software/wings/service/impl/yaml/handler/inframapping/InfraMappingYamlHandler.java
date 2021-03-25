@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -69,7 +69,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
   }
 
   protected String getProvisionerId(String appId, String provisionerName) {
-    if (isEmpty(provisionerName)) {
+    if (hasNone(provisionerName)) {
       return null;
     }
 

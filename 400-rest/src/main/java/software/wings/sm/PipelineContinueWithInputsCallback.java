@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
 import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 
@@ -64,7 +64,7 @@ public class PipelineContinueWithInputsCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     String waitId = StateMachineExecutor.getContinuePipelineWaitId(pipelineStageElementId, executionUuid);
     ContinuePipelineResponseData responseData = null;
-    if (isNotEmpty(response) && response.get(waitId) != null) {
+    if (hasSome(response) && response.get(waitId) != null) {
       responseData = (ContinuePipelineResponseData) response.get(waitId);
     }
 
@@ -83,7 +83,7 @@ public class PipelineContinueWithInputsCallback implements NotifyCallback {
     if (responseData.getInterrupt() != null
         && responseData.getInterrupt().getExecutionInterruptType() == CONTINUE_WITH_DEFAULTS) {
       executionInterruptManager.seize(responseData.getInterrupt());
-    } else if (isNotEmpty(responseData.getWorkflowVariables())) {
+    } else if (hasSome(responseData.getWorkflowVariables())) {
       Map<String, String> currentVariableValues = workflowState.getWorkflowVariables();
       for (Map.Entry<String, String> variableValue : responseData.getWorkflowVariables().entrySet()) {
         currentVariableValues.put(variableValue.getKey(), variableValue.getValue());

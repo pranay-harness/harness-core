@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.terraform.helper;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -77,7 +78,7 @@ public class TerraformConfigInspectClientImpl implements TerraformConfigInspectC
           String fileName =
               Paths.get(positionDetails.getString(BLOCK_TYPE.FILENAME.name().toLowerCase())).getFileName().toString();
           int line = positionDetails.getInt(BLOCK_TYPE.LINE.name().toLowerCase());
-          error = isNotEmpty(fileName) ? error + "\nFile: " + fileName + SPACE + "Line: " + line : error;
+          error = hasSome(fileName) ? error + "\nFile: " + fileName + SPACE + "Line: " + line : error;
         }
         return Optional.of(error);
       }

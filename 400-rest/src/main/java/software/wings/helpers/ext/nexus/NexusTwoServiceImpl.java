@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.quietSleep;
 
@@ -13,7 +13,6 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -169,8 +168,8 @@ public class NexusTwoServiceImpl {
     Queue<Future> futures = new ConcurrentLinkedQueue<>();
     Stack<FolderPath> paths = new Stack<>();
     paths.addAll(getFolderPaths(nexusRestClient, nexusConfig, repoId, ""));
-    while (isNotEmpty(paths) || isNotEmpty(futures)) {
-      while (isNotEmpty(paths)) {
+    while (hasSome(paths) || hasSome(futures)) {
+      while (hasSome(paths)) {
         FolderPath folderPath = paths.pop();
         String path = folderPath.getPath();
         if (folderPath.isFolder()) {
@@ -266,7 +265,7 @@ public class NexusTwoServiceImpl {
                 versions.add(child.getNodeName());
                 List<ArtifactFileMetadata> artifactFileMetadata =
                     constructArtifactDownloadUrls(nexusConfig, child, extension, classifier);
-                if (isNotEmpty(artifactFileMetadata)) {
+                if (hasSome(artifactFileMetadata)) {
                   versionToArtifactUrls.put(child.getNodeName(), artifactFileMetadata.get(0).getUrl());
                 }
                 versionToArtifactDownloadUrls.put(child.getNodeName(), artifactFileMetadata);
@@ -282,7 +281,7 @@ public class NexusTwoServiceImpl {
 
   public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName, String extension, String classifier) throws IOException {
-    if (isEmpty(extension) && isEmpty(classifier)) {
+    if (hasNone(extension) && hasNone(classifier)) {
       return true;
     }
     log.info(
@@ -313,18 +312,18 @@ public class NexusTwoServiceImpl {
 
                 final Response<ContentListResourceResponse> contentResponse = request.execute();
                 if (isSuccessful(contentResponse)) {
-                  if (isNotEmpty(contentResponse.body().getData())) {
+                  if (hasSome(contentResponse.body().getData())) {
                     for (ContentListResource contentListResource : contentResponse.body().getData()) {
                       if (contentListResource.isLeaf()) {
-                        if (isNotEmpty(extension) && isNotEmpty(classifier)) {
+                        if (hasSome(extension) && hasSome(classifier)) {
                           if (contentListResource.getText().endsWith('-' + classifier + '.' + extension)) {
                             return true;
                           }
-                        } else if (isNotEmpty(extension)) {
+                        } else if (hasSome(extension)) {
                           if (contentListResource.getText().endsWith(extension)) {
                             return true;
                           }
-                        } else if (isNotEmpty(classifier)) {
+                        } else if (hasSome(classifier)) {
                           int index = contentListResource.getText().lastIndexOf('.');
                           if (index != -1) {
                             if (contentListResource.getText().substring(0, index).endsWith(classifier)) {
@@ -369,7 +368,7 @@ public class NexusTwoServiceImpl {
                 versions.add(child.getNodeName());
                 List<ArtifactFileMetadata> artifactFileMetadata =
                     constructArtifactDownloadUrls(nexusConfig, child, extension, classifier);
-                if (isNotEmpty(artifactFileMetadata)) {
+                if (hasSome(artifactFileMetadata)) {
                   versionToArtifactUrls.put(child.getNodeName(), artifactFileMetadata.get(0).getUrl());
                 }
                 versionToArtifactDownloadUrls.put(child.getNodeName(), artifactFileMetadata);
@@ -432,7 +431,7 @@ public class NexusTwoServiceImpl {
           List<ArtifactFileMetadata> artifactFileMetadata = getArtifactDownloadMetadataForVersionForNuGet(
               nexusConfig, encryptionDetails, repositoryId, packageName, content.getText());
           versionToArtifactDownloadUrls.put(content.getText(), artifactFileMetadata);
-          if (isNotEmpty(artifactFileMetadata)) {
+          if (hasSome(artifactFileMetadata)) {
             versionToArtifactUrls.put(content.getText(), artifactFileMetadata.get(0).getUrl());
           }
         } catch (IOException e) {
@@ -498,7 +497,7 @@ public class NexusTwoServiceImpl {
     try {
       List<ArtifactFileMetadata> artifactFileMetadata = getArtifactDownloadMetadataForVersionForNuGet(
           nexusConfig, encryptionDetails, repositoryId, packageName, version);
-      if (isNotEmpty(artifactFileMetadata)) {
+      if (hasSome(artifactFileMetadata)) {
         Map<String, String> metadata = new HashMap<>();
         metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
         metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
@@ -548,7 +547,7 @@ public class NexusTwoServiceImpl {
           log.info("Artifact Download Url {}", artifactUrl);
           final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
           versionToArtifactDownloadUrls.put(next.at("/version").textValue(),
-              asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()));
+              Arrays.asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()));
         }
       }
     }
@@ -604,7 +603,7 @@ public class NexusTwoServiceImpl {
           .withMetadata(metadata)
           .withUiDisplayName("Version# " + version)
           .withArtifactDownloadMetadata(
-              asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()))
+              Arrays.asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()))
           .build();
     }
     return null;
@@ -622,7 +621,7 @@ public class NexusTwoServiceImpl {
             if (!artifactName.endsWith("pom")) {
               if (classifier == null || artifactName.contains(classifier)) {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
-                if (isEmpty(extension) || artifactName.endsWith(extension)) {
+                if (hasNone(extension) || artifactName.endsWith(extension)) {
                   log.info("Artifact Url:" + artifactUrl + " for artifact filename: " + artifactName);
                   artifactUrls.add(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build());
                 }
@@ -670,13 +669,13 @@ public class NexusTwoServiceImpl {
       String extension;
       String classifier;
       if (isSuccessful(response)) {
-        if (isNotEmpty(artifactStreamAttributes.getExtension())
+        if (hasSome(artifactStreamAttributes.getExtension())
             && artifactStreamAttributes.getExtension().contains("${")) {
           extension = artifactMetadata.get(ArtifactMetadataKeys.extension);
         } else {
           extension = artifactStreamAttributes.getExtension();
         }
-        if (isNotEmpty(artifactStreamAttributes.getClassifier())
+        if (hasSome(artifactStreamAttributes.getClassifier())
             && artifactStreamAttributes.getClassifier().contains("${")) {
           classifier = artifactMetadata.get(ArtifactMetadataKeys.classifier);
         } else {
@@ -751,7 +750,7 @@ public class NexusTwoServiceImpl {
               if (!artifactName.endsWith("pom")) {
                 String artifactUrl = constructArtifactDownloadUrl(nexusConfig, artifact, extension, classifier);
                 log.info("Artifact Url:" + artifactUrl);
-                if (isNotEmpty(extension)) {
+                if (hasSome(extension)) {
                   int index = artifactName.lastIndexOf('.');
                   // to avoid running into ArrayIndexOutOfBoundsException
                   if (index >= 0 && index < artifactName.length() - 1) {
@@ -781,24 +780,24 @@ public class NexusTwoServiceImpl {
         .append(artifact.getArtifactId())
         .append("&v=")
         .append(artifact.getVersion());
-    if (isNotEmpty(extension) || isNotEmpty(classifier)) {
-      if (isNotEmpty(artifact.getPackaging())) { // currently we are honoring the packaging specified in pom.xml
+    if (hasSome(extension) || hasSome(classifier)) {
+      if (hasSome(artifact.getPackaging())) { // currently we are honoring the packaging specified in pom.xml
         artifactUrl.append("&p=").append(artifact.getPackaging());
       }
-      if (isNotEmpty(extension)) {
+      if (hasSome(extension)) {
         artifactUrl.append("&e=").append(extension);
       }
-      if (isNotEmpty(classifier)) {
+      if (hasSome(classifier)) {
         artifactUrl.append("&c=").append(classifier);
       }
     } else {
-      if (isNotEmpty(artifact.getPackaging())) {
+      if (hasSome(artifact.getPackaging())) {
         artifactUrl.append("&p=").append(artifact.getPackaging());
       }
-      if (isNotEmpty(artifact.getExtension())) {
+      if (hasSome(artifact.getExtension())) {
         artifactUrl.append("&e=").append(artifact.getExtension());
       }
-      if (isNotEmpty(artifact.getClassifier())) {
+      if (hasSome(artifact.getClassifier())) {
         artifactUrl.append("&c=").append(artifact.getClassifier());
       }
     }
@@ -859,7 +858,7 @@ public class NexusTwoServiceImpl {
     List<FolderPath> folderPaths = new ArrayList<>();
     try {
       Response<IndexBrowserTreeViewResponse> response;
-      if (isEmpty(repoPath)) {
+      if (hasNone(repoPath)) {
         final Call<IndexBrowserTreeViewResponse> request;
         if (nexusConfig.hasCredentials()) {
           request = nexusRestClient.getIndexContent(

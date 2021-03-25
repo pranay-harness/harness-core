@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
@@ -138,7 +138,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    if (isEmpty(managedWorkloads) && isEmpty(customWorkloads)) {
+    if (hasNone(managedWorkloads) && hasNone(customWorkloads)) {
       k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WaitForSteadyState)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
@@ -269,7 +269,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       boolean inCanaryWorkflow, Boolean skipVersioningForAllK8sObjects) {
     try {
       managedWorkloads = getWorkloads(resources);
-      if (isNotEmpty(managedWorkloads) && isNotTrue(skipVersioningForAllK8sObjects)) {
+      if (hasSome(managedWorkloads) && isNotTrue(skipVersioningForAllK8sObjects)) {
         markVersionedResources(resources);
       }
 
@@ -290,7 +290,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       customWorkloads = getCustomResourceDefinitionWorkloads(resources);
 
-      if (isEmpty(managedWorkloads) && isEmpty(customWorkloads)) {
+      if (hasNone(managedWorkloads) && hasNone(customWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)

@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -50,11 +50,11 @@ public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, Q
     if (qlQuery.getPipelineId() != null) {
       pipeline = persistence.get(Pipeline.class, qlQuery.getPipelineId());
     } else if (qlQuery.getPipelineName() != null) {
-      if (EmptyPredicate.isEmpty(qlQuery.getApplicationId())) {
+      if (hasNone(qlQuery.getApplicationId())) {
         throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
       }
 
-      if (EmptyPredicate.isEmpty(qlQuery.getPipelineName())) {
+      if (hasNone(qlQuery.getPipelineName())) {
         throw new InvalidRequestException(EMPTY_PIPELINE_NAME, WingsException.USER);
       }
 

@@ -1,6 +1,6 @@
 package io.harness.ci.plan.creator.filter;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
@@ -19,7 +19,7 @@ public class CIFilterCreationResponseMerger implements FilterCreationResponseMer
     CIFilter finalCIFilter = (CIFilter) finalResponse.getPipelineFilter();
     CIFilter currentCIFilter = (CIFilter) current.getPipelineFilter();
 
-    if (isNotEmpty(currentCIFilter.getRepoNames())) {
+    if (hasSome(currentCIFilter.getRepoNames())) {
       finalCIFilter.addRepoNames(currentCIFilter.getRepoNames());
     }
   }

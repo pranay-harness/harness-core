@@ -1,7 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 
@@ -73,7 +73,7 @@ public class GcsArtifactStream extends ArtifactStream {
 
   @Override
   public boolean checkIfStreamParameterized() {
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       return validateParameters(jobname, artifactPaths.get(0), projectId);
     }
     return validateParameters(jobname, projectId);

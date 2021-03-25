@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
@@ -37,7 +37,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
   public void run() {
     try {
-      if (isNotEmpty(syncTaskWaitMap)) {
+      if (hasSome(syncTaskWaitMap)) {
         List<String> completedSyncTasks = persistence.createQuery(DelegateSyncTaskResponse.class, excludeAuthority)
                                               .field(DelegateSyncTaskResponseKeys.uuid)
                                               .in(syncTaskWaitMap.keySet())

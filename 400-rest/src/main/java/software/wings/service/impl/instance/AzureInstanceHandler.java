@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.stream.Collectors.toSet;
@@ -116,7 +116,7 @@ public class AzureInstanceHandler extends InstanceHandler {
                                              .map(entry -> entry.getValue().getUuid())
                                              .collect(Collectors.toSet());
 
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }

@@ -1,6 +1,6 @@
 package io.harness.delegate.task.ci;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType.TOKEN;
 
 import static java.lang.String.format;
@@ -125,7 +125,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
 
     String token = githubService.getToken(githubAppConfig, null);
 
-    if (isNotEmpty(token)) {
+    if (hasSome(token)) {
       Map<String, Object> bodyObjectMap = new HashMap<>();
       bodyObjectMap.put(DESC, ciBuildStatusPushParameters.getDesc());
       bodyObjectMap.put(CONTEXT, ciBuildStatusPushParameters.getIdentifier());
@@ -160,7 +160,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
 
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
-    if (isNotEmpty(token)) {
+    if (hasSome(token)) {
       return bitbucketService.sendStatus(BitbucketConfig.builder().bitbucketUrl(BITBUCKET_API_URL).build(),
           ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
@@ -180,7 +180,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
 
-    if (isNotEmpty(token)) {
+    if (hasSome(token)) {
       return gitlabService.sendStatus(GitlabConfig.builder().gitlabUrl(GITLAB_API_URL).build(),
           ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);

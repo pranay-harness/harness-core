@@ -5,7 +5,7 @@
 package software.wings.common;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -133,7 +133,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    if (isNotEmpty(serviceNames)) {
+    if (hasSome(serviceNames)) {
       return matchingServices(getSelectedServices(), serviceNames);
     }
 

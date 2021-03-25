@@ -1,13 +1,13 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.artifact.AcrArtifactStream;
@@ -237,7 +237,7 @@ public class ArtifactSourceController {
             .packageType(azureArtifactsArtifactStream.getProtocolType())
             .project(azureArtifactsArtifactStream.getProject())
             .feedName(azureArtifactsArtifactStream.getFeed())
-            .scope(EmptyPredicate.isNotEmpty(azureArtifactsArtifactStream.getProject()) ? "PROJECT" : "ORGANIZATION")
+            .scope(hasSome(azureArtifactsArtifactStream.getProject()) ? "PROJECT" : "ORGANIZATION")
             .build();
 
       case AZURE_MACHINE_IMAGE:
@@ -263,7 +263,7 @@ public class ArtifactSourceController {
     }
   }
   private static QLArtifactoryProps generateArtifactoryProps(ArtifactoryArtifactStream artifactoryArtifactStream) {
-    if (EmptyPredicate.isNotEmpty(artifactoryArtifactStream.getImageName())) {
+    if (hasSome(artifactoryArtifactStream.getImageName())) {
       return QLArtifactoryDockerProps.builder()
           .dockerImageName(artifactoryArtifactStream.getImageName())
           .dockerRepositoryServer(artifactoryArtifactStream.getDockerRepositoryServer())

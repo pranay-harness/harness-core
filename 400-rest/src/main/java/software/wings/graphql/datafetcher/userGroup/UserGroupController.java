@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -197,7 +197,7 @@ public class UserGroupController {
   }
 
   public void validateTheUserIds(List<String> userIds, String accountId) {
-    if (isEmpty(userIds)) {
+    if (hasNone(userIds)) {
       return;
     }
     List<String> idsInput = new ArrayList<>(userIds);
@@ -211,7 +211,7 @@ public class UserGroupController {
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(User::getUuid).collect(Collectors.toList());
     idsInput.removeAll(idsPresent);
-    if (isNotEmpty(idsInput)) {
+    if (hasSome(idsInput)) {
       throw new InvalidRequestException(
           String.format("Invalid id/s %s provided in the request", String.join(", ", idsInput)));
     }
@@ -313,7 +313,7 @@ public class UserGroupController {
   }
 
   public void checkIfUserGroupIdsExist(final String accountId, List<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return;
     }
     List<String> idsInput = new ArrayList<>(userGroupIds);
@@ -325,7 +325,7 @@ public class UserGroupController {
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<String> idsPresent = res.stream().map(UserGroup::getUuid).collect(Collectors.toList());
     idsInput.removeAll(idsPresent);
-    if (isNotEmpty(idsInput)) {
+    if (hasSome(idsInput)) {
       throw new InvalidRequestException(
           String.format("Invalid userGroupId: %s provided in the request", String.join(", ", idsInput)));
     }

@@ -5,7 +5,7 @@ import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.BLUEPRINT_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.UNIX_SEPARATOR;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -206,7 +206,7 @@ public class ARMProvisionState extends State {
       templateBody = provisioner.getTemplateBody();
     }
 
-    if (isEmpty(templateBody) || EMPTY_TEMPLATE.equalsIgnoreCase(templateBody)) {
+    if (hasNone(templateBody) || EMPTY_TEMPLATE.equalsIgnoreCase(templateBody)) {
       return ExecutionResponse.builder()
           .executionStatus(SKIPPED)
           .errorMessage("ARM template is not found or empty")
@@ -232,7 +232,7 @@ public class ARMProvisionState extends State {
             .resourceGroupName(context.renderExpression(resourceGroupExpression))
             .deploymentDataLocation(context.renderExpression(locationExpression))
             .templateJson(templateBody)
-            .parametersJson(isEmpty(parametersBody) ? EMPTY_TEMPLATE : parametersBody)
+            .parametersJson(hasNone(parametersBody) ? EMPTY_TEMPLATE : parametersBody)
             .commandName(ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE)
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
             .build();
@@ -263,7 +263,7 @@ public class ARMProvisionState extends State {
     Map<String, String> artifacts =
         helper.extractJSONsFromGitResponse(stateExecutionData, BLUEPRINT_FOLDER_KEY, artifactsFolderPath);
 
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       log.warn("Not found artifacts on path, artifactsFolderPath: {}", artifactsFolderPath);
     }
 
@@ -456,7 +456,7 @@ public class ARMProvisionState extends State {
 
   private boolean preDeploymentDataDoesNotExist(AzureARMDeploymentResponse azureTaskResponse) {
     AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
-    return preDeploymentData == null || isEmpty(preDeploymentData.getResourceGroupTemplateJson());
+    return preDeploymentData == null || hasNone(preDeploymentData.getResourceGroupTemplateJson());
   }
 
   private void saveARMOutputs(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {

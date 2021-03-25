@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
@@ -78,7 +78,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
 
   @Override
   public SampleAppStatus getSampleAppHealth(String accountId, String deploymentType) {
-    if (isEmpty(deploymentType)) {
+    if (hasNone(deploymentType)) {
       throw new InvalidRequestException("Please specify deployment type for sample app.", WingsException.USER);
     }
     if (deploymentType.equals(DeploymentType.KUBERNETES.name())) {
@@ -91,7 +91,7 @@ public class HarnessSampleAppServiceImpl implements HarnessSampleAppService {
 
   @Override
   public Application restoreSampleApp(@NotEmpty String accountId, String deploymentType) {
-    if (isEmpty(deploymentType)) {
+    if (hasNone(deploymentType)) {
       throw new InvalidRequestException(
           "Please specify deployment type for restoring sample app.", WingsException.USER);
     }

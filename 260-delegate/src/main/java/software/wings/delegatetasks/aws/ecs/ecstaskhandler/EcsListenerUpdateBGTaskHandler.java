@@ -1,12 +1,12 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -93,7 +93,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
               .append(request.getTargetGroupForNewService())
               .toString());
 
-      if (isNotEmpty(request.getStageListenerArn())) {
+      if (hasSome(request.getStageListenerArn())) {
         executionLogCallback.saveExecutionLog(
             new StringBuilder(128)
                 .append(
@@ -109,7 +109,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
               .append(request.getTargetGroupForExistingService())
               .toString());
 
-      if (isNotEmpty(request.getStageListenerArn())) {
+      if (hasSome(request.getStageListenerArn())) {
         executionLogCallback.saveExecutionLog(
             new StringBuilder(128)
                 .append(
@@ -130,7 +130,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
       List<Action> actions = awsElbHelperServiceDelegate.getMatchingTargetGroupForSpecificListenerRuleArn(
           request.getAwsConfig(), encryptedDataDetails, request.getRegion(), request.getProdListenerArn(),
           request.getProdListenerRuleArn(), request.getTargetGroupForNewService(), executionLogCallback);
-      if (EmptyPredicate.isNotEmpty(actions)) {
+      if (hasSome(actions)) {
         return true;
       }
       return false;
@@ -142,7 +142,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
     List<Action> actions = result.getListeners().get(0).getDefaultActions();
     Optional<Action> optionalAction =
         actions.stream()
-            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
+            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && hasSome(action.getTargetGroupArn()))
             .findFirst();
 
     String arn = optionalAction.get().getTargetGroupArn();

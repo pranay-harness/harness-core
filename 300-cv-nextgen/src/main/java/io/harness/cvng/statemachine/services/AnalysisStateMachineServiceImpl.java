@@ -1,8 +1,8 @@
 package io.harness.cvng.statemachine.services;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
@@ -87,7 +87,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
   @Override
   public void executeStateMachine(String verificationTaskId) {
-    if (isEmpty(verificationTaskId)) {
+    if (hasNone(verificationTaskId)) {
       log.error("Empty cvConfigId in executeStateMachine");
       throw new AnalysisStateMachineException("Empty cvConfigId in executeStateMachine");
     }
@@ -235,7 +235,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
 
   @Override
   public void save(List<AnalysisStateMachine> stateMachineList) {
-    if (isNotEmpty(stateMachineList)) {
+    if (hasSome(stateMachineList)) {
       hPersistence.save(stateMachineList);
     }
   }

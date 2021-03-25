@@ -1,7 +1,8 @@
 package io.harness.pms.notification;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.PipelineServiceConfiguration;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.notification.PipelineEventType;
@@ -62,7 +63,7 @@ public class NotificationHelper {
     String accountId = AmbianceUtils.getAccountId(ambiance);
 
     String yaml = ambiance.getMetadata().getYaml();
-    if (EmptyPredicate.isEmpty(yaml)) {
+    if (hasNone(yaml)) {
       log.error("Empty yaml found in executionMetaData");
       return;
     }
@@ -73,7 +74,7 @@ public class NotificationHelper {
       // Todo: throw Execution exception over here.
       log.error("", exception);
     }
-    if (EmptyPredicate.isEmpty(notificationRules)) {
+    if (hasNone(notificationRules)) {
       return;
     }
 

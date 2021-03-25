@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -291,7 +291,7 @@ public class ArtifactCollectionTaskHelper {
             (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes,
             artifactStreamAttributes.getMetadata(), false);
-        if (isEmpty(fileInfos)) {
+        if (hasNone(fileInfos)) {
           throw new InvalidArgumentsException(ImmutablePair.of(
               ArtifactMetadataKeys.version, metadata.getOrDefault(ArtifactMetadataKeys.version, "unknown")));
         }

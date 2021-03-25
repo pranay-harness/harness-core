@@ -1,7 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
@@ -71,7 +71,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   @Override
   public boolean checkIfStreamParameterized() {
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       return validateParameters(jobname, artifactPaths.get(0));
     }
     return validateParameters(jobname);

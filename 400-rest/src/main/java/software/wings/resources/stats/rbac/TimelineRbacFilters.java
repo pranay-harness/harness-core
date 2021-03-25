@@ -1,7 +1,7 @@
 package software.wings.resources.stats.rbac;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.google.common.collect.Sets.union;
 import static java.util.Collections.emptySet;
@@ -163,7 +163,7 @@ public class TimelineRbacFilters {
     UserRequestContext userRequestContext = currentUser.getUserRequestContext();
 
     Set<String> allowedAppIds = userRequestContext.getAppIds();
-    if (isEmpty(allowedAppIds)) {
+    if (hasNone(allowedAppIds)) {
       log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
       return emptySet();
     }

@@ -1,6 +1,6 @@
 package io.harness.spotinst;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_REST_TIMEOUT_MINUTES;
 import static io.harness.spotinst.model.SpotInstConstants.listElastiGroupsQueryTime;
@@ -85,7 +85,7 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
   public Optional<ElastiGroup> getElastiGroupByName(
       String spotInstToken, String spotInstAccountId, String elastiGroupName) throws Exception {
     List<ElastiGroup> items = listAllElstiGroups(spotInstToken, spotInstAccountId);
-    if (isEmpty(items)) {
+    if (hasNone(items)) {
       return empty();
     }
     return items.stream().filter(group -> elastiGroupName.equals(group.getName())).findFirst();
@@ -111,14 +111,14 @@ public class SpotInstHelperServiceDelegateImpl implements SpotInstHelperServiceD
     SpotInstListElastiGroupsResponse spotInstListElastiGroupsResponse =
         executeRestCall(getSpotInstRestClient().listElastiGroup(auth, elastiGroupId, spotInstAccountId));
     List<ElastiGroup> items = spotInstListElastiGroupsResponse.getResponse().getItems();
-    return isEmpty(items) ? empty() : of(items.get(0));
+    return hasNone(items) ? empty() : of(items.get(0));
   }
 
   @Override
   public List<ElastiGroup> listAllElastiGroups(
       String spotInstToken, String spotInstAccountId, String elastiGroupNamePrefix) throws Exception {
     List<ElastiGroup> items = listAllElstiGroups(spotInstToken, spotInstAccountId);
-    if (isEmpty(items)) {
+    if (hasNone(items)) {
       return emptyList();
     }
     String prefix = format("%s__", elastiGroupNamePrefix);

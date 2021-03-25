@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.trigger;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -36,7 +36,7 @@ public class TriggerQueryHelper {
   @Inject protected TagHelper tagHelper;
 
   public void setQuery(List<QLTriggerFilter> filters, Query query, String accountId) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

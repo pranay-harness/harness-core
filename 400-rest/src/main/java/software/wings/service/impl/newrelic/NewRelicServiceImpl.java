@@ -1,7 +1,7 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -90,7 +90,7 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config) {
-    if (isNotEmpty(config.getUrl()) && isNotEmpty(config.getBaseUrl())) {
+    if (hasSome(config.getUrl()) && hasSome(config.getBaseUrl())) {
       if (!config.getBaseUrl().endsWith("/")) {
         throw new VerificationOperationException(
             ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL must end with a / (forward slash)");
@@ -134,7 +134,7 @@ public class NewRelicServiceImpl implements NewRelicService {
                   Arrays.asList(bodySecrets, urlSecrets, apmVerificationConfig.getHeadersList(),
                       apmVerificationConfig.getOptionsList())))
               .build();
-      if (isNotEmpty(fetchConfig.getBody())) {
+      if (hasSome(fetchConfig.getBody())) {
         apmValidateCollectorConfig.setCollectionMethod(Method.POST);
       }
 
@@ -210,7 +210,7 @@ public class NewRelicServiceImpl implements NewRelicService {
               delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
                   .getAllApplications((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, null);
           // check if number of apps is too big to compute
-          if (isNotEmpty(allApplications) && allApplications.size() == 1 && allApplications.get(0).getId() == -1) {
+          if (hasSome(allApplications) && allApplications.size() == 1 && allApplications.get(0).getId() == -1) {
             return allApplications;
           }
           applications = NewRelicApplications.builder().applications(allApplications).build();
@@ -395,7 +395,7 @@ public class NewRelicServiceImpl implements NewRelicService {
             1. metricNames is empty - we add all metrics present in the YAML to the metricMap in this case
             2. metricNames is non-empty - we only add metrics which are present in the list
              */
-            if (metric != null && (isEmpty(metricNames) || metricNamesSet.contains(metric.getMetricName()))) {
+            if (metric != null && (hasNone(metricNames) || metricNamesSet.contains(metric.getMetricName()))) {
               if (metric.getTags() == null) {
                 metric.setTags(new HashSet<>());
               }
@@ -411,7 +411,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       If metricNames is non-empty but metricMap is, it means that all
       metric names were spelt incorrectly.
        */
-      if (!isEmpty(metricNames) && metricMap.isEmpty()) {
+      if (!hasNone(metricNames) && metricMap.isEmpty()) {
         log.warn("Incorrect set of metric names received. Maybe the UI is sending incorrect metric names.");
         throw new WingsException("Incorrect Metric Names received.");
       }

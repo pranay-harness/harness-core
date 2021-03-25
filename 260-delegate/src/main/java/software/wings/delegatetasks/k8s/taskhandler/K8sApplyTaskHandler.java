@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
@@ -139,7 +140,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
                                         .filter(StringUtils::isNotBlank)
                                         .collect(Collectors.toList());
 
-      if (isEmpty(applyFilePaths)) {
+      if (hasNone(applyFilePaths)) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
         return false;

@@ -6,7 +6,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -794,7 +794,7 @@ public enum StepType {
   }
 
   private boolean matchesWithOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
-    return isEmpty(orchestrationWorkflowTypes) || orchestrationWorkflowTypes.contains(orchestrationWorkflowType);
+    return hasNone(orchestrationWorkflowTypes) || orchestrationWorkflowTypes.contains(orchestrationWorkflowType);
   }
 
   public static List<StepType> filterByPhaseStepType(String phaseStepType, boolean rollbackSection) {

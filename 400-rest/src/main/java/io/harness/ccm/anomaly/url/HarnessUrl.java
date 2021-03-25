@@ -1,8 +1,9 @@
 package io.harness.ccm.anomaly.url;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.utility.AnomalyUtility;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 
 import java.io.UnsupportedEncodingException;
@@ -93,39 +94,39 @@ public class HarnessUrl {
   }
 
   private static void addEntityParams(URIBuilder uriBuilder, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getClusterId())) {
+    if (hasSome(anomaly.getClusterId())) {
       addToQuery(uriBuilder, UrlParams.CURRENT_VIEW, "TOTAL_COST");
       addToQuery(uriBuilder, UrlParams.FILTER_ON, "true");
       addToQuery(uriBuilder, UrlParams.SHOW_UNALLOCATED, "false");
       addToQuery(uriBuilder, UrlParams.GCP_DISCOUNTS, "false");
       addToQuery(uriBuilder, UrlParams.CLUSTER_ID, encodeValue(anomaly.getClusterId()));
     }
-    if (EmptyPredicate.isNotEmpty(anomaly.getNamespace())) {
+    if (hasSome(anomaly.getNamespace())) {
       addToQuery(uriBuilder, UrlParams.NAMESPACE, encodeValue(anomaly.getNamespace()));
     }
 
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpProject())) {
+    if (hasSome(anomaly.getGcpProject())) {
       addToQuery(uriBuilder, UrlParams.CURRENT_VIEW, "GCP_COST");
       addToQuery(uriBuilder, UrlParams.FILTER_ON, "true");
       addToQuery(uriBuilder, UrlParams.SHOW_UNALLOCATED, "false");
       addToQuery(uriBuilder, UrlParams.GCP_DISCOUNTS, "false");
       addToQuery(uriBuilder, UrlParams.GCP_PROJECT, encodeValue(anomaly.getGcpProject()));
     }
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpProduct())) {
+    if (hasSome(anomaly.getGcpProduct())) {
       addToQuery(uriBuilder, UrlParams.GCP_PRODUCT, encodeValue(anomaly.getGcpProduct()));
     }
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpSKUDescription())) {
+    if (hasSome(anomaly.getGcpSKUDescription())) {
       addToQuery(uriBuilder, UrlParams.GCP_SKU, encodeValue(anomaly.getGcpSKUDescription()));
     }
 
-    if (EmptyPredicate.isNotEmpty(anomaly.getAwsAccount())) {
+    if (hasSome(anomaly.getAwsAccount())) {
       addToQuery(uriBuilder, UrlParams.CURRENT_VIEW, "UNBLENDED_COST");
       addToQuery(uriBuilder, UrlParams.FILTER_ON, "true");
       addToQuery(uriBuilder, UrlParams.SHOW_UNALLOCATED, "false");
       addToQuery(uriBuilder, UrlParams.GCP_DISCOUNTS, "false");
       addToQuery(uriBuilder, UrlParams.AWS_ACCOUNT, encodeValue(anomaly.getAwsAccount()));
     }
-    if (EmptyPredicate.isNotEmpty(anomaly.getAwsService())) {
+    if (hasSome(anomaly.getAwsService())) {
       addToQuery(uriBuilder, UrlParams.AWS_SERVICE, encodeValue(anomaly.getAwsService()));
     }
   }

@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
@@ -46,7 +46,7 @@ import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
@@ -282,7 +282,7 @@ public class AccountServiceImpl implements AccountService {
     account.setCompanyName(account.getCompanyName().trim());
     account.setAccountName(account.getAccountName().trim());
 
-    if (isEmpty(account.getUuid())) {
+    if (hasNone(account.getUuid())) {
       log.info("Creating a new account '{}'.", account.getAccountName());
       account.setUuid(UUIDGenerator.generateUuid());
     } else {
@@ -369,7 +369,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean isCertValidationRequired(String accountId) {
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       return false;
     }
     Account account = wingsPersistence.get(Account.class, accountId);
@@ -517,7 +517,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void decryptLicenseInfo(List<Account> accounts) {
-    if (isEmpty(accounts)) {
+    if (hasNone(accounts)) {
       return;
     }
 
@@ -619,7 +619,7 @@ public class AccountServiceImpl implements AccountService {
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB, USER);
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    if (isEmpty(techStacks)) {
+    if (hasNone(techStacks)) {
       updateOperations.unset(AccountKeys.techStacks);
     } else {
       updateOperations.set(AccountKeys.techStacks, techStacks);
@@ -629,7 +629,7 @@ public class AccountServiceImpl implements AccountService {
 
     final List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
     final User currentUser = UserThreadLocal.get();
-    if (isNotEmpty(usersOfAccount) && usersOfAccount.contains(currentUser)) {
+    if (hasSome(usersOfAccount) && usersOfAccount.contains(currentUser)) {
       executorService.submit(() -> sendWelcomeEmail(currentUser, techStacks));
     }
     eventPublishHelper.publishTechStackEvent(accountId, techStacks);
@@ -642,12 +642,12 @@ public class AccountServiceImpl implements AccountService {
     notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB, USER);
     Set<AccountEvent> accountEvents = Sets.newHashSet(accountEvent);
     Set<AccountEvent> existingEvents = accountInDB.getAccountEvents();
-    if (isNotEmpty(existingEvents)) {
+    if (hasSome(existingEvents)) {
       accountEvents.addAll(existingEvents);
     }
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    if (isEmpty(accountEvents)) {
+    if (hasNone(accountEvents)) {
       updateOperations.unset("accountEvents");
     } else {
       updateOperations.set("accountEvents", accountEvents);
@@ -659,11 +659,11 @@ public class AccountServiceImpl implements AccountService {
   private UrlInfo getDocLink(TechStack techStack) {
     String category = techStack.getCategory();
     String technology = techStack.getTechnology();
-    if (isEmpty(category)) {
+    if (hasNone(category)) {
       return null;
     }
 
-    if (isEmpty(technology)) {
+    if (hasNone(technology)) {
       return null;
     }
 
@@ -681,7 +681,7 @@ public class AccountServiceImpl implements AccountService {
       List<String> deployPlatforms = new ArrayList<>();
       List<String> artifacts = new ArrayList<>();
       List<String> monitoringTools = new ArrayList<>();
-      if (isNotEmpty(techStackSet)) {
+      if (hasSome(techStackSet)) {
         techStackSet.forEach(techStack -> {
           UrlInfo docLink = getDocLink(techStack);
           if (docLink != null) {
@@ -702,7 +702,7 @@ public class AccountServiceImpl implements AccountService {
         });
       }
 
-      if (isEmpty(deployPlatforms)) {
+      if (hasNone(deployPlatforms)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Deployment Platforms").technology("General").build());
         if (docLink != null) {
@@ -710,7 +710,7 @@ public class AccountServiceImpl implements AccountService {
         }
       }
 
-      if (isEmpty(artifacts)) {
+      if (hasNone(artifacts)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Artifact Repositories").technology("General").build());
         if (docLink != null) {
@@ -718,7 +718,7 @@ public class AccountServiceImpl implements AccountService {
         }
       }
 
-      if (isEmpty(monitoringTools)) {
+      if (hasNone(monitoringTools)) {
         UrlInfo docLink =
             getDocLink(TechStack.builder().category("Monitoring And Logging").technology("General").build());
         if (docLink != null) {
@@ -841,7 +841,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Optional<Account> getOnPremAccount() {
     List<Account> accounts = listAccounts(Sets.newHashSet(GLOBAL_ACCOUNT_ID));
-    return isNotEmpty(accounts) ? Optional.of(accounts.get(0)) : Optional.empty();
+    return hasSome(accounts) ? Optional.of(accounts.get(0)) : Optional.empty();
   }
 
   @Override
@@ -859,7 +859,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public List<Account> listAccounts(Set<String> excludedAccountIds) {
     Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
-    if (isNotEmpty(excludedAccountIds)) {
+    if (hasSome(excludedAccountIds)) {
       query.field("_id").notIn(excludedAccountIds);
     }
 
@@ -1023,7 +1023,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void updateMigratedToClusterUrl(Account account, String migratedToClusterUrl) {
-    if (isNotEmpty(migratedToClusterUrl)) {
+    if (hasSome(migratedToClusterUrl)) {
       wingsPersistence.update(account,
           wingsPersistence.createUpdateOperations(Account.class)
               .set(AccountKeys.migratedToClusterUrl, migratedToClusterUrl));
@@ -1053,7 +1053,7 @@ public class AccountServiceImpl implements AccountService {
     if (account != null && account.getLicenseInfo() != null) {
       // Old account have empty 'licenseInfo' field in account. Need special handling of those account.
       return AccountStatus.INACTIVE.equals(account.getLicenseInfo().getAccountStatus())
-          && isNotEmpty(account.getMigratedToClusterUrl());
+          && hasSome(account.getMigratedToClusterUrl());
     } else {
       return false;
     }
@@ -1144,7 +1144,7 @@ public class AccountServiceImpl implements AccountService {
           mainConfiguration.getSampleTargetStatusHost(), getAccountIdentifier(accountId));
       log.info("Fetching delegate provisioning progress for account {} from {}", accountId, url);
       String result = Http.getResponseStringFromUrl(url, 30, 10).trim();
-      if (isNotEmpty(result)) {
+      if (hasSome(result)) {
         log.info("Provisioning progress for account {}: {}", accountId, result);
         if (result.contains("<title>404 Not Found</title>")) {
           return singletonList(ProvisionStep.builder().step("Provisioning Started").done(false).build());
@@ -1313,7 +1313,7 @@ public class AccountServiceImpl implements AccountService {
     // check if the notification group name exists
     List<NotificationGroup> existingGroups =
         notificationSetupService.listNotificationGroups(account.getUuid(), role, name);
-    if (isEmpty(existingGroups)) {
+    if (hasNone(existingGroups)) {
       log.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
           account.getAccountName());
       NotificationGroup notificationGroup = aNotificationGroup()
@@ -1384,7 +1384,7 @@ public class AccountServiceImpl implements AccountService {
   public List<Service> getServicesBreadCrumb(String accountId, User user) {
     PageRequest<String> request = aPageRequest().withOffset("0").withLimit(UNLIMITED_PAGE_SIZE).build();
     PageResponse<CVEnabledService> response = getServices(accountId, user, request, null);
-    if (response != null && isNotEmpty(response.getResponse())) {
+    if (response != null && hasSome(response.getResponse())) {
       List<Service> serviceList = new ArrayList<>();
       for (CVEnabledService cvEnabledService : response.getResponse()) {
         serviceList.add(Service.builder()
@@ -1404,7 +1404,7 @@ public class AccountServiceImpl implements AccountService {
       log.info("User is null when requesting for Services info. Returning null");
     }
     int offset = Integer.parseInt(request.getOffset());
-    if (isNotEmpty(request.getLimit()) && request.getLimit().equals(UNLIMITED_PAGE_SIZE)) {
+    if (hasSome(request.getLimit()) && request.getLimit().equals(UNLIMITED_PAGE_SIZE)) {
       request.setLimit(String.valueOf(Integer.MAX_VALUE));
     }
     int limit = Integer.parseInt(request.getLimit() != null ? request.getLimit() : "0");
@@ -1417,10 +1417,10 @@ public class AccountServiceImpl implements AccountService {
     final List<String> services = new ArrayList<>();
     Set<EnvInfo> envInfoSet = new HashSet<>();
     for (AppPermissionSummary summary : userAppPermissions.values()) {
-      if (isNotEmpty(summary.getServicePermissions())) {
+      if (hasSome(summary.getServicePermissions())) {
         services.addAll(summary.getServicePermissions().get(Action.READ));
       }
-      if (isNotEmpty(summary.getEnvPermissions())) {
+      if (hasSome(summary.getEnvPermissions())) {
         envInfoSet.addAll(summary.getEnvPermissions().get(Action.READ));
       }
     }
@@ -1486,7 +1486,7 @@ public class AccountServiceImpl implements AccountService {
       returnList = new ArrayList<>();
     }
 
-    if (isNotEmpty(returnList)) {
+    if (hasSome(returnList)) {
       return PageResponseBuilder.aPageResponse()
           .withResponse(returnList)
           .withOffset(String.valueOf(offset + returnList.size()))
@@ -1509,7 +1509,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account updateWhitelistedDomains(String accountId, Set<String> whitelistedDomains) {
     Set<String> trimmedWhitelistedDomains =
-        whitelistedDomains.stream().map(String::trim).filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet());
+        whitelistedDomains.stream().map(String::trim).filter(HasPredicate::hasSome).collect(Collectors.toSet());
     UpdateOperations<Account> whitelistedDomainsUpdateOperations =
         wingsPersistence.createUpdateOperations(Account.class);
     setUnset(whitelistedDomainsUpdateOperations, AccountKeys.whitelistedDomains, trimmedWhitelistedDomains);
@@ -1567,7 +1567,7 @@ public class AccountServiceImpl implements AccountService {
     notNullCheck("Account name can not be set to null!", accountName);
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
     updateOperations.set(AccountKeys.accountName, accountName);
-    if (isNotEmpty(companyName)) {
+    if (hasSome(companyName)) {
       updateOperations.set(AccountKeys.companyName, companyName);
     }
     wingsPersistence.update(

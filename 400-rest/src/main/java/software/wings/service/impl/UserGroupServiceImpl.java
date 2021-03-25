@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -41,7 +41,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.ccm.config.CCMSettingService;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.GeneralException;
@@ -232,14 +232,14 @@ public class UserGroupServiceImpl implements UserGroupService {
     PageRequest<User> req = aPageRequest().addFilter(UserKeys.accounts, Operator.HAS, account).build();
     PageResponse<User> res = userService.list(req, false);
     List<User> allUsersList = res.getResponse();
-    if (isEmpty(allUsersList)) {
+    if (hasNone(allUsersList)) {
       return;
     }
 
     Map<String, User> userMap = allUsersList.stream().collect(Collectors.toMap(User::getUuid, identity()));
     userGroups.forEach(userGroup -> {
       List<String> memberIds = userGroup.getMemberIds();
-      if (isEmpty(memberIds)) {
+      if (hasNone(memberIds)) {
         userGroup.setMembers(new ArrayList<>());
         return;
       }
@@ -264,7 +264,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList) {
-    if (isEmpty(userGroupList)) {
+    if (hasNone(userGroupList)) {
       return emptyList();
     }
     return userGroupList.stream().map(this::getUserGroupSummary).collect(toList());
@@ -396,7 +396,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       return get(accountId, groupId);
     }
 
-    if (EmptyPredicate.isNotEmpty(newNotificationSettings.getPagerDutyIntegrationKey())) {
+    if (hasSome(newNotificationSettings.getPagerDutyIntegrationKey())) {
       pagerDutyService.validateKey(newNotificationSettings.getPagerDutyIntegrationKey());
       pagerDutyService.validateCreateTestEvent(newNotificationSettings.getPagerDutyIntegrationKey());
     }
@@ -423,10 +423,10 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateMembers(UserGroup userGroupToUpdate, boolean sendNotification, boolean toBeAudited) {
-    Set<String> newMemberIds = isEmpty(userGroupToUpdate.getMemberIds())
+    Set<String> newMemberIds = hasNone(userGroupToUpdate.getMemberIds())
         ? Sets.newHashSet()
         : Sets.newHashSet(userGroupToUpdate.getMemberIds());
-    newMemberIds.removeIf(EmptyPredicate::isEmpty);
+    newMemberIds.removeIf(HasPredicate::hasNone);
 
     UserGroup existingUserGroup = get(userGroupToUpdate.getAccountId(), userGroupToUpdate.getUuid());
     if (UserGroupUtils.isAdminUserGroup(existingUserGroup) && newMemberIds.isEmpty()) {
@@ -434,7 +434,7 @@ public class UserGroupServiceImpl implements UserGroupService {
           ErrorCode.UPDATE_NOT_ALLOWED, "Account Administrator user group must have at least one user");
     }
 
-    Set<String> existingMemberIds = isEmpty(existingUserGroup.getMemberIds())
+    Set<String> existingMemberIds = hasNone(existingUserGroup.getMemberIds())
         ? Sets.newHashSet()
         : Sets.newHashSet(existingUserGroup.getMemberIds());
 
@@ -459,11 +459,11 @@ public class UserGroupServiceImpl implements UserGroupService {
       });
     }
 
-    if (isNotEmpty(existingUserGroup.getMemberIds())) {
+    if (hasSome(existingUserGroup.getMemberIds())) {
       newMemberIds.addAll(existingUserGroup.getMemberIds());
     }
 
-    if (isNotEmpty(newMemberIds)) {
+    if (hasSome(newMemberIds)) {
       evictUserPermissionInfoCacheForUsers(
           userGroupToUpdate.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
     }
@@ -485,11 +485,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup removeMembers(
       UserGroup userGroup, Collection<User> members, boolean sendNotification, boolean toBeAudited) {
-    if (isEmpty(members)) {
+    if (hasNone(members)) {
       return userGroup;
     }
     List<User> groupMembers = userGroup.getMembers();
-    if (isEmpty(groupMembers)) {
+    if (hasNone(groupMembers)) {
       return userGroup;
     }
 
@@ -516,12 +516,12 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void checkDeploymentPermissions(UserGroup userGroup) {
-    if (isEmpty(userGroup.getAppPermissions())) {
+    if (hasNone(userGroup.getAppPermissions())) {
       return;
     }
     Set<AppPermission> newAppPermissions = new HashSet<>();
     for (AppPermission appPermission : userGroup.getAppPermissions()) {
-      if (isNotEmpty(appPermission.getActions())
+      if (hasSome(appPermission.getActions())
           && (appPermission.getPermissionType() == ALL_APP_ENTITIES
               || appPermission.getPermissionType() == DEPLOYMENT)) {
         Set<PermissionAttribute.Action> actionSet = new HashSet<>();
@@ -569,7 +569,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     Set<PermissionType> permissions = accountPermissions.getPermissions();
-    if (isNotEmpty(permissions) && permissions.contains(USER_PERMISSION_MANAGEMENT)
+    if (hasSome(permissions) && permissions.contains(USER_PERMISSION_MANAGEMENT)
         && !permissions.contains(USER_PERMISSION_READ)) {
       log.info("Received account permissions {} are not in proper format for account {}, userGroupName {}", permissions,
           accountId, name);
@@ -662,7 +662,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return new ArrayList<>();
     }
 
@@ -683,14 +683,14 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     return userGroupList.stream()
-        .filter(userGroup -> !isEmpty(userGroup.getMemberIds()))
+        .filter(userGroup -> !hasNone(userGroup.getMemberIds()))
         .flatMap(userGroup -> userGroup.getMemberIds().stream())
         .collect(toList());
   }
 
   @Override
   public List<UserGroup> fetchUserGroupNamesFromIds(Collection<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return asList();
     }
 
@@ -701,13 +701,13 @@ public class UserGroupServiceImpl implements UserGroupService {
         .project(UserGroup.ID_KEY2, true)
         .asList()
         .stream()
-        .filter(userGroup -> !isEmpty(userGroup.getName()))
+        .filter(userGroup -> !hasNone(userGroup.getName()))
         .collect(toList());
   }
 
   @Override
   public List<UserGroup> fetchUserGroupNamesFromIdsUsingSecondary(Collection<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return emptyList();
     }
 
@@ -718,21 +718,20 @@ public class UserGroupServiceImpl implements UserGroupService {
         .project(UserGroup.ID_KEY2, true)
         .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()))
         .stream()
-        .filter(userGroup -> !isEmpty(userGroup.getName()))
+        .filter(userGroup -> !hasNone(userGroup.getName()))
         .collect(toList());
   }
 
   @Override
   public boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return false;
     }
 
     User user = UserThreadLocal.get();
     List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
 
-    return userService.isUserVerified(user) && isNotEmpty(userGroupMembers)
-        && userGroupMembers.contains(user.getUuid());
+    return userService.isUserVerified(user) && hasSome(userGroupMembers) && userGroupMembers.contains(user.getUuid());
   }
 
   @Override
@@ -812,13 +811,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     boolean isModified = false;
     boolean hasEmptyPermission = false;
 
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       return;
     }
 
     Set<AppPermission> groupAppPermissions = userGroup.getAppPermissions();
 
-    if (isEmpty(groupAppPermissions)) {
+    if (hasNone(groupAppPermissions)) {
       return;
     }
 
@@ -834,7 +833,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         isModified = true;
       }
 
-      if (isEmpty(ids)) {
+      if (hasNone(ids)) {
         hasEmptyPermission = true;
       }
     }
@@ -916,7 +915,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupsFromUserInvite(UserInvite userInvite) {
     Object[] userIds = userInvite.getUserGroups().stream().map(UuidAware::getUuid).toArray();
-    if (isEmpty(userIds)) {
+    if (hasNone(userIds)) {
       return emptyList();
     }
     PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY2, Operator.IN, userIds);
@@ -944,7 +943,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     String filterType = appFilter.getFilterType();
-    if (isEmpty(filterType)) {
+    if (hasNone(filterType)) {
       return false;
     }
 
@@ -952,7 +951,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private boolean isAppPermissionWithEmptyIds(AppPermission appPermission) {
-    return isEmpty(appPermission.getAppFilter().getIds());
+    return hasNone(appPermission.getAppFilter().getIds());
   }
 
   @Override

@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.amazons3;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.exception.WingsException.USER;
@@ -10,7 +12,6 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -72,7 +73,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     do {
       result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
       List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-      if (EmptyPredicate.isNotEmpty(objectSummaryList)) {
+      if (hasSome(objectSummaryList)) {
         objectSummaryListFinal.addAll(objectSummaryList.stream()
                                           .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
                                           .collect(Collectors.toList()));
@@ -127,7 +128,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       do {
         result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
         List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-        if (EmptyPredicate.isNotEmpty(objectSummaryList)) {
+        if (hasSome(objectSummaryList)) {
           objectSummaryListFinal.addAll(objectSummaryList);
         }
 
@@ -159,7 +160,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   private void sortDescending(List<S3ObjectSummary> objectSummaryList) {
-    if (EmptyPredicate.isEmpty(objectSummaryList)) {
+    if (hasNone(objectSummaryList)) {
       return;
     }
 
@@ -167,7 +168,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   }
 
   private void sortAscending(List<S3ObjectSummary> objectSummaryList) {
-    if (EmptyPredicate.isEmpty(objectSummaryList)) {
+    if (hasNone(objectSummaryList)) {
       return;
     }
 

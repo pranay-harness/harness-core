@@ -1,7 +1,7 @@
 package io.harness.steps.approval.step.jira.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -28,7 +28,7 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
     boolean matchCondition = (Boolean) keyValuesCriteriaSpec.getMatchAnyCondition().fetchFinalValue();
     List<Condition> conditions = keyValuesCriteriaSpec.getConditions();
 
-    if (isEmpty(conditions)) {
+    if (hasNone(conditions)) {
       throw new InvalidRequestException("At least 1 condition is required");
     }
 

@@ -1,7 +1,7 @@
 package software.wings.service.impl.infrastructuredefinition;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.reflection.ReflectionUtils;
 
@@ -35,7 +35,7 @@ class InfrastructureDefinitionHelper {
                                       .append(infrastructureDefinition.getUuid());
     Map<String, Object> queryMap = getQueryMap(infrastructureDefinition.getInfrastructure());
 
-    if (isNotEmpty(queryMap)) {
+    if (hasSome(queryMap)) {
       queryMap.entrySet()
           .stream()
           .filter(entry -> entry.getValue() != null)
@@ -57,7 +57,7 @@ class InfrastructureDefinitionHelper {
   InfrastructureMapping existingInfraMapping(InfrastructureDefinition infraDefinition, String serviceId) {
     Query baseQuery = getQuery(infraDefinition, serviceId);
     List<InfrastructureMapping> infrastructureMappings = baseQuery.asList();
-    return isEmpty(infrastructureMappings) ? null : infrastructureMappings.get(0);
+    return hasNone(infrastructureMappings) ? null : infrastructureMappings.get(0);
   }
 
   // Todo: Enhance this method to also query based on hash like getNameFromInfraDefinition method

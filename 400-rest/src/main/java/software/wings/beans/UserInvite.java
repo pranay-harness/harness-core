@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
@@ -8,7 +9,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -184,21 +184,21 @@ public class UserInvite extends Base implements AccountAccess {
   }
 
   public String getName() {
-    if (EmptyPredicate.isNotEmpty(name)) {
+    if (hasSome(name)) {
       return name;
     }
     return email.toLowerCase();
   }
 
   public String getGivenName() {
-    if (EmptyPredicate.isNotEmpty(givenName)) {
+    if (hasSome(givenName)) {
       return givenName;
     }
     return name;
   }
 
   public String getFamilyName() {
-    if (EmptyPredicate.isNotEmpty(familyName)) {
+    if (hasSome(familyName)) {
       return familyName;
     }
     return name;

@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
@@ -103,11 +103,11 @@ public class RepeatState extends State {
     }
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
     try {
-      if (isEmpty(repeatElements)) {
+      if (hasNone(repeatElements)) {
         if (repeatElementExpression != null) {
           repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
           repeatStateExecutionData.setRepeatElements(repeatElements);
-          if (isNotEmpty(repeatElements)) {
+          if (hasSome(repeatElements)) {
             repeatStateExecutionData.setRepeatElementType(repeatElements.get(0).getElementType());
           }
         }
@@ -139,7 +139,7 @@ public class RepeatState extends State {
 
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
 
-    if (isNotEmpty(repeatElements)) {
+    if (hasSome(repeatElements)) {
       List<String> correlationIds = new ArrayList<>();
       if (executionStrategy == ExecutionStrategy.PARALLEL) {
         for (ContextElement repeatElement : repeatElements) {

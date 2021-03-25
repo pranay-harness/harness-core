@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -49,7 +49,7 @@ public class DatadogCVServiceConfigurationMigration implements Migration {
           String metrics = (String) next.get("metrics");
           String dockerMetricFilter = (String) next.get("applicationFilter");
 
-          if (isEmpty(metrics)) {
+          if (hasNone(metrics)) {
             continue;
           }
           Map<String, String> dockerMetrics = new HashMap<>();

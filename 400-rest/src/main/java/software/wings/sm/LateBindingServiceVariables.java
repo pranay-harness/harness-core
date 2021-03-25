@@ -1,7 +1,7 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -39,7 +39,7 @@ class LateBindingServiceVariables implements LateBindingValue {
     String key = encryptedFieldMode == OBTAIN_VALUE ? SERVICE_VARIABLE : SAFE_DISPLAY_SERVICE_VARIABLE;
     executionContext.getContextMap().remove(key);
 
-    Map<String, Object> variables = isEmpty(phaseOverrides)
+    Map<String, Object> variables = hasNone(phaseOverrides)
         ? new HashMap<>()
         : phaseOverrides.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
 
@@ -47,7 +47,7 @@ class LateBindingServiceVariables implements LateBindingValue {
             ? ServiceTemplateService.EncryptedFieldComputeMode.MASKED
             : ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_META);
 
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       serviceVariables.forEach(serviceVariable -> {
         executionContext.prepareVariables(
             encryptedFieldMode, serviceVariable, variables, adoptDelegateDecryption, expressionFunctorToken);

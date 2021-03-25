@@ -1,6 +1,6 @@
 package io.harness.common;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.expression.EngineExpressionEvaluator;
 
@@ -15,14 +15,14 @@ public class NGExpressionUtils {
       EngineExpressionEvaluator.EXPR_START + "input" + EngineExpressionEvaluator.EXPR_END;
 
   public boolean matchesInputSetPattern(String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return NGExpressionUtils.InputSetVariablePattern.matcher(expression).matches();
   }
 
   public boolean matchesPattern(Pattern pattern, String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return pattern.matcher(expression).matches();
@@ -30,7 +30,7 @@ public class NGExpressionUtils {
 
   // Function which matches pattern on given expression.
   public boolean containsPattern(Pattern pattern, String expression) {
-    if (isEmpty(expression)) {
+    if (hasNone(expression)) {
       return false;
     }
     return pattern.matcher(expression).find();

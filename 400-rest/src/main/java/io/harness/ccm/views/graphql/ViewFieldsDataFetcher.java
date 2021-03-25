@@ -1,6 +1,6 @@
 package io.harness.ccm.views.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
@@ -65,7 +65,7 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
 
     if (isExplorerQuery) {
       CEView ceView = ceViewService.get(viewId);
-      if (ceView.getDataSources() != null && isNotEmpty(ceView.getDataSources())) {
+      if (ceView.getDataSources() != null && hasSome(ceView.getDataSources())) {
         for (ViewFieldIdentifier viewFieldIdentifier : viewFieldIdentifierSetFromCustomFields) {
           if (viewFieldIdentifier == ViewFieldIdentifier.AWS) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), viewFieldIdentifier));

@@ -1,5 +1,7 @@
 package io.harness.cdng.creator;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -10,7 +12,6 @@ import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo.CDStageModule
 import io.harness.cdng.pipeline.executions.beans.InfraExecutionSummary;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.pms.contracts.data.StepOutcomeRef;
@@ -42,7 +43,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
       artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
+    if (hasSome(serviceOutcome.getArtifactsResult().getSidecars())) {
       artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
                                            .getSidecars()
                                            .values()

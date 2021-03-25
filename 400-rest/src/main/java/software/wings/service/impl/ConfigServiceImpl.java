@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.validation.Validator.notNullCheck;
@@ -141,7 +141,7 @@ public class ConfigServiceImpl implements ConfigService {
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
 
-    if (isNotEmpty(fileId)) {
+    if (hasSome(fileId)) {
       fileService.updateParentEntityIdAndVersion(null, id, 1, fileId, null, CONFIGS);
     }
 
@@ -251,7 +251,7 @@ public class ConfigServiceImpl implements ConfigService {
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
 
     // if default version is already set 0, fileId may be null or not latest.
-    if (isEmpty(fileId) || !fileService.getLatestFileId(configId, CONFIGS).equals(fileId)) {
+    if (hasNone(fileId) || !fileService.getLatestFileId(configId, CONFIGS).equals(fileId)) {
       fileId = configFile.getFileUuid();
     }
 

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
@@ -65,7 +65,7 @@ public class CleanupOrphanInfraMappings implements Migration {
             }
           }
         }
-        if (isNotEmpty(infraMappingsToDeleteForAccount)) {
+        if (hasSome(infraMappingsToDeleteForAccount)) {
           deleteInfraMapping(accountId, infraMappingsToDeleteForAccount);
         }
         logInfo("The End for accountId " + accountId);

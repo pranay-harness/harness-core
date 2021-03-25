@@ -1,6 +1,6 @@
 package io.harness.pms.sample.cd.creator.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sample.cd.beans.DeploymentStage;
@@ -36,7 +36,7 @@ public class DeploymentStageFilterCreator implements FilterJsonCreator<io.harnes
     }
 
     Service service = deploymentStage.getSpec().getService();
-    if (service != null && isNotEmpty(service.getName())) {
+    if (service != null && hasSome(service.getName())) {
       cdFilter.addServiceName(service.getName());
     }
 
@@ -47,7 +47,7 @@ public class DeploymentStageFilterCreator implements FilterJsonCreator<io.harnes
 
     Infrastructure infrastructure = deploymentStage.getSpec().getInfrastructure();
     if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+        && hasSome(infrastructure.getEnvironment().getName())) {
       cdFilter.addEnvironmentName(infrastructure.getEnvironment().getName());
     }
 

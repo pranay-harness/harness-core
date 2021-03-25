@@ -1,8 +1,8 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.model.EventConstants.ACCOUNT_STATUS;
 import static io.harness.event.model.EventConstants.DAYS_LEFT_IN_TRIAL;
 import static io.harness.event.model.EventConstants.EMAIL;
@@ -46,7 +46,7 @@ public class SegmentHelper {
   @Inject
   public SegmentHelper(MainConfiguration config) {
     SegmentConfig segmentConfig = config.getSegmentConfig();
-    if (segmentConfig != null && segmentConfig.isEnabled() && isNotEmpty(segmentConfig.getApiKey())) {
+    if (segmentConfig != null && segmentConfig.isEnabled() && hasSome(segmentConfig.getApiKey())) {
       try {
         this.analytics = Analytics.builder(segmentConfig.getApiKey()).build();
       } catch (Exception ex) {
@@ -62,7 +62,7 @@ public class SegmentHelper {
     Builder identityBuilder = IdentifyMessage.builder();
 
     String identity;
-    if (isEmpty(userId)) {
+    if (hasNone(userId)) {
       identity = UUIDGenerator.generateUuid();
       identityBuilder.anonymousId(identity);
     } else {
@@ -73,9 +73,9 @@ public class SegmentHelper {
     Map<String, String> traits = new HashMap<>();
     traits.put(EMAIL, email);
     String firstName = utils.getFirstName(userName, email);
-    traits.put(FIRST_NAME, isNotEmpty(firstName) ? firstName : email);
+    traits.put(FIRST_NAME, hasSome(firstName) ? firstName : email);
     String lastName = utils.getLastName(userName, email);
-    traits.put(LAST_NAME, isNotEmpty(lastName) ? lastName : "");
+    traits.put(LAST_NAME, hasSome(lastName) ? lastName : "");
 
     if (account != null) {
       traits.put(GROUP_ID, account.getUuid());
@@ -87,11 +87,11 @@ public class SegmentHelper {
       }
     }
 
-    if (isNotEmpty(userInviteUrl)) {
+    if (hasSome(userInviteUrl)) {
       traits.put(USER_INVITE_URL, userInviteUrl);
     }
 
-    if (isNotEmpty(oauthProvider)) {
+    if (hasSome(oauthProvider)) {
       traits.put(OAUTH_PROVIDER, oauthProvider);
     }
 

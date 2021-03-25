@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -35,7 +35,7 @@ public class GcpBillingAccountDataFetcher
     String organizationSettingId = arguments.getOrganizationSettingId();
 
     List<GcpBillingAccount> gcpBillingAccounts = new ArrayList<>();
-    if (isNotEmpty(uuid)) {
+    if (hasSome(uuid)) {
       gcpBillingAccounts.add(gcpBillingAccountService.get(uuid));
     } else {
       gcpBillingAccounts.addAll(gcpBillingAccountService.list(accountId, organizationSettingId));

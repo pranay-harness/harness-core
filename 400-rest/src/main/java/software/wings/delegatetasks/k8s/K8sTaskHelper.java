@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
@@ -241,7 +241,7 @@ public class K8sTaskHelper {
     List<FileData> manifestFiles =
         renderTemplateForGivenFiles(k8sDelegateTaskParams, k8sDelegateManifestConfig, manifestFilesDirectory, filesList,
             valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters);
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return new ArrayList<>();
     }
 
@@ -382,7 +382,7 @@ public class K8sTaskHelper {
       GitFetchFilesResult gitFetchFilesResult, String prefixPath) {
     List<ManifestFile> manifestFiles = new ArrayList<>();
 
-    if (isNotEmpty(gitFetchFilesResult.getFiles())) {
+    if (hasSome(gitFetchFilesResult.getFiles())) {
       List<GitFile> files = gitFetchFilesResult.getFiles();
 
       for (GitFile gitFile : files) {

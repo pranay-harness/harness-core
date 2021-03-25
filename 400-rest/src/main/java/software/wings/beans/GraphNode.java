@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
@@ -108,7 +108,7 @@ public class GraphNode {
   }
 
   public boolean validate() {
-    if (isEmpty(inValidFieldMessages)) {
+    if (hasNone(inValidFieldMessages)) {
       valid = true;
       validationMessage = null;
     } else {

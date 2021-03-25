@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 
@@ -42,6 +42,6 @@ public class AwsAmiPreDeploymentData {
   }
 
   public List<String> getPreDeploymenyScalingPolicyJSON() {
-    return isNotEmpty(scalingPolicyJSON) ? scalingPolicyJSON : emptyList();
+    return hasSome(scalingPolicyJSON) ? scalingPolicyJSON : emptyList();
   }
 }

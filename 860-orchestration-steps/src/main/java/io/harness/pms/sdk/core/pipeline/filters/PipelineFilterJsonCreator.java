@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.filter.PipelineFilter;
@@ -58,8 +59,7 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
                               .map(YamlField::getNode)
                               .map(YamlNode::getName)
                               .collect(Collectors.toList()));
-      } else if (stage.getName().equals(YAMLFieldNameConstants.STAGE)
-          && EmptyPredicate.isNotEmpty(stage.getNode().getName())) {
+      } else if (stage.getName().equals(YAMLFieldNameConstants.STAGE) && hasSome(stage.getNode().getName())) {
         stageNames.add(stage.getNode().getName());
       }
     }

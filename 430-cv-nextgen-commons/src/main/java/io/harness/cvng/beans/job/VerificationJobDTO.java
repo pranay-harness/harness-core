@@ -1,6 +1,6 @@
 package io.harness.cvng.beans.job;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.beans.DataSourceType;
 
@@ -36,6 +36,6 @@ public abstract class VerificationJobDTO {
   public abstract VerificationJobType getType();
 
   public static boolean isRuntimeParam(String value) {
-    return isNotEmpty(value) && value.equals("<+input>");
+    return hasSome(value) && value.equals("<+input>");
   }
 }

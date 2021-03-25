@@ -1,6 +1,6 @@
 package software.wings.verification.dashboard;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.HIGH_RISK_CUTOFF;
 import static software.wings.common.VerificationConstants.MEDIUM_RISK_CUTOFF;
@@ -68,7 +68,7 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
   }
 
   public void updateKeyTransactionScores(Map<String, Map<String, Double>> keyTransactionMetricScores) {
-    if (isNotEmpty(keyTransactionMetricScores)) {
+    if (hasSome(keyTransactionMetricScores)) {
       if (keyTransactionScoreList == null) {
         keyTransactionScoreList = new ArrayList<>();
       }
@@ -79,7 +79,7 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
   }
 
   private double updateScores(Map<String, Double> metricScores, List<Double> scoreListToUpdate) {
-    if (isNotEmpty(metricScores)) {
+    if (hasSome(metricScores)) {
       if (scoreListToUpdate == null) {
         scoreListToUpdate = new ArrayList<>();
       }

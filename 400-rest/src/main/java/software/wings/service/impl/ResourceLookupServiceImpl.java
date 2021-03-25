@@ -4,8 +4,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SortOrder.OrderType.ASC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.audit.ResourceType.API_KEY;
 import static software.wings.audit.ResourceType.APPLICATION;
@@ -368,7 +368,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   private List<ResourceLookup> applyAuthFilters(List<ResourceLookup> resourceLookups) {
     List<ResourceLookup> filteredResourceLookupList = new ArrayList<>();
 
-    if (isEmpty(resourceLookups)) {
+    if (hasNone(resourceLookups)) {
       return filteredResourceLookupList;
     }
 
@@ -401,7 +401,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
             accountId, filter, String.valueOf(Integer.MAX_VALUE), "0", new Object[] {entityType});
 
         List<ResourceLookup> response = resourceLookupPageResponse.getResponse();
-        if (isEmpty(response)) {
+        if (hasNone(response)) {
           return aPageResponse().withResponse(emptyList()).build();
         }
 
@@ -456,7 +456,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
   private <T> String getAccountIdFromPageRequest(PageRequest<T> request) {
     List<SearchFilter> filters = request.getFilters();
 
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return null;
     }
 
@@ -464,7 +464,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
     String appId = null;
 
     for (SearchFilter searchFilter : filters) {
-      if (isNotEmpty(searchFilter.getFieldValues())) {
+      if (hasSome(searchFilter.getFieldValues())) {
         if (searchFilter.getFieldName().equals("accountId")) {
           accountId = (String) searchFilter.getFieldValues()[0];
           break;

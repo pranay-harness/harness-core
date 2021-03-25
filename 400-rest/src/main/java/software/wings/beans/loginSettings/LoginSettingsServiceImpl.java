@@ -1,6 +1,6 @@
 package software.wings.beans.loginSettings;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 
@@ -239,7 +239,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
           createUserLockoutInfoInstance(newCountOfFailedLoginAttempts, System.currentTimeMillis());
       updateUserLockoutOperations(operations, true, userLockoutInfo);
       sendNotifications(user, userLockoutPolicy);
-      if (isNotEmpty(user.getAccounts())) {
+      if (hasSome(user.getAccounts())) {
         user.getAccounts().forEach(account -> {
           auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.LOCK);
           log.info("Auditing locking of user={} in account={}", user.getName(), account.getAccountName());

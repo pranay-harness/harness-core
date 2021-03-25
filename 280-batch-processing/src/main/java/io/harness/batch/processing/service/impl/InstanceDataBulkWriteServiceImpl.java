@@ -1,6 +1,6 @@
 package io.harness.batch.processing.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -170,7 +170,7 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
               InstanceDataKeys.harnessServiceInfo, objectToDocument(instanceInfo.getHarnessServiceInfo()));
         }
 
-        if (!isEmpty(instanceInfo.getPvcClaimNames())) {
+        if (!hasNone(instanceInfo.getPvcClaimNames())) {
           instanceInfoDocument.append(InstanceDataKeys.pvcClaimNames, instanceInfo.getPvcClaimNames());
         }
 

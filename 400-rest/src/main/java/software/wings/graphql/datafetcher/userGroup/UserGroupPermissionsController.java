@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_CE;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
@@ -254,10 +254,10 @@ public class UserGroupPermissionsController {
 
   private EnvFilter createEnvFilter(QLEnvPermissions envPermissions) {
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(envPermissions.getEnvIds()) && isNotEmpty(envPermissions.getFilterTypes())) {
+    if (hasSome(envPermissions.getEnvIds()) && hasSome(envPermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in environment filter");
     }
-    if (isNotEmpty(envPermissions.getEnvIds())) {
+    if (hasSome(envPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (envPermissions.getFilterTypes() != null) {
@@ -274,11 +274,11 @@ public class UserGroupPermissionsController {
   }
 
   private WorkflowFilter createWorkflowFilter(QLWorkflowPermissions workflowPermissions) {
-    if (isNotEmpty(workflowPermissions.getEnvIds()) && isNotEmpty(workflowPermissions.getFilterTypes())) {
+    if (hasSome(workflowPermissions.getEnvIds()) && hasSome(workflowPermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in workflow filter");
     }
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(workflowPermissions.getEnvIds())) {
+    if (hasSome(workflowPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (workflowPermissions.getFilterTypes() != null) {
@@ -297,11 +297,11 @@ public class UserGroupPermissionsController {
   }
 
   private Filter createDeploymentFilter(QLDeploymentPermissions deploymentPermissions) {
-    if (isNotEmpty(deploymentPermissions.getEnvIds()) && isNotEmpty(deploymentPermissions.getFilterTypes())) {
+    if (hasSome(deploymentPermissions.getEnvIds()) && hasSome(deploymentPermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in deployment filter");
     }
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(deploymentPermissions.getEnvIds())) {
+    if (hasSome(deploymentPermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (deploymentPermissions.getFilterTypes() != null) {
@@ -317,11 +317,11 @@ public class UserGroupPermissionsController {
   }
 
   private Filter createPipelineFilter(QLPipelinePermissions pipelinePermissions) {
-    if (isNotEmpty(pipelinePermissions.getEnvIds()) && isNotEmpty(pipelinePermissions.getFilterTypes())) {
+    if (hasSome(pipelinePermissions.getEnvIds()) && hasSome(pipelinePermissions.getFilterTypes())) {
       throw new InvalidRequestException("Cannot set both envIds and filterTypes in environment filter");
     }
     Set<String> filterTypes = new HashSet<>();
-    if (isNotEmpty(pipelinePermissions.getEnvIds())) {
+    if (hasSome(pipelinePermissions.getEnvIds())) {
       filterTypes.add(SELECTED);
     } else {
       if (pipelinePermissions.getFilterTypes() != null) {
@@ -362,7 +362,7 @@ public class UserGroupPermissionsController {
       case SERVICE:
         Set<String> serviceIds = permission.getServices().getServiceIds();
         if (serviceIds != null) {
-          filterType = isNotEmpty(serviceIds) ? SELECTED : ALL;
+          filterType = hasSome(serviceIds) ? SELECTED : ALL;
         } else {
           filterType = ALL;
         }
@@ -383,7 +383,7 @@ public class UserGroupPermissionsController {
       case PROVISIONER:
         Set<String> provisionerIds = permission.getProvisioners().getProvisionerIds();
         if (provisionerIds != null) {
-          filterType = isNotEmpty(provisionerIds) ? SELECTED : ALL;
+          filterType = hasSome(provisionerIds) ? SELECTED : ALL;
         } else {
           filterType = ALL;
         }
@@ -552,9 +552,9 @@ public class UserGroupPermissionsController {
   }
 
   private QLWorkflowPermissions createWorkflowFilterOutput(WorkflowFilter workflowPermissions) {
-    if (isEmpty(workflowPermissions.getIds())) {
+    if (hasNone(workflowPermissions.getIds())) {
       EnumSet<QLWorkflowFilterType> filterTypes = EnumSet.noneOf(QLWorkflowFilterType.class);
-      if (isEmpty(workflowPermissions.getFilterTypes())) {
+      if (hasNone(workflowPermissions.getFilterTypes())) {
         filterTypes.add(QLWorkflowFilterType.PRODUCTION_WORKFLOWS);
         filterTypes.add(QLWorkflowFilterType.NON_PRODUCTION_WORKFLOWS);
         filterTypes.add(QLWorkflowFilterType.WORKFLOW_TEMPLATES);
@@ -575,9 +575,9 @@ public class UserGroupPermissionsController {
   }
 
   private QLEnvPermissions createEnvFilterOutput(EnvFilter envPermissions) {
-    if (isEmpty(envPermissions.getIds())) {
+    if (hasNone(envPermissions.getIds())) {
       EnumSet<QLEnvFilterType> filterTypes = EnumSet.noneOf(QLEnvFilterType.class);
-      if (isEmpty(envPermissions.getFilterTypes())) {
+      if (hasNone(envPermissions.getFilterTypes())) {
         filterTypes.add(QLEnvFilterType.PRODUCTION_ENVIRONMENTS);
         filterTypes.add(QLEnvFilterType.NON_PRODUCTION_ENVIRONMENTS);
       } else {
@@ -594,9 +594,9 @@ public class UserGroupPermissionsController {
   }
 
   private QLDeploymentPermissions createDeploymentFilterOutput(EnvFilter envPermissions) {
-    if (isEmpty(envPermissions.getIds())) {
+    if (hasNone(envPermissions.getIds())) {
       EnumSet<QLDeploymentFilterType> filterTypes = EnumSet.noneOf(QLDeploymentFilterType.class);
-      if (isEmpty(envPermissions.getFilterTypes())) {
+      if (hasNone(envPermissions.getFilterTypes())) {
         filterTypes.add(QLDeploymentFilterType.PRODUCTION_ENVIRONMENTS);
         filterTypes.add(QLDeploymentFilterType.NON_PRODUCTION_ENVIRONMENTS);
       } else {
@@ -613,9 +613,9 @@ public class UserGroupPermissionsController {
   }
 
   private QLPipelinePermissions createPipelineFilterOutput(EnvFilter envPermissions) {
-    if (isEmpty(envPermissions.getIds())) {
+    if (hasNone(envPermissions.getIds())) {
       EnumSet<QLPipelineFilterType> filterTypes = EnumSet.noneOf(QLPipelineFilterType.class);
-      if (isEmpty(envPermissions.getFilterTypes())) {
+      if (hasNone(envPermissions.getFilterTypes())) {
         filterTypes.add(QLPipelineFilterType.PRODUCTION_PIPELINES);
         filterTypes.add(QLPipelineFilterType.NON_PRODUCTION_PIPELINES);
 
@@ -657,7 +657,7 @@ public class UserGroupPermissionsController {
       case SERVICE:
         QLServicePermissions servicePermissions;
         Set<String> serviceIds = permission.getEntityFilter().getIds();
-        if (isEmpty(serviceIds)) {
+        if (hasNone(serviceIds)) {
           servicePermissions =
               QLServicePermissions.builder().filterType(QLPermissionsFilterType.ALL).serviceIds(serviceIds).build();
         } else {
@@ -681,7 +681,7 @@ public class UserGroupPermissionsController {
       case PROVISIONER:
         QLProivionerPermissions provisionerPermissions;
         Set<String> provisionersId = permission.getEntityFilter().getIds();
-        if (isEmpty(provisionersId)) {
+        if (hasNone(provisionersId)) {
           provisionerPermissions = QLProivionerPermissions.builder()
                                        .filterType(QLPermissionsFilterType.ALL)
                                        .provisionerIds(provisionersId)

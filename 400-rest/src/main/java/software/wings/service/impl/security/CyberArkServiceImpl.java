@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -71,7 +71,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     CyberArkConfig oldConfigForAudit = null;
     CyberArkConfig savedConfig = null;
     boolean credentialChanged = true;
-    if (!isEmpty(cyberArkConfig.getUuid())) {
+    if (!hasNone(cyberArkConfig.getUuid())) {
       savedConfig = getConfig(accountId, cyberArkConfig.getUuid());
       if (SECRET_MASK.equals(cyberArkConfig.getClientCertificate())) {
         cyberArkConfig.setClientCertificate(savedConfig.getClientCertificate());
@@ -128,7 +128,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
   private EncryptedData getEncryptedDataForClientCertificateField(
       CyberArkConfig savedConfig, CyberArkConfig cyberArkConfig, String clientCertificate) {
-    EncryptedData encryptedData = isNotEmpty(clientCertificate) && !Objects.equals(SECRET_MASK, clientCertificate)
+    EncryptedData encryptedData = hasSome(clientCertificate) && !Objects.equals(SECRET_MASK, clientCertificate)
         ? encryptLocal(clientCertificate.toCharArray())
         : null;
 
@@ -182,7 +182,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
     CyberArkConfig cyberArkConfig = wingsPersistence.get(CyberArkConfig.class, configId);
     checkNotNull(cyberArkConfig, "No CyberArk secret manager configuration found with id " + configId);
 
-    if (isNotEmpty(cyberArkConfig.getClientCertificate())) {
+    if (hasSome(cyberArkConfig.getClientCertificate())) {
       wingsPersistence.delete(EncryptedData.class, cyberArkConfig.getClientCertificate());
       log.info("Deleted encrypted auth token record {} associated with CyberArk Secrets Manager '{}'",
           cyberArkConfig.getClientCertificate(), cyberArkConfig.getName());
@@ -193,7 +193,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
   @Override
   public void validateConfig(CyberArkConfig cyberArkConfig) {
-    if (isEmpty(cyberArkConfig.getName())) {
+    if (hasNone(cyberArkConfig.getName())) {
       throw new SecretManagementException(CYBERARK_OPERATION_ERROR, "Name can not be empty", USER);
     }
 

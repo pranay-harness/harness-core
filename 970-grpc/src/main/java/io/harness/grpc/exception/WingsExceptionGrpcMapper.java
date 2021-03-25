@@ -1,6 +1,6 @@
 package io.harness.grpc.exception;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
@@ -22,7 +22,7 @@ public class WingsExceptionGrpcMapper implements GrpcExceptionMapper<WingsExcept
     if (throwable != null) {
       ExceptionLogger.logProcessedMessages(throwable, MANAGER, log);
       List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(throwable, REST_API);
-      if (isNotEmpty(responseMessages)) {
+      if (hasSome(responseMessages)) {
         status = Status.INTERNAL.withDescription(responseMessages.get(0).getMessage()).withCause(throwable);
       } else {
         status = Status.INTERNAL.withDescription(throwable.toString()).withCause(throwable);

@@ -2,8 +2,8 @@ package software.wings.helpers.ext.azure;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AZURE_SERVICE_EXCEPTION;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
@@ -119,7 +119,7 @@ public class AzureHelperService {
 
   public void validateAzureAccountCredential(AzureConfig azureConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      if (isNotEmpty(encryptedDataDetails)) {
+      if (hasSome(encryptedDataDetails)) {
         encryptionService.decrypt(azureConfig, encryptedDataDetails, false);
       }
 
@@ -240,7 +240,7 @@ public class AzureHelperService {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<VirtualMachine> listVms = azure.virtualMachines().listByResourceGroup(resourceGroupName);
 
-    if (isEmpty(listVms)) {
+    if (hasNone(listVms)) {
       log.info("List VMs by Tags and Resource group did not find any matching VMs in Azure for subscription : "
           + subscriptionId);
       return Collections.emptyList();
@@ -276,7 +276,7 @@ public class AzureHelperService {
       DeploymentType deploymentType) {
     List<VirtualMachine> vms = listVms(azureInfrastructureMapping, computeProviderSetting, encryptedDataDetails);
 
-    if (isNotEmpty(vms)) {
+    if (hasSome(vms)) {
       List<Host> azureHosts = new ArrayList<>();
       for (VirtualMachine vm : vms) {
         Host host =
@@ -311,7 +311,7 @@ public class AzureHelperService {
     List<VirtualMachine> vms =
         listVms(azureInstanceInfrastructure, computeProviderSetting, encryptedDataDetails, deploymentType);
 
-    if (isNotEmpty(vms)) {
+    if (hasSome(vms)) {
       List<Host> azureHosts = new ArrayList<>();
       for (VirtualMachine vm : vms) {
         Host host =
@@ -496,11 +496,11 @@ public class AzureHelperService {
                 .execute()
                 .body()
                 .getRepositories();
-        if (isNotEmpty(repositories)) {
+        if (hasSome(repositories)) {
           allRepositories.addAll(repositories);
           last = repositories.get(repositories.size() - 1);
         }
-      } while (isNotEmpty(repositories));
+      } while (hasSome(repositories));
       return allRepositories.stream().distinct().collect(toList());
     } catch (Exception e) {
       log.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
@@ -818,7 +818,7 @@ public class AzureHelperService {
 
     Authenticated authenticate = Azure.configure().authenticate(credentials);
 
-    if (isEmpty(azureVaultConfig.getSubscription())) {
+    if (hasNone(azureVaultConfig.getSubscription())) {
       azure = authenticate.withDefaultSubscription();
     } else {
       azure = authenticate.withSubscription(azureVaultConfig.getSubscription());

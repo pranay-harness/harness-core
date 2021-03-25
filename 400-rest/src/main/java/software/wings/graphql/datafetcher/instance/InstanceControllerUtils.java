@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.instance;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.artifact.Artifact;
@@ -25,9 +26,8 @@ public class InstanceControllerUtils {
     if (artifact == null) {
       return QLArtifact.builder()
           .buildNo(instance.getLastArtifactBuildNum())
-          .artifactSourceId(EmptyPredicate.isNotEmpty(instance.getLastArtifactStreamId())
-                  ? instance.getLastArtifactStreamId()
-                  : DUMMY_ARTIFACT_SOURCE_ID)
+          .artifactSourceId(hasSome(instance.getLastArtifactStreamId()) ? instance.getLastArtifactStreamId()
+                                                                        : DUMMY_ARTIFACT_SOURCE_ID)
           .id(instance.getLastArtifactId())
           .collectedAt(instance.getLastDeployedAt())
           .build();

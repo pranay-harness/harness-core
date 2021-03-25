@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.governance;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.CustomEnvFilter;
@@ -88,7 +89,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
   private List<String> getAppIds(String accountId, List<String> appNames) {
     List<Application> apps = new ArrayList<>();
-    if (EmptyPredicate.isEmpty(appNames)) {
+    if (hasNone(appNames)) {
       throw new InvalidRequestException("Custom App filter requires 1 app");
     }
     for (String appName : appNames) {

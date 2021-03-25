@@ -4,7 +4,7 @@ import static io.harness.SeedData.randomText;
 import static io.harness.SeedData.seedNames;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.FileBucket.PLATFORMS;
 import static io.harness.generator.AccountGenerator.Accounts;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
@@ -476,7 +476,7 @@ public class DataGenService {
     log.info("Creating System App Containers");
     List<Account> accounts =
         accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
-    if (isEmpty(accounts)) {
+    if (hasNone(accounts)) {
       return;
     }
     List<SystemCatalog> systemCatalogs = systemCatalogService.list(aPageRequest()
@@ -509,7 +509,7 @@ public class DataGenService {
                                            .addFilter("accountId", EQ, account.getUuid())
                                            .addFilter("fileUuid", EQ, systemCatalog.getFileUuid())
                                            .build());
-          if (isEmpty(pageResponse.getResponse())) {
+          if (hasNone(pageResponse.getResponse())) {
             appContainerService.save(appContainer);
           } else {
             AppContainer storedAppContainer = pageResponse.getResponse().get(0);

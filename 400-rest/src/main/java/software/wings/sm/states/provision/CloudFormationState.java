@@ -3,8 +3,8 @@ package software.wings.sm.states.provision;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -153,7 +153,7 @@ public abstract class CloudFormationState extends State {
     ExecutionResponseBuilder builder = ExecutionResponse.builder().executionStatus(executionStatus);
     if (ExecutionStatus.SUCCESS == executionStatus) {
       List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
-      if (isNotEmpty(elements)) {
+      if (hasSome(elements)) {
         elements.forEach(element -> {
           builder.contextElement(element);
           builder.notifyElement(element);
@@ -189,7 +189,7 @@ public abstract class CloudFormationState extends State {
 
     AwsConfig awsConfig;
     final List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (isNotEmpty(templateExpressions)) {
+    if (hasSome(templateExpressions)) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(templateExpressions, "awsConfigId");
       if (configIdExpression != null) {
@@ -231,7 +231,7 @@ public abstract class CloudFormationState extends State {
 
     if (CommandExecutionStatus.SUCCESS == commandResponse.getCommandExecutionStatus()) {
       Map<String, Object> outputs = createStackResponse.getCloudFormationOutputMap();
-      if (isNotEmpty(outputs)) {
+      if (hasSome(outputs)) {
         infrastructureProvisionerService.regenerateInfrastructureMappings(
             provisionerId, context, outputs, Optional.of(executionLogCallback), Optional.of(region));
       } else {
@@ -295,7 +295,7 @@ public abstract class CloudFormationState extends State {
   }
 
   protected String fetchResolvedAwsConfigId(ExecutionContext context) {
-    if (isNotEmpty(getTemplateExpressions())) {
+    if (hasSome(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "awsConfigId");
       if (configIdExpression != null) {
@@ -310,7 +310,7 @@ public abstract class CloudFormationState extends State {
   }
 
   private String getNormalizedId(String id) {
-    if (isEmpty(id)) {
+    if (hasNone(id)) {
       return id;
     }
     StringBuilder sb = new StringBuilder();
@@ -333,7 +333,7 @@ public abstract class CloudFormationState extends State {
     String url = null;
     String body = null;
     String createType;
-    if (isNotEmpty(rollbackInfo.getUrl())) {
+    if (hasSome(rollbackInfo.getUrl())) {
       createType = CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL;
       url = rollbackInfo.getUrl();
     } else {

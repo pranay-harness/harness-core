@@ -1,6 +1,6 @@
 package software.wings.verification.stackdriver;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -53,7 +53,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
   }
 
   public Map<String, TimeSeriesMetricDefinition> fetchMetricTemplate() {
-    if (isEmpty(metricDefinitions)) {
+    if (hasNone(metricDefinitions)) {
       return null;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.manifest;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static java.util.Collections.emptyList;
@@ -181,11 +181,11 @@ public class CustomManifestServiceImplTest extends CategoryTest {
 
   @After
   public void cleanup() throws IOException {
-    if (isNotEmpty(testOutputDirectory)) {
+    if (hasSome(testOutputDirectory)) {
       FileUtils.deleteDirectory(new File(testOutputDirectory));
     }
 
-    if (isNotEmpty(shellWorkingDirectory)) {
+    if (hasSome(shellWorkingDirectory)) {
       FileUtils.deleteDirectory(new File(shellWorkingDirectory));
     }
   }

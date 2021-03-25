@@ -2,8 +2,8 @@ package software.wings.security;
 
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
@@ -132,7 +132,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     if (isExternalFacingApiRequest(containerRequestContext)) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
-      if (isNotEmpty(apiKey)) {
+      if (hasSome(apiKey)) {
         if (!containerRequestContext.getUriInfo().getAbsolutePath().getPath().endsWith("graphql")) {
           ensureValidQPM(containerRequestContext.getHeaderString(API_KEY_HEADER));
         }
@@ -222,7 +222,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
     String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
-    return isNotEmpty(value);
+    return hasSome(value);
   }
 
   protected boolean isAdminPortalRequest() {
@@ -305,7 +305,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected void validateLearningEngineRequest(ContainerRequestContext containerRequestContext) {
     String header = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-    if (isEmpty(header)) {
+    if (hasNone(header)) {
       throw new IllegalStateException("Invalid verification header");
     }
 
@@ -336,7 +336,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
         containerRequestContext.getUriInfo().getQueryParameters());
 
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       // In case of graphql, accountId comes as null. For the new version of api keys, we can get the accountId
       accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
     }

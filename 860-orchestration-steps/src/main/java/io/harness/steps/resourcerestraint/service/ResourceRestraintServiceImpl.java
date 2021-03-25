@@ -1,8 +1,8 @@
 package io.harness.steps.resourcerestraint.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
@@ -131,7 +131,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
     for (ResourceRestraint restraint : restraintList) {
       final Constraint constraint = createAbstraction(restraint);
       final List<ConstraintUnit> units = units(restraint);
-      if (isEmpty(units)) {
+      if (hasNone(units)) {
         continue;
       }
 
@@ -184,7 +184,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
 
     List<ResourceRestraintInstance> instances =
         restraintInstanceRepository.findByReleaseEntityTypeAndReleaseEntityId(scope, releaseEntityId);
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       for (ResourceRestraintInstance instance : instances) {
         currentPermits += instance.getPermits();
       }

@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
@@ -79,13 +79,13 @@ public class GcpClusterSetup extends State {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.getWithDetails(app.getUuid(), serviceId).getName();
-    if (isEmpty(zone)) {
+    if (hasNone(zone)) {
       zone = "us-west1-a";
     }
     if (nodeCount <= 0) {
       nodeCount = 2;
     }
-    if (isEmpty(machineType)) {
+    if (hasNone(machineType)) {
       machineType = "n1-standard-2";
     }
 

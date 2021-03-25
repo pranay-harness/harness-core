@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -192,8 +192,8 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
 
     String templateUri = yaml.getTemplateUri();
     String templateUuid;
-    if (isNotEmpty(templateUri)) {
-      if (isNotEmpty(appId)) {
+    if (hasSome(templateUri)) {
+      if (hasSome(appId)) {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
       } else {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);

@@ -6,7 +6,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.utils.KmsUtils.generateKmsUrl;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
@@ -94,7 +94,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
     List<ExecutionCapability> executionCapabilities =
         new ArrayList<>(Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             getEncryptionServiceUrl(), maskingEvaluator)));
-    if (isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }
@@ -108,7 +108,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    if (isNotEmpty(this.secretKey)) {
+    if (hasSome(this.secretKey)) {
       this.secretKey = SECRET_MASK;
     }
   }

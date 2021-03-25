@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -65,7 +65,7 @@ public class ExecutionConnectionDataFetcher
      * the does not exist in the query
      */
 
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       for (QLExecutionFilter filter : filters) {
         includePipelineId = includePipelineId || (filter.getPipelineExecutionId() != null);
       }
@@ -103,7 +103,7 @@ public class ExecutionConnectionDataFetcher
   private List<QLExecutionFilter> addAppIdValidation(List<QLExecutionFilter> filters) {
     List<QLExecutionFilter> updatedFilters = filters != null ? new ArrayList<>(filters) : new ArrayList<>();
     boolean appIdFilterFound = false;
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       for (QLExecutionFilter filter : filters) {
         if (filter.getApplication() != null) {
           appIdFilterFound = true;

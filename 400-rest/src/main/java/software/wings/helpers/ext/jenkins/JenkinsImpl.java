@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.jenkins;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.stream.StreamUtils.getInputStreamSize;
 import static io.harness.threading.Morpheus.quietSleep;
@@ -277,7 +277,7 @@ public class JenkinsImpl implements Jenkins {
 
   protected String getNormalizedName(String jobName) {
     try {
-      if (isNotEmpty(jobName)) {
+      if (hasSome(jobName)) {
         return URLDecoder.decode(jobName, Charsets.UTF_8.name());
       }
     } catch (UnsupportedEncodingException e) {
@@ -349,11 +349,11 @@ public class JenkinsImpl implements Jenkins {
             .filter(BuildWithDetails.class ::isInstance)
             .map(build -> (BuildWithDetails) build)
             .filter(!allStatuses ? build
-                -> (build.getResult() == BuildResult.SUCCESS) && isNotEmpty(build.getArtifacts())
+                -> (build.getResult() == BuildResult.SUCCESS) && hasSome(build.getArtifacts())
                                  : build
                 -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE
                        || build.getResult() == BuildResult.FAILURE)
-                    && isNotEmpty(build.getArtifacts()))
+                    && hasSome(build.getArtifacts()))
             .map(buildWithDetails1 -> getBuildDetails(buildWithDetails1, artifactPaths))
             .collect(toList()));
     return buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
@@ -379,12 +379,12 @@ public class JenkinsImpl implements Jenkins {
   private List<ArtifactFileMetadata> getArtifactFileMetadata(
       BuildWithDetails buildWithDetails, List<String> artifactPaths) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       List<Artifact> buildArtifacts = buildWithDetails.getArtifacts();
-      if (isNotEmpty(buildArtifacts)) {
+      if (hasSome(buildArtifacts)) {
         for (String artifactPath : artifactPaths) {
           // only if artifact path is not empty check if there is a match
-          if (isNotEmpty(artifactPath.trim())) {
+          if (hasSome(artifactPath.trim())) {
             Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
             Optional<Artifact> artifactOpt = buildWithDetails.getArtifacts()
                                                  .stream()
@@ -448,7 +448,7 @@ public class JenkinsImpl implements Jenkins {
     QueueReference queueReference;
     try {
       log.info("Triggering job {} ", job.getUrl());
-      if (isEmpty(parameters)) {
+      if (hasNone(parameters)) {
         ExtractHeader location = job.getClient().post(job.getUrl() + "build", null, ExtractHeader.class, true);
         queueReference = new QueueReference(location.getLocation());
       } else {
@@ -457,7 +457,7 @@ public class JenkinsImpl implements Jenkins {
       log.info("Triggering job {} success ", job.getUrl());
       return queueReference;
     } catch (HttpResponseException e) {
-      if (e.getStatusCode() == 400 && isEmpty(parameters)) {
+      if (e.getStatusCode() == 400 && hasNone(parameters)) {
         throw new InvalidRequestException(
             format(
                 "Failed to trigger job %s with url %s.%nThis might be because the Jenkins job requires parameters but none were provided in the Jenkins step.",
@@ -626,7 +626,7 @@ public class JenkinsImpl implements Jenkins {
 
           DocumentContext documentContext = JsonUtils.parseJson(jsonString);
           Map<String, String> envVars = documentContext.read("$['envMap']");
-          if (isEmpty(envVars)) {
+          if (hasNone(envVars)) {
             envVars = new HashMap<>();
           } else {
             // NOTE: Removing environment variables where keys contain '.'. Storing and retrieving these keys is

@@ -1,6 +1,7 @@
 package io.harness.cvng;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -53,7 +54,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
           coreV1Api.listNamespace(null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
       List<String> rv = new ArrayList<>();
       v1NamespaceList.getItems().forEach(v1Namespace -> {
-        if (isNotEmpty(filter)
+        if (hasSome(filter)
             && !v1Namespace.getMetadata().getName().toLowerCase().contains(filter.trim().toLowerCase())) {
           return;
         }
@@ -80,9 +81,9 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       Set<String> rv = new HashSet<>();
       podList.getItems().forEach(viPod -> {
         List<V1OwnerReference> ownerReferences = viPod.getMetadata().getOwnerReferences();
-        if (isNotEmpty(ownerReferences)) {
+        if (hasSome(ownerReferences)) {
           ownerReferences.forEach(v1OwnerReference -> {
-            if (isNotEmpty(filter) && !v1OwnerReference.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+            if (hasSome(filter) && !v1OwnerReference.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
               return;
             }
             if ("ReplicaSet".equals(v1OwnerReference.getKind())) {

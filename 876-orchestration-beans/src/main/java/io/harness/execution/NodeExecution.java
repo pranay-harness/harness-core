@@ -1,7 +1,7 @@
 package io.harness.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
@@ -114,7 +114,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   }
 
   public ExecutableResponse obtainLatestExecutableResponse() {
-    if (isEmpty(executableResponses)) {
+    if (hasNone(executableResponses)) {
       return null;
     }
     return executableResponses.get(executableResponses.size() - 1);

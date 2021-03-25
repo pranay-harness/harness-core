@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -308,7 +308,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       log.warn("Returning empty results from getCVExecutionMetaData since user was null");
       return results;
     }
-    if (isEmpty(getAllowedApplicationsForUser(user, accountId))) {
+    if (hasNone(getAllowedApplicationsForUser(user, accountId))) {
       log.info(
           "Returning empty results from getCVExecutionMetaData since user does not have permissions for any applications");
       return results;
@@ -483,7 +483,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
     List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
-    if (isEmpty(allowedApplications)) {
+    if (hasNone(allowedApplications)) {
       log.info(
           "Returning empty results from getCVDeploymentData since user does not have permissions for any applications");
       return results;
@@ -518,7 +518,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    if (isEmpty(deploymentData)) {
+    if (hasNone(deploymentData)) {
       log.info("There are no deployments with CV for service {}", serviceId);
       return new ArrayList<>();
     }
@@ -563,7 +563,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
     Service service = wingsPersistence.get(Service.class, serviceId);
-    if (isEmpty(allowedApplications) || service == null || !allowedApplications.contains(service.getAppId())) {
+    if (hasNone(allowedApplications) || service == null || !allowedApplications.contains(service.getAppId())) {
       log.info(
           "Returning empty results from getCVDeploymentData since user {} does not have permissions for any applications",
           user);
@@ -639,7 +639,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private Set<String> getEnvPermissions(Map<String, AppPermissionSummary> userAppPermissions, String applicationId) {
-    if (isEmpty(userAppPermissions)) {
+    if (hasNone(userAppPermissions)) {
       return emptySet();
     }
 
@@ -651,12 +651,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
 
-    if (isEmpty(envPermissions)) {
+    if (hasNone(envPermissions)) {
       return emptySet();
     }
 
     Set<EnvInfo> envInfoSet = envPermissions.get(Action.READ);
-    if (isEmpty(envInfoSet)) {
+    if (hasNone(envInfoSet)) {
       return emptySet();
     }
 
@@ -669,11 +669,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
    * @return False if set is either empty or it does not contain value. True otherwise.
    */
   private boolean checkIfPermissionsApproved(final Set<String> setToCheck, final String value) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return true;
     }
 
-    if (isEmpty(setToCheck) || !setToCheck.contains(value)) {
+    if (hasNone(setToCheck) || !setToCheck.contains(value)) {
       log.info("Permissions rejected for value {} in set {}", value, setToCheck);
       return false;
     }
@@ -697,7 +697,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                  .filter(CVConfigurationKeys.enabled24x7, true)
                                                  .asList();
 
-    if (isEmpty(cvConfigurations)) {
+    if (hasNone(cvConfigurations)) {
       log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
@@ -786,7 +786,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       List<TimeSeriesMLAnalysisRecord> records) {
     List<TimeSeriesMLAnalysisRecord> retList = new ArrayList<>();
     Map<String, List<TimeSeriesMLAnalysisRecord>> minuteConfigMap = new LinkedHashMap<>();
-    if (isNotEmpty(records)) {
+    if (hasSome(records)) {
       records.forEach(record -> {
         String key = record.getCvConfigId() + "::" + record.getAnalysisMinute();
         if (!minuteConfigMap.containsKey(key)) {
@@ -839,7 +839,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
     List<HeatMapUnit> units = new ArrayList<>();
-    if (isEmpty(timeSeriesAnalysisRecords) && isEmpty(logAnalysisRecords)) {
+    if (hasNone(timeSeriesAnalysisRecords) && hasNone(logAnalysisRecords)) {
       while (endMinute > startMinute) {
         units.add(HeatMapUnit.builder()
                       .startTime(TimeUnit.MINUTES.toMillis(startMinute))
@@ -855,7 +855,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     SortedSet<HeatMapUnit> sortedUnitsFromDB = new TreeSet<>();
 
-    if (isNotEmpty(timeSeriesAnalysisRecords)) {
+    if (hasSome(timeSeriesAnalysisRecords)) {
       timeSeriesAnalysisRecords.forEach(record -> {
         HeatMapUnit heatMapUnit =
             HeatMapUnit.builder()
@@ -870,7 +870,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       });
     }
 
-    if (isNotEmpty(logAnalysisRecords)) {
+    if (hasSome(logAnalysisRecords)) {
       logAnalysisRecords.forEach(record -> {
         HeatMapUnit heatMapUnit =
             HeatMapUnit.builder()
@@ -960,7 +960,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private SettingValue getConnectorConfig(CVConfiguration cvConfiguration) {
-    if (isNotEmpty(cvConfiguration.getConnectorId())) {
+    if (hasSome(cvConfiguration.getConnectorId())) {
       return wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId()).getValue();
     }
     return null;
@@ -980,7 +980,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         final Optional<ServiceGuardThroughputToErrorsMap> txnThroughputToError =
             throughputToErrors.stream()
                 .filter(throughputToErrorsMap
-                    -> isNotEmpty(throughputToErrorsMap.getTxnName())
+                    -> hasSome(throughputToErrorsMap.getTxnName())
                         && throughputToErrorsMap.getTxnName().equals(dataRecord.getName()))
                 .findFirst();
         if (txnThroughputToError.isPresent()) {
@@ -1029,25 +1029,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case CLOUD_WATCH:
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration = (CloudWatchCVServiceConfiguration) cvConfig;
         List<CloudWatchMetric> metrics = new ArrayList<>();
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEc2Metrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getEc2Metrics())) {
           metrics.addAll(cloudWatchCVServiceConfiguration.getEc2Metrics());
         }
 
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
           metrics.addAll(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics()
                              .values()
                              .stream()
                              .flatMap(List::stream)
                              .collect(Collectors.toList()));
         }
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
           metrics.addAll(cloudWatchCVServiceConfiguration.getEcsMetrics()
                              .values()
                              .stream()
                              .flatMap(List::stream)
                              .collect(Collectors.toList()));
         }
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
           metrics.addAll(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics()
                              .values()
                              .stream()
@@ -1069,9 +1069,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private void setDeeplinkUrlInRecords(CVConfiguration cvConfiguration, SettingValue connectorConfig, long startTime,
       long endTime, List<NewRelicMetricDataRecord> records) {
-    if (isNotEmpty(records)) {
+    if (hasSome(records)) {
       records.forEach(record -> {
-        if (isNotEmpty(record.getDeeplinkMetadata())) {
+        if (hasSome(record.getDeeplinkMetadata())) {
           record.getDeeplinkMetadata().forEach((metric, metadata) -> {
             if (record.getDeeplinkUrl() == null) {
               record.setDeeplinkUrl(new HashMap<>());
@@ -1098,7 +1098,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case NEW_RELIC:
         String newRelicAppId = ((NewRelicCVServiceConfiguration) cvConfig).getApplicationId();
         String newRelicAccountId = ((NewRelicConfig) connectorConfig).getNewRelicAccountId();
-        if (isEmpty(newRelicAccountId)) {
+        if (hasNone(newRelicAccountId)) {
           return "";
         }
         int durationInHours = (int) TimeUnit.MILLISECONDS.toHours(endTime - startTime);
@@ -1153,7 +1153,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           metricMap.entrySet()
               .stream()
               .filter(e
-                  -> isNotEmpty(summary.getTxnMetricRisk()) && summary.getTxnMetricRisk().containsKey(transaction)
+                  -> hasSome(summary.getTxnMetricRisk()) && summary.getTxnMetricRisk().containsKey(transaction)
                       && summary.getTxnMetricRisk().get(transaction).containsKey(e.getKey()))
               .forEach(entry -> {
                 Integer risk = summary.getTxnMetricRisk().get(transaction).get(entry.getKey());
@@ -1168,7 +1168,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           metricMap.entrySet()
               .stream()
               .filter(e
-                  -> isNotEmpty(summary.getTxnMetricLongTermPattern())
+                  -> hasSome(summary.getTxnMetricLongTermPattern())
                       && summary.getTxnMetricLongTermPattern().containsKey(transaction)
                       && summary.getTxnMetricLongTermPattern().get(transaction).containsKey(e.getKey()))
               .forEach(entry -> {
@@ -1180,8 +1180,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           metricMap.entrySet()
               .stream()
               .filter(e
-                  -> isNotEmpty(summary.getTxnMetricRiskData())
-                      && summary.getTxnMetricRiskData().containsKey(transaction)
+                  -> hasSome(summary.getTxnMetricRiskData()) && summary.getTxnMetricRiskData().containsKey(transaction)
                       && summary.getTxnMetricRiskData().get(transaction).containsKey(e.getKey()))
               .forEach(entry -> {
                 Integer pattern =
@@ -1243,7 +1242,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void populateMetricNames(CVConfiguration cvConfiguration, TimeSeriesFilter filter) {
-    if (isEmpty(filter.getMetricNames())) {
+    if (hasNone(filter.getMetricNames())) {
       return;
     }
     switch (cvConfiguration.getStateType()) {
@@ -1337,7 +1336,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         dataRecordPageRequest.addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT, end);
       }
 
-      if (isNotEmpty(filter.getTags()) && filter.getTags().size() == 1) {
+      if (hasSome(filter.getTags()) && filter.getTags().size() == 1) {
         dataRecordPageRequest.addFilter(
             NewRelicMetricDataRecordKeys.tag, Operator.EQ, filter.getTags().iterator().next());
       }
@@ -1350,7 +1349,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           .filter(dataRecord -> !HEARTBEAT_METRIC_NAME.equals(dataRecord.getName()))
           .forEach(dataRecord -> {
             // filter for txnName
-            if (isEmpty(filter.getTxnNames())) {
+            if (hasNone(filter.getTxnNames())) {
               records.add(dataRecord);
             } else if (filter.getTxnNames().contains(dataRecord.getName())) {
               records.add(dataRecord);
@@ -1367,7 +1366,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     log.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
       String tag = metricRecord.getTag();
-      if (isEmpty(tag)) {
+      if (hasNone(tag)) {
         tag = HARNESS_DEFAULT_TAG;
       }
       if (!observedTimeSeries.containsKey(tag)) {
@@ -1394,7 +1393,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .addToTimeSeriesMap(metricRecord.getDataCollectionMinute(),
                 getNormalizedMetricValue(metricName, metricRecord, cvConfiguration));
         metricMap.get(metricName).setMetricType(getMetricType(cvConfiguration, metricName));
-        if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
+        if (hasSome(metricRecord.getDeeplinkMetadata())) {
           if (metricRecord.getDeeplinkUrl().containsKey(metricName)) {
             String deeplinkUrl = metricRecord.getDeeplinkUrl().get(metricName);
             metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
@@ -1411,7 +1410,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private void filterMetrics(TimeSeriesFilter filter, List<NewRelicMetricDataRecord> records) {
     // filter for metric names
-    if (isNotEmpty(filter.getMetricNames())) {
+    if (hasSome(filter.getMetricNames())) {
       records.forEach(dataRecord -> {
         for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
              iterator.hasNext();) {
@@ -1424,7 +1423,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
       for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
         NewRelicMetricDataRecord dataRecord = recordIterator.next();
-        if (isEmpty(dataRecord.getValues())) {
+        if (hasNone(dataRecord.getValues())) {
           recordIterator.remove();
         }
       }
@@ -1485,7 +1484,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String logCollectionResponse =
           delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
               .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, config.getGuid()));
-      if (isNotEmpty(logCollectionResponse)) {
+      if (hasSome(logCollectionResponse)) {
         response.setProviderReachable(true);
       }
 
@@ -1497,7 +1496,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           logCollectionResponse, null, false, false, logDefinitions.values().iterator().next());
 
       Collection<LogElement> logRecords = (new LogResponseParser()).extractLogs(responseData);
-      if (isNotEmpty(logRecords)) {
+      if (hasSome(logRecords)) {
         response.setProviderReachable(true);
         response.setLoadResponse(
             VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(logCollectionResponse).build());
@@ -1535,7 +1534,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String apmResponse =
         delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
             .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, config.getGuid()));
-    if (isNotEmpty(apmResponse)) {
+    if (hasSome(apmResponse)) {
       response.setProviderReachable(true);
     }
 
@@ -1550,7 +1549,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME, apmResponse, metricInfoList);
 
     Collection<NewRelicMetricDataRecord> metricDataRecords = APMResponseParser.extract(Arrays.asList(responseData));
-    if (isNotEmpty(metricDataRecords)) {
+    if (hasSome(metricDataRecords)) {
       response.setProviderReachable(true);
       response.setLoadResponse(
           VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(apmResponse).build());
@@ -1574,7 +1573,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         config.getMetrics(), config.getDockerMetrics(), null, config.getEcsMetrics());
     Map<String, String> invalidMetrics =
         DatadogServiceImpl.validateNameClashInCustomMetrics(config.getCustomMetrics(), metricsString);
-    if (isNotEmpty(invalidMetrics)) {
+    if (hasSome(invalidMetrics)) {
       StringBuilder exception = new StringBuilder("Invalid metric definitions found:");
       invalidMetrics.forEach((metric, reason) -> { exception.append(metric + COMMA_STR); });
       throw new DataCollectionException(exception.substring(0, exception.lastIndexOf(COMMA_STR)));
@@ -1583,12 +1582,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Map<String, List<APMMetricInfo>> metricInfoByQuery;
     if (!config.isServiceLevel()) {
       Optional<List<String>> metrics = Optional.empty();
-      if (isNotEmpty(config.getMetrics())) {
+      if (hasSome(config.getMetrics())) {
         metrics = Optional.of(new ArrayList<>(Arrays.asList(config.getMetrics().split(COMMA_STR))));
       }
       metricInfoByQuery = metricEndpointsInfo(Optional.ofNullable(config.getDatadogServiceName()), metrics,
           Optional.empty(), Optional.ofNullable(config.getCustomMetrics()),
-          isEmpty(config.getDeploymentType()) ? Optional.empty()
+          hasNone(config.getDeploymentType()) ? Optional.empty()
                                               : Optional.of(DeploymentType.valueOf(config.getDeploymentType())));
     } else {
       metricInfoByQuery = createDatadogMetricEndPointMap(
@@ -1638,7 +1637,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     VerificationLoadResponse response =
-        VerificationLoadResponse.builder().loadResponse(loadResponse).isLoadPresent(!isEmpty(loadResponse)).build();
+        VerificationLoadResponse.builder().loadResponse(loadResponse).isLoadPresent(!hasNone(loadResponse)).build();
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
@@ -2135,7 +2134,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public static Map<String, List<APMMetricInfo>> createDatadogMetricEndPointMap(Map<String, String> dockerMetricsMap,
       Map<String, String> ecsMetricsMap, String datadogServiceName, Map<String, Set<Metric>> customMetricsMap) {
     Map<String, List<APMMetricInfo>> metricEndPoints = new HashMap<>();
-    if (isNotEmpty(dockerMetricsMap)) {
+    if (hasSome(dockerMetricsMap)) {
       for (Entry<String, String> entry : dockerMetricsMap.entrySet()) {
         String filter = entry.getKey();
         List<String> dockerMetrics = new ArrayList<>(
@@ -2144,7 +2143,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             Optional.empty(), Optional.of(dockerMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
       }
     }
-    if (isNotEmpty(ecsMetricsMap)) {
+    if (hasSome(ecsMetricsMap)) {
       for (Entry<String, String> entry : ecsMetricsMap.entrySet()) {
         String filter = entry.getKey();
         List<String> ecsMetrics = new ArrayList<>(
@@ -2273,7 +2272,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
                 .serviceId(config.getServiceId())
                 .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-                .body(isEmpty(body) ? null : new JSONObject(body).toMap())
+                .body(hasNone(body) ? null : new JSONObject(body).toMap())
                 .cvConfidId(config.getUuid())
                 .shouldDoHostBasedFiltering(false)
                 .startTime(startTime)
@@ -2547,8 +2546,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
     alertData.setAlertStatus(AlertStatus.Open);
-    alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
-                                                                     : mainConfiguration.getPortal().getUrl());
+    alertData.setPortalUrl(hasSome(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
+                                                                  : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(cvConfiguration.getAccountId());
     addHighRiskTxnsIfNecessary(alertData);
     log.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
@@ -2564,8 +2563,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
     alertData.setAlertStatus(AlertStatus.Open);
-    alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
-                                                                     : mainConfiguration.getPortal().getUrl());
+    alertData.setPortalUrl(hasSome(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
+                                                                  : mainConfiguration.getPortal().getUrl());
     alertData.setAccountId(cvConfiguration.getAccountId());
     addHighRiskTxnsIfNecessary(alertData);
     log.info("Opening alert with riskscore {} for {} and validUntil {}", alertData.getRiskScore(), cvConfiguration,
@@ -2647,7 +2646,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       demoStatExecutionData.setEndTs(Timestamp.currentMinuteBoundary());
       return demoStatExecutionData;
     }
-    if (isEmpty(stateExecutionMap) || !stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
+    if (hasNone(stateExecutionMap) || !stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
       return VerificationStateAnalysisExecutionData.builder().build();
     }
     Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),
@@ -2805,7 +2804,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
-    if (isNotEmpty(cvList)) {
+    if (hasSome(cvList)) {
       List<String> stateExecutionIds = new ArrayList<>();
       Map<String, CVCertifiedDetailsForWorkflowState> stateExecIdCVCertifiedMap = new HashMap<>();
       cvList.forEach(cvMetadata -> {

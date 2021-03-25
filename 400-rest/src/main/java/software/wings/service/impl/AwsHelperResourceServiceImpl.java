@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -8,7 +9,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -66,7 +66,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Override
   public List<NameValuePair> getAwsRegions() {
     Map<String, String> awsRegionIdToName = mainConfiguration.getAwsRegionIdToName();
-    if (EmptyPredicate.isEmpty(awsRegionIdToName)) {
+    if (hasNone(awsRegionIdToName)) {
       awsRegionIdToName = new LinkedHashMap<>();
     }
     List<NameValuePair> awsRegions = new ArrayList<>();

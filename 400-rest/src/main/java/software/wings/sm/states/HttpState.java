@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -297,14 +297,14 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String resolvedBody = body;
     String resolvedAssertion = assertion;
     List<Variable> variables = new ArrayList<>();
-    if (isNotEmpty(getTemplateVariables())) {
+    if (hasSome(getTemplateVariables())) {
       for (Variable variable : getTemplateVariables()) {
         if (VariableType.ARTIFACT != variable.getType()) {
           variables.add(variable);
         }
       }
       Map<String, Object> templateVariables = convertToVariableMap(variables);
-      if (isNotEmpty(templateVariables)) {
+      if (hasSome(templateVariables)) {
         resolvedUrl = fetchTemplatedValue(url, templateVariables);
         resolvedBody = fetchTemplatedValue(body, templateVariables);
         resolvedAssertion = fetchTemplatedValue(assertion, templateVariables);
@@ -368,7 +368,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
 
     List<String> renderedTags = newArrayList();
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       for (String tag : tags) {
         renderedTags.add(context.renderExpression(tag));
       }
@@ -397,7 +397,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
-    if (isNotEmpty(httpTaskParameters.getHeaders())) {
+    if (hasSome(httpTaskParameters.getHeaders())) {
       List<KeyValuePair> httpHeaders =
           httpTaskParameters.getHeaders()
               .stream()
@@ -491,7 +491,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       executionResponseBuilder.stateExecutionData(executionData);
       executionResponseBuilder.errorMessage(errorMessage);
 
-      if (isNotEmpty(responseProcessingExpressions)) {
+      if (hasSome(responseProcessingExpressions)) {
         Map<String, Object> output = new HashMap<>();
 
         responseProcessingExpressions.forEach(expression -> {

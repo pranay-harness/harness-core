@@ -1,6 +1,8 @@
 package io.harness.pms.sdk;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
@@ -28,7 +30,7 @@ public class PmsSdkHelper {
   public Map<String, PlanCreatorServiceInfo> getServices() {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
+    if (hasSome(planCreatorServices) && hasSome(sdkInstances)) {
       sdkInstances.forEach((k, v) -> {
         if (planCreatorServices.containsKey(k)) {
           services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
@@ -60,6 +62,6 @@ public class PmsSdkHelper {
               }
             })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    return !EmptyPredicate.isEmpty(filteredDependencies);
+    return !hasNone(filteredDependencies);
   }
 }

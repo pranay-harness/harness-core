@@ -1,6 +1,6 @@
 package io.harness.delegate.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
@@ -130,7 +130,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
                                         .filter(StringUtils::isNotBlank)
                                         .collect(Collectors.toList());
 
-      if (isEmpty(applyFilePaths)) {
+      if (hasNone(applyFilePaths)) {
         logCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         logCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
         return false;

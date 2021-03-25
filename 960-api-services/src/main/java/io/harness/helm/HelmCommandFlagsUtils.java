@@ -1,6 +1,6 @@
 package io.harness.helm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.k8s.model.HelmVersion;
 
@@ -12,7 +12,7 @@ public class HelmCommandFlagsUtils {
   public String applyHelmCommandFlags(
       String command, String commandType, Map<HelmSubCommandType, String> commandFlags, HelmVersion helmVersion) {
     String flags = "";
-    if (isNotEmpty(commandFlags)) {
+    if (hasSome(commandFlags)) {
       HelmSubCommandType subCommandType = HelmSubCommandType.getSubCommandType(commandType, helmVersion);
       flags = commandFlags.getOrDefault(subCommandType, "");
     }

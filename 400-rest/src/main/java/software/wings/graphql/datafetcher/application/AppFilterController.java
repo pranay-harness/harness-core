@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.application;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
@@ -46,10 +46,10 @@ public class AppFilterController {
     if (appFilter == null) {
       throw new InvalidRequestException("The app filter cannot be null");
     }
-    if (isEmpty(appFilter.getAppIds()) && appFilter.getFilterType() == null) {
+    if (hasNone(appFilter.getAppIds()) && appFilter.getFilterType() == null) {
       throw new InvalidRequestException("No appIds or filterType provided in app filter");
     }
-    if (isNotEmpty(appFilter.getAppIds()) && appFilter.getFilterType() != null) {
+    if (hasSome(appFilter.getAppIds()) && appFilter.getFilterType() != null) {
       throw new InvalidRequestException("Cannot set both appIds and filterType in app filter");
     }
     checkApplicationsExists(appFilter.getAppIds(), accountId);
@@ -59,10 +59,10 @@ public class AppFilterController {
     if (appFilter == null) {
       throw new InvalidRequestException("The app filter cannot be null");
     }
-    if (isEmpty(appFilter.getAppId()) && appFilter.getFilterType() == null) {
+    if (hasNone(appFilter.getAppId()) && appFilter.getFilterType() == null) {
       throw new InvalidRequestException("No appId or filterType provided in the app filter");
     }
-    if (isNotEmpty(appFilter.getAppId()) && appFilter.getFilterType() != null) {
+    if (hasSome(appFilter.getAppId()) && appFilter.getFilterType() != null) {
       throw new InvalidRequestException("Cannot set both appId and filterType in the app filter");
     }
     if (!isBlank(appFilter.getAppId())) {
@@ -83,7 +83,7 @@ public class AppFilterController {
   // Creates Filter for Environment and Service Type filters
   public GenericEntityFilter createGenericEntityFilter(QLAppFilter appFilter) {
     String filterType = ALL;
-    if (isNotEmpty(appFilter.getAppIds())) {
+    if (hasSome(appFilter.getAppIds())) {
       filterType = SELECTED;
     }
     return GenericEntityFilter.builder().filterType(filterType).ids(appFilter.getAppIds()).build();
@@ -91,7 +91,7 @@ public class AppFilterController {
 
   // Creates Filter for Environment and Service Type filters
   public GenericEntityFilter createGenericEntityFilter(QLAppScopeFilter appFilter) {
-    if (isNotEmpty(appFilter.getAppId())) {
+    if (hasSome(appFilter.getAppId())) {
       return GenericEntityFilter.builder()
           .filterType(SELECTED)
           .ids(new HashSet<>(Arrays.asList(appFilter.getAppId())))
@@ -101,7 +101,7 @@ public class AppFilterController {
   }
 
   public void checkApplicationsExists(Set<String> appIds, String accountId) {
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       return;
     }
     PageRequest<Application> req = aPageRequest()
@@ -119,7 +119,7 @@ public class AppFilterController {
     if (appFilter == null) {
       return null;
     }
-    if (isEmpty(appFilter.getIds())) {
+    if (hasNone(appFilter.getIds())) {
       return QLAppFilter.builder().filterType(QLGenericFilterType.ALL).build();
     }
     return QLAppFilter.builder().appIds(appFilter.getIds()).build();

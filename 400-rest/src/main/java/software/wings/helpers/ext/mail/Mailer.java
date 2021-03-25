@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.mail;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -62,7 +62,7 @@ public class Mailer {
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
-      if (isNotEmpty(smtpConfig.getPassword())) {
+      if (hasSome(smtpConfig.getPassword())) {
         email.setAuthenticator(
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }

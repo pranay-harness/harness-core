@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import static software.wings.beans.AzureKubernetesInfrastructureMapping.Builder.anAzureKubernetesInfrastructureMapping;
@@ -48,7 +48,7 @@ public class AzureKubernetesService
 
   @Override
   public String getReleaseName() {
-    return isEmpty(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
+    return hasNone(releaseName) ? INFRA_KUBERNETES_INFRAID_EXPRESSION : releaseName;
   }
 
   @Override

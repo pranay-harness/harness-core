@@ -1,8 +1,8 @@
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.ACCOUNT_MIGRATED;
 import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
@@ -201,7 +201,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
-      if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
+      if (hasSome(requestContext.getHeaderString("X-Api-Key"))) {
         String apiKey = requestContext.getHeaderString("X-Api-Key");
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
@@ -225,7 +225,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     boolean isExternalApi = externalAPI();
 
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
-    boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
+    boolean emptyAppIdsInReq = hasNone(appIdsFromRequest);
 
     if (!emptyAppIdsInReq && accountId == null) {
       // Ideally, we should force all the apis to have accountId as a mandatory field and not have this code.
@@ -253,7 +253,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     boolean isHarnessUserExemptedRequest = isHarnessUserExemptedRequest(uriPath);
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       validateAccountStatus(accountId, isHarnessUserExemptedRequest);
     } else if (accountId == null && isAuthFilteringExempted(uriPath)) {
       return;
@@ -295,7 +295,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
-    if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+    if (hasNone(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
       UserRequestContext userRequestContext =
           buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
       user.setUserRequestContext(userRequestContext);
@@ -388,7 +388,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private boolean isAccountLevelPermissions(PermissionType permissionType) {
     Set<PermissionType> accountPermissions = authHandler.getAllAccountPermissions();
-    if (isNotEmpty(accountPermissions)) {
+    if (hasSome(accountPermissions)) {
       return accountPermissions.contains(permissionType);
     }
     return false;
@@ -650,7 +650,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule[] methodAnnotations = resourceMethod.getAnnotationsByType(AuthRule.class);
-    if (isNotEmpty(methodAnnotations)) {
+    if (hasSome(methodAnnotations)) {
       for (AuthRule methodAnnotation : methodAnnotations) {
         methodPermissionAttributes.add(buildPermissionAttribute(methodAnnotation, requestContext.getMethod(), null));
       }
@@ -658,7 +658,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule[] classAnnotations = resourceClass.getAnnotationsByType(AuthRule.class);
-    if (isNotEmpty(classAnnotations)) {
+    if (hasSome(classAnnotations)) {
       for (AuthRule classAnnotation : classAnnotations) {
         classPermissionAttributes.add(new PermissionAttribute(null, classAnnotation.permissionType(),
             getAction(classAnnotation, requestContext.getMethod()), requestContext.getMethod(),

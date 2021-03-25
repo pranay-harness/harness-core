@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
@@ -460,7 +460,7 @@ public class EntityHelper {
           wingsPersistence.get(ApplicationManifest.class, manifestFile.getApplicationManifestId());
       if (manifest != null) {
         String envId = manifest.getEnvId();
-        if (isNotEmpty(envId)) {
+        if (hasSome(envId)) {
           affectedResourceId = envId;
           affectedResourceName = getEnvironmentName(envId, appId);
           affectedResourceType = EntityType.ENVIRONMENT.name();
@@ -468,7 +468,7 @@ public class EntityHelper {
               getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
         } else {
           String serviceId = manifest.getServiceId();
-          if (isNotEmpty(serviceId)) {
+          if (hasSome(serviceId)) {
             affectedResourceId = serviceId;
             affectedResourceName = getServiceName(serviceId, appId);
             affectedResourceType = EntityType.SERVICE.name();
@@ -483,7 +483,7 @@ public class EntityHelper {
       entityName = format("Application Manifest: [%s]", applicationManifest.getKind().name());
       appId = applicationManifest.getAppId();
       String envId = applicationManifest.getEnvId();
-      if (isNotEmpty(envId)) {
+      if (hasSome(envId)) {
         affectedResourceId = envId;
         affectedResourceName = getEnvironmentName(envId, appId);
         affectedResourceType = EntityType.ENVIRONMENT.name();
@@ -491,7 +491,7 @@ public class EntityHelper {
             getAffectedResourceOperation(EntityType.ENVIRONMENT, affectedResourceId, affectedResourceName);
       } else {
         String serviceId = applicationManifest.getServiceId();
-        if (isNotEmpty(serviceId)) {
+        if (hasSome(serviceId)) {
           affectedResourceId = serviceId;
           affectedResourceName = getServiceName(serviceId, appId);
           affectedResourceType = EntityType.SERVICE.name();
@@ -612,7 +612,7 @@ public class EntityHelper {
       entityName = format("Name of class: [%s]", entity.getClass().getSimpleName());
     }
 
-    if (isNotEmpty(appId) && !Application.GLOBAL_APP_ID.equals(appId)) {
+    if (hasSome(appId) && !Application.GLOBAL_APP_ID.equals(appId)) {
       appName = getApplicationName(appId);
     }
 
@@ -677,7 +677,7 @@ public class EntityHelper {
                                          .filter(ApplicationKeys.appId, appId)
                                          .project(ApplicationKeys.name, true)
                                          .asList();
-    if (isEmpty(applications)) {
+    if (hasNone(applications)) {
       return "";
     }
     return applications.get(0).getName();
@@ -689,7 +689,7 @@ public class EntityHelper {
                                  .filter(ApplicationKeys.appId, appId)
                                  .project(ServiceKeys.name, true)
                                  .asList();
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return "";
     }
     return services.get(0).getName();
@@ -701,7 +701,7 @@ public class EntityHelper {
                                          .filter(ApplicationKeys.appId, appId)
                                          .project(EnvironmentKeys.name, true)
                                          .asList();
-    if (isEmpty(environments)) {
+    if (hasNone(environments)) {
       return "";
     }
     return environments.get(0).getName();
@@ -766,7 +766,7 @@ public class EntityHelper {
       }
 
       String yamlPrefix = yamlHelper.getYamlPathForEntity(entity);
-      if (isEmpty(yamlPrefix)) {
+      if (hasNone(yamlPrefix)) {
         return EMPTY;
       }
       String finalYaml;

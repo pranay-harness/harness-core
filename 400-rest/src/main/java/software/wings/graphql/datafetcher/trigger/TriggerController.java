@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -8,7 +10,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
@@ -158,18 +159,18 @@ public class TriggerController {
   void validateTrigger(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String accountId) {
     validateUpdateTrigger(qlCreateOrUpdateTriggerInput, accountId);
 
-    if (EmptyPredicate.isEmpty(qlCreateOrUpdateTriggerInput.getApplicationId())) {
+    if (hasNone(qlCreateOrUpdateTriggerInput.getApplicationId())) {
       throw new InvalidRequestException("ApplicationId must not be empty", USER);
     }
     if (!accountId.equals(appService.getAccountIdByAppId(qlCreateOrUpdateTriggerInput.getApplicationId()))) {
       throw new InvalidRequestException("ApplicationId doesn't belong to this account", USER);
     }
 
-    if (EmptyPredicate.isEmpty(qlCreateOrUpdateTriggerInput.getName().trim())) {
+    if (hasNone(qlCreateOrUpdateTriggerInput.getName().trim())) {
       throw new InvalidRequestException("Trigger name must not be empty", USER);
     }
 
-    if (EmptyPredicate.isEmpty(qlCreateOrUpdateTriggerInput.getAction().getEntityId())) {
+    if (hasNone(qlCreateOrUpdateTriggerInput.getAction().getEntityId())) {
       throw new InvalidRequestException("Entity Id must not be empty", USER);
     }
 
@@ -177,7 +178,7 @@ public class TriggerController {
   }
 
   private void validateUpdateTrigger(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String accountId) {
-    if (EmptyPredicate.isNotEmpty(qlCreateOrUpdateTriggerInput.getTriggerId())) {
+    if (hasSome(qlCreateOrUpdateTriggerInput.getTriggerId())) {
       Trigger trigger = persistence.get(Trigger.class, qlCreateOrUpdateTriggerInput.getTriggerId());
       if (trigger == null) {
         throw new InvalidRequestException("Trigger doesn't exist", USER);
@@ -212,7 +213,7 @@ public class TriggerController {
   }
 
   private void validateGitConnectorChecks(String gitConnectorId, String accountId, String appId) {
-    if (EmptyPredicate.isNotEmpty(gitConnectorId)) {
+    if (hasSome(gitConnectorId)) {
       SettingAttribute gitConfig = settingsService.get(gitConnectorId);
       if (gitConfig == null) {
         throw new InvalidRequestException(String.format("GitConnector: %s doesn't exists", gitConnectorId), USER);

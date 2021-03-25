@@ -1,6 +1,9 @@
 package io.harness.pms.sdk;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -42,7 +45,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
   @Override
   public void initializeSdk(InitializeSdkRequest request, StreamObserver<InitializeSdkResponse> responseObserver) {
-    if (EmptyPredicate.isEmpty(request.getName())) {
+    if (hasNone(request.getName())) {
       throw new InvalidRequestException("Name is empty");
     }
 
@@ -59,13 +62,13 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
   private void saveSdkInstance(InitializeSdkRequest request) {
     Map<String, Set<String>> supportedTypes = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(request.getSupportedTypesMap())) {
+    if (hasSome(request.getSupportedTypesMap())) {
       for (Map.Entry<String, Types> entry : request.getSupportedTypesMap().entrySet()) {
-        if (EmptyPredicate.isEmpty(entry.getKey()) || EmptyPredicate.isEmpty(entry.getValue().getTypesList())) {
+        if (hasNone(entry.getKey()) || hasNone(entry.getValue().getTypesList())) {
           continue;
         }
         supportedTypes.put(entry.getKey(),
-            entry.getValue().getTypesList().stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet()));
+            entry.getValue().getTypesList().stream().filter(HasPredicate::hasSome).collect(Collectors.toSet()));
       }
     }
 

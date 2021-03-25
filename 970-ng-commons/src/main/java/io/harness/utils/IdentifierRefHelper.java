@@ -1,8 +1,10 @@
 package io.harness.utils;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.IdentifierRef.IdentifierRefBuilder;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
@@ -37,11 +39,11 @@ public class IdentifierRefHelper {
     String identifier;
     IdentifierRefBuilder identifierRefBuilder = IdentifierRef.builder().accountIdentifier(accountId);
 
-    if (EmptyPredicate.isNotEmpty(metadata)) {
+    if (hasSome(metadata)) {
       identifierRefBuilder.metadata(metadata);
     }
 
-    if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
+    if (hasNone(scopedIdentifierConfig)) {
       throw new InvalidRequestException("Empty secret ref cannot be given");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
@@ -81,7 +83,7 @@ public class IdentifierRefHelper {
   }
 
   public Scope getScope(String identifierScopeString) {
-    if (EmptyPredicate.isEmpty(identifierScopeString)) {
+    if (hasNone(identifierScopeString)) {
       return null;
     }
     return Scope.fromString(identifierScopeString);
@@ -97,7 +99,7 @@ public class IdentifierRefHelper {
   }
 
   public String getIdentifier(String scopedIdentifierConfig) {
-    if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
+    if (hasNone(scopedIdentifierConfig)) {
       throw new InvalidRequestException("scopedIdentifierConfig is null");
     }
     String identifier;

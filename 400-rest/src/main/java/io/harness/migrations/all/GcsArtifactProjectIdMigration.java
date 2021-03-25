@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -47,8 +47,8 @@ public class GcsArtifactProjectIdMigration implements Migration {
       while (records.hasNext()) {
         GcsArtifactStream artifactStream = (GcsArtifactStream) records.next();
 
-        if (artifactStream != null && isNotEmpty(artifactStream.getSettingId())
-            && isEmpty(artifactStream.getProjectId())) {
+        if (artifactStream != null && hasSome(artifactStream.getSettingId())
+            && hasNone(artifactStream.getProjectId())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
           if (settingAttribute == null) {
             log.info("GCP Cloud provider Settings Attribute is null. Can not set Project Id in Artifact Stream");
@@ -61,7 +61,7 @@ public class GcsArtifactProjectIdMigration implements Migration {
             String projectId = gcsService.getProject(gcpConfig, encryptedDataDetails);
 
             // Set the project Id for artifact stream
-            if (isNotEmpty(projectId)) {
+            if (hasSome(projectId)) {
               artifactStream.setProjectId(projectId);
               wingsPersistence.save(artifactStream);
             }

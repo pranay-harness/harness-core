@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -36,7 +36,7 @@ public class PrometheusCVMigration implements Migration {
               (PrometheusCVServiceConfiguration) iterator.next();
 
           log.info("running migration for {} ", prometheusCVConfiguration);
-          if (isEmpty(prometheusCVConfiguration.getTimeSeriesToAnalyze())) {
+          if (hasNone(prometheusCVConfiguration.getTimeSeriesToAnalyze())) {
             log.error("Empty timeseries list for prometheus {}", prometheusCVConfiguration);
             continue;
           }

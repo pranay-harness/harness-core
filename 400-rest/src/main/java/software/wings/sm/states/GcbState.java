@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.TaskType.GCB;
@@ -166,10 +166,10 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
     Map<String, String> substitutions = null;
-    if (gcbOptions.getSpecSource() == TRIGGER && !isEmpty(gcbOptions.getTriggerSpec().getSubstitutions())) {
+    if (gcbOptions.getSpecSource() == TRIGGER && !hasNone(gcbOptions.getTriggerSpec().getSubstitutions())) {
       substitutions = evaluate(context, gcbOptions.getTriggerSpec().getSubstitutions());
     }
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression gcpConfigExp =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "gcpConfigId");
       TemplateExpression gitConfigExp =

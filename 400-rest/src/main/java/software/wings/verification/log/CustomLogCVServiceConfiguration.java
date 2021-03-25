@@ -1,7 +1,7 @@
 package software.wings.verification.log;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
@@ -37,15 +37,15 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
 
   public boolean validateConfiguration() {
     if (logCollectionInfo != null) {
-      if (logCollectionInfo.getMethod() == Method.POST && isEmpty(logCollectionInfo.getCollectionBody())) {
+      if (logCollectionInfo.getMethod() == Method.POST && hasNone(logCollectionInfo.getCollectionBody())) {
         return false;
       }
-      boolean bodyContainsStartTime = isNotEmpty(logCollectionInfo.getCollectionBody())
+      boolean bodyContainsStartTime = hasSome(logCollectionInfo.getCollectionBody())
           && (logCollectionInfo.getCollectionBody().contains("${start_time}")
               || logCollectionInfo.getCollectionBody().contains("${start_time_seconds}"));
       boolean urlContainsStartTime = logCollectionInfo.getCollectionUrl().contains("${start_time}")
           || logCollectionInfo.getCollectionUrl().contains("${start_time_seconds}");
-      boolean bodyContainsEndTime = isNotEmpty(logCollectionInfo.getCollectionBody())
+      boolean bodyContainsEndTime = hasSome(logCollectionInfo.getCollectionBody())
           && (logCollectionInfo.getCollectionBody().contains("${end_time}")
               || logCollectionInfo.getCollectionBody().contains("${end_time_seconds}"));
       boolean urlContainsEndTime = logCollectionInfo.getCollectionUrl().contains("${end_time}")

@@ -1,6 +1,6 @@
 package io.harness.cvng.core.beans.stackdriver;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.serializer.JsonUtils;
@@ -41,7 +41,7 @@ public class StackdriverDashboardDetail {
     Type type = new TypeToken<List<DataSet>>() {}.getType();
     this.dataSetList = gson.fromJson(JsonUtils.asJson(dataSets), type);
     List<DataSet> modifiedDataset = new ArrayList<>();
-    if (isNotEmpty(dataSetList)) {
+    if (hasSome(dataSetList)) {
       dataSetList.forEach(dataSet -> {
         String appendedDataSet = dataSetsJsonAppender + JsonUtils.asJson(dataSet) + "]}";
         StackDriverMetricDefinition metricDefinition = StackDriverMetricDefinition.extractFromJson(appendedDataSet);

@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -335,7 +335,7 @@ public interface BuildService<T> {
     }
     List<BuildDetails> buildDetailsList =
         wrapNewBuildsWithLabels(Collections.singletonList(buildDetails), artifactStreamAttributes, config);
-    return isEmpty(buildDetailsList) ? null : buildDetailsList.get(0);
+    return hasNone(buildDetailsList) ? null : buildDetailsList.get(0);
   }
 
   /*

@@ -1,7 +1,7 @@
 package io.harness.delegate.capability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -39,7 +39,7 @@ public class EncryptedDataDetailsCapabilityHelper {
       List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return executionCapabilities;
     }
     return fetchExecutionCapabilitiesForSecretManagers(
@@ -50,7 +50,7 @@ public class EncryptedDataDetailsCapabilityHelper {
       @NotNull EncryptionConfig encryptionConfig, ExpressionEvaluator maskingEvaluator) {
     if (encryptionConfig instanceof ExecutionCapabilityDemander) {
       return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
-    } else if (isNotEmpty(encryptionConfig.getEncryptionServiceUrl())) {
+    } else if (hasSome(encryptionConfig.getEncryptionServiceUrl())) {
       return new ArrayList<>(
           Collections.singleton(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
               encryptionConfig.getEncryptionServiceUrl(), maskingEvaluator)));
@@ -61,7 +61,7 @@ public class EncryptedDataDetailsCapabilityHelper {
   public static Map<String, EncryptionConfig> fetchEncryptionConfigsMapFromEncryptedDataDetails(
       List<EncryptedDataDetail> encryptedDataDetails) {
     Map<String, EncryptionConfig> encryptionConfigsMap = new HashMap<>();
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return encryptionConfigsMap;
     }
     List<EncryptedDataDetail> nonLocalEncryptedDetails =
@@ -69,7 +69,7 @@ public class EncryptedDataDetailsCapabilityHelper {
             .filter(encryptedDataDetail
                 -> encryptedDataDetail.getEncryptedData().getEncryptionType() != EncryptionType.LOCAL)
             .collect(Collectors.toList());
-    if (isNotEmpty(nonLocalEncryptedDetails)) {
+    if (hasSome(nonLocalEncryptedDetails)) {
       nonLocalEncryptedDetails.forEach(nonLocalEncryptedDetail
           -> encryptionConfigsMap.put(
               nonLocalEncryptedDetail.getEncryptionConfig().getUuid(), nonLocalEncryptedDetail.getEncryptionConfig()));

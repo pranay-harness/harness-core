@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
@@ -162,7 +162,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList) {
-    if (isEmpty(whitelistConfigList)) {
+    if (hasNone(whitelistConfigList)) {
       return true;
     } else {
       boolean isValidClientAddress = checkWhitelist(whitelistConfigList, ipAddress);
@@ -176,7 +176,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private boolean checkWhitelist(List<Whitelist> whitelistConfigList, String ipAddress) {
-    if (isEmpty(whitelistConfigList)) {
+    if (hasNone(whitelistConfigList)) {
       return false;
     }
     return whitelistConfigList.stream().anyMatch(whitelist -> {
@@ -203,7 +203,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private boolean checkDefaultWhitelist(GlobalWhitelistConfig globalWhitelistConfig, String ipAddress) {
-    if (globalWhitelistConfig == null || isEmpty(globalWhitelistConfig.getFilters())) {
+    if (globalWhitelistConfig == null || hasNone(globalWhitelistConfig.getFilters())) {
       return false;
     }
 

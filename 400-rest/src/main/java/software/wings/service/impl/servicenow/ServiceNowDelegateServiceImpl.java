@@ -1,11 +1,11 @@
 package software.wings.service.impl.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
@@ -351,7 +351,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
     Set<String> serviceNowFields = approvalParams.getAllCriteriaFields();
 
-    if (EmptyPredicate.isNotEmpty(serviceNowFields)) {
+    if (hasSome(serviceNowFields)) {
       Map<String, String> issueStatus = serviceNowFields.stream().collect(
           Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText()));
       try {
@@ -384,7 +384,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private String extractCurrentStatusFromIssue(JsonNode issueObj, ServiceNowApprovalParams approvalParams) {
     Set<String> criteriaFields = approvalParams.getAllCriteriaFields();
-    if (EmptyPredicate.isNotEmpty(criteriaFields)) {
+    if (hasSome(criteriaFields)) {
       return criteriaFields.stream()
           .map(field -> StringUtils.capitalize(field) + " is " + issueObj.get(field).get("display_value").asText())
           .collect(Collectors.joining(",\n"));

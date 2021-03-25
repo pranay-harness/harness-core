@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.ApplicationKeys;
@@ -67,20 +67,20 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
   private Set<String> getDeletedAppIds(UserGroup userGroup, Set<String> existingAppIds) {
     Set<String> deletedIds = new HashSet<>();
 
-    if (isEmpty(existingAppIds)) {
+    if (hasNone(existingAppIds)) {
       return deletedIds;
     }
 
     Set<AppPermission> groupAppPermissions = userGroup.getAppPermissions();
 
-    if (isEmpty(groupAppPermissions)) {
+    if (hasNone(groupAppPermissions)) {
       return deletedIds;
     }
 
     for (AppPermission permission : groupAppPermissions) {
       GenericEntityFilter filter = permission.getAppFilter();
       Set<String> ids = filter.getIds();
-      if (isEmpty(ids)) {
+      if (hasNone(ids)) {
         continue;
       }
 

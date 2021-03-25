@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static java.util.stream.Collectors.toList;
@@ -430,8 +430,8 @@ public class User extends Base implements Principal {
   }
 
   public List<String> getAccountIds() {
-    return isNotEmpty(accounts) ? accounts.stream().map(Account::getUuid).collect(Collectors.toList())
-                                : Collections.emptyList();
+    return hasSome(accounts) ? accounts.stream().map(Account::getUuid).collect(Collectors.toList())
+                             : Collections.emptyList();
   }
 
   /**
@@ -470,7 +470,7 @@ public class User extends Base implements Principal {
   }
 
   public String getLastAccountId() {
-    if (isEmpty(lastAccountId) && isNotEmpty(accounts)) {
+    if (hasNone(lastAccountId) && hasSome(accounts)) {
       // The first account will be considered as last account if not set. It will be used for encoding AuthToken.
       lastAccountId = accounts.get(0).getUuid();
     }
@@ -482,7 +482,7 @@ public class User extends Base implements Principal {
   }
 
   public String getDefaultAccountId() {
-    if (defaultAccountId == null && isNotEmpty(accounts)) {
+    if (defaultAccountId == null && hasSome(accounts)) {
       return getDefaultAccountCandidate();
     }
     return defaultAccountId;
@@ -497,7 +497,7 @@ public class User extends Base implements Principal {
 
     List<Account> userAccounts = getAccounts();
 
-    if (isEmpty(userAccounts)) {
+    if (hasNone(userAccounts)) {
       return null;
     }
 

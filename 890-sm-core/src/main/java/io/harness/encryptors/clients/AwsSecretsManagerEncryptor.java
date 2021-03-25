@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -157,12 +157,12 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateReference(String accountId, String path, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
+    return hasSome(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
   }
 
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
-    if (isEmpty(encryptedRecord.getEncryptionKey()) && isEmpty(encryptedRecord.getPath())) {
+    if (hasNone(encryptedRecord.getEncryptionKey()) && hasNone(encryptedRecord.getPath())) {
       return null;
     }
     AwsSecretsManagerConfig awsSecretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
@@ -208,7 +208,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   private EncryptedRecord renameSecretInternal(
       String name, EncryptedRecord existingRecord, AwsSecretsManagerConfig secretsManagerConfig) {
     char[] value = fetchSecretValueInternal(existingRecord, secretsManagerConfig);
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       String message = "Empty value fetched when trying to rename the secret " + existingRecord.getName();
       throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER);
     }
@@ -224,7 +224,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
 
     boolean secretExists = false;
     try {
-      secretExists = isNotEmpty(
+      secretExists = hasSome(
           fetchSecretValueInternal(EncryptedRecordData.builder().path(fullSecretName).build(), secretsManagerConfig));
     } catch (ResourceNotFoundException e) {
       // If reaching here, it means the resource doesn't exist.

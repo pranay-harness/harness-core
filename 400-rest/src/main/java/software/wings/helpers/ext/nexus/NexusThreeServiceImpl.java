@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -106,7 +106,7 @@ public class NexusThreeServiceImpl {
     }
 
     if (isSuccessful(response)) {
-      if (isNotEmpty(response.body())) {
+      if (hasSome(response.body())) {
         log.info("Retrieving {} repositories success", repositoryFormat);
         final Map<String, String> repositories;
         if (repositoryFormat == null) {
@@ -149,7 +149,7 @@ public class NexusThreeServiceImpl {
       Set<String> packages = null;
       if (isSuccessful(response)) {
         if (response.body() != null) {
-          if (isNotEmpty(response.body().getItems())) {
+          if (hasSome(response.body().getItems())) {
             if (repositoryFormat.equals(RepositoryFormat.nuget.name())
                 || repositoryFormat.equals(RepositoryFormat.npm.name())) {
               packages = response.body()
@@ -158,7 +158,7 @@ public class NexusThreeServiceImpl {
                              .map(Nexus3ComponentResponse.Component::getName)
                              .collect(Collectors.toSet());
             }
-            if (isNotEmpty(packages)) {
+            if (hasSome(packages)) {
               for (String p : packages) {
                 if (!images.contains(p)) {
                   images.add(p);
@@ -196,8 +196,8 @@ public class NexusThreeServiceImpl {
     Queue<Future> futures = new ConcurrentLinkedQueue<>();
     Stack<FolderPath> paths = new Stack<>();
     paths.addAll(getFolderPaths(nexusThreeRestClient, nexusConfig, repoId, "/", repositoryFormat));
-    while (isNotEmpty(paths) || isNotEmpty(futures)) {
-      while (isNotEmpty(paths)) {
+    while (hasSome(paths) || hasSome(futures)) {
+      while (hasSome(paths)) {
         FolderPath folderPath = paths.pop();
         String node = folderPath.getNode();
         if (folderPath.isFolder()) {
@@ -293,8 +293,8 @@ public class NexusThreeServiceImpl {
     Stack<FolderPath> paths = new Stack<>();
     paths.addAll(
         getFolderPaths(nexusThreeRestClient, nexusConfig, repoId, groupId.replaceAll("\\.", "/"), repositoryFormat));
-    while (isNotEmpty(paths) || isNotEmpty(futures)) {
-      while (isNotEmpty(paths)) {
+    while (hasSome(paths) || hasSome(futures)) {
+      while (hasSome(paths)) {
         FolderPath folderPath = paths.pop();
         String node = folderPath.getNode();
         if (folderPath.isFolder()) {
@@ -345,7 +345,7 @@ public class NexusThreeServiceImpl {
       Set<String> packages = null;
       if (isSuccessful(response)) {
         if (response.body() != null) {
-          if (isNotEmpty(response.body().getItems())) {
+          if (hasSome(response.body().getItems())) {
             if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
               packages = response.body()
                              .getItems()
@@ -353,7 +353,7 @@ public class NexusThreeServiceImpl {
                              .map(Nexus3ComponentResponse.Component::getGroup)
                              .collect(Collectors.toSet());
             }
-            if (isNotEmpty(packages)) {
+            if (hasSome(packages)) {
               for (String p : packages) {
                 if (!images.contains(p)) {
                   images.add(p);
@@ -426,12 +426,12 @@ public class NexusThreeServiceImpl {
 
       if (isSuccessful(response)) {
         if (response.body() != null) {
-          if (isNotEmpty(response.body().getItems())) {
+          if (hasSome(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
               versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
 
-              if (isNotEmpty(component.getAssets())) {
+              if (hasSome(component.getAssets())) {
                 Asset asset = component.getAssets().get(0);
                 if (supportForNexusGroupReposEnabled && !asset.getRepository().equals(repositoryName)) {
                   // For nuget, Eg. repository/nuget-hosted-group-repo/NuGet.Sample.Package/1.0.0.0
@@ -487,7 +487,7 @@ public class NexusThreeServiceImpl {
   private List<ArtifactFileMetadata> getDownloadUrlsForPackageVersion(Nexus3ComponentResponse.Component component) {
     List<Asset> assets = component.getAssets();
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isNotEmpty(assets)) {
+    if (hasSome(assets)) {
       for (Asset asset : assets) {
         String artifactUrl = asset.getDownloadUrl();
         String artifactName;
@@ -587,7 +587,7 @@ public class NexusThreeServiceImpl {
 
         if (isSuccessful(response)) {
           if (response.body() != null) {
-            if (isNotEmpty(response.body().getItems())) {
+            if (hasSome(response.body().getItems())) {
               response.body().getItems().forEach(item -> {
                 String url = item.getDownloadUrl();
                 String artifactName = url.substring(url.lastIndexOf('/') + 1);
@@ -622,7 +622,7 @@ public class NexusThreeServiceImpl {
 
         if (isSuccessful(response)) {
           if (response.body() != null) {
-            if (isNotEmpty(response.body().getItems())) {
+            if (hasSome(response.body().getItems())) {
               response.body().getItems().forEach(item -> {
                 String url = item.getDownloadUrl();
                 String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
@@ -655,7 +655,7 @@ public class NexusThreeServiceImpl {
       NexusThreeRestClient nexusThreeRestClient) throws IOException {
     Response<Nexus3AssetResponse> response;
     if (nexusConfig.hasCredentials()) {
-      if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+      if (hasSome(extension) || hasSome(classifier)) {
         response = nexusThreeRestClient
                        .getMavenAssetWithExtensionAndClassifier(
                            Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
@@ -669,7 +669,7 @@ public class NexusThreeServiceImpl {
                 .execute();
       }
     } else {
-      if (isNotEmpty(extension) || isNotEmpty(classifier)) {
+      if (hasSome(extension) || hasSome(classifier)) {
         response = nexusThreeRestClient
                        .getMavenAssetWithExtensionAndClassifier(
                            repoName, groupId, artifactName, version, extension, classifier)
@@ -716,14 +716,14 @@ public class NexusThreeServiceImpl {
       Set<String> packages = null;
       if (isSuccessful(response)) {
         if (response.body() != null) {
-          if (isNotEmpty(response.body().getItems())) {
+          if (hasSome(response.body().getItems())) {
             packages = response.body()
                            .getItems()
                            .stream()
                            .map(Nexus3ComponentResponse.Component::getName)
                            .collect(Collectors.toSet());
           }
-          if (isNotEmpty(packages)) {
+          if (hasSome(packages)) {
             for (String p : packages) {
               if (!artifactNames.contains(p)) {
                 artifactNames.add(p);
@@ -769,7 +769,7 @@ public class NexusThreeServiceImpl {
       }
       if (isSuccessful(response)) {
         if (response.body() != null) {
-          if (isNotEmpty(response.body().getItems())) {
+          if (hasSome(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
               versions.add(version);
@@ -779,7 +779,7 @@ public class NexusThreeServiceImpl {
               List<ArtifactFileMetadata> artifactFileMetadata =
                   getDownloadUrlsForMaven(versionResponse, repoId, supportForNexusGroupReposEnabled);
 
-              if (isNotEmpty(artifactFileMetadata)) {
+              if (hasSome(artifactFileMetadata)) {
                 versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
               }
               versionToArtifactDownloadUrls.put(version, artifactFileMetadata);
@@ -803,7 +803,7 @@ public class NexusThreeServiceImpl {
   private List<ArtifactFileMetadata> getDownloadUrlsForMaven(
       Response<Nexus3AssetResponse> response, String repoId, boolean supportForNexusGroupReposEnabled) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isSuccessful(response) && response.body() != null && isNotEmpty(response.body().getItems())) {
+    if (isSuccessful(response) && response.body() != null && hasSome(response.body().getItems())) {
       for (Asset item : response.body().getItems()) {
         String url = item.getDownloadUrl();
         String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
@@ -846,7 +846,7 @@ public class NexusThreeServiceImpl {
                        .execute();
       }
       if (isSuccessful(response) && response.body() != null) {
-        if (isEmpty(response.body().getItems())) {
+        if (hasNone(response.body().getItems())) {
           throw new ArtifactServerException(
               "No versions found matching the provided extension/ classifier", null, WingsException.USER);
         }

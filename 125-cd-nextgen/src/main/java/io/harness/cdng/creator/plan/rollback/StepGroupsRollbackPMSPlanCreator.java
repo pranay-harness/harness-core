@@ -1,10 +1,11 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -36,7 +37,7 @@ public class StepGroupsRollbackPMSPlanCreator {
           PlanCreationResponse stepGroupRollbackPlan =
               StepGroupRollbackPMSPlanCreator.createStepGroupRollbackPlan(yamlField);
           stepGroupResponses.merge(stepGroupRollbackPlan);
-          if (EmptyPredicate.isNotEmpty(stepGroupRollbackPlan.getNodes())) {
+          if (hasSome(stepGroupRollbackPlan.getNodes())) {
             YamlField rollbackStepsNode = yamlField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
             RollbackNode rollbackNode =
                 RollbackNode.builder()
@@ -51,7 +52,7 @@ public class StepGroupsRollbackPMSPlanCreator {
           PlanCreationResponse parallelStepGroupRollbackPlan =
               ParallelStepGroupRollbackPMSPlanCreator.createParallelStepGroupRollbackPlan(yamlField);
           stepGroupResponses.merge(parallelStepGroupRollbackPlan);
-          if (EmptyPredicate.isNotEmpty(parallelStepGroupRollbackPlan.getNodes())) {
+          if (hasSome(parallelStepGroupRollbackPlan.getNodes())) {
             RollbackNode rollbackNode =
                 RollbackNode.builder()
                     .nodeId(yamlField.getNode().getUuid() + "_rollback")
@@ -68,7 +69,7 @@ public class StepGroupsRollbackPMSPlanCreator {
 
     RollbackOptionalChildChainStepParameters childChainStepParameters =
         sectionOptionalChildChainStepParametersBuilder.build();
-    if (EmptyPredicate.isNotEmpty(childChainStepParameters.getChildNodes())) {
+    if (hasSome(childChainStepParameters.getChildNodes())) {
       PlanNode stepGroupsRollbackNode =
           PlanNode.builder()
               .uuid(executionStepsField.getNode().getUuid() + "_stepGrouprollback")

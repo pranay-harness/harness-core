@@ -1,6 +1,6 @@
 package io.harness.migrations;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELISTING;
@@ -49,7 +49,7 @@ public class RemoveRedundantAccountPermissions implements Migration {
   }
 
   private boolean checkIfUserGroupHasAccountPermissions(UserGroup userGroup) {
-    return userGroup.getAccountPermissions() != null && isNotEmpty(userGroup.getAccountPermissions().getPermissions());
+    return userGroup.getAccountPermissions() != null && hasSome(userGroup.getAccountPermissions().getPermissions());
   }
 
   @Override

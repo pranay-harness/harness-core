@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -98,7 +98,7 @@ public class ArtifactCollectionState extends State {
     String evaluatedBuildNo;
     Artifact lastCollectedArtifact;
     if (artifactStream.isArtifactStreamParameterized()) {
-      if (isEmpty(runtimeValues)) {
+      if (hasNone(runtimeValues)) {
         log.info("Artifact Source {} parameterized. However, runtime values not provided", artifactStream.getName());
         return ExecutionResponse.builder()
             .executionStatus(ExecutionStatus.FAILED)
@@ -235,7 +235,7 @@ public class ArtifactCollectionState extends State {
   private void addBuildExecutionSummary(ExecutionContext context,
       ArtifactCollectionExecutionData artifactCollectionExecutionData, ArtifactStream artifactStream) {
     Map<String, String> metadata = new HashMap<>();
-    if (isNotEmpty(artifactCollectionExecutionData.getMetadata())) {
+    if (hasSome(artifactCollectionExecutionData.getMetadata())) {
       metadata.putAll(artifactCollectionExecutionData.getMetadata());
     }
     String buildUrl = metadata.get(ArtifactMetadataKeys.url);

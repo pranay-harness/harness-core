@@ -1,7 +1,9 @@
 package io.harness.jobs.workflow.logs;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -113,7 +115,7 @@ public class WorkflowFeedbackAnalysisJob implements MongoPersistenceIterator.Han
                     .callManagerWithRetry(
                         managerClient.getFeedbackList(context.getPredictiveCvConfigId(), context.getStateExecutionId()))
                     .getResource();
-            if (EmptyPredicate.isEmpty(feedbackRecordList)) {
+            if (hasNone(feedbackRecordList)) {
               // mark the analysis as feedback complete and move on.
               analysisService.createAndUpdateFeedbackAnalysis(
                   LogMLAnalysisRecordKeys.stateExecutionId, context.getStateExecutionId(), lastLogMLTaskMinute);

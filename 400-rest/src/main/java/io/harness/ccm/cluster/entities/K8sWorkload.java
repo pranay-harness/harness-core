@@ -1,7 +1,6 @@
 package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;

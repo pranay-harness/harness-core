@@ -2,7 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -145,7 +145,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
         gitConfig.setReference(configParameter.getSourceRepoReference());
         String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
-        if (isNotEmpty(branch)) {
+        if (hasSome(branch)) {
           gitConfig.setBranch(branch);
         }
       }

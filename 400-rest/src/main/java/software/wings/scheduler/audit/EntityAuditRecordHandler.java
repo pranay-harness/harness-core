@@ -1,8 +1,8 @@
 package software.wings.scheduler.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofMinutes;
@@ -65,14 +65,14 @@ public class EntityAuditRecordHandler implements Handler<AuditRecord> {
     List<AuditRecord> auditRecords =
         auditService.fetchEntityAuditRecordsOlderThanGivenTime(entity.getAuditHeaderId(), entity.getCreatedAt());
 
-    if (isEmpty(auditRecords)) {
+    if (hasNone(auditRecords)) {
       return;
     }
 
     List<EntityAuditRecord> recordsToBeAdded =
         auditRecords.stream().map(AuditRecord::getEntityAuditRecord).collect(toList());
 
-    if (isNotEmpty(recordsToBeAdded)) {
+    if (hasSome(recordsToBeAdded)) {
       auditService.addEntityAuditRecordsToSet(recordsToBeAdded, entity.getAccountId(), entity.getAuditHeaderId());
       auditService.deleteTempAuditRecords(auditRecords.stream().map(AuditRecord::getUuid).collect(toList()));
     }

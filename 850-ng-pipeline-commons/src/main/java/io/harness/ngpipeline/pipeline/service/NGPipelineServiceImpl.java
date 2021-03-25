@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.pipeline.service;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -9,7 +10,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.EntityType;
 import io.harness.NGResourceFilterConstants;
 import io.harness.beans.IdentifierRef;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -189,7 +189,7 @@ public class NGPipelineServiceImpl implements NGPipelineService {
       String accountId, String orgId, String projectId, Criteria criteria, Pageable pageable, String searchTerm) {
     criteria = criteria.and(PipelineNGKeys.deleted).is(false);
     criteria = criteria.andOperator(getPipelineEqualityCriteria(accountId, orgId, projectId, null));
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);

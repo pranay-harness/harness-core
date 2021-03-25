@@ -2,8 +2,8 @@ package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.nullIfEmpty;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.metadata.ExecutionHistoryMetadata;
@@ -59,7 +59,7 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
   }
 
   public void process() {
-    if (isEmpty(stateExecutionInstanceIdToNodeMetadataMap)) {
+    if (hasNone(stateExecutionInstanceIdToNodeMetadataMap)) {
       return;
     }
 
@@ -72,7 +72,7 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
   public void updateInterruptRefsAndExecutionHistory() {
     List<StateExecutionInstance> stateExecutionInstances =
         stateExecutionService.listByIdsUsingSecondary(stateExecutionInstanceIdToNodeMetadataMap.keySet());
-    if (isEmpty(stateExecutionInstances)) {
+    if (hasNone(stateExecutionInstances)) {
       return;
     }
 
@@ -82,7 +82,7 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
         return;
       }
 
-      if (isNotEmpty(stateExecutionInstance.getInterruptHistory())) {
+      if (hasSome(stateExecutionInstance.getInterruptHistory())) {
         stateExecutionInstance.getInterruptHistory().forEach(interruptEffect -> {
           if (interruptEffect.getInterruptId() == null) {
             return;
@@ -101,7 +101,7 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
   public void updateStateExecutionInstanceInterrupts() {
     List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.listByStateExecutionIdsUsingSecondary(
         stateExecutionInstanceIdToNodeMetadataMap.keySet());
-    if (isEmpty(executionInterrupts)) {
+    if (hasNone(executionInterrupts)) {
       return;
     }
 
@@ -120,13 +120,13 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
 
   @VisibleForTesting
   public void updateIdInterrupts() {
-    if (isEmpty(interruptIdToNodeMetadataMap)) {
+    if (hasNone(interruptIdToNodeMetadataMap)) {
       return;
     }
 
     List<ExecutionInterrupt> executionInterrupts =
         executionInterruptManager.listByIdsUsingSecondary(interruptIdToNodeMetadataMap.keySet());
-    if (isEmpty(executionInterrupts)) {
+    if (hasNone(executionInterrupts)) {
       return;
     }
 
@@ -147,17 +147,17 @@ public class StateExecutionInstanceProcessor implements ExportExecutionsProcesso
 
   private void addInterruptHistoryGraphNodeMetadata(
       GraphNodeMetadata nodeMetadata, List<StateExecutionInterrupt> stateExecutionInterrupts) {
-    if (nodeMetadata == null || isEmpty(stateExecutionInterrupts)) {
+    if (nodeMetadata == null || hasNone(stateExecutionInterrupts)) {
       return;
     }
 
     List<ExecutionInterruptMetadata> executionInterruptMetadataList =
         ExecutionInterruptMetadata.fromStateExecutionInterrupts(stateExecutionInterrupts);
-    if (isEmpty(executionInterruptMetadataList)) {
+    if (hasNone(executionInterruptMetadataList)) {
       return;
     }
 
-    if (isEmpty(nodeMetadata.getInterruptHistory())) {
+    if (hasNone(nodeMetadata.getInterruptHistory())) {
       nodeMetadata.setInterruptHistory(executionInterruptMetadataList);
     } else {
       nodeMetadata.getInterruptHistory().addAll(executionInterruptMetadataList);

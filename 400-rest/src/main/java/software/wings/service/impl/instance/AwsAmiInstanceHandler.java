@@ -2,8 +2,8 @@ package software.wings.service.impl.instance;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_DEPLOYMENTS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.stream.Collectors.toList;
@@ -118,7 +118,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler implements Instanc
   }
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
-    if (isEmpty(newDeploymentSummaries)) {
+    if (hasNone(newDeploymentSummaries)) {
       return Collections.emptyMap();
     }
 
@@ -177,24 +177,24 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler implements Instanc
         AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) stepExecutionSummary;
 
         // Capture the instances of the new revision
-        if (isNotEmpty(amiStepExecutionSummary.getNewInstanceData())) {
+        if (hasSome(amiStepExecutionSummary.getNewInstanceData())) {
           List<String> asgList = amiStepExecutionSummary.getNewInstanceData()
                                      .stream()
                                      .map(ContainerServiceData::getName)
                                      .collect(toList());
-          if (isNotEmpty(asgList)) {
+          if (hasSome(asgList)) {
             autoScalingGroupNames.addAll(asgList);
           }
         }
 
         // Capture the instances of the old revision, note that the downsize operation need not bring the count
         // to zero.
-        if (isNotEmpty(amiStepExecutionSummary.getOldInstanceData())) {
+        if (hasSome(amiStepExecutionSummary.getOldInstanceData())) {
           List<String> asgList = amiStepExecutionSummary.getOldInstanceData()
                                      .stream()
                                      .map(ContainerServiceData::getName)
                                      .collect(toList());
-          if (isNotEmpty(asgList)) {
+          if (hasSome(asgList)) {
             autoScalingGroupNames.addAll(asgList);
           }
         }
@@ -267,7 +267,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler implements Instanc
   public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
     AwsAsgListInstancesResponse asgListInstancesResponse = (AwsAsgListInstancesResponse) response;
     boolean success = asgListInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
-    boolean deleteTask = success && isEmpty(asgListInstancesResponse.getInstances());
+    boolean deleteTask = success && hasNone(asgListInstancesResponse.getInstances());
     String errorMessage = success ? null : asgListInstancesResponse.getErrorMessage();
 
     return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();

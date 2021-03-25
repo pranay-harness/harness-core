@@ -2,8 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -113,7 +113,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
   }
 
   private void saveHosts(List<TimeSeriesDataCollectionRecord> dataRecords) {
-    if (isNotEmpty(dataRecords)) {
+    if (hasSome(dataRecords)) {
       Preconditions.checkState(
           dataRecords.stream().map(dataRecord -> dataRecord.getVerificationTaskId()).distinct().count() == 1,
           "All the verificationIds should be same");
@@ -130,7 +130,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                               .map(dataRecord -> dataRecord.getHost())
                               .filter(host -> host != null)
                               .collect(Collectors.toSet());
-      if (isNotEmpty(hosts)) {
+      if (hasSome(hosts)) {
         HostRecordDTO hostRecordDTO = HostRecordDTO.builder()
                                           .verificationTaskId(verificationTaskId)
                                           .startTime(Instant.ofEpochMilli(minTimestamp))
@@ -253,7 +253,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
 
     riskSummary.getTransactionMetricRiskList().forEach(metricRisk -> {
       List<TimeSeriesRecord> timeSeriesRecords = metricNameRecordMap.get(metricRisk.getMetricName());
-      if (isNotEmpty(timeSeriesRecords)) {
+      if (hasSome(timeSeriesRecords)) {
         timeSeriesRecords.forEach(record -> {
           String groupName = metricRisk.getTransactionName();
           record.getTimeSeriesGroupValues().forEach(groupValue -> {
@@ -312,7 +312,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
         .stream()
         .filter(MetricDefinition::isIncluded)
         .forEach(metricDefinition -> {
-          if (isNotEmpty(metricDefinition.getThresholds())) {
+          if (hasSome(metricDefinition.getThresholds())) {
             metricDefinition.getThresholds().forEach(timeSeriesThreshold
                 -> timeSeriesMetricDefinitions.add(
                     TimeSeriesMetricDefinition.builder()
@@ -345,14 +345,14 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
           metricNameGroupNameValMap.put(metricName, new HashMap<>());
         }
 
-        if (isNotEmpty(groupNames) && groupNames.contains(groupName)) {
+        if (hasSome(groupNames) && groupNames.contains(groupName)) {
           List<MetricData> values = metricValueMap.get(metricName);
           if (!metricNameGroupNameValMap.containsKey(metricName)) {
             metricNameGroupNameValMap.put(metricName, new HashMap<>());
           }
 
           metricNameGroupNameValMap.get(metricName).put(groupName, values);
-        } else if (isEmpty(groupNames)) {
+        } else if (hasNone(groupNames)) {
           // we need to add for all transactions without filtering
           metricNameGroupNameValMap.get(metricName).put(groupName, metricValueMap.get(metricName));
         }
@@ -381,7 +381,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
       List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueList.get(record.getMetricName());
       List<TimeSeriesRecord.TimeSeriesGroupValue> curValueList = new ArrayList<>();
       // if txnName filter is present, filter by that name
-      if (isNotEmpty(txnName)) {
+      if (hasSome(txnName)) {
         record.getTimeSeriesGroupValues().forEach(timeSeriesGroupValue -> {
           if (timeSeriesGroupValue.getGroupName().equals(txnName)) {
             curValueList.add(timeSeriesGroupValue);
@@ -422,7 +422,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
             .greaterThanOrEq(queryStartTime)
             .field(TimeSeriesRecordKeys.bucketStartTime)
             .lessThan(queryEndTime);
-    if (isNotEmpty(metricName)) {
+    if (hasSome(metricName)) {
       timeSeriesRecordsQuery = timeSeriesRecordsQuery.filter(TimeSeriesRecordKeys.metricName, metricName);
     }
     // TODO: filter values that are outside of given time range.
@@ -455,7 +455,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
 
   private TimeSeriesTestDataDTO getSortedListOfTimeSeriesRecords(
       String cvConfigId, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> unsortedTimeseries) {
-    if (isNotEmpty(unsortedTimeseries)) {
+    if (hasSome(unsortedTimeseries)) {
       Map<String, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>>> txnMetricMap = new HashMap<>();
 
       // first build the txn -> metric -> TimeSeriesGroupValue object

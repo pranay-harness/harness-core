@@ -1,17 +1,17 @@
 package io.harness.encryption;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ScopeHelper {
   public static Scope getScope(String accountId, String orgId, String projectId) {
-    if (isNotEmpty(projectId)) {
+    if (hasSome(projectId)) {
       return Scope.PROJECT;
-    } else if (isNotEmpty(orgId)) {
+    } else if (hasSome(orgId)) {
       return Scope.ORG;
-    } else if (isNotEmpty(accountId)) {
+    } else if (hasSome(accountId)) {
       return Scope.ACCOUNT;
     }
     return Scope.UNKNOWN;

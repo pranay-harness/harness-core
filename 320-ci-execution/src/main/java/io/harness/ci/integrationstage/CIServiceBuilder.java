@@ -4,8 +4,8 @@ import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
@@ -39,7 +39,7 @@ public class CIServiceBuilder {
       StageElementConfig stageElementConfig, PortFinder portFinder, CIExecutionServiceConfig ciExecutionServiceConfig) {
     List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-    if (isEmpty(integrationStage.getServiceDependencies())) {
+    if (hasNone(integrationStage.getServiceDependencies())) {
       return containerDefinitionInfos;
     }
 
@@ -86,10 +86,10 @@ public class CIServiceBuilder {
     if (envVariables == null) {
       envVariables = new HashMap<>();
     }
-    if (isNotEmpty(entrypoint)) {
+    if (hasSome(entrypoint)) {
       envVariables.put(HARNESS_SERVICE_ENTRYPOINT, String.join(SEPARATOR, entrypoint));
     }
-    if (isNotEmpty(args)) {
+    if (hasSome(args)) {
       envVariables.put(HARNESS_SERVICE_ARGS, String.join(SEPARATOR, args));
     }
 
@@ -138,7 +138,7 @@ public class CIServiceBuilder {
     List<String> serviceIdList = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(integrationStage.getServiceDependencies())) {
+    if (hasNone(integrationStage.getServiceDependencies())) {
       return serviceIdList;
     }
 
@@ -158,7 +158,7 @@ public class CIServiceBuilder {
     List<Integer> grpcPortList = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(integrationStage.getServiceDependencies())) {
+    if (hasNone(integrationStage.getServiceDependencies())) {
       return grpcPortList;
     }
 

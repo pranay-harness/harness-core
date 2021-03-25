@@ -3,8 +3,8 @@ package software.wings.service.impl.yaml;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -57,7 +57,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
@@ -247,7 +247,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public GitConfig getGitConfig(YamlGitConfig ygs) {
     GitConfig gitConfig = null;
-    if (EmptyPredicate.isNotEmpty(ygs.getGitConnectorId())) {
+    if (hasSome(ygs.getGitConnectorId())) {
       SettingAttribute settingAttributeForGitConnector = settingsService.get(ygs.getGitConnectorId());
       if (settingAttributeForGitConnector == null) {
         log.info(GIT_YAML_LOG_PREFIX + "Setting attribute deleted with connector Id [{}]", ygs.getGitConnectorId());
@@ -256,14 +256,14 @@ public class YamlGitServiceImpl implements YamlGitService {
       gitConfig = (GitConfig) settingAttributeForGitConnector.getValue();
       if (gitConfig != null) {
         gitConfig.setBranch(ygs.getBranchName());
-        if (EmptyPredicate.isNotEmpty(gitConfig.getSshSettingId())) {
+        if (hasSome(gitConfig.getSshSettingId())) {
           SettingAttribute settingAttributeForSshKey = getAndDecryptSettingAttribute(gitConfig.getSshSettingId());
           gitConfig.setSshSettingAttribute(settingAttributeForSshKey);
         }
       }
     } else {
       // This is to support backward compatibility. Should be removed once we move to using gitConnector completely
-      if (EmptyPredicate.isNotEmpty(ygs.getSshSettingId())) {
+      if (hasSome(ygs.getSshSettingId())) {
         SettingAttribute settingAttributeForSshKey = getAndDecryptSettingAttribute(ygs.getSshSettingId());
         gitConfig = ygs.getGitConfig(settingAttributeForSshKey);
       } else {
@@ -480,7 +480,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<YamlChangeSet> yamlChangeSets = new ArrayList<>();
     List<Application> apps = appService.getAppsByAccountId(accountId);
 
-    if (isEmpty(apps)) {
+    if (hasNone(apps)) {
       return yamlChangeSets;
     }
     for (Application app : apps) {
@@ -667,7 +667,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @VisibleForTesting
   boolean shouldPushOnlyIfHeadSeen(YamlChangeSet yamlChangeSet, String lastProcessedGitCommitId) {
     return !PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT.equals(yamlChangeSet.getPushRetryCount()) && !yamlChangeSet.isFullSync()
-        && !isEmpty(lastProcessedGitCommitId);
+        && !hasNone(lastProcessedGitCommitId);
   }
 
   /**
@@ -677,12 +677,12 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @VisibleForTesting
   void ensureValidNameSyntax(List<GitFileChange> gitFileChanges) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     // Get all yamlTypes having non-empty filepath prefixes (these yaml types represent different file paths)
     List<YamlType> folderYamlTypes =
-        Arrays.stream(YamlType.values()).filter(yamlType -> isNotEmpty(yamlType.getPathExpression())).collect(toList());
+        Arrays.stream(YamlType.values()).filter(yamlType -> hasSome(yamlType.getPathExpression())).collect(toList());
 
     // make sure, all filepaths to be synced with git are in proper format
     // e.g. Setup/Application/app_name/index.yaml is valid one, but
@@ -747,7 +747,7 @@ public class YamlGitServiceImpl implements YamlGitService {
               .filter(SettingAttributeKeys.value_type, SettingVariableTypes.GIT.name())
               .asList();
 
-      if (isEmpty(settingAttributes)) {
+      if (hasNone(settingAttributes)) {
         log.info(GIT_YAML_LOG_PREFIX + "Git connector not found for account");
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
@@ -764,7 +764,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         }
       }
 
-      if (isEmpty(gitConnectorId) || gitConfig == null) {
+      if (hasNone(gitConnectorId) || gitConfig == null) {
         throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
 
@@ -776,7 +776,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       final String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
 
-      if (isEmpty(branchName)) {
+      if (hasNone(branchName)) {
         log.info(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
             webhookToken, yamlWebHookPayload, headers);
         throw new InvalidRequestException("Branch not found from webhook payload", USER);
@@ -786,7 +786,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (gitConfig.getUrlType() == UrlType.ACCOUNT) {
         repositoryFullName =
             obtainRepositoryFullNameFromPayload(yamlWebHookPayload, headers)
-                .filter(EmptyPredicate::isNotEmpty)
+                .filter(HasPredicate::hasSome)
                 .orElseThrow(() -> {
                   log.info(GIT_YAML_LOG_PREFIX
                           + "Repository full name not found. webhookToken: {}, yamlWebHookPayload: {}, headers: {}",
@@ -797,7 +797,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String headCommitId = obtainCommitIdFromPayload(yamlWebHookPayload, headers);
 
-      if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
+      if (hasSome(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         return "Commit already processed";
       }
@@ -856,8 +856,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public List<YamlGitConfig> getYamlGitConfigs(
       String accountId, String gitConnectorId, String branchName, String repositoryName) {
-    checkState(isNotEmpty(gitConnectorId), "gitConnectorId should not be empty");
-    checkState(isNotEmpty(branchName), "branchName should not be empty");
+    checkState(hasSome(gitConnectorId), "gitConnectorId should not be empty");
+    checkState(hasSome(branchName), "branchName should not be empty");
     List<YamlGitConfig> list = wingsPersistence.createQuery(YamlGitConfig.class)
                                    .filter(YamlGitConfigKeys.accountId, accountId)
                                    .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
@@ -867,7 +867,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     SettingAttribute settingAttribute = settingsService.get(gitConnectorId);
     if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig
         && UrlType.ACCOUNT == ((GitConfig) settingAttribute.getValue()).getUrlType()) {
-      if (isEmpty(repositoryName)) {
+      if (hasNone(repositoryName)) {
         throw new IllegalArgumentException(
             "Missing repository name when using account level git connector in webhook request attributes");
       }
@@ -887,7 +887,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       String accountId, String gitConnectorId, String branchName, String repositoryName) {
     List<String> yamlGitConfigIds = new ArrayList<>();
     List<YamlGitConfig> yamlGitConfigs = getYamlGitConfigs(accountId, gitConnectorId, branchName, repositoryName);
-    if (isNotEmpty(yamlGitConfigs)) {
+    if (hasSome(yamlGitConfigs)) {
       yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(Collectors.toList());
     }
     return yamlGitConfigIds;
@@ -915,7 +915,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       log.info(
           GIT_YAML_LOG_PREFIX + "Started handling Git -> harness changeset with headCommit Id =[{}]", headCommitId);
 
-      if (isNotEmpty(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
+      if (hasSome(headCommitId) && isCommitAlreadyProcessed(accountId, headCommitId)) {
         log.info(GIT_YAML_LOG_PREFIX + "CommitId: [{}] already processed.", headCommitId);
         yamlChangeSetService.updateStatus(accountId, yamlChangeSet.getUuid(), Status.SKIPPED);
         return;
@@ -923,7 +923,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       final List<YamlGitConfig> yamlGitConfigs = getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
 
-      if (isEmpty(yamlGitConfigs)) {
+      if (hasNone(yamlGitConfigs)) {
         log.info(GIT_YAML_LOG_PREFIX + "Git sync configuration not found");
         throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
       }
@@ -976,10 +976,10 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
   }
   private String getEndCommitId(String headCommitId, String accountId) {
-    if (isEmpty(headCommitId)) {
+    if (hasNone(headCommitId)) {
       log.warn("headCommitId cannot be deciphered from payload. Using HEAD for taking diff");
     }
-    return isNotEmpty(headCommitId) ? headCommitId : null;
+    return hasSome(headCommitId) ? headCommitId : null;
   }
   private YamlProcessingLogContext getYamlProcessingLogContext(
       String gitConnectorId, String branch, String webhookToken, String yamlChangeSetId) {
@@ -1318,7 +1318,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public boolean retainYamlGitConfigsOfSelectedGitConnectorsAndDeleteRest(
       String accountId, List<String> selectedGitConnectors) {
-    if (EmptyPredicate.isNotEmpty(selectedGitConnectors)) {
+    if (hasSome(selectedGitConnectors)) {
       // Delete yamlGitConfig documents whose gitConnectorId is not among
       // the list of selected git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(YamlGitConfig.class)
@@ -1342,7 +1342,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public YamlGitConfig fetchYamlGitConfig(String appId, String accountId) {
-    if (isNotEmpty(appId) && isNotEmpty(accountId)) {
+    if (hasSome(appId) && hasSome(accountId)) {
       final String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
       final EntityType entityType = GLOBAL_APP_ID.equals(appId) ? ACCOUNT : APPLICATION;
       return get(accountId, entityId, entityType);

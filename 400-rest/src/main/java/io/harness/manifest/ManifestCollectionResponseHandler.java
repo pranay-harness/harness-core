@@ -1,7 +1,7 @@
 package io.harness.manifest;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toSet;
@@ -110,7 +110,7 @@ public class ManifestCollectionResponseHandler {
     List<HelmChart> manifestsCollected = manifestCollectionResponse.getHelmCharts();
     Set<String> toBeDeletedVersions = manifestCollectionResponse.getToBeDeletedKeys();
 
-    if (isNotEmpty(toBeDeletedVersions)) {
+    if (hasSome(toBeDeletedVersions)) {
       if (!helmChartService.deleteHelmChartsByVersions(accountId, appManifestId, toBeDeletedVersions)) {
         log.error("Failed to delete manifest versions: {}", toBeDeletedVersions);
       } else {
@@ -118,7 +118,7 @@ public class ManifestCollectionResponseHandler {
       }
     }
 
-    if (isNotEmpty(manifestsCollected)) {
+    if (hasSome(manifestsCollected)) {
       if (!helmChartService.addCollectedHelmCharts(accountId, appManifestId, manifestsCollected)) {
         log.error("Error in saving one or more collected manifest versions: {}",
             manifestsCollected.stream().map(HelmChart::getVersion).collect(toSet()));

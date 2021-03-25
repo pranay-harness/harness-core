@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff.gitaudit;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
 import static software.wings.beans.User.Builder.anUser;
@@ -114,7 +114,7 @@ public class YamlAuditRecordGenerationUtils {
             .filter(gitFileChange -> changeWithErrorMsgs.containsKey(gitFileChange.getFilePath()))
             .collect(toList());
 
-    if (isEmpty(auditHeader.getEntityAuditRecords())) {
+    if (hasNone(auditHeader.getEntityAuditRecords())) {
       auditHeader.setEntityAuditRecords(new ArrayList<>());
     }
 
@@ -160,7 +160,7 @@ public class YamlAuditRecordGenerationUtils {
 
   private boolean whetherAllChangesFailedInCommit(
       List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return false;
     }
     for (GitFileChange gitFileChange : gitFileChanges) {
@@ -173,7 +173,7 @@ public class YamlAuditRecordGenerationUtils {
 
   private String generateFailureStatusMessage(
       List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return StringUtils.EMPTY;
     }
     try {
@@ -195,7 +195,7 @@ public class YamlAuditRecordGenerationUtils {
    */
   private void updateAuditHeader(String accountId, AuditHeader auditHeader, String msg, String failureStatusMsg) {
     UpdateOperations<AuditHeader> operations = wingsPersistence.createUpdateOperations(AuditHeader.class);
-    if (isNotEmpty(auditHeader.getEntityAuditRecords())
+    if (hasSome(auditHeader.getEntityAuditRecords())
         && !featureFlagService.isEnabled(FeatureName.ENTITY_AUDIT_RECORD, accountId)) {
       operations.addToSet("entityAuditRecords", auditHeader.getEntityAuditRecords());
     }
@@ -252,6 +252,6 @@ public class YamlAuditRecordGenerationUtils {
    * When delete, new path will be empty and opposite for other cases
    */
   private String getChangePath(GitFileChange change) {
-    return isEmpty(change.getFilePath()) ? change.getOldFilePath() + "\n" : change.getFilePath() + "\n";
+    return hasNone(change.getFilePath()) ? change.getOldFilePath() + "\n" : change.getFilePath() + "\n";
   }
 }

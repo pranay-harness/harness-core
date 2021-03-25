@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.sm.StateType.PHASE;
@@ -214,7 +214,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
   @Override
   public List<StateExecutionInstance> listByIdsUsingSecondary(Collection<String> stateExecutionInstanceIds) {
-    if (isEmpty(stateExecutionInstanceIds)) {
+    if (hasNone(stateExecutionInstanceIds)) {
       return Collections.emptyList();
     }
 
@@ -233,7 +233,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
         phaseElement == null ? null : phaseElement.getPhaseName(), CurrentPhase.EXCLUDE);
 
-    if (isEmpty(instanceList)) {
+    if (hasNone(instanceList)) {
       return hostExclusionList;
     }
 
@@ -259,7 +259,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       }
       for (PhaseStepExecutionSummary phaseStepExecutionSummary :
           phaseExecutionSummary.getPhaseStepExecutionSummaryMap().values()) {
-        if (phaseStepExecutionSummary == null || isEmpty(phaseStepExecutionSummary.getStepExecutionSummaryList())) {
+        if (phaseStepExecutionSummary == null || hasNone(phaseStepExecutionSummary.getStepExecutionSummaryList())) {
           continue;
         }
         for (StepExecutionSummary stepExecutionSummary : phaseStepExecutionSummary.getStepExecutionSummaryList()) {

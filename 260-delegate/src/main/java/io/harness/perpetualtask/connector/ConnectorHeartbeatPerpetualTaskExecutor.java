@@ -2,7 +2,8 @@ package io.harness.perpetualtask.connector;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.SafeHttpCall.execute;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -105,7 +106,7 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
   }
 
   private String getErrorMessage(List<ErrorDetail> errors) {
-    if (isNotEmpty(errors) && errors.size() == 1) {
+    if (hasSome(errors) && errors.size() == 1) {
       return errors.get(0).getMessage();
     }
     return "Invalid Credentials";

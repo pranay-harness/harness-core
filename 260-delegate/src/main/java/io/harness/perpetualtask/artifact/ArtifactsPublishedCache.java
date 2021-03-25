@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -83,7 +84,7 @@ public class ArtifactsPublishedCache<P> {
    * @param builds the new build details returned by third party-repo
    */
   public void addCollectionResult(List<P> builds) {
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       return;
     }
 
@@ -124,7 +125,7 @@ public class ArtifactsPublishedCache<P> {
   }
 
   public void removeDeletedArtifactKeys(Collection<String> deletedKeys) {
-    if (!enableCleanup || isEmpty(deletedKeys)) {
+    if (!enableCleanup || hasNone(deletedKeys)) {
       return;
     }
 
@@ -134,7 +135,7 @@ public class ArtifactsPublishedCache<P> {
   }
 
   public void addPublishedBuildDetails(Collection<P> builds) {
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       return;
     }
 
@@ -167,7 +168,7 @@ public class ArtifactsPublishedCache<P> {
    * @return the next limited sublist of unpublished build details and boolean indicating if any more are left
    */
   public ImmutablePair<List<P>, Boolean> getLimitedUnpublishedBuildDetails() {
-    if (isEmpty(unpublishedBuildDetails)) {
+    if (hasNone(unpublishedBuildDetails)) {
       return ImmutablePair.of(new ArrayList<>(), Boolean.FALSE);
     }
 

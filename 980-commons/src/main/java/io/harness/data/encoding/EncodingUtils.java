@@ -1,6 +1,6 @@
 package io.harness.data.encoding;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.WingsException;
 
@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 @UtilityClass
 public class EncodingUtils {
   public static byte[] compressString(String toCompress) throws IOException {
-    Preconditions.checkState(isNotEmpty(toCompress));
+    Preconditions.checkState(hasSome(toCompress));
     ByteArrayOutputStream bos = new ByteArrayOutputStream(toCompress.length());
     GZIPOutputStream gzip = new GZIPOutputStream(bos);
     gzip.write(toCompress.getBytes(Charset.forName("UTF-8")));

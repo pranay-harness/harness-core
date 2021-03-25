@@ -2,7 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -1168,7 +1168,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(savedAttribute.getType()).isEqualTo(Type.TEXT);
     assertThat(new String(savedAttribute.getValue())).isEqualTo("unencrypted");
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncryptedValsForKms + 1);
-    assertThat(isEmpty(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
+    assertThat(hasNone(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                            .filter("type", SettingVariableTypes.SECRET_TEXT)
                            .asList()
                            .get(0)
@@ -1660,7 +1660,7 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig1.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(accountId);
       } else {
         nonDefaultConfig++;
@@ -1668,7 +1668,7 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig2.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(accountId);
       }
     }
@@ -1696,7 +1696,7 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig2.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(accountId);
       } else {
         nonDefaultConfig++;
@@ -1704,7 +1704,7 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig1.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(accountId);
       }
     }
@@ -1884,14 +1884,14 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
       } else {
         defaultConfig++;
         assertThat(actualConfig.getName()).isEqualTo(globalKmsConfig.getName());
         assertThat(actualConfig.getAccessKey()).isEqualTo(globalKmsConfig.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
         assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
       }
     }
@@ -1914,14 +1914,14 @@ public class KmsTest extends WingsBaseTest {
         assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(kmsConfig.getKmsArn());
         assertThat(actualConfig.getSecretKey()).isEqualTo(kmsConfig.getSecretKey());
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
       } else {
         defaultConfig++;
         assertThat(actualConfig.getName()).isEqualTo(globalKmsConfig.getName());
         assertThat(actualConfig.getAccessKey()).isEqualTo(globalKmsConfig.getAccessKey());
         assertThat(actualConfig.getKmsArn()).isEqualTo(globalKmsConfig.getKmsArn());
         assertThat(actualConfig.getSecretKey()).isEqualTo(globalKmsConfig.getSecretKey());
-        assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+        assertThat(hasNone(actualConfig.getUuid())).isFalse();
         assertThat(actualConfig.getAccountId()).isEqualTo(GLOBAL_ACCOUNT_ID);
       }
     }
@@ -1945,7 +1945,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(actualConfig.getAccessKey()).isEqualTo(kmsConfig.getAccessKey());
     assertThat(actualConfig.getKmsArn()).isEqualTo(SECRET_MASK);
     assertThat(actualConfig.getSecretKey()).isEqualTo(SECRET_MASK);
-    assertThat(isEmpty(actualConfig.getUuid())).isFalse();
+    assertThat(hasNone(actualConfig.getUuid())).isFalse();
     assertThat(actualConfig.isDefault()).isTrue();
 
     // add another kms
@@ -2286,7 +2286,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(0);
     ConfigFile savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isFalse();
-    assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isTrue();
+    assertThat(hasNone(savedConfigFile.getEncryptedFileId())).isTrue();
     assertThat(wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).count())
         .isEqualTo(0);
 
@@ -2308,7 +2308,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
     savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isTrue();
-    assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isFalse();
+    assertThat(hasNone(savedConfigFile.getEncryptedFileId())).isFalse();
 
     assertThat(
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
@@ -2333,7 +2333,7 @@ public class KmsTest extends WingsBaseTest {
         .isEqualTo(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()));
     savedConfigFile = configService.get(renameAppId, configFileId);
     assertThat(savedConfigFile.isEncrypted()).isFalse();
-    assertThat(isEmpty(savedConfigFile.getEncryptedFileId())).isTrue();
+    assertThat(hasNone(savedConfigFile.getEncryptedFileId())).isTrue();
 
     assertThat(
         wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, renameAccountId).count())
@@ -2507,7 +2507,7 @@ public class KmsTest extends WingsBaseTest {
                             .filter("accountId", randomAccountId)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
+    assertThat(hasNone(encryptedFileData.get(0).getParents())).isFalse();
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {
@@ -2629,7 +2629,7 @@ public class KmsTest extends WingsBaseTest {
                                                 .filter("accountId", renameAccountId)
                                                 .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
+    assertThat(hasNone(encryptedFileData.get(0).getParents())).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
@@ -2653,7 +2653,7 @@ public class KmsTest extends WingsBaseTest {
                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
+    assertThat(hasNone(encryptedFileData.get(0).getParents())).isFalse();
   }
 
   @Test

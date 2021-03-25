@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -328,7 +328,7 @@ public class StateExecutionData {
         .stream()
         .filter(e -> e.getValue() != null)
         .map(e -> {
-          if (isNotEmpty(secretOutputVars) && secretOutputVars.contains(e.getKey())) {
+          if (hasSome(secretOutputVars) && secretOutputVars.contains(e.getKey())) {
             e.setValue(SECRET_MASK);
           }
           return e;

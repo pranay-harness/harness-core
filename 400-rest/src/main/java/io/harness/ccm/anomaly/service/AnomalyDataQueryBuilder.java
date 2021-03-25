@@ -1,5 +1,7 @@
 package io.harness.ccm.anomaly.service;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -8,7 +10,6 @@ import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
@@ -262,7 +263,7 @@ public class AnomalyDataQueryBuilder {
   }
 
   private static boolean checkFilter(Filter f) {
-    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+    return f.getOperator() != null && hasSome(f.getValues());
   }
 
   private static DbColumn getFilterKey(QLBillingDataFilterType type) {

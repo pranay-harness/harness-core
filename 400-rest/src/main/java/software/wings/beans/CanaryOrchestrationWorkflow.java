@@ -3,8 +3,8 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 
@@ -408,7 +408,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     for (Variable variable : userVariables) {
       if (variable.getType() == VariableType.ENTITY) {
         Map<String, Object> metadata = variable.getMetadata();
-        if (isNotEmpty(metadata) && metadata.get(Variable.ENTITY_TYPE) != null) {
+        if (hasSome(metadata) && metadata.get(Variable.ENTITY_TYPE) != null) {
           if (metadata.get(Variable.ENTITY_TYPE).equals(SERVICE.toString())
               || metadata.get(Variable.ENTITY_TYPE).equals(ENVIRONMENT.toString())
               || metadata.get(Variable.ENTITY_TYPE).equals(INFRASTRUCTURE_DEFINITION.toString())) {
@@ -434,7 +434,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (!workflowPhase.checkInfraDefinitionTemplatized()) {
         String storedInfraValue = (String) variable.getMetadata().get(Variable.INFRA_ID);
         String currentInfraId = workflowPhase.getInfraDefinitionId();
-        if (isEmpty(storedInfraValue)) {
+        if (hasNone(storedInfraValue)) {
           variable.getMetadata().put(Variable.INFRA_ID, currentInfraId);
         } else if (!Arrays.asList(storedInfraValue.split(",")).contains(currentInfraId)) {
           String joinedInfraVal = join(",", storedInfraValue, currentInfraId);
@@ -444,7 +444,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         // add infra variable names in related field
         String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
         String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
-        if (isEmpty(storedRelatedField)) {
+        if (hasNone(storedRelatedField)) {
           variable.getMetadata().put(Variable.RELATED_FIELD, infraVarName);
         } else if (!Arrays.asList(storedRelatedField.split(",")).contains(infraVarName)) {
           String joinedRelatedField = join(",", storedRelatedField, infraVarName);
@@ -452,7 +452,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
 
-      if (isEmpty((String) variable.getMetadata().get(Variable.INFRA_ID))) {
+      if (hasNone((String) variable.getMetadata().get(Variable.INFRA_ID))) {
         variable.getMetadata().remove(Variable.INFRA_ID);
       }
     }
@@ -472,7 +472,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       if (!workflowPhase.checkServiceTemplatized()) {
         String storedServiceValue = (String) variable.getMetadata().get(Variable.SERVICE_ID);
         String currentServiceId = workflowPhase.getServiceId();
-        if (isEmpty(storedServiceValue)) {
+        if (hasNone(storedServiceValue)) {
           variable.getMetadata().put(Variable.SERVICE_ID, currentServiceId);
         } else if (!Arrays.asList(storedServiceValue.split(",")).contains(currentServiceId)) {
           String joinedServiceVal = join(",", storedServiceValue, currentServiceId);
@@ -482,7 +482,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         // add service variable names in related field
         String serviceVarName = workflowPhase.fetchServiceTemplatizedName();
         String storedRelatedField = (String) variable.getMetadata().get(Variable.RELATED_FIELD);
-        if (isEmpty(storedRelatedField)) {
+        if (hasNone(storedRelatedField)) {
           variable.getMetadata().put(Variable.RELATED_FIELD, serviceVarName);
         } else if (!Arrays.asList(storedRelatedField.split(",")).contains(serviceVarName)) {
           String joinedRelatedField = join(",", storedRelatedField, serviceVarName);
@@ -490,7 +490,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         }
       }
 
-      if (isEmpty((String) variable.getMetadata().get(Variable.SERVICE_ID))) {
+      if (hasNone((String) variable.getMetadata().get(Variable.SERVICE_ID))) {
         variable.getMetadata().remove(Variable.SERVICE_ID);
       }
 
@@ -521,7 +521,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhase.getDeploymentType() != null) {
       String newDeploymentType = workflowPhase.getDeploymentType().name();
       String storedDeploymentType = (String) variable.getMetadata().get(Variable.DEPLOYMENT_TYPE);
-      if (isEmpty(storedDeploymentType)) {
+      if (hasNone(storedDeploymentType)) {
         variable.getMetadata().put(Variable.DEPLOYMENT_TYPE, newDeploymentType);
       } else if (!Arrays.asList(storedDeploymentType.split(",")).contains(newDeploymentType)) {
         String joinedDeployementType = join(",", storedDeploymentType, newDeploymentType);
@@ -810,7 +810,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   public void populatePhaseStepIds(WorkflowPhase workflowPhase) {
-    if (isEmpty(workflowPhase.getPhaseSteps())) {
+    if (hasNone(workflowPhase.getPhaseSteps())) {
       return;
     }
     workflowPhase.getPhaseSteps().forEach(this::populatePhaseStepIds);
@@ -830,7 +830,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       log.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
       return;
     }
-    if (isEmpty(phaseStep.getStepsIds())) {
+    if (hasNone(phaseStep.getStepsIds())) {
       return;
     }
 
@@ -903,7 +903,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                        .filter(workflowPhase -> !workflowPhase.validate())
                                        .map(WorkflowPhase::getName)
                                        .collect(toList());
-    if (isNotEmpty(invalidChildren)) {
+    if (hasSome(invalidChildren)) {
       setValid(false);
       invalid += invalidChildren.toString();
     }
@@ -913,7 +913,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                                       .filter(preDeploymentStep -> !preDeploymentStep.validate())
                                                       .map(GraphNode::getName)
                                                       .collect(toList());
-      if (isNotEmpty(invalidChildrenPreDeployment)) {
+      if (hasSome(invalidChildrenPreDeployment)) {
         setValid(false);
         invalid += invalidChildrenPreDeployment.toString();
       }
@@ -924,7 +924,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
                                                        .filter(postDeploymentStep -> !postDeploymentStep.validate())
                                                        .map(GraphNode::getName)
                                                        .collect(toList());
-      if (isNotEmpty(invalidChildrenPostDeployment)) {
+      if (hasSome(invalidChildrenPostDeployment)) {
         setValid(false);
         invalid += invalidChildrenPostDeployment.toString();
       }
@@ -960,11 +960,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         if (phase == null || phase.checkInfraDefinitionTemplatized()) {
           continue;
         }
-        if (isEmpty(phase.getInfraDefinitionId())) {
+        if (hasNone(phase.getInfraDefinitionId())) {
           invalidInfraPhaseIds.add(phase.getName());
         }
       }
-      if (isNotEmpty(invalidInfraPhaseIds)) {
+      if (hasSome(invalidInfraPhaseIds)) {
         setValid(false);
         setValidationMessage(format(WORKFLOW_INFRADEFINITION_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
       }
@@ -1138,7 +1138,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   public boolean checkLastPhaseForOnDemandRollback(@NotNull String phaseName) {
-    if (isNotEmpty(workflowPhases)) {
+    if (hasSome(workflowPhases)) {
       return phaseName.equals(
           STAGING_PHASE_NAME + WHITE_SPACE + workflowPhases.get(workflowPhases.size() - 1).getName());
     }

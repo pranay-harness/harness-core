@@ -1,6 +1,7 @@
 package io.harness.plancreator.execution;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -44,7 +45,7 @@ public class ExecutionPlanCreator extends ChildrenPlanCreator<ExecutionElementCo
     }
 
     // Add Steps Node
-    if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
+    if (hasSome(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
       PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());

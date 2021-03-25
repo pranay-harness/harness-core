@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.entities;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -80,7 +80,7 @@ public final class TimeSeriesCumulativeSums implements PersistentEntity, UuidAwa
       return null;
     }
     txnMetricMap.forEach((txnName, metricMap) -> {
-      if (isNotEmpty(metricMap)) {
+      if (hasSome(metricMap)) {
         TransactionMetricSums txnMetricSums = TransactionMetricSums.builder().transactionName(txnName).build();
         List<MetricSum> metricSumsList = new ArrayList<>();
         metricMap.forEach((metricName, metricSums) -> {
@@ -96,14 +96,14 @@ public final class TimeSeriesCumulativeSums implements PersistentEntity, UuidAwa
 
   public static Map<String, Map<String, List<MetricSum>>> convertToMap(
       List<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsList) {
-    if (isEmpty(timeSeriesCumulativeSumsList)) {
+    if (hasNone(timeSeriesCumulativeSumsList)) {
       return new HashMap<>();
     }
     timeSeriesCumulativeSumsList.sort(Comparator.comparing(TimeSeriesCumulativeSums::getAnalysisStartTime));
     Map<String, Map<String, List<MetricSum>>> txnMetricMap = new HashMap<>();
 
     for (TimeSeriesCumulativeSums timeSeriesCumulativeSums : timeSeriesCumulativeSumsList) {
-      if (isEmpty(timeSeriesCumulativeSums.getTransactionMetricSums())) {
+      if (hasNone(timeSeriesCumulativeSums.getTransactionMetricSums())) {
         continue;
       }
       for (TransactionMetricSums transactionSum : timeSeriesCumulativeSums.getTransactionMetricSums()) {

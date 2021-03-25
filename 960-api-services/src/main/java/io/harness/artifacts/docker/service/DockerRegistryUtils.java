@@ -2,12 +2,12 @@ package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
@@ -35,7 +35,7 @@ public class DockerRegistryUtils {
   public List<Map<String, String>> getLabels(DockerRegistryRestClient registryRestClient,
       Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();
-    if (EmptyPredicate.isEmpty(tags)) {
+    if (hasNone(tags)) {
       return Collections.emptyList();
     }
 

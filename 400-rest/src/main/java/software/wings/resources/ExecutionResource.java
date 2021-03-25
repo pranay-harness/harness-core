@@ -1,8 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.GE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -128,7 +128,7 @@ public class ExecutionResource {
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     // NOTE: Any new filters added here should also be added in ExportExecutionsResource.
     List<String> authorizedAppIds;
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       authorizedAppIds = appIds;
       pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
     }
@@ -137,7 +137,7 @@ public class ExecutionResource {
       pageRequest.setLimit(ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
 
-    if (isNotEmpty(workflowTypes)) {
+    if (hasSome(workflowTypes)) {
       pageRequest.addFilter("workflowType", Operator.IN, workflowTypes.toArray());
     }
 
@@ -231,9 +231,9 @@ public class ExecutionResource {
     // Moved Authorization checks to WorkflowExecutionServiceImpl where pipeline and workflow is already read and we
     // have env resolved to validate RBAC.
     if (executionArgs != null) {
-      if (isNotEmpty(executionArgs.getArtifactVariables())) {
+      if (hasSome(executionArgs.getArtifactVariables())) {
         for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
-          if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
+          if (hasNone(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
             throw new InvalidRequestException(
                 format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
           }
@@ -258,9 +258,9 @@ public class ExecutionResource {
       @QueryParam("pipelineStageElementId") String pipelineStageElementId,
       @QueryParam("pipelineExecutionId") String pipelineExecutionId, ExecutionArgs executionArgs) {
     // add auth
-    if (executionArgs != null && isNotEmpty(executionArgs.getArtifactVariables())) {
+    if (executionArgs != null && hasSome(executionArgs.getArtifactVariables())) {
       for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
-        if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
+        if (hasNone(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
           throw new InvalidRequestException(
               format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
         }
@@ -406,7 +406,7 @@ public class ExecutionResource {
         workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
             appId, workflowExecutionId, stateExecutionId, approvalDetails);
 
-    if (isEmpty(approvalStateExecutionData.getUserGroups())) {
+    if (hasNone(approvalStateExecutionData.getUserGroups())) {
       deploymentAuthHandler.authorize(appId, workflowExecutionId);
     }
 
@@ -638,7 +638,7 @@ public class ExecutionResource {
     // workflow/pipeline. Below empty check does that
     notNullCheck("App cannot be null", appId);
 
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       try {
         deploymentAuthHandler.authorize(appId, workflowExecutionId);
       } catch (WingsException e) {
@@ -682,7 +682,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<Map<String, GraphGroup>> getNodeSubGraphs(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, Map<String, List<String>> selectedNodes) {
-    if (isEmpty(selectedNodes)) {
+    if (hasNone(selectedNodes)) {
       return new RestResponse<>();
     }
     return new RestResponse<>(workflowExecutionService.getNodeSubGraphs(appId, workflowExecutionId, selectedNodes));
@@ -695,7 +695,7 @@ public class ExecutionResource {
   @LearningEngineAuth
   public RestResponse<WorkflowExecutionInfo> getWorkflowExecutionInfo(
       @PathParam("workflowExecutionId") String workflowExecutionId) {
-    if (isEmpty(workflowExecutionId)) {
+    if (hasNone(workflowExecutionId)) {
       throw new InvalidRequestException("workflowExecutionId is required", USER);
     }
     return new RestResponse<>(workflowExecutionService.getWorkflowExecutionInfo(workflowExecutionId));

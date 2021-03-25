@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -211,11 +211,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           initialService.getAppContainer() == null ? null : initialService.getAppContainer().getName();
       String initialServiceArtifactType = initialService.getArtifactType().name();
       String initialServiceDeploymentType = initialService.getDeploymentType().name();
-      if (isNotEmpty(initialServiceAppStack) && !initialServiceAppStack.equals(yaml.getApplicationStack())) {
+      if (hasSome(initialServiceAppStack) && !initialServiceAppStack.equals(yaml.getApplicationStack())) {
         throw new InvalidRequestException(
             "The 'applicationStack' can not be updated when a Service is already created.");
       }
-      if (isEmpty(initialServiceAppStack) && isNotEmpty(yaml.getApplicationStack())) {
+      if (hasNone(initialServiceAppStack) && hasSome(yaml.getApplicationStack())) {
         throw new InvalidRequestException(
             "The 'applicationStack' can not be updated when a Service is already created.");
       }
@@ -254,7 +254,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
     List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
 
-    if (isEmpty(yaml.getConfigVariables())) {
+    if (hasNone(yaml.getConfigVariables())) {
       return configVarsToAdd;
     }
 
@@ -277,7 +277,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
     List<NameValuePair.Yaml> configVarsToUpdate = new ArrayList<>();
 
-    if (isEmpty(yaml.getConfigVariables())) {
+    if (hasNone(yaml.getConfigVariables())) {
       return configVarsToUpdate;
     }
 
@@ -311,12 +311,12 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
     List<ServiceVariable> configVarsToDelete = new ArrayList<>();
 
-    if (isEmpty(serviceVariablesMap)) {
+    if (hasNone(serviceVariablesMap)) {
       return configVarsToDelete;
     }
 
     Map<String, NameValuePair.Yaml> configVariablesFromYamlMap = new HashMap<>();
-    if (isNotEmpty(yaml.getConfigVariables())) {
+    if (hasSome(yaml.getConfigVariables())) {
       for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
         configVariablesFromYamlMap.put(configVar.getName(), configVar);
       }

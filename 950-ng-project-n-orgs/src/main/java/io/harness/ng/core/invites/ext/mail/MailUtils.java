@@ -1,7 +1,7 @@
 package io.harness.ng.core.invites.ext.mail;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -47,7 +47,7 @@ public class MailUtils {
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
-      if (isNotEmpty(smtpConfig.getPassword())) {
+      if (hasSome(smtpConfig.getPassword())) {
         email.setAuthenticator(
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }
@@ -138,7 +138,7 @@ public class MailUtils {
       Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
-      if (isNotEmpty(smtpConfig.getPassword())) {
+      if (hasSome(smtpConfig.getPassword())) {
         email.setAuthenticator(
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }

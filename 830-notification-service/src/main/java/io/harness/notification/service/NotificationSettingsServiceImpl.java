@@ -1,6 +1,6 @@
 package io.harness.notification.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ng.core.dto.UserGroupDTO;
@@ -38,7 +38,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
   private final SmtpConfigClient smtpConfigClient;
 
   private List<UserGroupDTO> getUserGroups(List<String> userGroupIds) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return new ArrayList<>();
     }
     List<UserGroupDTO> userGroups = new ArrayList<>();
@@ -53,7 +53,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
   }
 
   private List<String> getEmailsForUserIds(List<String> userIds) {
-    if (isEmpty(userIds)) {
+    if (hasNone(userIds)) {
       return new ArrayList<>();
     }
     List<UserInfo> users = new ArrayList<>();

@@ -1,6 +1,7 @@
 package io.harness.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_METRICS;
 
@@ -48,7 +49,7 @@ public class MetricResource {
     String env = System.getenv("ENV");
     VERIFICATION_SERVICE_METRICS.forEach(metricName -> {
       metrics.add(metricName);
-      if (isNotEmpty(env)) {
+      if (hasSome(env)) {
         metrics.add(env.replaceAll("-", "_") + "_" + metricName);
       }
     });

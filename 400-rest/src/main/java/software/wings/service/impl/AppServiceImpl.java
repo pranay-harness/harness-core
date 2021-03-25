@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -155,7 +155,7 @@ public class AppServiceImpl implements AppService {
 
   private void validateAppName(Application app) {
     if (app != null) {
-      if (isEmpty(app.getName().trim())) {
+      if (hasNone(app.getName().trim())) {
         throw new InvalidRequestException("App Name can not be empty", USER);
       }
       if (!EntityNameValidator.isValid(app.getName().trim())) {
@@ -256,7 +256,7 @@ public class AppServiceImpl implements AppService {
         resourceLookupService.listWithTagFilters(req, tagFilter, EntityType.APPLICATION, withTags);
 
     List<Application> applicationList = response.getResponse();
-    if (isEmpty(applicationList)) {
+    if (hasNone(applicationList)) {
       return response;
     }
     List<String> appIdList = applicationList.stream().map(Base::getUuid).collect(toList());
@@ -269,7 +269,7 @@ public class AppServiceImpl implements AppService {
 
     String accountId;
     String[] appIdArray = appIdList.toArray(new String[0]);
-    if (isNotEmpty(applicationList)) {
+    if (hasSome(applicationList)) {
       accountId = applicationList.get(0).getAccountId();
       PageRequest<YamlGitConfig> yamlPageRequest = PageRequestBuilder.aPageRequest()
                                                        .addFilter("accountId", Operator.EQ, accountId)
@@ -427,7 +427,7 @@ public class AppServiceImpl implements AppService {
 
   private void ensureSafeToDelete(String appId, String appName) {
     List<String> runningExecutionNames = workflowExecutionService.runningExecutionsForApplication(appId);
-    if (isNotEmpty(runningExecutionNames)) {
+    if (hasSome(runningExecutionNames)) {
       throw new InvalidRequestException(
           format("Application:[%s] couldn't be deleted. [%d] Running executions present: [%s]", appName,
               runningExecutionNames.size(), String.join(", ", runningExecutionNames)),
@@ -516,7 +516,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public String getAccountIdByAppId(String appId) {
-    if (isEmpty(appId)) {
+    if (hasNone(appId)) {
       return null;
     }
 

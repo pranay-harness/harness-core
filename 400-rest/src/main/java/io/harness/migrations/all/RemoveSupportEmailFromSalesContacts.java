@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -37,7 +37,7 @@ public class RemoveSupportEmailFromSalesContacts implements Migration {
         try {
           account = records.next();
           List<String> salesContacts = account.getSalesContacts();
-          if (isEmpty(salesContacts)) {
+          if (hasNone(salesContacts)) {
             continue;
           }
 
@@ -63,7 +63,7 @@ public class RemoveSupportEmailFromSalesContacts implements Migration {
 
   private String getListAsString(List<String> salesContacts) {
     StringBuilder sb = new StringBuilder();
-    if (isEmpty(salesContacts)) {
+    if (hasNone(salesContacts)) {
       return null;
     }
 

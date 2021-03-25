@@ -1,5 +1,6 @@
 package io.harness.pms.ngpipeline.inputset.resources;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.merger.helpers.MergeHelper.removeRuntimeInputFromYaml;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -9,7 +10,6 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -255,7 +255,7 @@ public class InputSetResourcePMS {
     Criteria criteria = PMSInputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, InputSetEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

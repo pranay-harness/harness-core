@@ -1,7 +1,7 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -32,7 +32,7 @@ public class OauthSettings extends SSOSettings {
     super(SSOType.OAUTH, allowedProviders.stream().map(OauthProviderType::name).collect(Collectors.joining(",")), "");
     this.accountId = accountId;
     this.filter = filter;
-    if (isNotEmpty(displayName)) {
+    if (hasSome(displayName)) {
       this.displayName = displayName;
     }
     this.allowedProviders = allowedProviders;

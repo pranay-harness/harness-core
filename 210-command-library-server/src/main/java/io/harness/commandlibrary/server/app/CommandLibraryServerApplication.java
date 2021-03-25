@@ -1,6 +1,6 @@
 package io.harness.commandlibrary.server.app;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.inject.matcher.Matchers.not;
@@ -232,7 +232,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     final String description = "This metric is used to track the Command library service analytics data";
     harnessMetricRegistry.registerGaugeMetric(metricName, labels, description);
     String env = System.getenv("ENV");
-    if (isNotEmpty(env)) {
+    if (hasSome(env)) {
       env = env.replaceAll("-", "_").toLowerCase();
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, description);
     }

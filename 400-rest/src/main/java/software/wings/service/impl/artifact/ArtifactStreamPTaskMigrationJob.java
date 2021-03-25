@@ -3,6 +3,8 @@ package software.wings.service.impl.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.String.format;
@@ -10,7 +12,6 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -105,7 +106,7 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
           Sets.intersection(getAccountIds(ARTIFACT_PERPETUAL_TASK), getAccountIds(ARTIFACT_PERPETUAL_TASK_MIGRATION));
     }
 
-    if (EmptyPredicate.isNotEmpty(accountIds)) {
+    if (hasSome(accountIds)) {
       createPerpetualTasks(accountIds);
     } else {
       log.info("Not migrating artifact streams to perpetual task for any accounts");
@@ -114,7 +115,7 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
 
   private void createPerpetualTasks(Set<String> accountIds) {
     Query<ArtifactStream> query;
-    if (EmptyPredicate.isEmpty(accountIds)) {
+    if (hasNone(accountIds)) {
       log.info("Migrating artifact streams to perpetual task for all accounts");
       query = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority);
     } else {
@@ -129,7 +130,7 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
                                                .project(ArtifactStreamKeys.accountId, true)
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .asList(new FindOptions().limit(BATCH_SIZE));
-    if (EmptyPredicate.isEmpty(artifactStreams)) {
+    if (hasNone(artifactStreams)) {
       log.info("No eligible artifact streams for perpetual task migration");
       return;
     }
@@ -140,6 +141,6 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
 
   private Set<String> getAccountIds(FeatureName featureName) {
     Set<String> accountIds = featureFlagService.getAccountIds(featureName);
-    return EmptyPredicate.isEmpty(accountIds) ? Collections.emptySet() : accountIds;
+    return hasNone(accountIds) ? Collections.emptySet() : accountIds;
   }
 }

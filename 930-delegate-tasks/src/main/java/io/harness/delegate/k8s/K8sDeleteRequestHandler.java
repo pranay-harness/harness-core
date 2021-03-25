@@ -1,6 +1,6 @@
 package io.harness.delegate.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getResourcesInStringFormat;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Delete;
@@ -137,7 +137,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
       kubernetesConfig =
           containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sDeleteRequest.getK8sInfraDelegateConfig());
 
-      if (isEmpty(k8sDeleteRequest.getFilePaths())) {
+      if (hasNone(k8sDeleteRequest.getFilePaths())) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         executionLogCallback.saveExecutionLog("\nSuccess.", INFO, SUCCESS);
         return true;
@@ -147,7 +147,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
                                          .filter(StringUtils::isNotBlank)
                                          .collect(Collectors.toList());
 
-      if (isEmpty(deleteFilePaths)) {
+      if (hasNone(deleteFilePaths)) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
         executionLogCallback.saveExecutionLog("\nSuccess.", INFO, SUCCESS);
         return true;
@@ -184,7 +184,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     if (!success) {
       return getGenericFailureResponse(null);
     }
-    if (isEmpty(resourceIdsToDelete)) {
+    if (hasNone(resourceIdsToDelete)) {
       return k8sDeleteBaseHandler.getSuccessResponse();
     }
 

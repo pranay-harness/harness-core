@@ -1,11 +1,10 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 
@@ -18,18 +17,18 @@ public class NgPipelineFilterHelper {
   public Criteria createCriteriaForGetList(
       String accountId, String orgIdentifier, String projectIdentifier, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(PipelineNGKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(PipelineNGKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(PipelineNGKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.and(PipelineNGKeys.deleted).is(deleted);
 
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(PipelineNGKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -245,7 +245,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private Optional<NewRelicMetricDataRecord> createNewDataRecord(
         NewRelicApplicationInstance node, String metricName, long timeStamp) {
       String hostname = isPredictiveAnalysis() ? DEFAULT_GROUP_NAME : node.getHost();
-      String groupName = isEmpty(dataCollectionInfo.getHosts().get(node.getHost()))
+      String groupName = hasNone(dataCollectionInfo.getHosts().get(node.getHost()))
           ? DEFAULT_GROUP_NAME
           : dataCollectionInfo.getHosts().get(node.getHost());
       final NewRelicMetricDataRecord metricDataRecord =
@@ -335,7 +335,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       while (retry < RETRIES) {
         try {
           Set<String> apdexMetricNames = getApdexMetricNames(metricNames);
-          if (isEmpty(apdexMetricNames)) {
+          if (hasNone(apdexMetricNames)) {
             return;
           }
           NewRelicMetricData metricData =

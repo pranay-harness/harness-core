@@ -1,7 +1,7 @@
 package io.harness.state.inspection;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.Arrays.asList;
@@ -40,7 +40,7 @@ public class StateInspectionServiceImpl implements StateInspectionService {
 
   @Override
   public List<StateInspection> listUsingSecondary(Collection<String> stateExecutionInstanceIds) {
-    if (isEmpty(stateExecutionInstanceIds)) {
+    if (hasNone(stateExecutionInstanceIds)) {
       return new ArrayList<>();
     }
 

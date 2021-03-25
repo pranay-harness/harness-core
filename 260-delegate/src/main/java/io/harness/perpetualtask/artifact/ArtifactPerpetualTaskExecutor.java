@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.SafeHttpCall.executeWithExceptions;
 
 import static java.lang.String.format;
@@ -103,7 +104,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     }
 
     List<BuildDetails> builds = buildSourceExecutionResponse.getBuildSourceResponse().getBuildDetails();
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       log.info("Published empty artifact collection result");
       return;
     }
@@ -136,7 +137,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private boolean publishDeletedArtifactKeys(
       String accountId, String artifactStreamId, PerpetualTaskId taskId, ArtifactsPublishedCache currCache) {
     Set<String> toBeDeletedArtifactKeys = currCache.getToBeDeletedArtifactKeys();
-    if (isEmpty(toBeDeletedArtifactKeys)) {
+    if (hasNone(toBeDeletedArtifactKeys)) {
       log.info(
           "Empty toBeDeletedArtifactKeys in publishDeletedArtifactKeys for artifactStreamId: {}, perpetualTaskId: {}",
           artifactStreamId, taskId.getId());
@@ -168,7 +169,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
       ArtifactsPublishedCache<BuildDetails> currCache) {
     ImmutablePair<List<BuildDetails>, Boolean> resp = currCache.getLimitedUnpublishedBuildDetails();
     List<BuildDetails> builds = resp.getLeft();
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       log.info("Empty build details in publishUnpublishedBuildDetails for artifactStreamId: {}, perpetualTaskId: {}",
           artifactStreamId, taskId.getId());
       return false;

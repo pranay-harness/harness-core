@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -144,7 +144,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
     ResumeNodeExecutionEventData eventData = (ResumeNodeExecutionEventData) event.getEventData();
     Map<String, ResponseData> response = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(eventData.getResponse())) {
+    if (hasSome(eventData.getResponse())) {
       eventData.getResponse().forEach((k, v) -> response.put(k, (ResponseData) kryoSerializer.asInflatedObject(v)));
     }
     try {

@@ -5,8 +5,8 @@ import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -59,7 +59,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     long fromDateEpochMilli = getEpochMilliPSTZone(numOfDays);
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
     List<WorkflowExecution> workflowExecutions;
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       workflowExecutions =
           workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
     } else {
@@ -67,7 +67,7 @@ public class StatisticsServiceImpl implements StatisticsService {
           workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
     }
 
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       return deploymentStats;
     }
 
@@ -92,14 +92,14 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
     List<WorkflowExecution> workflowExecutions;
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       workflowExecutions =
           workflowExecutionService.obtainWorkflowExecutions(accountId, fromDateEpochMilli, workflowExecutionKeys);
     } else {
       workflowExecutions =
           workflowExecutionService.obtainWorkflowExecutions(appIds, fromDateEpochMilli, workflowExecutionKeys);
     }
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       return instanceStats;
     }
     Comparator<TopConsumer> byCount = comparing(TopConsumer::getTotalCount, reverseOrder());
@@ -197,7 +197,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private void getTopServicesDeployed(List<TopConsumer> topConsumers, List<WorkflowExecution> wflExecutions) {
     Map<String, TopConsumer> topConsumerMap = new HashMap<>();
-    if (isEmpty(wflExecutions)) {
+    if (hasNone(wflExecutions)) {
       return;
     }
     for (WorkflowExecution execution : wflExecutions) {
@@ -206,7 +206,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       }
       final List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
       if (execution.getWorkflowType() == PIPELINE && execution.getPipelineExecution() != null
-          && isNotEmpty(execution.getPipelineExecution().getPipelineStageExecutions())) {
+          && hasSome(execution.getPipelineExecution().getPipelineStageExecutions())) {
         execution.getPipelineExecution()
             .getPipelineStageExecutions()
             .stream()

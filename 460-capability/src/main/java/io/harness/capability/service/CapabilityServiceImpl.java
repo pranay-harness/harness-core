@@ -1,6 +1,6 @@
 package io.harness.capability.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -87,7 +87,7 @@ public class CapabilityServiceImpl implements CapabilityService {
     List<String> insertedPermissionIds =
         capabilityDao.addCapabilityPermissions(capabilityRequirement, allDelegateIds, result);
 
-    if (isCapabilityBlocked && isNotEmpty(insertedPermissionIds)) {
+    if (isCapabilityBlocked && hasSome(insertedPermissionIds)) {
       for (String delegateId : allDelegateIds) {
         capSubjectPermissionTaskCrudSubject.fireInform(
             CapabilitySubjectPermissionCrudObxxxxxxxx:onBlockingPermissionsCreated, capabilityRequirement.getAccountId(),
@@ -186,14 +186,14 @@ public class CapabilityServiceImpl implements CapabilityService {
     }
 
     StringBuilder setupAbstractionsKey = new StringBuilder();
-    if (isNotEmpty(taskSetupAbstractions)) {
+    if (hasSome(taskSetupAbstractions)) {
       for (Map.Entry<String, String> entry : taskSetupAbstractions.entrySet()) {
         setupAbstractionsKey.append(entry.getKey()).append(entry.getValue());
       }
     }
 
     StringBuilder selectorsKey = new StringBuilder();
-    if (isNotEmpty(taskSelectors)) {
+    if (hasSome(taskSelectors)) {
       for (Map.Entry<String, Set<String>> entry : taskSelectors.entrySet()) {
         selectorsKey.append(entry.getKey()).append(String.join("", entry.getValue()));
       }

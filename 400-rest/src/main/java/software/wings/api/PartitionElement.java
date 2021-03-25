@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.context.ContextElementType;
 
@@ -29,7 +29,7 @@ public class PartitionElement implements ContextElement {
   }
 
   public ContextElementType getPartitionElementType() {
-    if (isNotEmpty(partitionElements)) {
+    if (hasSome(partitionElements)) {
       return partitionElements.get(0).getElementType();
     }
     return partitionElementType;

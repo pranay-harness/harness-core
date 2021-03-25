@@ -1,7 +1,7 @@
 package software.wings.features;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -54,7 +54,7 @@ public class UsersFeature extends AbstractUsageLimitedFeature implements Complia
 
     @SuppressWarnings("unchecked")
     List<String> usersToRetain = (List<String>) requiredInfoToLimitUsage.get("usersToRetain");
-    if (!isEmpty(usersToRetain)) {
+    if (!hasNone(usersToRetain)) {
       userService.deleteUsersByEmailAddress(accountId, usersToRetain);
     }
 

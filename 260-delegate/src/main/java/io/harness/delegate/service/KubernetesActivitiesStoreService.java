@@ -1,6 +1,7 @@
 package io.harness.delegate.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.SafeHttpCall.execute;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -53,7 +54,7 @@ public class KubernetesActivitiesStoreService {
 
   private void dispatchKubernetesActivities(
       String accountId, List<KubernetesActivityDTO> activityDTOS, RemovalCause removalCause) {
-    if (accountId == null || isEmpty(activityDTOS)) {
+    if (accountId == null || hasNone(activityDTOS)) {
       log.error("Unexpected Cache eviction accountId={}, activityDTOS={}, removalCause={}", accountId, activityDTOS,
           removalCause);
       return;
@@ -61,7 +62,7 @@ public class KubernetesActivitiesStoreService {
     activityDTOS.stream()
         .collect(groupingBy(KubernetesActivityDTO::getActivitySourceConfigId, toList()))
         .forEach((activitySourceConfigId, activities) -> {
-          if (isEmpty(activities)) {
+          if (hasNone(activities)) {
             return;
           }
           try {

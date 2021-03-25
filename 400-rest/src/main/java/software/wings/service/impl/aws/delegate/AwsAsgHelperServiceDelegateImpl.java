@@ -1,8 +1,8 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.threading.Morpheus.sleep;
@@ -302,7 +302,7 @@ public class AwsAsgHelperServiceDelegateImpl
               amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
           log.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
-        if (isNotEmpty(autoScalingGroup.getLaunchConfigurationName())) {
+        if (hasSome(autoScalingGroup.getLaunchConfigurationName())) {
           try {
             tracker.trackASGCall("Delete Launch Config");
             amazonAutoScalingClient.deleteLaunchConfiguration(
@@ -378,7 +378,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, int minCapacity, ExecutionLogCallback logCallback) {
     try {
-      if (isEmpty(autoScalingGroupName)) {
+      if (hasNone(autoScalingGroupName)) {
         return;
       }
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
@@ -388,7 +388,7 @@ public class AwsAsgHelperServiceDelegateImpl
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
       List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
-      if (isEmpty(autoScalingGroups)) {
+      if (hasNone(autoScalingGroups)) {
         return;
       }
       logCallback.saveExecutionLog(
@@ -417,7 +417,7 @@ public class AwsAsgHelperServiceDelegateImpl
       tracker.trackASGCall("Describe Autoscaling Groups");
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
       List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
-      if (isEmpty(autoScalingGroups)) {
+      if (hasNone(autoScalingGroups)) {
         return;
       }
       AutoScalingGroup autoScalingGroup = autoScalingGroups.get(0);
@@ -582,7 +582,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void registerAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
     try {
-      if (isEmpty(targetGroupARNs)) {
+      if (hasNone(targetGroupARNs)) {
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
@@ -603,7 +603,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void registerAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
     try {
-      if (isEmpty(classicLBs)) {
+      if (hasNone(classicLBs)) {
         logCallback.saveExecutionLog(format("No classic load balancers to attach to: [%s]", asgName));
         return;
       }
@@ -623,7 +623,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void deRegisterAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
     try {
-      if (isEmpty(targetGroupARNs)) {
+      if (hasNone(targetGroupARNs)) {
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
@@ -644,7 +644,7 @@ public class AwsAsgHelperServiceDelegateImpl
   public void deRegisterAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
     try {
-      if (isEmpty(classicLBs)) {
+      if (hasNone(classicLBs)) {
         logCallback.saveExecutionLog(format("No classic load balancers to detach to: [%s]", asgName));
         return;
       }
@@ -669,7 +669,7 @@ public class AwsAsgHelperServiceDelegateImpl
       int asgMax = DEFAULT_AMI_ASG_MAX_INSTANCES;
       int asgDesired = DEFAULT_AMI_ASG_DESIRED_INSTANCES;
       List<AutoScalingGroup> groups = listAllAsgs(awsConfig, encryptionDetails, region);
-      if (isNotEmpty(groups)) {
+      if (hasSome(groups)) {
         Optional<AutoScalingGroup> first =
             groups.stream()
                 .filter(group
@@ -725,7 +725,7 @@ public class AwsAsgHelperServiceDelegateImpl
       request = new DescribePoliciesRequest().withAutoScalingGroupName(asgName).withNextToken(nextToken);
       tracker.trackASGCall("Describe ASG Policies");
       result = amazonAutoScalingClient.describePolicies(request);
-      if (isNotEmpty(result.getScalingPolicies())) {
+      if (hasSome(result.getScalingPolicies())) {
         scalingPolicies.addAll(result.getScalingPolicies());
       }
       nextToken = result.getNextToken();
@@ -741,7 +741,7 @@ public class AwsAsgHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
-      if (isEmpty(scalingPolicies)) {
+      if (hasNone(scalingPolicies)) {
         logCallback.saveExecutionLog("No policies found");
         return emptyList();
       }
@@ -767,7 +767,7 @@ public class AwsAsgHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       List<ScalingPolicy> scalingPolicies = listAllScalingPoliciesOfAsg(amazonAutoScalingClient, asgName);
-      if (isEmpty(scalingPolicies)) {
+      if (hasNone(scalingPolicies)) {
         logCallback.saveExecutionLog("No policies found");
         return;
       }
@@ -827,14 +827,14 @@ public class AwsAsgHelperServiceDelegateImpl
       String region, String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback) {
     try {
       logCallback.saveExecutionLog(format("Attaching scaling policies to Asg: [%s]", asgName));
-      if (isEmpty(scalingPolicyJSONs)) {
+      if (hasNone(scalingPolicyJSONs)) {
         logCallback.saveExecutionLog("No policy to attach");
         return;
       }
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       scalingPolicyJSONs.forEach(scalingPolicyJSON -> {
-        if (isNotEmpty(scalingPolicyJSON)) {
+        if (hasSome(scalingPolicyJSON)) {
           ScalingPolicy scalingPolicy = getScalingPolicyFromJSON(scalingPolicyJSON, logCallback);
           if (scalingPolicy != null) {
             logCallback.saveExecutionLog(

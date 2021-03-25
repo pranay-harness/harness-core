@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
@@ -171,7 +171,7 @@ public class UserGroupResource {
     }
 
     List<UserGroup> userGroups = pageResponse.getResponse();
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       return new RestResponse<>(pageResponse);
     }
     userGroups.forEach(this::setUserSummary);

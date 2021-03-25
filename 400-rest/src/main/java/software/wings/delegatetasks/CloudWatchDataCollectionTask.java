@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -216,23 +216,23 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
           dataCollectionInfo.getMetricsByECSClusterName();
       Map<String, List<CloudWatchMetric>> cloudWatchMetricsByELBName = dataCollectionInfo.getLoadBalancerMetrics();
 
-      if (isNotEmpty(cloudWatchMetricsByECSClusterName)) {
+      if (hasSome(cloudWatchMetricsByECSClusterName)) {
         log.info("for {} fetching metrics for ECS Cluster {}", dataCollectionInfo.getStateExecutionId(),
             cloudWatchMetricsByECSClusterName);
         addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ECS, cloudWatchMetricsByECSClusterName);
       }
-      if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
+      if (hasSome(cloudWatchMetricsByLambdaFunction)) {
         log.info("for {} fetching metrics for lambda functions {}", dataCollectionInfo.getStateExecutionId(),
             cloudWatchMetricsByLambdaFunction);
         addCallablesForGetMetricData(
             cloudWatchClient, callables, AwsNameSpace.LAMBDA, cloudWatchMetricsByLambdaFunction);
       }
-      if (isNotEmpty(cloudWatchMetricsByELBName)) {
+      if (hasSome(cloudWatchMetricsByELBName)) {
         log.info("for {} fetching metrics for load balancers {}", dataCollectionInfo.getStateExecutionId(),
             cloudWatchMetricsByELBName);
         addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ELB, cloudWatchMetricsByELBName);
       }
-      if (isNotEmpty(dataCollectionInfo.getHosts()) && isNotEmpty(dataCollectionInfo.getEc2Metrics())) {
+      if (hasSome(dataCollectionInfo.getHosts()) && hasSome(dataCollectionInfo.getEc2Metrics())) {
         log.info("for {} fetching {} metrics for hosts {}", dataCollectionInfo.getStateExecutionId(),
             dataCollectionInfo.getEc2Metrics(), dataCollectionInfo.getHosts());
         dataCollectionInfo.getHosts().forEach(

@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -49,14 +49,14 @@ public class UserGroupPermissionValidator {
 
   private void checkForInvalidIds(List<String> idsInput, List<String> idsPresent) {
     idsInput.removeAll(idsPresent);
-    if (isNotEmpty(idsInput)) {
+    if (hasSome(idsInput)) {
       throw new InvalidRequestException(
           String.format("Invalid id/s %s provided in the request", String.join(", ", idsInput)));
     }
   }
 
   private void checkServiceExists(Set<String> serviceIds, String accountId) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(serviceIds);
@@ -72,7 +72,7 @@ public class UserGroupPermissionValidator {
   }
 
   private void checkProvisionerExists(Set<String> provisionersIds, String accountId) {
-    if (isEmpty(provisionersIds)) {
+    if (hasNone(provisionersIds)) {
       return;
     }
     List<String> ids = new ArrayList<>(provisionersIds);
@@ -115,7 +115,7 @@ public class UserGroupPermissionValidator {
 
   private void validateTheActions(QLPermissionType permissionType, Set<QLActions> actions) {
     // If no actions is provided, we will ask the user to give the actions field
-    if (isEmpty(actions)) {
+    if (hasNone(actions)) {
       throw new InvalidRequestException(
           String.format("No Actions Supplied for the %s permission type", permissionType.getStringValue()));
     }
@@ -150,42 +150,42 @@ public class UserGroupPermissionValidator {
         return;
       case SERVICE:
         if (appPermission.getServices() != null
-            && (isNotEmpty(appPermission.getServices().getServiceIds())
+            && (hasSome(appPermission.getServices().getServiceIds())
                 || appPermission.getServices().getFilterType() != null)) {
           return;
         }
         break;
       case ENV:
         if (appPermission.getEnvironments() != null
-            && (isNotEmpty(appPermission.getEnvironments().getEnvIds())
-                || isNotEmpty(appPermission.getEnvironments().getFilterTypes()))) {
+            && (hasSome(appPermission.getEnvironments().getEnvIds())
+                || hasSome(appPermission.getEnvironments().getFilterTypes()))) {
           return;
         }
         break;
       case WORKFLOW:
         if (appPermission.getWorkflows() != null
-            && (isNotEmpty(appPermission.getWorkflows().getEnvIds())
-                || isNotEmpty(appPermission.getWorkflows().getFilterTypes()))) {
+            && (hasSome(appPermission.getWorkflows().getEnvIds())
+                || hasSome(appPermission.getWorkflows().getFilterTypes()))) {
           return;
         }
         break;
       case PIPELINE:
         if (appPermission.getPipelines() != null
-            && (isNotEmpty(appPermission.getPipelines().getEnvIds())
-                || isNotEmpty(appPermission.getPipelines().getFilterTypes()))) {
+            && (hasSome(appPermission.getPipelines().getEnvIds())
+                || hasSome(appPermission.getPipelines().getFilterTypes()))) {
           return;
         }
         break;
       case DEPLOYMENT:
         if (appPermission.getDeployments() != null
-            && (isNotEmpty(appPermission.getDeployments().getEnvIds())
-                || isNotEmpty(appPermission.getDeployments().getFilterTypes()))) {
+            && (hasSome(appPermission.getDeployments().getEnvIds())
+                || hasSome(appPermission.getDeployments().getFilterTypes()))) {
           return;
         }
         break;
       case PROVISIONER:
         if (appPermission.getProvisioners() != null
-            && (isNotEmpty(appPermission.getProvisioners().getProvisionerIds())
+            && (hasSome(appPermission.getProvisioners().getProvisionerIds())
                 || appPermission.getProvisioners().getFilterType() != null)) {
           return;
         }
@@ -210,7 +210,7 @@ public class UserGroupPermissionValidator {
   private void checkAllAppPermissionFilter(QLAppPermission appPermission) {
     // If the user has given the ids, then we won't consider the filterType thus no need to check for filterType All
     QLAppFilter application = appPermission.getApplications();
-    if (isNotEmpty(application.getAppIds())) {
+    if (hasSome(application.getAppIds())) {
       return;
     }
     // If ids is empty then filterType will be there as we already did a check for it, and it can only take value ALL
@@ -256,7 +256,7 @@ public class UserGroupPermissionValidator {
   }
 
   void validateAppPermission(String accountId, List<QLAppPermission> appPermissions) {
-    if (isEmpty(appPermissions)) {
+    if (hasNone(appPermissions)) {
       return;
     }
     for (QLAppPermission appPermission : appPermissions) {

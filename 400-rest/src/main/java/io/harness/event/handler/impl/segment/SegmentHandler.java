@@ -1,8 +1,8 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
@@ -142,7 +142,7 @@ public class SegmentHandler implements EventHandler {
       return;
     }
     Map<String, String> properties = eventData.getProperties();
-    if (isEmpty(properties)) {
+    if (hasNone(properties)) {
       log.error("Event data properties are null");
       return;
     }
@@ -155,13 +155,13 @@ public class SegmentHandler implements EventHandler {
     try {
       if (NEW_TRIAL_SIGNUP == eventType || JOIN_ACCOUNT_REQUEST == eventType) {
         String email = properties.get(EMAIL_ID);
-        if (isEmpty(email)) {
+        if (hasNone(email)) {
           log.error("User email is empty");
           return;
         }
 
         String identity = reportIdentity(properties.get(USER_NAME), email);
-        if (isNotEmpty(identity)) {
+        if (hasSome(identity)) {
           reportTrackEvent(eventType, Arrays.asList(identity));
         } else {
           log.error("identity is null");
@@ -170,7 +170,7 @@ public class SegmentHandler implements EventHandler {
       }
 
       String accountId = properties.get(ACCOUNT_ID);
-      if (isEmpty(accountId)) {
+      if (hasNone(accountId)) {
         log.error("Account is empty");
         return;
       }
@@ -205,7 +205,7 @@ public class SegmentHandler implements EventHandler {
         case COMPLETE_USER_REGISTRATION:
           // In case of sso based signup, we only send complete user registration.
           // But we have a special requirement for sending NEW_TRIAL_SIGNUP to segment for easier tracking.
-          if (isNotEmpty(user.getOauthProvider())) {
+          if (hasSome(user.getOauthProvider())) {
             reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user, null);
           }
           reportTrackEvent(account, eventType.name(), user, null);
@@ -233,7 +233,7 @@ public class SegmentHandler implements EventHandler {
 
   private void reportToAllUsers(Account account, EventType eventType) {
     List<User> usersOfAccount = userService.getUsersOfAccount(account.getUuid());
-    if (isEmpty(usersOfAccount)) {
+    if (hasNone(usersOfAccount)) {
       return;
     }
 
@@ -243,11 +243,11 @@ public class SegmentHandler implements EventHandler {
 
   private void updateAllUsersInSegment(Account account) {
     List<User> usersOfAccount = userService.getUsersOfAccount(account.getUuid());
-    if (isEmpty(usersOfAccount)) {
+    if (hasNone(usersOfAccount)) {
       return;
     }
 
-    usersOfAccount.stream().filter(user -> isNotEmpty(user.getSegmentIdentity())).forEach(user -> {
+    usersOfAccount.stream().filter(user -> hasSome(user.getSegmentIdentity())).forEach(user -> {
       try {
         reportIdentity(account, user, false);
       } catch (URISyntaxException e) {
@@ -314,7 +314,7 @@ public class SegmentHandler implements EventHandler {
 
   @VisibleForTesting
   public User updateUserIdentity(User user, String segmentIdentity) {
-    if (isEmpty(segmentIdentity)) {
+    if (hasNone(segmentIdentity)) {
       return user;
     }
 
@@ -332,7 +332,7 @@ public class SegmentHandler implements EventHandler {
 
   public boolean reportTrackEvent(EventType eventType, List<String> identityList) {
     log.info("Reporting track for event {} with leads {}", eventType, identityList);
-    if (isEmpty(identityList)) {
+    if (hasNone(identityList)) {
       log.error("No identities reported for event {}", eventType);
       return false;
     }
@@ -356,9 +356,9 @@ public class SegmentHandler implements EventHandler {
       String userId = user.getUuid();
       String identity = user.getSegmentIdentity();
       log.info("Reporting track for event {} with lead {}", event, userId);
-      if (isEmpty(identity) || !identity.equals(userId)) {
+      if (hasNone(identity) || !identity.equals(userId)) {
         identity = reportIdentity(account, user, true);
-        if (isEmpty(identity)) {
+        if (hasNone(identity)) {
           log.error("Invalid identity id reported for user {}", userId);
           return;
         }
@@ -384,7 +384,7 @@ public class SegmentHandler implements EventHandler {
       Map<String, Boolean> integrations) throws URISyntaxException {
     String identity;
     User user = null;
-    if (isNotEmpty(userId)) {
+    if (hasSome(userId)) {
       user = userService.get(userId);
       if (user == null) {
         log.warn("User is null. Skipping reporting of track event {}", event);
@@ -392,9 +392,9 @@ public class SegmentHandler implements EventHandler {
       }
       identity = user.getSegmentIdentity();
       log.info("Reporting track for event {} with lead {}", event, userId);
-      if (isEmpty(identity) || !identity.equals(userId)) {
+      if (hasNone(identity) || !identity.equals(userId)) {
         identity = reportIdentity(account, user, true);
-        if (isEmpty(identity)) {
+        if (hasNone(identity)) {
           log.error("Invalid identity id reported for user {}", userId);
           return;
         }

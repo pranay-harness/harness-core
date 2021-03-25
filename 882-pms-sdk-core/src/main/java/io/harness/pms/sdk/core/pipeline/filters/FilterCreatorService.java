@@ -1,12 +1,11 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.plan.creation.PlanCreatorUtils.supportsField;
 
 import static java.lang.String.format;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
@@ -47,7 +46,7 @@ public class FilterCreatorService {
     Map<String, YamlFieldBlob> dependencyBlobs = request.getDependenciesMap();
     Map<String, YamlField> initialDependencies = new HashMap<>();
 
-    if (isNotEmpty(dependencyBlobs)) {
+    if (hasSome(dependencyBlobs)) {
       try {
         for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
           initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
@@ -65,7 +64,7 @@ public class FilterCreatorService {
   private FilterCreationResponse processNodesRecursively(
       Map<String, YamlField> initialDependencies, SetupMetadata setupMetadata) {
     FilterCreationResponse finalResponse = FilterCreationResponse.builder().build();
-    if (isEmpty(initialDependencies)) {
+    if (hasNone(initialDependencies)) {
       return finalResponse;
     }
 
@@ -75,7 +74,7 @@ public class FilterCreatorService {
       initialDependencies.keySet().forEach(dependencies::remove);
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
+    if (hasSome(finalResponse.getDependencies())) {
       initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
     }
 
@@ -122,7 +121,7 @@ public class FilterCreatorService {
       finalResponse.addStageNames(response.getStageNames());
       filterCreationResponseMerger.mergeFilterCreationResponse(finalResponse, response);
       finalResponse.addResolvedDependency(yamlField);
-      if (isNotEmpty(response.getDependencies())) {
+      if (hasSome(response.getDependencies())) {
         response.getDependencies().values().forEach(field -> dependencies.put(field.getNode().getUuid(), field));
       }
     }

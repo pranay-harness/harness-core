@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -44,7 +44,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     List<PortMapping.Yaml> portMappingYamlList = Collections.emptyList();
     PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
-    if (isNotEmpty(portMappings)) {
+    if (hasSome(portMappings)) {
       portMappingYamlList =
           portMappings.stream().map(portMapping -> portMappingYamlHandler.toYaml(portMapping, appId)).collect(toList());
     }
@@ -54,7 +54,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     StorageConfigurationYamlHandler storageConfigYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION);
     List<StorageConfiguration> storageConfigurations = containerDefinition.getStorageConfigurations();
-    if (isNotEmpty(storageConfigurations)) {
+    if (hasSome(storageConfigurations)) {
       storageConfigYamlList =
           storageConfigurations.stream()
               .filter(storageConfiguration
@@ -103,7 +103,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
 
     // storage configurations
     List<StorageConfiguration> storageConfigs = Lists.newArrayList();
-    if (isNotEmpty(yaml.getStorageConfigurations())) {
+    if (hasSome(yaml.getStorageConfigurations())) {
       StorageConfigurationYamlHandler storageConfigYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION);
       storageConfigs = yaml.getStorageConfigurations()

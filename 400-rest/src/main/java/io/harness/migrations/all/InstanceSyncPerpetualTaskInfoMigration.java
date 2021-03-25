@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -36,7 +36,7 @@ public class InstanceSyncPerpetualTaskInfoMigration implements Migration {
         final InstanceSyncPerpetualTaskInfo next = it.next();
         try {
           final List<String> perpetualTaskIds = next.getPerpetualTaskIds();
-          if (isNotEmpty(perpetualTaskIds) && perpetualTaskIds.size() > 1) {
+          if (hasSome(perpetualTaskIds) && perpetualTaskIds.size() > 1) {
             final List<String> distinctPerpetualTaskIds = perpetualTaskIds.stream().distinct().collect(toList());
             if (distinctPerpetualTaskIds.size() < perpetualTaskIds.size()) {
               wingsPersistence.updateField(InstanceSyncPerpetualTaskInfo.class, next.getUuid(),

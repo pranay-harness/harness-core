@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
@@ -79,7 +79,7 @@ public class ArtifactVariableYamlHelper {
   public List<String> computeAllowedList(
       String accountId, List<AllowedValueYaml> allowedValueYamlList, String artifactVariableName) {
     List<String> allowedList = new ArrayList<>();
-    if (isNotEmpty(allowedValueYamlList)) {
+    if (hasSome(allowedValueYamlList)) {
       for (AllowedValueYaml allowedValueYaml : allowedValueYamlList) {
         if (allowedValueYaml instanceof ArtifactStreamAllowedValueYaml) {
           ArtifactStreamAllowedValueYaml artifactStreamAllowedValueYaml =

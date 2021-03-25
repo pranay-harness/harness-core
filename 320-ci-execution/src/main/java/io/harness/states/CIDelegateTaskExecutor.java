@@ -1,8 +1,9 @@
 package io.harness.states;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.TaskParameters;
@@ -50,7 +51,7 @@ public class CIDelegateTaskExecutor {
   }
 
   private TaskParameters extractTaskParameters(TaskData taskData) {
-    if (taskData == null || EmptyPredicate.isEmpty(taskData.getParameters())) {
+    if (taskData == null || hasNone(taskData.getParameters())) {
       return null;
     }
     if (taskData.getParameters()[0] instanceof TaskParameters) {

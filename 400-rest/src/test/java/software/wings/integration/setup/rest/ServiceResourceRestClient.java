@@ -1,6 +1,6 @@
 package software.wings.integration.setup.rest;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.integration.SeedData.randomText;
 import static software.wings.utils.ArtifactType.DOCKER;
@@ -75,7 +75,7 @@ public class ServiceResourceRestClient {
     RestResponse<PageResponse<Service>> response =
         userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
             .get(new GenericType<RestResponse<PageResponse<Service>>>() {});
-    return isEmpty(response.getResource()) ? null : response.getResource().get(0);
+    return hasNone(response.getResource()) ? null : response.getResource().get(0);
   }
 
   public Service getService(Client client, String userToken, String appId, String serviceId) {

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -46,7 +46,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           log.info("Artifact Streams: {} updated", i);
         }
-        if (isEmpty(nexusArtifactStream.getArtifactPaths())) {
+        if (hasNone(nexusArtifactStream.getArtifactPaths())) {
           SettingAttribute settingAttribute = settingsService.get(nexusArtifactStream.getSettingId());
           if (settingAttribute != null && settingAttribute.getValue() != null
               && settingAttribute.getValue() instanceof NexusConfig) {

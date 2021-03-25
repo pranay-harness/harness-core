@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -27,7 +27,7 @@ public class PreferenceUserIdRemoveDollarSignMigration implements Migration {
       while (records.hasNext()) {
         Preference preference = records.next();
         String userId = preference.getUserId();
-        if (!isEmpty(userId) && userId.endsWith("$")) {
+        if (!hasNone(userId) && userId.endsWith("$")) {
           String newUserId = userId.substring(0, userId.length() - 1);
           preference.setUserId(newUserId);
           wingsPersistence.save(preference);

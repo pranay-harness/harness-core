@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.metrics.RiskLevel.NA;
@@ -279,12 +279,12 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     analysisRecord.decompress(false);
     experimentalAnalysisRecord.decompress(false);
 
-    if (isEmpty(analysisRecord.getTransactions())) {
+    if (hasNone(analysisRecord.getTransactions())) {
       log.info("No transactions recorded for actual analysis of state execution id: {}", stateExecutionId);
       throw new InvalidRequestException("No transactions recorded for actual analysis");
     }
 
-    if (isEmpty(experimentalAnalysisRecord.getTransactions())) {
+    if (hasNone(experimentalAnalysisRecord.getTransactions())) {
       log.info("Experimental transactions not found: {}", stateExecutionId);
       throw new InvalidRequestException("No transactions recorded for experimental analysis");
     }
@@ -295,7 +295,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     RiskLevel riskLevel = NA;
     RiskLevel experimentalRiskLevel = NA;
 
-    if (isNotEmpty(metricAnalysis)) {
+    if (hasSome(metricAnalysis)) {
       riskLevel =
           Collections.max(metricAnalysis, Comparator.comparingInt(analysis -> analysis.getRiskLevel().getRisk()))
               .getRiskLevel();
@@ -314,7 +314,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
 
   private void updateMetricNameForDynatrace(
       List<ExperimentalMetricAnalysis> metricAnalysis, ExperimentalMetricRecord metricRecord) {
-    if (metricRecord.getStateType() == StateType.DYNA_TRACE && !isEmpty(metricAnalysis)) {
+    if (metricRecord.getStateType() == StateType.DYNA_TRACE && !hasNone(metricAnalysis)) {
       for (ExperimentalMetricAnalysis analysis : metricAnalysis) {
         String metricName = analysis.getMetricName();
         String[] split = metricName.split(":");
@@ -341,7 +341,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     for (Map.Entry<String, TimeSeriesMLMetricSummary> metricSummaryEntry : txnSummary.getMetrics().entrySet()) {
       TimeSeriesMLMetricSummary metricSummary = metricSummaryEntry.getValue();
       TimeSeriesMLMetricSummary experimentalMetricSummary =
-          experimentalTxnSummary == null || isEmpty(experimentalTxnSummary.getMetrics())
+          experimentalTxnSummary == null || hasNone(experimentalTxnSummary.getMetrics())
           ? null
           : experimentalTxnSummary.getMetrics().get(metricSummaryEntry.getKey());
 
@@ -450,7 +450,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     }
 
     RiskLevel riskLevel = RiskLevel.NA;
-    String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
+    String analysisSummaryMsg = hasNone(analysisRecord.getAnalysisSummaryMessage())
         ? analysisSummary.getControlClusters().isEmpty()
             ? "No baseline data for the given queries. This will be baseline for the next run."
             : analysisSummary.getTestClusters().isEmpty()
@@ -462,7 +462,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
     int lowRiskClusters = 0;
-    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+    if (hasSome(analysisSummary.getUnknownClusters())) {
       for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
         if (clusterSummary.getScore() > HIGH_RISK_THRESHOLD) {
           ++highRiskClusters;
@@ -526,13 +526,13 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
             dataStoreService.list(ExperimentalMessageComparisonResult.class, comparisonResultPageRequest);
         log.info("Got {} comparison results from GDS for msg pairs to vote. serviceID {}, cvConfigId {}",
             comparisonResults.size(), serviceId, cvConfiguration.getUuid());
-        if (isNotEmpty(comparisonResults)) {
+        if (hasSome(comparisonResults)) {
           for (ExperimentalMessageComparisonResult result : comparisonResults) {
             if (messagesToShow.size() >= 10) {
               break;
             }
 
-            if (isEmpty(result.getUserVotes())) {
+            if (hasNone(result.getUserVotes())) {
               messagesToShow.add(result);
               continue;
             }
@@ -552,7 +552,7 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
   @Override
   public boolean saveMessagePairsToVote(String serviceId, Map<String, String> userVotes) {
     User currentUser = UserThreadLocal.get();
-    if (isNotEmpty(userVotes)) {
+    if (hasSome(userVotes)) {
       List<ExperimentalMessageComparisonResult> resultsToSave = new ArrayList<>();
       userVotes.forEach((uuid, vote) -> {
         ExperimentalMessageComparisonResult result =

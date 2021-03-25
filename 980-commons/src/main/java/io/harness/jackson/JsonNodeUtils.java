@@ -1,10 +1,10 @@
 package io.harness.jackson;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,7 +44,7 @@ public class JsonNodeUtils {
   }
 
   public static JsonNode deletePropertiesInJsonNode(ObjectNode jsonNode, String... properties) {
-    if (isEmpty(properties) || jsonNode == null) {
+    if (hasNone(properties) || jsonNode == null) {
       return jsonNode;
     }
     for (String property : properties) {
@@ -56,7 +56,7 @@ public class JsonNodeUtils {
   }
 
   public static JsonNode updatePropertiesInJsonNode(ObjectNode jsonNode, Map<String, String> properties) {
-    if (isEmpty(properties) || jsonNode == null) {
+    if (hasNone(properties) || jsonNode == null) {
       return jsonNode;
     }
     for (Map.Entry<String, String> property : properties.entrySet()) {
@@ -68,7 +68,7 @@ public class JsonNodeUtils {
   }
 
   public static JsonNode setPropertiesInJsonNodeWithArrayKey(ObjectNode jsonNode, String key, String... values) {
-    if (isEmpty(key) || jsonNode == null) {
+    if (hasNone(key) || jsonNode == null) {
       return jsonNode;
     }
     if (jsonNode.has(key)) {
@@ -93,12 +93,12 @@ public class JsonNodeUtils {
 
   // In case key is arraynode values are added to array.
   public static JsonNode upsertPropertyInObjectNode(JsonNode objectNode, String key, String... values) {
-    if (isEmpty(key) || objectNode == null) {
+    if (hasNone(key) || objectNode == null) {
       return objectNode;
     }
 
     List<String> valuesList = new ArrayList<>(Arrays.asList(values));
-    if (isEmpty(valuesList)) {
+    if (hasNone(valuesList)) {
       return objectNode;
     }
     final JsonNode keyNode = objectNode.get(key);
@@ -188,7 +188,7 @@ public class JsonNodeUtils {
 
     Map<String, JsonNode> map = new HashMap<>();
     field.fields().forEachRemaining(f -> {
-      if (EmptyPredicate.isNotEmpty(f.getKey()) && !isNull(f.getValue())) {
+      if (hasSome(f.getKey()) && !isNull(f.getValue())) {
         map.put(f.getKey(), f.getValue());
       }
     });

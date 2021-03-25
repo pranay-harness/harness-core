@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -45,7 +45,7 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    if (isNotEmpty(yaml.getUsername()) && isNotEmpty(yaml.getUsernameSecretId())) {
+    if (hasSome(yaml.getUsername()) && hasSome(yaml.getUsernameSecretId())) {
       throw new InvalidRequestException("Cannot set both value and secret reference for username field", USER);
     }
 

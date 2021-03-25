@@ -1,11 +1,11 @@
 package software.wings.features;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.security.UserGroup;
 import software.wings.features.api.FeatureRestrictions;
@@ -51,7 +51,7 @@ public class SlackNotificationFeature extends AbstractNotificationFeature {
 
   private static boolean hasSlack(UserGroup userGroup) {
     return userGroup.getNotificationSettings() != null && userGroup.getNotificationSettings().getSlackConfig() != null
-        && !EmptyPredicate.isEmpty(userGroup.getNotificationSettings().getSlackConfig().getOutgoingWebhookUrl());
+        && !hasNone(userGroup.getNotificationSettings().getSlackConfig().getOutgoingWebhookUrl());
   }
 
   private PageResponse<UserGroup> getUserGroups(String accountId) {

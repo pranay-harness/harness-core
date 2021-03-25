@@ -1,6 +1,6 @@
 package io.harness.pms.cdng.artifact.bean.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.cdng.artifact.bean.ArtifactSpecWrapperPms;
 import io.harness.pms.cdng.artifact.bean.SidecarArtifactWrapperPms;
@@ -31,7 +31,7 @@ public class ArtifactListConfigPms {
       this.primary.getArtifactConfigPms().setPrimaryArtifact(true);
     }
     this.sidecars = sidecars;
-    if (isNotEmpty(sidecars)) {
+    if (hasSome(sidecars)) {
       for (SidecarArtifactWrapperPms sidecar : this.sidecars) {
         sidecar.getArtifactConfigPms().setIdentifier(sidecar.getIdentifier());
         sidecar.getArtifactConfigPms().setPrimaryArtifact(false);

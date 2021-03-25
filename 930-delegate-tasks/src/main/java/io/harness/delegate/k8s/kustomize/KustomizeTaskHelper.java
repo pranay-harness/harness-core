@@ -1,6 +1,6 @@
 package io.harness.delegate.k8s.kustomize;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -60,7 +60,7 @@ public class KustomizeTaskHelper {
   @NotNull
   public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, String pluginRootDir,
       @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, LogCallback executionLogCallback) {
-    if (isEmpty(filesToApply)) {
+    if (hasNone(filesToApply)) {
       throw new InvalidRequestException("Apply files can't be empty", USER);
     }
     if (filesToApply.size() > 1) {

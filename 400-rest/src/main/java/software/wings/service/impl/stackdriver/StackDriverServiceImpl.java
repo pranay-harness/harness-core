@@ -1,6 +1,6 @@
 package software.wings.service.impl.stackdriver;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -83,7 +83,7 @@ public class StackDriverServiceImpl implements StackDriverService {
   @Override
   public void validateMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
     Map<String, String> errorMap = StackDriverState.validateMetricDefinitions(metricDefinitions, true);
-    if (isNotEmpty(errorMap)) {
+    if (hasSome(errorMap)) {
       throw new VerificationOperationException(
           ErrorCode.STACKDRIVER_CONFIGURATION_ERROR, errorMap.get(errorMap.keySet().iterator().next()));
     }

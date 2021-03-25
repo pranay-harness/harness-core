@@ -1,6 +1,6 @@
 package io.harness.pms.filter.creation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 
@@ -29,13 +29,13 @@ public class FilterCreationBlobResponseUtils {
   }
 
   public void mergeFilters(FilterCreationResponseWrapper response, Map<String, String> filters) {
-    if (isNotEmpty(response.getResponse().getFilter())) {
+    if (hasSome(response.getResponse().getFilter())) {
       filters.put(response.getServiceName(), response.getResponse().getFilter());
     }
   }
 
   public void mergeReferredEntities(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getReferredEntitiesList())) {
+    if (hasSome(response.getReferredEntitiesList())) {
       builder.addAllReferredEntities(response.getReferredEntitiesList());
     }
   }
@@ -48,7 +48,7 @@ public class FilterCreationBlobResponseUtils {
 
   public void mergeResolvedDependencies(
       FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getResolvedDependenciesMap())) {
+    if (hasSome(response.getResolvedDependenciesMap())) {
       response.getResolvedDependenciesMap().forEach((key, value) -> {
         builder.putResolvedDependencies(key, value);
         builder.removeDependencies(key);
@@ -57,7 +57,7 @@ public class FilterCreationBlobResponseUtils {
   }
 
   public void mergeDependencies(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getDependenciesMap())) {
+    if (hasSome(response.getDependenciesMap())) {
       response.getDependenciesMap().forEach((key, value) -> {
         if (!builder.containsResolvedDependencies(key)) {
           builder.putDependencies(key, value);

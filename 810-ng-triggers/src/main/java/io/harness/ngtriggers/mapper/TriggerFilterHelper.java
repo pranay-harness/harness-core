@@ -1,12 +1,11 @@
 package io.harness.ngtriggers.mapper;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
@@ -25,16 +24,16 @@ public class TriggerFilterHelper {
   public Criteria createCriteriaForGetList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String targetIdentifier, NGTriggerType type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountIdentifier)) {
+    if (hasSome(accountIdentifier)) {
       criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(NGTriggerEntityKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(NGTriggerEntityKeys.projectIdentifier).is(projectIdentifier);
     }
-    if (isNotEmpty(targetIdentifier)) {
+    if (hasSome(targetIdentifier)) {
       criteria.and(NGTriggerEntityKeys.targetIdentifier).is(targetIdentifier);
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
@@ -42,7 +41,7 @@ public class TriggerFilterHelper {
     if (type != null) {
       criteria.and(NGTriggerEntityKeys.type).is(type);
     }
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(NGTriggerEntityKeys.identifier)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
@@ -74,16 +73,16 @@ public class TriggerFilterHelper {
   public Criteria createCriteriaForWebhookTriggerGetList(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, List<String> repoURLs, String searchTerm, boolean deleted, boolean enabledOnly) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountIdentifier)) {
+    if (hasSome(accountIdentifier)) {
       criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(NGTriggerEntityKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(NGTriggerEntityKeys.projectIdentifier).is(projectIdentifier);
     }
-    if (isNotEmpty(repoURLs)) {
+    if (hasSome(repoURLs)) {
       criteria.and("metadata.webhook.repoURL").in(repoURLs);
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
@@ -92,7 +91,7 @@ public class TriggerFilterHelper {
       criteria.and(NGTriggerEntityKeys.enabled).is(true);
     }
 
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(NGTriggerEntityKeys.identifier)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),

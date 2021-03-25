@@ -1,7 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
@@ -51,7 +52,6 @@ import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import io.harness.beans.Encryptable;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
@@ -275,7 +275,7 @@ public class SettingServiceHelper {
 
             List<Field> declaredAndInheritedFields =
                 ReflectionUtils.getDeclaredAndInheritedFields(obj.getClass(), f -> f.getName().equals(flagFiledName));
-            if (isNotEmpty(declaredAndInheritedFields)) {
+            if (hasSome(declaredAndInheritedFields)) {
               Object flagFieldValue = ReflectionUtils.getFieldValue(obj, declaredAndInheritedFields.get(0));
               return flagFieldValue != null && (Boolean) flagFieldValue;
             }
@@ -292,7 +292,7 @@ public class SettingServiceHelper {
     }
 
     List<Field> encryptedFields = SettingServiceHelper.getAllEncryptedFields(obj);
-    if (EmptyPredicate.isEmpty(encryptedFields)) {
+    if (hasNone(encryptedFields)) {
       return Collections.emptyList();
     }
 
@@ -311,13 +311,13 @@ public class SettingServiceHelper {
   }
 
   public void updateUsageRestrictions(SettingAttribute settingAttribute) {
-    if (isNotEmpty(getUsedSecretIds(settingAttribute))) {
+    if (hasSome(getUsedSecretIds(settingAttribute))) {
       settingAttribute.setUsageRestrictions(null);
     }
   }
 
   public UsageRestrictions getUsageRestrictions(SettingAttribute settingAttribute) {
-    if (isNotEmpty(getUsedSecretIds(settingAttribute))) {
+    if (hasSome(getUsedSecretIds(settingAttribute))) {
       return null;
     }
 
@@ -327,7 +327,7 @@ public class SettingServiceHelper {
   public void validateUsageRestrictionsOnEntitySave(
       SettingAttribute settingAttribute, String accountId, UsageRestrictions newUsageRestrictions) {
     Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
-    if (isNotEmpty(usedSecretIds)) {
+    if (hasSome(usedSecretIds)) {
       if (!secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId)) {
         throw new UnauthorizedUsageRestrictionsException(WingsException.USER);
       }
@@ -341,7 +341,7 @@ public class SettingServiceHelper {
   public void validateUsageRestrictionsOnEntityUpdate(SettingAttribute settingAttribute, String accountId,
       UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions) {
     Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
-    if (isNotEmpty(usedSecretIds)) {
+    if (hasSome(usedSecretIds)) {
       if (!secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId)) {
         throw new UnauthorizedUsageRestrictionsException(WingsException.USER);
       }
@@ -355,7 +355,7 @@ public class SettingServiceHelper {
   public boolean userHasPermissionsToChangeEntity(
       SettingAttribute settingAttribute, String accountId, UsageRestrictions entityUsageRestrictions) {
     Set<String> usedSecretIds = getUsedSecretIds(settingAttribute);
-    if (isNotEmpty(usedSecretIds)) {
+    if (hasSome(usedSecretIds)) {
       return secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId);
     }
 
@@ -368,7 +368,7 @@ public class SettingServiceHelper {
     if (hasReferencedSecrets(settingAttribute)) {
       List<String> secretIds = emptyIfNull(settingAttribute.fetchRelevantSecretIds());
       return secretIds.stream()
-          .filter(secretId -> isNotEmpty(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
+          .filter(secretId -> hasSome(secretId) && !YamlHelper.ENCRYPTED_VALUE_STR.equals(secretId))
           .collect(Collectors.toSet());
     }
 

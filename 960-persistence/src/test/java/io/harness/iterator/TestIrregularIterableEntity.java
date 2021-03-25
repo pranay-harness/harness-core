@@ -1,6 +1,6 @@
 package io.harness.iterator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Arrays.asList;
 
@@ -22,7 +22,7 @@ public class TestIrregularIterableEntity implements PersistentIrregularIterable 
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return isEmpty(nextIterations) ? null : nextIterations.get(0);
+    return hasNone(nextIterations) ? null : nextIterations.get(0);
   }
 
   @Override

@@ -1,11 +1,11 @@
 package software.wings.resources.graphql;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.limits.defaults.service.DefaultLimitsService.GRAPHQL_EXTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT;
 import static io.harness.limits.defaults.service.DefaultLimitsService.GRAPHQL_INTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT;
 import static io.harness.limits.defaults.service.DefaultLimitsService.GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE;
 
 import io.harness.configuration.DeployMode;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -78,7 +78,7 @@ public class GraphQLRateLimiter {
       if (globalRateLimitReached) {
         log.info("Global {} GraphQL API call rate limit reached", adj);
         return true;
-      } else if (EmptyPredicate.isNotEmpty(accountId)) {
+      } else if (hasSome(accountId)) {
         boolean accountRateLimitReached =
             getRateLimiterForAccount(accountId, isInternalGraphQLCall).overLimitWhenIncremented(accountId);
         if (accountRateLimitReached) {

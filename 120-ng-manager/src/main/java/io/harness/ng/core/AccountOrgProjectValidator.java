@@ -1,6 +1,6 @@
 package io.harness.ng.core;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import io.harness.exception.InvalidRequestException;
@@ -24,16 +24,16 @@ public class AccountOrgProjectValidator {
   @DefaultOrganization
   public boolean isPresent(
       String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
-    if (isEmpty(accountIdentifier)) {
+    if (hasNone(accountIdentifier)) {
       return true;
-    } else if (isEmpty(orgIdentifier)) {
+    } else if (hasNone(orgIdentifier)) {
       try {
         return getResponse(accountClient.getAccountDTO(accountIdentifier)) != null;
       } catch (InvalidRequestException exception) {
         log.error(String.format("Account with accountIdentifier %s not found", accountIdentifier));
         return false;
       }
-    } else if (isEmpty(projectIdentifier)) {
+    } else if (hasNone(projectIdentifier)) {
       return organizationService.get(accountIdentifier, orgIdentifier).isPresent();
     } else {
       return projectService.get(accountIdentifier, orgIdentifier, projectIdentifier).isPresent();

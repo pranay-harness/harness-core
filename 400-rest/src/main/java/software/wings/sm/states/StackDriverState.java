@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -64,7 +64,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
     this.metricDefinitions = metricDefinitions;
-    if (isNotEmpty(metricDefinitions)) {
+    if (hasSome(metricDefinitions)) {
       metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
     }
   }
@@ -224,7 +224,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   }
 
   public static String getMetricTypeForMetric(StackDriverMetricCVConfiguration cvConfiguration, String metricName) {
-    if (cvConfiguration != null && isNotEmpty(metricName)) {
+    if (cvConfiguration != null && hasSome(metricName)) {
       return cvConfiguration.getMetricDefinitions()
           .stream()
           .filter(timeSeries -> timeSeries.getMetricName().equals(metricName))
@@ -238,7 +238,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   public static Map<String, String> validateMetricDefinitions(
       List<StackDriverMetricDefinition> metricDefinitions, boolean serviceLevel) {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(metricDefinitions)) {
+    if (hasNone(metricDefinitions)) {
       invalidFields.put("Invalid Setup: ", "No metrics given to analyze.");
       return invalidFields;
     }
@@ -248,7 +248,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     metricDefinitions.forEach(timeSeries -> {
       MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
       final String filter = timeSeries.getFilter();
-      if (isEmpty(filter)) {
+      if (hasNone(filter)) {
         invalidFields.put("Invalid metrics: ",
             "No Filter JSON specified for group: " + timeSeries.getTxnName()
                 + " and metric: " + timeSeries.getMetricName());

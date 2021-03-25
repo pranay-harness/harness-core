@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster.dao;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeValidate;
@@ -52,7 +52,7 @@ public class ClusterRecordDao {
     Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class, excludeValidate)
                                      .field(ClusterRecordKeys.accountId)
                                      .equal(accountId);
-    if (!isEmpty(cloudProviderId)) {
+    if (!hasNone(cloudProviderId)) {
       query.field(cloudProviderField).equal(cloudProviderId);
     }
     return query.asList(new FindOptions().skip(startIndex).limit(count));

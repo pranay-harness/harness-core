@@ -1,9 +1,10 @@
 package io.harness.utils;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
 
@@ -30,6 +31,6 @@ public class FieldWithPlainTextOrSecretValueHelper {
 
   public String getSecretAsStringFromPlainTextOrSecretRef(String plainText, SecretRefData secretRefData) {
     char[] secretValue = getValueFromPlainTextOrSecretRef(plainText, secretRefData);
-    return EmptyPredicate.isNotEmpty(secretValue) ? String.valueOf(secretValue) : null;
+    return hasSome(secretValue) ? String.valueOf(secretValue) : null;
   }
 }

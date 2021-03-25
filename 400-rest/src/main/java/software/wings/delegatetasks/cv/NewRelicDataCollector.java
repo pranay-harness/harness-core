@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -220,7 +220,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
   private void getApdexMetrics(NewRelicApplicationInstance node, Set<String> metricNames, MetricElementTable records)
       throws IOException {
     Set<String> apdexMetricNames = getApdexMetricNames(metricNames);
-    if (isEmpty(apdexMetricNames)) {
+    if (hasNone(apdexMetricNames)) {
       return;
     }
     NewRelicMetricData metricData = getMetricData(getApdexMetricNames(metricNames), node);
@@ -247,7 +247,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
 
   private void getApdexMetrics(Set<String> metricNames, MetricElementTable records) throws IOException {
     Set<String> apdexMetricNames = getApdexMetricNames(metricNames);
-    if (isEmpty(apdexMetricNames)) {
+    if (hasNone(apdexMetricNames)) {
       return;
     }
     NewRelicMetricData metricData = getMetricDataByApplication(getApdexMetricNames(metricNames));
@@ -296,7 +296,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
         // set from time to the timestamp
         long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
         String host = hostname.orElseGet(() -> DEFAULT_GROUP_NAME);
-        String groupName = isEmpty(dataCollectionInfo.getHostsToGroupNameMap().get(host))
+        String groupName = hasNone(dataCollectionInfo.getHostsToGroupNameMap().get(host))
             ? DEFAULT_GROUP_NAME
             : dataCollectionInfo.getHostsToGroupNameMap().get(host);
         MetricElement metricElement = MetricElement.builder()
@@ -375,7 +375,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
                   "Fetching application instances from " + dataCollectionInfo.getNewRelicConfig().getNewRelicUrl(),
                   request)
               .getApplication_instances();
-      if (isEmpty(applicationInstances)) {
+      if (hasNone(applicationInstances)) {
         break;
       } else {
         rv.addAll(applicationInstances);
@@ -396,7 +396,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
           dataCollectionExecutionContext
               .executeRequest("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl(), request)
               .getMetrics();
-      if (isNotEmpty(metrics)) {
+      if (hasSome(metrics)) {
         metrics.forEach(metric -> {
           if (metric.getName().startsWith(txnName)) {
             newRelicMetrics.add(metric);

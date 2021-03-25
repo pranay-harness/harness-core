@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -71,7 +71,7 @@ public class UpdateUserGroupDataFetcher
         userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
       }
       // We will throw a error whenever someone update the name, with which a usergroup already exists
-      if (!isEmpty(userGroups) && !userGroupIds.contains(userGroupId)) {
+      if (!hasNone(userGroups) && !userGroupIds.contains(userGroupId)) {
         throw new InvalidRequestException(String.format("A user group already exists with the name %s", name));
       }
       existingUserGroup.setName(name);

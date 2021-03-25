@@ -6,8 +6,8 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
@@ -95,7 +95,7 @@ public class PluginSettingUtils {
     String projectID =
         resolveStringParameter("projectID", "BuildAndPushGCR", identifier, stepInfo.getProjectID(), true);
     String registry = null;
-    if (isNotEmpty(host) && isNotEmpty(projectID)) {
+    if (hasSome(host) && hasSome(projectID)) {
       registry = format("%s/%s", trimTrailingCharacter(host, '/'), trimLeadingCharacter(projectID, '/'));
     }
     setMandatoryEnvironmentVariable(map, PLUGIN_REGISTRY, registry);
@@ -124,13 +124,13 @@ public class PluginSettingUtils {
 
     Map<String, String> buildArgs =
         resolveMapParameter("buildArgs", "BuildAndPushGCR", identifier, stepInfo.getBuildArgs(), false);
-    if (isNotEmpty(buildArgs)) {
+    if (hasSome(buildArgs)) {
       setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels =
         resolveMapParameter("labels", "BuildAndPushGCR", identifier, stepInfo.getLabels(), false);
-    if (isNotEmpty(labels)) {
+    if (hasSome(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
     return map;
@@ -141,7 +141,7 @@ public class PluginSettingUtils {
     String account = resolveStringParameter("account", "BuildAndPushECR", identifier, stepInfo.getAccount(), true);
     String region = resolveStringParameter("region", "BuildAndPushECR", identifier, stepInfo.getRegion(), true);
     String registry = null;
-    if (isNotEmpty(account) && isNotEmpty(region)) {
+    if (hasSome(account) && hasSome(region)) {
       registry = format(ECR_REGISTRY_PATTERN, account, region);
     }
 
@@ -170,13 +170,13 @@ public class PluginSettingUtils {
 
     Map<String, String> buildArgs =
         resolveMapParameter("buildArgs", "BuildAndPushECR", identifier, stepInfo.getBuildArgs(), false);
-    if (isNotEmpty(buildArgs)) {
+    if (hasSome(buildArgs)) {
       setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels =
         resolveMapParameter("labels", "BuildAndPushECR", identifier, stepInfo.getLabels(), false);
-    if (isNotEmpty(labels)) {
+    if (hasSome(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
     return map;
@@ -207,12 +207,12 @@ public class PluginSettingUtils {
 
     Map<String, String> buildArgs =
         resolveMapParameter("buildArgs", "DockerHub", identifier, stepInfo.getBuildArgs(), false);
-    if (isNotEmpty(buildArgs)) {
+    if (hasSome(buildArgs)) {
       setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels = resolveMapParameter("labels", "DockerHub", identifier, stepInfo.getLabels(), false);
-    if (isNotEmpty(labels)) {
+    if (hasSome(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
 
@@ -404,7 +404,7 @@ public class PluginSettingUtils {
 
   // converts map "key1":"value1","key2":"value2" to string "key1=value1,key2=value2"
   private String mapToStringSlice(Map<String, String> map) {
-    if (isEmpty(map)) {
+    if (hasNone(map)) {
       return "";
     }
     StringBuilder mapAsString = new StringBuilder();
@@ -417,7 +417,7 @@ public class PluginSettingUtils {
 
   // converts list "value1", "value2" to string "value1,value2"
   private String listToStringSlice(List<String> stringList) {
-    if (isEmpty(stringList)) {
+    if (hasNone(stringList)) {
       return "";
     }
     StringBuilder listAsString = new StringBuilder();
@@ -429,13 +429,13 @@ public class PluginSettingUtils {
   }
 
   private static void setOptionalEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return;
     }
     envVarMap.put(var, value);
   }
   private static void setMandatoryEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       throw new InvalidArgumentsException(format("Environment variable %s can't be empty or null", var));
     }
     envVarMap.put(var, value);

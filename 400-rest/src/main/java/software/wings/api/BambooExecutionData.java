@@ -1,8 +1,8 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -52,8 +52,8 @@ public class BambooExecutionData extends StateExecutionData implements DelegateT
     putNotNull(
         executionDetails, "planName", ExecutionDataValue.builder().displayName("Plan Name").value(planName).build());
 
-    if (isNotEmpty(parameters)) {
-      Map<String, String> parameterMap = isEmpty(parameters)
+    if (hasSome(parameters)) {
+      Map<String, String> parameterMap = hasNone(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "parameters",

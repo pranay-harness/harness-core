@@ -1,6 +1,6 @@
 package io.harness.pms.variables;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
@@ -27,7 +27,7 @@ public class VariableCreationBlobResponseUtils {
     return VariableMergeServiceResponse.builder()
         .yaml(yaml)
         .metadataMap(metadataMap)
-        .errorResponses(isNotEmpty(errorMessages) ? errorMessages : null)
+        .errorResponses(hasSome(errorMessages) ? errorMessages : null)
         .build();
   }
 
@@ -45,21 +45,21 @@ public class VariableCreationBlobResponseUtils {
 
   public static void mergeErrorResponses(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getErrorResponseList())) {
+    if (hasSome(otherResponse.getErrorResponseList())) {
       otherResponse.getErrorResponseList().forEach(builder::addErrorResponse);
     }
   }
 
   public void mergeYamlProperties(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getYamlPropertiesMap())) {
+    if (hasSome(otherResponse.getYamlPropertiesMap())) {
       otherResponse.getYamlPropertiesMap().forEach(builder::putYamlProperties);
     }
   }
 
   public void mergeResolvedDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getResolvedDependenciesMap())) {
+    if (hasSome(otherResponse.getResolvedDependenciesMap())) {
       otherResponse.getResolvedDependenciesMap().forEach((key, value) -> {
         builder.putResolvedDependencies(key, value);
         builder.removeDependencies(key);
@@ -69,7 +69,7 @@ public class VariableCreationBlobResponseUtils {
 
   public void mergeDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getDependenciesMap())) {
+    if (hasSome(otherResponse.getDependenciesMap())) {
       otherResponse.getDependenciesMap().forEach((key, value) -> {
         if (!builder.containsResolvedDependencies(key)) {
           builder.putDependencies(key, value);

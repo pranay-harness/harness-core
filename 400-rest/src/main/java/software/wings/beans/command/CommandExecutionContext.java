@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.govern.Switch.unhandled;
 
@@ -245,7 +245,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                              .winRmConnectionAttributes(winrmConnectionAttributes)
                              .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
                              .build());
-        if (isNotEmpty(delegateSelectors)) {
+        if (hasSome(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
         }
@@ -266,7 +266,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                              .sshExecutionCredential((SSHExecutionCredential) executionCredential)
                              .sshVaultConfig(sshVaultConfig)
                              .build());
-        if (isNotEmpty(delegateSelectors)) {
+        if (hasSome(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
         }

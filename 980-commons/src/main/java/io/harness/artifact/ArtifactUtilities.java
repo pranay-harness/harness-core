@@ -1,7 +1,7 @@
 package io.harness.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -38,9 +38,9 @@ public class ArtifactUtilities {
   }
 
   public static String getNexusRegistryUrl(String nexusUrl, String dockerPort, String dockerRegistryUrl) {
-    if (isEmpty(dockerRegistryUrl)) {
+    if (hasNone(dockerRegistryUrl)) {
       String registryUrl = extractNexusDockerRegistryUrl(nexusUrl);
-      if (isNotEmpty(dockerPort)) {
+      if (hasSome(dockerPort)) {
         registryUrl = registryUrl + ":" + dockerPort;
       }
       return registryUrl;
@@ -61,7 +61,7 @@ public class ArtifactUtilities {
 
   public static String getNexusRepositoryName(
       String nexusUrl, String dockerPort, String dockerRegistryUrl, String imageName) {
-    if (isEmpty(dockerRegistryUrl)) {
+    if (hasNone(dockerRegistryUrl)) {
       String registryUrl = getNexusRegistryUrl(nexusUrl, dockerPort, dockerRegistryUrl);
       String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
       return namePrefix + "/" + imageName;

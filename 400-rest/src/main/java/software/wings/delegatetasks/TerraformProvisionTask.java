@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.LogLevel.ERROR;
@@ -175,14 +175,14 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     GitOperationContext gitOperationContext =
         GitOperationContext.builder().gitConfig(gitConfig).gitConnectorId(sourceRepoSettingId).build();
 
-    if (isNotEmpty(gitConfig.getBranch())) {
+    if (hasSome(gitConfig.getBranch())) {
       saveExecutionLog("Branch: " + gitConfig.getBranch(), CommandExecutionStatus.RUNNING, INFO, logCallback);
     }
     saveExecutionLog(
         "\nNormalized Path: " + parameters.getScriptPath(), CommandExecutionStatus.RUNNING, INFO, logCallback);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 
-    if (isNotEmpty(gitConfig.getReference())) {
+    if (hasSome(gitConfig.getReference())) {
       saveExecutionLog(format("%nInheriting git state at commit id: [%s]", gitConfig.getReference()),
           CommandExecutionStatus.RUNNING, INFO, logCallback);
     }
@@ -248,15 +248,15 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       String varParams = inlineCommandBuffer.toString();
       String uiLogs = inlineUILogBuffer.toString();
 
-      if (isNotEmpty(parameters.getBackendConfigs()) || isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+      if (hasSome(parameters.getBackendConfigs()) || hasSome(parameters.getEncryptedBackendConfigs())) {
         try (BufferedWriter writer =
                  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfBackendConfigsFile), "UTF-8"))) {
-          if (isNotEmpty(parameters.getBackendConfigs())) {
+          if (hasSome(parameters.getBackendConfigs())) {
             for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
               saveVariable(writer, entry.getKey(), entry.getValue());
             }
           }
-          if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+          if (hasSome(parameters.getEncryptedBackendConfigs())) {
             for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
               String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
               saveVariable(writer, entry.getKey(), value);
@@ -292,7 +292,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           code = executeShellCommand(
               format("echo \"no\" | %s", command), scriptDirectory, parameters, envVars, activityLogOutputStream);
 
-          if (isNotEmpty(parameters.getWorkspace())) {
+          if (hasSome(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
@@ -350,7 +350,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           saveExecutionLog(commandToLog, CommandExecutionStatus.RUNNING, INFO, logCallback);
           code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
 
-          if (isNotEmpty(parameters.getWorkspace())) {
+          if (hasSome(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
@@ -539,7 +539,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   private String collectEnvVarKeys(Map<String, String> envVars) {
-    if (isNotEmpty(envVars)) {
+    if (hasSome(envVars)) {
       return envVars.keySet().stream().collect(Collectors.joining(", "));
     }
     return "";
@@ -548,13 +548,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private List<NameValuePair> getAllVariables(
       Map<String, String> variables, Map<String, EncryptedDataDetail> encryptedVariables) {
     List<NameValuePair> allVars = new ArrayList<>();
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       for (Entry<String, String> entry : variables.entrySet()) {
         allVars.add(new NameValuePair(entry.getKey(), entry.getValue(), Type.TEXT.name()));
       }
     }
 
-    if (isNotEmpty(encryptedVariables)) {
+    if (hasSome(encryptedVariables)) {
       for (Entry<String, EncryptedDataDetail> entry : encryptedVariables.entrySet()) {
         allVars.add(new NameValuePair(
             entry.getKey(), entry.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
@@ -586,10 +586,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private ImmutableMap<String, String> getEnvironmentVariables(TerraformProvisionParameters parameters)
       throws IOException {
     ImmutableMap.Builder<String, String> envVars = ImmutableMap.builder();
-    if (isNotEmpty(parameters.getEnvironmentVariables())) {
+    if (hasSome(parameters.getEnvironmentVariables())) {
       envVars.putAll(parameters.getEnvironmentVariables());
     }
-    if (isNotEmpty(parameters.getEncryptedEnvironmentVariables())) {
+    if (hasSome(parameters.getEncryptedEnvironmentVariables())) {
       for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedEnvironmentVariables().entrySet()) {
         String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
         envVars.put(entry.getKey(), value);
@@ -624,19 +624,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @VisibleForTesting
   public void getCommandLineVariableParams(TerraformProvisionParameters parameters, File tfVariablesFile,
       StringBuilder executeParams, StringBuilder uiLogParams) throws IOException {
-    if (isEmpty(parameters.getVariables()) && isEmpty(parameters.getEncryptedVariables())) {
+    if (hasNone(parameters.getVariables()) && hasNone(parameters.getEncryptedVariables())) {
       FileUtils.deleteQuietly(tfVariablesFile);
       return;
     }
     String variableFormatString = " -var='%s=%s' ";
-    if (isNotEmpty(parameters.getVariables())) {
+    if (hasSome(parameters.getVariables())) {
       for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
         executeParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
         uiLogParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
       }
     }
 
-    if (isNotEmpty(parameters.getEncryptedVariables())) {
+    if (hasSome(parameters.getEncryptedVariables())) {
       for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
         executeParams.append(format(variableFormatString, entry.getKey(),
             String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false))));
@@ -701,7 +701,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @VisibleForTesting
   public String getTargetArgs(List<String> targets) {
     StringBuilder targetArgs = new StringBuilder();
-    if (isNotEmpty(targets)) {
+    if (hasSome(targets)) {
       for (String target : targets) {
         targetArgs.append("-target=" + target + " ");
       }
@@ -710,7 +710,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   private File getTerraformStateFile(String scriptDirectory, String workspace) {
-    File tfStateFile = isEmpty(workspace)
+    File tfStateFile = hasNone(workspace)
         ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
         : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
 

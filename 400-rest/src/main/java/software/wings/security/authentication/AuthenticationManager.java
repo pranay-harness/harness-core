@@ -3,8 +3,8 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED;
 import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
@@ -100,7 +100,7 @@ public class AuthenticationManager {
       throw new WingsException(USER_DISABLED, USER);
     }
     AuthenticationMechanism authenticationMechanism;
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       // First check if the user is associated with the account.
       if (!userService.isUserAssignedToAccount(user, accountId)) {
         throw new InvalidRequestException("User is not assigned to account", USER);
@@ -191,7 +191,7 @@ public class AuthenticationManager {
     }
 
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
-        user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
+        user, hasNone(accountId) ? Optional.empty() : Optional.of(accountId));
     AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (null == authenticationMechanism) {
       authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
@@ -297,7 +297,7 @@ public class AuthenticationManager {
       String userName = decryptedData[0];
       String password = decryptedData[1];
 
-      if (isNotEmpty(accountId)) {
+      if (hasSome(accountId)) {
         User user = authenticationUtils.getUser(userName, USER);
         AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
         return defaultLoginInternal(userName, password, false, authenticationMechanism);

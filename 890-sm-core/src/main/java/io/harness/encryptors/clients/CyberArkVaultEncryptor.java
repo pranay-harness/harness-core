@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -66,7 +66,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateReference(String accountId, String path, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
+    return hasSome(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
   }
 
   @Override
@@ -100,7 +100,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
     // Sample query params: "Address=components;Username=svc_account" or
     // "Safe=Test;Folder=root\OS\Windows;Object=windows1"
 
-    if (isEmpty(query)) {
+    if (hasNone(query)) {
       String errorMessage =
           "Query parameter is mandatory but it's not present in the encrypted record for CyberArk secret manager "
           + cyberArkConfig.getUuid();
@@ -122,7 +122,7 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
       log.error("Failed to read secret from CyberArk", e);
     }
 
-    if (isNotEmpty(secretValue)) {
+    if (hasSome(secretValue)) {
       log.info("Done reading secret {} from CyberArk {} in {} ms.", query, cyberArkConfig.getCyberArkUrl(),
           System.currentTimeMillis() - startTime);
       return secretValue.toCharArray();

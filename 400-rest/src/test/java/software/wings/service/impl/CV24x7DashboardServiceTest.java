@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -335,7 +335,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     assertThat(summary.getUnknownClusters()).hasSize(10);
     LogMLClusterSummary feedbackCluster = null;
     for (LogMLClusterSummary clusterSummary : summary.getUnknownClusters()) {
-      if (isNotEmpty(clusterSummary.getLogMLFeedbackId())) {
+      if (hasSome(clusterSummary.getLogMLFeedbackId())) {
         feedbackCluster = clusterSummary;
         break;
       }

@@ -1,7 +1,7 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -39,7 +39,7 @@ public class CustomSecretsManagerValidationUtils {
   void validateName(@NotEmpty String name) {
     Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !_]+$");
 
-    if (isEmpty(name) || !nameValidator.matcher(name).find()) {
+    if (hasNone(name) || !nameValidator.matcher(name).find()) {
       String message =
           "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new InvalidArgumentsException(message, USER);
@@ -61,13 +61,13 @@ public class CustomSecretsManagerValidationUtils {
   }
 
   void validateConnectionAttributes(@NonNull CustomSecretsManagerConfig customSecretsManagerConfig) {
-    if (isEmpty(customSecretsManagerConfig.getCommandPath())) {
+    if (hasNone(customSecretsManagerConfig.getCommandPath())) {
       String message = "Command path for the custom secret manager cannot be empty";
       throw new InvalidArgumentsException(message, USER);
     }
 
     if (!customSecretsManagerConfig.isExecuteOnDelegate()) {
-      if (isEmpty(customSecretsManagerConfig.getHost())) {
+      if (hasNone(customSecretsManagerConfig.getHost())) {
         String message = "Target host cannot be empty when the secret has to be retrieved from another system.";
         throw new InvalidArgumentsException(message, USER);
       }

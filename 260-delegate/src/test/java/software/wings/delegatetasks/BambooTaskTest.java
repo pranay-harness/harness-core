@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -67,7 +68,7 @@ public class BambooTaskTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     Map<String, String> evaluatedParameters = Maps.newLinkedHashMap();
-    if (isNotEmpty(parameters)) {
+    if (hasSome(parameters)) {
       parameters.forEach(
           parameterEntry -> { evaluatedParameters.put(parameterEntry.getKey(), parameterEntry.getValue()); });
     }

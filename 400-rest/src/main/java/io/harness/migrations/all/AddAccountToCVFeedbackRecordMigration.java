@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -35,10 +35,10 @@ public class AddAccountToCVFeedbackRecordMigration implements Migration {
     List<CVFeedbackRecord> records = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     records.forEach(record -> {
       try {
-        if (isNotEmpty(records)) {
+        if (hasSome(records)) {
           String cvConfig = record.getCvConfigId();
           String stateExecId = record.getStateExecutionId();
-          if (isNotEmpty(cvConfig)) {
+          if (hasSome(cvConfig)) {
             CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfig);
             if (cvConfiguration != null) {
               record.setAccountId(cvConfiguration.getAccountId());

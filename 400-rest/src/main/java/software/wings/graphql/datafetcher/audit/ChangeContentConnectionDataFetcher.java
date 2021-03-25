@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.audit;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -33,7 +33,7 @@ public class ChangeContentConnectionDataFetcher
   @AuthRule(permissionType = PermissionType.AUDIT_VIEWER)
   public QLChangeContentConnection fetchConnection(List<QLChangeContentFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       if (filters.size() == 1 && null != filters.get(0)) {
         QLChangeContentFilter filter = filters.get(0);
         String changeSetId = filter.getChangeSetId();

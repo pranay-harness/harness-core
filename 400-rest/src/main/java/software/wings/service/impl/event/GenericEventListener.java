@@ -1,6 +1,6 @@
 package software.wings.service.impl.event;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
@@ -41,7 +41,7 @@ public class GenericEventListener extends QueueListener<GenericEvent> implements
   public void onMessage(GenericEvent event) {
     Collection<EventHandler> eventHandlers = handlerRegistry.get(event.getEvent().getEventType());
 
-    if (isEmpty(eventHandlers)) {
+    if (hasNone(eventHandlers)) {
       return;
     }
 

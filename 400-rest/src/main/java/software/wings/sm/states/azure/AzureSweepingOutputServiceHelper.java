@@ -1,6 +1,6 @@
 package software.wings.sm.states.azure;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.deployment.InstanceDetails.InstanceType.AZURE_VMSS;
 import static io.harness.deployment.InstanceDetails.InstanceType.AZURE_WEBAPP;
 
@@ -106,7 +106,7 @@ public class AzureSweepingOutputServiceHelper {
   }
 
   private String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
-    if (isEmpty(hostNameConvention)) {
+    if (hasNone(hostNameConvention)) {
       throw new InvalidRequestException("Instance element host name convention is empty or null");
     }
 

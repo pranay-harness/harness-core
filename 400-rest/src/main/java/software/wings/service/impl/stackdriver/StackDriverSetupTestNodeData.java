@@ -1,6 +1,6 @@
 package software.wings.service.impl.stackdriver;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.sm.StateType;
@@ -58,7 +58,7 @@ public class StackDriverSetupTestNodeData extends SetupTestNodeData {
 
   public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
     this.metricDefinitions = metricDefinitions;
-    if (isNotEmpty(metricDefinitions)) {
+    if (hasSome(metricDefinitions)) {
       metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
     }
   }

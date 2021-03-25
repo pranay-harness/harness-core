@@ -11,8 +11,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
@@ -430,7 +430,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateTypeScope stateTypeScope, StateType stateType) {
     if (!featureFlagService.isEnabled(featureName, appService.getAccountIdByAppId(appId))) {
       List<Stencil> stencilList = stencils.get(stateTypeScope);
-      if (isNotEmpty(stencilList)) {
+      if (hasSome(stencilList)) {
         for (Iterator<Stencil> it = stencilList.iterator(); it.hasNext();) {
           Stencil stencil = it.next();
           if (stencil.getType().equals(stateType.toString())) {
@@ -498,7 +498,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       mapByScope = getStateTypeForApp(appId, stencilsMap, entityMap);
     }
     Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
-    if (isEmpty(stateTypeScopes)) {
+    if (hasNone(stateTypeScopes)) {
       maps.putAll(mapByScope);
     } else {
       for (StateTypeScope scope : stateTypeScopes) {
@@ -664,7 +664,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .project(WorkflowKeys.uuid, true)
                                    .project(WorkflowKeys.appId, true)
                                    .asList();
-    if (isEmpty(workflows)) {
+    if (hasNone(workflows)) {
       return new ArrayList<>();
     }
     List<Workflow> allWorkflows = new ArrayList<>();
@@ -712,10 +712,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void loadTrafficShiftPhaseIds(Set<String> phaseIds, WorkflowPhase phase) {
     List<PhaseStep> phaseSteps = phase.getPhaseSteps();
-    if (isNotEmpty(phaseSteps)) {
+    if (hasSome(phaseSteps)) {
       for (PhaseStep phaseStep : phaseSteps) {
         List<GraphNode> steps = phaseStep.getSteps();
-        if (isNotEmpty(steps)) {
+        if (hasSome(steps)) {
           for (GraphNode node : steps) {
             if (trafficShiftStateTypes.contains(node.getType())) {
               phaseIds.add(phase.getUuid());
@@ -902,13 +902,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       WorkflowCreator workflowCreator = abstractWorkflowFactory.getWorkflowCreatorFactory(category).getWorkflowCreator(
           orchestrationWorkflow.getOrchestrationWorkflowType());
       workflow = workflowCreator.createWorkflow(workflow);
-      if (isEmpty(orchestrationWorkflow.getNotificationRules())) {
+      if (hasNone(orchestrationWorkflow.getNotificationRules())) {
         createDefaultNotificationRule(workflow);
       }
       if (orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD
           && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-        if (isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
+        if (hasNone(canaryOrchestrationWorkflow.getFailureStrategies())) {
           createDefaultFailureStrategy(workflow);
         }
 
@@ -983,10 +983,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (featureFlagService.isEnabled(
             FeatureName.ARTIFACT_STREAM_REFACTOR, appService.getAccountIdByAppId(workflow.getAppId()))) {
       List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-      if (isNotEmpty(userVariables)) {
+      if (hasSome(userVariables)) {
         for (Variable userVariable : userVariables) {
           if (userVariable.getType() == VariableType.ARTIFACT) {
-            if (isNotEmpty(userVariable.getAllowedList())) {
+            if (hasSome(userVariable.getAllowedList())) {
               for (String artifactStreamId : userVariable.getAllowedList()) {
                 if (!linkedArtifactStreamIds.contains(artifactStreamId)) {
                   linkedArtifactStreamIds.add(artifactStreamId);
@@ -1016,7 +1016,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateKeywordsAndLinkedTemplateUuids(Workflow workflow, List<String> linkedTemplateUuids) {
-    if (isNotEmpty(linkedTemplateUuids)) {
+    if (hasSome(linkedTemplateUuids)) {
       linkedTemplateUuids = linkedTemplateUuids.stream().distinct().collect(toList());
     }
 
@@ -1032,7 +1032,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void updateLinkedArtifactStreamIds(Workflow workflow, List<String> linkedArtifactStreamIds) {
-    if (isNotEmpty(linkedArtifactStreamIds)) {
+    if (hasSome(linkedArtifactStreamIds)) {
       linkedArtifactStreamIds = linkedArtifactStreamIds.stream().distinct().collect(toList());
     }
 
@@ -1163,13 +1163,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
               .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
               .build());
-      if (isNotEmpty(pipelinesWithWorkflowLinked)) {
+      if (hasSome(pipelinesWithWorkflowLinked)) {
         updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
         pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
       }
     }
 
-    if (isEmpty(templateExpressions)) {
+    if (hasNone(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
     orchestrationWorkflow = workflowServiceHelper.propagateWorkflowDataToPhases(orchestrationWorkflow,
@@ -1197,7 +1197,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       workflowServiceTemplateHelper.populatePropertiesFromWorkflow(workflow);
 
-      if (isEmpty(workflow.getAccountId())) {
+      if (hasNone(workflow.getAccountId())) {
         workflow.setAccountId(accountId);
       }
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
@@ -1238,11 +1238,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void updateEnvIdInLinkedPipelines(
       Workflow workflow, String newEnvId, List<Pipeline> pipelinesWithWorkflowLinked) {
-    if (isEmpty(pipelinesWithWorkflowLinked)) {
+    if (hasNone(pipelinesWithWorkflowLinked)) {
       return;
     }
     for (Pipeline pipeline : pipelinesWithWorkflowLinked) {
-      if (isNotEmpty(pipeline.getPipelineStages())) {
+      if (hasSome(pipeline.getPipelineStages())) {
         for (PipelineStage stage : pipeline.getPipelineStages()) {
           if (workflow.getUuid().equals(
                   stage.getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.workflowId))) {
@@ -1268,7 +1268,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
             .build());
 
-    if (isNotEmpty(pipelines)) {
+    if (hasSome(pipelines)) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       String message = format("Workflow is referenced by %d %s [%s].", pipelines.size(),
           plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames));
@@ -1283,14 +1283,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<String> triggerNames;
     {
       List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
-      if (isEmpty(triggers)) {
+      if (hasNone(triggers)) {
         return;
       }
       triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
     }
 
     List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
-    if (isEmpty(triggers)) {
+    if (hasNone(triggers)) {
       return;
     }
 
@@ -1445,7 +1445,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                  || CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType());
                                            })
                                            .collect(Collectors.toList());
-    if (isEmpty(provisionerSteps)) {
+    if (hasNone(provisionerSteps)) {
       return null;
     }
     List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
@@ -1483,7 +1483,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .stream()
                                      .filter(step -> StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()))
                                      .collect(toList());
-    return isNotEmpty(graphNodes);
+    return hasSome(graphNodes);
   }
 
   private PhaseStep generateARMRollbackProvisioners(
@@ -1494,7 +1494,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .filter(step -> { return StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()); })
             .collect(Collectors.toList());
 
-    if (isEmpty(provisionerSteps)) {
+    if (hasNone(provisionerSteps)) {
       return null;
     }
     List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
@@ -1704,7 +1704,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-    if (isEmpty(phaseSteps)) {
+    if (hasNone(phaseSteps)) {
       return;
     }
     if (PhaseStepType.PROVISION_INFRASTRUCTURE != phaseSteps.get(0).getPhaseStepType()) {
@@ -2077,7 +2077,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
-    if (isNotEmpty(userVariables)) {
+    if (hasSome(userVariables)) {
       userVariables.forEach(variable -> ManagerExpressionEvaluator.isValidVariableName(variable.getName()));
     }
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -2094,7 +2094,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void validateWorkflowVariables(Workflow savedWorkflow, OrchestrationWorkflow orchestrationWorkflow) {
-    if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getUserVariables())) {
+    if (orchestrationWorkflow == null || hasNone(orchestrationWorkflow.getUserVariables())) {
       return;
     }
 
@@ -2126,9 +2126,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             "Duplicate variable name [" + variableName + "]. Duplicates are not allowed.", USER);
       }
 
-      if (isNotEmpty(variable.getAllowedValues())) {
+      if (hasSome(variable.getAllowedValues())) {
         variable.setAllowedList(CsvParser.parse(variable.getAllowedValues()));
-        if (isNotEmpty(defaultValue)) {
+        if (hasSome(defaultValue)) {
           if (!variable.getAllowedList().contains(defaultValue)) {
             throw new InvalidRequestException(
                 "Default value [" + defaultValue + " is not in Allowed Values" + variable.getAllowedList());
@@ -2154,7 +2154,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean withDefaultArtifact, WorkflowExecution workflowExecution, Include... includes) {
     DeploymentMetadataBuilder deploymentMetadataBuilder = DeploymentMetadata.builder();
 
-    List<Include> includeList = isEmpty(includes) ? Arrays.asList(Include.values()) : Arrays.asList(includes);
+    List<Include> includeList = hasNone(includes) ? Arrays.asList(Include.values()) : Arrays.asList(includes);
 
     if (includeList.contains(Include.ARTIFACT_SERVICE)) {
       if (artifactRequiredServiceIds == null) {
@@ -2172,7 +2172,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else {
         fetchArtifactAndManifestNeededServiceIds(
             appId, workflow, workflowVariables, artifactRequiredServiceIds, manifestRequiredServiceIds, serviceCache);
-        if (isNotEmpty(artifactRequiredServiceIds)) {
+        if (hasSome(artifactRequiredServiceIds)) {
           for (String serviceId : artifactRequiredServiceIds) {
             List<String> allowedArtifactStreams =
                 artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
@@ -2208,7 +2208,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       // Update artifact variables with display info and artifact stream summaries.
-      if (isNotEmpty(artifactVariables)) {
+      if (hasSome(artifactVariables)) {
         deploymentMetadataBuilder.artifactVariables(artifactVariables);
         updateArtifactVariables(appId, workflow, artifactVariables, withDefaultArtifact, workflowExecution);
         resolveArtifactStreamMetadata(appId, artifactVariables, workflowExecution);
@@ -2268,7 +2268,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @VisibleForTesting
   public LastDeployedHelmChartInformation fetchLastDeployedHelmChart(Workflow workflow, String serviceId) {
     WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecutionForService(workflow, serviceId);
-    if (lastWorkflowExecution == null || isEmpty(lastWorkflowExecution.getHelmCharts())) {
+    if (lastWorkflowExecution == null || hasNone(lastWorkflowExecution.getHelmCharts())) {
       return null;
     }
     List<HelmChart> lastHelmCharts = lastWorkflowExecution.getHelmCharts();
@@ -2326,7 +2326,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (lastWorkflowExecution != null) {
       List<Artifact> lastArtifacts = lastWorkflowExecution.getArtifacts();
 
-      if (isNotEmpty(lastArtifacts)) {
+      if (hasSome(lastArtifacts)) {
         return populateLastDeployedArtifactInfo(
             lastArtifacts, allowedArtifactStreams, lastWorkflowExecution, serviceId);
       }
@@ -2394,7 +2394,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean withDefaultArtifact, WorkflowExecution workflowExecution) {
     for (ArtifactVariable artifactVariable : artifactVariables) {
       artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
-      if (isEmpty(artifactVariable.getAllowedList())) {
+      if (hasNone(artifactVariable.getAllowedList())) {
         continue;
       }
       String accountId = appService.getAccountIdByAppId(appId);
@@ -2441,14 +2441,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getExecutionArgs() != null) {
       List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
-      if (isNotEmpty(previousArtifactVariables)) {
+      if (hasSome(previousArtifactVariables)) {
         for (ArtifactVariable artifactVariable : artifactVariables) {
           for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
             if (artifactVariable.getName().equals(previousArtifactVariable.getName())
                 && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
                 && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
                 && previousArtifactVariable.getArtifactStreamMetadata() != null
-                && isNotEmpty(artifactVariable.getAllowedList())
+                && hasSome(artifactVariable.getAllowedList())
                 && artifactVariable.getAllowedList().contains(
                     previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
               artifactVariable.setArtifactStreamMetadata(
@@ -2474,7 +2474,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         Map<String, Object> runtimeValues = new HashMap<>();
         List<String> parameters = artifactStreamService.getArtifactStreamParameters(artifactStreamId);
         // since artifact stream is parameterized this won't be empty but still adding a check
-        if (isNotEmpty(parameters)) {
+        if (hasSome(parameters)) {
           for (String parameter : parameters) {
             runtimeValues.put(parameter, previousRuntimeValues.getOrDefault(parameter, ""));
           }
@@ -2490,7 +2490,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Artifact getArtifactVariableDefaultArtifact(
       ArtifactVariable artifactVariable, WorkflowExecution workflowExecution) {
-    if (isEmpty(artifactVariable.getAllowedList())) {
+    if (hasNone(artifactVariable.getAllowedList())) {
       // No artifact streams, so we cannot pre-fill it.
       return null;
     }
@@ -2511,7 +2511,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private Artifact getArtifactVariableDefaultArtifactHelper(
       ArtifactVariable artifactVariable, WorkflowExecution workflowExecution) {
     List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
-    if (isNotEmpty(previousArtifactVariables)) {
+    if (hasSome(previousArtifactVariables)) {
       // If artifact variables are present use them.
       ArtifactVariable foundArtifactVariable =
           previousArtifactVariables.stream()
@@ -2531,7 +2531,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
-      if (isEmpty(artifacts)) {
+      if (hasNone(artifacts)) {
         return null;
       }
 
@@ -2539,7 +2539,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<Artifact> previousArtifacts = workflowExecution.getExecutionArgs().getArtifacts();
-    if (isEmpty(previousArtifacts) || isEmpty(artifactVariable.getAllowedList())) {
+    if (hasNone(previousArtifacts) || hasNone(artifactVariable.getAllowedList())) {
       return null;
     }
 
@@ -2615,7 +2615,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void updateDisplayInfoForArtifactVariableOverrides(
       String appId, Workflow workflow, ArtifactVariable artifactVariable, Map<String, List<String>> displayInfo) {
-    if (isNotEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+    if (hasSome(artifactVariable.getOverriddenArtifactVariables())) {
       List<ArtifactVariable> overriddenArtifactVariables = artifactVariable.getOverriddenArtifactVariables();
       overriddenArtifactVariables.forEach(
           artifactVariable1 -> mergeDisplayInfoMaps(displayInfo, getDisplayInfo(appId, workflow, artifactVariable1)));
@@ -2628,7 +2628,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
     fetchArtifactAndManifestNeededServiceIds(
         appId, workflow, null, artifactNeededServiceIds, new ArrayList<>(), new HashMap<String, Service>());
-    if (isNotEmpty(artifactNeededServiceIds)) {
+    if (hasSome(artifactNeededServiceIds)) {
       // At least one service needs artifact..so add required entity type as ARTIFACT
       requiredEntityTypes.add(ARTIFACT);
     }
@@ -2703,7 +2703,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhase.checkServiceTemplatized()) {
       String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
       if (serviceTemplatizedName != null) {
-        serviceId = isEmpty(workflowVaraibles) ? null : workflowVaraibles.get(serviceTemplatizedName);
+        serviceId = hasNone(workflowVaraibles) ? null : workflowVaraibles.get(serviceTemplatizedName);
       }
     } else {
       serviceId = workflowPhase.getServiceId();
@@ -2789,13 +2789,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String accountId = appService.getAccountIdByAppId(appId);
     for (GraphNode step : phaseStep.getSteps()) {
       if (step.getTemplateUuid() != null) {
-        if (isNotEmpty(step.getTemplateVariables())) {
+        if (hasSome(step.getTemplateVariables())) {
           List<String> values = step.getTemplateVariables()
                                     .stream()
-                                    .filter(variable -> isNotEmpty(variable.getValue()))
+                                    .filter(variable -> hasSome(variable.getValue()))
                                     .map(Variable::getValue)
                                     .collect(toList());
-          if (isNotEmpty(values)) {
+          if (hasSome(values)) {
             if (isArtifactNeeded(values.toArray())) {
               artifactNeeded = true;
               break;
@@ -2862,7 +2862,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+          if (hasSome(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             InfrastructureDefinition infrastructureDefinition =
                 infrastructureDefinitionService.get(appId, infraDefinitionId);
             if (infrastructureDefinition != null) {
@@ -2887,7 +2887,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
         List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
+          if (hasSome(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
               && k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
             artifactNeeded = true;
             break;
@@ -2922,13 +2922,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean checkManifestNeededForStep(GraphNode step) {
     if (step.getTemplateUuid() != null) {
-      if (isNotEmpty(step.getTemplateVariables())) {
+      if (hasSome(step.getTemplateVariables())) {
         List<String> values = step.getTemplateVariables()
                                   .stream()
-                                  .filter(variable -> isNotEmpty(variable.getValue()))
+                                  .filter(variable -> hasSome(variable.getValue()))
                                   .map(Variable::getValue)
                                   .collect(toList());
-        if (isNotEmpty(values)) {
+        if (hasSome(values)) {
           if (isManifestNeeded(values.toArray())) {
             return true;
           }
@@ -3009,7 +3009,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Set<String> workflowVariableNames = new HashSet<>();
     if (serviceArtifactVariableNamesMap.containsKey("")) {
       Set<String> implicitWorkflowVariableNames = serviceArtifactVariableNamesMap.get("");
-      if (isNotEmpty(implicitWorkflowVariableNames)) {
+      if (hasSome(implicitWorkflowVariableNames)) {
         // These artifact variables weren't defined in the context of any service, hence, they must be as workflow
         // variables.
         workflowVariableNames.addAll(implicitWorkflowVariableNames);
@@ -3041,7 +3041,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     serviceArtifactVariableNamesMap = serviceArtifactVariableNamesMap.entrySet()
                                           .stream()
-                                          .filter(entry -> isNotEmpty(entry.getKey()) && isNotEmpty(entry.getValue()))
+                                          .filter(entry -> hasSome(entry.getKey()) && hasSome(entry.getValue()))
                                           .collect(toMap(Entry::getKey, Entry::getValue));
 
     // NOTE: Current overriding behaviour order:
@@ -3085,7 +3085,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             invalidVariableNames.add(variableName);
             continue;
           }
-          if (isNotEmpty(invalidVariableNames)) {
+          if (hasSome(invalidVariableNames)) {
             // If we have invalid variable names, we will just throw at the end of the for loop. No need to process
             // further.
             continue;
@@ -3125,7 +3125,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           count++;
         }
 
-        if (isNotEmpty(invalidVariableNames)) {
+        if (hasSome(invalidVariableNames)) {
           // Throw an exception if invalid artifact variable names were found for the current service.
           Service service = serviceResourceService.get(serviceId);
           notNullCheck("Service does not exist: " + serviceId, service, USER);
@@ -3160,7 +3160,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           artifactVariables.stream()
               .filter(artifactVariable -> artifactVariable.getName().equals(variableName))
               .collect(Collectors.toList());
-      if (isNotEmpty(overriddenArtifactVariables)) {
+      if (hasSome(overriddenArtifactVariables)) {
         artifactVariables.removeIf(artifactVariable -> artifactVariable.getName().equals(variableName));
       }
 
@@ -3177,7 +3177,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   public Map<String, List<ServiceVariable>> computeServiceVariables(
       String appId, String envId, Set<String> serviceIds) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return new HashMap<>();
     }
 
@@ -3234,7 +3234,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       existingServiceVariables = new ArrayList<>();
     }
     List<ServiceVariable> mergedServiceVariables = existingServiceVariables;
-    if (isNotEmpty(newServiceVariables)) {
+    if (hasSome(newServiceVariables)) {
       mergedServiceVariables = concat(newServiceVariables.stream(), existingServiceVariables.stream())
                                    .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
                                    .collect(toList());
@@ -3254,7 +3254,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhase.checkServiceTemplatized()) {
       String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
       if (serviceTemplatizedName != null) {
-        serviceId = isEmpty(workflowVariablesMap) ? null : workflowVariablesMap.get(serviceTemplatizedName);
+        serviceId = hasNone(workflowVariablesMap) ? null : workflowVariablesMap.get(serviceTemplatizedName);
         if (isBlank(serviceId)) {
           return;
         }
@@ -3296,13 +3296,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     for (GraphNode step : phaseStep.getSteps()) {
       if (step.getTemplateUuid() != null) {
-        if (isNotEmpty(step.getTemplateVariables())) {
+        if (hasSome(step.getTemplateVariables())) {
           List<String> values = step.getTemplateVariables()
                                     .stream()
-                                    .filter(variable -> isNotEmpty(variable.getValue()))
+                                    .filter(variable -> hasSome(variable.getValue()))
                                     .map(Variable::getValue)
                                     .collect(toList());
-          if (isNotEmpty(values)) {
+          if (hasSome(values)) {
             updateArtifactVariablesNeededForTemplate(serviceArtifactVariableNames, values.toArray());
           }
         }
@@ -3357,7 +3357,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+          if (hasSome(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             InfrastructureDefinition infraDefiniton = infrastructureDefinitionService.get(appId, infraDefinitionId);
             ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, infraDefiniton.getEnvId());
             if (serviceTemplate != null) {
@@ -3370,7 +3370,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
         List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+          if (hasSome(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
                 appId, infraDefinitionId, serviceArtifactVariableNames, serviceId);
           }
@@ -3385,7 +3385,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String infraDefinitionTemplatizedName = workflowPhase.fetchInfraDefinitionTemplatizedName();
       if (infraDefinitionTemplatizedName != null) {
         String infraDefinitionId =
-            isEmpty(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
+            hasNone(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
         if (infraDefinitionId != null) {
           if (infraDefinitionId.contains(",")) {
             infraDefinitionIds = asList(infraDefinitionId.split(","));
@@ -3668,7 +3668,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     do {
       workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
 
-      if (isEmpty(workflowExecutions)) {
+      if (hasNone(workflowExecutions)) {
         log.info("Did not find a successful execution for {}. ", workflowId);
         return singletonList(InstanceElement.Builder.anInstanceElement()
                                  .hostName("No successful workflow execution found for this workflow. "
@@ -3684,7 +3684,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             instanceElement.setServiceTemplateElement(null);
             if (instanceElement.getHost() != null) {
               String hostUuid = instanceElement.getHost().getUuid();
-              if (!isEmpty(hostUuid)) {
+              if (!hasNone(hostUuid)) {
                 Host host = hostService.get(appId, envId, hostUuid);
                 instanceElement.getHost().setEc2Instance(host.getEc2Instance());
               }
@@ -3692,7 +3692,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             instanceElements.add(instanceElement);
           }
         }
-        if (!isEmpty(instanceElements)) {
+        if (!hasNone(instanceElements)) {
           return instanceElements;
         }
       }
@@ -3748,12 +3748,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     // Verify in workflow phases
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (isEmpty(workflowPhases)) {
+    if (hasNone(workflowPhases)) {
       return null;
     }
     for (WorkflowPhase workflowPhase : workflowPhases) {
       List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-      if (isNotEmpty(phaseSteps)) {
+      if (hasSome(phaseSteps)) {
         for (PhaseStep phaseStep : phaseSteps) {
           graphNode = matchesInPhaseStep(phaseStep, nodeId);
           if (graphNode != null) {
@@ -3780,7 +3780,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<EntityType> getRequiredEntities(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
     Set<EntityType> entityTypes = fetchRequiredEntityTypes(appId, workflow);
-    if (isNotEmpty(entityTypes)) {
+    if (hasSome(entityTypes)) {
       return new ArrayList<>(entityTypes);
     }
     return null;
@@ -3943,7 +3943,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (step.matches(workflowPhaseDeploymentType, orchestrationWorkflowType)) {
         WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
                                         .name(step.getName())
-                                        .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
+                                        .favorite(hasSome(favorites) && favorites.contains(step.getType()))
                                         .available(true)
                                         .build();
         if (!step.getType().equals(StateType.CVNG.name())
@@ -4008,7 +4008,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
       WorkflowStepType workflowStepType = entry.getKey();
       List<StepType> stepTypeList = entry.getValue();
-      if (workflowStepType.name().equals(SERVICE_COMMAND.name()) || isEmpty(stepTypeList)) {
+      if (workflowStepType.name().equals(SERVICE_COMMAND.name()) || hasNone(stepTypeList)) {
         continue;
       }
       List<String> stepIds = new ArrayList<>();
@@ -4018,7 +4018,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       // not adding category if there are no steps
-      if (isNotEmpty(stepIds)) {
+      if (hasSome(stepIds)) {
         String displayName = workflowStepType.getDisplayName();
         if ((workflowStepType.equals(WorkflowStepType.APM) || workflowStepType.equals(WorkflowStepType.LOG))
             && featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
@@ -4034,7 +4034,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Map<String, WorkflowStepMeta> steps, List<String> commandNames, List<WorkflowCategoryStepsMeta> categories) {
     // Special handling for ServiceCommands
     // For "Service Commands" Category to show up on UI, the corresponding StepIds must be present in Map<> steps
-    if (isNotEmpty(commandNames)) {
+    if (hasSome(commandNames)) {
       List<String> upped = new ArrayList<>();
       for (String commandName : commandNames) {
         // converting commandName like "Install" to uppercase. This is to make it consistent with other steps
@@ -4055,7 +4055,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void addFavoritesToWorkflowCategories(
       Set<String> favorites, Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories) {
     List<String> stepIds = new ArrayList<>();
-    if (isNotEmpty(favorites)) {
+    if (hasSome(favorites)) {
       for (String stepType : filteredStepTypes) {
         if (favorites.contains(stepType)) {
           stepIds.add(stepType);
@@ -4067,7 +4067,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void addRecentsToWorkflowCategories(LinkedList<String> recent, List<WorkflowCategoryStepsMeta> categories) {
-    if (isNotEmpty(recent)) {
+    if (hasSome(recent)) {
       List<String> stepIds = new ArrayList<>();
       recent.descendingIterator().forEachRemaining(stepIds::add);
       categories.add(

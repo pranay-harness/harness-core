@@ -1,6 +1,6 @@
 package io.harness.mongo.queue;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 
 import static java.lang.String.format;
@@ -159,7 +159,7 @@ public class NGMongoQueueConsumer<T extends Queuable> implements QueueConsumer<T
 
   private Query createQuery() {
     Query query = new Query();
-    if (isNotEmpty(topics)) {
+    if (hasSome(topics)) {
       query.addCriteria(Criteria.where(QueuableKeys.topic).in(topics));
     } else {
       query.addCriteria(Criteria.where(QueuableKeys.topic).exists(false));

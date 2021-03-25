@@ -2,8 +2,8 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_SUFFIX;
@@ -201,7 +201,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     String originStateName = null;
     State prevState = null;
 
-    if (isNotEmpty(pipeline.getPipelineStages())) {
+    if (hasSome(pipeline.getPipelineStages())) {
       for (int i = 0; i < pipeline.getPipelineStages().size(); i++) {
         PipelineStage pipelineStage = pipeline.getPipelineStages().get(i);
         State state = convertToState(pipelineStage, pipeline, stencilMap);
@@ -251,7 +251,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
   private State convertToState(
       PipelineStage pipelineStage, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    if (pipelineStage == null || isEmpty(pipelineStage.getPipelineStageElements())) {
+    if (pipelineStage == null || hasNone(pipelineStage.getPipelineStageElements())) {
       throw new InvalidArgumentsException(Pair.of("args", "Pipeline Stage: pipelineStage"));
     }
     if (pipelineStage.getPipelineStageElements().size() == 1) {
@@ -317,7 +317,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     if (subworkflows != null) {
       for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
         Graph childGraph = entry.getValue();
-        if (childGraph == null || isEmpty(childGraph.getNodes())) {
+        if (childGraph == null || hasNone(childGraph.getNodes())) {
           continue;
         }
         childStateMachines.put(entry.getKey(), new StateMachine(childGraph, stencilMap, orchestrationWorkflow));
@@ -375,7 +375,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
       state.resolveProperties();
 
-      if (isNotEmpty(node.getVariableOverrides()) && state instanceof SubWorkflowState) {
+      if (hasSome(node.getVariableOverrides()) && state instanceof SubWorkflowState) {
         ((SubWorkflowState) state).setVariableOverrides(node.getVariableOverrides());
       }
       Map<String, String> stateValidateMessages = state.validateFields();
@@ -385,7 +385,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
         if (state.getTemplateExpressions() != null) {
           orchestrationWorkflow.addToUserVariables(state);
         }
-        if (isNotEmpty(state.getTemplateUuid())) {
+        if (hasSome(state.getTemplateUuid())) {
           orchestrationWorkflow.addTemplateUuid(state.getTemplateUuid());
         }
       }
@@ -544,7 +544,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
    * @return map to state to stateNames.
    */
   public Map<String, State> getStatesMap() {
-    if (isNotEmpty(cachedStatesMap)) {
+    if (hasSome(cachedStatesMap)) {
       return cachedStatesMap;
     }
     Map<String, State> statesMap = new HashMap<>();
@@ -599,7 +599,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
    */
   public State getNextState(String fromStateName, TransitionType transitionType) {
     List<State> nextStates = getNextStates(fromStateName, transitionType);
-    if (isEmpty(nextStates)) {
+    if (hasNone(nextStates)) {
       return null;
     }
     return nextStates.get(0);
@@ -652,7 +652,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
    * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
-    if (isNotEmpty(cachedTransitionFlowMap)) {
+    if (hasSome(cachedTransitionFlowMap)) {
       return cachedTransitionFlowMap;
     }
 
@@ -851,7 +851,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
         continue;
       }
       List<Transition> transitionsToOldState = getTransitionsTo(state);
-      if (isEmpty(transitionsToOldState)) {
+      if (hasNone(transitionsToOldState)) {
         if (!initialStateName.equals(stateName)) {
           throw new StateMachineIssueException("Inconsistent state", ErrorCode.STATE_MACHINE_ISSUE);
         }
@@ -944,7 +944,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   private void buildAvailableContextsByTransition(State state, Set<ContextElementType> previousContexts,
       Map<Transition, Set<ContextElementType>> availableContextsByTransition) {
     List<Transition> transitionFrom = getTransitionFrom(state);
-    if (isEmpty(transitionFrom)) {
+    if (hasNone(transitionFrom)) {
       return;
     }
     transitionFrom.forEach(transition -> {
@@ -960,7 +960,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
 
   private void buildStateNamesInOrderByAppearance(State state, List<String> stateNamesInOrder) {
     List<State> nextStates = getNextStates(state.getName());
-    if (isEmpty(nextStates)) {
+    if (hasNone(nextStates)) {
       stateNamesInOrder.add(state.getName());
       return;
     }

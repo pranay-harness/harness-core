@@ -1,7 +1,7 @@
 package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 
@@ -151,7 +151,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
                 -> !enabled || encryptedDataDetail.getEncryptedData().getEncryptionType() == EncryptionType.LOCAL)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(localEncryptedDetails)) {
+    if (hasSome(localEncryptedDetails)) {
       managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
       String value = new String(serviceVariable.getValue());
       evaluatedSecrets.put(secretName, value);

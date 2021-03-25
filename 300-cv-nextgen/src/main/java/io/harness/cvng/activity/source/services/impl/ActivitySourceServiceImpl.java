@@ -1,7 +1,7 @@
 package io.harness.cvng.activity.source.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -42,7 +42,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Override
   public String saveActivitySource(
       String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO) {
-    if (isNotEmpty(activitySourceDTO.getUuid())) {
+    if (hasSome(activitySourceDTO.getUuid())) {
       update(activitySourceDTO);
       return activitySourceDTO.getUuid();
     } else {
@@ -110,7 +110,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
           USER);
     }
 
-    if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
+    if (hasSome(activitySource.getDataCollectionTaskId())) {
       verificationManagerService.deletePerpetualTask(
           activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
     }
@@ -153,7 +153,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
 
   private void update(ActivitySourceDTO activitySourceDTO) {
     ActivitySource activitySource = hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid());
-    if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
+    if (hasSome(activitySource.getDataCollectionTaskId())) {
       verificationManagerService.deletePerpetualTask(
           activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
     }
@@ -206,7 +206,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
     List<ActivitySourceDTO> activitySourceDTOs =
         activitySources.stream()
             .filter(activitySource
-                -> isEmpty(filter) || activitySource.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+                -> hasNone(filter) || activitySource.getName().toLowerCase().contains(filter.trim().toLowerCase()))
             .map(activitySource -> activitySource.toDTO())
             .collect(Collectors.toList());
     return PageUtils.offsetAndLimit(activitySourceDTOs, offset, pageSize);
@@ -227,7 +227,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
 
   private boolean getActivitySourceForDeletion(String accountId, ActivitySource activitySource) {
     if (activitySource != null) {
-      if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
+      if (hasSome(activitySource.getDataCollectionTaskId())) {
         verificationManagerService.deletePerpetualTask(accountId, activitySource.getDataCollectionTaskId());
       }
     }

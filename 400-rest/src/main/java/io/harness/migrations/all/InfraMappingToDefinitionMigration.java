@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -148,7 +148,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
                   DEBUG_LINE, "Starting migration for inframappingId ", infrastructureMapping.getUuid()));
 
               // If infradefinitionId is already set, then no need to migrate
-              if (isEmpty(infrastructureMapping.getInfrastructureDefinitionId())) {
+              if (hasNone(infrastructureMapping.getInfrastructureDefinitionId())) {
                 Optional<InfrastructureDefinition> newInfraDefinition = createInfraDefinition(
                     infrastructureMapping, infrastructureProvisionerMap.get(infrastructureMapping.getProvisionerId()));
 
@@ -213,7 +213,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
               .cloudProviderType(CloudProviderType.valueOf(src.getComputeProviderType()))
               .provisionerId(src.getProvisionerId());
 
-      if (isNotEmpty(src.getServiceId())) {
+      if (hasSome(src.getServiceId())) {
         definitionBuilder.scopedToServices(Arrays.asList(src.getServiceId()));
       } else {
         log.error(
@@ -517,7 +517,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
 
     final List<List<BlueprintProperty>> bluePrintPropertiesList =
         blueprints.stream()
-            .filter(blueprint -> isNotEmpty(blueprint.getProperties()))
+            .filter(blueprint -> hasSome(blueprint.getProperties()))
             .filter(blueprint -> blueprint.getServiceId().equals(infrastructureMapping.getServiceId()))
             .filter(blueprint
                 -> blueprint.infrastructureMappingType().name().equals(infrastructureMapping.getInfraMappingType()))
@@ -542,7 +542,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
       return blueprintProperties.stream()
           .map(blueprintProperty -> {
             List<NameValuePair> fields =
-                isEmpty(blueprintProperty.getFields()) ? new ArrayList<>() : blueprintProperty.getFields();
+                hasNone(blueprintProperty.getFields()) ? new ArrayList<>() : blueprintProperty.getFields();
             String name = fieldNameChanges.getOrDefault(blueprintProperty.getName(), blueprintProperty.getName());
             fields.add(NameValuePair.builder().name(name).value(blueprintProperty.getValue()).build());
             fields.forEach(nameValuePair
@@ -551,7 +551,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
             return fields;
           })
           .flatMap(Collection::stream)
-          .filter(nameValuePair -> isNotEmpty(nameValuePair.getValue()) && isNotEmpty(nameValuePair.getName()))
+          .filter(nameValuePair -> hasSome(nameValuePair.getValue()) && hasSome(nameValuePair.getName()))
           .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue, (value1, value2) -> {
             log.info(StringUtils.join(DEBUG_LINE,
                 " Found duplicate value for keys in "

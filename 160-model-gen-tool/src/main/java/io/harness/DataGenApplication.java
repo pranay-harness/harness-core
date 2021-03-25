@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.cache.CacheBackend.NOOP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.LOCAL;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 
@@ -237,7 +237,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     if (DeployMode.isOnPrem(deployMode)) {
       LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
-      if (isEmpty(encryptedLicenseInfoBase64String)) {
+      if (hasNone(encryptedLicenseInfoBase64String)) {
         log.error("No license info is provided");
       } else {
         try {

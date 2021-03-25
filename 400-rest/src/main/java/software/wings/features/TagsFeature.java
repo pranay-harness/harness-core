@@ -1,6 +1,6 @@
 package software.wings.features;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.google.common.collect.Sets.newHashSet;
 
@@ -33,7 +33,7 @@ public class TagsFeature extends AbstractPremiumFeature implements ComplianceByR
   }
 
   private static boolean isRestrictedTag(HarnessTag tag) {
-    return isNotEmpty(tag.getAllowedValues());
+    return hasSome(tag.getAllowedValues());
   }
 
   @Override

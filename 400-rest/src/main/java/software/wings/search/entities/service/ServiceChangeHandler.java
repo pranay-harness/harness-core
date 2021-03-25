@@ -1,9 +1,9 @@
 package software.wings.search.entities.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.mongo.changestreams.ChangeType;
 
@@ -143,11 +143,11 @@ public class ServiceChangeHandler implements ChangeHandler {
       EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (EmptyPredicate.isNotEmpty(toBeAddedServiceIds)) {
+      if (hasSome(toBeAddedServiceIds)) {
         result = searchDao.appendToListInMultipleDocuments(
             ServiceSearchEntity.TYPE, fieldToUpdate, toBeAddedServiceIds, newElement);
       }
-      if (EmptyPredicate.isNotEmpty(toBeDeletedServiceIds)) {
+      if (hasSome(toBeDeletedServiceIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
                 ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, pipeline.getUuid());

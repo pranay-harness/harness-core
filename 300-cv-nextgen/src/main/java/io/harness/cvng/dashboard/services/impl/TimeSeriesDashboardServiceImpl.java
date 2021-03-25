@@ -1,8 +1,8 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -104,7 +104,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       List<TimeSeriesRecord> timeSeriesRecordsfromDB =
           timeSeriesRecordService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
       List<TimeSeriesRecord> timeSeriesRecords = Collections.synchronizedList(new ArrayList<>());
-      if (isEmpty(timeSeriesRecordsfromDB)) {
+      if (hasNone(timeSeriesRecordsfromDB)) {
         return timeSeriesRecords;
       }
       if (!anomalousOnly) {
@@ -165,7 +165,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       record.getTimeSeriesGroupValues().forEach(timeSeriesGroupValue -> {
         String txnName = timeSeriesGroupValue.getGroupName();
         String key = txnName + "." + metricName;
-        if (isNotEmpty(filter) && !txnName.toLowerCase().contains(filter)
+        if (hasSome(filter) && !txnName.toLowerCase().contains(filter)
             && !metricName.toLowerCase().contains(filter.toLowerCase())) {
           return;
         }

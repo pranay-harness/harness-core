@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.Log.Builder.aLog;
@@ -9,7 +11,6 @@ import static java.util.Collections.emptyList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -121,10 +122,10 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
   HashMap<String, String> getCombinedVariablesMap(
       Map<String, String> textVariables, Map<String, EncryptedDataDetail> encryptedVariables) {
     HashMap<String, String> envMap = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(textVariables)) {
+    if (hasSome(textVariables)) {
       envMap.putAll(textVariables);
     }
-    if (EmptyPredicate.isNotEmpty(encryptedVariables)) {
+    if (hasSome(encryptedVariables)) {
       for (Entry<String, EncryptedDataDetail> encryptedVariable : encryptedVariables.entrySet()) {
         envMap.put(encryptedVariable.getKey(),
             String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));

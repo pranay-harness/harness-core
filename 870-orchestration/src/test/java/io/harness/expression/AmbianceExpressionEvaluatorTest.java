@@ -1,5 +1,6 @@
 package io.harness.expression;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -277,7 +277,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator();
     on(evaluator).set("planExecutionService", planExecutionService);
     on(evaluator).set("parameterFieldProcessor", parameterFieldProcessor);
-    if (EmptyPredicate.isEmpty(contextMap)) {
+    if (hasNone(contextMap)) {
       return evaluator;
     }
 

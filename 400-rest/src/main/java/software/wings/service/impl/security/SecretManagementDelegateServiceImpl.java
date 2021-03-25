@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -66,7 +66,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             VAULT_OPERATION_ERROR, "SSH Vault config while fetching signed public key is null", USER);
       }
       String vaultToken = sshVaultConfig.getAuthToken();
-      if (isEmpty(vaultToken)) {
+      if (hasNone(vaultToken)) {
         VaultAppRoleLoginResult loginResult = appRoleLogin(sshVaultConfig);
         if (loginResult != null) {
           vaultToken = loginResult.getClientToken();
@@ -138,7 +138,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
                                                .readSecretMetadata(vaultConfig.getAuthToken(),
                                                    vaultConfig.getSecretEngineName(), encryptedData.getPath());
-      if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
+      if (secretMetadata != null && hasSome(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
           VersionMetadata versionMetadata = entry.getValue();
@@ -212,7 +212,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     List<SecretEngineSummary> secretEngineSummaries = new ArrayList<>();
     try {
       String vaultToken = vaultConfig.getAuthToken();
-      if (isEmpty(vaultToken)) {
+      if (hasNone(vaultToken)) {
         VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
         if (loginResult != null) {
           vaultToken = loginResult.getClientToken();
@@ -297,7 +297,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig) {
     String errorMessage;
     // Basic connectivity and certificate validity checks
-    if (isNotEmpty(cyberArkConfig.getClientCertificate())
+    if (hasSome(cyberArkConfig.getClientCertificate())
         && !CyberArkRestClientFactory.validateClientCertificate(cyberArkConfig.getClientCertificate())) {
       errorMessage = "Client certificate provided is not valid. Please check your configurations and try again";
       throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, errorMessage, USER);

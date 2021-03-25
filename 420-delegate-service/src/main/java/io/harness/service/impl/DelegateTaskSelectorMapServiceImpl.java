@@ -1,7 +1,7 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskSelectorMap.TaskSelectorMapKeys;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 
@@ -36,7 +36,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
   @Override
   public TaskSelectorMap add(TaskSelectorMap taskSelectorMap) {
     log.info("Adding task selector map:" + taskSelectorMap);
-    if (isEmpty(taskSelectorMap.getSelectors())) {
+    if (hasNone(taskSelectorMap.getSelectors())) {
       log.warn("Task selector list cannot be empty.");
       throw new IllegalArgumentException("Task selector list cannot be empty.");
     }
@@ -55,7 +55,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
   @Override
   public TaskSelectorMap update(TaskSelectorMap taskSelectorMap) {
     log.info("Updating task selector map:" + taskSelectorMap);
-    if (isEmpty(taskSelectorMap.getSelectors())) {
+    if (hasNone(taskSelectorMap.getSelectors())) {
       hPersistence.delete(TaskSelectorMap.class, taskSelectorMap.getUuid());
       return null;
     } else {
@@ -97,7 +97,7 @@ public class DelegateTaskSelectorMapServiceImpl implements DelegateTaskSelectorM
       log.warn(errorMessage);
       throw NoResultFoundException.newBuilder().code(ErrorCode.RESOURCE_NOT_FOUND).message(errorMessage).build();
     }
-    if (isNotEmpty(existingMap.getSelectors()) && existingMap.getSelectors().contains(taskSelector)) {
+    if (hasSome(existingMap.getSelectors()) && existingMap.getSelectors().contains(taskSelector)) {
       existingMap.getSelectors().remove(taskSelector);
       if (existingMap.getSelectors().isEmpty()) {
         hPersistence.delete(TaskSelectorMap.class, taskSelectorMapUuid);

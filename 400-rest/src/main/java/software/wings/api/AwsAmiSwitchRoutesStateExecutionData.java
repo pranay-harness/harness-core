@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.google.common.base.Joiner.on;
 
@@ -44,7 +44,7 @@ public class AwsAmiSwitchRoutesStateExecutionData extends StateExecutionData imp
   }
 
   private String joinStrings(List<String> strings) {
-    if (isEmpty(strings)) {
+    if (hasNone(strings)) {
       return null;
     }
     return on(",").join(strings);

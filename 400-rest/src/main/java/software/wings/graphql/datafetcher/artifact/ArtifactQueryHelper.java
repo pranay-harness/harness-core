@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,7 +28,7 @@ public class ArtifactQueryHelper {
   @Inject private DataFetcherUtils utils;
 
   public void setQuery(List<QLArtifactFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

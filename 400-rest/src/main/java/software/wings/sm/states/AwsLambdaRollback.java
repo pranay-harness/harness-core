@@ -5,7 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
@@ -54,7 +54,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
                                  .addFilter("workflowExecutionId", NOT_EQ, workflowExecutionId)
                                  .addFilter("artifactId", EXISTS)
                                  .build());
-    if (isNotEmpty(pageResponse)) {
+    if (hasSome(pageResponse)) {
       return artifactService.get(pageResponse.getResponse().get(0).getArtifactId());
     }
     return null;
@@ -66,7 +66,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
         context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
     if (awsLambdaContextElement != null) {
       List<String> aliases = awsLambdaContextElement.getAliases();
-      if (isNotEmpty(aliases)) {
+      if (hasSome(aliases)) {
         return aliases.stream().map(context::renderExpression).collect(toList());
       }
     }
@@ -79,7 +79,7 @@ public class AwsLambdaRollback extends AwsLambdaState {
         context.getContextElement(ContextElementType.PARAM, AWS_LAMBDA_REQUEST_PARAM);
     if (awsLambdaContextElement != null) {
       List<Tag> tags = awsLambdaContextElement.getTags();
-      if (isNotEmpty(tags)) {
+      if (hasSome(tags)) {
         Map<String, String> functionTags = new HashMap<>();
         tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
         return functionTags;

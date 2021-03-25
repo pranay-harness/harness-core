@@ -1,8 +1,8 @@
 package io.harness.audit.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
@@ -24,19 +24,19 @@ public class AuditFilterPropertiesValidator {
   }
 
   private void validateFilterRequest(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    if (isEmpty(accountIdentifier)) {
+    if (hasNone(accountIdentifier)) {
       throw new InvalidRequestException("Missing accountIdentifier in the audit filter request");
     }
     if (auditFilterPropertiesDTO == null) {
       return;
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
+    if (hasSome(auditFilterPropertiesDTO.getScopes())) {
       verifyScopes(accountIdentifier, auditFilterPropertiesDTO.getScopes());
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
+    if (hasSome(auditFilterPropertiesDTO.getResources())) {
       verifyResources(auditFilterPropertiesDTO.getResources());
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
+    if (hasSome(auditFilterPropertiesDTO.getPrincipals())) {
       verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
     }
     verifyTimeFilter(auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime());
@@ -51,7 +51,7 @@ public class AuditFilterPropertiesValidator {
   }
 
   private void verifyScopes(String accountIdentifier, List<ResourceScope> resourceScopes) {
-    if (isNotEmpty(resourceScopes)) {
+    if (hasSome(resourceScopes)) {
       resourceScopes.forEach(resourceScope -> verifyScope(accountIdentifier, resourceScope));
     }
   }
@@ -61,7 +61,7 @@ public class AuditFilterPropertiesValidator {
       throw new InvalidRequestException(String.format(
           "Invalid resource scope filter with accountIdentifier %s.", resourceScope.getAccountIdentifier()));
     }
-    if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getProjectIdentifier())) {
+    if (hasNone(resourceScope.getOrgIdentifier()) && hasSome(resourceScope.getProjectIdentifier())) {
       throw new InvalidRequestException(
           String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
               resourceScope.getProjectIdentifier()));
@@ -69,22 +69,22 @@ public class AuditFilterPropertiesValidator {
   }
 
   private void verifyResources(List<Resource> resources) {
-    if (isNotEmpty(resources)) {
+    if (hasSome(resources)) {
       resources.forEach(this::verifyResource);
     }
   }
 
   private void verifyResource(Resource resource) {
-    if (isEmpty(resource.getType())) {
+    if (hasNone(resource.getType())) {
       throw new InvalidRequestException("Invalid resource filter with missing resource type.");
     }
     List<KeyValuePair> labels = resource.getLabels();
-    if (isNotEmpty(labels)) {
+    if (hasSome(labels)) {
       labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
+        if (hasNone(label.getKey())) {
           throw new InvalidRequestException("Invalid resource filter with missing key in resource labels.");
         }
-        if (isEmpty(label.getValue())) {
+        if (hasNone(label.getValue())) {
           throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
         }
       });

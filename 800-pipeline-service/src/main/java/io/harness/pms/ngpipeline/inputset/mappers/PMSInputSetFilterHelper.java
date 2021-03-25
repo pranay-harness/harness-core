@@ -1,6 +1,6 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -19,16 +19,16 @@ public class PMSInputSetFilterHelper {
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, InputSetListTypePMS type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(InputSetEntityKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(InputSetEntityKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(InputSetEntityKeys.projectIdentifier).is(projectIdentifier);
     }
-    if (isNotEmpty(pipelineIdentifier)) {
+    if (hasSome(pipelineIdentifier)) {
       criteria.and(InputSetEntityKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
     criteria.and(InputSetEntityKeys.deleted).is(deleted);
@@ -37,7 +37,7 @@ public class PMSInputSetFilterHelper {
       criteria.and(InputSetEntityKeys.inputSetEntityType).is(getInputSetType(type));
     }
 
-    if (isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(InputSetEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(InputSetEntityKeys.identifier)

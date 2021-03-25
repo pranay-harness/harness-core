@@ -1,7 +1,7 @@
 package software.wings.beans.alert;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -69,8 +69,8 @@ public class NoEligibleDelegatesAlert implements AlertData {
         && taskType == otherAlertData.getTaskType() && StringUtils.equals(appId, otherAlertData.getAppId())
         && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId())
-        && ((isEmpty(executionCapabilities) && isEmpty(otherAlertData.getExecutionCapabilities()))
-            || (isNotEmpty(executionCapabilities) && isNotEmpty(otherAlertData.getExecutionCapabilities())
+        && ((hasNone(executionCapabilities) && hasNone(otherAlertData.getExecutionCapabilities()))
+            || (hasSome(executionCapabilities) && hasSome(otherAlertData.getExecutionCapabilities())
                 && executionCapabilities.containsAll(otherAlertData.getExecutionCapabilities())
                 && otherAlertData.getExecutionCapabilities().containsAll(executionCapabilities)));
   }
@@ -95,7 +95,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
         title.append("with service infrastructure ").append(infrastructureMapping.getDisplayName());
       }
     }
-    if (isNotEmpty(executionCapabilities)) {
+    if (hasSome(executionCapabilities)) {
       List<SelectorCapability> selectorCapabilities = executionCapabilities.stream()
                                                           .filter(c -> c instanceof SelectorCapability)
                                                           .map(c -> (SelectorCapability) c)

@@ -1,7 +1,8 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -9,7 +10,6 @@ import static software.wings.sm.StateType.ENV_STATE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.EntityType;
@@ -42,13 +42,13 @@ public class PipelineServiceHelper {
       return;
     }
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (EmptyPredicate.isEmpty(userVariables)) {
+    if (hasNone(userVariables)) {
       return;
     }
     List<Variable> infraDefVariables = userVariables.stream()
                                            .filter(t -> EntityType.INFRASTRUCTURE_DEFINITION == t.obtainEntityType())
                                            .collect(Collectors.toList());
-    if (EmptyPredicate.isEmpty(infraDefVariables) || infraDefVariables.size() > 1) {
+    if (hasNone(infraDefVariables) || infraDefVariables.size() > 1) {
       return;
     }
 
@@ -56,7 +56,7 @@ public class PipelineServiceHelper {
     String infraVarNameInPipelineStage = infraDefVariables.get(0).getName();
 
     if (isRuntimeVariableEnabled && runtimeInputsConfig != null
-        && isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())
+        && hasSome(runtimeInputsConfig.getRuntimeInputVariables())
         && runtimeInputsConfig.getRuntimeInputVariables().contains(infraVarNameInPipelineStage)) {
       pipelineStage.setLooped(true);
       pipelineStage.setLoopedVarName(infraVarNameInPipelineStage);
@@ -64,7 +64,7 @@ public class PipelineServiceHelper {
     }
 
     String infraValueInPipelineStage = pipelineStageElement.getWorkflowVariables().get(infraVarNameInPipelineStage);
-    if (EmptyPredicate.isEmpty(infraValueInPipelineStage)) {
+    if (hasNone(infraValueInPipelineStage)) {
       throw new InvalidRequestException(
           "No value supplied in pipeline for infra variable: " + infraVarNameInPipelineStage);
     }
@@ -90,16 +90,15 @@ public class PipelineServiceHelper {
           List<String> loopedValues = new ArrayList<>();
           // In case an Infra var is marked runtime, we assume the stage to be looped.
           // The default value can be empty, or a single value as well.
-          if (isRuntimeEnabled && isNotEmpty(runtimeVariablesInStage) && runtimeVariablesInStage.contains(varLooped)) {
-            if (isNotEmpty(pipelineStageVariableValues) && pipelineStageVariableValues.containsKey(varLooped)) {
+          if (isRuntimeEnabled && hasSome(runtimeVariablesInStage) && runtimeVariablesInStage.contains(varLooped)) {
+            if (hasSome(pipelineStageVariableValues) && pipelineStageVariableValues.containsKey(varLooped)) {
               String defaultValue = pipelineStageVariableValues.get(varLooped);
-              if (isNotEmpty(defaultValue)) {
+              if (hasSome(defaultValue)) {
                 loopedValues = Arrays.asList(pipelineStageVariableValues.get(varLooped).trim().split("\\s*,\\s*"));
               }
             }
           } else {
-            if (EmptyPredicate.isEmpty(pipelineStageVariableValues)
-                || !pipelineStageVariableValues.containsKey(varLooped)
+            if (hasNone(pipelineStageVariableValues) || !pipelineStageVariableValues.containsKey(varLooped)
                 || !pipelineStageVariableValues.get(varLooped).contains(",")) {
               throw new InvalidRequestException("Pipeline stage marked as loop, but doesnt have looping config");
             }
@@ -117,7 +116,7 @@ public class PipelineServiceHelper {
     List<String> envIds = new ArrayList<>();
     boolean envIdsCollected = false;
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      if (isNotEmpty(pipelineStage.getPipelineStageElements())) {
+      if (hasSome(pipelineStage.getPipelineStageElements())) {
         for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
           if (pse.getParallelIndex() == parallelIndex) {
             String envId = resolveEnvIdForPipelineStage(

@@ -9,8 +9,8 @@ import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.SizeFunction.size;
 import static io.harness.data.structure.UUIDGenerator.convertFromBase64;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -91,7 +91,6 @@ import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelect
 import io.harness.capability.internal.CapabilityAttributes;
 import io.harness.capability.service.CapabilityService;
 import io.harness.configuration.DeployMode;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
@@ -472,7 +471,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
-    if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
+    if (hasNone(task.getData().getParameters()) || hasSome(task.getExecutionCapabilities())) {
       return;
     }
 
@@ -484,7 +483,7 @@ public class DelegateServiceImpl implements DelegateService {
                 -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(maskingEvaluator).stream())
             .collect(toList()));
 
-    if (isNotEmpty(encryptionConfigs)) {
+    if (hasSome(encryptionConfigs)) {
       task.getExecutionCapabilities().addAll(
           EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForSecretManagers(
               encryptionConfigs, maskingEvaluator));
@@ -651,7 +650,7 @@ public class DelegateServiceImpl implements DelegateService {
       selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
     }
 
-    if (delegateProfile != null && isNotEmpty(delegateProfile.getSelectors())) {
+    if (delegateProfile != null && hasSome(delegateProfile.getSelectors())) {
       for (String selector : delegateProfile.getSelectors()) {
         selectorTypeMap.put(selector.toLowerCase(), SelectorType.PROFILE_SELECTORS);
       }
@@ -806,7 +805,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String getHostNameForGroupedDelegate(String hostname) {
-    if (isNotEmpty(hostname)) {
+    if (hasSome(hostname)) {
       int indexOfLastHyphen = hostname.lastIndexOf('-');
       if (indexOfLastHyphen > 0) {
         hostname = hostname.substring(0, indexOfLastHyphen) + "-{n}";
@@ -1222,7 +1221,7 @@ public class DelegateServiceImpl implements DelegateService {
             .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
-    if (isNotEmpty(scriptParams)) {
+    if (hasSome(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
       log.info("Upgrading delegate to version: {}", upgradeToVersion);
       boolean doUpgrade;
@@ -1255,7 +1254,7 @@ public class DelegateServiceImpl implements DelegateService {
             .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
-    if (isNotEmpty(scriptParams)) {
+    if (hasSome(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
       log.info("Upgrading delegate to version: {}", upgradeToVersion);
       boolean doUpgrade;
@@ -1335,8 +1334,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean useCDN =
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
 
-    boolean isCiEnabled = inquiry.isCiEnabled()
-        && isNotEmpty(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
+    boolean isCiEnabled = inquiry.isCiEnabled() && hasSome(mainConfiguration.getPortal().getJwtNextGenManagerSecret())
         && nonNull(delegateGrpcConfig.getPort());
 
     try {
@@ -1602,7 +1600,7 @@ public class DelegateServiceImpl implements DelegateService {
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .build());
 
-      if (isEmpty(scriptParams)) {
+      if (hasNone(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
       }
 
@@ -1721,7 +1719,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                                                      .delegateType(DOCKER)
                                                                                      .build());
 
-      if (isEmpty(scriptParams)) {
+      if (hasNone(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
       }
 
@@ -2090,7 +2088,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
-    if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+    if (hasSome(delegatesToRetain)) {
       persistence.delete(persistence.createQuery(Delegate.class)
                              .filter(DelegateKeys.accountId, accountId)
                              .field(DelegateKeys.uuid)
@@ -2268,7 +2266,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
-      if (isEmpty(delegate.getDescription())) {
+      if (hasNone(delegate.getDescription())) {
         delegate.setDescription(existingDelegate.getDescription());
       }
       if (ECS.equals(delegate.getDelegateType())) {
@@ -2467,7 +2465,7 @@ public class DelegateServiceImpl implements DelegateService {
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
-      if (isEmpty(eligibleDelegateIds)) {
+      if (hasNone(eligibleDelegateIds)) {
         log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
           throw new NoInstalledDelegatesException();
@@ -2571,7 +2569,7 @@ public class DelegateServiceImpl implements DelegateService {
   public void convertToExecutionCapability(DelegateTask task) {
     Set<ExecutionCapability> selectorCapabilities = new HashSet<>();
 
-    if (isNotEmpty(task.getTags())) {
+    if (hasSome(task.getTags())) {
       SelectorCapability selectorCapability =
           SelectorCapability.builder().selectors(new HashSet<>(task.getTags())).selectorOrigin(TASK_SELECTORS).build();
       selectorCapabilities.add(selectorCapability);
@@ -2580,7 +2578,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (task.getData() != null && task.getData().getTaskType() != null) {
       TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
       TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
-      if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
+      if (mapFromTaskType != null && hasSome(mapFromTaskType.getSelectors())) {
         SelectorCapability selectorCapability = SelectorCapability.builder()
                                                     .selectors(mapFromTaskType.getSelectors())
                                                     .selectorOrigin(TASK_CATEGORY_MAP)
@@ -2655,7 +2653,7 @@ public class DelegateServiceImpl implements DelegateService {
       List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
       delegateSelectionLogsService.save(batch);
 
-      if (isEmpty(task.getExecutionCapabilities())) {
+      if (hasNone(task.getExecutionCapabilities())) {
         return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
       }
 
@@ -2666,7 +2664,7 @@ public class DelegateServiceImpl implements DelegateService {
               .filter(capability -> EvaluationMode.AGENT == capability.evaluationMode())
               .collect(toList());
 
-      if (isEmpty(agentCapabilities)) {
+      if (hasNone(agentCapabilities)) {
         return pickDelegateForTaskWithoutAnyAgentCapabilities(task, activeDelegates);
       }
 
@@ -2721,7 +2719,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {
-    if (isEmpty(activeDelegates)) {
+    if (hasNone(activeDelegates)) {
       log.warn("No active delegates found to execute the task.");
       return null;
     }
@@ -2753,7 +2751,7 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   public void upsertCapabilityRequirements(DelegateTask task) {
     if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, task.getAccountId())
-        && isNotEmpty(task.getExecutionCapabilities())) {
+        && hasSome(task.getExecutionCapabilities())) {
       // Check if any capability with AGENT evaluation mode is present
       List<ExecutionCapability> agentCapabilities =
           task.getExecutionCapabilities()
@@ -2761,7 +2759,7 @@ public class DelegateServiceImpl implements DelegateService {
               .filter(capability -> EvaluationMode.AGENT == capability.evaluationMode())
               .collect(toList());
 
-      if (isNotEmpty(agentCapabilities)) {
+      if (hasSome(agentCapabilities)) {
         List<Delegate> accountDelegates = assignDelegateService.getAccountDelegates(task.getAccountId());
         if (accountDelegates != null) {
           BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
@@ -2888,7 +2886,7 @@ public class DelegateServiceImpl implements DelegateService {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    if (isNotEmpty(capabilityCheckDetailsList)) {
+    if (hasSome(capabilityCheckDetailsList)) {
       DelegateTask capabilitiesCheckTask =
           buildCapabilitiesCheckTask(accountId, delegateId, capabilityCheckDetailsList);
 
@@ -2987,7 +2985,7 @@ public class DelegateServiceImpl implements DelegateService {
     List<CapabilityTaskSelectionDetails> taskSelectionDetailsList =
         capabilityService.getAllCapabilityTaskSelectionDetails(accountId, capabilityId);
 
-    if (isEmpty(taskSelectionDetailsList)) {
+    if (hasNone(taskSelectionDetailsList)) {
       return true;
     }
 
@@ -3029,7 +3027,7 @@ public class DelegateServiceImpl implements DelegateService {
   public boolean isDelegateInCapabilityScope(
       String accountId, String delegateId, CapabilityTaskSelectionDetails taskSelectionDetails) {
     List<ExecutionCapability> selectorCapabilities = new ArrayList<>();
-    if (isNotEmpty(taskSelectionDetails.getTaskSelectors())) {
+    if (hasSome(taskSelectionDetails.getTaskSelectors())) {
       taskSelectionDetails.getTaskSelectors().forEach(
           (origin, selectors)
               -> selectorCapabilities.add(SelectorCapability.builder()
@@ -3042,7 +3040,7 @@ public class DelegateServiceImpl implements DelegateService {
     String appId = null;
     String envId = null;
     String infraMappingId = null;
-    if (isNotEmpty(taskSelectionDetails.getTaskSetupAbstractions())) {
+    if (hasSome(taskSelectionDetails.getTaskSetupAbstractions())) {
       appId = taskSelectionDetails.getTaskSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD);
       envId = taskSelectionDetails.getTaskSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD);
       infraMappingId =
@@ -3087,14 +3085,13 @@ public class DelegateServiceImpl implements DelegateService {
       try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
                TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);) {
         // Verify presence of Environment type, if EnvironmentId is present
-        if (isNotEmpty(task.getSetupAbstractions())
-            && task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD) != null
+        if (hasSome(task.getSetupAbstractions()) && task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD) != null
             && task.getSetupAbstractions().get(Cd1SetupFields.ENV_TYPE_FIELD) == null) {
           log.error("Missing envType setup abstraction", new RuntimeException());
         }
 
         // Verify presence of ServiceId, if Infrastructure Mapping is present
-        if (isNotEmpty(task.getSetupAbstractions())
+        if (hasSome(task.getSetupAbstractions())
             && task.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD) != null
             && task.getSetupAbstractions().get(Cd1SetupFields.SERVICE_ID_FIELD) == null) {
           log.error("Missing serviceId setup abstraction", new RuntimeException());
@@ -3141,12 +3138,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
     embedCapabilitiesInDelegateTask(task,
-        delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
+        delegateTaskPackage == null || hasNone(delegateTaskPackage.getEncryptionConfigs())
             ? emptyList()
             : delegateTaskPackage.getEncryptionConfigs().values(),
         new ManagerPreviewExpressionEvaluator());
 
-    if (isNotEmpty(task.getExecutionCapabilities())) {
+    if (hasSome(task.getExecutionCapabilities())) {
       log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
           task.getData().getTaskType(), task.getExecutionCapabilities()));
     }
@@ -3377,7 +3374,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
-      if (isNotEmpty(whitelistedDelegates)) {
+      if (hasSome(whitelistedDelegates)) {
         log.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
         return;
       }
@@ -3403,7 +3400,7 @@ public class DelegateServiceImpl implements DelegateService {
   private String generateValidationError(DelegateTask delegateTask) {
     String capabilities = "";
     List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
-    if (isNotEmpty(executionCapabilities)) {
+    if (hasSome(executionCapabilities)) {
       capabilities = (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
                          .stream()
                          .map(ExecutionCapability::fetchCapabilityBasis)
@@ -3417,7 +3414,7 @@ public class DelegateServiceImpl implements DelegateService {
     Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
     Set<String> validatingDelegateIds = delegateTask.getValidatingDelegateIds();
 
-    if (isNotEmpty(validationCompleteDelegateIds)) {
+    if (hasSome(validationCompleteDelegateIds)) {
       delegates = join(", ",
           validationCompleteDelegateIds.stream()
               .map(delegateId -> {
@@ -3429,7 +3426,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegates = "no delegates";
     }
 
-    if (isNotEmpty(validatingDelegateIds)) {
+    if (hasSome(validatingDelegateIds)) {
       timedoutDelegates = join(", ",
           validatingDelegateIds.stream()
               .filter(p -> !validationCompleteDelegateIds.contains(p))
@@ -3470,7 +3467,7 @@ public class DelegateServiceImpl implements DelegateService {
   private boolean isValidationComplete(DelegateTask delegateTask) {
     Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
     Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
-    boolean allDelegatesFinished = isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
+    boolean allDelegatesFinished = hasSome(validatingDelegates) && hasSome(completeDelegates)
         && completeDelegates.containsAll(validatingDelegates);
     if (allDelegatesFinished) {
       log.info("Validation attempts are complete for task", delegateTask.getUuid());
@@ -3530,7 +3527,7 @@ public class DelegateServiceImpl implements DelegateService {
               delegateTask.getData().getExpressionFunctorToken(), ngSecretService, delegateTask.getSetupAbstractions());
 
       List<ExecutionCapability> executionCapabilityList = emptyList();
-      if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
+      if (hasSome(delegateTask.getExecutionCapabilities())) {
         executionCapabilityList = delegateTask.getExecutionCapabilities()
                                       .stream()
                                       .filter(x -> x.evaluationMode() == EvaluationMode.AGENT)
@@ -3622,7 +3619,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (secretManagerFunctor != null) {
       encryptionConfigs.putAll(secretManagerFunctor.getEncryptionConfigs());
       secretDetails.putAll(secretManagerFunctor.getSecretDetails());
-      if (isNotEmpty(secretManagerFunctor.getEvaluatedSecrets())) {
+      if (hasSome(secretManagerFunctor.getEvaluatedSecrets())) {
         secrets.addAll(secretManagerFunctor.getEvaluatedSecrets().values());
       }
     }
@@ -3630,13 +3627,13 @@ public class DelegateServiceImpl implements DelegateService {
     if (ngSecretManagerFunctor != null) {
       encryptionConfigs.putAll(ngSecretManagerFunctor.getEncryptionConfigs());
       secretDetails.putAll(ngSecretManagerFunctor.getSecretDetails());
-      if (isNotEmpty(ngSecretManagerFunctor.getEvaluatedSecrets())) {
+      if (hasSome(ngSecretManagerFunctor.getEvaluatedSecrets())) {
         secrets.addAll(ngSecretManagerFunctor.getEvaluatedSecrets().values());
       }
     }
 
     if (sweepingOutputSecretFunctor != null) {
-      if (isNotEmpty(sweepingOutputSecretFunctor.getEvaluatedSecrets())) {
+      if (hasSome(sweepingOutputSecretFunctor.getEvaluatedSecrets())) {
         secrets.addAll(sweepingOutputSecretFunctor.getEvaluatedSecrets());
       }
     }
@@ -4016,7 +4013,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (existingUUID.timestamp() > currentUUID.timestamp()) {
           Delegate delegate = delegateCache.get(accountId, delegateId, false);
           boolean sameShellScriptDelegateLocation = DelegateType.SHELL_SCRIPT.equals(delegate.getDelegateType())
-              && (isEmpty(heartbeat.getLocation()) || isEmpty(existingConnection.getLocation())
+              && (hasNone(heartbeat.getLocation()) || hasNone(existingConnection.getLocation())
                   || heartbeat.getLocation().equals(existingConnection.getLocation()));
           if (!sameShellScriptDelegateLocation) {
             log.error(
@@ -4208,7 +4205,7 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   void initDelegateWithConfigFromExistingDelegate(Delegate delegate) {
     List<Delegate> existingDelegates = getAllDelegatesMatchingGroupName(delegate);
-    if (isNotEmpty(existingDelegates)) {
+    if (hasSome(existingDelegates)) {
       initNewDelegateWithExistingDelegate(delegate, existingDelegates.get(0));
     }
   }
@@ -4413,7 +4410,7 @@ public class DelegateServiceImpl implements DelegateService {
     List<Delegate> retVal = new ArrayList<>();
     List<Delegate> delegates = getAllDelegatesMatchingGroupName(delegate);
 
-    if (isEmpty(delegates)) {
+    if (hasNone(delegates)) {
       return null;
     }
 
@@ -4440,7 +4437,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    if (isNotEmpty(retVal)) {
+    if (hasSome(retVal)) {
       return retVal.get(0);
     } else {
       return null;

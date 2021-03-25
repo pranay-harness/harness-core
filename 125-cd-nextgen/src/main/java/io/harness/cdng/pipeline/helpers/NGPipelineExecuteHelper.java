@@ -1,7 +1,8 @@
 package io.harness.cdng.pipeline.helpers;
 
 import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.EVENT_PAYLOAD_KEY;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
@@ -9,7 +10,6 @@ import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -51,7 +51,7 @@ public class NGPipelineExecuteHelper {
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
       String inputSetPipelineYaml, String eventPayload, boolean useFQNIfErrorResponse, TriggeredBy triggeredBy) {
     MergeInputSetResponse mergeInputSetResponse;
-    if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
+    if (hasNone(inputSetPipelineYaml)) {
       NgPipeline pipeline = inputSetMergeHelper.getOriginalOrTemplatePipeline(
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
       mergeInputSetResponse = MergeInputSetResponse.builder().mergedPipeline(pipeline).build();
@@ -150,7 +150,7 @@ public class NGPipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    if (isNotEmpty(contextAttributes)) {
+    if (hasSome(contextAttributes)) {
       contextAttributes.forEach((key, val) -> {
         if (val != null && String.class.isAssignableFrom(val.getClass())) {
           abstractionsBuilder.put(key, (String) val);

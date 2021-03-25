@@ -1,9 +1,9 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.jira.deserializer.JiraCreateMetadataDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -46,14 +46,14 @@ public class JiraIssueCreateMetadataNG {
   }
 
   public void updateStatuses(List<JiraStatusNG> statuses) {
-    if (EmptyPredicate.isEmpty(statuses)) {
+    if (hasNone(statuses)) {
       return;
     }
     this.projects.values().forEach(p -> p.updateStatuses(statuses));
   }
 
   public void updateProjectStatuses(String projectKey, List<JiraIssueTypeNG> projectStatuses) {
-    if (EmptyPredicate.isEmpty(projectStatuses)) {
+    if (hasNone(projectStatuses)) {
       return;
     }
     this.projects.values()

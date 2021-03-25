@@ -1,5 +1,6 @@
 package io.harness.expression;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.rule.Owner;
@@ -410,7 +410,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
 
   private static EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator();
-    if (EmptyPredicate.isEmpty(contextMap)) {
+    if (hasNone(contextMap)) {
       return evaluator;
     }
 

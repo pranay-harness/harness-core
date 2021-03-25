@@ -1,8 +1,8 @@
 package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.exception.WingsException.USER;
 
@@ -52,7 +52,7 @@ public class AuthenticationUtils {
   }
 
   public User getUser(String userName, EnumSet<ReportTarget> reportTargets) {
-    User user = isNotEmpty(userName) ? getUserByEmail(userName) : null;
+    User user = hasSome(userName) ? getUserByEmail(userName) : null;
     if (user == null) {
       log.info("User {} does not exists.", userName);
       if (reportTargets == null) {
@@ -73,7 +73,7 @@ public class AuthenticationUtils {
 
   public Account getDefaultAccount(User user) {
     String defaultAccountId = user.getDefaultAccountId();
-    if (isEmpty(defaultAccountId)) {
+    if (hasNone(defaultAccountId)) {
       Preconditions.checkNotNull(user.getAccounts(), "Account field in user is null.");
       return user.getAccounts().get(0);
     } else {

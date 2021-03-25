@@ -1,6 +1,6 @@
 package io.harness.delegate.task.terraform;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 
@@ -28,7 +28,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
   @Override
   public void downloadTfStateFile(String workspace, String accountId, String currentStateFileId, String scriptDirectory)
       throws IOException {
-    File tfStateFile = (isEmpty(workspace))
+    File tfStateFile = (hasNone(workspace))
         ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
         : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
 

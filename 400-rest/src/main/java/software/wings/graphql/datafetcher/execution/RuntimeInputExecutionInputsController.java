@@ -3,8 +3,8 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notBlankCheck;
 import static io.harness.validation.Validator.notNullCheck;
@@ -67,7 +67,7 @@ public class RuntimeInputExecutionInputsController {
       pipelineExecutionController.handleAuthentication(appId, pipeline);
       // Validate Required changes
       List<String> serviceIds = getArtifactNeededServices(appId, parameters, pipeline, pipelineExecution);
-      if (isEmpty(serviceIds)) {
+      if (hasNone(serviceIds)) {
         return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
       }
       PageRequest<Service> pageRequest = aPageRequest()
@@ -100,7 +100,7 @@ public class RuntimeInputExecutionInputsController {
         appId, workflowVariables, false, params.getPipelineExecutionId(), params.getPipelineStageElementId());
     if (finalDeploymentMetadata != null) {
       List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
-      if (isNotEmpty(artifactNeededServiceIds)) {
+      if (hasSome(artifactNeededServiceIds)) {
         return artifactNeededServiceIds;
       }
     }

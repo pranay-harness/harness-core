@@ -1,7 +1,7 @@
 package io.harness.execution.export.background;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -60,7 +60,7 @@ public class ExportExecutionsNotificationHelper {
   }
 
   private void dispatchToUserGroup(@NotNull ExportExecutionsRequest request) {
-    if (isEmpty(request.getUserGroupIds())) {
+    if (hasNone(request.getUserGroupIds())) {
       return;
     }
 
@@ -100,7 +100,7 @@ public class ExportExecutionsNotificationHelper {
 
     if (failed) {
       placeholderValues.put(
-          "ERROR_MESSAGE", isEmpty(request.getErrorMessage()) ? "unknown" : request.getErrorMessage());
+          "ERROR_MESSAGE", hasNone(request.getErrorMessage()) ? "unknown" : request.getErrorMessage());
     } else {
       ExportExecutionsRequestSummary summary = exportExecutionsRequestHelper.prepareSummary(request);
       placeholderValues.put("DOWNLOAD_LINK", summary.getDownloadLink());

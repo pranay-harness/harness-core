@@ -1,8 +1,8 @@
 package io.harness.event.handler.impl.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.model.EventConstants.EMAIL;
 import static io.harness.event.model.EventConstants.FIRST_NAME;
 import static io.harness.event.model.EventConstants.LAST_NAME;
@@ -122,8 +122,8 @@ public class AccountChangeHandler implements EventHandler {
             .userId(user.getId())
             .traits(identityTraits.put(NAME, user.getUserName())
                         .put(EMAIL, user.getEmail())
-                        .put(FIRST_NAME, isNotEmpty(firstName) ? firstName : user.getEmail())
-                        .put(LAST_NAME, isNotEmpty(lastName) ? lastName : "")
+                        .put(FIRST_NAME, hasSome(firstName) ? firstName : user.getEmail())
+                        .put(LAST_NAME, hasSome(lastName) ? lastName : "")
                         .build());
 
     integrations.forEach((k, v) -> {
@@ -163,7 +163,7 @@ public class AccountChangeHandler implements EventHandler {
 
     List<User> users = userService.getUsersOfAccount(accountId);
     long count = 0;
-    if (isNotEmpty(users)) {
+    if (hasSome(users)) {
       count = users.stream()
                   .filter(userObj -> {
                     if (userObj.getEmail() != null) {
@@ -190,8 +190,8 @@ public class AccountChangeHandler implements EventHandler {
         ImmutableMap.<String, Object>builder()
             .put("name", name)
             .put("company_name", account.getCompanyName())
-            .put("account_type", isEmpty(accountType) ? "" : accountType)
-            .put("cluster", isEmpty(env) ? "" : env)
+            .put("account_type", hasNone(accountType) ? "" : accountType)
+            .put("cluster", hasNone(env) ? "" : env)
             .put("usage_service_instances_30d", usage)
             .put("security_secrets_manager_default",
                 defaultSecretManager != null ? defaultSecretManager.getEncryptionType().name() : "LOCAL")

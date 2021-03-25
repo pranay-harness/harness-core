@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.datacollection;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -17,7 +18,7 @@ public class DataCollectionLogContext extends AutoLogContext {
 
   private static Map<String, String> getContext(String dataCollectionWorkerId, DataCollectionType dataCollectionType) {
     Map<String, String> contextMap = new HashMap<>();
-    if (isNotEmpty(dataCollectionWorkerId)) {
+    if (hasSome(dataCollectionWorkerId)) {
       contextMap.put(DATA_COLLECTION_WORKER_ID, dataCollectionWorkerId);
     }
     if (dataCollectionType != null) {

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -94,9 +94,9 @@ public class TimeSeriesRiskSummaryMigration implements Migration {
       riskSummary.setAppId(mlAnalysisResponse.getAppId());
       TreeBasedTable<String, String, TimeSeriesRiskData> risks = TreeBasedTable.create();
 
-      if (isNotEmpty(mlAnalysisResponse.getTransactions())) {
+      if (hasSome(mlAnalysisResponse.getTransactions())) {
         for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
-          if (isNotEmpty(txnSummary.getMetrics())) {
+          if (hasSome(txnSummary.getMetrics())) {
             for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
               if (mlMetricSummary.getResults() != null) {
                 int maxRisk = mlMetricSummary.getMax_risk();

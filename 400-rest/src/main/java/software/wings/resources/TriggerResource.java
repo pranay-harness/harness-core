@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -69,7 +69,7 @@ public class TriggerResource {
   public RestResponse<PageResponse<Trigger>> list(@QueryParam("appId") List<String> appIds,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Trigger> pageRequest) {
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       triggerService.authorizeAppAccess(appIds);
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }

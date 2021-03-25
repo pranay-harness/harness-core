@@ -1,6 +1,6 @@
 package io.harness.security.encryption;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
 
 import lombok.AllArgsConstructor;
@@ -18,7 +18,7 @@ public class EncryptedDataDetail {
   private String fieldName;
 
   public SecretUniqueIdentifier getIdentifier() {
-    String kmsId = isNotEmpty(encryptionConfig.getUuid()) ? encryptionConfig.getUuid() : encryptedData.getKmsId();
+    String kmsId = hasSome(encryptionConfig.getUuid()) ? encryptionConfig.getUuid() : encryptedData.getKmsId();
 
     if (encryptionConfig.getEncryptionType() == CUSTOM) {
       return ParameterizedSecretUniqueIdentifier.builder()
@@ -27,7 +27,7 @@ public class EncryptedDataDetail {
           .build();
     }
 
-    if (isNotEmpty(encryptedData.getPath())) {
+    if (hasSome(encryptedData.getPath())) {
       return ReferencedSecretUniqueIdentifier.builder().path(encryptedData.getPath()).kmsId(kmsId).build();
     }
 

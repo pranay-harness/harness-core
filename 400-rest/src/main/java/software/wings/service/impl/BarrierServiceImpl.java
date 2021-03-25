@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.distribution.barrier.Barrier.getDuration;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
@@ -384,7 +384,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public List<BarrierInstance> obtainInstances(
       String appId, List<OrchestrationWorkflowInfo> orchestrations, String pipelineExecutionId, int parallelIndex) {
-    if (isEmpty(orchestrations)) {
+    if (hasNone(orchestrations)) {
       return null;
     }
 

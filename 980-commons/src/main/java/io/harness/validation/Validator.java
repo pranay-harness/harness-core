@@ -1,6 +1,7 @@
 package io.harness.validation;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -27,7 +28,7 @@ public class Validator {
   }
 
   public static <T> void notEmptyCheck(String message, Collection<T> value) {
-    if (EmptyPredicate.isEmpty(value)) {
+    if (hasNone(value)) {
       throw new InvalidRequestException(message);
     }
   }

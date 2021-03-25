@@ -3,7 +3,7 @@ package software.wings.service.impl.expression;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.noop;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.k8s.model.K8sExpressions.canaryDestination;
@@ -324,7 +324,7 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getServiceVariables(String appId, List<String> entityIds, EntityType entityType) {
-    if (isEmpty(entityIds)) {
+    if (hasNone(entityIds)) {
       return new TreeSet<>();
     }
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()

@@ -1,6 +1,7 @@
 package io.harness.cdng.expressions;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.expression.LateBindingValue;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -19,6 +20,6 @@ public class AccountFunctor implements LateBindingValue {
   @Override
   public Object bind() {
     String accountId = AmbianceHelper.getAccountId(ambiance);
-    return EmptyPredicate.isEmpty(accountId) ? null : accountService.get(accountId);
+    return hasNone(accountId) ? null : accountService.get(accountId);
   }
 }

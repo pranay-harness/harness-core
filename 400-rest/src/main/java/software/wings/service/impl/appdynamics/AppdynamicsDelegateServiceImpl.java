@@ -1,7 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
@@ -82,9 +82,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails));
     List<NewRelicApplication> newRelicApplications = requestExecutor.executeRequest(request);
 
-    if (isNotEmpty(newRelicApplications)) {
+    if (hasSome(newRelicApplications)) {
       newRelicApplications = newRelicApplications.stream()
-                                 .filter(application -> isNotEmpty(application.getName()))
+                                 .filter(application -> hasSome(application.getName()))
                                  .sorted(Comparator.comparing(NewRelicApplication::getName))
                                  .collect(Collectors.toList());
     }
@@ -99,9 +99,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .listAllApplications(getHeaderWithCredentials(appDynamicsConnector, encryptionDetails));
     List<NewRelicApplication> newRelicApplications = requestExecutor.executeRequest(request);
 
-    if (isNotEmpty(newRelicApplications)) {
+    if (hasSome(newRelicApplications)) {
       newRelicApplications = newRelicApplications.stream()
-                                 .filter(application -> isNotEmpty(application.getName()))
+                                 .filter(application -> hasSome(application.getName()))
                                  .sorted(Comparator.comparing(NewRelicApplication::getName))
                                  .collect(Collectors.toList());
     }
@@ -181,7 +181,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   private void parseAndAddExternalTier(
       Set<AppdynamicsTier> externalTiers, AppdynamicsMetric externalCallMetric, Set<AppdynamicsTier> allTiers) {
     List<AppdynamicsMetric> childMetrices = externalCallMetric.getChildMetrices();
-    if (isEmpty(childMetrices)) {
+    if (hasNone(childMetrices)) {
       return;
     }
 
@@ -243,7 +243,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         "End time was null while getting data from Appdynamics. StateExecutionId: ", apiCallLog.getStateExecutionId());
 
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|"
-        + (isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
+        + (hasNone(hostName) ? "*" : "Individual Nodes|" + hostName + "|*");
     apiCallLog.setTitle("Fetching metric data for " + metricPath);
     log.debug("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
@@ -351,7 +351,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final List<AppdynamicsMetric> tierMetrics = getTierBTMetrics(appDynamicsConfig,
         setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails, apiCallLog);
 
-    if (isEmpty(tierMetrics)) {
+    if (hasNone(tierMetrics)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
@@ -409,7 +409,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       List<Callable<AppdynamicsMetricValueValidationResponse>> callables = new ArrayList<>();
       metricPack.getMetrics()
           .stream()
-          .filter(metricDefinition -> metricDefinition.isIncluded() && isNotEmpty(metricDefinition.getValidationPath()))
+          .filter(metricDefinition -> metricDefinition.isIncluded() && hasSome(metricDefinition.getValidationPath()))
           .forEach(metricDefinition -> callables.add(() -> {
             String metricPath =
                 metricDefinition.getValidationPath().replaceAll(CVNextGenConstants.APPD_TIER_ID_PLACEHOLDER, tierName);
@@ -423,7 +423,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
                       metricPackName + ":" + metricDefinition.getName() + ":" + requestGuid),
                   metriDataRequest);
 
-              if (isEmpty(appdynamicsMetricData) || isEmpty(appdynamicsMetricData.get(0).getMetricValues())) {
+              if (hasNone(appdynamicsMetricData) || hasNone(appdynamicsMetricData.get(0).getMetricValues())) {
                 return AppdynamicsMetricValueValidationResponse.builder()
                     .metricName(metricDefinition.getName())
                     .apiResponseStatus(ThirdPartyApiResponseStatus.NO_DATA)

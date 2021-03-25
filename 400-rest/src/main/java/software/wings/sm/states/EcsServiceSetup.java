@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.FailureType.TIMEOUT;
@@ -157,7 +157,7 @@ public class EcsServiceSetup extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    if (isEmpty(serviceSteadyStateTimeout)) {
+    if (hasNone(serviceSteadyStateTimeout)) {
       return null;
     }
     return Ints.checkedCast(TimeUnit.MINUTES.toMillis(DEFAULT_STATE_TIMEOUT_BUFFER_MIN

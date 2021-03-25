@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -14,7 +15,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -57,7 +57,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
       Service service = invocation.getArgumentAt(0, Service.class);
       String artifactStreamId = invocation.getArgumentAt(1, String.class);
       List<String> artifactStreamIds = service.getArtifactStreamIds();
-      if (EmptyPredicate.isEmpty(artifactStreamId) || !artifactStreamIds.contains(artifactStreamId)) {
+      if (hasNone(artifactStreamId) || !artifactStreamIds.contains(artifactStreamId)) {
         return service;
       }
 

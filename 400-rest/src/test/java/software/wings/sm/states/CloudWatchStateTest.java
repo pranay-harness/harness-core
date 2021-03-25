@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
@@ -88,8 +88,8 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     // not adding any metrics for verification
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
     assertThat(invalidFields.size() == 1).isTrue();
     assertThat(invalidFields.keySet().iterator().next()).isEqualTo("No metrics provided");
   }
@@ -101,9 +101,9 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     cloudWatchState.setShouldDoLambdaVerification(true);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoLambdaVerification()).isTrue();
     assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 
@@ -117,9 +117,9 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
     cloudWatchState.setShouldDoECSClusterVerification(true);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isTrue();
     assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
 
@@ -138,9 +138,9 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
 
     cloudWatchState.setLoadBalancerMetrics(metrics);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
-    assertThat(isNotEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(hasSome(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
     assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 
@@ -157,9 +157,9 @@ public class CloudWatchStateTest extends APMStateVerificationTestBase {
 
     cloudWatchState.setEc2Metrics(metricList);
     Map<String, String> invalidFields = cloudWatchState.validateFields();
-    assertThat(isEmpty(cloudWatchState.fetchEcsMetrics())).isTrue();
-    assertThat(isEmpty(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
-    assertThat(isNotEmpty(cloudWatchState.fetchEc2Metrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchEcsMetrics())).isTrue();
+    assertThat(hasNone(cloudWatchState.fetchLoadBalancerMetrics())).isTrue();
+    assertThat(hasSome(cloudWatchState.fetchEc2Metrics())).isTrue();
     assertThat(cloudWatchState.isShouldDoLambdaVerification()).isFalse();
     assertThat(cloudWatchState.isShouldDoECSClusterVerification()).isFalse();
 

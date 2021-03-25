@@ -1,6 +1,7 @@
 package io.harness.pms.exception;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.GeneralException;
 import io.harness.pms.contracts.plan.ErrorResponse;
@@ -32,7 +33,7 @@ public class PmsExceptionUtils {
   }
 
   public void checkAndThrowErrorResponseException(String msg, List<ErrorResponse> errorResponses) {
-    if (EmptyPredicate.isEmpty(errorResponses)) {
+    if (hasNone(errorResponses)) {
       return;
     }
     List<String> messages =

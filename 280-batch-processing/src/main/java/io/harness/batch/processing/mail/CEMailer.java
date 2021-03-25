@@ -1,7 +1,7 @@
 package io.harness.batch.processing.mail;
 
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -71,7 +71,7 @@ public class CEMailer {
       email.setHostName(smtpConfig.getHost());
       email.setSmtpPort(smtpConfig.getPort());
 
-      if (isNotEmpty(smtpConfig.getPassword())) {
+      if (hasSome(smtpConfig.getPassword())) {
         email.setAuthenticator(
             new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
       }

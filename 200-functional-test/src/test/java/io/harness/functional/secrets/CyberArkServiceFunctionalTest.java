@@ -1,5 +1,6 @@
 package io.harness.functional.secrets;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.clients.CyberArkVaultEncryptor;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
@@ -91,7 +91,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
       // Verifying the secret decryption
       cyberArkConfig.setClientCertificate(clientCertificate);
       char[] decrypted = cyberArkVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, cyberArkConfig);
-      assertThat(EmptyPredicate.isNotEmpty(decrypted)).isTrue();
+      assertThat(hasSome(decrypted)).isTrue();
       String decryptedSecret = String.valueOf(decrypted);
       log.info("Decrypted value: {}", decryptedSecret);
       assertThat(decryptedSecret).isEqualTo(":m23LF6f");

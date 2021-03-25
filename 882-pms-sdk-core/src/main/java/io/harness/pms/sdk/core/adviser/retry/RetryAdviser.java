@@ -1,11 +1,11 @@
 package io.harness.pms.sdk.core.adviser.retry;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -62,7 +62,7 @@ public class RetryAdviser implements Adviser {
     boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
     io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters parameters = extractParameters(advisingEvent);
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+    if (failureInfo != null && !hasNone(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
@@ -87,7 +87,7 @@ public class RetryAdviser implements Adviser {
             .build();
       case IGNORE:
         Builder builder = NextStepAdvise.newBuilder();
-        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+        if (hasSome(parameters.getNextNodeId())) {
           builder.setNextNodeId(parameters.getNextNodeId());
         }
         builder.setToStatus(Status.IGNORE_FAILED);
@@ -97,7 +97,7 @@ public class RetryAdviser implements Adviser {
         return adviserResponseBuilder.setNextStepAdvise(nextStepAdvise.build()).setType(AdviseType.NEXT_STEP).build();
       case MARK_AS_SUCCESS:
         MarkSuccessAdvise.Builder markSuccessBuilder = MarkSuccessAdvise.newBuilder();
-        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+        if (hasSome(parameters.getNextNodeId())) {
           markSuccessBuilder.setNextNodeId(parameters.getNextNodeId());
         }
         return adviserResponseBuilder.setMarkSuccessAdvise(markSuccessBuilder.build())
@@ -109,7 +109,7 @@ public class RetryAdviser implements Adviser {
   }
 
   private int calculateWaitInterval(List<Integer> waitIntervalList, int retryCount) {
-    if (isEmpty(waitIntervalList)) {
+    if (hasNone(waitIntervalList)) {
       return 0;
     }
     return waitIntervalList.size() <= retryCount ? waitIntervalList.get(waitIntervalList.size() - 1)

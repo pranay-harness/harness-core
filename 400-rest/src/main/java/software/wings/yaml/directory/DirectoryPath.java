@@ -1,6 +1,6 @@
 package software.wings.yaml.directory;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 public class DirectoryPath implements Cloneable {
   private static final String delimiter = "/";
@@ -12,7 +12,7 @@ public class DirectoryPath implements Cloneable {
   }
 
   public DirectoryPath add(String pathPart) {
-    if (isEmpty(path)) {
+    if (hasNone(path)) {
       this.path = pathPart;
     } else {
       this.path += delimiter + pathPart;

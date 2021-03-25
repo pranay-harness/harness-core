@@ -1,6 +1,6 @@
 package io.harness.functional.secrets;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.testframework.restutils.SecretsRestUtils.addSecret;
 import static io.harness.testframework.restutils.SecretsRestUtils.deleteSecret;
@@ -85,7 +85,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     assertNotNull(data);
 
     char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
-    assertTrue(isNotEmpty(decrypted));
+    assertTrue(hasSome(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);
     assertEquals(value, decryptedSecret);
@@ -107,7 +107,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     assertNotNull(data);
 
     char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
-    assertTrue(isNotEmpty(decrypted));
+    assertTrue(hasSome(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);
     assertEquals("Val2", decryptedSecret);
@@ -129,7 +129,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
     assertNotNull(data);
 
     char[] decrypted = azureVaultEncryptor.fetchSecretValue(getAccount().getUuid(), data, azureVaultConfig);
-    assertTrue(isNotEmpty(decrypted));
+    assertTrue(hasSome(decrypted));
 
     String decryptedSecret = String.valueOf(decrypted);
     assertEquals("Val1", decryptedSecret);

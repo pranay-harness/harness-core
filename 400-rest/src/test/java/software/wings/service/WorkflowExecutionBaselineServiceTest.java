@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -231,7 +231,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(
           stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
             assertThat(pipelineWorkflowExecution.isBaseline()).isTrue();
@@ -248,7 +248,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
     pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(
           stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
             assertThat(pipelineWorkflowExecution.isBaseline()).isFalse();
@@ -278,7 +278,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
     pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(
           stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
             assertThat(pipelineWorkflowExecution.isBaseline()).isTrue();
@@ -395,7 +395,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipeLineExecId);
       pipelineExecution = savedPipelineExecution.getPipelineExecution();
       List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-      if (isNotEmpty(pipelineStageExecutions)) {
+      if (hasSome(pipelineStageExecutions)) {
         pipelineStageExecutions.forEach(
             stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
               assertThat(pipelineWorkflowExecution.isBaseline()).isFalse();
@@ -424,7 +424,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipeLineExecId);
       pipelineExecution = savedPipelineExecution.getPipelineExecution();
       pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-      if (isNotEmpty(pipelineStageExecutions)) {
+      if (hasSome(pipelineStageExecutions)) {
         pipelineStageExecutions.forEach(
             stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
               assertThat(pipelineWorkflowExecution.isBaseline()).isTrue();
@@ -591,7 +591,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipelineExecutionId);
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(
           stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
             assertThat(pipelineWorkflowExecution.isBaseline()).isTrue();
@@ -630,7 +630,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
     AtomicInteger numOfBaselineWorkflow = new AtomicInteger(0);
     AtomicInteger numOfNonBaselineWorkflow = new AtomicInteger(0);
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(stageExecution -> {
         for (int i = 0; i < numOfWorkflowExecutions; i++) {
           if (i == workflowNum) {
@@ -759,7 +759,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
     pipelineExecution = savedPipelineExecution.getPipelineExecution();
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isNotEmpty(pipelineStageExecutions)) {
+    if (hasSome(pipelineStageExecutions)) {
       pipelineStageExecutions.forEach(
           stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
             assertThat(pipelineWorkflowExecution.isBaseline()).isTrue();

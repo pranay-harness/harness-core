@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -103,7 +103,7 @@ public class DataFetcherUtils {
 
   public boolean isSampleClusterDataPresent() {
     String sampleAccountId = configuration.getCeSetUpConfig().getSampleAccountId();
-    return isNotEmpty(sampleAccountId) && isAnyClusterDataPresent(sampleAccountId);
+    return hasSome(sampleAccountId) && isAnyClusterDataPresent(sampleAccountId);
   }
 
   private Integer getCount(String query, String accountId) {
@@ -166,7 +166,7 @@ public class DataFetcherUtils {
 
     String accountId = context.get("accountId");
 
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       throw new WingsException("accountId is null in the environment");
     }
 
@@ -193,7 +193,7 @@ public class DataFetcherUtils {
 
     String[] stringFilterValues = stringFilter.getValues();
 
-    if (isEmpty(stringFilterValues)) {
+    if (hasNone(stringFilterValues)) {
       throw new WingsException("Values cannot be empty");
     }
 
@@ -224,7 +224,7 @@ public class DataFetcherUtils {
 
     String[] idFilterValues = idFilter.getValues();
 
-    if (isEmpty(idFilterValues) && operator != QLIdOperator.NOT_NULL) {
+    if (hasNone(idFilterValues) && operator != QLIdOperator.NOT_NULL) {
       throw new WingsException("Values cannot be empty");
     }
 
@@ -265,7 +265,7 @@ public class DataFetcherUtils {
       throw new WingsException("Enum Operator cannot be null");
     }
 
-    if (isEmpty(filter.getValues())) {
+    if (hasNone(filter.getValues())) {
       throw new WingsException("Enum values cannot be empty");
     }
 
@@ -303,7 +303,7 @@ public class DataFetcherUtils {
 
     Number[] numberFilterValues = numberFilter.getValues();
 
-    if (isEmpty(numberFilterValues)) {
+    if (hasNone(numberFilterValues)) {
       throw new WingsException("Values cannot be empty");
     }
 
@@ -361,7 +361,7 @@ public class DataFetcherUtils {
 
     Number[] values = timeFilter.getValues();
 
-    if (isEmpty(values)) {
+    if (hasNone(values)) {
       throw new WingsException("Values cannot be empty");
     }
 

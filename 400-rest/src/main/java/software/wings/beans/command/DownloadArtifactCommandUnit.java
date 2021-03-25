@@ -1,8 +1,8 @@
 package software.wings.beans.command;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -186,7 +186,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         List<AzureArtifactsPackageFileInfo> fileInfos = azureArtifactsService.listFiles(
             (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionDetails,
             artifactStreamAttributes, metadata, true);
-        if (isEmpty(fileInfos)) {
+        if (hasNone(fileInfos)) {
           return SUCCESS;
         }
 
@@ -355,7 +355,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "    Authorization = \"" + authorizationHeader + "\"\n"
             + "    \"x-amz-content-sha256\" = \"" + EMPTY_BODY_SHA256 + "\"\n"
             + "    \"x-amz-date\" = \"" + dateTimeStamp + "\"\n"
-            + (isEmpty(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n")
+            + (hasNone(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n")
             + "}\n Invoke-WebRequest -Uri \""
             + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true)
             + "\" -Headers $Headers -OutFile (New-Item -Path \"" + getCommandPath() + "\\" + artifactFileName + "\""
@@ -373,7 +373,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
             + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
             + "-H \"x-amz-date: " + dateTimeStamp + "\" \\\n"
-            + (isEmpty(awsToken) ? "" : "-H \"x-amz-security-token: " + awsToken + "\" \\\n") + " -o \""
+            + (hasNone(awsToken) ? "" : "-H \"x-amz-security-token: " + awsToken + "\" \\\n") + " -o \""
             + getCommandPath() + "/" + artifactFileName + "\"";
         break;
       default:
@@ -391,14 +391,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
-        String domain = isNotEmpty(smbConfig.getDomain()) ? smbConfig.getDomain() + "\\" : "";
+        String domain = hasSome(smbConfig.getDomain()) ? smbConfig.getDomain() + "\\" : "";
         String userPassword = "/user:" + domain + smbConfig.getUsername() + " " + new String(smbConfig.getPassword());
         String shareUrl = smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()) + "\\"
             + smbHelperService.getSharedFolderName(smbConfig.getSmbUrl());
 
         // Remove trailing slashes from the folder name as the net use command fails with it.
         String artifactFolder = StringUtils.stripEnd(getArtifactFolder(artifactPath, artifactFileName), "/\\");
-        if (!isEmpty(artifactFolder)) {
+        if (!hasNone(artifactFolder)) {
           // Make all the slashes as back slashes.
           artifactFolder = artifactFolder.replace("/", "\\");
           shareUrl = shareUrl + "\\" + artifactFolder;
@@ -541,7 +541,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
     StringBuilder command = new StringBuilder(128);
 
-    if (isEmpty(artifactFileMetadata)) {
+    if (hasNone(artifactFileMetadata)) {
       // Try once more of to get download url
       try {
         List<BuildDetails> buildDetailsList;
@@ -559,7 +559,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
                   artifactStreamAttributes.getMetadata().get("buildNo")));
         }
 
-        if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
+        if (hasNone(buildDetailsList) || hasNone(buildDetailsList.get(0).getArtifactFileMetadataList())) {
           saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
           throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
         } else {
@@ -574,7 +574,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
     // No op for non-parameterized artifact stream because we have already filtered artifactFileMetadata before we reach
     // here
-    if (isNotEmpty(artifactStreamAttributes.getExtension())) {
+    if (hasSome(artifactStreamAttributes.getExtension())) {
       artifactFileMetadata =
           artifactFileMetadata.stream()
               .filter(aFileMetadata
@@ -582,7 +582,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
               .collect(Collectors.toList());
     }
 
-    if (isNotEmpty(artifactStreamAttributes.getClassifier())) {
+    if (hasSome(artifactStreamAttributes.getClassifier())) {
       artifactFileMetadata =
           artifactFileMetadata.stream()
               .filter(aFileMetadata -> aFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))
@@ -659,7 +659,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
     StringBuilder command = new StringBuilder(128);
 
-    if (isEmpty(artifactFileMetadata)) {
+    if (hasNone(artifactFileMetadata)) {
       saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
       throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
     }
@@ -711,7 +711,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
     StringBuilder command = new StringBuilder(128);
 
-    if (isEmpty(artifactFileMetadata)) {
+    if (hasNone(artifactFileMetadata)) {
       saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
       throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
     }

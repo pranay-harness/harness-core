@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -13,7 +13,6 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -135,7 +134,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
     log.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
 
-    if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
+    if (!hasNone(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
         decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
@@ -232,7 +231,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private List<String> resolveDollarReferences(String url, String host, AnalysisComparisonStrategy strategy) {
-      if (isEmpty(url)) {
+      if (hasNone(url)) {
         return Collections.EMPTY_LIST;
       }
       // TODO: Come back and clean up the time variables.
@@ -289,7 +288,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
     private Map<String, String> getStringsToMask() {
       Map<String, String> maskFields = new HashMap<>();
-      if (isNotEmpty(decryptedFields)) {
+      if (hasSome(decryptedFields)) {
         decryptedFields.forEach((k, v) -> { maskFields.put(v, "<" + k + ">"); });
       }
       return maskFields;
@@ -345,7 +344,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               resolveDollarReferences(canaryMetricInfo.getUrl(), canaryMetricInfo.getHostName(), strategy).get(0);
 
           List<String> resolvedBodies = resolveDollarReferences(body, TEST_HOST_NAME, strategy);
-          if (isEmpty(body)) {
+          if (hasNone(body)) {
             callabels.add(
                 ()
                     -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
@@ -364,8 +363,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             });
           }
         });
-      } else if (!isEmpty(hostKey) || initialUrl.contains(VERIFICATION_HOST_PLACEHOLDER)
-          || (isNotEmpty(body) && body.contains(VERIFICATION_HOST_PLACEHOLDER))) {
+      } else if (!hasNone(hostKey) || initialUrl.contains(VERIFICATION_HOST_PLACEHOLDER)
+          || (hasSome(body) && body.contains(VERIFICATION_HOST_PLACEHOLDER))) {
         if (initialUrl.contains(BATCH_TEXT)) {
           List<String> urlList = resolveBatchHosts(initialUrl);
           for (String url : urlList) {
@@ -383,10 +382,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           // This is not a batch query
           for (String host : dataCollectionInfo.getHosts().keySet()) {
             List<String> curUrls = resolveDollarReferences(initialUrl, host, strategy);
-            if (!isEmpty(body)) {
+            if (!hasNone(body)) {
               String resolvedBody = resolvedUrl(body, host, lastEndTime, System.currentTimeMillis());
               Map<String, Object> bodyMap =
-                  isEmpty(resolvedBody) ? new HashMap<>() : new JSONObject(resolvedBody).toMap();
+                  hasNone(resolvedBody) ? new HashMap<>() : new JSONObject(resolvedBody).toMap();
 
               curUrls.forEach(curUrl
                   -> callabels.add(
@@ -410,7 +409,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       } else {
         List<String> curUrls = resolveDollarReferences(initialUrl, TEST_HOST_NAME, strategy);
         List<String> resolvedBodies = resolveDollarReferences(body, TEST_HOST_NAME, strategy);
-        if (isEmpty(body)) {
+        if (hasNone(body)) {
           IntStream.range(0, curUrls.size())
               .forEach(index
                   -> callabels.add(
@@ -511,7 +510,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
             List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
-            if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
+            if (hasSome(dataCollectionInfo.getCanaryMetricInfos())) {
               apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
                   dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
                   dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
@@ -643,7 +642,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
     private void addHeartbeatRecords(
         Set<String> groupNameSet, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
-      if (isEmpty(groupNameSet)) {
+      if (hasNone(groupNameSet)) {
         groupNameSet = new HashSet<>(Arrays.asList(DEFAULT_GROUP_NAME));
       }
       for (String group : groupNameSet) {

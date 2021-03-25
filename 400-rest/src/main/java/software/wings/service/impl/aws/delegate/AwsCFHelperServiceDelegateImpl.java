@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -71,7 +71,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       tracker.trackCFCall("Get Template Summary");
       GetTemplateSummaryResult result = client.getTemplateSummary(request);
       List<ParameterDeclaration> parameters = result.getParameters();
-      if (isNotEmpty(parameters)) {
+      if (hasSome(parameters)) {
         return parameters.stream()
             .map(parameter
                 -> AwsCFTemplateParamsData.builder()

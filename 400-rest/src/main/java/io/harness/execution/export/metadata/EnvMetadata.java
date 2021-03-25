@@ -1,7 +1,7 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
@@ -20,7 +20,7 @@ public class EnvMetadata {
   EnvironmentType environmentType;
 
   static EnvMetadata fromFirstEnvSummary(List<EnvSummary> envSummaries) {
-    if (isEmpty(envSummaries)) {
+    if (hasNone(envSummaries)) {
       return null;
     }
 

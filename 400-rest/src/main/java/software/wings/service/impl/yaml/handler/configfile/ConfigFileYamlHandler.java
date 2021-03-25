@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -86,7 +86,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
                                    .filter(entry -> entry.getValue() == null)
                                    .map(Map.Entry::getKey)
                                    .collect(toList());
-      if (isNotEmpty(envIdList)) {
+      if (hasSome(envIdList)) {
         envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);
           if (environment != null) {
@@ -130,7 +130,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     Yaml yaml = changeContext.getYaml();
     List<String> envNameList = yaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = new HashMap<>();
-    if (isNotEmpty(envNameList)) {
+    if (hasSome(envNameList)) {
       envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {

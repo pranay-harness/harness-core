@@ -1,7 +1,7 @@
 
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.logging.Misc.replaceUnicodeWithDot;
 
@@ -304,7 +304,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
 
   private Map<String, String> updateNodesReplaceDots(Map<String, String> nodes) {
     Map<String, String> updatedNodes = new HashMap<>();
-    if (isEmpty(nodes)) {
+    if (hasNone(nodes)) {
       return updatedNodes;
     }
     nodes.forEach((host, groupName) -> updatedNodes.put(replaceDotWithUnicode(host), groupName));

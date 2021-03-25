@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -103,7 +103,7 @@ public class MetricPackServiceImpl implements MetricPackService {
                                              .filter(MetricPackKeys.dataSourceType, dataSourceType)
                                              .asList();
 
-    if (isEmpty(metricPacksFromDb)) {
+    if (hasNone(metricPacksFromDb)) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
           getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
       final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
@@ -128,7 +128,7 @@ public class MetricPackServiceImpl implements MetricPackService {
           getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
       final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
 
-      if (isEmpty(getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType))) {
+      if (hasNone(getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType))) {
         hPersistence.save(metricPacks);
         metricPacks.forEach(metricPack
             -> createDefaultIgnoreThresholds(
@@ -187,7 +187,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public boolean saveMetricPacks(String accountId, String orgIdentifier, String projectIdentifier,
       DataSourceType dataSourceType, List<MetricPack> metricPacks) {
-    if (isEmpty(metricPacks)) {
+    if (hasNone(metricPacks)) {
       return false;
     }
 
@@ -229,7 +229,7 @@ public class MetricPackServiceImpl implements MetricPackService {
             .filter(TimeSeriesThresholdKeys.metricPackIdentifier, metricPackIdentifier)
             .filter(TimeSeriesThresholdKeys.dataSourceType, dataSourceType)
             .asList();
-    if (isEmpty(timeSeriesThresholds)) {
+    if (hasNone(timeSeriesThresholds)) {
       return createDefaultIgnoreThresholds(
           accountId, orgIdentifier, projectIdentifier, metricPackIdentifier, dataSourceType);
     }

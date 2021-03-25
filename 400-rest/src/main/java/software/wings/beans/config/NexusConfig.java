@@ -1,7 +1,7 @@
 package software.wings.beans.config;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -64,7 +64,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   }
 
   public boolean hasCredentials() {
-    return isNotEmpty(username);
+    return hasSome(username);
   }
 
   public NexusConfig(String nexusUrl, String version, String username, char[] password, List<String> delegateSelectors,

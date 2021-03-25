@@ -2,8 +2,8 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -94,9 +94,9 @@ public class AwsEc2HelperServiceDelegateImpl
         AwsEc2ValidateCredentialsResponseBuilder responseBuilder =
             AwsEc2ValidateCredentialsResponse.builder().valid(false).executionStatus(SUCCESS);
         if (!awsConfig.isUseEc2IamCredentials()) {
-          if (isEmpty(awsConfig.getAccessKey())) {
+          if (hasNone(awsConfig.getAccessKey())) {
             responseBuilder.errorMessage("Access Key should not be empty");
-          } else if (isEmpty(awsConfig.getSecretKey())) {
+          } else if (hasNone(awsConfig.getSecretKey())) {
             responseBuilder.errorMessage("Secret Key should not be empty");
           }
         }
@@ -161,7 +161,7 @@ public class AwsEc2HelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       List<Filter> filters = new ArrayList<>();
-      if (isNotEmpty(vpcIds)) {
+      if (hasSome(vpcIds)) {
         filters.add(new Filter("vpc-id", vpcIds));
       }
       filters.add(new Filter("state").withValues("available"));
@@ -198,7 +198,7 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         List<Filter> filters = new ArrayList<>();
-        if (isNotEmpty(vpcIds)) {
+        if (hasSome(vpcIds)) {
           filters.add(new Filter("vpc-id", vpcIds));
         }
         tracker.trackEC2Call("List SGs");
@@ -305,7 +305,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public Set<String> listBlockDeviceNamesOfAmi(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId) {
     try {
-      if (isEmpty(amiId)) {
+      if (hasNone(amiId)) {
         return emptySet();
       }
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
@@ -314,11 +314,11 @@ public class AwsEc2HelperServiceDelegateImpl
       tracker.trackEC2Call("List Images");
       DescribeImagesResult result = amazonEC2Client.describeImages(request);
       List<Image> images = result.getImages();
-      if (isNotEmpty(images)) {
+      if (hasSome(images)) {
         Optional<Image> optionalImage = images.stream().filter(image -> amiId.equals(image.getImageId())).findFirst();
         if (optionalImage.isPresent()) {
           List<BlockDeviceMapping> blockDeviceMappings = optionalImage.get().getBlockDeviceMappings();
-          if (isNotEmpty(blockDeviceMappings)) {
+          if (hasSome(blockDeviceMappings)) {
             return blockDeviceMappings.stream().map(BlockDeviceMapping::getDeviceName).collect(toSet());
           }
         }
@@ -342,7 +342,7 @@ public class AwsEc2HelperServiceDelegateImpl
           amazonEc2Client.describeLaunchTemplateVersions(
               new DescribeLaunchTemplateVersionsRequest().withLaunchTemplateId(launchTemplateId).withVersions(version));
       if (describeLaunchTemplateVersionsResult != null
-          && isNotEmpty(describeLaunchTemplateVersionsResult.getLaunchTemplateVersions())) {
+          && hasSome(describeLaunchTemplateVersionsResult.getLaunchTemplateVersions())) {
         return describeLaunchTemplateVersionsResult.getLaunchTemplateVersions().get(0);
       }
 

@@ -1,6 +1,8 @@
 package io.harness.steps.common.script;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -11,7 +13,6 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -182,7 +183,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   private Map<String, String> getEnvironmentVariables(Map<String, Object> inputVariables) {
-    if (EmptyPredicate.isEmpty(inputVariables)) {
+    if (hasNone(inputVariables)) {
       return new HashMap<>();
     }
     Map<String, String> res = new LinkedHashMap<>();
@@ -192,7 +193,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   private List<String> getOutputVars(Map<String, Object> outputVariables) {
-    if (EmptyPredicate.isEmpty(outputVariables)) {
+    if (hasNone(outputVariables)) {
       return emptyList();
     }
 
@@ -207,7 +208,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
 
   private String getWorkingDirectory(ShellScriptStepParameters stepParameters, ScriptType scriptType) {
     if (stepParameters.getExecutionTarget() != null && stepParameters.getExecutionTarget().getWorkingDirectory() != null
-        && EmptyPredicate.isNotEmpty(stepParameters.getExecutionTarget().getWorkingDirectory().getValue())) {
+        && hasSome(stepParameters.getExecutionTarget().getWorkingDirectory().getValue())) {
       return stepParameters.getExecutionTarget().getWorkingDirectory().getValue();
     }
     String commandPath = null;

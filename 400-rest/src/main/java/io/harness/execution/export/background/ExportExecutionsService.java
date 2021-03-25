@@ -1,8 +1,8 @@
 package io.harness.execution.export.background;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -116,7 +116,7 @@ public class ExportExecutionsService {
       throws IOException {
     for (int currPageOffset = 0;; currPageOffset++) {
       List<ExecutionMetadata> executionMetadataList = prepareExecutionMetadataListBatch(request, currPageOffset);
-      if (isEmpty(executionMetadataList)) {
+      if (hasNone(executionMetadataList)) {
         if (currPageOffset == 0) {
           throw new ExportExecutionsException(
               "No executions found matching request filters. Note that executions that were not finished when request was made are ignored");
@@ -150,7 +150,7 @@ public class ExportExecutionsService {
       @NotNull ExportExecutionsRequest request, int currPageOffset) {
     List<WorkflowExecution> workflowExecutions = processExportExecutionsRequestBatch(request, currPageOffset);
     List<ExecutionMetadata> currExecutionMetadataList = prepareExecutionMetadataList(workflowExecutions);
-    if (isEmpty(currExecutionMetadataList)) {
+    if (hasNone(currExecutionMetadataList)) {
       return Collections.emptyList();
     }
 
@@ -160,7 +160,7 @@ public class ExportExecutionsService {
   }
 
   private List<ExecutionMetadata> prepareExecutionMetadataList(List<WorkflowExecution> workflowExecutions) {
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       return Collections.emptyList();
     }
 
@@ -177,7 +177,7 @@ public class ExportExecutionsService {
 
   @VisibleForTesting
   void runProcessors(List<ExecutionMetadata> executionMetadataList, ExportExecutionsProcessor... processors) {
-    if (isEmpty(executionMetadataList) || isEmpty(processors)) {
+    if (hasNone(executionMetadataList) || hasNone(processors)) {
       return;
     }
 
@@ -204,7 +204,7 @@ public class ExportExecutionsService {
   private void processExecutionMetadataListBatch(@NotNull ExportExecutionsRequest request,
       List<ExecutionMetadata> executionMetadataList, OutputFormatter outputFormatter, ZipOutputStream zipOutputStream)
       throws IOException {
-    if (isEmpty(executionMetadataList)) {
+    if (hasNone(executionMetadataList)) {
       return;
     }
 
@@ -308,12 +308,12 @@ public class ExportExecutionsService {
             .skip(pageOffset * EXPORT_EXECUTIONS_BATCH_SIZE)
             .readPreference(ReadPreference.secondaryPreferred()),
         true);
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       return Collections.emptyList();
     }
 
     Set<String> newWorkflowExecutionIds = collectSubWorkflowExecutionIds(workflowExecutions);
-    if (isNotEmpty(newWorkflowExecutionIds)) {
+    if (hasSome(newWorkflowExecutionIds)) {
       List<WorkflowExecution> subWorkflowExecutions = workflowExecutionService.listExecutionsUsingQuery(
           wingsPersistence.createQuery(WorkflowExecution.class)
               .filter(WorkflowExecutionKeys.accountId, request.getAccountId())
@@ -331,7 +331,7 @@ public class ExportExecutionsService {
     for (WorkflowExecution workflowExecution : workflowExecutions) {
       if (workflowExecution.getWorkflowType() != WorkflowType.PIPELINE
           || workflowExecution.getPipelineExecution() == null
-          || isEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
+          || hasNone(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
         continue;
       }
 
@@ -351,7 +351,7 @@ public class ExportExecutionsService {
 
   private void substituteSubWorkflowExecutionIds(
       List<WorkflowExecution> workflowExecutions, List<WorkflowExecution> subWorkflowExecutions) {
-    if (isEmpty(workflowExecutions) || isEmpty(subWorkflowExecutions)) {
+    if (hasNone(workflowExecutions) || hasNone(subWorkflowExecutions)) {
       return;
     }
 
@@ -361,13 +361,13 @@ public class ExportExecutionsService {
     for (WorkflowExecution workflowExecution : workflowExecutions) {
       if (workflowExecution.getWorkflowType() != WorkflowType.PIPELINE
           || workflowExecution.getPipelineExecution() == null
-          || isEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
+          || hasNone(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
         continue;
       }
 
       for (PipelineStageExecution stageExecution :
           workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
-        if (isEmpty(stageExecution.getWorkflowExecutions())) {
+        if (hasNone(stageExecution.getWorkflowExecutions())) {
           continue;
         }
 

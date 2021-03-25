@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -55,7 +55,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
     boolean updateCallWithMaskedSecretKey = false;
 
-    if (isNotEmpty(azureVautConfig.getUuid())) {
+    if (hasSome(azureVautConfig.getUuid())) {
       savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
       oldConfigForAudit = kryoSerializer.clone(savedAzureVaultConfig);
 
@@ -97,7 +97,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   }
 
   private void validateConfig(AzureVaultConfig azureVautConfig) {
-    if (isEmpty(azureVautConfig.getName())) {
+    if (hasNone(azureVautConfig.getName())) {
       throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, "Name can not be empty", USER);
     }
   }
@@ -118,7 +118,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
   private EncryptedData getEncryptedDataForSecretField(AzureVaultConfig savedSecretsManagerConfig,
       AzureVaultConfig secretsManagerConfig, String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = isNotEmpty(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
+    EncryptedData encryptedData = hasSome(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
     if (savedSecretsManagerConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -190,7 +190,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     AzureVaultConfig azureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, configId);
     Preconditions.checkNotNull(azureVaultConfig, "no Azure vault config found with id " + configId);
 
-    if (isNotEmpty(azureVaultConfig.getSecretKey())) {
+    if (hasSome(azureVaultConfig.getSecretKey())) {
       wingsPersistence.delete(EncryptedData.class, azureVaultConfig.getSecretKey());
       log.info("Deleted encrypted auth token record {} associated with Azure Secrets Manager '{}'",
           azureVaultConfig.getSecretKey(), azureVaultConfig.getName());

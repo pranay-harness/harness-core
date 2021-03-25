@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -55,7 +55,7 @@ public class InstanceConnectionDataFetcher
 
   @Override
   protected void populateFilters(List<QLInstanceFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
     instanceMongoHelper.setQuery(getAccountId(), filters, query);

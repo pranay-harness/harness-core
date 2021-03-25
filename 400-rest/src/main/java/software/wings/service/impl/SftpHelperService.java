@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
 import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -133,7 +133,7 @@ public class SftpHelperService {
       log.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
     }
 
-    if (isEmpty(hostKeyVerifier)) {
+    if (hasNone(hostKeyVerifier)) {
       log.error("SFTP server {} host key could not be verified.", sftpUrl);
       return false;
     }
@@ -194,7 +194,7 @@ public class SftpHelperService {
           String directory = getFileParentPath(artifactPath);
           String fileName = searchPattern;
           // if directory is empty, default is HOME
-          if (isEmpty(directory)) {
+          if (hasNone(directory)) {
             directory = ROOT_DIR_ARTIFACT_PATH;
           }
 

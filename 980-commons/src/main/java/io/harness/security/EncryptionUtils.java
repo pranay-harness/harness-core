@@ -2,7 +2,7 @@ package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.EncryptDecryptException;
@@ -47,8 +47,7 @@ public class EncryptionUtils {
 
   public static byte[] encrypt(byte[] content, String containerId) {
     try {
-      SimpleEncryption encryption =
-          isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
+      SimpleEncryption encryption = hasSome(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
       return encryption.encrypt(content);
     } catch (Exception ioe) {
       throw new EncryptDecryptException("Failed to encrypt content", ioe);
@@ -57,8 +56,7 @@ public class EncryptionUtils {
 
   public static byte[] decrypt(byte[] encryptedText, String containerId) {
     try {
-      SimpleEncryption encryption =
-          isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
+      SimpleEncryption encryption = hasSome(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
       return encryption.decrypt(encryptedText);
     } catch (Exception ioe) {
       throw new EncryptDecryptException("Failed to decrypt encrypted text", ioe);

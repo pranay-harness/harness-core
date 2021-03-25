@@ -1,6 +1,6 @@
 package software.wings.integration.security;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -77,7 +77,7 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertThat(isNotEmpty(encryptedDataId)).isTrue();
+    assertThat(hasSome(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -95,7 +95,7 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertThat(isNotEmpty(encryptedDataId)).isTrue();
+    assertThat(hasSome(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -108,7 +108,7 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String encryptedDataId = restResponse.getResource();
-    assertThat(isNotEmpty(encryptedDataId)).isTrue();
+    assertThat(hasSome(encryptedDataId)).isTrue();
 
     return encryptedDataId;
   }
@@ -202,7 +202,7 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String vaultConfigId = restResponse.getResource();
-    assertThat(isNotEmpty(vaultConfigId)).isTrue();
+    assertThat(hasSome(vaultConfigId)).isTrue();
 
     return vaultConfigId;
   }
@@ -245,7 +245,7 @@ public abstract class SecretManagementIntegrationTestBase extends IntegrationTes
     // Verify vault config was successfully created.
     assertThat(restResponse.getResponseMessages()).isEmpty();
     String kmsConfigId = restResponse.getResource();
-    assertThat(isNotEmpty(kmsConfigId)).isTrue();
+    assertThat(hasSome(kmsConfigId)).isTrue();
 
     return kmsConfigId;
   }

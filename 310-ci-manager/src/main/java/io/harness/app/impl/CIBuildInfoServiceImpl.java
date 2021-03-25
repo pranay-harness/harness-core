@@ -1,6 +1,6 @@
 package io.harness.app.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -53,7 +53,7 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
   public Page<CIBuildResponseDTO> getBuilds(CIBuildFilterDTO ciBuildFilterDTO, Pageable pageable) {
     Criteria criteria = createBuildFilterCriteria(ciBuildFilterDTO);
     Map<String, NgPipelineEntity> ngPipelineEntityMap = getPipelines(ciBuildFilterDTO);
-    if (isNotEmpty(ciBuildFilterDTO.getTags())) {
+    if (hasSome(ciBuildFilterDTO.getTags())) {
       List<String> pipelineIds = new ArrayList<>();
       pipelineIds.addAll(ngPipelineEntityMap.keySet());
       criteria.and(CIBuild.Build.pipelineIdentifier).in(pipelineIds);
@@ -87,7 +87,7 @@ public class CIBuildInfoServiceImpl implements CIBuildInfoService {
     if (isNotBlank(ciBuildFilterDTO.getPipelineName())) {
       criteria.and(NgPipelineKeys.name).is(ciBuildFilterDTO.getPipelineName());
     }
-    if (isNotEmpty(ciBuildFilterDTO.getTags())) {
+    if (hasSome(ciBuildFilterDTO.getTags())) {
       criteria.and(NgPipelineKeys.tags).in(ciBuildFilterDTO.getTags());
     }
 

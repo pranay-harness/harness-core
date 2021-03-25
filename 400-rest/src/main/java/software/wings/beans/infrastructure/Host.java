@@ -1,7 +1,5 @@
 package software.wings.beans.infrastructure;
 
-import static software.wings.beans.infrastructure.Host.HostKeys;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;

@@ -1,7 +1,7 @@
 package io.harness.steps;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
@@ -236,7 +236,7 @@ public class StepUtils {
             .setSelectionTrackingLogEnabled(true)
             .setTaskName(taskName == null ? taskData.getTaskType() : taskName);
 
-    if (isNotEmpty(capabilities)) {
+    if (hasSome(capabilities)) {
       requestBuilder.addAllCapabilities(
           capabilities.stream()
               .map(capability
@@ -260,17 +260,17 @@ public class StepUtils {
   }
 
   public static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
-    if (isEmpty(logAbstractionMap)) {
+    if (hasNone(logAbstractionMap)) {
       return Collections.emptyList();
     }
     String baseLogKey = LogStreamingHelper.generateLogBaseKey(logAbstractionMap);
-    if (isEmpty(units)) {
+    if (hasNone(units)) {
       return Collections.singletonList(baseLogKey);
     }
 
     List<String> unitKeys = new ArrayList<>();
     for (String unit : units) {
-      String logKey = baseLogKey + (isEmpty(baseLogKey) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, unit));
+      String logKey = baseLogKey + (hasNone(baseLogKey) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, unit));
       unitKeys.add(logKey);
     }
     return unitKeys;
@@ -278,7 +278,7 @@ public class StepUtils {
 
   public static boolean isStepInRollbackSection(Ambiance ambiance) {
     List<Level> levelsList = ambiance.getLevelsList();
-    if (isEmpty(levelsList)) {
+    if (hasNone(levelsList)) {
       return false;
     }
 

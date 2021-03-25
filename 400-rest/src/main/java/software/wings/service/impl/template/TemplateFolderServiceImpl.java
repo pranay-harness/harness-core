@@ -1,8 +1,8 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -100,7 +100,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   private TemplateFolder saveInternal(
       TemplateFolder templateFolder, String galleryId, UnaryOperator<TemplateFolder> saveStrategy) {
     templateFolder.setGalleryId(galleryId);
-    if (!isEmpty(templateFolder.getParentId())) {
+    if (!hasNone(templateFolder.getParentId())) {
       TemplateFolder parentFolder = get(templateFolder.getParentId());
       notNullCheck("Parent template folder was deleted", parentFolder);
       String pathId = parentFolder.getPathId() == null
@@ -165,8 +165,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
     Set<String> userKeywords = trimmedLowercaseSet(savedTemplateFolder.getKeywords());
 
-    if (isNotEmpty(savedTemplateFolder.getDescription())) {
-      if (isNotEmpty(userKeywords)) {
+    if (hasSome(savedTemplateFolder.getDescription())) {
+      if (hasSome(userKeywords)) {
         userKeywords.remove(savedTemplateFolder.getDescription().toLowerCase());
       }
       operations.set("description", templateFolder.getDescription());
@@ -284,14 +284,14 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
                                         .filter(TemplateFolderKeys.accountId, accountId)
                                         .filter(TemplateFolderKeys.galleryId, galleryId);
 
-    if (isNotEmpty(keyword)) {
+    if (hasSome(keyword)) {
       folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
       templateQuery = templateQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
     }
 
     List<TemplateFolder> templateFolders = new ArrayList<>();
     boolean contentOnlySearch = false;
-    if (isNotEmpty(templateTypes)) {
+    if (hasSome(templateTypes)) {
       templateQuery = templateQuery.field(TYPE_KEY).in(templateTypes);
       contentOnlySearch = true;
     }
@@ -299,9 +299,9 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       templateFolders = folderQuery.asList();
 
       List<TemplateFolder> rootTemplateFolders = templateFolders.stream()
-                                                     .filter(templateFolder -> isEmpty(templateFolder.getPathId()))
+                                                     .filter(templateFolder -> hasNone(templateFolder.getPathId()))
                                                      .collect(Collectors.toList());
-      if (isNotEmpty(rootTemplateFolders)) {
+      if (hasSome(rootTemplateFolders)) {
         for (TemplateFolder rootTemplateFolder : rootTemplateFolders) {
           templateFolders.addAll(wingsPersistence.createQuery(TemplateFolder.class)
                                      .filter(TemplateFolderKeys.accountId, accountId)
@@ -337,14 +337,14 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
                                         .filter(TemplateKeys.appId, appId)
                                         .filter(TemplateFolderKeys.galleryId, galleryId);
 
-    if (isNotEmpty(keyword)) {
+    if (hasSome(keyword)) {
       folderQuery = folderQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
       templateQuery = templateQuery.field(TemplateFolder.KEYWORDS_KEY).contains(keyword.toLowerCase());
     }
 
     List<TemplateFolder> templateFolders = new ArrayList<>();
     boolean contentOnlySearch = false;
-    if (isNotEmpty(templateTypes)) {
+    if (hasSome(templateTypes)) {
       templateQuery = templateQuery.field(TYPE_KEY).in(templateTypes);
       contentOnlySearch = true;
     }
@@ -391,7 +391,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   private void getParentUuids(String accountId, List<TemplateFolder> templateFolders) {
     List<String> parentUuids =
         templateFolders.stream()
-            .filter(templateFolder -> isNotEmpty(templateFolder.getPathId()))
+            .filter(templateFolder -> hasSome(templateFolder.getPathId()))
             .flatMap(templateFolder -> Arrays.stream(templateFolder.getPathId().split("/")).distinct())
             .collect(Collectors.toList());
     templateFolders.addAll(getTemplateFolderUuids(accountId, parentUuids));
@@ -411,7 +411,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     templateFolders.forEach(templateFolder -> folderMap.putIfAbsent(templateFolder.getUuid(), templateFolder));
     folderMap.values().forEach(folder -> {
       folder.setTemplatesCount(folderIdChildCountMap.get(folder.getUuid()));
-      if (isNotEmpty(folder.getParentId())) {
+      if (hasSome(folder.getParentId())) {
         TemplateFolder templateFolder = folderMap.get(folder.getParentId());
         if (templateFolder != null) {
           templateFolder.setNodeType(FOLDER.name());
@@ -423,7 +423,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
         folder.setNodeType(FOLDER.name());
       }
     });
-    return folderMap.values().stream().filter(folder -> isEmpty(folder.getParentId())).findFirst().orElse(null);
+    return folderMap.values().stream().filter(folder -> hasNone(folder.getParentId())).findFirst().orElse(null);
   }
 
   @Override
@@ -451,7 +451,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     for (TemplateFolder templateFolder : templateFolders) {
       // Verify the length of the parent folder matches the length of the given folder path
       // Otherwise, ignore
-      if (isEmpty(templateFolder.getPathId()) && templateFolder.getName().equals(folderPath)) {
+      if (hasNone(templateFolder.getPathId()) && templateFolder.getName().equals(folderPath)) {
         return templateFolder;
       }
       List<String> parentUuids =
@@ -514,7 +514,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     if (templateFolder == null) {
       return;
     }
-    if (isEmpty(templateFolder.getChildren())) {
+    if (hasNone(templateFolder.getChildren())) {
       return;
     }
     templateFolder.getChildren().forEach(sourceFolder -> {

@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.util.Collections.emptyList;
@@ -158,10 +158,10 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
     // Now kept for backward compatibility, but will be changed soon to validate for non-empty project and
     // orgIdentifier.
-    if (isNotEmpty(projectIdentifier) && isNotEmpty(orgIdentifier)) {
+    if (hasSome(projectIdentifier) && hasSome(orgIdentifier)) {
       enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
           accountId, orgIdentifier, projectIdentifier, true);
-    } else if (isNotEmpty(orgIdentifier)) {
+    } else if (hasSome(orgIdentifier)) {
       enabledTriggerForProject =
           ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabled(accountId, orgIdentifier, true);
     } else {
@@ -177,7 +177,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountIdentifier, List<String> fqns) {
-    if (isEmpty(fqns)) {
+    if (hasNone(fqns)) {
       return emptyList();
     }
     try {

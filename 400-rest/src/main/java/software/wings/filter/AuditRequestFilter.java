@@ -1,6 +1,6 @@
 package software.wings.filter;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 
@@ -125,7 +125,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private boolean isAllowApiUsingKey(ContainerRequestContext requestContext) {
-    return isEmpty(requestContext.getHeaderString("X-Api-Key"));
+    return hasNone(requestContext.getHeaderString("X-Api-Key"));
   }
   private boolean isAllowWhitelistedIP(ContainerRequestContext requestContext) {
     return !requestContext.getUriInfo().getPath().contains("whitelist/isEnabled");
@@ -136,7 +136,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {
-    if (isEmpty(headers)) {
+    if (hasNone(headers)) {
       return "";
     }
 
@@ -168,7 +168,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
       }
       queryParams.append('&').append(temp.substring(1));
     }
-    if (isEmpty(queryParams.toString())) {
+    if (hasNone(queryParams.toString())) {
       return null;
     } else {
       return queryParams.substring(1);

@@ -2,8 +2,8 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -75,7 +75,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     log.info("DataCollectionInfo {} ", dataCollectionInfo);
     try (DataCollectionLogContext ignored = new DataCollectionLogContext(
              taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
-      secretDecryptionService.decrypt(isNotEmpty(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities())
+      secretDecryptionService.decrypt(hasSome(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities())
               ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities().get(0)
               : null,
           dataCollectionInfo.getEncryptedDataDetails());
@@ -84,7 +84,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       // TODO: What happens if this task takes more time then the schedule?
       while (true) {
         dataCollectionTasks = getNextDataCollectionTasks(taskParams);
-        if (isEmpty(dataCollectionTasks)) {
+        if (hasNone(dataCollectionTasks)) {
           log.info("Nothing to process.");
           break;
         } else {

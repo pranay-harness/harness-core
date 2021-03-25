@@ -9,8 +9,8 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -99,7 +99,7 @@ public class PipelineResumeUtils {
     if (pipeline == null) {
       throw new InvalidRequestException("Pipeline does not exist");
     }
-    if (isEmpty(pipeline.getPipelineStages())) {
+    if (hasNone(pipeline.getPipelineStages())) {
       throw new InvalidRequestException("You cannot resume an empty pipeline");
     }
 
@@ -111,7 +111,7 @@ public class PipelineResumeUtils {
       WorkflowExecution prevWorkflowExecution, ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
     List<PipelineStageExecution> pipelineStageExecutions =
         prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
+    if (hasNone(pipelineStageExecutions)) {
       // Previous pipeline execution had 0 stages.
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
@@ -124,7 +124,7 @@ public class PipelineResumeUtils {
         throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
       }
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
-      if (isEmpty(pipelineStageElements)) {
+      if (hasNone(pipelineStageElements)) {
         throw new InvalidRequestException(
             PIPELINE_INVALID + ". Stage { " + pipelineStage.getName() + " } is incomplete/invalid");
       }
@@ -185,7 +185,7 @@ public class PipelineResumeUtils {
       ForkStateExecutionData forkStateExecutionData, Map<String, Object> properties) {
     pse.setType(ENV_LOOP_RESUME_STATE.name());
     Map<String, String> prevWorkflowExecutionIdStateInstanceId = new HashMap<>();
-    if (isNotEmpty(forkStateExecutionData.getForkStateNames())) {
+    if (hasSome(forkStateExecutionData.getForkStateNames())) {
       for (String element : forkStateExecutionData.getForkStateNames()) {
         StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
         if (executionInstanceLooped == null) {
@@ -208,11 +208,11 @@ public class PipelineResumeUtils {
       List<PipelineStageExecution> stageExecutions, PipelineStageElement pse, Map<String, Object> properties) {
     pse.setType(ENV_RESUME_STATE.name());
     List<WorkflowExecution> workflowExecutions = stageExecutions.stream()
-                                                     .filter(t -> isNotEmpty(t.getWorkflowExecutions()))
+                                                     .filter(t -> hasSome(t.getWorkflowExecutions()))
                                                      .map(t -> t.getWorkflowExecutions().get(0))
                                                      .collect(Collectors.toList());
     List<String> workflowExecutionIds;
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       // This might happen in case a pipeline stage is skipped.
       workflowExecutionIds = new ArrayList<>();
     } else {
@@ -262,7 +262,7 @@ public class PipelineResumeUtils {
       return workflowExecution.getPipelineExecution().getPipeline();
     } else {
       if (workflowExecution.getPipelineSummary() != null
-          && !isEmpty(workflowExecution.getPipelineSummary().getPipelineId())) {
+          && !hasNone(workflowExecution.getPipelineSummary().getPipelineId())) {
         String pipelineId = workflowExecution.getPipelineSummary().getPipelineId();
         return pipelineService.getPipeline(appId, pipelineId);
       } else {
@@ -274,7 +274,7 @@ public class PipelineResumeUtils {
   public void updatePipelineExecutionsAfterResume(
       WorkflowExecution currWorkflowExecution, WorkflowExecution prevWorkflowExecution) {
     String pipelineResumeId = prevWorkflowExecution.getPipelineResumeId();
-    if (isEmpty(pipelineResumeId)) {
+    if (hasNone(pipelineResumeId)) {
       pipelineResumeId = prevWorkflowExecution.getUuid();
     }
 
@@ -315,13 +315,13 @@ public class PipelineResumeUtils {
     }
 
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    if (isEmpty(pipelineStages)) {
+    if (hasNone(pipelineStages)) {
       throw new InvalidRequestException("You cannot resume an empty pipeline");
     }
 
     List<PipelineStageExecution> pipelineStageExecutions =
         prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
+    if (hasNone(pipelineStageExecutions)) {
       // Previous pipeline execution had 0 stages.
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
@@ -355,7 +355,7 @@ public class PipelineResumeUtils {
                   return pse.getName();
                 })
                 .collect(Collectors.toList());
-      if (pipelineStage.isParallel() && isNotEmpty(groupedInfoBuilders)) {
+      if (pipelineStage.isParallel() && hasSome(groupedInfoBuilders)) {
         // The stage is parallel to the previous one. Just append the new element names to the last group info.
         groupedInfoBuilders.get(groupedInfoBuilders.size() - 1).pipelineStageElementNames(newPipelineStageElementNames);
       } else {
@@ -364,7 +364,7 @@ public class PipelineResumeUtils {
         PipelineStageGroupedInfoBuilder builder = PipelineStageGroupedInfo.builder()
                                                       .name(pipelineStage.getName())
                                                       .pipelineStageElementNames(newPipelineStageElementNames);
-        if (isNotEmpty(pipelineStage.getPipelineStageElements())) {
+        if (hasSome(pipelineStage.getPipelineStageElements())) {
           builder.parallelIndex(pipelineStage.getPipelineStageElements().get(0).getParallelIndex());
         }
         groupedInfoBuilders.add(builder);
@@ -384,7 +384,7 @@ public class PipelineResumeUtils {
   public List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution prevWorkflowExecution) {
     checkPipelineResumeHistoryAvailable(prevWorkflowExecution);
     String pipelineResumeId = prevWorkflowExecution.getPipelineResumeId();
-    if (isEmpty(pipelineResumeId)) {
+    if (hasNone(pipelineResumeId)) {
       return new ArrayList<>();
     }
 
@@ -393,7 +393,7 @@ public class PipelineResumeUtils {
                                                      .filter(WorkflowExecutionKeys.pipelineResumeId, pipelineResumeId)
                                                      .project(WorkflowExecutionKeys.stateMachine, false)
                                                      .asList();
-    if (isEmpty(workflowExecutions)) {
+    if (hasNone(workflowExecutions)) {
       return workflowExecutions;
     }
 
@@ -411,7 +411,7 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(format(PIPELINE_RESUME_ERROR_INVALID_STATUS, prevWorkflowExecution.getUuid(),
           ExecutionStatus.resumableStatuses.toString()));
     }
-    if (isNotEmpty(prevWorkflowExecution.getPipelineResumeId()) && !prevWorkflowExecution.isLatestPipelineResume()) {
+    if (hasSome(prevWorkflowExecution.getPipelineResumeId()) && !prevWorkflowExecution.isLatestPipelineResume()) {
       throw new InvalidRequestException(
           format("Pipeline resume is only available on the latest iteration of a resumed execution: %s",
               prevWorkflowExecution.getUuid()));
@@ -419,7 +419,7 @@ public class PipelineResumeUtils {
 
     List<PipelineStageExecution> pipelineStageExecutions =
         prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
+    if (hasNone(pipelineStageExecutions)) {
       throw new InvalidRequestException("You cannot resume an empty pipeline");
     } else {
       boolean notInActiveStatus = false;
@@ -451,7 +451,7 @@ public class PipelineResumeUtils {
    */
   @VisibleForTesting
   void checkStageAndStageExecutions(PipelineStage stage, List<PipelineStageExecution> stageExecutions) {
-    if (isEmpty(stageExecutions)) {
+    if (hasNone(stageExecutions)) {
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
 
@@ -479,11 +479,11 @@ public class PipelineResumeUtils {
     }
     PipelineStageElement stageElement = stage.getPipelineStageElements().get(0);
     List<WorkflowExecution> workflowExecutions = stageExecutions.stream()
-                                                     .filter(t -> isNotEmpty(t.getWorkflowExecutions()))
+                                                     .filter(t -> hasSome(t.getWorkflowExecutions()))
                                                      .map(t -> t.getWorkflowExecutions().get(0))
                                                      .collect(Collectors.toList());
 
-    String newWorkflowId = isEmpty(stageElement.getProperties())
+    String newWorkflowId = hasNone(stageElement.getProperties())
         ? null
         : (String) stageElement.getProperties().get(EnvStateKeys.workflowId);
 
@@ -492,8 +492,8 @@ public class PipelineResumeUtils {
                                        .map(WorkflowExecution::getWorkflowId)
                                        .collect(Collectors.toSet());
 
-    if (isEmpty(oldWorkflowIdSet)) {
-      if (isNotEmpty(newWorkflowId)) {
+    if (hasNone(oldWorkflowIdSet)) {
+      if (hasSome(newWorkflowId)) {
         throw new InvalidRequestException(format(
             "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow has been added.",
             stage.getName()));
@@ -502,12 +502,12 @@ public class PipelineResumeUtils {
       }
     }
 
-    if (isEmpty(newWorkflowId)) {
-      if (isNotEmpty(oldWorkflowIdSet)) {
+    if (hasNone(newWorkflowId)) {
+      if (hasSome(oldWorkflowIdSet)) {
         String workflowName = workflowExecutions.get(0).getName();
         throw new InvalidRequestException(format(
             "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
-            stage.getName(), isEmpty(workflowName) ? oldWorkflowIdSet.iterator().next() : workflowName));
+            stage.getName(), hasNone(workflowName) ? oldWorkflowIdSet.iterator().next() : workflowName));
       } else {
         return;
       }

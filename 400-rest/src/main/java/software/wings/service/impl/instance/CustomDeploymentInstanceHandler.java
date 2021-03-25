@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 
@@ -103,12 +103,12 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
     log.info("Instances to be added {}", latestHostInfos.size());
     log.info("Instances to be deleted {}", instancesInDb.size());
 
-    if (isNotEmpty(instancesInDb)) {
+    if (hasSome(instancesInDb)) {
       instanceService.delete(instancesInDb.stream().map(Instance::getUuid).collect(Collectors.toSet()));
     }
 
     final DeploymentSummary deploymentSummary;
-    if (isNotEmpty(latestHostInfos) && isNotEmpty(newDeploymentSummaries)) {
+    if (hasSome(latestHostInfos) && hasSome(newDeploymentSummaries)) {
       deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummaries.get(0), false);
       latestHostInfos.stream()
           .map(hostInstanceInfo -> buildInstanceFromHostInfo(infraMapping, hostInstanceInfo, deploymentSummary))
@@ -137,13 +137,13 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
                                              .map(Map.Entry::getValue)
                                              .map(Instance::getUuid)
                                              .collect(Collectors.toSet());
-    if (isNotEmpty(instanceIdsForDeletion)) {
+    if (hasSome(instanceIdsForDeletion)) {
       instanceService.delete(instanceIdsForDeletion);
     }
 
     final DeploymentSummary deploymentSummary;
-    if (isNotEmpty(instancesToBeAdded)) {
-      if (isEmpty(newDeploymentSummaries)) {
+    if (hasSome(instancesToBeAdded)) {
+      if (hasNone(newDeploymentSummaries)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
           log.warn("Couldn't find an instance from a previous deployment");
@@ -177,7 +177,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
   private String getScriptOutput(
       List<DeploymentSummary> newDeploymentSummaries, ShellScriptProvisionExecutionData response) {
-    if (isNotEmpty(newDeploymentSummaries)) {
+    if (hasSome(newDeploymentSummaries)) {
       return newDeploymentSummaries.stream()
           .map(DeploymentSummary::getDeploymentInfo)
           .map(CustomDeploymentTypeInfo.class ::cast)
@@ -203,7 +203,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
   @Override
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 

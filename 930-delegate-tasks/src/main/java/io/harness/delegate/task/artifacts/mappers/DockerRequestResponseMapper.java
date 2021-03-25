@@ -1,8 +1,9 @@
 package io.harness.delegate.task.artifacts.mappers;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -25,7 +26,7 @@ public class DockerRequestResponseMapper {
       DockerUserNamePasswordDTO credentials =
           (DockerUserNamePasswordDTO) request.getDockerConnectorDTO().getAuth().getCredentials();
       if (credentials.getPasswordRef() != null) {
-        password = EmptyPredicate.isNotEmpty(credentials.getPasswordRef().getDecryptedValue())
+        password = hasSome(credentials.getPasswordRef().getDecryptedValue())
             ? new String(credentials.getPasswordRef().getDecryptedValue())
             : null;
       }

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
@@ -37,7 +37,7 @@ public class GoogleKubernetesEngineYamlHandler
                     .build();
 
     // To prevent default release name from showing in yaml when provisioner
-    if (isNotEmpty(bean.getExpressions())) {
+    if (hasSome(bean.getExpressions())) {
       yaml.setReleaseName(null);
     }
     return yaml;

@@ -1,8 +1,8 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
@@ -46,7 +46,7 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
 
   public void visitGraphNode(GraphNodeMetadata nodeMetadata) {
     addExecutionDetailsMetadata(nodeMetadata);
-    if (isNotEmpty(nodeMetadata.getExecutionHistory())) {
+    if (hasSome(nodeMetadata.getExecutionHistory())) {
       nodeMetadata.getExecutionHistory().forEach(this::addExecutionDetailsMetadata);
     }
   }
@@ -54,7 +54,7 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
   private void addShellScriptApprovalMetadata(ExecutionMetadata executionMetadata) {
     List<ApprovalMetadata> shellScriptApprovalMetadataList =
         SubCommandsProcessor.getShellScriptApprovalMetadataList(executionMetadata);
-    if (isEmpty(shellScriptApprovalMetadataList)) {
+    if (hasNone(shellScriptApprovalMetadataList)) {
       return;
     }
 
@@ -68,13 +68,13 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
   }
 
   public void process() {
-    if (isEmpty(activityIdToNodeMetadataMap)) {
+    if (hasNone(activityIdToNodeMetadataMap)) {
       return;
     }
 
     Map<String, List<CommandUnitDetails>> commandUnitsMap =
         activityService.getCommandUnitsMapUsingSecondary(activityIdToNodeMetadataMap.keySet());
-    if (isEmpty(commandUnitsMap)) {
+    if (hasNone(commandUnitsMap)) {
       return;
     }
 
@@ -94,7 +94,7 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
     }
 
     PipelineExecutionMetadata pipelineExecutionMetadata = (PipelineExecutionMetadata) executionMetadata;
-    if (isEmpty(pipelineExecutionMetadata.getStages())) {
+    if (hasNone(pipelineExecutionMetadata.getStages())) {
       return Collections.emptyList();
     }
 

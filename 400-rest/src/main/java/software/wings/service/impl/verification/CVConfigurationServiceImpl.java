@@ -1,7 +1,7 @@
 package software.wings.service.impl.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.APM_CONFIGURATION_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
@@ -154,7 +154,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         final Map<String, String> invalidFields = PrometheusResource.validateTransactions(
             ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze(), true);
 
-        if (isNotEmpty(invalidFields)) {
+        if (hasSome(invalidFields)) {
           throw new VerificationOperationException(
               ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
         }
@@ -163,12 +163,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
         DatadogCVServiceConfiguration ddCVConfig = (DatadogCVServiceConfiguration) cvConfiguration;
-        if (isEmpty(ddCVConfig.getDatadogServiceName()) && isEmpty(ddCVConfig.getDockerMetrics())
-            && isEmpty(ddCVConfig.getEcsMetrics()) && isEmpty(ddCVConfig.getCustomMetrics())) {
+        if (hasNone(ddCVConfig.getDatadogServiceName()) && hasNone(ddCVConfig.getDockerMetrics())
+            && hasNone(ddCVConfig.getEcsMetrics()) && hasNone(ddCVConfig.getCustomMetrics())) {
           throw new VerificationOperationException(
               ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "No metrics found in the yaml");
         }
-        if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
+        if (hasSome(ddCVConfig.getCustomMetrics())) {
           final Map<String, String> ddInvalidFields =
               DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
           String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
@@ -176,7 +176,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           ddInvalidFields.putAll(
               DatadogServiceImpl.validateNameClashInCustomMetrics(ddCVConfig.getCustomMetrics(), metricsString));
 
-          if (isNotEmpty(ddInvalidFields)) {
+          if (hasSome(ddInvalidFields)) {
             throw new VerificationOperationException(
                 ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
           }
@@ -188,10 +188,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
             (CloudWatchCVServiceConfiguration) cvConfiguration;
-        if (isEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
-            && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
-            && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
-            && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+        if (hasNone(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
+            && hasNone(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
+            && hasNone(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
+            && hasNone(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
           throw new VerificationOperationException(ErrorCode.CLOUDWATCH_ERROR, "No metric provided in Configuration");
         }
         break;
@@ -201,7 +201,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         ((StackDriverMetricCVConfiguration) cvConfiguration).setMetricFilters();
         Map<String, String> stackDriverInvalidFields = StackDriverState.validateMetricDefinitions(
             ((StackDriverMetricCVConfiguration) cvConfiguration).getMetricDefinitions(), true);
-        if (isNotEmpty(stackDriverInvalidFields)) {
+        if (hasSome(stackDriverInvalidFields)) {
           throw new VerificationOperationException(
               ErrorCode.APM_CONFIGURATION_ERROR, "Invalid configuration. Reason: " + stackDriverInvalidFields);
         }
@@ -372,7 +372,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                       .filter(CVConfigurationKeys.accountId, accountId)
                                       .filter("appId", appId)
                                       .filter(CVConfigurationKeys.isWorkflowConfig, false);
-    if (isNotEmpty(envId)) {
+    if (hasSome(envId)) {
       configurationQuery = configurationQuery.filter("envId", envId);
     }
 
@@ -400,11 +400,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                       .filter(CVConfigurationKeys.accountId, accountId)
                                       .filter(CVConfigurationKeys.isWorkflowConfig, false);
 
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       configurationQuery = configurationQuery.field(CVConfiguration.APP_ID_KEY2).in(appIds);
     }
 
-    if (isNotEmpty(envIds)) {
+    if (hasSome(envIds)) {
       configurationQuery = configurationQuery.field(CVConfigurationKeys.envId).in(envIds);
     }
 
@@ -441,7 +441,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         final Map<String, String> invalidFields = PrometheusResource.validateTransactions(
             ((PrometheusCVServiceConfiguration) updatedConfig).getTimeSeriesToAnalyze(), true);
 
-        if (isNotEmpty(invalidFields)) {
+        if (hasSome(invalidFields)) {
           throw new VerificationOperationException(
               ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
         }
@@ -449,14 +449,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case DATA_DOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
         DatadogCVServiceConfiguration ddCVConfig = (DatadogCVServiceConfiguration) updatedConfig;
-        if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
+        if (hasSome(ddCVConfig.getCustomMetrics())) {
           final Map<String, String> ddInvalidFields =
               DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
           String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
               null, ddCVConfig.getDockerMetrics(), null, ddCVConfig.getEcsMetrics());
           ddInvalidFields.putAll(
               DatadogServiceImpl.validateNameClashInCustomMetrics(ddCVConfig.getCustomMetrics(), metricsString));
-          if (isNotEmpty(ddInvalidFields)) {
+          if (hasSome(ddInvalidFields)) {
             throw new VerificationOperationException(
                 ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
           }
@@ -470,7 +470,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         ((StackDriverMetricCVConfiguration) updatedConfig).setMetricFilters();
         Map<String, String> stackDriverInvalidFields = StackDriverState.validateMetricDefinitions(
             ((StackDriverMetricCVConfiguration) updatedConfig).getMetricDefinitions(), true);
-        if (isNotEmpty(stackDriverInvalidFields)) {
+        if (hasSome(stackDriverInvalidFields)) {
           throw new VerificationOperationException(
               APM_CONFIGURATION_ERROR, "Invalid setup: " + stackDriverInvalidFields);
         }
@@ -676,13 +676,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (cvConfiguration.getAnalysisTolerance() != null) {
       updateOperations.set(CVConfigurationKeys.analysisTolerance, cvConfiguration.getAnalysisTolerance());
     }
-    if (isNotEmpty(cvConfiguration.getCustomThresholdRefId())) {
+    if (hasSome(cvConfiguration.getCustomThresholdRefId())) {
       updateOperations.set(CVConfigurationKeys.customThresholdRefId, cvConfiguration.getCustomThresholdRefId());
     }
     switch (stateType) {
       case NEW_RELIC:
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId());
-        if (isNotEmpty(((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics())) {
+        if (hasSome(((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics())) {
           updateOperations.set("metrics", ((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics());
         }
         break;
@@ -704,30 +704,30 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case DATA_DOG:
         DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
-        if (isEmpty(datadogCVServiceConfiguration.getDockerMetrics())
-            && isEmpty(datadogCVServiceConfiguration.getEcsMetrics())
-            && isEmpty(datadogCVServiceConfiguration.getCustomMetrics())
-            && isEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
+        if (hasNone(datadogCVServiceConfiguration.getDockerMetrics())
+            && hasNone(datadogCVServiceConfiguration.getEcsMetrics())
+            && hasNone(datadogCVServiceConfiguration.getCustomMetrics())
+            && hasNone(datadogCVServiceConfiguration.getDatadogServiceName())) {
           throw new VerificationOperationException(ErrorCode.DATA_DOG_CONFIGURATION_ERROR,
               "No metric provided in Configuration for configId " + savedConfiguration.getUuid() + " and serviceId "
                   + savedConfiguration.getServiceId());
         }
-        if (isNotEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
+        if (hasSome(datadogCVServiceConfiguration.getDatadogServiceName())) {
           updateOperations.set("datadogServiceName", datadogCVServiceConfiguration.getDatadogServiceName());
         } else {
           updateOperations.unset("datadogServiceName");
         }
-        if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
+        if (hasSome(datadogCVServiceConfiguration.getDockerMetrics())) {
           updateOperations.set("dockerMetrics", datadogCVServiceConfiguration.getDockerMetrics());
         } else {
           updateOperations.unset("dockerMetrics");
         }
-        if (isNotEmpty(datadogCVServiceConfiguration.getEcsMetrics())) {
+        if (hasSome(datadogCVServiceConfiguration.getEcsMetrics())) {
           updateOperations.set("ecsMetrics", datadogCVServiceConfiguration.getEcsMetrics());
         } else {
           updateOperations.unset("ecsMetrics");
         }
-        if (isNotEmpty(datadogCVServiceConfiguration.getCustomMetrics())) {
+        if (hasSome(datadogCVServiceConfiguration.getCustomMetrics())) {
           updateOperations.set("customMetrics", datadogCVServiceConfiguration.getCustomMetrics());
         } else {
           updateOperations.unset("customMetrics");
@@ -736,35 +736,35 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case CLOUD_WATCH:
         CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration =
             (CloudWatchCVServiceConfiguration) cvConfiguration;
-        if (isEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
-            && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
-            && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
-            && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+        if (hasNone(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())
+            && hasNone(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
+            && hasNone(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
+            && hasNone(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
           throw new VerificationOperationException(ErrorCode.CLOUDWATCH_CONFIGURATION_ERROR,
               "No metric provided in Configuration for configId " + savedConfiguration.getUuid() + " and serviceId "
                   + savedConfiguration.getServiceId());
         }
         updateOperations.set("region", cloudWatchCVServiceConfiguration.getRegion());
 
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics())) {
           updateOperations.set("loadBalancerMetrics", cloudWatchCVServiceConfiguration.getLoadBalancerMetrics());
-        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getLoadBalancerMetrics())) {
+        } else if (hasSome(((CloudWatchCVServiceConfiguration) savedConfiguration).getLoadBalancerMetrics())) {
           updateOperations.unset("loadBalancerMetrics");
         }
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getEc2InstanceNames())) {
           updateOperations.set("ec2InstanceName", cloudWatchCVServiceConfiguration.getEc2InstanceNames())
               .set("ec2Metrics", cloudWatchCVServiceConfiguration.getEc2Metrics());
-        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getEc2InstanceNames())) {
+        } else if (hasSome(((CloudWatchCVServiceConfiguration) savedConfiguration).getEc2InstanceNames())) {
           updateOperations.unset("ec2InstanceName").unset("ec2Metrics");
         }
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())) {
           updateOperations.set("lambdaFunctionsMetrics", cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics());
-        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getLambdaFunctionsMetrics())) {
+        } else if (hasSome(((CloudWatchCVServiceConfiguration) savedConfiguration).getLambdaFunctionsMetrics())) {
           updateOperations.unset("lambdaFunctionsMetrics");
         }
-        if (isNotEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
+        if (hasSome(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
           updateOperations.set("ecsMetrics", cloudWatchCVServiceConfiguration.getEcsMetrics());
-        } else if (isNotEmpty(((CloudWatchCVServiceConfiguration) savedConfiguration).getEcsMetrics())) {
+        } else if (hasSome(((CloudWatchCVServiceConfiguration) savedConfiguration).getEcsMetrics())) {
           updateOperations.unset("ecsMetrics");
         }
         break;
@@ -836,16 +836,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("projectId", bugsnagCVConfiguration.getProjectId())
             .set("browserApplication", bugsnagCVConfiguration.isBrowserApplication())
             .set("alertPriority", bugsnagCVConfiguration.getAlertPriority());
-        if (isNotEmpty(bugsnagCVConfiguration.getReleaseStage())) {
+        if (hasSome(bugsnagCVConfiguration.getReleaseStage())) {
           updateOperations.set("releaseStage", bugsnagCVConfiguration.getReleaseStage());
-        } else if (isNotEmpty(((BugsnagCVConfiguration) savedConfiguration).getReleaseStage())) {
+        } else if (hasSome(((BugsnagCVConfiguration) savedConfiguration).getReleaseStage())) {
           updateOperations.unset("releaseStage");
         }
 
         resetBaselineIfNecessary(bugsnagCVConfiguration, (LogsCVConfiguration) savedConfiguration);
         break;
       case APM_VERIFICATION:
-        if (isNotEmpty(((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos())) {
+        if (hasSome(((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos())) {
           updateOperations.set(
               "metricCollectionInfos", ((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos());
         }
@@ -903,7 +903,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .get();
     Map<String, TimeSeriesMetricDefinition> metricTemplates = getMetricDefinitionMap(stateType, cvConfiguration);
 
-    if (isEmpty(metricTemplates) || metricTemplate == null) {
+    if (hasNone(metricTemplates) || metricTemplate == null) {
       return;
     }
 
@@ -916,7 +916,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     TimeSeriesMetricTemplates metricTemplate;
     Map<String, TimeSeriesMetricDefinition> metricTemplates = getMetricDefinitionMap(stateType, cvConfiguration);
 
-    if (isEmpty(metricTemplates)) {
+    if (hasNone(metricTemplates)) {
       return;
     }
 
@@ -964,10 +964,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case DATA_DOG:
         DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
-        if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
+        if (hasSome(datadogCVServiceConfiguration.getDockerMetrics())) {
           metricTemplates.putAll(getMetricTemplates(datadogCVServiceConfiguration.getDockerMetrics()));
         }
-        if (isNotEmpty(datadogCVServiceConfiguration.getEcsMetrics())) {
+        if (hasSome(datadogCVServiceConfiguration.getEcsMetrics())) {
           metricTemplates.putAll(getMetricTemplates(datadogCVServiceConfiguration.getEcsMetrics()));
         }
 
@@ -1113,7 +1113,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public Map<String, String> getTxnMetricPairsForAPMCVConfig(String cvConfigId) {
-    if (isEmpty(cvConfigId)) {
+    if (hasNone(cvConfigId)) {
       log.error("Empty cvConfigId passed into getTxnMetricPairsForAPMCVConfig");
       return null;
     }
@@ -1139,13 +1139,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public boolean saveKeyTransactionsForCVConfiguration(
       String accountId, String cvConfigId, List<String> keyTransactions) {
-    if (isEmpty(cvConfigId) || getConfiguration(cvConfigId) == null) {
+    if (hasNone(cvConfigId) || getConfiguration(cvConfigId) == null) {
       final String errMsg = "CVConfigId is empty in saveKeyTransactionsForCVConfiguration";
       log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
     }
 
-    if (isEmpty(keyTransactions)) {
+    if (hasNone(keyTransactions)) {
       final String errMsg = "keyTransactions is empty in saveKeyTransactionsForCVConfiguration";
       log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -1170,7 +1170,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public boolean addToKeyTransactionsForCVConfiguration(
       String accountId, String cvConfigId, List<String> keyTransaction) {
-    if (isEmpty(keyTransaction)) {
+    if (hasNone(keyTransaction)) {
       final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
       log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -1192,7 +1192,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public boolean removeFromKeyTransactionsForCVConfiguration(String cvConfigId, List<String> keyTransaction) {
-    if (isEmpty(keyTransaction)) {
+    if (hasNone(keyTransaction)) {
       final String errMsg = "keyTransaction is empty in saveKeyTransactionsForCVConfiguration";
       log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
@@ -1202,7 +1202,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     if (keyTransactionsForConfig != null) {
       log.info("Removing {} from the keytransactions list for cvConfigId: {}", keyTransaction, cvConfigId);
       keyTransactionsForConfig.getKeyTransactions().removeAll(keyTransaction);
-      if (isEmpty(keyTransactionsForConfig.getKeyTransactions())) {
+      if (hasNone(keyTransactionsForConfig.getKeyTransactions())) {
         wingsPersistence.delete(keyTransactionsForConfig);
       } else {
         wingsPersistence.save(keyTransactionsForConfig);
@@ -1213,7 +1213,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   @Override
   public TimeSeriesKeyTransactions getKeyTransactionsForCVConfiguration(String cvConfigId) {
-    if (isEmpty(cvConfigId)) {
+    if (hasNone(cvConfigId)) {
       final String errMsg = "CVConfigId is empty in getForCVConfiguration";
       log.error(errMsg);
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);

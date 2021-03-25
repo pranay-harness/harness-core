@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -94,7 +94,7 @@ public class DelegateConnectionDao {
                                           .field(DelegateConnectionKeys.lastHeartbeat)
                                           .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis());
     String primaryVersion = persistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
-    if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
+    if (hasSome(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
       query.filter(DelegateConnectionKeys.version, primaryVersion);
     }
     return query.project(DelegateConnectionKeys.delegateId, true)

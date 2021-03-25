@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -67,10 +67,10 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
 
-      if (isNotEmpty(parameters.getSourceRepoBranch())) {
+      if (hasSome(parameters.getSourceRepoBranch())) {
         gitConfig.setBranch(parameters.getSourceRepoBranch());
       }
-      if (isNotEmpty(parameters.getCommitId())) {
+      if (hasSome(parameters.getCommitId())) {
         gitConfig.setReference(parameters.getCommitId());
       }
       GitOperationContext gitOperationContext = null;

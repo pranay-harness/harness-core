@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -23,7 +24,7 @@ public class K8sResourceStandardizer {
   }
 
   public BigDecimal getCpuCores(String cpu) {
-    if (isEmpty(cpu)) {
+    if (hasNone(cpu)) {
       return BigDecimal.ZERO;
     }
     return Quantity.fromString(cpu).getNumber();
@@ -38,7 +39,7 @@ public class K8sResourceStandardizer {
 
   // Standardize memory as bytes
   public long getMemoryByte(String mem) {
-    if (isEmpty(mem)) {
+    if (hasNone(mem)) {
       return 0L;
     }
     return Quantity.fromString(mem).getNumber().longValue();

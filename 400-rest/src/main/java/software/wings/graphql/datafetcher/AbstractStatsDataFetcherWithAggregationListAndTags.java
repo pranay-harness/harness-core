@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.function.Function.identity;
 
@@ -76,7 +76,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         QLBillingStackedTimeSeriesData billingStackedTimeSeriesData = (QLBillingStackedTimeSeriesData) qlData;
         List<QLBillingStackedTimeSeriesDataPoint> billingStackedTimeSeriesDataPoints =
             billingStackedTimeSeriesData.getData();
-        if (isEmpty(billingStackedTimeSeriesDataPoints)) {
+        if (hasNone(billingStackedTimeSeriesDataPoints)) {
           return qlData;
         }
         billingStackedTimeSeriesDataPoints.forEach(billingStackedTimeSeriesDataPoint -> {
@@ -87,14 +87,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       } else if (qlData instanceof QLEntityTableListData) {
         QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
         List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
-        if (isEmpty(entityTableDataPoints)) {
+        if (hasNone(entityTableDataPoints)) {
           return qlData;
         }
         getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1, includeOthers);
       } else if (qlData instanceof QLCEData) {
         QLCEData data = (QLCEData) qlData;
         List<QLCEDataEntry> dataPoints = data.getData();
-        if (isEmpty(dataPoints)) {
+        if (hasNone(dataPoints)) {
           return qlData;
         }
       }
@@ -184,7 +184,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
   protected List<TA> getGroupByTag(List<G> groupByList) {
     List<TA> groupByTagList = new ArrayList<>();
-    if (isEmpty(groupByList)) {
+    if (hasNone(groupByList)) {
       return groupByTagList;
     }
 
@@ -199,7 +199,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
 
   protected List<LA> getGroupByLabel(List<G> groupByList) {
     List<LA> groupByLabelList = new ArrayList<>();
-    if (isEmpty(groupByList)) {
+    if (hasNone(groupByList)) {
       return groupByLabelList;
     }
 

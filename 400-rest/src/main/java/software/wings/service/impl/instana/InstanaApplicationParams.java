@@ -1,6 +1,6 @@
 package software.wings.service.impl.instana;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,14 +29,14 @@ public class InstanaApplicationParams {
   }
 
   public void validateFields(Map<String, String> errors) {
-    if (isEmpty(hostTagFilter)) {
+    if (hasNone(hostTagFilter)) {
       errors.put("applicationParams." + ApplicationParamsKeys.hostTagFilter, "hostTagFilter is a required field.");
     }
     getTagFilters().forEach(tagFilter -> {
-      if (isEmpty(tagFilter.getName())) {
+      if (hasNone(tagFilter.getName())) {
         errors.put("applicationParams.tagFilter.name", "tagFilter.name is a required field.");
       }
-      if (isEmpty(tagFilter.getValue())) {
+      if (hasNone(tagFilter.getValue())) {
         errors.put("applicationParams.tagFilter.value", "tagFilter.value is a required field.");
       }
       if (tagFilter.getOperator() == null) {

@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readBoolean;
@@ -166,11 +166,11 @@ public class CVFeedbackRecord implements GoogleDataStoreAware, AccountAccess {
             .build();
 
     String createdBy = readString(entity, CVFeedbackRecordKeys.createdBy);
-    if (isNotEmpty(createdBy)) {
+    if (hasSome(createdBy)) {
       record.setCreatedBy(JsonUtils.asObject(createdBy, EmbeddedUser.class));
     }
     String lastUpdatedBy = readString(entity, CVFeedbackRecordKeys.lastUpdatedBy);
-    if (isNotEmpty(lastUpdatedBy)) {
+    if (hasSome(lastUpdatedBy)) {
       record.setLastUpdatedBy(JsonUtils.asObject(lastUpdatedBy, EmbeddedUser.class));
     }
     return record;

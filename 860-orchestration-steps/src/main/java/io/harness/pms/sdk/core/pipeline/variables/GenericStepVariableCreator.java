@@ -1,8 +1,8 @@
 package io.harness.pms.sdk.core.pipeline.variables;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
@@ -27,7 +27,7 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     Set<String> stepTypes = getSupportedStepTypes();
-    if (EmptyPredicate.isEmpty(stepTypes)) {
+    if (hasNone(stepTypes)) {
       return Collections.emptyMap();
     }
     return Collections.singletonMap(STEP, stepTypes);

@@ -3,8 +3,8 @@ package software.wings.service.impl.artifactstream;
 import static io.harness.beans.FeatureName.ENHANCED_GCR_CONNECTIVITY_CHECK;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ANIL;
@@ -1007,10 +1007,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedNexusArtifactStream.setJobname("snapshots");
     savedNexusArtifactStream.setGroupId("io.harness.test.changed");
     savedNexusArtifactStream.setArtifactPaths(asList("todolist-changed"));
-    if (isNotEmpty(extension)) {
+    if (hasSome(extension)) {
       savedNexusArtifactStream.setExtension(extension);
     }
-    if (isNotEmpty(classifier)) {
+    if (hasSome(classifier)) {
       savedNexusArtifactStream.setClassifier(classifier);
     }
 
@@ -1042,14 +1042,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
           .pushYamlChangeSet(any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(),
               anyBoolean(), anyBoolean());
     }
-    if (isNotEmpty(extension)) {
+    if (hasSome(extension)) {
       assertThat(updatedNexusArtifactStream.getExtension()).isEqualTo(extension);
     }
 
-    if (isNotEmpty(classifier)) {
+    if (hasSome(classifier)) {
       assertThat(updatedNexusArtifactStream.getClassifier()).isEqualTo(classifier);
     }
-    if (isEmpty(extension) && isEmpty(classifier)) {
+    if (hasNone(extension) && hasNone(classifier)) {
       verify(buildSourceService, times(0))
           .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
     } else {

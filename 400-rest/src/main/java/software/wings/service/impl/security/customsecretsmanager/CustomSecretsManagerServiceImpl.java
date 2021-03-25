@@ -1,7 +1,7 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -96,7 +96,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     secretsManagerConfig.setAccountId(accountId);
     secretsManagerConfig.setEncryptionType(CUSTOM);
 
-    if (isEmpty(secretsManagerConfig.getUuid())) {
+    if (hasNone(secretsManagerConfig.getUuid())) {
       String errorMessage = "Update request for custom secret manager received without the secret manager id";
       throw new InvalidArgumentsException(errorMessage, USER);
     }
@@ -149,7 +149,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   }
 
   private void setCommandPathInConfig(CustomSecretsManagerConfig secretsManagerConfig) {
-    if (isEmpty(secretsManagerConfig.getCommandPath())) {
+    if (hasNone(secretsManagerConfig.getCommandPath())) {
       if (secretsManagerConfig.getCustomSecretsManagerShellScript().getScriptType() == BASH
           || secretsManagerConfig.isExecuteOnDelegate()) {
         secretsManagerConfig.setCommandPath("/tmp");

@@ -1,6 +1,6 @@
 package software.wings.sm.states.customdeployment;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.serializer.JsonUtils;
 
@@ -32,7 +32,7 @@ public class InstanceMapperUtils {
     Function<Map<String, Object>, HostProperties> hostJsonPropertyMapper =
         getMapHostPropertiesFunction(hostAttributes, hostNameKey);
 
-    if (isNotEmpty(instanceList)) {
+    if (hasSome(instanceList)) {
       return instanceList.stream()
           .map(hostJsonPropertyMapper)
           .filter(hostProperties -> StringUtils.isNotBlank(hostProperties.getHostName()))

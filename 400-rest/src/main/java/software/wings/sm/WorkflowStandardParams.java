@@ -2,8 +2,8 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
@@ -184,12 +184,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
     ServiceElement serviceElement = context.fetchServiceElement();
     if (serviceElement == null) {
-      if (isNotEmpty(artifactIds)) {
+      if (hasSome(artifactIds)) {
         Artifact artifact = artifactService.get(artifactIds.get(0));
         ExecutionContextImpl.addArtifactToContext(
             artifactStreamService, getApp().getAccountId(), map, artifact, buildSourceService, false);
       }
-      if (isNotEmpty(rollbackArtifactIds)) {
+      if (hasSome(rollbackArtifactIds)) {
         Artifact rollbackArtifact = artifactService.get(rollbackArtifactIds.get(0));
         ExecutionContextImpl.addArtifactToContext(
             artifactStreamService, getApp().getAccountId(), map, rollbackArtifact, buildSourceService, true);
@@ -217,7 +217,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   public HelmChart getHelmChartForService(String serviceId) {
     getHelmCharts();
-    if (isEmpty(helmCharts)) {
+    if (hasNone(helmCharts)) {
       return null;
     }
 
@@ -225,7 +225,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   }
 
   public List<HelmChart> getHelmCharts() {
-    if (isEmpty(helmCharts) && isNotEmpty(helmChartIds)) {
+    if (hasNone(helmCharts) && hasSome(helmChartIds)) {
       helmCharts = helmChartService.listByIds(getApp().getAccountId(), helmChartIds);
     }
     return helmCharts;
@@ -544,7 +544,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * @return the artifacts
    */
   public List<Artifact> getArtifacts() {
-    if (artifacts == null && isNotEmpty(artifactIds)) {
+    if (artifacts == null && hasSome(artifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
         Artifact artifact = artifactService.get(artifactId);
@@ -563,7 +563,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    * @return the rollback artifacts
    */
   public List<Artifact> getRollbackArtifacts() {
-    if (rollbackArtifacts == null && isNotEmpty(rollbackArtifactIds)) {
+    if (rollbackArtifacts == null && hasSome(rollbackArtifactIds)) {
       List<Artifact> list = new ArrayList<>();
       for (String rollbackArtifactId : rollbackArtifactIds) {
         Artifact rollbackArtifact = artifactService.get(rollbackArtifactId);
@@ -584,12 +584,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public Artifact getArtifactForService(String serviceId) {
     getArtifacts();
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return null;
     }
 
     List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
-    if (isEmpty(artifactStreamIds)) {
+    if (hasNone(artifactStreamIds)) {
       return null;
     }
 
@@ -607,12 +607,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public Artifact getRollbackArtifactForService(String serviceId) {
     getRollbackArtifacts();
-    if (isEmpty(rollbackArtifacts)) {
+    if (hasNone(rollbackArtifacts)) {
       return null;
     }
 
     List<String> rollbackArtifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
-    if (isEmpty(rollbackArtifactStreamIds)) {
+    if (hasNone(rollbackArtifactStreamIds)) {
       return null;
     }
 

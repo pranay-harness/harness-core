@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -122,7 +122,7 @@ public class SpotinstTrafficShiftAlbSetupTaskHandler extends SpotInstTaskHandler
     Map<String, Object> computeConfigMap = (Map<String, Object>) elastigroupConfigMap.get(COMPUTE);
     Map<String, Object> launchSpecificationMap = (Map<String, Object>) computeConfigMap.get(LAUNCH_SPECIFICATION);
     launchSpecificationMap.put(ELASTI_GROUP_IMAGE_CONFIG, parameters.getImage());
-    if (isNotEmpty(parameters.getUserData())) {
+    if (hasSome(parameters.getUserData())) {
       launchSpecificationMap.put(ELASTI_GROUP_USER_DATA_CONFIG, parameters.getUserData());
     }
     List<ElastiGroupLoadBalancer> loadBalancers = new ArrayList<>();
@@ -142,7 +142,7 @@ public class SpotinstTrafficShiftAlbSetupTaskHandler extends SpotInstTaskHandler
 
   private List<LbDetailsForAlbTrafficShift> loadTargetGroupDetails(AwsConfig awsConfig, String region,
       List<LbDetailsForAlbTrafficShift> originalLbDetails, ExecutionLogCallback logCallback) {
-    if (isEmpty(originalLbDetails)) {
+    if (hasNone(originalLbDetails)) {
       throw new InvalidRequestException("No load balancers found for traffic shifting.");
     }
     List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups = new ArrayList<>();

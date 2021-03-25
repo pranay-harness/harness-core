@@ -1,6 +1,6 @@
 package io.harness.delegate.task.git;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus.SUCCESS;
 
 import io.harness.connector.ConnectivityStatus;
@@ -44,7 +44,7 @@ public class GitCommandTaskHandler {
     log.info("Processing Git command: VALIDATE");
     String errorMessage = gitService.validate(gitConfig, accountId, sshSessionConfig);
     ConnectorValidationResultBuilder builder = ConnectorValidationResult.builder().testedAt(System.currentTimeMillis());
-    if (isEmpty(errorMessage)) {
+    if (hasNone(errorMessage)) {
       return GitCommandExecutionResponse.builder()
           .gitCommandStatus(SUCCESS)
           .connectorValidationResult(builder.status(ConnectivityStatus.SUCCESS).build())

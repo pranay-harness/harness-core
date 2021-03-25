@@ -3,7 +3,7 @@ package io.harness.yaml.schema;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
@@ -48,17 +48,17 @@ public class YamlSchemaProvider {
         JsonNodeUtils.deletePropertiesInJsonNode(secondLevelNodeProperties, PROJECT_KEY, ORG_KEY);
       } else if (scope == Scope.ORG && schemaDetailsForEntityType.isAvailableAtOrgLevel()) {
         JsonNodeUtils.deletePropertiesInJsonNode(secondLevelNodeProperties, PROJECT_KEY);
-        if (isNotEmpty(orgIdentifier)) {
+        if (hasSome(orgIdentifier)) {
           JsonNodeUtils.upsertPropertyInObjectNode(secondLevelNodeProperties.get(ORG_KEY), CONST_NODE, orgIdentifier);
         }
         if (secondLevelNodeProperties.has(ORG_KEY)) {
           JsonNodeUtils.upsertPropertyInObjectNode(secondLevelNode, REQUIRED_NODE, ORG_KEY);
         }
       } else if (scope == Scope.PROJECT && schemaDetailsForEntityType.isAvailableAtProjectLevel()) {
-        if (isNotEmpty(orgIdentifier)) {
+        if (hasSome(orgIdentifier)) {
           JsonNodeUtils.upsertPropertyInObjectNode(secondLevelNodeProperties.get(ORG_KEY), CONST_NODE, orgIdentifier);
         }
-        if (isNotEmpty(projectIdentifier)) {
+        if (hasSome(projectIdentifier)) {
           JsonNodeUtils.upsertPropertyInObjectNode(
               secondLevelNodeProperties.get(PROJECT_KEY), CONST_NODE, projectIdentifier);
         }

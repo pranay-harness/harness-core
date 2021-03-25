@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.acl.models;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
@@ -21,7 +21,7 @@ public class HResource {
   private String resourceType;
 
   public String getResourceIdentifier() {
-    return isEmpty(resourceIdentifier) ? IDENTIFIER_FOR_ALL_RESOURCES : resourceIdentifier;
+    return hasNone(resourceIdentifier) ? IDENTIFIER_FOR_ALL_RESOURCES : resourceIdentifier;
   }
 
   public static List<Optional<HResource>> fromResourceSelector(ResourceSelector resourceSelector) {

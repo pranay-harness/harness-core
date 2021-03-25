@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +19,7 @@ public class TrialSignupOptions {
   @Getter @Setter private Boolean assistedOption;
 
   public TrialSignupOptions(List<Products> freemiumProducts, Boolean assistedOption) {
-    if (isEmpty(freemiumProducts)) {
+    if (hasNone(freemiumProducts)) {
       this.productsSelected = getDefaultProducts();
     } else {
       this.productsSelected = freemiumProducts;
@@ -55,7 +55,7 @@ public class TrialSignupOptions {
     }
 
     public static List<Products> getProductsFromFullNames(List<String> fullNames) {
-      if (isEmpty(fullNames)) {
+      if (hasNone(fullNames)) {
         return Collections.emptyList();
       }
 

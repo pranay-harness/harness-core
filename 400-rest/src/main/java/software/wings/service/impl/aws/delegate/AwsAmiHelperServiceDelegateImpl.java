@@ -3,8 +3,8 @@ package software.wings.service.impl.aws.delegate;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -132,8 +132,8 @@ public class AwsAmiHelperServiceDelegateImpl
       String newAsgName = request.getNewAsgName();
 
       logCallback.saveExecutionLog("Starting Ami B/G swap");
-      if (isNotEmpty(newAsgName)) {
-        if (isNotEmpty(stageTargetGroupARNs)) {
+      if (hasSome(newAsgName)) {
+        if (hasSome(stageTargetGroupARNs)) {
           logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
               on(",").join(stageTargetGroupARNs), newAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
@@ -146,7 +146,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(stageClassicLBs)) {
+        if (hasSome(stageClassicLBs)) {
           logCallback.saveExecutionLog(format(
               "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(stageClassicLBs), newAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
@@ -159,7 +159,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(primaryTargetGroupARNs)) {
+        if (hasSome(primaryTargetGroupARNs)) {
           logCallback.saveExecutionLog(format("Sending request to attach target groups:[%s] to Asg:[%s]",
               on(",").join(primaryTargetGroupARNs), newAsgName));
           awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
@@ -172,7 +172,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(primaryClassicLBs)) {
+        if (hasSome(primaryClassicLBs)) {
           logCallback.saveExecutionLog(format("Sending request to attach classic load balancers:[%s] to Asg:[%s]",
               on(",").join(primaryClassicLBs), newAsgName));
           awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
@@ -192,8 +192,8 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, newAsgName, region, BG_VERSION, BG_BLUE, logCallback);
       }
 
-      if (isNotEmpty(oldAsgName)) {
-        if (isNotEmpty(primaryTargetGroupARNs)) {
+      if (hasSome(oldAsgName)) {
+        if (hasSome(primaryTargetGroupARNs)) {
           logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
               on(",").join(primaryTargetGroupARNs), oldAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
@@ -206,7 +206,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(primaryClassicLBs)) {
+        if (hasSome(primaryClassicLBs)) {
           logCallback.saveExecutionLog(format(
               "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(primaryClassicLBs), oldAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
@@ -261,7 +261,7 @@ public class AwsAmiHelperServiceDelegateImpl
 
       logCallback.saveExecutionLog("Rolling back Ami B/G swap");
 
-      if (isNotEmpty(oldAsgName)) {
+      if (hasSome(oldAsgName)) {
         logCallback.saveExecutionLog(format("Upgrading old Asg: [%s] back to initial state", oldAsgName));
         int desiredCount = preDeploymentData.getPreDeploymentDesiredCapacity();
         int minCount = preDeploymentData.getPreDeploymentMinCapacity();
@@ -276,7 +276,7 @@ public class AwsAmiHelperServiceDelegateImpl
         awsAsgHelperServiceDelegate.setMinInstancesForAsg(
             awsConfig, encryptionDetails, region, oldAsgName, minCount, logCallback);
 
-        if (isNotEmpty(primaryTargetGroupARNs)) {
+        if (hasSome(primaryTargetGroupARNs)) {
           logCallback.saveExecutionLog(format("Sending request to attach target groups:[%s] to Asg:[%s]",
               on(",").join(primaryTargetGroupARNs), oldAsgName));
           awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
@@ -289,7 +289,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(primaryClassicLBs)) {
+        if (hasSome(primaryClassicLBs)) {
           logCallback.saveExecutionLog(format("Sending request to attach classic load balancers:[%s] to Asg:[%s]",
               on(",").join(primaryClassicLBs), oldAsgName));
           awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
@@ -307,8 +307,8 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, oldAsgName, region, BG_VERSION, BG_BLUE, logCallback);
       }
 
-      if (isNotEmpty(newAsgName)) {
-        if (isNotEmpty(primaryTargetGroupARNs)) {
+      if (hasSome(newAsgName)) {
+        if (hasSome(primaryTargetGroupARNs)) {
           logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
               on(",").join(primaryTargetGroupARNs), newAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
@@ -321,7 +321,7 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
-        if (isNotEmpty(primaryClassicLBs)) {
+        if (hasSome(primaryClassicLBs)) {
           logCallback.saveExecutionLog(format(
               "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(primaryClassicLBs), newAsgName));
           awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
@@ -372,7 +372,7 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Getting existing instance Ids");
 
       Set<String> existingInstanceIds = new HashSet<>();
-      if (isNotEmpty(request.getExistingInstanceIds())) {
+      if (hasSome(request.getExistingInstanceIds())) {
         existingInstanceIds.addAll(request.getExistingInstanceIds());
       }
 
@@ -448,7 +448,7 @@ public class AwsAmiHelperServiceDelegateImpl
   @Override
   public AwsAmiSwitchRoutesResponse switchAmiRoutesTrafficShift(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
     try {
-      if (isEmpty(request.getNewAsgName())) {
+      if (hasNone(request.getNewAsgName())) {
         return skipAwsAmiTrafficShifting(request);
       }
       performTrafficShiftingBetweenTargetGroups(request);
@@ -472,7 +472,7 @@ public class AwsAmiHelperServiceDelegateImpl
 
   private String getSkipMessage(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
     String oldAsgName = request.getOldAsgName();
-    if (isEmpty(oldAsgName)) {
+    if (hasNone(oldAsgName)) {
       return "Skipping downscaling as did not find any old AutoScaling Group";
     } else if (!request.isDownscaleOldAsg()) {
       return format(
@@ -486,7 +486,7 @@ public class AwsAmiHelperServiceDelegateImpl
 
   private void upScaleOldAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
     String oldAsgName = request.getOldAsgName();
-    if (isEmpty(oldAsgName)) {
+    if (hasNone(oldAsgName)) {
       String message = "No old AutoScaling Group found for upscaling";
       createAndFinishEmptyExecutionLog(request, UP_SCALE_ASG_COMMAND_UNIT, message);
       createAndFinishEmptyExecutionLog(request, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
@@ -527,7 +527,7 @@ public class AwsAmiHelperServiceDelegateImpl
 
   private void downScaleNewAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
     String newAsgName = request.getNewAsgName();
-    if (isEmpty(newAsgName)) {
+    if (hasNone(newAsgName)) {
       String message = "No new AutoScaling Group found for downscaling.";
       createAndFinishEmptyExecutionLog(request, DOWN_SCALE_ASG_COMMAND_UNIT, message);
       createAndFinishEmptyExecutionLog(request, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
@@ -604,7 +604,7 @@ public class AwsAmiHelperServiceDelegateImpl
   }
 
   private boolean downSizeOldAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
-    return isNotEmpty(request.getOldAsgName()) && request.getNewAutoscalingGroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT
+    return hasSome(request.getOldAsgName()) && request.getNewAutoscalingGroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT
         && request.isDownscaleOldAsg();
   }
 
@@ -692,7 +692,7 @@ public class AwsAmiHelperServiceDelegateImpl
   private List<LbDetailsForAlbTrafficShift> loadTargetGroupDetails(
       AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
     List<LbDetailsForAlbTrafficShift> originalLbDetails = request.getLbDetails();
-    if (isEmpty(originalLbDetails)) {
+    if (hasNone(originalLbDetails)) {
       throw new InvalidRequestException("No load balancers found for traffic shifting.");
     }
     List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups = new ArrayList<>();
@@ -757,8 +757,8 @@ public class AwsAmiHelperServiceDelegateImpl
       return existingInstancesForOldASG;
     }
 
-    if (isEmpty(request.getAsgDesiredCounts())) {
-      if (isNotEmpty(request.getOldAutoScalingGroupName())) {
+    if (hasNone(request.getAsgDesiredCounts())) {
+      if (hasSome(request.getOldAutoScalingGroupName())) {
         existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
             awsConfig, encryptionDetails, request.getRegion(), request.getOldAutoScalingGroupName(), false));
       }
@@ -767,7 +767,7 @@ public class AwsAmiHelperServiceDelegateImpl
     }
 
     for (AwsAmiResizeData awsAmiResizeData : request.getAsgDesiredCounts()) {
-      if (isNotEmpty(awsAmiResizeData.getAsgName()) && awsAmiResizeData.getDesiredCount() > 0) {
+      if (hasSome(awsAmiResizeData.getAsgName()) && awsAmiResizeData.getDesiredCount() > 0) {
         try {
           existingInstancesForOldASG.addAll(awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
               awsConfig, encryptionDetails, request.getRegion(), awsAmiResizeData.getAsgName(), false));
@@ -804,7 +804,7 @@ public class AwsAmiHelperServiceDelegateImpl
         }
       }
       if (!rollback) {
-        if (isNotEmpty(targetGroupsArns)) {
+        if (hasSome(targetGroupsArns)) {
           targetGroupsArns.forEach(arn -> {
             executionLogCallback.saveExecutionLog(format(
                 "Waiting for Target Group: [%s] to have all instances of Asg: [%s]", arn, newAutoScalingGroupName));
@@ -812,7 +812,7 @@ public class AwsAmiHelperServiceDelegateImpl
                 region, arn, newAutoScalingGroupName, autoScalingSteadyStateTimeout, executionLogCallback);
           });
         }
-        if (isNotEmpty(classicLBs)) {
+        if (hasSome(classicLBs)) {
           classicLBs.forEach(classicLB -> {
             executionLogCallback.saveExecutionLog(
                 format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB,
@@ -843,7 +843,7 @@ public class AwsAmiHelperServiceDelegateImpl
       List<AwsAmiResizeData> oldAsgsDesiredCounts, ExecutionLogCallback executionLogCallback,
       Integer autoScalingSteadyStateTimeout, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
       List<String> classicLBs, boolean rollback, int newAsgFinalDesiredCount, int desiredInstances) {
-    if (isNotEmpty(oldAsgsDesiredCounts)) {
+    if (hasSome(oldAsgsDesiredCounts)) {
       oldAsgsDesiredCounts.forEach(count -> {
         awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
             awsConfig, encryptionDetails, region, count.getAsgName(), executionLogCallback);
@@ -861,7 +861,7 @@ public class AwsAmiHelperServiceDelegateImpl
                 preDeploymentData.getPreDeploymentMinCapacity(), executionLogCallback);
           }
 
-          if (isNotEmpty(targetGroupsArns)) {
+          if (hasSome(targetGroupsArns)) {
             targetGroupsArns.forEach(arn -> {
               executionLogCallback.saveExecutionLog(
                   format("Waiting for Target Group: [%s] to have all instances of Asg: [%s]", arn, count.getAsgName()));
@@ -869,7 +869,7 @@ public class AwsAmiHelperServiceDelegateImpl
                   region, arn, count.getAsgName(), autoScalingSteadyStateTimeout, executionLogCallback);
             });
           }
-          if (isNotEmpty(classicLBs)) {
+          if (hasSome(classicLBs)) {
             classicLBs.forEach(classicLB -> {
               executionLogCallback.saveExecutionLog(
                   format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB,
@@ -902,7 +902,7 @@ public class AwsAmiHelperServiceDelegateImpl
       ExecutionLogCallback executionLogCallback, boolean resizeNewFirst, Integer autoScalingSteadyStateTimeout,
       int maxInstances, int minInstances, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
       List<String> classicLBs, boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances) {
-    if (isBlank(newAutoScalingGroupName) && isEmpty(oldAsgsDesiredCounts)) {
+    if (isBlank(newAutoScalingGroupName) && hasNone(oldAsgsDesiredCounts)) {
       throw new InvalidRequestException("At least one AutoScaling Group must be present");
     }
     if (resizeNewFirst) {
@@ -1071,14 +1071,14 @@ public class AwsAmiHelperServiceDelegateImpl
           harnessManagedAutoScalingGroups.stream()
               .filter(asg -> checkIfContainsTag(asg.getTags(), BG_VERSION, BG_BLUE))
               .collect(toList());
-      if (isNotEmpty(blueVersionAsgs)) {
+      if (hasSome(blueVersionAsgs)) {
         return blueVersionAsgs.get(0);
       }
     }
 
-    if (isNotEmpty(autoScalingGroupsWithNonZeroCount)) {
+    if (hasSome(autoScalingGroupsWithNonZeroCount)) {
       mostRecentActiveAsg = autoScalingGroupsWithNonZeroCount.get(0);
-    } else if (isNotEmpty(harnessManagedAutoScalingGroups)) {
+    } else if (hasSome(harnessManagedAutoScalingGroups)) {
       mostRecentActiveAsg = harnessManagedAutoScalingGroups.get(0);
     }
 
@@ -1091,12 +1091,12 @@ public class AwsAmiHelperServiceDelegateImpl
                                                 -> tagKey.equalsIgnoreCase(tagDescription.getKey())
                                                     && tagValue.equalsIgnoreCase(tagDescription.getValue()))
                                             .collect(toList());
-    return !isEmpty(filteredTags);
+    return !hasNone(filteredTags);
   }
 
   private List<AutoScalingGroup> listAllExistingAsgsWithNonZeroCount(
       List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
-    if (isEmpty(harnessManagedAutoScalingGroups)) {
+    if (hasNone(harnessManagedAutoScalingGroups)) {
       return harnessManagedAutoScalingGroups;
     }
 
@@ -1110,7 +1110,7 @@ public class AwsAmiHelperServiceDelegateImpl
   void downsizeOrDeleteOlderAutoScalaingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       AwsAmiServiceSetupRequest request, List<AutoScalingGroup> autoScalingGroups,
       AutoScalingGroup mostRecentOrBlueAsgWithNonZeroInstanceCount, ExecutionLogCallback executionLogCallback) {
-    if (isEmpty(autoScalingGroups) || mostRecentOrBlueAsgWithNonZeroInstanceCount == null) {
+    if (hasNone(autoScalingGroups) || mostRecentOrBlueAsgWithNonZeroInstanceCount == null) {
       return;
     }
 
@@ -1307,7 +1307,7 @@ public class AwsAmiHelperServiceDelegateImpl
     Set<String> deviceNamesInBaseAmi = awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(
         awsConfig, encryptedDataDetails, region, baseLaunchConfiguration.getImageId());
     List<BlockDeviceMapping> baseMappings = baseLaunchConfiguration.getBlockDeviceMappings();
-    if (isNotEmpty(baseMappings)) {
+    if (hasSome(baseMappings)) {
       return baseMappings.stream()
           .filter(mapping -> !deviceNamesInBaseAmi.contains(mapping.getDeviceName()))
           .collect(toList());
@@ -1364,7 +1364,7 @@ public class AwsAmiHelperServiceDelegateImpl
             .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
             .withAssociatePublicIpAddress(cloneBaseLaunchConfiguration.getAssociatePublicIpAddress());
 
-    if (isNotEmpty(userData)) {
+    if (hasSome(userData)) {
       createLaunchConfigurationRequest.setUserData(userData);
     }
 
@@ -1401,7 +1401,7 @@ public class AwsAmiHelperServiceDelegateImpl
   CreateLaunchTemplateVersionRequest createNewLaunchTemplateVersionRequest(
       String artifactRevision, LaunchTemplateVersion baseLaunchTemplateVersion, String userData) {
     RequestLaunchTemplateData launchTemplateData = new RequestLaunchTemplateData().withImageId(artifactRevision);
-    if (isNotEmpty(userData)) {
+    if (hasSome(userData)) {
       launchTemplateData = launchTemplateData.withUserData(userData);
     }
     return new CreateLaunchTemplateVersionRequest()
@@ -1414,7 +1414,7 @@ public class AwsAmiHelperServiceDelegateImpl
   @VisibleForTesting
   Integer getNewHarnessVersion(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
     Integer harnessRevision = 1;
-    if (isNotEmpty(harnessManagedAutoScalingGroups)) {
+    if (hasSome(harnessManagedAutoScalingGroups)) {
       harnessRevision = harnessManagedAutoScalingGroups.stream()
                             .flatMap(autoScalingGroup -> autoScalingGroup.getTags().stream())
                             .filter(tagDescription -> tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG))

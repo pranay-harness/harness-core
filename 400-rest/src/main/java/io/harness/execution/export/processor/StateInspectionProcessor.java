@@ -1,7 +1,7 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.metadata.ExecutionMetadata;
@@ -43,13 +43,13 @@ public class StateInspectionProcessor implements ExportExecutionsProcessor, Grap
   }
 
   public void process() {
-    if (isEmpty(stateExecutionInstanceIdToNodeMetadataMap)) {
+    if (hasNone(stateExecutionInstanceIdToNodeMetadataMap)) {
       return;
     }
 
     List<StateInspection> stateInspections =
         stateInspectionService.listUsingSecondary(stateExecutionInstanceIdToNodeMetadataMap.keySet());
-    if (isEmpty(stateInspections)) {
+    if (hasNone(stateInspections)) {
       return;
     }
 
@@ -61,7 +61,7 @@ public class StateInspectionProcessor implements ExportExecutionsProcessor, Grap
   }
 
   private void updateGraphNodeMetadata(GraphNodeMetadata nodeMetadata, StateInspection stateInspection) {
-    if (nodeMetadata == null || stateInspection == null || isEmpty(stateInspection.getData())) {
+    if (nodeMetadata == null || stateInspection == null || hasNone(stateInspection.getData())) {
       return;
     }
 
@@ -71,7 +71,7 @@ public class StateInspectionProcessor implements ExportExecutionsProcessor, Grap
     }
 
     ExpressionVariableUsage expressionVariableUsage = (ExpressionVariableUsage) stateInspectionData;
-    if (isEmpty(expressionVariableUsage.getVariables())) {
+    if (hasNone(expressionVariableUsage.getVariables())) {
       return;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -20,6 +20,6 @@ public class TagValidator implements ConstraintValidator<Tag, String> {
 
   // A static method added in case we need to do the same validation on some string w/o the annotation.
   public static boolean isValidTag(String value) {
-    return isNotEmpty(value) && value.length() <= TAG_MAX_LENGTH;
+    return hasSome(value) && value.length() <= TAG_MAX_LENGTH;
   }
 }

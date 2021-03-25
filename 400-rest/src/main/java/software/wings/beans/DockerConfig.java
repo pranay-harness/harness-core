@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -59,7 +59,7 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
 
   @SchemaIgnore
   public boolean hasCredentials() {
-    return isNotEmpty(username);
+    return hasSome(username);
   }
 
   public DockerConfig(String dockerRegistryUrl, String username, char[] password, List<String> delegateSelectors,

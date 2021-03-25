@@ -1,7 +1,7 @@
 package io.harness.security;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
@@ -79,7 +79,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
       String apiKeyFromHeader = extractToken(containerRequestContext, PREFIX_BEARER);
 
       ClientType[] clientTypes = getClientTypesFromHarnessApiKeyAuth(resourceInfo);
-      if (isEmpty(clientTypes)) {
+      if (hasNone(clientTypes)) {
         throw new WingsException(INVALID_TOKEN, USER);
       }
       if (!validateHarnessClientApiRequest(clientTypes[0], apiKeyFromHeader)) {
@@ -257,7 +257,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
 
     String apiKeyFromDB = get(clientType.name());
-    return isNotEmpty(apiKeyFromDB) && apiKeyFromDB.equals(apiKey);
+    return hasSome(apiKeyFromDB) && apiKeyFromDB.equals(apiKey);
   }
 
   private String get(String clientType) {

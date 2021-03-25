@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
@@ -132,7 +132,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
 
     GraphQLContext context = (GraphQLContext) contextObj;
     String accountId = context.get("accountId");
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       log.error("No user permission info for the given api key");
       throw new WingsException(ErrorCode.ACCESS_DENIED);
     }
@@ -160,7 +160,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     ResourceType[] resourceTypes = scope.value();
-    resourceType = isEmpty(resourceTypes) ? null : resourceTypes[0];
+    resourceType = hasNone(resourceTypes) ? null : resourceTypes[0];
 
     Action action = authRule.action() != null ? authRule.action() : Action.DEFAULT;
     httpMethod = getHttpMethod(action.name());
@@ -180,11 +180,11 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     boolean isAccountLevelPermissions = authRuleFilter.isAccountLevelPermissions(permissionAttributes);
-    boolean emptyAppIdsInReq = isEmpty(appId);
+    boolean emptyAppIdsInReq = hasNone(appId);
     List<String> appIdsFromRequest = emptyAppIdsInReq ? null : asList(appId);
     boolean isScopedToApp = ResourceType.APPLICATION == resourceType;
 
-    if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN == permissionAttribute.getPermissionType()) {
+    if (hasNone(permissionAttributes) || PermissionType.LOGGED_IN == permissionAttribute.getPermissionType()) {
       UserRequestContext userRequestContext = buildUserRequestContext(
           userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
       user.setUserRequestContext(userRequestContext);
@@ -218,7 +218,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
         // In case of list api, the entityId would be null, we enforce restrictions in WingsMongoPersistence
         if (entityId != null && emptyAppIdsInReq && isScopedToApp) {
           appId = getApplicationId(permissionAttribute, entityId);
-          if (isNotEmpty(appId)) {
+          if (hasSome(appId)) {
             appIdsFromRequest = asList(appId);
           } else {
             String msg = "Could not retrieve appId for entityId: " + entityId;
@@ -349,7 +349,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
         userRequestContextBuilder.appIdFilterRequired(true);
         userRequestContextBuilder.appIds(allowedAppIds);
       } else {
-        if (isEmpty(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
+        if (hasNone(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
           throw new WingsException(ErrorCode.ACCESS_DENIED);
         }
       }

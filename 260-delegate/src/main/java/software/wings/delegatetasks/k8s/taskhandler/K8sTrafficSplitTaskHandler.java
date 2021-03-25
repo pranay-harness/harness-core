@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.TrafficSplit;
@@ -154,7 +154,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     release = releaseHistory.getLatestRelease();
 
     List<KubernetesResourceId> resources = release.getResources();
-    if (isEmpty(resources)) {
+    if (hasNone(resources)) {
       executionLogCallback.saveExecutionLog("\nNo resources found in release history");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
       return true;
@@ -235,7 +235,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
       K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters, ExecutionLogCallback executionLogCallback) {
     List<IstioDestinationWeight> istioDestinationWeights = k8sTrafficSplitTaskParameters.getIstioDestinationWeights();
 
-    if (isNotEmpty(istioDestinationWeights)) {
+    if (hasSome(istioDestinationWeights)) {
       executionLogCallback.saveExecutionLog("\nFound following destinations");
       for (IstioDestinationWeight ruleWithWeight : istioDestinationWeights) {
         executionLogCallback.saveExecutionLog(ruleWithWeight.getDestination());
@@ -253,7 +253,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
             kubernetesContainerService.getIstioVirtualService(kubernetesConfig, resourceId.getName());
 
         if (istioVirtualService != null && istioVirtualService.getMetadata() != null
-            && isNotEmpty(istioVirtualService.getMetadata().getAnnotations())) {
+            && hasSome(istioVirtualService.getMetadata().getAnnotations())) {
           Map<String, String> annotations = istioVirtualService.getMetadata().getAnnotations();
           if (annotations.containsKey(HarnessAnnotations.managed)
               && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {

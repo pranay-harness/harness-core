@@ -1,6 +1,6 @@
 package io.harness.delegate.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.k8s.manifest.ManifestHelper.getCustomResourceDefinitionWorkloads;
 import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -53,7 +53,7 @@ public class K8sApplyBaseHandler {
       k8sApplyHandlerConfig.setWorkloads(getEligibleWorkloads(k8sApplyHandlerConfig.getResources()));
       k8sApplyHandlerConfig.setCustomWorkloads(
           getCustomResourceDefinitionWorkloads(k8sApplyHandlerConfig.getResources()));
-      if (isEmpty(k8sApplyHandlerConfig.getWorkloads()) && isEmpty(k8sApplyHandlerConfig.getCustomWorkloads())) {
+      if (hasNone(k8sApplyHandlerConfig.getWorkloads()) && hasNone(k8sApplyHandlerConfig.getCustomWorkloads())) {
         executionLogCallback.saveExecutionLog(color("\nNo Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog("Found following Workloads\n"
@@ -75,7 +75,7 @@ public class K8sApplyBaseHandler {
   public boolean steadyStateCheck(boolean skipSteadyStateCheck, String namespace,
       K8sDelegateTaskParams k8sDelegateTaskParams, long timeoutInMillis, LogCallback executionLogCallback,
       K8sApplyHandlerConfig k8sApplyHandlerConfig) throws Exception {
-    if (isEmpty(k8sApplyHandlerConfig.getWorkloads()) && isEmpty(k8sApplyHandlerConfig.getCustomWorkloads())) {
+    if (hasNone(k8sApplyHandlerConfig.getWorkloads()) && hasNone(k8sApplyHandlerConfig.getCustomWorkloads())) {
       executionLogCallback.saveExecutionLog("Skipping Status Check since there is no Workload.", INFO, SUCCESS);
       return true;
     }

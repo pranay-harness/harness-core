@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -236,7 +236,7 @@ public class PhaseStep {
 
   public Graph generateSubworkflow(DeploymentType deploymentType) {
     Builder graphBuilder = aGraph().withGraphName(name);
-    if (isEmpty(steps)) {
+    if (hasNone(steps)) {
       return graphBuilder.build();
     }
     for (GraphNode step : getSteps()) {
@@ -317,7 +317,7 @@ public class PhaseStep {
     if (steps != null) {
       List<String> invalidChildren =
           steps.stream().filter(step -> !step.validate()).map(GraphNode::getName).collect(toList());
-      if (isNotEmpty(invalidChildren)) {
+      if (hasSome(invalidChildren)) {
         valid = false;
         validationMessage = format(WorkflowConstants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
       }

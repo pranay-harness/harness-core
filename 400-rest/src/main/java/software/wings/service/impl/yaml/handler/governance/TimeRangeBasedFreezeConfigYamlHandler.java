@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.governance;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.ApplicationFilter;
 import io.harness.governance.ApplicationFilterYaml;
@@ -84,7 +85,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   }
 
   private List<String> getUserGroupIds(List<String> userGroupNames, String accountId) {
-    if (EmptyPredicate.isEmpty(userGroupNames)) {
+    if (hasNone(userGroupNames)) {
       throw new InvalidRequestException("User Groups cannot be empty");
     }
     List<String> userGroupIds = new ArrayList<>();

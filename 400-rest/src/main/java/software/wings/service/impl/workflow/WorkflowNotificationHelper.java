@@ -6,8 +6,8 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.RESUMED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.Misc.getDurationString;
 import static io.harness.validation.Validator.notNullCheck;
@@ -29,7 +29,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.app.MainConfiguration;
@@ -127,7 +127,7 @@ public class WorkflowNotificationHelper {
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
         obtainNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW, status);
-    if (isEmpty(notificationRules)) {
+    if (hasNone(notificationRules)) {
       return;
     }
 
@@ -174,7 +174,7 @@ public class WorkflowNotificationHelper {
 
     List<NotificationRule> notificationRules =
         obtainNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW_PHASE, status);
-    if (isEmpty(notificationRules)) {
+    if (hasNone(notificationRules)) {
       return;
     }
 
@@ -342,7 +342,7 @@ public class WorkflowNotificationHelper {
         Arrays.stream(renderedExpression.split(",")).map(String::trim).collect(Collectors.toList());
 
     List<UserGroup> userGroups = userGroupService.listByName(accountId, userGroupNames);
-    if (isNotEmpty(userGroups)) {
+    if (hasSome(userGroups)) {
       List<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList());
       notificationRule.setUserGroupIds(userGroupIds);
     }
@@ -392,7 +392,7 @@ public class WorkflowNotificationHelper {
     final WorkflowNotificationDetails environmentDetails =
         calculateEnvironmentDetails(app.getAccountId(), app.getAppId(), env);
     String pipelineNameForSubject =
-        isEmpty(pipelineDetails.getName()) ? "" : String.format(" in pipeline %s", pipelineDetails.getName());
+        hasNone(pipelineDetails.getName()) ? "" : String.format(" in pipeline %s", pipelineDetails.getName());
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
@@ -517,9 +517,9 @@ public class WorkflowNotificationHelper {
     StringBuilder infraDetailsName = new StringBuilder(32);
     StringBuilder infraDetailsUrl = new StringBuilder(32);
 
-    if (isNotEmpty(infraIds)) {
+    if (hasSome(infraIds)) {
       List<String> infras = infraIds.stream()
-                                .filter(EmptyPredicate::isNotEmpty)
+                                .filter(HasPredicate::hasSome)
                                 .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
                                 .collect(Collectors.toList());
       boolean firstInfra = true;
@@ -564,7 +564,7 @@ public class WorkflowNotificationHelper {
     StringBuilder envDetailsName = new StringBuilder();
     StringBuilder envDetailsUrl = new StringBuilder();
 
-    if (isNotEmpty(envSummaries)) {
+    if (hasSome(envSummaries)) {
       boolean firstEnv = true;
       for (EnvSummary envSummary : envSummaries) {
         if (!firstEnv) {
@@ -596,7 +596,7 @@ public class WorkflowNotificationHelper {
       PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowNotificationDetailsBuilder serviceDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
-    if (isNotEmpty(workflowExecution.getServiceIds())) {
+    if (hasSome(workflowExecution.getServiceIds())) {
       if (scope == WORKFLOW_PHASE) {
         serviceIds.add(phaseSubWorkflow.getServiceId());
       } else {
@@ -610,7 +610,7 @@ public class WorkflowNotificationHelper {
 
     boolean firstService = true;
     List<String> filteredServices = serviceIds.stream()
-                                        .filter(EmptyPredicate::isNotEmpty)
+                                        .filter(HasPredicate::hasSome)
                                         .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
                                         .collect(Collectors.toList());
     for (String serviceId : filteredServices) {
@@ -667,7 +667,7 @@ public class WorkflowNotificationHelper {
     String appMsg = "";
 
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    if (isNotEmpty(appId) && (app != null)) {
+    if (hasSome(appId) && (app != null)) {
       String appURL =
           NotificationMessageResolver.buildAbsoluteUrl(format("/account/%s/app/%s/details", accountId, appId), baseUrl);
       appMsg = format("*Application:* <<<%s|-|%s>>>", appURL, app.getName());
@@ -702,7 +702,7 @@ public class WorkflowNotificationHelper {
       ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowNotificationDetailsBuilder artifactsDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
-    if (isNotEmpty(workflowExecution.getServiceIds())) {
+    if (hasSome(workflowExecution.getServiceIds())) {
       if (scope == WORKFLOW_PHASE) {
         serviceIds.add(phaseSubWorkflow.getServiceId());
       } else {
@@ -712,7 +712,7 @@ public class WorkflowNotificationHelper {
 
     Map<String, Artifact> artifactStreamIdArtifacts = new HashMap<>();
     List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
-    if (isNotEmpty(artifacts)) {
+    if (hasSome(artifacts)) {
       for (Artifact artifact : artifacts) {
         artifactStreamIdArtifacts.put(artifact.getArtifactStreamId(), artifact);
       }
@@ -727,7 +727,7 @@ public class WorkflowNotificationHelper {
 
       List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
       boolean found = false;
-      if (isNotEmpty(artifactStreamIds)) {
+      if (hasSome(artifactStreamIds)) {
         for (String artifactStreamId : artifactStreamIds) {
           if (artifactStreamIdArtifacts.containsKey(artifactStreamId)) {
             Artifact artifact = artifactStreamIdArtifacts.get(artifactStreamId);
@@ -749,7 +749,7 @@ public class WorkflowNotificationHelper {
     }
 
     String artifactsMsg = "no artifacts";
-    if (isNotEmpty(serviceMsgs)) {
+    if (hasSome(serviceMsgs)) {
       artifactsMsg = join(", ", serviceMsgs);
     }
 

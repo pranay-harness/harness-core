@@ -1,7 +1,7 @@
 package io.harness.migrations.accountpermission;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -53,7 +53,7 @@ public abstract class AbstractAccountManagementPermissionMigration implements Mi
   }
 
   private boolean checkIfUserGroupContainsAccountManagementPermission(UserGroup userGroup) {
-    return userGroup.getAccountPermissions() != null && isNotEmpty(userGroup.getAccountPermissions().getPermissions())
+    return userGroup.getAccountPermissions() != null && hasSome(userGroup.getAccountPermissions().getPermissions())
         && userGroup.getAccountPermissions().getPermissions().contains(ACCOUNT_MANAGEMENT);
   }
 

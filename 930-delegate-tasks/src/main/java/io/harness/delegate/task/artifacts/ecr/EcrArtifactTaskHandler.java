@@ -1,5 +1,6 @@
 package io.harness.delegate.task.artifacts.ecr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE;
@@ -8,7 +9,6 @@ import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.ecr.beans.EcrInternalConfig;
 import io.harness.aws.beans.AwsInternalConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
@@ -95,7 +95,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     AwsInternalConfig awsInternalConfig = getAwsInternalConfig(attributesRequest);
     String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
-    if (EmptyPredicate.isNotEmpty(attributesRequest.getTagRegex())) {
+    if (hasSome(attributesRequest.getTagRegex())) {
       lastSuccessfulBuild = ecrService.getLastSuccessfulBuildFromRegex(awsInternalConfig, ecrimageUrl,
           attributesRequest.getRegion(), attributesRequest.getImagePath(), attributesRequest.getTagRegex());
     } else {

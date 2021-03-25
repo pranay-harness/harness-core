@@ -1,6 +1,6 @@
 package io.harness.cvng.migration.list;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -40,7 +40,7 @@ public class UpdateActivitySourceTasksMigration implements CVNGMigration {
             .asList();
     Set<CVConfigKey> cvConfigKeys = new HashSet<>();
     kubernetesActivitySources.stream()
-        .filter(kubernetesActivitySource -> isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId()))
+        .filter(kubernetesActivitySource -> hasSome(kubernetesActivitySource.getDataCollectionTaskId()))
         .forEach(kubernetesActivitySource -> {
           try {
             log.info("deleting perpetual task for {}", kubernetesActivitySource);

@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
@@ -31,7 +31,7 @@ public class VerificationServiceSecretManagerImpl implements VerificationService
   @Override
   public String getVerificationServiceSecretKey() {
     final String verificationServiceSecret = getEnv(CVNextGenConstants.VERIFICATION_SERVICE_SECRET);
-    if (isNotEmpty(verificationServiceSecret)) {
+    if (hasSome(verificationServiceSecret)) {
       return verificationServiceSecret;
     }
     return hPersistence.createQuery(ServiceSecretKey.class)

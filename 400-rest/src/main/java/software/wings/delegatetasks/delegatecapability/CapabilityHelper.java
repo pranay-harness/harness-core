@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
@@ -48,7 +48,7 @@ public class CapabilityHelper {
     if (capabilityDemander != null) {
       executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return executionCapabilities;
     }
 
@@ -127,7 +127,7 @@ public class CapabilityHelper {
       }
 
       List list = (List) argument;
-      if (isNotEmpty(list) && list.get(0) instanceof EncryptedDataDetail) {
+      if (hasSome(list) && list.get(0) instanceof EncryptedDataDetail) {
         return true;
       }
     } catch (Exception e) {
@@ -144,7 +144,7 @@ public class CapabilityHelper {
       }
 
       List list = (List) argument;
-      if (isNotEmpty(list) && list.get(0) instanceof EncryptableSettingWithEncryptionDetails) {
+      if (hasSome(list) && list.get(0) instanceof EncryptableSettingWithEncryptionDetails) {
         return true;
       }
     } catch (Exception e) {
@@ -195,11 +195,11 @@ public class CapabilityHelper {
     executionCapabilities.add(
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
 
-    if (isNotEmpty(encryptedDataDetails)) {
+    if (hasSome(encryptedDataDetails)) {
       List<ExecutionCapability> capabilitiesForEncryption =
           EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
               encryptedDataDetails, maskingEvaluator);
-      if (isNotEmpty(capabilitiesForEncryption)) {
+      if (hasSome(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }
     }

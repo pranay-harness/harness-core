@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 
@@ -69,14 +69,14 @@ public class JenkinsArtifactStream extends ArtifactStream {
 
   @Override
   public void validateRequiredFields() {
-    if (!isMetadataOnly() && isEmpty(artifactPaths)) {
+    if (!isMetadataOnly() && hasNone(artifactPaths)) {
       throw new InvalidRequestException("Please provide at least one artifact path for non-metadata only");
     }
     // for both metadata and non-metadata remove artifact path containing empty strings
     List<String> updatedArtifactPaths = new ArrayList<>();
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       for (String artifactPath : artifactPaths) {
-        if (isNotEmpty(artifactPath.trim())) {
+        if (hasSome(artifactPath.trim())) {
           updatedArtifactPaths.add(artifactPath);
         }
       }
@@ -86,7 +86,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
 
   @Override
   public boolean checkIfStreamParameterized() {
-    if (isNotEmpty(artifactPaths)) {
+    if (hasSome(artifactPaths)) {
       return validateParameters(jobname, artifactPaths.get(0));
     } else {
       return validateParameters(jobname);

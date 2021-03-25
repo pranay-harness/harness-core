@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -11,7 +12,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -97,7 +97,7 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
           ((ShellExecutionData) executeCommandResponse.getCommandExecutionData()).getSweepingOutputEnvVariables();
 
       if (MapUtils.isNotEmpty(sweepingOutputEnvVariables)
-          && EmptyPredicate.isNotEmpty(sweepingOutputEnvVariables.get(SCRIPT_APPROVAL_ENV_VARIABLE))) {
+          && hasSome(sweepingOutputEnvVariables.get(SCRIPT_APPROVAL_ENV_VARIABLE))) {
         if (sweepingOutputEnvVariables.get(SCRIPT_APPROVAL_ENV_VARIABLE).equalsIgnoreCase(APPROVE_STATUS)) {
           action = Action.APPROVE;
           executionStatus = ExecutionStatus.SUCCESS;

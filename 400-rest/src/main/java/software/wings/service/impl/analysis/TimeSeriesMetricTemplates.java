@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
@@ -57,6 +57,6 @@ public class TimeSeriesMetricTemplates extends Base implements AccountAccess {
     this.cvConfigId = cvConfigId;
     this.accountId = accountId;
     this.metricTemplates = metricTemplates;
-    this.validUntil = isEmpty(stateExecutionId) ? null : Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+    this.validUntil = hasNone(stateExecutionId) ? null : Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
   }
 }

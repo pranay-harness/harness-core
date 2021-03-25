@@ -1,6 +1,6 @@
 package software.wings.verification.log;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
@@ -28,7 +28,7 @@ public class LogsCVConfiguration extends CVConfiguration {
   private FeedbackPriority alertPriority = FeedbackPriority.P5;
 
   public void setQuery(String query) {
-    this.query = isNotEmpty(query) ? query.trim() : query;
+    this.query = hasSome(query) ? query.trim() : query;
   }
 
   /**

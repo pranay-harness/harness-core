@@ -2,8 +2,8 @@ package io.harness.perpetualtask.connector;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 import static io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO.ConnectorValidationResultProto.newBuilder;
 
@@ -125,10 +125,10 @@ public class ConnectorHearbeatPublisher {
         newBuilder()
             .setStatus(connectorValidationResult.getStatus().toString())
             .setTestedAt(connectorValidationResult.getTestedAt());
-    if (isNotEmpty(connectorValidationResult.getDelegateId())) {
+    if (hasSome(connectorValidationResult.getDelegateId())) {
       connectorValidationResultProto.setDelegateId(connectorValidationResult.getDelegateId());
     }
-    if (isNotEmpty(connectorValidationResult.getErrorSummary())) {
+    if (hasSome(connectorValidationResult.getErrorSummary())) {
       connectorValidationResultProto.setErrorSummary(connectorValidationResult.getErrorSummary());
     }
     if (connectorValidationResult.getErrors() != null) {
@@ -138,7 +138,7 @@ public class ConnectorHearbeatPublisher {
   }
 
   private List<EntityActivityCreateDTO.ErrorDetailProto> getErrorDetailsProto(List<ErrorDetail> errors) {
-    if (isEmpty(errors)) {
+    if (hasNone(errors)) {
       return Collections.emptyList();
     }
     return errors.stream().map(this::createErrorProtoDetail).collect(Collectors.toList());
@@ -150,10 +150,10 @@ public class ConnectorHearbeatPublisher {
     }
     EntityActivityCreateDTO.ErrorDetailProto.Builder builder =
         EntityActivityCreateDTO.ErrorDetailProto.newBuilder().setCode(error.getCode());
-    if (isNotEmpty(error.getMessage())) {
+    if (hasSome(error.getMessage())) {
       builder.setMessage(error.getMessage());
     }
-    if (isNotEmpty(error.getReason())) {
+    if (hasSome(error.getReason())) {
       builder.setReason(error.getReason());
     }
     return builder.build();

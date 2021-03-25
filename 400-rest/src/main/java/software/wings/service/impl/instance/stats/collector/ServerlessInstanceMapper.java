@@ -1,10 +1,10 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.groupingBy;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.InvocationCount;
@@ -50,12 +50,12 @@ class ServerlessInstanceMapper implements Mapper<Collection<ServerlessInstance>,
       return instances.stream()
           .filter(instance -> instance.getInstanceInfo() != null)
           .map(ServerlessInstance::getInstanceInfo)
-          .filter(instanceInfo -> isNotEmpty(instanceInfo.getInvocationCountMap()))
+          .filter(instanceInfo -> hasSome(instanceInfo.getInvocationCountMap()))
           .flatMap(serverlessInstanceInfo -> serverlessInstanceInfo.getInvocationCountMap().values().stream())
           .collect(groupingBy(InvocationCount::getKey))
           .values()
           .stream()
-          .filter(EmptyPredicate::isNotEmpty)
+          .filter(HasPredicate::hasSome)
           .map(invocationCounts -> processInvocationCountsWithSameCountKey(invocationCounts, appId, appName));
     }
     return Stream.empty();

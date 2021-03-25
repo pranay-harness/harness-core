@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.exception.ArtifactServerException;
@@ -51,7 +51,7 @@ public class JenkinsJobPathBuilder {
   }
 
   public static String constructJobPath(String[] jobNameSplit) {
-    if (isEmpty(jobNameSplit)) {
+    if (hasNone(jobNameSplit)) {
       return "/";
     }
 
@@ -70,7 +70,7 @@ public class JenkinsJobPathBuilder {
   }
 
   public static String constructParentJobPath(String[] jobNameSplit) {
-    if (isEmpty(jobNameSplit)) {
+    if (hasNone(jobNameSplit)) {
       return "/";
     }
 

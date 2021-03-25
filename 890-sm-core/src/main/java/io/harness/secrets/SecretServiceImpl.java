@@ -3,7 +3,7 @@ package io.harness.secrets;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS;
@@ -382,7 +382,7 @@ public class SecretServiceImpl implements SecretService {
     SecretFile secretFile = (SecretFile) secretUpdateData.getUpdatedSecret();
     EncryptedData existingRecord = secretUpdateData.getExistingRecord();
     EncryptedRecord updatedEncryptedData = null;
-    String updatedFileContent = isEmpty(secretFile.getFileContent())
+    String updatedFileContent = hasNone(secretFile.getFileContent())
         ? null
         : new String(CHARSET.decode(ByteBuffer.wrap(encodeBase64ToByteArray(secretFile.getFileContent()))).array());
     if (secretUpdateData.shouldRencryptUsingKms(secretManagerType)) {
@@ -468,7 +468,7 @@ public class SecretServiceImpl implements SecretService {
       byte[] decodedBytes = EncodingUtils.decodeBase64(value);
       value = CHARSET.decode(ByteBuffer.wrap(decodedBytes)).array();
     }
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       String message = format("Empty or null value returned. Could not migrate secret %s", encryptedRecord.getName());
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
@@ -482,8 +482,8 @@ public class SecretServiceImpl implements SecretService {
   }
 
   private void validateEncryptedData(EncryptedRecord encryptedRecord) {
-    if (encryptedRecord == null || isEmpty(encryptedRecord.getEncryptionKey())
-        || isEmpty(encryptedRecord.getEncryptedValue())) {
+    if (encryptedRecord == null || hasNone(encryptedRecord.getEncryptionKey())
+        || hasNone(encryptedRecord.getEncryptedValue())) {
       String message =
           "Encryption of secret failed unexpectedly. Please check your secret manager configuration and try again.";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);

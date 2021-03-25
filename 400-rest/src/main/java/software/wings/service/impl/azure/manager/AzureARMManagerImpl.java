@@ -1,7 +1,7 @@
 package software.wings.service.impl.azure.manager;
 
 import static io.harness.azure.model.AzureConstants.DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -84,7 +84,7 @@ public class AzureARMManagerImpl implements AzureARMManager {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(azureConfig.getAccountId())
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, hasSome(appId) ? appId : GLOBAL_APP_ID)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.AZURE_ARM_TASK.name())

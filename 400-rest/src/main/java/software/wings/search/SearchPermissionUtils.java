@@ -1,9 +1,9 @@
 package software.wings.search;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.User;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
@@ -77,7 +77,7 @@ public final class SearchPermissionUtils {
   }
 
   public static Set<EntityInfo> getAllowedEntities(Set<EntityInfo> entities, Set<String> allowedEntityIds) {
-    if (EmptyPredicate.isEmpty(entities) || EmptyPredicate.isEmpty(allowedEntityIds)) {
+    if (hasNone(entities) || hasNone(allowedEntityIds)) {
       return new HashSet<>();
     }
     return entities.stream().filter(entity -> allowedEntityIds.contains(entity.getId())).collect(Collectors.toSet());
@@ -94,7 +94,7 @@ public final class SearchPermissionUtils {
 
   public static List<RelatedDeploymentView> getAllowedDeployments(
       List<RelatedDeploymentView> deployments, Set<String> allowedDeploymentIds) {
-    if (EmptyPredicate.isEmpty(deployments) || EmptyPredicate.isEmpty(allowedDeploymentIds)) {
+    if (hasNone(deployments) || hasNone(allowedDeploymentIds)) {
       return new ArrayList<>();
     }
     return deployments.stream()

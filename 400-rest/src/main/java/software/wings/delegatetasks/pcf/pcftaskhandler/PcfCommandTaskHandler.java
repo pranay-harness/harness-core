@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -57,11 +57,11 @@ public abstract class PcfCommandTaskHandler {
   private Optional<LogSanitizer> getLogSanitizer(
       String activityId, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     Set<String> secrets = new HashSet<>();
-    if (isNotEmpty(encryptedDataDetails)) {
+    if (hasSome(encryptedDataDetails)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
         secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, isInstanceSync)));
       }
     }
-    return isNotEmpty(secrets) ? Optional.of(new ActivityBasedLogSanitizer(activityId, secrets)) : Optional.empty();
+    return hasSome(secrets) ? Optional.of(new ActivityBasedLogSanitizer(activityId, secrets)) : Optional.empty();
   }
 }

@@ -1,7 +1,7 @@
 package software.wings.infra;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.validation.Validator.ensureType;
 
@@ -107,7 +107,7 @@ public class AwsInstanceInfrastructure
   @Override
   public void applyExpressions(
       Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
-    if (isNotEmpty(resolvedExpressions)) {
+    if (hasSome(resolvedExpressions)) {
       for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
         switch (entry.getKey()) {
           case "autoScalingGroupName":

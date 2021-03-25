@@ -1,5 +1,6 @@
 package io.harness.engine.pms.data;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
@@ -8,7 +9,6 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outputs.SweepingOutputException;
@@ -94,11 +94,10 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                        .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
     List<ExecutionSweepingOutputInstance> instances = mongoTemplate.find(query, ExecutionSweepingOutputInstance.class);
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
-    return EmptyPredicate.isEmpty(instances)
-        ? null
-        : instances.stream()
-              .max(Comparator.comparing(ExecutionSweepingOutputInstance::getLevelRuntimeIdIdx))
-              .orElse(null);
+    return hasNone(instances) ? null
+                              : instances.stream()
+                                    .max(Comparator.comparing(ExecutionSweepingOutputInstance::getLevelRuntimeIdIdx))
+                                    .orElse(null);
   }
 
   @Override

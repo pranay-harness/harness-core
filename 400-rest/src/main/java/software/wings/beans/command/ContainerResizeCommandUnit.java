@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -92,11 +92,11 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         if (contextData.resizeParams.isRollbackAllPhases()) {
           // Roll back to original counts
           executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
-          if (isNotEmpty(newInstanceDataList)) {
+          if (hasSome(newInstanceDataList)) {
             setDesiredToOriginal(newInstanceDataList, originalServiceCounts, originalTrafficWeights);
           }
 
-          if (isNotEmpty(oldInstanceDataList)) {
+          if (hasSome(oldInstanceDataList)) {
             setDesiredToOriginal(oldInstanceDataList, originalServiceCounts, originalTrafficWeights);
           }
         }
@@ -109,10 +109,10 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
 
       List<ContainerServiceData> allData = new ArrayList<>();
-      if (isNotEmpty(firstDataList)) {
+      if (hasSome(firstDataList)) {
         allData.addAll(firstDataList);
       }
-      if (isNotEmpty(secondDataList)) {
+      if (hasSome(secondDataList)) {
         allData.addAll(secondDataList);
       }
 
@@ -168,7 +168,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize) {
-    if (isNotEmpty(instanceData)) {
+    if (hasSome(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
               .flatMap(data -> executeResize(contextData, data, executionLogCallback).stream())
@@ -186,14 +186,13 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   private void logContainerInfos(List<ContainerInfo> containerInfos, ExecutionLogCallback executionLogCallback) {
     try {
-      if (isNotEmpty(containerInfos)) {
+      if (hasSome(containerInfos)) {
         containerInfos.sort(Comparator.comparing(ContainerInfo::isNewContainer).reversed());
         executionLogCallback.saveExecutionLog("\nContainer IDs:");
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
-                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getIp()) ? ""
-                                                                                             : " - " + info.getIp())
-                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getContainerId())
+                + (hasSome(info.getHostName()) && info.getHostName().equals(info.getIp()) ? "" : " - " + info.getIp())
+                + (hasSome(info.getHostName()) && info.getHostName().equals(info.getContainerId())
                         ? ""
                         : " - " + info.getContainerId())
                 + (info.isNewContainer() ? " (new)" : "")));

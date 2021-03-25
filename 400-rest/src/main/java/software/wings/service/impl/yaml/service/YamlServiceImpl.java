@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
@@ -86,7 +86,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -325,7 +324,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     try {
       List<ChangeContext> changeContextList = processChangeSet(asList(change));
       notNullCheck("Change Context List is null", changeContextList);
-      boolean empty = isEmpty(changeContextList);
+      boolean empty = hasNone(changeContextList);
       if (!empty) {
         // We only sent one
 
@@ -343,7 +342,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     } catch (YamlProcessingException ex) {
       Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = ex.getFailedYamlFileChangeMap();
       String errorMsg;
-      if (isNotEmpty(failedYamlFileChangeMap)) {
+      if (hasSome(failedYamlFileChangeMap)) {
         ChangeWithErrorMsg changeWithErrorMsg = failedYamlFileChangeMap.get(change.getFilePath());
         if (changeWithErrorMsg != null) {
           errorMsg = changeWithErrorMsg.getErrorMsg();
@@ -698,7 +697,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private Map<String, ChangeWithErrorMsg> process(List<ChangeContext> changeContextList, boolean gitSyncPath) {
-    if (isEmpty(changeContextList)) {
+    if (hasNone(changeContextList)) {
       log.info("No changes to process in the change set");
       return null;
     }
@@ -766,7 +765,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private void logAllErrorsWhileYamlInjestion(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
     StringBuilder builder =
         new StringBuilder(128).append(GIT_YAML_LOG_PREFIX).append("Found Following Errors in Yaml Injestion");
-    if (EmptyPredicate.isNotEmpty(failedYamlFileChangeMap)) {
+    if (hasSome(failedYamlFileChangeMap)) {
       for (Map.Entry<String, ChangeWithErrorMsg> entry : failedYamlFileChangeMap.entrySet()) {
         builder.append("\nFileName: ")
             .append(entry.getKey())
@@ -910,7 +909,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       BaseYamlHandler yamlSyncHandler, String accountId, String filePath, ChangeContext changeContext) {
     GitFileChange change = (GitFileChange) changeContext.getChange();
     if (changeContext.getYamlType() == TAG || changeContext.getYamlType() == APPLICATION_DEFAULTS
-        || isEmpty(change.getEntityId())) {
+        || hasNone(change.getEntityId())) {
       return;
     }
     String entityIdFromYaml;
@@ -928,7 +927,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       throw ex;
     }
 
-    if (isNotEmpty(change.getEntityId())) {
+    if (hasSome(change.getEntityId())) {
       // Its an update operation
       if (!change.getEntityId().equals(entityIdFromYaml)) {
         throw new InvalidRequestException(
@@ -1020,7 +1019,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    */
   @Override
   public BaseYaml getYamlForFilePath(String accountId, String yamlFilePath, String yamlSubType, String applicationId) {
-    if (EmptyPredicate.isEmpty(yamlFilePath)) {
+    if (hasNone(yamlFilePath)) {
       throw new InvalidArgumentsException(Pair.of("yaml file path", "cannot be empty"));
     }
     BaseYaml yamlForFilePath = null;
@@ -1119,7 +1118,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
     } catch (YamlProcessingException ex) {
       log.warn(String.format("Unable to process yaml file for account %s, error: %s", accountId, ex));
-      if (ex != null && !isEmpty(ex.getFailedYamlFileChangeMap())) {
+      if (ex != null && !hasNone(ex.getFailedYamlFileChangeMap())) {
         final Map.Entry<String, ChangeWithErrorMsg> entry =
             ex.getFailedYamlFileChangeMap().entrySet().iterator().next();
         final ChangeWithErrorMsg changeWithErrorMsg = entry.getValue();

@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
@@ -108,7 +108,7 @@ public class GitConfigHelperService {
       }
 
       // Cannot throw exception here as validation is being called at many places and gitConfig.repoName is transient.
-      if (isEmpty(gitConfig.getRepoName())) {
+      if (hasNone(gitConfig.getRepoName())) {
         return;
       }
     }

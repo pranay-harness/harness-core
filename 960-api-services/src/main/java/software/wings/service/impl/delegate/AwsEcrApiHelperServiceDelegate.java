@@ -1,6 +1,6 @@
 package software.wings.service.impl.delegate;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -43,7 +43,7 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
     DescribeRepositoriesResult describeRepositoriesResult =
         listRepositories(awsConfig, describeRepositoriesRequest, region);
     List<Repository> repositories = describeRepositoriesResult.getRepositories();
-    if (isNotEmpty(repositories)) {
+    if (hasSome(repositories)) {
       return repositories.get(0);
     }
     return null;

@@ -1,6 +1,6 @@
 package io.harness.delegate.task;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -69,7 +69,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       BuildService service = getBuildService(artifactStreamType);
       ArtifactStreamAttributes artifactStreamAttributes = buildSourceRequest.getArtifactStreamAttributes();
       artifactStreamAttributes.setCollection(buildSourceRequest.isCollection());
-      if (isNotEmpty(buildSourceRequest.getSavedBuildDetailsKeys())) {
+      if (hasSome(buildSourceRequest.getSavedBuildDetailsKeys())) {
         artifactStreamAttributes.setSavedBuildDetailsKeys(buildSourceRequest.getSavedBuildDetailsKeys());
       }
       String appId = buildSourceRequest.getAppId();

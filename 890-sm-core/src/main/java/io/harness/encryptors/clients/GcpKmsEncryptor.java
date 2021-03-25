@@ -3,7 +3,7 @@ package io.harness.encryptors.clients;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -140,7 +140,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     while (true) {
       try {
         byte[] cachedEncryptedKey = getCachedEncryptedKey(encryptedData);
-        if (isNotEmpty(cachedEncryptedKey)) {
+        if (hasSome(cachedEncryptedKey)) {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.

@@ -1,8 +1,8 @@
 package software.wings.dl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
 import static io.harness.exception.WingsException.USER;
@@ -433,7 +433,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         PageResponse<T> pageResponse = callable.call();
         total = pageResponse.getTotal();
         List<T> listFromResponse = pageResponse.getResponse();
-        if (isEmpty(listFromResponse)) {
+        if (hasNone(listFromResponse)) {
           break;
         }
         currentPageSize = listFromResponse.size();
@@ -526,7 +526,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       encryptedRefField.setAccessible(true);
       Optional<char[]> secretOptional = Optional.ofNullable((char[]) encryptedField.get(object));
 
-      if (secretOptional.isPresent() && isNotEmpty(secretOptional.get())) {
+      if (secretOptional.isPresent() && hasSome(secretOptional.get())) {
         char[] secret = secretOptional.get();
         String encryptedId = encryptPlainTextSecret(encryptedField, secret, object, savedObject);
         encryptedRefField.set(object, encryptedId);

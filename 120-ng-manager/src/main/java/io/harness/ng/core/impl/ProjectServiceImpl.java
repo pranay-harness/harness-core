@@ -2,7 +2,7 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
@@ -235,7 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.key).regex(projectFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.value).regex(projectFilterDTO.getSearchTerm(), "i"));
     }
-    if (isNotEmpty(projectFilterDTO.getIdentifiers())) {
+    if (hasSome(projectFilterDTO.getIdentifiers())) {
       criteria.and(ProjectKeys.identifier).in(projectFilterDTO.getIdentifiers());
     }
     return criteria;

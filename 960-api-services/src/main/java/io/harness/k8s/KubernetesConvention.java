@@ -1,6 +1,6 @@
 package io.harness.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 
 import static java.lang.String.format;
@@ -200,7 +200,7 @@ public class KubernetesConvention {
   }
 
   public static String getHelmHarnessReleaseRevision(String releaseName) {
-    return isNotEmpty(releaseName) && releaseName.length() > HELM_RELEASE_VERSION_LENGTH
+    return hasSome(releaseName) && releaseName.length() > HELM_RELEASE_VERSION_LENGTH
         ? releaseName.substring(releaseName.length() - 15)
         : null;
   }

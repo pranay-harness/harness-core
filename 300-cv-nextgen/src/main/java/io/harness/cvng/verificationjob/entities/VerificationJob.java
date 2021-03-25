@@ -5,7 +5,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATIO
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.RUNTIME_STRING;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
@@ -236,7 +236,7 @@ public abstract class VerificationJob
   }
 
   public VerificationJob resolveVerificationJob(Map<String, String> runtimeParameters) {
-    if (isNotEmpty(runtimeParameters)) {
+    if (hasSome(runtimeParameters)) {
       runtimeParameters.keySet().forEach(key -> {
         switch (key) {
           case SERVICE_IDENTIFIER_KEY:

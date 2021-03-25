@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -107,11 +107,11 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     String type = stepYaml.getType();
 
-    if (isEmpty(type)) {
+    if (hasNone(type)) {
       throw new InvalidRequestException("Step type could not be empty");
     }
 
-    if (isEmpty(stepYaml.getName())) {
+    if (hasNone(stepYaml.getName())) {
       throw new InvalidRequestException("Step name is empty for " + type + " step");
     }
 
@@ -165,8 +165,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String templateUri = stepYaml.getTemplateUri();
     ImportedTemplateDetails importedTemplateDetail = null;
     TemplateMetadata templateMetadata = null;
-    if (isNotEmpty(templateUri)) {
-      if (isNotEmpty(appId)) {
+    if (hasSome(templateUri)) {
+      if (hasSome(appId)) {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
       } else {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
@@ -200,19 +200,19 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   private void validateOutputEnvironmentVariables(StepYaml stepYaml, Map<String, Object> outputProperties) {
-    if (StateType.SHELL_SCRIPT.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
+    if (StateType.SHELL_SCRIPT.name().equals(stepYaml.getType()) && hasSome(outputProperties)) {
       String outputVars = (String) outputProperties.get("outputVars");
       String secretOutputVars = (String) outputProperties.get("secretOutputVars");
 
       List<String> outputVarsList = new ArrayList<>();
       List<String> secretOutputVarsList = new ArrayList<>();
 
-      if (isNotEmpty(outputVars)) {
+      if (hasSome(outputVars)) {
         outputVarsList = Arrays.asList(outputVars.trim().split("\\s*,\\s*"));
         outputVarsList.replaceAll(String::trim);
       }
 
-      if (isNotEmpty(secretOutputVars)) {
+      if (hasSome(secretOutputVars)) {
         secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
         secretOutputVarsList.replaceAll(String::trim);
       }
@@ -229,14 +229,14 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       Set<String> commonVars =
           outputVarsList.stream().distinct().filter(secretOutputVarsList::contains).collect(Collectors.toSet());
 
-      if (isNotEmpty(commonVars)) {
+      if (hasSome(commonVars)) {
         throw new InvalidRequestException("Variables cannot be both Secret and String");
       }
     }
   }
 
   private void validateArtifactCollectionStep(StepYaml stepYaml, Map<String, Object> outputProperties) {
-    if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
+    if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && hasSome(outputProperties)) {
       String artifactStreamId = (String) outputProperties.get("artifactStreamId");
       if (artifactStreamId != null) {
         ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
@@ -276,13 +276,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   private void validateRuntimeValues(
       Map<String, Object> outputProperties, String artifactStreamId, ArtifactStream artifactStream) {
     Map<String, Object> runtimeValues = (Map<String, Object>) outputProperties.get("runtimeValues");
-    if (isEmpty(runtimeValues)) {
+    if (hasNone(runtimeValues)) {
       throw new InvalidRequestException(
           format("Artifact Source [%s] Parameterized. However, runtime values not provided.", artifactStream.getName()),
           USER);
     }
     List<String> expectedParameters = artifactStreamService.getArtifactStreamParameters(artifactStreamId);
-    if (isNotEmpty(expectedParameters)) {
+    if (hasSome(expectedParameters)) {
       for (String parameter : expectedParameters) {
         if (runtimeValues.get(parameter) == null) {
           throw new InvalidRequestException(
@@ -344,11 +344,11 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       }
     }
 
-    if (StateType.HTTP.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
+    if (StateType.HTTP.name().equals(step.getType()) && hasSome(outputProperties)) {
       outputProperties.remove("header");
     }
 
-    if (StateType.APPROVAL.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
+    if (StateType.APPROVAL.name().equals(step.getType()) && hasSome(outputProperties)) {
       if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
         Map<String, Object> snowParams =
             (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
@@ -385,20 +385,20 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     Map<String, Object> fields =
         (Map<String, Object>) ((Map<String, Object>) outputProperties.get(SERVICE_NOW_CREATE_UPDATE_PARAMS))
             .get("fields");
-    return isEmpty(fields) ? Collections.emptySet() : fields.keySet();
+    return hasNone(fields) ? Collections.emptySet() : fields.keySet();
   }
 
   private Set<String> getSnowCreateUpdateParamsAdditionalFields(Map<String, Object> outputProperties) {
     Map<String, Object> additionalFields =
         (Map<String, Object>) ((Map<String, Object>) outputProperties.get(SERVICE_NOW_CREATE_UPDATE_PARAMS))
             .get("additionalFields");
-    return isEmpty(additionalFields) ? Collections.emptySet() : additionalFields.keySet();
+    return hasNone(additionalFields) ? Collections.emptySet() : additionalFields.keySet();
   }
 
   // If the properties contain known entity id, convert it into name
   private void convertIdToNameIfKnownType(String name, Object objectValue, Map<String, Object> outputProperties,
       String appId, Map<String, Object> inputProperties) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return;
     }
 
@@ -485,7 +485,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   // If the properties contain known entity type, convert the name back to id, this is used in toBean() path
   private void convertNameToIdIfKnownType(String name, Object objectValue, Map<String, Object> properties, String appId,
       String accountId, Map<String, Object> inputProperties) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return;
     }
 
@@ -572,7 +572,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
   // Some of these properties need not be exposed, they could be generated in the toBean() method
   private boolean shouldBeIgnored(String name) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return true;
     }
 

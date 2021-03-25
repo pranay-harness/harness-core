@@ -1,6 +1,6 @@
 package io.harness.plancreator.steps;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -36,7 +36,7 @@ public class FailureStrategiesUtils {
       List<FailureStrategyConfig> failureStrategyConfigList) {
     EnumMap<NGFailureType, FailureStrategyActionConfig> map = new EnumMap<>(NGFailureType.class);
 
-    if (isNotEmpty(failureStrategyConfigList)) {
+    if (hasSome(failureStrategyConfigList)) {
       for (FailureStrategyConfig failureStrategyConfig : failureStrategyConfigList) {
         for (NGFailureType ngFailureType : failureStrategyConfig.getOnFailure().getErrors()) {
           if (map.containsKey(ngFailureType)

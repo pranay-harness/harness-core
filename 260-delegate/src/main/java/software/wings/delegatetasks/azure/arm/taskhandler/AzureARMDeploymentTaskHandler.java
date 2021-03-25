@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.azure.arm.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_NAME_PATTERN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.AzureARMPreDeploymentDataBuilder;
 import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.builder;
 
@@ -183,7 +184,7 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   }
 
   private String getDeploymentName(AzureARMDeploymentParameters deploymentParameters) {
-    if (!isEmpty(deploymentParameters.getDeploymentName())) {
+    if (!hasNone(deploymentParameters.getDeploymentName())) {
       return deploymentParameters.getDeploymentName();
     }
     int randomNum = rand.nextInt(1000);

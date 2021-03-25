@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -162,12 +162,12 @@ public class AzureVaultEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateReference(String accountId, String path, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
+    return hasSome(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
   }
 
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
-    if (isEmpty(encryptedRecord.getEncryptionKey()) && isEmpty(encryptedRecord.getPath())) {
+    if (hasNone(encryptedRecord.getEncryptionKey()) && hasNone(encryptedRecord.getPath())) {
       return null;
     }
     AzureVaultConfig azureConfig = (AzureVaultConfig) encryptionConfig;
@@ -199,7 +199,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
   private char[] fetchSecretValueInternal(EncryptedRecord data, AzureVaultConfig azureConfig) {
     long startTime = System.currentTimeMillis();
 
-    AzureParsedSecretReference parsedSecretReference = isNotEmpty(data.getPath())
+    AzureParsedSecretReference parsedSecretReference = hasSome(data.getPath())
         ? new AzureParsedSecretReference(data.getPath())
         : new AzureParsedSecretReference(data.getEncryptionKey());
 

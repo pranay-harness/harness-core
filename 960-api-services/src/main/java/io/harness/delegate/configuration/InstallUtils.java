@@ -1,7 +1,7 @@
 package io.harness.delegate.configuration;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 
@@ -939,14 +939,14 @@ public class InstallUtils {
   @VisibleForTesting
   static boolean delegateConfigHasHelmPath(DelegateConfiguration configuration, String helmVersion) {
     if (helm2Version.equals(helmVersion)) {
-      if (isNotEmpty(configuration.getHelmPath())) {
+      if (hasSome(configuration.getHelmPath())) {
         String helmPath = configuration.getHelmPath();
         helmPaths.put(helmVersion, helmPath);
         log.info("Found user configured helm2 at {}. Skipping Install.", helmPath);
         return true;
       }
     } else if (helm3Version.equals(helmVersion)) {
-      if (isNotEmpty(configuration.getHelm3Path())) {
+      if (hasSome(configuration.getHelm3Path())) {
         String helmPath = configuration.getHelm3Path();
         helmPaths.put(helmVersion, helmPath);
         log.info("Found user configured helm3 at {}. Skipping Install.", helmPath);

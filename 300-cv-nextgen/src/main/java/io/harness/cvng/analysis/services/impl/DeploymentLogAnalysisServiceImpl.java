@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
@@ -48,7 +48,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
       String accountId, String verificationJobInstanceId, String hostName) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
         getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
-    if (isEmpty(latestDeploymentLogAnalysis)) {
+    if (hasNone(latestDeploymentLogAnalysis)) {
       return Collections.emptyList();
     }
 
@@ -84,7 +84,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
         getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
-    if (isEmpty(latestDeploymentLogAnalysis)) {
+    if (hasNone(latestDeploymentLogAnalysis)) {
       return formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE);
     }
     boolean shouldFilterByHostName = StringUtils.isNotBlank(hostName);

@@ -1,6 +1,6 @@
 package io.harness.k8s.apiclient;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -36,7 +36,7 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
 
   private static ApiClient createNewApiClient(KubernetesConfig kubernetesConfig, OidcTokenRetriever tokenRetriever) {
     // Enable SSL validation only if CA Certificate provided with configuration
-    ClientBuilder clientBuilder = new ClientBuilder().setVerifyingSsl(isNotEmpty(kubernetesConfig.getCaCert()));
+    ClientBuilder clientBuilder = new ClientBuilder().setVerifyingSsl(hasSome(kubernetesConfig.getCaCert()));
     if (isNotBlank(kubernetesConfig.getMasterUrl())) {
       clientBuilder.setBasePath(kubernetesConfig.getMasterUrl());
     }

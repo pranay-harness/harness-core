@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -367,7 +367,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return;
     }
     Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
-    if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(template.getUuid()))) {
+    if (hasSome(envConfigMaps) && isNotBlank(envConfigMaps.get(template.getUuid()))) {
       template.setConfigMapYamlOverride(envConfigMaps.get(template.getUuid()));
     }
   }
@@ -451,7 +451,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid());
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return;
     }
 
@@ -472,7 +472,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     List<ManifestFile> manifestFiles =
         applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid());
-    if (isEmpty(manifestFiles)) {
+    if (hasNone(manifestFiles)) {
       return null;
     }
     return manifestFiles.get(0);
@@ -614,7 +614,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
-    if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(templateId))) {
+    if (hasSome(envConfigMaps) && isNotBlank(envConfigMaps.get(templateId))) {
       configMapYaml = envConfigMaps.get(templateId);
     }
 
@@ -631,7 +631,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (!existingFiles.isEmpty() || !newFiles.isEmpty()) {
       log.debug("Config files before overrides [{}]", existingFiles.toString());
       log.debug("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
-      if (isNotEmpty(newFiles)) {
+      if (hasSome(newFiles)) {
         mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
                                 .filter(new TreeSet<>(comparing(ConfigFile::getRelativeFilePath))::add)
                                 .collect(toList());
@@ -651,7 +651,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
       }
 
-      if (isNotEmpty(newServiceVariables)) {
+      if (hasSome(newServiceVariables)) {
         mergedServiceSettings = concat(newServiceVariables.stream(), existingServiceVariables.stream())
                                     .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
                                     .collect(toList());
@@ -669,13 +669,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Map<EncryptionConfig, List<EncryptableSettingWithEncryptionDetails>> encryptableSettingDetailsMap = new HashMap<>();
     serviceVariables.forEach(serviceVariable -> {
       if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        if (isEmpty(serviceVariable.getAccountId())) {
+        if (hasNone(serviceVariable.getAccountId())) {
           serviceVariable.setAccountId(accountId);
         }
 
         List<EncryptedDataDetail> encryptedDataDetails =
             secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
-        if (isNotEmpty(encryptedDataDetails)) {
+        if (hasSome(encryptedDataDetails)) {
           EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
               EncryptableSettingWithEncryptionDetails.builder()
                   .encryptableSetting(serviceVariable)

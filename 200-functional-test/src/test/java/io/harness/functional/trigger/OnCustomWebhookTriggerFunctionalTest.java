@@ -1,12 +1,12 @@
 package io.harness.functional.trigger;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.MILAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -125,7 +125,7 @@ public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest
     assertThat(action.get("workflowName")).isEqualTo(savedWorkflow.getName());
 
     List<Map<String, Object>> artifactSelections = (List<Map<String, Object>>) action.get("artifactSelections");
-    assertThat(EmptyPredicate.isEmpty(artifactSelections)).isTrue();
+    assertThat(hasNone(artifactSelections)).isTrue();
 
     // DELETE
     mutation = getGraphQLQueryForTriggerDeletion(clientMutationId, application.getAppId(), triggerId);

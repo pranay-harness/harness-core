@@ -1,10 +1,10 @@
 package io.harness.steps.approval.step.harness.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
@@ -50,7 +50,7 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   List<ApproverInputInfoDTO> approverInputs;
 
   private Optional<HarnessApprovalActivity> fetchLastApprovalActivity() {
-    if (EmptyPredicate.isEmpty(approvalActivities)) {
+    if (hasNone(approvalActivities)) {
       return Optional.empty();
     }
     return Optional.of(approvalActivities.get(approvalActivities.size() - 1));
@@ -68,7 +68,7 @@ public class HarnessApprovalInstance extends ApprovalInstance {
       return;
     }
 
-    if (EmptyPredicate.isEmpty(approvalActivities)) {
+    if (hasNone(approvalActivities)) {
       approvalActivities = Collections.singletonList(approvalActivity);
     } else {
       approvalActivities = new ArrayList<>(approvalActivities);
@@ -77,8 +77,8 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   }
 
   private boolean validateApprovalInputsRequest(List<ApproverInput> requestInputs) {
-    if (EmptyPredicate.isEmpty(requestInputs) || EmptyPredicate.isEmpty(approverInputs)) {
-      return EmptyPredicate.isEmpty(requestInputs) && EmptyPredicate.isEmpty(approverInputs);
+    if (hasNone(requestInputs) || hasNone(approverInputs)) {
+      return hasNone(requestInputs) && hasNone(approverInputs);
     }
     if (requestInputs.size() != approverInputs.size()) {
       return false;

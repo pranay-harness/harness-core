@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.mappers;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
@@ -43,7 +44,7 @@ public class NGPipelineExecutionDTOMapper {
     }
     Map<String, NGPipelineErrorResponseDTO> uuidToErrorResponseMap = new HashMap<>();
 
-    if (EmptyPredicate.isNotEmpty(mergeInputSetResponse.getUuidToErrorResponseMap())) {
+    if (hasSome(mergeInputSetResponse.getUuidToErrorResponseMap())) {
       for (Map.Entry<String, VisitorErrorResponseWrapper> entry :
           mergeInputSetResponse.getUuidToErrorResponseMap().entrySet()) {
         List<NGPipelineErrorDTO> errorDTOS = new LinkedList<>();

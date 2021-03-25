@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
@@ -10,7 +12,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -160,7 +161,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @JsonIgnore
   @SchemaIgnore
   public boolean isDecrypted() {
-    return decrypted || !EmptyPredicate.isEmpty(delegateSelectors);
+    return decrypted || !hasNone(delegateSelectors);
   }
 
   @Override
@@ -217,30 +218,30 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       return initWithOidcAuthDetails(kubernetesConfig);
     }
 
-    if (EmptyPredicate.isNotEmpty(username)) {
+    if (hasSome(username)) {
       kubernetesConfig.username(username);
     }
 
-    if (EmptyPredicate.isNotEmpty(password)) {
+    if (hasSome(password)) {
       kubernetesConfig.password(password);
     }
 
-    if (EmptyPredicate.isNotEmpty(caCert)) {
+    if (hasSome(caCert)) {
       kubernetesConfig.caCert(caCert);
     }
 
-    if (EmptyPredicate.isNotEmpty(clientCert)) {
+    if (hasSome(clientCert)) {
       kubernetesConfig.clientCert(clientCert);
     }
-    if (EmptyPredicate.isNotEmpty(clientKey)) {
+    if (hasSome(clientKey)) {
       kubernetesConfig.clientKey(clientKey);
     }
 
-    if (EmptyPredicate.isNotEmpty(clientKeyPassphrase)) {
+    if (hasSome(clientKeyPassphrase)) {
       kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceAccountToken)) {
+    if (hasSome(serviceAccountToken)) {
       kubernetesConfig.serviceAccountToken(serviceAccountToken);
     }
 
@@ -263,7 +264,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (useKubernetesDelegate) {
-      if (!EmptyPredicate.isEmpty(delegateSelectors)) {
+      if (!hasNone(delegateSelectors)) {
         return singletonList(SelectorCapability.builder().selectors(delegateSelectors).build());
       }
       return emptyList();

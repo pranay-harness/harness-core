@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
@@ -85,7 +85,7 @@ public class ScheduledTriggerJob implements Job {
     triggerService.triggerScheduledExecutionAsync(trigger, jobExecutionContext.getNextFireTime());
 
     // Old cron jobs doesn't have accountId. Will need to recreate with accountId as part of the job details
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       log.info(
           "Quartz job '{}' in group {} doesn't have accountId in job details. Will recreate with accountId included.",
           triggerId, GROUP);

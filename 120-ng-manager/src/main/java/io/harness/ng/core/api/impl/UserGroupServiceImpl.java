@@ -1,8 +1,8 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 
@@ -130,12 +130,12 @@ public class UserGroupServiceImpl implements UserGroupService {
     validateFilter(userGroupFilterDTO);
     Criteria criteria = createScopeCriteria(userGroupFilterDTO.getAccountIdentifier(),
         userGroupFilterDTO.getOrgIdentifier(), userGroupFilterDTO.getProjectIdentifier());
-    if (isNotEmpty(userGroupFilterDTO.getDatabaseIdFilter())) {
+    if (hasSome(userGroupFilterDTO.getDatabaseIdFilter())) {
       criteria.and(UserGroupKeys.id).in(userGroupFilterDTO.getDatabaseIdFilter());
-    } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
+    } else if (hasSome(userGroupFilterDTO.getIdentifierFilter())) {
       criteria.and(UserGroupKeys.identifier).in(userGroupFilterDTO.getIdentifierFilter());
     }
-    if (isNotEmpty(userGroupFilterDTO.getUserIdentifierFilter())) {
+    if (hasSome(userGroupFilterDTO.getUserIdentifierFilter())) {
       criteria.and(UserGroupKeys.users).in(userGroupFilterDTO.getUserIdentifierFilter());
     }
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
@@ -234,20 +234,20 @@ public class UserGroupServiceImpl implements UserGroupService {
     EntityChangeDTO.Builder builder = EntityChangeDTO.newBuilder()
                                           .setAccountIdentifier(StringValue.of(userGroup.getAccountIdentifier()))
                                           .setIdentifier(StringValue.of(userGroup.getIdentifier()));
-    if (isNotEmpty(userGroup.getOrgIdentifier())) {
+    if (hasSome(userGroup.getOrgIdentifier())) {
       builder.setOrgIdentifier(StringValue.of(userGroup.getOrgIdentifier()));
     }
-    if (isNotEmpty(userGroup.getProjectIdentifier())) {
+    if (hasSome(userGroup.getProjectIdentifier())) {
       builder.setProjectIdentifier(StringValue.of(userGroup.getProjectIdentifier()));
     }
     return builder.build().toByteString();
   }
 
   private void validateFilter(UserGroupFilterDTO filter) {
-    if (isEmpty(filter.getIdentifierFilter()) && isEmpty(filter.getDatabaseIdFilter())) {
+    if (hasNone(filter.getIdentifierFilter()) && hasNone(filter.getDatabaseIdFilter())) {
       throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be empty");
     }
-    if (isNotEmpty(filter.getIdentifierFilter()) && isNotEmpty(filter.getDatabaseIdFilter())) {
+    if (hasSome(filter.getIdentifierFilter()) && hasSome(filter.getDatabaseIdFilter())) {
       throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be provided");
     }
   }
@@ -279,13 +279,13 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private Criteria createScopeCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountIdentifier)) {
+    if (hasSome(accountIdentifier)) {
       criteria.and(UserGroupKeys.accountIdentifier).is(accountIdentifier);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(UserGroupKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(UserGroupKeys.projectIdentifier).is(projectIdentifier);
     }
     return criteria;

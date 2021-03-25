@@ -1,5 +1,7 @@
 package io.harness.cdng.creator.plan.service;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
@@ -7,7 +9,6 @@ import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
@@ -39,7 +40,7 @@ public class ServicePMSPlanCreator {
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     ServiceYaml actualServiceYaml = actualServiceConfig.getService();
-    if (actualServiceYaml != null && EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
+    if (actualServiceYaml != null && hasNone(actualServiceYaml.getName())) {
       actualServiceYaml.setName(actualServiceYaml.getIdentifier());
     }
     ServiceConfig serviceOverrides = null;

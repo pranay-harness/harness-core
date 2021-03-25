@@ -1,14 +1,13 @@
 package software.wings.helpers.ext.customrepository;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -84,7 +83,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       File file = new File(artifactResultPath);
       CustomRepositoryResponse customRepositoryResponse;
       try {
-        if (EmptyPredicate.isNotEmpty(artifactStreamAttributes.getArtifactRoot())) {
+        if (hasSome(artifactStreamAttributes.getArtifactRoot())) {
           JsonNode jsonObject = (JsonNode) JsonUtils.readFromFile(file, JsonNode.class);
           String json = JsonUtils.asJson(jsonObject);
           customRepositoryResponse = mapToCustomRepositoryResponse(json, artifactStreamAttributes.getArtifactRoot(),
@@ -96,10 +95,10 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
 
         List<Result> results = customRepositoryResponse.getResults();
         List<String> buildNumbers = new ArrayList<>();
-        if (isNotEmpty(results)) {
+        if (hasSome(results)) {
           results.forEach(result -> {
             final String buildNo = result.getBuildNo();
-            if (isNotEmpty(buildNo)) {
+            if (hasSome(buildNo)) {
               if (buildNumbers.contains(buildNo)) {
                 log.warn(
                     "There is an entry with buildNo {} already exists. So, skipping the result. Please ensure that buildNo is unique across the results",
@@ -143,11 +142,11 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
   }
 
   private void validateAttributeMapping(String artifactRoot, String buildNoPath) {
-    if (EmptyPredicate.isEmpty(artifactRoot)) {
+    if (hasNone(artifactRoot)) {
       throw new InvalidArtifactServerException(
           "Artifacts Array Path cannot be null or empty. Please provide a valid value for Artifacts Array Path.", USER);
     }
-    if (EmptyPredicate.isEmpty(buildNoPath)) {
+    if (hasNone(buildNoPath)) {
       throw new InvalidArtifactServerException(
           "BuildNo Path cannot be null or empty. Please provide a valid value for BuildNo Path", USER);
     }
@@ -165,7 +164,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
       CustomRepositoryResponse.Result.ResultBuilder res = CustomRepositoryResponse.Result.builder();
       res.buildNo(JsonUtils.jsonPath(ctx, artifactRoot + "[" + i + "]." + buildNoPath));
       for (Entry<String, String> entry : map.entrySet()) {
-        String mappedAttribute = EmptyPredicate.isEmpty(entry.getValue())
+        String mappedAttribute = hasNone(entry.getValue())
             ? entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1)
             : entry.getValue().substring(entry.getValue().lastIndexOf('.') + 1);
         String value = JsonUtils.jsonPath(ctx, artifactRoot + "[" + i + "]." + entry.getKey()).toString();
@@ -181,7 +180,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
   @Override
   public boolean validateArtifactSource(ArtifactStreamAttributes artifactStreamAttributes) {
     List<BuildDetails> buildDetails = getBuilds(artifactStreamAttributes);
-    if (isEmpty(buildDetails)) {
+    if (hasNone(buildDetails)) {
       throw new InvalidArtifactServerException(
           "Script execution was successful. However, no artifacts were found matching the criteria provided in script.",
           USER);

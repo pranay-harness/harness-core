@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -212,12 +212,12 @@ public abstract class ContainerServiceDeploy extends State {
               .containerResizeParams(params)
               .deploymentType(deploymentType.name())
               .delegateSelectors(
-                  isNotEmpty(delegateSelectorsFromK8sCloudProvider) ? delegateSelectorsFromK8sCloudProvider : null)
+                  hasSome(delegateSelectorsFromK8sCloudProvider) ? delegateSelectorsFromK8sCloudProvider : null)
               .build();
 
       List<String> allTaskTags = new ArrayList<>();
       List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
-      if (isNotEmpty(awsConfigTags)) {
+      if (hasSome(awsConfigTags)) {
         allTaskTags.addAll(awsConfigTags);
       }
 
@@ -227,7 +227,7 @@ public abstract class ContainerServiceDeploy extends State {
               .accountId(contextData.app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, contextData.appId)
               .waitId(waitId)
-              .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
+              .tags(hasSome(allTaskTags) ? allTaskTags : null)
               .data(TaskData.builder()
                         .async(true)
                         .taskType(TaskType.COMMAND.name())

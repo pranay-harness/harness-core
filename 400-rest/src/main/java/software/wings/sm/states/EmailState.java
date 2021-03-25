@@ -5,7 +5,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
@@ -183,7 +183,7 @@ public class EmailState extends State {
 
   private List<String> getEmailAddressList(String address) {
     List addressList = new ArrayList();
-    if (isNotEmpty(address)) {
+    if (hasSome(address)) {
       addressList.addAll(COMMA_SPLITTER.splitToList(address));
     }
     return addressList;

@@ -1,7 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
 import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME;
@@ -113,13 +113,13 @@ public class SpotinstTrafficShiftAlbDeployState extends State {
           taskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
       List<InstanceElement> oldInstanceElements = awsStateHelper.generateInstanceElements(
           taskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
-      if (isNotEmpty(newInstanceElements)) {
+      if (hasSome(newInstanceElements)) {
         // These are newly launched instances, set NewInstance = true for verification service
         newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
         instanceElements.addAll(newInstanceElements);
       }
 
-      if (isNotEmpty(oldInstanceElements)) {
+      if (hasSome(oldInstanceElements)) {
         instanceElements.addAll(oldInstanceElements);
       }
     }

@@ -1,6 +1,6 @@
 package io.harness.migrations;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -84,7 +84,7 @@ public class HostConnectionTypeMigration implements Migration {
 
   private void updateInfraMapping(@Nonnull AwsInfrastructureMapping infrastructureMapping) {
     try {
-      if (isNotEmpty(infrastructureMapping.getHostConnectionType())) {
+      if (hasSome(infrastructureMapping.getHostConnectionType())) {
         return;
       }
 
@@ -107,7 +107,7 @@ public class HostConnectionTypeMigration implements Migration {
       AwsInstanceInfrastructure infrastructure =
           (AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
 
-      if (isNotEmpty(infrastructure.getHostConnectionType())) {
+      if (hasSome(infrastructure.getHostConnectionType())) {
         return;
       }
 

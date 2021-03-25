@@ -1,7 +1,7 @@
 package io.harness.filesystem;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
@@ -87,7 +87,7 @@ public class FileIo {
 
   private static String getDirectoryCheckCommand() {
     String osName = System.getProperty("os.name");
-    if (isNotEmpty(osName) && osName.startsWith("Windows")) {
+    if (hasSome(osName) && osName.startsWith("Windows")) {
       return "cmd /c cd";
     }
     return "bash -c pwd";
@@ -234,10 +234,10 @@ public class FileIo {
 
   public static String getHomeDir() {
     String osName = System.getProperty("os.name");
-    if (isNotEmpty(osName) && osName.toLowerCase().startsWith("win")) {
+    if (hasSome(osName) && osName.toLowerCase().startsWith("win")) {
       String homeDrive = System.getenv("HOMEDRIVE");
       String homePath = System.getenv("HOMEPATH");
-      if (isNotEmpty(homeDrive) && isNotEmpty(homePath)) {
+      if (hasSome(homeDrive) && hasSome(homePath)) {
         String homeDir = homeDrive + homePath;
         File f = new File(homeDir);
         if (f.exists() && f.isDirectory()) {
@@ -245,7 +245,7 @@ public class FileIo {
         }
       }
       String userProfile = System.getenv("USERPROFILE");
-      if (isNotEmpty(userProfile)) {
+      if (hasSome(userProfile)) {
         File f = new File(userProfile);
         if (f.exists() && f.isDirectory()) {
           return userProfile;
@@ -253,7 +253,7 @@ public class FileIo {
       }
     }
     String home = System.getenv("HOME");
-    if (isNotEmpty(home)) {
+    if (hasSome(home)) {
       File f = new File(home);
       if (f.exists() && f.isDirectory()) {
         return home;

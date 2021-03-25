@@ -1,6 +1,6 @@
 package io.harness.engine.expressions.functors;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -194,7 +194,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
             .setSkipExpressionChain(skipExpressionChain)
             .setStepParameters(RecastOrchestrationUtils.toDocumentJson(prepareStepParameters(paramValue)));
 
-    if (!isEmpty(groupName)) {
+    if (!hasNone(groupName)) {
       builder.setGroup(groupName);
     }
     return builder.build();

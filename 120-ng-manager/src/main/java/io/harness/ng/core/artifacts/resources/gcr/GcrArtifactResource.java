@@ -1,5 +1,7 @@
 package io.harness.ng.core.artifacts.resources.gcr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
@@ -7,7 +9,6 @@ import io.harness.cdng.artifact.resources.gcr.dtos.GcrRequestDTO;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrResponseDTO;
 import io.harness.cdng.artifact.resources.gcr.service.GcrResourceService;
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.artifacts.resources.util.ArtifactResourceUtils;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -139,8 +140,7 @@ public class GcrArtifactResource {
       try {
         ResponseDTO<GcrBuildDetailsDTO> lastSuccessfulBuild = getLastSuccessfulBuild(
             imagePath, gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier, requestDTO);
-        if (lastSuccessfulBuild.getData() != null
-            && EmptyPredicate.isNotEmpty(lastSuccessfulBuild.getData().getTag())) {
+        if (lastSuccessfulBuild.getData() != null && hasSome(lastSuccessfulBuild.getData().getTag())) {
           isValidArtifact = true;
         }
       } catch (Exception e) {

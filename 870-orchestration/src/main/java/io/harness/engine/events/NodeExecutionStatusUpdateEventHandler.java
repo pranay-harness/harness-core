@@ -1,9 +1,9 @@
 package io.harness.engine.events;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -35,7 +35,7 @@ public class NodeExecutionStatusUpdateEventHandler implements AsyncOrchestration
     }
 
     List<String> timeoutInstanceIds = nodeExecution.getTimeoutInstanceIds();
-    if (EmptyPredicate.isNotEmpty(timeoutInstanceIds)) {
+    if (hasSome(timeoutInstanceIds)) {
       timeoutEngine.onEvent(timeoutInstanceIds, new StatusUpdateTimeoutEvent(nodeExecution.getStatus()));
     }
   }

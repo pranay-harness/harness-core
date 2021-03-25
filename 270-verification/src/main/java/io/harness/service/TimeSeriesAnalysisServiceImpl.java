@@ -2,8 +2,8 @@ package io.harness.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.logging.Misc.replaceUnicodeWithDot;
@@ -134,7 +134,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (TOP_HATTER_ACCOUNT_ID.equals(accountId)) {
       log.info("for {} received metric data {}", stateExecutionId, metricData);
     }
-    if (isEmpty(metricData)) {
+    if (hasNone(metricData)) {
       log.info("For state {} received empty collection", stateExecutionId);
       return false;
     }
@@ -144,7 +144,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     metricData.forEach(metric -> {
       metric.setAccountId(accountId);
-      if (isNotEmpty(metric.getCvConfigId())) {
+      if (hasSome(metric.getCvConfigId())) {
         metric.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
       }
     });
@@ -198,7 +198,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private void logLearningEngineAnalysisMessage(NewRelicMetricAnalysisRecord metricAnalysisRecord) {
-    if (isNotEmpty(metricAnalysisRecord.getMessage())) {
+    if (hasSome(metricAnalysisRecord.getMessage())) {
       cvActivityLogService
           .getLogger(metricAnalysisRecord.getAccountId(), metricAnalysisRecord.getCvConfigId(),
               metricAnalysisRecord.getAnalysisMinute(), metricAnalysisRecord.getStateExecutionId())
@@ -207,7 +207,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private void logLearningEngineAnalysisMessage(MetricAnalysisRecord mlAnalysisResponse) {
-    if (isNotEmpty(mlAnalysisResponse.getMessage())) {
+    if (hasSome(mlAnalysisResponse.getMessage())) {
       cvActivityLogService
           .getLogger(mlAnalysisResponse.getAccountId(), mlAnalysisResponse.getCvConfigId(),
               mlAnalysisResponse.getAnalysisMinute(), mlAnalysisResponse.getStateExecutionId())
@@ -247,7 +247,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAccountId(accountId);
 
-    if (isEmpty(mlAnalysisResponse.getGroupName())) {
+    if (hasNone(mlAnalysisResponse.getGroupName())) {
       mlAnalysisResponse.setGroupName(DEFAULT_GROUP_NAME);
     }
 
@@ -319,7 +319,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       }
       ++txnId;
     }
-    if (isNotEmpty(tag)) {
+    if (hasSome(tag)) {
       mlAnalysisResponse.setTag(tag);
       riskSummary.setTag(tag);
     }
@@ -347,7 +347,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       learningEngineService.markCompleted(taskId);
     }
 
-    if (isNotEmpty(mlAnalysisResponse.getAnomalies())) {
+    if (hasSome(mlAnalysisResponse.getAnomalies())) {
       TimeSeriesAnomaliesRecord anomaliesRecord =
           wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class, excludeAuthority)
               .filter(TimeSeriesAnomaliesRecordKeys.cvConfigId, cvConfigId)
@@ -386,7 +386,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       anomaliesRecord.compressAnomalies();
       wingsPersistence.save(anomaliesRecord);
     }
-    if (isNotEmpty(mlAnalysisResponse.getTransactionMetricSums())) {
+    if (hasSome(mlAnalysisResponse.getTransactionMetricSums())) {
       TimeSeriesCumulativeSums cumulativeSums =
           TimeSeriesCumulativeSums.builder()
               .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
@@ -395,21 +395,21 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .accountId(accountId)
               .build();
       cumulativeSums.setAppId(appId);
-      if (isNotEmpty(tag)) {
+      if (hasSome(tag)) {
         cumulativeSums.setTag(tag);
       }
       cumulativeSums.compressMetricSums();
       wingsPersistence.saveIgnoringDuplicateKeys(Arrays.asList(cumulativeSums));
     }
     // encode the dots in keyTxnData
-    if (isNotEmpty(mlAnalysisResponse.getKeyTransactionMetricScores())) {
+    if (hasSome(mlAnalysisResponse.getKeyTransactionMetricScores())) {
       List<String> transactionNamesToRemove = new ArrayList<>();
       mlAnalysisResponse.getKeyTransactionMetricScores().forEach((transaction, metricMap) -> {
         if (transaction.contains(".")) {
           transactionNamesToRemove.add(transaction);
         }
       });
-      if (isNotEmpty(transactionNamesToRemove)) {
+      if (hasSome(transactionNamesToRemove)) {
         transactionNamesToRemove.forEach(transactionName -> {
           mlAnalysisResponse.getKeyTransactionMetricScores().put(replaceDotWithUnicode(transactionName),
               mlAnalysisResponse.getKeyTransactionMetricScores().get(transactionName));
@@ -490,7 +490,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Set<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(String appId, String workflowExecutionId,
       String groupName, int analysisMinute, int analysisStartMinute, String accountId) {
-    if (isEmpty(workflowExecutionId)) {
+    if (hasNone(workflowExecutionId)) {
       return Collections.emptySet();
     }
     PageRequest<TimeSeriesDataRecord> pageRequest =
@@ -505,7 +505,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false).getResponse();
     List<NewRelicMetricDataRecord> results =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
-    if (isEmpty(results)) {
+    if (hasNone(results)) {
       PageRequest<NewRelicMetricDataRecord> newRelicRequest =
           aPageRequest()
               .withLimit(UNLIMITED)
@@ -642,7 +642,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private String getCustomThresholdRefIdForWorkflow(String stateExecutionId) {
-    if (isNotEmpty(stateExecutionId)) {
+    if (hasSome(stateExecutionId)) {
       AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class)
                                     .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
                                     .get();
@@ -691,7 +691,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     List<NewRelicMetricDataRecord> rv =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
 
-    if (isEmpty(rv)) {
+    if (hasNone(rv)) {
       log.info(
           "No heartbeat record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}",
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
@@ -725,7 +725,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     List<NewRelicMetricDataRecord> rv =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecords);
 
-    if (isEmpty(rv)) {
+    if (hasNone(rv)) {
       log.info(
           "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}.",
           ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
@@ -741,7 +741,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     log.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
-    if (isEmpty(stateExecutionId)) {
+    if (hasNone(stateExecutionId)) {
       return;
     }
 
@@ -774,7 +774,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
       String appId, StateType stateType, String serviceId, String cvConfigId, String customThresholdRefId) {
     Query<TimeSeriesMLTransactionThresholds> thresholdsQuery;
-    if (isEmpty(customThresholdRefId)) {
+    if (hasNone(customThresholdRefId)) {
       thresholdsQuery = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                             .filter(TimeSeriesMLTransactionThresholds.BaseKeys.appId, appId)
                             .filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
@@ -834,7 +834,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
       for (SupervisedTSThreshold threshold : thresholds) {
         List<Threshold> supervisedThresholds = SupervisedTSThreshold.getThresholds(threshold);
-        if (isNotEmpty(supervisedThresholds)) {
+        if (hasSome(supervisedThresholds)) {
           updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
               threshold.getMetricType(), metricDefinitionMap);
           metricDefinitionMap.get(threshold.getTransactionName())
@@ -953,7 +953,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final PageResponse<TimeSeriesDataRecord> results =
         dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
-    if (isEmpty(results)) {
+    if (hasNone(results)) {
       return -1;
     }
     return results.get(0).getDataCollectionMinute();
@@ -1002,7 +1002,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                 .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, endMin)
                 .build();
 
-        if (isNotEmpty(tag)) {
+        if (hasSome(tag)) {
           pageRequest.addFilter(TimeSeriesMetricRecordKeys.tag, Operator.EQ, tag);
         }
 
@@ -1029,7 +1029,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
             .filter(MetricAnalysisRecordKeys.analysisMinute, dataCollectionMin);
 
-    if (isNotEmpty(tag)) {
+    if (hasSome(tag)) {
       analysisQuery = analysisQuery.filter(MetricAnalysisRecordKeys.tag, tag);
     }
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = analysisQuery.get();
@@ -1054,7 +1054,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .field(MetricAnalysisRecordKeys.analysisMinute)
             .in(historicalAnalysisTimes);
 
-    if (isNotEmpty(tag)) {
+    if (hasSome(tag)) {
       analysisQuery = analysisQuery.filter(MetricAnalysisRecordKeys.tag, tag);
     }
 
@@ -1071,7 +1071,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     Query<TimeSeriesAnomaliesRecord> timeSeriesAnomaliesRecordQuery =
         wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
             .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId);
-    if (isNotEmpty(tag)) {
+    if (hasSome(tag)) {
       timeSeriesAnomaliesRecordQuery = timeSeriesAnomaliesRecordQuery.filter("tag", tag);
     }
     TimeSeriesAnomaliesRecord timeSeriesAnomaliesRecord = timeSeriesAnomaliesRecordQuery.get();
@@ -1082,7 +1082,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     timeSeriesAnomaliesRecord.decompressAnomalies();
 
-    if (isEmpty(metrics)) {
+    if (hasNone(metrics)) {
       return timeSeriesAnomaliesRecord;
     }
 
@@ -1109,7 +1109,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Set<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
       String appId, String cvConfigId, int startMinute, int endMinute, String tag) {
-    if (isNotEmpty(appId) && isNotEmpty(cvConfigId) && startMinute <= endMinute) {
+    if (hasSome(appId) && hasSome(cvConfigId) && startMinute <= endMinute) {
       Query<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsQuery =
           wingsPersistence.createQuery(TimeSeriesCumulativeSums.class, excludeAuthority)
               .filter(TimeSeriesCumulativeSumsKeys.cvConfigId, cvConfigId)
@@ -1117,7 +1117,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .greaterThanOrEq(startMinute)
               .field(TimeSeriesCumulativeSumsKeys.analysisMinute)
               .lessThanOrEq(endMinute);
-      if (isNotEmpty(tag)) {
+      if (hasSome(tag)) {
         timeSeriesCumulativeSumsQuery = timeSeriesCumulativeSumsQuery.filter(TimeSeriesCumulativeSumsKeys.tag, tag);
       }
       List<TimeSeriesCumulativeSums> cumulativeSums = timeSeriesCumulativeSumsQuery.asList();
@@ -1136,7 +1136,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Set<String> getKeyTransactions(String cvConfigId) {
-    if (isNotEmpty(cvConfigId)) {
+    if (hasSome(cvConfigId)) {
       TimeSeriesKeyTransactions keyTxns = wingsPersistence.createQuery(TimeSeriesKeyTransactions.class)
                                               .filter(TimeSeriesKeyTransactionsKeys.cvConfigId, cvConfigId)
                                               .get();
@@ -1168,7 +1168,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final PageResponse<TimeSeriesDataRecord> results =
         dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
-    if (isEmpty(results)) {
+    if (hasNone(results)) {
       return Optional.empty();
     }
     return Optional.of(results.get(0).getCreatedAt());

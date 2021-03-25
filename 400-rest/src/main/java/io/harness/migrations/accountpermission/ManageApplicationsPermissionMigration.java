@@ -1,6 +1,6 @@
 package io.harness.migrations.accountpermission;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
@@ -60,7 +60,7 @@ public class ManageApplicationsPermissionMigration implements Migration {
   }
 
   private boolean checkIfUserGroupContainsApplicationCreatePermission(UserGroup userGroup) {
-    return userGroup.getAccountPermissions() != null && isNotEmpty(userGroup.getAccountPermissions().getPermissions())
+    return userGroup.getAccountPermissions() != null && hasSome(userGroup.getAccountPermissions().getPermissions())
         && userGroup.getAccountPermissions().getPermissions().contains(APPLICATION_CREATE_DELETE);
   }
 

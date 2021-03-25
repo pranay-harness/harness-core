@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -57,7 +57,7 @@ public class AwsStateHelper {
   public List<InstanceElement> generateInstanceElements(
       List<Instance> ec2InstancesAded, InfrastructureMapping infraMapping, ExecutionContext context) {
     List<InstanceElement> instanceElementList = emptyList();
-    if (isNotEmpty(ec2InstancesAded)) {
+    if (hasSome(ec2InstancesAded)) {
       instanceElementList =
           ec2InstancesAded.stream()
               .map(instance -> {
@@ -107,7 +107,7 @@ public class AwsStateHelper {
   }
 
   public List<InstanceDetails> generateAmInstanceDetails(List<InstanceElement> allInstanceElements) {
-    if (isEmpty(allInstanceElements)) {
+    if (hasNone(allInstanceElements)) {
       return emptyList();
     }
 

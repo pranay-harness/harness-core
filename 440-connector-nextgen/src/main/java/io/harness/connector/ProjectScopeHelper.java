@@ -1,6 +1,6 @@
 package io.harness.connector;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ng.core.entities.Project.ProjectKeys;
 
 import io.harness.connector.entities.Connector;
@@ -24,20 +24,20 @@ public class ProjectScopeHelper {
   ProjectService projectService;
 
   public Map<String, String> createProjectIdentifierProjectNameMap(List<String> projectIdentifiersList) {
-    if (isEmpty(projectIdentifiersList)) {
+    if (hasNone(projectIdentifiersList)) {
       return Collections.emptyMap();
     }
     Criteria criteria = new Criteria();
     criteria.and(ProjectKeys.identifier).in(projectIdentifiersList);
     List<Project> organizations = projectService.list(criteria, Pageable.unpaged()).toList();
-    if (isEmpty(organizations)) {
+    if (hasNone(organizations)) {
       return Collections.emptyMap();
     }
     return organizations.stream().collect(Collectors.toMap(Project::getIdentifier, Project::getName));
   }
 
   public List<String> getProjectIdentifiers(List<Connector> connectors) {
-    if (isEmpty(connectors)) {
+    if (hasNone(connectors)) {
       return Collections.emptyList();
     }
     return connectors.stream().map(Connector::getProjectIdentifier).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.utils.UuidUtils.base64StrToUuid;
 import static io.harness.utils.UuidUtils.isValidUuidStr;
 
@@ -28,7 +28,7 @@ public class UuidValidator implements ConstraintValidator<Uuid, String> {
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return false;
     }
     return isValidUuidStr(value) || isValidBase64EncodedUuid(value);

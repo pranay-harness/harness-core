@@ -1,7 +1,7 @@
 package software.wings.scim;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.GROUP;
 
 import io.harness.exception.InvalidRequestException;
@@ -176,7 +176,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     }
 
     List<String> existingMemberIds =
-        isNotEmpty(existingGroup.getMemberIds()) ? existingGroup.getMemberIds() : new ArrayList<>();
+        hasSome(existingGroup.getMemberIds()) ? existingGroup.getMemberIds() : new ArrayList<>();
     Set<String> newMemberIds = new HashSet<>(existingMemberIds);
     String newGroupName = null;
 
@@ -261,7 +261,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
     try {
       List<? extends ScimMultiValuedObject> operations = patchOperation.getValues(ScimMultiValuedObject.class);
-      if (!isEmpty(operations)) {
+      if (!hasNone(operations)) {
         return operations.stream().map(operation -> (String) operation.getValue()).collect(Collectors.toSet());
       }
       log.error("SCIM: Operations received is null. Skipping remove operation processing for groupId: {}", groupId);
@@ -291,7 +291,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       scimGroup.setDisplayName(userGroup.getName());
       List<Member> memberList = new ArrayList<>();
 
-      if (isNotEmpty(userGroup.getMembers())) {
+      if (hasSome(userGroup.getMembers())) {
         userGroup.getMembers().forEach(member -> {
           Member member1 = new Member();
           member1.setValue(member.getUuid());
@@ -317,7 +317,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
                                           .equal(userGroupName);
 
     List<UserGroup> userGroupList = userGroupQuery.asList();
-    if (isNotEmpty(userGroupList)) {
+    if (hasSome(userGroupList)) {
       return userGroupList.get(0);
     }
     return null;
@@ -351,7 +351,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   private List<String> getMembersOfUserGroup(ScimGroup scimGroup) {
     List<String> newMemberIds = new ArrayList<>();
-    if (isNotEmpty(scimGroup.getMembers())) {
+    if (hasSome(scimGroup.getMembers())) {
       scimGroup.getMembers().forEach(member -> {
         if (!newMemberIds.contains(member.getValue())) {
           User user = wingsPersistence.get(User.class, member.getValue());

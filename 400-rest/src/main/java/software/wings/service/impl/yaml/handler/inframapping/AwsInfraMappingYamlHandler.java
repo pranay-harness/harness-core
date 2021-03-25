@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -166,10 +166,10 @@ public class AwsInfraMappingYamlHandler
   }
 
   private boolean avoidSettingHostConnAttributesToYaml(AwsInfrastructureMapping bean) {
-    return isNotEmpty(bean.getProvisionerId()) && isEmpty(bean.getHostConnectionAttrs());
+    return hasSome(bean.getProvisionerId()) && hasNone(bean.getHostConnectionAttrs());
   }
 
   private boolean avoidSettingHostConnAttributesFromYaml(Yaml yaml) {
-    return isEmpty(yaml.getConnectionType()) && isNotEmpty(yaml.getProvisionerName());
+    return hasNone(yaml.getConnectionType()) && hasSome(yaml.getProvisionerName());
   }
 }

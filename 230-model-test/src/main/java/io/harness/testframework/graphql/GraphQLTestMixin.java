@@ -1,6 +1,6 @@
 package io.harness.testframework.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import software.wings.graphql.schema.type.QLObject;
 
@@ -48,7 +48,7 @@ public interface GraphQLTestMixin {
 
   default QLTestObject qlExecute(String query, String accountId) {
     final ExecutionResult result = qlResult(query, accountId);
-    if (isNotEmpty(result.getErrors())) {
+    if (hasSome(result.getErrors())) {
       throw new RuntimeException(result.getErrors().toString());
     }
     return QLTestObject.builder()

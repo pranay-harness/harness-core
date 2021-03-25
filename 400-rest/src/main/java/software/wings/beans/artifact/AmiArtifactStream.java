@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
@@ -59,12 +59,12 @@ public class AmiArtifactStream extends ArtifactStream {
 
   @Override
   public String fetchArtifactDisplayName(String amiName) {
-    return isEmpty(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
+    return hasNone(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
   }
 
   @Override
   public String generateSourceName() {
-    if (isEmpty(tags) && isEmpty(filters)) {
+    if (hasNone(tags) && hasNone(filters)) {
       return region;
     }
     List<String> tagFields = new ArrayList<>();
@@ -113,7 +113,7 @@ public class AmiArtifactStream extends ArtifactStream {
   @Override
   public boolean checkIfStreamParameterized() {
     boolean containsParameters;
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       for (Tag tag : tags) {
         containsParameters = validateParameters(tag.getKey(), tag.getValue());
         if (containsParameters) {
@@ -121,7 +121,7 @@ public class AmiArtifactStream extends ArtifactStream {
         }
       }
     }
-    if (isNotEmpty(filters)) {
+    if (hasSome(filters)) {
       for (FilterClass filter : filters) {
         containsParameters = validateParameters(filter.getKey(), filter.getValue());
         if (containsParameters) {

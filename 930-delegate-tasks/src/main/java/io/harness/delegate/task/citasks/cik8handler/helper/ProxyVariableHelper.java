@@ -1,7 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler.helper;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 
 import io.harness.delegate.beans.ci.pod.SecretParams;
@@ -35,7 +35,7 @@ public class ProxyVariableHelper {
       String proxyHost = System.getenv(PROXY_HOST);
       String proxyPort = System.getenv(PROXY_PORT);
       String proxyScheme = System.getenv(PROXY_SCHEME);
-      if (isNotEmpty(proxyHost) && isNotEmpty(proxyPort) && isNotEmpty(proxyScheme)) {
+      if (hasSome(proxyHost) && hasSome(proxyPort) && hasSome(proxyScheme)) {
         log.info("Setting env variables for proxy configuration");
         return true;
       } else {
@@ -56,8 +56,8 @@ public class ProxyVariableHelper {
     String noProxy = System.getenv(NO_PROXY_VAR);
 
     String proxyString = null;
-    if (isNotEmpty(proxyHost) && isNotEmpty(proxyPort) && isNotEmpty(proxyScheme)) {
-      if (isNotEmpty(proxyUser) && isNotEmpty(proxyPassword)) {
+    if (hasSome(proxyHost) && hasSome(proxyPort) && hasSome(proxyScheme)) {
+      if (hasSome(proxyUser) && hasSome(proxyPassword)) {
         proxyString =
             String.format(PROXY_STRING_FORMAT_WITH_CREDS, proxyScheme, proxyUser, proxyPassword, proxyHost, proxyPort);
       } else {
@@ -65,13 +65,13 @@ public class ProxyVariableHelper {
       }
     }
 
-    if (isNotEmpty(proxyString)) {
+    if (hasSome(proxyString)) {
       Map<String, SecretParams> proxyConfiguration = new HashMap<>();
       proxyConfiguration.put(HTTP_PROXY_VAR,
           SecretParams.builder().secretKey(HTTP_PROXY_VAR).value(encodeBase64(proxyString)).type(TEXT).build());
       proxyConfiguration.put(HTTPS_PROXY_VAR,
           SecretParams.builder().secretKey(HTTPS_PROXY_VAR).value(encodeBase64(proxyString)).type(TEXT).build());
-      if (isNotEmpty(noProxy)) {
+      if (hasSome(noProxy)) {
         proxyConfiguration.put(NO_PROXY_VAR,
             SecretParams.builder().secretKey(NO_PROXY_VAR).value(encodeBase64(noProxy)).type(TEXT).build());
       }

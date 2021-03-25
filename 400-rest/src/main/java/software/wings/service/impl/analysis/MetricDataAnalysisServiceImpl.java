@@ -2,8 +2,8 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
@@ -140,7 +140,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                       && ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
               .collect(Collectors.toList());
 
-      if (isNotEmpty(rv)) {
+      if (hasSome(rv)) {
         return successfulExecution;
       }
     }
@@ -203,7 +203,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
             .filter(MetricAnalysisRecordKeys.groupName,
-                isEmpty(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName)
+                hasNone(groupName) ? NewRelicMetricDataRecord.DEFAULT_GROUP_NAME : groupName)
             .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
             .get();
     if (timeSeriesMLAnalysisRecord == null) {
@@ -264,9 +264,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
       String cvConfigId, String groupName, String transactionName, String metricName, String customThresholdRefId)
       throws UnsupportedEncodingException {
-    if (isNotEmpty(customThresholdRefId)) {
+    if (hasSome(customThresholdRefId)) {
       List<TimeSeriesMLTransactionThresholds> thresholdList = getCustomThreshold(customThresholdRefId);
-      if (isNotEmpty(thresholdList)) {
+      if (hasSome(thresholdList)) {
         for (TimeSeriesMLTransactionThresholds threshold : thresholdList) {
           if (threshold.getTransactionName().equals(transactionName) && threshold.getMetricName().equals(metricName)) {
             return threshold;
@@ -320,7 +320,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public boolean saveCustomThreshold(
       String serviceId, String cvConfigId, List<TimeSeriesMLTransactionThresholds> thresholds) {
-    if (isNotEmpty(thresholds)) {
+    if (hasSome(thresholds)) {
       validateCustomThresholdsBeforeSaving(thresholds);
       log.info("Saving custom threshold list for cvConfigId {} , serviceId {} : {}", cvConfigId, serviceId, thresholds);
       wingsPersistence.save(thresholds);
@@ -335,7 +335,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // For percentage deviation, check if it is between 0-100.
     // for anomalous, check if there are more than one with same txn, metric, criteria, values -> then fail.
 
-    if (isEmpty(thresholds)) {
+    if (hasNone(thresholds)) {
       return null;
     }
     Map<String, TimeSeriesMLTransactionThresholds> txnMetricThresholdMap = new HashMap<>();
@@ -416,7 +416,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   private void validateThresholdsForSameCriteria(List<Threshold> customThresholds) {
-    if (isEmpty(customThresholds)) {
+    if (hasNone(customThresholds)) {
       return;
     }
 
@@ -441,7 +441,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .filter(TimeSeriesMLTransactionThresholdKeys.transactionName, transactionName)
             .filter(TimeSeriesMLTransactionThresholdKeys.metricName, metricDefinition.getMetricName());
 
-    if (isNotEmpty(customThresholdRefId)) {
+    if (hasSome(customThresholdRefId)) {
       query = query.filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
     } else {
       query = query.filter(TimeSeriesMLTransactionThresholdKeys.serviceId, serviceId)
@@ -483,7 +483,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public boolean deleteCustomThreshold(List<String> thresholdIdsToBeDeleted) {
-    if (isNotEmpty(thresholdIdsToBeDeleted)) {
+    if (hasSome(thresholdIdsToBeDeleted)) {
       log.info("Deleting the custom thresholds with the IDs {}", thresholdIdsToBeDeleted);
       thresholdIdsToBeDeleted.forEach(
           thresholdId -> wingsPersistence.delete(TimeSeriesMLTransactionThresholds.class, thresholdId));
@@ -502,7 +502,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             .filter(TimeSeriesMLTransactionThresholdKeys.metricName,
                 URLDecoder.decode(metricName, StandardCharsets.UTF_8.name()));
 
-    if (isNotEmpty(customThresholdRefId)) {
+    if (hasSome(customThresholdRefId)) {
       thresholdsQuery =
           thresholdsQuery.filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, customThresholdRefId);
     } else {
@@ -514,9 +514,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       return wingsPersistence.delete(thresholdsQuery);
     }
     List<TimeSeriesMLTransactionThresholds> thresholds = thresholdsQuery.asList();
-    if (isNotEmpty(thresholds)) {
+    if (hasSome(thresholds)) {
       thresholds.forEach(threshold -> {
-        if (isNotEmpty(threshold.getThresholds().getCustomThresholds())) {
+        if (hasSome(threshold.getThresholds().getCustomThresholds())) {
           for (Threshold t : threshold.getThresholds().getCustomThresholds()) {
             if (t.getComparisonType() == thresholdComparisonType) {
               wingsPersistence.delete(threshold);
@@ -597,7 +597,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   private String getCustomThresholdRefIdForStateExecutionId(String stateExecutionId) {
-    if (isNotEmpty(stateExecutionId)) {
+    if (hasSome(stateExecutionId)) {
       AnalysisContext context = wingsPersistence.createQuery(AnalysisContext.class)
                                     .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
                                     .get();
@@ -695,9 +695,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
     }
 
-    if (newRelicMetricAnalysisRecord != null && isNotEmpty(newRelicMetricAnalysisRecord.getMetricAnalyses())) {
+    if (newRelicMetricAnalysisRecord != null && hasSome(newRelicMetricAnalysisRecord.getMetricAnalyses())) {
       for (NewRelicMetricAnalysis newRelicMetricAnalysis : newRelicMetricAnalysisRecord.getMetricAnalyses()) {
-        String tag = isEmpty(newRelicMetricAnalysis.getTag()) ? ContinuousVerificationServiceImpl.HARNESS_DEFAULT_TAG
+        String tag = hasNone(newRelicMetricAnalysis.getTag()) ? ContinuousVerificationServiceImpl.HARNESS_DEFAULT_TAG
                                                               : newRelicMetricAnalysis.getTag();
 
         newRelicMetricAnalysis.setTag(tag);
@@ -850,7 +850,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     analysisRecords.addAll(groupVsMetricAnalysisRecord.values());
 
     String accountId = appService.getAccountIdByAppId(appId);
-    if (isEmpty(analysisRecords)) {
+    if (hasNone(analysisRecords)) {
       analysisRecords.add(NewRelicMetricAnalysisRecord.builder()
                               .accountId(accountId)
                               .showTimeSeries(false)
@@ -918,7 +918,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         analysisRecord.setRiskLevel(RiskLevel.NA);
       }
 
-      if (analysisRecord.getStateType() == StateType.DYNA_TRACE && !isEmpty(analysisRecord.getMetricAnalyses())) {
+      if (analysisRecord.getStateType() == StateType.DYNA_TRACE && !hasNone(analysisRecord.getMetricAnalyses())) {
         for (NewRelicMetricAnalysis analysis : analysisRecord.getMetricAnalyses()) {
           String metricName = analysis.getMetricName();
           String[] split = metricName.split(":");
@@ -940,7 +940,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   private void populateProgress(Set<NewRelicMetricAnalysisRecord> analysisRecords) {
-    if (isEmpty(analysisRecords)) {
+    if (hasNone(analysisRecords)) {
       return;
     }
 

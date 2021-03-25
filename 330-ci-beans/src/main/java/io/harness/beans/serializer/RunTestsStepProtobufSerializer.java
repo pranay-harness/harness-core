@@ -1,6 +1,6 @@
 package io.harness.beans.serializer;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
@@ -60,7 +60,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
 
     List<String> output = RunTimeInputHandler.resolveListParameter(
         "OutputVariables", "RunTests", step.getIdentifier(), runTestsStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
+    if (hasSome(output)) {
       runTestsStepBuilder.addAllEnvVarOutputs(output);
     }
 

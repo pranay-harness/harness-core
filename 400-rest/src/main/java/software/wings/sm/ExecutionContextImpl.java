@@ -6,8 +6,8 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.TriggeredBy.triggeredBy;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -223,7 +223,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     injector.injectMembers(this);
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
-    if (isNotEmpty(stateExecutionInstance.getContextElements())) {
+    if (hasSome(stateExecutionInstance.getContextElements())) {
       stateExecutionInstance.getContextElements().forEach(contextElement -> {
         injector.injectMembers(contextElement);
         if (contextElement instanceof ExecutionContextAware) {
@@ -231,7 +231,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         }
       });
     }
-    if (isNotEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
+    if (hasSome(stateExecutionInstance.getExecutionEventAdvisors())) {
       stateExecutionInstance.getExecutionEventAdvisors().forEach(injector::injectMembers);
     }
   }
@@ -250,12 +250,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                            .build();
       map.put(rollbackArtifact ? ROLLBACK_ARTIFACT : ARTIFACT, artifact);
       String artifactFileName = null;
-      if (isNotEmpty(artifact.getArtifactFiles())) {
+      if (hasSome(artifact.getArtifactFiles())) {
         artifactFileName = artifact.getArtifactFiles().get(0).getName();
       } else if (artifact.getMetadata() != null) {
         artifactFileName = artifact.getFileName();
       }
-      if (isNotEmpty(artifactFileName)) {
+      if (hasSome(artifactFileName)) {
         map.put(rollbackArtifact ? ExpressionEvaluator.ROLLBACK_ARTIFACT_FILE_NAME_VARIABLE
                                  : ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE,
             artifactFileName);
@@ -447,7 +447,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     String accountId = workflowStandardParams.fetchRequiredApp().getAccountId();
     if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       List<ServiceArtifactElement> artifactElements = getArtifactElements();
-      if (isEmpty(artifactElements)) {
+      if (hasNone(artifactElements)) {
         return workflowStandardParams.getArtifacts();
       }
       List<Artifact> list = new ArrayList<>();
@@ -457,7 +457,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return list;
     } else {
       List<ServiceArtifactVariableElement> artifactVariableElements = getArtifactVariableElements();
-      if (isEmpty(artifactVariableElements)) {
+      if (hasNone(artifactVariableElements)) {
         return workflowStandardParams.getArtifacts();
       }
       List<Artifact> list = new ArrayList<>();
@@ -487,7 +487,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   private Optional<ServiceArtifactElement> getArtifactElement(String serviceId) {
     List<ServiceArtifactElement> artifactElementsList = getArtifactElements();
-    if (isEmpty(artifactElementsList)) {
+    if (hasNone(artifactElementsList)) {
       return Optional.empty();
     }
 
@@ -578,7 +578,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       case SERVICE:
         return artifactVariable.getEntityId().equals(serviceId);
       case ENVIRONMENT:
-        if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+        if (hasNone(artifactVariable.getOverriddenArtifactVariables())) {
           return true;
         }
         for (ArtifactVariable overriddenArtifactVariable : artifactVariable.getOverriddenArtifactVariables()) {
@@ -602,12 +602,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return map;
     }
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
-    if (isEmpty(artifactVariables)) {
+    if (hasNone(artifactVariables)) {
       return map;
     }
 
     Map<String, Artifact> artifactMapForPhase = getArtifactMapForPhase();
-    if (isEmpty(artifactMapForPhase)) {
+    if (hasNone(artifactMapForPhase)) {
       return map;
     }
 
@@ -817,7 +817,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(expressionProcessor.getPrefixObjectName(), expressionProcessor);
     }
 
-    if (isNotEmpty(normalizedExpressionMap)) {
+    if (hasSome(normalizedExpressionMap)) {
       log.info("The above code seems obsolete, but if you see me in the logs, it is not");
     }
 
@@ -864,7 +864,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
         variables.put(variableName, renderExpression(new String(serviceVariable.getValue())));
       } else if (Type.ARTIFACT != serviceVariable.getType()) {
-        if (isEmpty(serviceVariable.getAccountId())) {
+        if (hasNone(serviceVariable.getAccountId())) {
           Application app = getApp();
           notNullCheck("app", app);
           serviceVariable.setAccountId(app.getAccountId());
@@ -1006,7 +1006,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (stateExecutionData != null) {
       map = copyIfNeeded(map);
       map.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), stateExecutionData);
-      if (isNotEmpty(stateExecutionData.getTemplateVariable())) {
+      if (hasSome(stateExecutionData.getTemplateVariable())) {
         map = copyIfNeeded(map);
         map.putAll(stateExecutionData.getTemplateVariable());
       }
@@ -1113,7 +1113,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_VALUE);
 
     Map<String, Object> variables = new HashMap<>();
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       serviceVariables.forEach(serviceVariable -> {
         if (Type.ARTIFACT != serviceVariable.getType()) {
           String name = renderExpression(serviceVariable.getName());
@@ -1127,7 +1127,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-    if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
+    if (phaseElement != null && hasSome(phaseElement.getVariableOverrides())) {
       variables.putAll(phaseElement.getVariableOverrides().stream().collect(
           Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
@@ -1251,10 +1251,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
 
-      String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
-          ? pcfInfrastructureMapping.getRouteMaps().get(0)
-          : StringUtils.EMPTY;
-      String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
+      String route = hasSome(pcfInfrastructureMapping.getRouteMaps()) ? pcfInfrastructureMapping.getRouteMaps().get(0)
+                                                                      : StringUtils.EMPTY;
+      String tempRoute = hasSome(pcfInfrastructureMapping.getTempRouteMap())
           ? pcfInfrastructureMapping.getTempRouteMap().get(0)
           : StringUtils.EMPTY;
 
@@ -1418,7 +1417,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @VisibleForTesting
   InstanceInfoVariables getAccumulatedInstanceInfoVariables(List<SweepingOutput> sweepingOutputs) {
-    if (isEmpty(sweepingOutputs)) {
+    if (hasNone(sweepingOutputs)) {
       return InstanceInfoVariables.builder().build();
     }
     if (sweepingOutputs.size() == 1) {
@@ -1494,7 +1493,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     List<String> list = new ArrayList<>();
     Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
     Map<String, InstanceElement> hostNameToInstanceElementMap = new HashMap<>();
-    if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+    if (hasSome(instanceInfoVariables.getInstanceElements())) {
       instanceInfoVariables.getInstanceElements().forEach(
           instanceElement -> hostNameToInstanceElementMap.put(instanceElement.getHostName(), instanceElement));
       instanceInfoVariables.getInstanceDetails().forEach(
@@ -1551,7 +1550,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   public SweepingOutputFunctor fetchSweepingOutputFunctor() {
-    if (isEmpty(contextMap)) {
+    if (hasNone(contextMap)) {
       return null;
     }
 

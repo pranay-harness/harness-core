@@ -1,6 +1,6 @@
 package io.harness.functional.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -129,7 +129,7 @@ public class HelmHelper {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.listAppManifests(service.getAppId(), service.getUuid());
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       applicationManifestService.create(applicationManifest);
     } else {
       boolean found = false;

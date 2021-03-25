@@ -1,6 +1,6 @@
 package software.wings.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -104,7 +104,7 @@ public class YamlHelper {
 
     rr.setResponseMessages(yp.getResponseMessages());
 
-    if (isNotEmpty(yp.getYaml())) {
+    if (hasSome(yp.getYaml())) {
       rr.setResource(yp);
     }
 
@@ -120,7 +120,7 @@ public class YamlHelper {
 
     rr.setResponseMessages(yp.getResponseMessages());
 
-    if (isNotEmpty(yp.getYaml())) {
+    if (hasSome(yp.getYaml())) {
       rr.setResource(yp);
     }
 
@@ -135,7 +135,7 @@ public class YamlHelper {
 
     rr.setResponseMessages(yp.getResponseMessages());
 
-    if (isNotEmpty(yp.getYaml())) {
+    if (hasSome(yp.getYaml())) {
       rr.setResource(yp);
     }
 

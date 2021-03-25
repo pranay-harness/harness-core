@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
@@ -55,7 +55,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   public boolean isArtifactNeeded() {
     Set<String> serviceArtifactVariableNames = new HashSet<>();
     updateServiceArtifactVariableNames(serviceArtifactVariableNames);
-    return isNotEmpty(serviceArtifactVariableNames);
+    return hasSome(serviceArtifactVariableNames);
   }
 
   @SchemaIgnore

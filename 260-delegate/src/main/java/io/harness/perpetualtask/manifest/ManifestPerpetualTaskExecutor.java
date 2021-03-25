@@ -1,7 +1,8 @@
 package io.harness.perpetualtask.manifest;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.network.SafeHttpCall.executeWithExceptions;
 
@@ -109,7 +110,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
                                               .sorted(Comparator.comparing(HelmChart::getVersion).reversed())
                                               .collect(Collectors.toList());
     Set<String> toBeDeletedVersions = appManifestCache.getToBeDeletedArtifactKeys();
-    if (isEmpty(toBeDeletedVersions) && isEmpty(unpublishedVersions)) {
+    if (hasNone(toBeDeletedVersions) && hasNone(unpublishedVersions)) {
       log.info("No new manifest versions added or deleted to publish");
       return;
     }
@@ -152,7 +153,7 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
       String taskId) throws Exception {
     try {
       List<HelmChart> collectedManifests = manifestRepositoryService.collectManifests(params);
-      if (isEmpty(collectedManifests)) {
+      if (hasNone(collectedManifests)) {
         log.info("No manifests present for the repository");
         return;
       }

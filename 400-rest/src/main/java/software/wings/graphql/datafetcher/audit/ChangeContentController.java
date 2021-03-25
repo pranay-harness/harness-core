@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.audit;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -51,7 +51,7 @@ public class ChangeContentController {
             .filter(entityAuditRecord -> resourceId.equals(entityAuditRecord.getEntityId()))
             .collect(Collectors.toList());
     List<AuditHeaderYamlResponse> yamlList = getYamlsForEntityAuditRecords(changeSetId, filteredEntityAuditRecords);
-    if (isNotEmpty(yamlList)) {
+    if (hasSome(yamlList)) {
       addResponseToConnectionBuilder(yamlList, connectionBuilder);
       connectionBuilder.pageInfo(QLPageInfo.builder().hasMore(Boolean.FALSE).total(1).limit(1).offset(0).build());
     }
@@ -62,13 +62,13 @@ public class ChangeContentController {
     int limit = pageQueryParameters.getLimit();
     if (limit != 0) {
       List<EntityAuditRecord> entityAuditRecordsrecords = getEntityAuditRecordsForChangeSetId(changeSetId);
-      if (isEmpty(entityAuditRecordsrecords)) {
+      if (hasNone(entityAuditRecordsrecords)) {
         return;
       }
       int offset = pageQueryParameters.getOffset();
       List<AuditHeaderYamlResponse> yamlList =
           getYamlListForChangeSetId(changeSetId, entityAuditRecordsrecords, offset, limit);
-      if (isNotEmpty(yamlList)) {
+      if (hasSome(yamlList)) {
         addResponseToConnectionBuilder(yamlList, connectionBuilder);
         connectionBuilder.pageInfo(QLPageInfo.builder()
                                        .total(entityAuditRecordsrecords.size())
@@ -83,7 +83,7 @@ public class ChangeContentController {
   private void addResponseToConnectionBuilder(
       List<AuditHeaderYamlResponse> yamlList, QLChangeContentConnectionBuilder connectionBuilder) {
     List<QLChangeContent> list = populateChangeSetContent(yamlList);
-    if (isNotEmpty(list)) {
+    if (hasSome(list)) {
       connectionBuilder.nodes(list);
     }
   }
@@ -108,7 +108,7 @@ public class ChangeContentController {
    * @return list of EntityAuditRecord instances
    */
   private List<EntityAuditRecord> getEntityAuditRecordsForChangeSetId(@NotNull String changeSetId) {
-    if (isEmpty(changeSetId)) {
+    if (hasNone(changeSetId)) {
       throw new GraphQLException("changeSetId is needed.", WingsException.USER_SRE);
     }
 
@@ -118,7 +118,7 @@ public class ChangeContentController {
       throw new GraphQLException("changeSetId does not exist", WingsException.USER_SRE);
     }
 
-    if (isEmpty(header.getEntityAuditRecords())) {
+    if (hasNone(header.getEntityAuditRecords())) {
       return null;
     }
 
@@ -141,7 +141,7 @@ public class ChangeContentController {
                                                         .mapToObj(i -> entityAuditRecords.get(i))
                                                         .collect(Collectors.toList());
 
-    if (isEmpty(entityAuditRecordsSub)) {
+    if (hasNone(entityAuditRecordsSub)) {
       return null;
     }
 
@@ -163,7 +163,7 @@ public class ChangeContentController {
    */
   private List<AuditHeaderYamlResponse> getYamlsForEntityAuditRecords(
       String changeSetId, List<EntityAuditRecord> entityAuditRecords) {
-    if (isEmpty(entityAuditRecords)) {
+    if (hasNone(entityAuditRecords)) {
       return null;
     }
     List<AuditHeaderYamlResponse> yamls = new LinkedList<>();
@@ -175,13 +175,13 @@ public class ChangeContentController {
                        .map(entityAuditRecord -> entityAuditRecord.getEntityNewYamlRecordId())
                        .collect(Collectors.toSet()));
 
-    if (isNotEmpty(yamlIds)) {
+    if (hasSome(yamlIds)) {
       Query<EntityYamlRecord> query = wingsPersistence.createQuery(EntityYamlRecord.class).field("_id").in(yamlIds);
 
       Map<String, EntityYamlRecord> yamlIdToAuditHeaderYamlResponse = query.asList().stream().collect(
           Collectors.toMap(entityYamlRecord -> entityYamlRecord.getUuid(), entityYamlRecord -> entityYamlRecord));
 
-      if (isNotEmpty(yamlIdToAuditHeaderYamlResponse)) {
+      if (hasSome(yamlIdToAuditHeaderYamlResponse)) {
         entityAuditRecords.forEach(entityAuditRecord -> {
           EntityYamlRecord oldYamlRecord =
               yamlIdToAuditHeaderYamlResponse.get(entityAuditRecord.getEntityOldYamlRecordId());

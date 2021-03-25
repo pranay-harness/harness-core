@@ -1,10 +1,11 @@
 package io.harness.steps.http;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGTimeConversionHelper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpStepResponse;
@@ -67,7 +68,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
                                                                   .method(stepParameters.getMethod().getValue())
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
-    if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
+    if (hasSome(stepParameters.getHeaders())) {
       List<HttpHeaderConfig> headers = new ArrayList<>();
       stepParameters.getHeaders().keySet().forEach(
           key -> headers.add(HttpHeaderConfig.builder().key(key).value(stepParameters.getHeaders().get(key)).build()));
@@ -156,7 +157,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
 
     HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse.getHttpResponseCode());
     String assertion = (String) stepParameters.getAssertion().fetchFinalValue();
-    if (assertion == null || EmptyPredicate.isEmpty(assertion.trim())) {
+    if (assertion == null || hasNone(assertion.trim())) {
       return true;
     }
 

@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
@@ -32,11 +32,11 @@ public class AwsUtils {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
   public String getHostnameFromPrivateDnsName(String dnsName) {
-    return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
+    return hasSome(dnsName) ? dnsName.split("\\.")[0] : "";
   }
 
   public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
-    if (isEmpty(hostNameConvention)) {
+    if (hasNone(hostNameConvention)) {
       hostNameConvention = InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION;
     }
     return expressionEvaluator.substitute(hostNameConvention, context);
@@ -58,10 +58,10 @@ public class AwsUtils {
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("instance-state-name").withValues("running"));
     if (instanceFilter != null) {
-      if (isNotEmpty(instanceFilter.getVpcIds())) {
+      if (hasSome(instanceFilter.getVpcIds())) {
         filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
       }
-      if (isNotEmpty(instanceFilter.getTags())) {
+      if (hasSome(instanceFilter.getTags())) {
         Multimap<String, String> tags = ArrayListMultimap.create();
         instanceFilter.getTags().forEach(tag -> {
           if (!(ExpressionEvaluator.containsVariablePattern((String) tag.getKey())

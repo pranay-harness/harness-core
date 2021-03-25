@@ -5,8 +5,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
@@ -143,9 +143,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else {
       List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
       ExecutionResponse spawningExecutionResponse = super.execute(contextIntf);
-      if (isNotEmpty(spawningExecutionResponse.getStateExecutionInstances())) {
+      if (hasSome(spawningExecutionResponse.getStateExecutionInstances())) {
         for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstances()) {
-          if (isNotEmpty(rollbackRequiredParams)) {
+          if (hasSome(rollbackRequiredParams)) {
             rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
           }
         }
@@ -164,19 +164,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   }
 
   void populateInfraMapping(ExecutionContext context) {
-    if (isNotEmpty(context.fetchInfraMappingId())) {
+    if (hasSome(context.fetchInfraMappingId())) {
       return;
     }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
 
-    if (phaseElement != null && isNotEmpty(phaseElement.getInfraDefinitionId())) {
+    if (phaseElement != null && hasSome(phaseElement.getInfraDefinitionId())) {
       String infraDefinitionId = phaseElement.getInfraDefinitionId();
       String appId = context.getAppId();
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
       notNullCheck(String.format("Infrastructure Definition not found with id : [%s]", infraDefinitionId),
           infrastructureDefinition);
 
-      if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+      if (hasSome(infrastructureDefinition.getProvisionerId())) {
         InfrastructureProvisioner infrastructureProvisioner =
             infrastructureProvisionerService.get(appId, infrastructureDefinition.getProvisionerId());
 
@@ -443,7 +443,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                    .addFilter("artifactId", EXISTS)
                                    .build());
 
-      if (isNotEmpty(pageResponse)) {
+      if (hasSome(pageResponse)) {
         serviceInstanceArtifactParam.getInstanceArtifactMap().put(
             serviceInstanceId, pageResponse.getResponse().get(0).getArtifactId());
       }
@@ -528,7 +528,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       if (notifiedResponseData instanceof ElementNotifyResponseData) {
         ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
         List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-        if (isNotEmpty(elements)) {
+        if (hasSome(elements)) {
           executionResponseBuilder.contextElements(Lists.newArrayList(elements));
         }
       }
@@ -549,7 +549,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void handleElementNotifyResponseData(PhaseElement phaseElement, Map<String, ResponseData> response,
       ExecutionResponseBuilder executionResponseBuilder) {
-    if (isEmpty(response)) {
+    if (hasNone(response)) {
       throw new InvalidRequestException("Missing response");
     }
     DelegateResponseData notifiedResponseData = (DelegateResponseData) response.values().iterator().next();
@@ -566,7 +566,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return;
     }
 
-    if (isEmpty(elementNotifyResponseData.getContextElements())) {
+    if (hasNone(elementNotifyResponseData.getContextElements())) {
       return;
     }
 
@@ -646,7 +646,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void addContextElementsIfPresent(ExecutionResponseBuilder executionResponseBuilder, boolean addNotifyElement,
       List<ContextElement> contextElements) {
-    if (isNotEmpty(contextElements)) {
+    if (hasSome(contextElements)) {
       executionResponseBuilder.contextElements(contextElements);
       if (addNotifyElement) {
         executionResponseBuilder.notifyElements(contextElements);
@@ -657,7 +657,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @VisibleForTesting
   ContextElement getSpotinstNotifiedContextElement(ElementNotifyResponseData elementNotifyResponseData) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return null;
     }
     Optional<ContextElement> elementOptional = elements.stream()
@@ -673,7 +673,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private ContextElement getAwsAmiNotifiedContextElement(ElementNotifyResponseData elementNotifyResponseData) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return null;
     }
     Optional<ContextElement> elementOptional = elements.stream()
@@ -687,7 +687,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void addProvisionerElements(
       ElementNotifyResponseData elementNotifyResponseData, List<ContextElement> contextElements) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return;
     }
     contextElements.addAll(elements.stream().filter(this::isProvisionerElement).collect(toList()));
@@ -701,7 +701,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private ContextElement fetchNotifiedContextElement(
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return null;
     }
     Optional<ContextElement> elementOptional = elements.stream().filter(cls::isInstance).findFirst();

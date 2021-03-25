@@ -1,6 +1,6 @@
 package software.wings.beans.alert.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.alert.AlertData;
 
@@ -92,7 +92,7 @@ public class ContinuousVerificationAlertData implements AlertData {
     switch (mlAnalysisType) {
       case TIME_SERIES:
         sb.append("\nRisk Score: ").append(riskScore);
-        if (isNotEmpty(highRiskTxns)) {
+        if (hasSome(highRiskTxns)) {
           sb.append("\nBelow are the top concerning metrics");
           highRiskTxns.forEach(highRiskTxn
               -> sb.append("\nMetric: ")

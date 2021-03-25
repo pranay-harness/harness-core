@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.steps.io;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.UnitProgress;
@@ -38,7 +38,7 @@ public class StepResponse {
 
   public Map<String, StepOutcome> stepOutcomeMap() {
     Map<String, StepOutcome> stepOutcomeMap = new HashMap<>();
-    if (isEmpty(stepOutcomes)) {
+    if (hasNone(stepOutcomes)) {
       return stepOutcomeMap;
     }
     for (StepOutcome stepOutcome : stepOutcomes) {

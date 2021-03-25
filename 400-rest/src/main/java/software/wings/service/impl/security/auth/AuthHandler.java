@@ -3,8 +3,8 @@ package software.wings.service.impl.security.auth;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 
@@ -221,12 +221,12 @@ public class AuthHandler {
 
     userGroups.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-      if (isEmpty(appPermissions)) {
+      if (hasNone(appPermissions)) {
         return;
       }
 
       appPermissions.forEach(appPermission -> {
-        if (isEmpty(appPermission.getActions())) {
+        if (hasNone(appPermission.getActions())) {
           log.error("Actions empty for apps: {}", appPermission.getAppFilter());
           return;
         }
@@ -275,7 +275,7 @@ public class AuthHandler {
 
     Set<Action> actions = permissionMap.get(entityId);
 
-    if (isEmpty(actions)) {
+    if (hasNone(actions)) {
       actions = new HashSet<>();
       permissionMap.put(entityId, actions);
     }
@@ -293,7 +293,7 @@ public class AuthHandler {
     Map<Action, Set<String>> finalPermissionMap = permissionMap;
     actionSet.forEach(action -> {
       Set<String> existingEntityIdSet = finalPermissionMap.get(action);
-      if (isEmpty(existingEntityIdSet)) {
+      if (hasNone(existingEntityIdSet)) {
         existingEntityIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingEntityIdSet);
       }
@@ -311,7 +311,7 @@ public class AuthHandler {
     Map<Action, Set<String>> finalPermissionMap = permissionMap;
     pipelineIdActionMap.forEach((pipelineId, action) -> {
       Set<String> existingPipelineIdSet = finalPermissionMap.get(action);
-      if (isEmpty(existingPipelineIdSet)) {
+      if (hasNone(existingPipelineIdSet)) {
         existingPipelineIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingPipelineIdSet);
       }
@@ -329,7 +329,7 @@ public class AuthHandler {
     Map<Action, Set<EnvInfo>> finalPermissionMap = permissionMap;
     actionSet.forEach(action -> {
       Set<EnvInfo> existingEnvIdSet = finalPermissionMap.get(action);
-      if (isEmpty(existingEnvIdSet)) {
+      if (hasNone(existingEnvIdSet)) {
         existingEnvIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingEnvIdSet);
       }
@@ -359,13 +359,13 @@ public class AuthHandler {
             appPermissionSummary.setCanCreateService(true);
           }
 
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
 
           Set<String> entityIds = getServiceIdsByFilter(
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
-          if (isEmpty(entityIds)) {
+          if (hasNone(entityIds)) {
             break;
           }
           Map<Action, Set<String>> actionEntityIdMap =
@@ -378,12 +378,12 @@ public class AuthHandler {
             appPermissionSummary.setCanCreateProvisioner(true);
           }
 
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
           Set<String> entityIds = getProvisionerIdsByFilter(
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
-          if (isEmpty(entityIds)) {
+          if (hasNone(entityIds)) {
             break;
           }
           Map<Action, Set<String>> actionEntityIdMap =
@@ -399,12 +399,12 @@ public class AuthHandler {
             finalAppPermissionSummary.setEnvCreatePermissionsForEnvTypes(environmentTypeSet);
           }
 
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
           Set<EnvInfo> envInfoSet = getEnvsInfoByFilter(
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (EnvFilter) entityFilter);
-          if (isEmpty(envInfoSet)) {
+          if (hasNone(envInfoSet)) {
             break;
           }
 
@@ -425,14 +425,14 @@ public class AuthHandler {
             if (!finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
               WorkflowFilter workflowFilter = getDefaultWorkflowFilterIfNull((WorkflowFilter) entityFilter);
               Set<String> filterTypes = workflowFilter.getFilterTypes();
-              if (isNotEmpty(filterTypes)) {
+              if (hasSome(filterTypes)) {
                 boolean hasTemplateFilterType = filterTypes.contains(WorkflowFilter.FilterType.TEMPLATES);
                 finalAppPermissionSummary.setCanCreateTemplatizedWorkflow(hasTemplateFilterType);
               }
             }
           }
 
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
 
@@ -449,7 +449,7 @@ public class AuthHandler {
           Set<String> entityIds = getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (WorkflowFilter) entityFilter);
 
-          if (isEmpty(entityIds)) {
+          if (hasNone(entityIds)) {
             break;
           }
 
@@ -459,13 +459,13 @@ public class AuthHandler {
           break;
         }
         case DEPLOYMENT: {
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
           Set<String> entityIds = getDeploymentIdsByFilter(permissionTypeAppIdEntityMap.get(WORKFLOW).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, appId);
 
-          if (isEmpty(entityIds)) {
+          if (hasNone(entityIds)) {
             break;
           }
 
@@ -495,7 +495,7 @@ public class AuthHandler {
   }
 
   private Set<String> addToExistingEntityIdSet(Set<String> existingEntityIdSet, Set<String> entityIdSet) {
-    if (isEmpty(entityIdSet)) {
+    if (hasNone(entityIdSet)) {
       return existingEntityIdSet;
     }
 
@@ -511,14 +511,14 @@ public class AuthHandler {
       String appId, Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap) {
     // Try to create a workflow cache using permissionTypeAppIdEntityMap.
     Map<String, Workflow> workflowCache = new HashMap<>();
-    if (isEmpty(permissionTypeAppIdEntityMap)) {
+    if (hasNone(permissionTypeAppIdEntityMap)) {
       return workflowCache;
     }
 
     Map<String, List<Base>> appIdWorkflowsMap = permissionTypeAppIdEntityMap.get(WORKFLOW);
-    if (isNotEmpty(appIdWorkflowsMap)) {
+    if (hasSome(appIdWorkflowsMap)) {
       List<Base> workflowList = appIdWorkflowsMap.get(appId);
-      if (isNotEmpty(workflowList)) {
+      if (hasSome(workflowList)) {
         for (Base entity : workflowList) {
           if (!(entity instanceof Workflow)) {
             continue;
@@ -562,7 +562,7 @@ public class AuthHandler {
             finalAppPermissionSummary.setPipelineCreatePermissionsForEnvs(updatedEnvIdSet);
           }
 
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
 
@@ -585,7 +585,7 @@ public class AuthHandler {
           break;
 
         case DEPLOYMENT:
-          if (isEmpty(entityActions)) {
+          if (hasNone(entityActions)) {
             break;
           }
 
@@ -712,13 +712,13 @@ public class AuthHandler {
 
     userGroups.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-      if (isEmpty(appPermissions)) {
+      if (hasNone(appPermissions)) {
         return;
       }
 
       appPermissions.forEach(appPermission -> {
         Set<String> appIdSet = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
-        if (isEmpty(appIdSet)) {
+        if (hasNone(appIdSet)) {
           return;
         }
         PermissionType permissionType = appPermission.getPermissionType();
@@ -733,7 +733,7 @@ public class AuthHandler {
     });
 
     Set<String> appIdSetForWorkflowPermission = permissionTypeAppIdSetMap.get(WORKFLOW);
-    if (isEmpty(appIdSetForWorkflowPermission)) {
+    if (hasNone(appIdSetForWorkflowPermission)) {
       appIdSetForWorkflowPermission = new HashSet<>();
       permissionTypeAppIdSetMap.put(WORKFLOW, appIdSetForWorkflowPermission);
     }
@@ -742,7 +742,7 @@ public class AuthHandler {
     appIdSetForWorkflowPermission.addAll(permissionTypeAppIdSetMap.get(PIPELINE));
 
     Set<String> appIdSetForEnvPermission = permissionTypeAppIdSetMap.get(ENV);
-    if (isEmpty(appIdSetForEnvPermission)) {
+    if (hasNone(appIdSetForEnvPermission)) {
       appIdSetForEnvPermission = new HashSet<>();
       permissionTypeAppIdSetMap.put(ENV, appIdSetForEnvPermission);
     }
@@ -859,9 +859,9 @@ public class AuthHandler {
           entityPermissions = appPermissionSummary.getProvisionerPermissions();
         } else if (permissionType == ENV) {
           Map<Action, Set<EnvInfo>> envEntityPermissions = appPermissionSummary.getEnvPermissions();
-          if (isNotEmpty(envEntityPermissions)) {
+          if (hasSome(envEntityPermissions)) {
             Set<EnvInfo> envInfoSet = envEntityPermissions.get(action);
-            if (isNotEmpty(envInfoSet)) {
+            if (hasSome(envInfoSet)) {
               envInfoSet.forEach(envInfo -> entityIds.add(envInfo.getEnvId()));
             }
           }
@@ -874,12 +874,12 @@ public class AuthHandler {
           entityPermissions = appPermissionSummary.getDeploymentPermissions();
         }
 
-        if (isEmpty(entityPermissions)) {
+        if (hasNone(entityPermissions)) {
           continue;
         }
 
         Set<String> entityIdCollection = entityPermissions.get(action);
-        if (isNotEmpty(entityIdCollection)) {
+        if (hasSome(entityIdCollection)) {
           entityIds.addAll(entityIdCollection);
         }
       }
@@ -944,7 +944,7 @@ public class AuthHandler {
   }
 
   private Set<String> getServiceIdsByFilter(List<Base> services, GenericEntityFilter serviceFilter) {
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return new HashSet<>();
     }
     if (serviceFilter == null) {
@@ -967,7 +967,7 @@ public class AuthHandler {
   }
 
   private Set<String> getProvisionerIdsByFilter(List<Base> provisioners, GenericEntityFilter provisionerFilter) {
-    if (isEmpty(provisioners)) {
+    if (hasNone(provisioners)) {
       return new HashSet<>();
     }
     if (provisionerFilter == null) {
@@ -990,7 +990,7 @@ public class AuthHandler {
   }
 
   private EnvFilter getDefaultEnvFilterIfNull(EnvFilter envFilter) {
-    if (envFilter == null || isEmpty(envFilter.getFilterTypes())) {
+    if (envFilter == null || hasNone(envFilter.getFilterTypes())) {
       envFilter = new EnvFilter();
       envFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD));
     }
@@ -1071,7 +1071,7 @@ public class AuthHandler {
   }
 
   private WorkflowFilter getDefaultWorkflowFilterIfNull(WorkflowFilter workflowFilter) {
-    if (workflowFilter == null || isEmpty(workflowFilter.getFilterTypes())) {
+    if (workflowFilter == null || hasNone(workflowFilter.getFilterTypes())) {
       workflowFilter = new WorkflowFilter();
       workflowFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD, WorkflowFilter.FilterType.TEMPLATES));
     }
@@ -1195,13 +1195,13 @@ public class AuthHandler {
 
     // Return if no new workflow ids found. Cache has all the needed workflows.
     Map<String, Workflow> finalWorkflowCache = (workflowCache == null) ? new HashMap<>() : workflowCache;
-    if (isEmpty(newWorkflowIds)) {
+    if (hasNone(newWorkflowIds)) {
       return finalWorkflowCache;
     }
 
     // Fetch all the workflows in batch.
     List<Workflow> workflows = workflowService.listWorkflowsWithoutOrchestration(newWorkflowIds);
-    if (isEmpty(workflows)) {
+    if (hasNone(workflows)) {
       return finalWorkflowCache;
     }
 
@@ -1216,12 +1216,12 @@ public class AuthHandler {
       EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission,
       Map<String, Workflow> workflowCache) {
     Multimap<String, Action> pipelineActionMap = HashMultimap.create();
-    if (isEmpty(pipelines)) {
+    if (hasNone(pipelines)) {
       return pipelineActionMap;
     }
 
     Set<String> envIds;
-    if (isNotEmpty(environments)) {
+    if (hasSome(environments)) {
       envIds = getEnvIdsByFilter(environments, envFilter);
       envIds.forEach(envId -> envActionMap.putAll(envId, entityActionsFromCurrentPermission));
     } else {
@@ -1266,7 +1266,7 @@ public class AuthHandler {
   }
 
   public boolean checkIfPipelineHasOnlyGivenEnvs(Pipeline pipeline, Set<String> allowedEnvIds) {
-    if (isEmpty(pipeline.getPipelineStages())) {
+    if (hasNone(pipeline.getPipelineStages())) {
       return true;
     }
 
@@ -1281,7 +1281,7 @@ public class AuthHandler {
                    return pair.getRight();
                  }
 
-                 return isNotEmpty(allowedEnvIds) && allowedEnvIds.contains(envId);
+                 return hasSome(allowedEnvIds) && allowedEnvIds.contains(envId);
                }));
   }
 
@@ -1297,7 +1297,7 @@ public class AuthHandler {
     }
 
     String envId = resolveEnvId(appId, pipelineStageElement, workflowCache);
-    if (envId == null || (pipelineStageElement.checkDisableAssertion() && isEmpty(envId))
+    if (envId == null || (pipelineStageElement.checkDisableAssertion() && hasNone(envId))
         || ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
       return ImmutablePair.of(null, Boolean.TRUE);
     }
@@ -1335,7 +1335,7 @@ public class AuthHandler {
 
   private boolean hasEnvSelectedType(EnvFilter envFilter) {
     Set<String> filterTypes = envFilter.getFilterTypes();
-    if (isEmpty(filterTypes)) {
+    if (hasNone(filterTypes)) {
       return false;
     }
 
@@ -1385,7 +1385,7 @@ public class AuthHandler {
    */
   private Map<String, Set<Action>> convertActionEntityIdMapToEntityActionMap(Map<Action, Set<String>> fromMap) {
     Map<String, Set<Action>> toMap = new HashMap<>();
-    if (isEmpty(fromMap)) {
+    if (hasNone(fromMap)) {
       return null;
     }
 
@@ -1407,7 +1407,7 @@ public class AuthHandler {
 
   private Map<String, Set<Action>> convertActionEnvMapToEnvActionMap(Map<Action, Set<EnvInfo>> fromMap) {
     Map<String, Set<Action>> toMap = new HashMap<>();
-    if (isEmpty(fromMap)) {
+    if (hasNone(fromMap)) {
       return toMap;
     }
 
@@ -1612,7 +1612,7 @@ public class AuthHandler {
 
       List<String> memberIds = userGroup.getMemberIds();
       boolean userMemberOfGroup;
-      if (isEmpty(memberIds)) {
+      if (hasNone(memberIds)) {
         userMemberOfGroup = false;
       } else {
         userMemberOfGroup = memberIds.contains(user.getUuid());

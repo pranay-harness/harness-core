@@ -1,6 +1,6 @@
 package io.harness.ccm.billing;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
 import static java.lang.String.format;
@@ -123,7 +123,7 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
   // read the credential path from env variables
   public static ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
     String googleCredentialsPath = System.getenv(googleCredentialPathSystemEnv);
-    checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
+    checkFalse(hasNone(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
     ServiceAccountCredentials credentials = null;
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {

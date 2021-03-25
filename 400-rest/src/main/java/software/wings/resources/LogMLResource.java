@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.beans.FeatureName;
@@ -67,7 +67,7 @@ public class LogMLResource {
   @ExceptionMetered
   public RestResponse<Boolean> createUserFeedback(
       @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) {
-    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+    if (!hasNone(feedback.getLogMLFeedbackId())) {
       throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
     }
     return new RestResponse<>(analysisService.saveFeedback(feedback, stateType));
@@ -121,7 +121,7 @@ public class LogMLResource {
   @ExceptionMetered
   public RestResponse<Boolean> create24x7UserFeedback(
       @QueryParam("accountId") String accountId, @QueryParam("cvConfigId") String cvConfigId, LogMLFeedback feedback) {
-    if (!isEmpty(feedback.getLogMLFeedbackId())) {
+    if (!hasNone(feedback.getLogMLFeedbackId())) {
       throw new WingsException("Feedback id should not be set in POST call. to update feedback use PUT", USER);
     }
     return new RestResponse<>(analysisService.save24x7Feedback(feedback, cvConfigId));

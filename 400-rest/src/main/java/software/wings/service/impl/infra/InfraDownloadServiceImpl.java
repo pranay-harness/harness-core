@@ -1,6 +1,6 @@
 package software.wings.service.impl.infra;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.nio.charset.Charset.defaultCharset;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -63,7 +63,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
             @Override
             public AccessTokenBean load(String key) {
               String serviceAccountJson = getServiceAccountJson(key);
-              if (isEmpty(serviceAccountJson)) {
+              if (hasNone(serviceAccountJson)) {
                 throw new InvalidInfraException("No logging service account available");
               }
 
@@ -90,7 +90,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
 
   @Override
   public String getDownloadUrlForDelegate(String version, String envString, String accountId) {
-    if (isEmpty(envString)) {
+    if (hasNone(envString)) {
       envString = getEnv();
     }
     if ("local".equals(envString)) {
@@ -118,7 +118,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
 
   @Override
   public String getDownloadUrlForWatcher(String version, String envString, String accountId) {
-    if (isEmpty(envString)) {
+    if (hasNone(envString)) {
       envString = getEnv();
     }
     if ("local".equals(envString)) {
@@ -189,7 +189,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     }
 
     String serviceAccountPath = sysenv.get(serviceAccountEnvVarName);
-    if (isEmpty(serviceAccountPath)) {
+    if (hasNone(serviceAccountPath)) {
       String msg = String.format(
           "Environment variable [%s] containing path to the service account not found", serviceAccountEnvVarName);
       log.error(msg);

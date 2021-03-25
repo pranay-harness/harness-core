@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
@@ -43,7 +43,7 @@ public final class WorkflowAndPipelineMigrationUtils {
                                                            .addFilter(WorkflowKeys.accountId, EQ, accountId)
                                                            .build())
                                         .getResponse();
-      if (!isEmpty(newWorkflows)) {
+      if (!hasNone(newWorkflows)) {
         workflows.addAll(newWorkflows);
       }
     }
@@ -66,7 +66,7 @@ public final class WorkflowAndPipelineMigrationUtils {
                                                            .build(),
                                             true, 0, false, null)
                                         .getResponse();
-      if (!isEmpty(newPipelines)) {
+      if (!hasNone(newPipelines)) {
         pipelines.addAll(newPipelines);
       }
     }

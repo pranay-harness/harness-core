@@ -1,7 +1,7 @@
 package io.harness.git;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.ADMIN;
@@ -27,7 +27,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
@@ -189,7 +188,7 @@ public class GitClientV2Impl implements GitClientV2 {
     CloneCommand cloneCommand = (CloneCommand) getAuthConfiguredCommand(Git.cloneRepository(), request);
     try (Git git = cloneCommand.setURI(request.getRepoUrl())
                        .setDirectory(new File(gitRepoDirectory))
-                       .setBranch(isEmpty(request.getBranch()) ? null : request.getBranch())
+                       .setBranch(hasNone(request.getBranch()) ? null : request.getBranch())
                        // if set to <code>true</code> no branch will be checked out, after the clone.
                        // This enhances performance of the clone command when there is no need for a checked out branch.
                        .setNoCheckout(noCheckout)
@@ -204,7 +203,7 @@ public class GitClientV2Impl implements GitClientV2 {
   private synchronized void checkout(GitBaseRequest request) {
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(request)))) {
       try {
-        if (isNotEmpty(request.getBranch())) {
+        if (hasSome(request.getBranch())) {
           git.checkout()
               .setCreateBranch(true)
               .setName(request.getBranch())
@@ -226,7 +225,7 @@ public class GitClientV2Impl implements GitClientV2 {
     } catch (IOException | GitAPIException ex) {
       log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
       throw new YamlException(format("Unable to checkout given reference: %s",
-                                  isEmpty(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
+                                  hasNone(request.getCommitId()) ? request.getBranch() : request.getCommitId()),
           USER);
     }
   }
@@ -596,7 +595,7 @@ public class GitClientV2Impl implements GitClientV2 {
 
   @VisibleForTesting
   void ensureLastProcessedCommitIsHead(boolean pushOnlyIfHeadSeen, String lastProcessedCommit, Git git) {
-    if (!pushOnlyIfHeadSeen || isEmpty(lastProcessedCommit)) {
+    if (!pushOnlyIfHeadSeen || hasNone(lastProcessedCommit)) {
       return;
     }
     String headCommit = getHeadCommit(git);
@@ -613,7 +612,7 @@ public class GitClientV2Impl implements GitClientV2 {
     We do not need to specifically git add every added/modified file. git add . will take care
     of this
      */
-    if (isNotEmpty(filesToAdd)) {
+    if (hasSome(filesToAdd)) {
       try {
         git.add().addFilepattern(".").call();
       } catch (GitAPIException ex) {
@@ -757,11 +756,11 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   private void validateRequiredArgsForFilesBetweenCommit(String oldCommitId, String newCommitId) {
-    if (isEmpty(oldCommitId)) {
+    if (hasNone(oldCommitId)) {
       throw new YamlException("Old commit id can not be empty", USER_ADMIN);
     }
 
-    if (isEmpty(newCommitId)) {
+    if (hasNone(newCommitId)) {
       throw new YamlException("New commit id can not be empty", USER_ADMIN);
     }
   }
@@ -809,7 +808,7 @@ public class GitClientV2Impl implements GitClientV2 {
   public FetchFilesResult fetchFilesBetweenCommits(FetchFilesBwCommitsRequest request) {
     String gitConnectorId = request.getConnectorId();
     validateRequiredArgsForFilesBetweenCommit(request.getOldCommitId(), request.getNewCommitId());
-    if (!isEmpty(request.getBranch())) {
+    if (!hasNone(request.getBranch())) {
       request.setBranch(StringUtils.EMPTY);
     }
 
@@ -888,7 +887,7 @@ public class GitClientV2Impl implements GitClientV2 {
         List<GitFile> gitFiles = getFilteredGitFiles(request);
         resetWorkingDir(request);
 
-        if (isNotEmpty(gitFiles)) {
+        if (hasSome(gitFiles)) {
           gitFiles.forEach(gitFile -> log.info("File fetched : " + gitFile.getFilePath()));
         }
 
@@ -951,7 +950,7 @@ public class GitClientV2Impl implements GitClientV2 {
   @VisibleForTesting
   Predicate<Path> matchingFilesExtensions(List<String> fileExtensions) {
     return path -> {
-      if (isEmpty(fileExtensions)) {
+      if (hasNone(fileExtensions)) {
         return true;
       } else {
         for (String fileExtension : fileExtensions) {
@@ -1162,11 +1161,11 @@ public class GitClientV2Impl implements GitClientV2 {
    * @throws InvalidRequestException for required args with message
    */
   private void validateRequiredArgs(FetchFilesByPathRequest request) {
-    if (isEmpty(request.getFilePaths())) {
+    if (hasNone(request.getFilePaths())) {
       throw new InvalidRequestException("FilePaths can not be empty", USER);
     }
 
-    if (isEmpty(request.getBranch()) && isEmpty(request.getCommitId())) {
+    if (hasNone(request.getBranch()) && hasNone(request.getCommitId())) {
       throw new InvalidRequestException("No refs provided to checkout", USER);
     }
   }
@@ -1175,9 +1174,9 @@ public class GitClientV2Impl implements GitClientV2 {
   TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitBaseRequest gitBaseRequest) {
     if (gitBaseRequest.getAuthRequest().getAuthType() == AuthInfo.AuthType.HTTP_PASSWORD) {
       UsernamePasswordAuthRequest authRequest = (UsernamePasswordAuthRequest) gitBaseRequest.getAuthRequest();
-      Preconditions.checkState(EmptyPredicate.isNotEmpty(authRequest.getUsername()),
+      Preconditions.checkState(hasSome(authRequest.getUsername()),
           "The user is null in git config for the git connector " + gitBaseRequest.getConnectorId());
-      Preconditions.checkState(EmptyPredicate.isNotEmpty(authRequest.getPassword()),
+      Preconditions.checkState(hasSome(authRequest.getPassword()),
           "The password is null in git config for the git connector " + gitBaseRequest.getConnectorId());
       gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(
           authRequest.getUsername(), authRequest.getPassword()));

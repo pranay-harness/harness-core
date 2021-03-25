@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
@@ -148,7 +148,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               "Your license type does not support running this verification. Skipping Analysis");
         }
 
-        if (!isEmpty(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
+        if (!hasNone(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
           return generateAnalysisResponse(
               analysisContext, ExecutionStatus.SUCCESS, "Time duration cannot be more than 4 hours. Skipping Analysis");
         }
@@ -177,7 +177,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
-        if (isEmpty(lastExecutionNodes)) {
+        if (hasNone(lastExecutionNodes)) {
           if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
             getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
             return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
@@ -205,7 +205,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
               analysisContext.getAppId(), analysisContext.getWorkflowId(), workflowStandardParams.getEnv().getUuid(),
               analysisContext.getServiceId());
-          if (isEmpty(baselineWorkflowExecutionId)) {
+          if (hasNone(baselineWorkflowExecutionId)) {
             responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
             getLogger().info("{}", responseMessage);
             baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
@@ -397,7 +397,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       generateAnalysisResponse(analysisContext, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
     }
 
-    if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
+    if (hasSome(analysisContext.getPredictiveCvConfigId())) {
       getLogger().info("disabling the predictive cv config {} state {}", analysisContext.getPredictiveCvConfigId(),
           analysisContext.getStateExecutionId());
       wingsPersistence.updateField(
@@ -486,7 +486,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       case STACK_DRIVER_LOG:
         return this.getHostnameField(context);
       case SPLUNKV2:
-        if (isEmpty(hostnameField)) {
+        if (hasNone(hostnameField)) {
           return "host";
         }
         return getResolvedFieldValue(context, AbstractAnalysisStateKeys.hostnameField, hostnameField);

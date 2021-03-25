@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static io.harness.validation.Validator.notNullCheck;
@@ -123,7 +123,7 @@ public class ContainerServiceImpl implements ContainerService {
       log.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams, isInstanceSync);
       notNullCheck("KubernetesConfig", kubernetesConfig);
-      if (isNotEmpty(containerServiceName)) {
+      if (hasSome(containerServiceName)) {
         HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, containerServiceName);
         if (controller != null) {
           log.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
@@ -138,7 +138,7 @@ public class ContainerServiceImpl implements ContainerService {
           List<Pod> pods = kubernetesContainerService.getPods(kubernetesConfig, labels);
           log.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0, containerServiceName,
               accountId);
-          if (isEmpty(pods)) {
+          if (hasNone(pods)) {
             return result;
           }
 
@@ -162,7 +162,7 @@ public class ContainerServiceImpl implements ContainerService {
           log.info("Could not get controller {} for account {}", containerServiceName, accountId);
         }
       } else {
-        if (isEmpty(containerServiceParams.getReleaseName())) {
+        if (hasNone(containerServiceParams.getReleaseName())) {
           return Collections.emptyList();
         }
         final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig,
@@ -252,7 +252,7 @@ public class ContainerServiceImpl implements ContainerService {
               .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
               .collect(toList());
 
-      if (isNotEmpty(controllers)) {
+      if (hasSome(controllers)) {
         return controllers.stream().map(controller -> controller.getMetadata().getName()).collect(Collectors.toSet());
       }
     }

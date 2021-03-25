@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.isEmptyCustomExpression;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
@@ -48,7 +48,7 @@ public class WorkflowYAMLHelper {
 
   public String getWorkflowVariableValueBean(String accountId, String envId, String appId, String entityType,
       String variableValue, boolean skipEmpty, Variable variable) {
-    if (entityType == null || (skipEmpty && isEmpty(variableValue))
+    if (entityType == null || (skipEmpty && hasNone(variableValue))
         || (matchesVariablePattern(variableValue) && (!isEmptyCustomExpression(variableValue)))) {
       return variableValue;
     }
@@ -108,7 +108,7 @@ public class WorkflowYAMLHelper {
 
   public String getWorkflowVariableValueYaml(
       String appId, String entryValue, EntityType entityType, boolean skipEmpty) {
-    if (entityType == null || (skipEmpty && isEmpty(entryValue)) || matchesVariablePattern(entryValue)) {
+    if (entityType == null || (skipEmpty && hasNone(entryValue)) || matchesVariablePattern(entryValue)) {
       return entryValue;
     }
 

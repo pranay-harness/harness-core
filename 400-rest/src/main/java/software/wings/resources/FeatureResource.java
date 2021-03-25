@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -35,7 +35,7 @@ public class FeatureResource {
   @Timed
   public RestResponse<FeaturesUsageComplianceReport> getFeaturesUsageComplianceReport(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("targetAccountType") String targetAccountType) {
-    FeaturesUsageComplianceReport report = isEmpty(targetAccountType)
+    FeaturesUsageComplianceReport report = hasNone(targetAccountType)
         ? featureService.getFeaturesUsageComplianceReport(accountId)
         : featureService.getFeaturesUsageComplianceReport(accountId, targetAccountType);
 

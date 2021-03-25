@@ -1,6 +1,6 @@
 package io.harness.shell;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 
@@ -39,7 +39,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
     File workingDirectory;
 
     UUID uuid = UUID.randomUUID();
-    if (isEmpty(shellExecutionRequest.getWorkingDirectory())) {
+    if (hasNone(shellExecutionRequest.getWorkingDirectory())) {
       String directoryPath = defaultParentWorkingDirectory + uuid.toString();
       try {
         createDirectoryIfDoesNotExist(directoryPath);

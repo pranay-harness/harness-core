@@ -1,7 +1,7 @@
 package software.wings.service.impl.apm;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -74,7 +74,7 @@ public class MLServiceUtils {
       contextBuilder = contextBuilder.stateExecutionData(stateExecutionData);
     }
 
-    String hostName = isEmpty(nodeData.getHostExpression())
+    String hostName = hasNone(nodeData.getHostExpression())
         ? nodeData.getInstanceName()
         : executionContext.renderExpression(nodeData.getHostExpression(), contextBuilder.build());
 

@@ -1,6 +1,6 @@
 package io.harness.shell;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.INVALID_EXECUTION_ID;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -85,7 +85,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
   @Inject
   public ScriptSshExecutor(LogCallback logCallback, boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
     super(logCallback, shouldSaveExecutionLogs);
-    if (isEmpty(((SshSessionConfig) config).getExecutionId())) {
+    if (hasNone(((SshSessionConfig) config).getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }
     this.config = (SshSessionConfig) config;

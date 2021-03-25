@@ -1,6 +1,6 @@
 package io.harness.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
@@ -306,7 +306,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
 
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
-    if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
+    if (hasNone(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
       ImmutableMap.Builder<String, String> labelsBuilder =
           ImmutableMap.<String, String>builder()
               .put("source", localhostName)

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.notification;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -43,7 +43,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
 
     List<NotificationGroup> notificationGroups = Lists.newArrayList();
 
-    if (isNotEmpty(yaml.getNotificationGroups())) {
+    if (hasSome(yaml.getNotificationGroups())) {
       notificationGroups =
           yaml.getNotificationGroups()
               .stream()

@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
@@ -16,7 +16,7 @@ import static software.wings.service.impl.ContainerMetadataType.K8S;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -221,9 +221,9 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
           emptyIfNull(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())
               .stream()
               .map(io.harness.container.ContainerInfo::getWorkloadName)
-              .filter(EmptyPredicate::isNotEmpty)
+              .filter(HasPredicate::hasSome)
               .collect(Collectors.toSet());
-      if (isNotEmpty(controllers)) {
+      if (hasSome(controllers)) {
         return controllers.stream()
             .map(controller
                 -> ContainerMetadata.builder()
@@ -232,7 +232,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                        .releaseName(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getReleaseName())
                        .build())
             .collect(Collectors.toSet());
-      } else if (isNotEmpty(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())) {
+      } else if (hasSome(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())) {
         return ImmutableSet.of(
             ContainerMetadata.builder()
                 .namespace(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getNamespace())
@@ -261,7 +261,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
       namespaces.add(k8sDeploymentInfo.getNamespace());
     }
 
-    if (isNotEmpty(k8sDeploymentInfo.getNamespaces())) {
+    if (hasSome(k8sDeploymentInfo.getNamespaces())) {
       namespaces.addAll(k8sDeploymentInfo.getNamespaces());
     }
 

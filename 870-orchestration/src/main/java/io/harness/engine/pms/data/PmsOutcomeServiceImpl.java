@@ -1,6 +1,7 @@
 package io.harness.engine.pms.data;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
@@ -9,7 +10,6 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.data.OutcomeInstance;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outcomes.OutcomeException;
@@ -45,7 +45,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public String resolve(Ambiance ambiance, RefObject refObject) {
-    if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
+    if (hasSome(refObject.getProducerId())) {
       return resolveUsingProducerSetupId(ambiance, refObject);
     }
     if (!refObject.getName().contains(".")) {
@@ -99,7 +99,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
-    if (isEmpty(outcomeInstances)) {
+    if (hasNone(outcomeInstances)) {
       return Collections.emptyList();
     }
 
@@ -108,7 +108,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> fetchOutcomes(List<String> outcomeInstanceIds) {
-    if (isEmpty(outcomeInstanceIds)) {
+    if (hasNone(outcomeInstanceIds)) {
       return Collections.emptyList();
     }
     List<String> outcomes = new ArrayList<>();
@@ -139,7 +139,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
 
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
-    OutcomeInstance instance = EmptyPredicate.isEmpty(instances)
+    OutcomeInstance instance = hasNone(instances)
         ? null
         : instances.stream().max(Comparator.comparing(OutcomeInstance::getLevelRuntimeIdIdx)).orElse(null);
     if (instance == null) {
@@ -159,7 +159,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
 
     // Multiple instances might be returned if the same plan node executed multiple times.
-    if (EmptyPredicate.isEmpty(instances)) {
+    if (hasNone(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
@@ -167,7 +167,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
-    if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
+    if (hasSome(refObject.getProducerId())) {
       return resolveOptionalUsingProducerSetupId(ambiance, refObject);
     }
     if (!refObject.getName().contains(".")) {

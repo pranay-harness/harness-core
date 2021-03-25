@@ -8,8 +8,8 @@ import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.getName;
@@ -99,7 +99,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
@@ -384,7 +383,7 @@ public class WorkflowServiceHelper {
 
   public boolean workflowHasSshDeploymentPhase(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (isNotEmpty(workflowPhases)) {
+    if (hasSome(workflowPhases)) {
       return workflowPhases.stream().anyMatch(workflowPhase -> DeploymentType.SSH == workflowPhase.getDeploymentType());
     }
     return false;
@@ -393,7 +392,7 @@ public class WorkflowServiceHelper {
   public List<DeploymentType> obtainDeploymentTypes(OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
-      if (isNotEmpty(workflowPhases)) {
+      if (hasSome(workflowPhases)) {
         return workflowPhases.stream()
             .map(WorkflowPhase::getDeploymentType)
             .filter(Objects::nonNull)
@@ -406,7 +405,7 @@ public class WorkflowServiceHelper {
 
   public boolean needArtifactCheckStep(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+    if (hasSome(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       List<String> infraDefinitionIds = workflowPhases.stream()
                                             .filter(workflowPhase -> workflowPhase.getInfraDefinitionId() != null)
                                             .map(WorkflowPhase::getInfraDefinitionId)
@@ -447,10 +446,10 @@ public class WorkflowServiceHelper {
 
   public String obtainEnvIdWithoutOrchestration(Workflow workflow, Map<String, String> workflowVariables) {
     final String envTemplatizedName = workflow.fetchEnvTemplatizedName();
-    if (isEmpty(envTemplatizedName)) {
+    if (hasNone(envTemplatizedName)) {
       return workflow.getEnvId();
     }
-    if (isEmpty(workflowVariables)) {
+    if (hasNone(workflowVariables)) {
       return null;
     }
     return workflowVariables.get(envTemplatizedName);
@@ -461,7 +460,7 @@ public class WorkflowServiceHelper {
     if (!workflow.checkEnvironmentTemplatized()) {
       return workflow.getEnvId();
     } else {
-      if (isNotEmpty(workflowVariables)) {
+      if (hasSome(workflowVariables)) {
         String envName =
             WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
         if (envName != null) {
@@ -479,7 +478,7 @@ public class WorkflowServiceHelper {
     if (!workflow.checkEnvironmentTemplatized()) {
       return workflow.getEnvId();
     } else {
-      if (isNotEmpty(workflowVariables)) {
+      if (hasSome(workflowVariables)) {
         String envName =
             WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
         if (envName != null) {
@@ -577,7 +576,7 @@ public class WorkflowServiceHelper {
             USER);
       }
       List<String> scopedServices = infrastructureDefinition.getScopedToServices();
-      if (EmptyPredicate.isNotEmpty(scopedServices)) {
+      if (hasSome(scopedServices)) {
         if (!scopedServices.contains(serviceId)) {
           throw new InvalidRequestException(
               "Service [" + serviceId + "] Infrastructure Definition[" + infraDefinitionId + "] are not compatible",
@@ -1095,7 +1094,7 @@ public class WorkflowServiceHelper {
     GraphNodeBuilder node =
         GraphNode.builder().id(generateUuid()).type(AWS_CODEDEPLOY_STATE.name()).name(AWS_CODE_DEPLOY);
 
-    if (isNotEmpty(stateDefaults)) {
+    if (hasSome(stateDefaults)) {
       Map<String, Object> properties = new HashMap<>();
       if (isNotBlank(stateDefaults.get("bucket"))) {
         properties.put("bucket", stateDefaults.get("bucket"));
@@ -1291,7 +1290,7 @@ public class WorkflowServiceHelper {
           serviceResourceService.getEcsServiceSpecification(appId, serviceId);
 
       if (serviceSpecification != null) {
-        if (isEmpty(serviceSpecification.getServiceSpecJson())) {
+        if (hasNone(serviceSpecification.getServiceSpecJson())) {
           isDaemonSchedulingStrategy =
               ECS_DAEMON_SCHEDULING_STRATEGY.equals(serviceSpecification.getSchedulingStrategy());
         } else {
@@ -2444,7 +2443,7 @@ public class WorkflowServiceHelper {
       return;
     }
     Service oldService = null;
-    if (EmptyPredicate.isNotEmpty(oldServiceId)) {
+    if (hasSome(oldServiceId)) {
       oldService = serviceResourceService.get(appId, oldServiceId, false);
     }
     if (oldService == null) {
@@ -2501,7 +2500,7 @@ public class WorkflowServiceHelper {
     if (orchestrationWorkflow.isServiceTemplatized()) {
       List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
       List<String> serviceNames = new ArrayList<>();
-      if (isNotEmpty(userVariables)) {
+      if (hasSome(userVariables)) {
         serviceNames = getEntityNames(userVariables, SERVICE);
       }
       List<String> serviceIds = getTemplatizedIds(workflowVariables, serviceNames);
@@ -2725,7 +2724,7 @@ public class WorkflowServiceHelper {
   }
 
   public boolean isExecutionForK8sV2Service(WorkflowExecution workflowExecution) {
-    if (isNotEmpty(workflowExecution.getServiceIds())) {
+    if (hasSome(workflowExecution.getServiceIds())) {
       return isK8sV2Service(workflowExecution.getAppId(), workflowExecution.getServiceIds().get(0));
     }
     return false;
@@ -2733,15 +2732,15 @@ public class WorkflowServiceHelper {
 
   public boolean isOrchestrationWorkflowForK8sV2Service(
       String appId, CanaryOrchestrationWorkflow orchestrationWorkflow) {
-    if (isNotEmpty(orchestrationWorkflow.getWorkflowPhases())) {
+    if (hasSome(orchestrationWorkflow.getWorkflowPhases())) {
       WorkflowPhase firstPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
-      if (isNotEmpty(firstPhase.getPhaseSteps())) {
+      if (hasSome(firstPhase.getPhaseSteps())) {
         PhaseStep firstPhaseStep = firstPhase.getPhaseSteps().get(0);
         return firstPhaseStep.getPhaseStepType() == K8S_PHASE_STEP;
       }
     }
 
-    if (isNotEmpty(orchestrationWorkflow.getServiceIds())) {
+    if (hasSome(orchestrationWorkflow.getServiceIds())) {
       return isK8sV2Service(appId, orchestrationWorkflow.getServiceIds().get(0));
     }
     return false;
@@ -2754,13 +2753,13 @@ public class WorkflowServiceHelper {
 
   public static void checkWorkflowVariablesOverrides(PipelineStageElement stageElement, List<Variable> variables,
       Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables, boolean isRuntimeEnabled) {
-    if (isEmpty(variables) || stageElement.checkDisableAssertion()) {
+    if (hasNone(variables) || stageElement.checkDisableAssertion()) {
       return;
     }
 
     List<Variable> requiredVariables =
         variables.stream().filter(variable -> variable.isMandatory() && !variable.isFixed()).collect(toList());
-    if (isEmpty(requiredVariables)) {
+    if (hasNone(requiredVariables)) {
       return;
     }
 
@@ -2771,8 +2770,8 @@ public class WorkflowServiceHelper {
       boolean isEntity = variable.obtainEntityType() != null;
       String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
       String finalValue;
-      boolean isRuntimeVar = isRuntimeEnabled && isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
-      if (isEmpty(workflowVariableValue)) {
+      boolean isRuntimeVar = isRuntimeEnabled && hasSome(runtimeVars) && runtimeVars.contains(variable.getName());
+      if (hasNone(workflowVariableValue)) {
         finalValue = extractMapValue(pipelineVariables, variable.getName());
       } else {
         // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
@@ -2786,7 +2785,7 @@ public class WorkflowServiceHelper {
       }
 
       String prefix = isEntity ? "Templatized" : "Required";
-      if (isEmpty(finalValue) && !isRuntimeVar) {
+      if (hasNone(finalValue) && !isRuntimeVar) {
         throw new InvalidRequestException(
             format("%s variable %s is not set for stage %s", prefix, variable.getName(), stageElement.getName()));
       } else if (ExpressionEvaluator.matchesVariablePattern(finalValue) && (isEntity || !finalValue.contains("."))) {
@@ -2803,14 +2802,14 @@ public class WorkflowServiceHelper {
   public static Map<String, String> overrideWorkflowVariables(
       List<Variable> variables, Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
     Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new HashMap<>();
     }
 
     for (Variable variable : variables) {
       String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
       String finalValue;
-      if (isEmpty(workflowVariableValue)) {
+      if (hasNone(workflowVariableValue)) {
         finalValue = extractMapValue(pipelineVariables, variable.getName());
       } else {
         // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
@@ -3089,23 +3088,23 @@ public class WorkflowServiceHelper {
 
   public static List<FailureStrategy> cleanupFailureStrategies(
       List<FailureStrategy> failureStrategies, Set<String> validStepNames) {
-    if (isEmpty(failureStrategies)) {
+    if (hasNone(failureStrategies)) {
       return Collections.emptyList();
     }
 
     List<FailureStrategy> strategies = cleanupFailureStrategies(failureStrategies);
-    if (isEmpty(strategies)) {
+    if (hasNone(strategies)) {
       return Collections.emptyList();
     }
     return strategies.stream()
         .map(failureStrategy -> {
-          if (!isEmpty(failureStrategy.getSpecificSteps())) {
+          if (!hasNone(failureStrategy.getSpecificSteps())) {
             // Validate step names only if this failureStrategy applies to specificSteps.
 
             List<String> cleanedStepNames = new ArrayList<>(failureStrategy.getSpecificSteps());
             cleanedStepNames.removeIf(stepName -> !validStepNames.contains(stepName));
 
-            if (isEmpty(cleanedStepNames)) {
+            if (hasNone(cleanedStepNames)) {
               // If getSpecificSteps list becomes empty. Return false so that this strategy itself is deleted.
               // Otherwise this FailureStrategy will start applying to all steps.
               return null;
@@ -3121,14 +3120,14 @@ public class WorkflowServiceHelper {
   }
 
   public static List<FailureStrategy> cleanupFailureStrategies(List<FailureStrategy> failureStrategies) {
-    if (isEmpty(failureStrategies)) {
+    if (hasNone(failureStrategies)) {
       return Collections.emptyList();
     }
 
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     Validator validator = factory.getValidator();
     return failureStrategies.stream()
-        .filter(failureStrategy -> isEmpty(validator.validate(failureStrategy)))
+        .filter(failureStrategy -> hasNone(validator.validate(failureStrategy)))
         .collect(toList());
   }
 
@@ -3142,7 +3141,7 @@ public class WorkflowServiceHelper {
     Set<String> stepIds = phaseStep.getSteps() == null
         ? Collections.emptySet()
         : phaseStep.getSteps().stream().map(GraphNode::getId).collect(Collectors.toSet());
-    if (isNotEmpty(phaseStep.getStepSkipStrategies())) {
+    if (hasSome(phaseStep.getStepSkipStrategies())) {
       phaseStep.setStepSkipStrategies(
           phaseStep.getStepSkipStrategies()
               .stream()
@@ -3151,23 +3150,23 @@ public class WorkflowServiceHelper {
                   return true;
                 }
 
-                if (isNotEmpty(stepSkipStrategy.getStepIds())) {
+                if (hasSome(stepSkipStrategy.getStepIds())) {
                   stepSkipStrategy.setStepIds(
                       stepSkipStrategy.getStepIds().stream().filter(stepIds::contains).collect(toList()));
                 }
 
-                return isNotEmpty(stepSkipStrategy.getStepIds());
+                return hasSome(stepSkipStrategy.getStepIds());
               })
               .collect(toList()));
     }
 
-    if (isNotEmpty(phaseStep.getFailureStrategies())) {
+    if (hasSome(phaseStep.getFailureStrategies())) {
       phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies(), validStepNames));
     }
   }
 
   public static void cleanupPhaseStrategies(WorkflowPhase workflowPhase) {
-    if (workflowPhase == null || isEmpty(workflowPhase.getPhaseSteps())) {
+    if (workflowPhase == null || hasNone(workflowPhase.getPhaseSteps())) {
       return;
     }
 
@@ -3182,14 +3181,14 @@ public class WorkflowServiceHelper {
     }
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    if (isNotEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
+    if (hasSome(canaryOrchestrationWorkflow.getFailureStrategies())) {
       canaryOrchestrationWorkflow.setFailureStrategies(
           cleanupFailureStrategies(canaryOrchestrationWorkflow.getFailureStrategies()));
     }
 
     cleanupPhaseStepStrategies(canaryOrchestrationWorkflow.getPreDeploymentSteps());
     cleanupPhaseStepStrategies(canaryOrchestrationWorkflow.getPostDeploymentSteps());
-    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+    if (hasNone(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       return;
     }
 

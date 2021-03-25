@@ -1,6 +1,7 @@
 package io.harness.timeout;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -8,7 +9,6 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -56,7 +56,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   }
 
   public void onEvent(List<String> timeoutInstanceIds, TimeoutEvent event) {
-    if (EmptyPredicate.isEmpty(timeoutInstanceIds)) {
+    if (hasNone(timeoutInstanceIds)) {
       return;
     }
 

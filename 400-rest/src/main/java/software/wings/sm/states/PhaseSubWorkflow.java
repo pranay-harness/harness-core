@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -265,7 +265,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       phaseElementBuilder.phaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
     }
 
-    if (isNotEmpty(getVariableOverrides())) {
+    if (hasSome(getVariableOverrides())) {
       phaseElementBuilder.variableOverrides(getVariableOverrides());
     }
 
@@ -357,7 +357,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private void saveArtifactsToSweepingOutput(
       String appId, String phaseExecutionId, Map<String, Artifact> artifactsMap) {
-    if (isNotEmpty(artifactsMap)) {
+    if (hasSome(artifactsMap)) {
       sweepingOutputService.save(SweepingOutputServiceImpl
                                      .prepareSweepingOutputBuilder(
                                          appId, null, null, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
@@ -374,7 +374,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       if (service != null) {
         for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
           List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
-          if (isNotEmpty(artifactStreamIds) && artifactStreamIds.contains(artifact.getArtifactStreamId())) {
+          if (hasSome(artifactStreamIds) && artifactStreamIds.contains(artifact.getArtifactStreamId())) {
             rollbackArtifactId = artifact.getUuid();
             break;
           }
@@ -396,12 +396,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     // throw exception if variable does not exist in service
     List<ArtifactVariable> artifactVariables = workflowStandardParams.getWorkflowElement().getArtifactVariables();
     Map<String, Artifact> artifactsMap = new HashMap<>();
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         Artifact artifact = null;
         switch (artifactVariable.getEntityType()) {
           case WORKFLOW:
-            if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+            if (hasNone(artifactVariable.getOverriddenArtifactVariables())) {
               artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
               artifactsMap.put(artifactVariable.getName(), artifact);
             } else {
@@ -416,7 +416,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                     artifactsMap.put(artifactVariable.getName(), artifact);
                   }
                 } else if (EntityType.ENVIRONMENT == overridingVariable.getEntityType()) {
-                  if (isEmpty(overridingVariable
+                  if (hasNone(overridingVariable
                                   .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
                     artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
                     artifactsMap.put(artifactVariable.getName(), artifact);
@@ -438,7 +438,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             }
             break;
           case ENVIRONMENT:
-            if (isEmpty(artifactVariable
+            if (hasNone(artifactVariable
                             .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
               artifact = getArtifactByUuid(workflowExecution.getArtifacts(), artifactVariable.getValue());
               artifactsMap.put(artifactVariable.getName(), artifact);
@@ -481,7 +481,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     if (artifactId == null) {
       return null;
     }
-    if (isNotEmpty(artifacts)) {
+    if (hasSome(artifacts)) {
       for (Artifact artifact : artifacts) {
         if (artifact.getUuid().equals(artifactId)) {
           // This will fetch artifactFiles as well
@@ -504,9 +504,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         && lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifacts() != null) {
       previousArtifactVariables = lastSuccessfulWorkflowExecution.getExecutionArgs().getArtifactVariables();
     }
-    previousArtifactVariables = isEmpty(previousArtifactVariables) ? new ArrayList<>() : previousArtifactVariables;
+    previousArtifactVariables = hasNone(previousArtifactVariables) ? new ArrayList<>() : previousArtifactVariables;
     Map<String, Artifact> artifactsMap = new HashMap<>();
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       collectRollbackArtifactsFromVariables(stateExecutionInstance, service, phaseExecutionId, artifactVariables,
           previousArtifactVariables, artifactsMap, lastSuccessfulWorkflowExecution.getArtifacts());
     }
@@ -520,7 +520,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       Artifact artifact = null;
       switch (artifactVariable.getEntityType()) {
         case WORKFLOW:
-          if (isEmpty(artifactVariable.getOverriddenArtifactVariables())) {
+          if (hasNone(artifactVariable.getOverriddenArtifactVariables())) {
             artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
           } else {
             for (ArtifactVariable overridingVariable : artifactVariable.getOverriddenArtifactVariables()) {
@@ -533,7 +533,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                   artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
                 }
               } else if (EntityType.ENVIRONMENT == overridingVariable.getEntityType()) {
-                if (isEmpty(overridingVariable
+                if (hasNone(overridingVariable
                                 .getOverriddenArtifactVariables())) { // direct env variables - all service overrides
                   artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
                 } else { // overridden for specific service
@@ -554,7 +554,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           }
           break;
         case ENVIRONMENT:
-          if (isEmpty(
+          if (hasNone(
                   artifactVariable.getOverriddenArtifactVariables())) { // direct env variables - all service overrides
             artifact = fetchLastSuccessArtifact(previousArtifactVariables, previousArtifacts, artifactVariable);
 
@@ -606,14 +606,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private String getArtifactIdFromPreviousArtifactVariables(ArtifactVariable artifactVariable,
       List<ArtifactVariable> lastSuccessArtifactVariables, List<Artifact> lastSuccessArtifacts) {
     String artifactId = null;
-    if (isNotEmpty(lastSuccessArtifactVariables)) {
+    if (hasSome(lastSuccessArtifactVariables)) {
       for (ArtifactVariable variable : lastSuccessArtifactVariables) {
         if (variable.getName().equals(artifactVariable.getName())
             && variable.getEntityId().equals(artifactVariable.getEntityId())) {
           return variable.getValue();
         }
       }
-    } else if (isNotEmpty(lastSuccessArtifacts)) {
+    } else if (hasSome(lastSuccessArtifacts)) {
       artifactId = getArtifactIdFromPreviousArtifacts(artifactVariable, lastSuccessArtifacts);
     }
 
@@ -622,7 +622,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private String getArtifactIdFromPreviousArtifacts(
       ArtifactVariable artifactVariable, List<Artifact> lastSuccessArtifacts) {
-    if (isEmpty(lastSuccessArtifacts)) {
+    if (hasNone(lastSuccessArtifacts)) {
       return null;
     }
     for (Artifact artifact : lastSuccessArtifacts) {
@@ -641,7 +641,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {
         List<ContextElement> notifyElements = ((ElementNotifyResponseData) notifyResponseData).getContextElements();
-        if (isNotEmpty(notifyElements)) {
+        if (hasSome(notifyElements)) {
           for (ContextElement element : notifyElements) {
             executionResponseBuilder.contextElement(element);
           }

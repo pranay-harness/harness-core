@@ -1,12 +1,12 @@
 package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.outcomes.OutcomeException;
@@ -84,7 +84,7 @@ public class NodeExecutionMap extends LateBindingMap {
   }
 
   private Object fetchFirst(List<Function<String, Optional<Object>>> fns, String key) {
-    if (EmptyPredicate.isEmpty(fns)) {
+    if (hasNone(fns)) {
       return null;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.resolver.outcome.mapper;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -23,7 +23,7 @@ public class PmsOutcomeMapper {
   }
 
   public List<Outcome> convertJsonToOutcome(List<String> outcomesAsJsonList) {
-    if (isEmpty(outcomesAsJsonList)) {
+    if (hasNone(outcomesAsJsonList)) {
       return Collections.emptyList();
     }
     List<Outcome> outcomes = new ArrayList<>();
@@ -34,7 +34,7 @@ public class PmsOutcomeMapper {
   }
 
   public List<Document> convertJsonToDocument(List<String> outcomeAsJsonList) {
-    if (isEmpty(outcomeAsJsonList)) {
+    if (hasNone(outcomeAsJsonList)) {
       return Collections.emptyList();
     }
     List<Document> outcomes = new ArrayList<>();
@@ -45,7 +45,7 @@ public class PmsOutcomeMapper {
   }
 
   public List<Outcome> convertFromDocumentToOutcome(List<Document> outcomeDocuments) {
-    if (isEmpty(outcomeDocuments)) {
+    if (hasNone(outcomeDocuments)) {
       return Collections.emptyList();
     }
     List<Outcome> outcomes = new ArrayList<>();
@@ -56,7 +56,7 @@ public class PmsOutcomeMapper {
   }
 
   public List<Document> convertOutcomesToDocumentList(List<Outcome> outcomes) {
-    if (isEmpty(outcomes)) {
+    if (hasNone(outcomes)) {
       return Collections.emptyList();
     }
     List<Document> outcomeDocuments = new ArrayList<>();

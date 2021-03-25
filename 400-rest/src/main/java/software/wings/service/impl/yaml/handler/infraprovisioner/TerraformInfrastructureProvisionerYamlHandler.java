@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -62,13 +62,13 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
     yaml.setCommitId(bean.getCommitId());
     yaml.setRepoName(bean.getRepoName());
-    if (isNotEmpty(bean.getBackendConfigs())) {
+    if (hasSome(bean.getBackendConfigs())) {
       yaml.setBackendConfigs(getSortedNameValuePairYamlList(bean.getBackendConfigs(), bean.getAppId()));
     }
-    if (isNotEmpty(bean.getEnvironmentVariables())) {
+    if (hasSome(bean.getEnvironmentVariables())) {
       yaml.setEnvironmentVariables(getSortedNameValuePairYamlList(bean.getEnvironmentVariables(), bean.getAppId()));
     }
-    if (isNotEmpty(bean.getKmsId())) {
+    if (hasSome(bean.getKmsId())) {
       SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(bean.getAccountId(), bean.getKmsId());
       yaml.setSecretMangerName(secretManagerConfig.getName());
     }
@@ -126,13 +126,13 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setRepoName(yaml.getRepoName());
     bean.setSkipRefreshBeforeApplyingPlan(yaml.isSkipRefreshBeforeApplyingPlan());
 
-    if (isNotEmpty(yaml.getBackendConfigs())) {
+    if (hasSome(yaml.getBackendConfigs())) {
       bean.setBackendConfigs(getNameValuePairList(yaml.getBackendConfigs()));
     }
-    if (isNotEmpty(yaml.getEnvironmentVariables())) {
+    if (hasSome(yaml.getEnvironmentVariables())) {
       bean.setEnvironmentVariables(getNameValuePairList(yaml.getEnvironmentVariables()));
     }
-    if (isNotEmpty(yaml.getSecretMangerName())) {
+    if (hasSome(yaml.getSecretMangerName())) {
       SecretManagerConfig secretManagerConfig =
           secretManager.getSecretManagerByName(bean.getAccountId(), yaml.getSecretMangerName());
       bean.setKmsId(secretManagerConfig.getUuid());
@@ -151,10 +151,10 @@ public class TerraformInfrastructureProvisionerYamlHandler
   }
 
   private void validateBranchCommitId(String sourceRepoBranch, String commitId) {
-    if (isEmpty(sourceRepoBranch) && isEmpty(commitId)) {
+    if (hasNone(sourceRepoBranch) && hasNone(commitId)) {
       throw new InvalidRequestException("Either sourceRepoBranch or commitId should be specified", USER);
     }
-    if (isNotEmpty(sourceRepoBranch) && isNotEmpty(commitId)) {
+    if (hasSome(sourceRepoBranch) && hasSome(commitId)) {
       throw new InvalidRequestException("Cannot specify both sourceRepoBranch and commitId", USER);
     }
   }

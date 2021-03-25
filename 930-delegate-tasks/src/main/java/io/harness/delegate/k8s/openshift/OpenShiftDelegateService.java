@@ -1,7 +1,7 @@
 package io.harness.delegate.k8s.openshift;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -36,7 +36,7 @@ public class OpenShiftDelegateService {
   public List<FileData> processTemplatization(@NotEmpty String manifestFilesDirectory, @NotEmpty String ocBinaryPath,
       @NotEmpty String templateFilePath, LogCallback executionLogCallback, List<String> paramFilesContent) {
     List<String> paramsFilePaths = null;
-    if (isNotEmpty(paramFilesContent)) {
+    if (hasSome(paramFilesContent)) {
       paramsFilePaths = writeParamsToFile(manifestFilesDirectory, paramFilesContent);
     }
 
@@ -45,7 +45,7 @@ public class OpenShiftDelegateService {
 
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       String processedTemplateFile = cliResponse.getOutput();
-      if (isEmpty(processedTemplateFile)) {
+      if (hasNone(processedTemplateFile)) {
         throw new InvalidRequestException("Oc process result can't be empty", WingsException.USER);
       }
       String kubernetesReadyYaml = prepareKubernetesReadyYaml(processedTemplateFile);
@@ -83,7 +83,7 @@ public class OpenShiftDelegateService {
         }
       }
     }
-    if (isEmpty(resultYaml.toString())) {
+    if (hasNone(resultYaml.toString())) {
       throw new InvalidRequestException("Items list can't be empty", WingsException.USER);
     }
     return resultYaml.toString();

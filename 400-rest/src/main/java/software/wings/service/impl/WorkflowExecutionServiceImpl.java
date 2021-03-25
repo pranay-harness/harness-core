@@ -29,8 +29,8 @@ import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -107,7 +107,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
@@ -425,7 +424,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                          .greaterThanOrEq(startedFrom)
                                          .field(WorkflowExecutionKeys.startTs)
                                          .lessThan(statedTo);
-    if (isNotEmpty(includeOnlyFields)) {
+    if (hasSome(includeOnlyFields)) {
       includeOnlyFields.forEach(field -> query.project(field, true));
     }
 
@@ -461,7 +460,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private List<WorkflowExecution> processExecutions(List<WorkflowExecution> res, boolean includeGraph,
       boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
-    if (isEmpty(res)) {
+    if (hasNone(res)) {
       return res;
     }
 
@@ -538,7 +537,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
-    if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
+    if (hasSome(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
       throw new InvalidRequestException("User not authorized to accept or reject the approval");
     }
 
@@ -817,7 +816,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @VisibleForTesting
   void appendSkipCondition(PipelineStageElement pipelineStageElement, PipelineStageExecution stageExecution,
       String stateExecutionInstanceId) {
-    if (isNotEmpty(pipelineStageElement.getDisableAssertion())) {
+    if (hasSome(pipelineStageElement.getDisableAssertion())) {
       stageExecution.setDisableAssertionInspection(stateInspectionService.get(stateExecutionInstanceId));
       stageExecution.setSkipCondition(pipelineStageElement.getDisableAssertion());
     }
@@ -835,7 +834,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
       PipelineStageElement pipelineStageElement, String stateExecutionInstanceId) {
-    if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
+    if (hasSome(envStateExecutionData.getForkStateNames())) {
       for (String element : envStateExecutionData.getForkStateNames()) {
         StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
         if (executionInstanceLooped == null) {
@@ -1102,7 +1101,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     int parallelIndex = 0;
     for (PipelineStage stage : pipeline.getPipelineStages()) {
       if (!stage.isParallel()) {
-        if (!isEmpty(orchestrationWorkflows)) {
+        if (!hasNone(orchestrationWorkflows)) {
           barrierService
               .obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId, parallelIndex)
               .forEach(barrier -> barrierService.save(barrier));
@@ -1145,7 +1144,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    if (!isEmpty(orchestrationWorkflows)) {
+    if (!hasNone(orchestrationWorkflows)) {
       barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId, parallelIndex)
           .forEach(barrier -> barrierService.save(barrier));
     }
@@ -1180,7 +1179,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     User user = UserThreadLocal.get();
     if (trigger == null && user != null) {
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
-      if (isNotEmpty(pipeline.getEnvIds())) {
+      if (hasSome(pipeline.getEnvIds())) {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
       }
     }
@@ -1194,7 +1193,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
-    if (isEmpty(pipeline.getPipelineStages())) {
+    if (hasNone(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
     }
     preDeploymentChecks.checkIfPipelineUsingRestrictedFeatures(pipeline);
@@ -1211,7 +1210,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    if (isEmpty(pipeline.getAccountId())) {
+    if (hasNone(pipeline.getAccountId())) {
       pipeline.setAccountId(accountId);
     }
     StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
@@ -1240,13 +1239,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
-    if (isNotEmpty(executionArgs.getArtifacts())) {
+    if (hasSome(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
-    if (isNotEmpty(executionArgs.getHelmCharts())) {
+    if (hasSome(executionArgs.getHelmCharts())) {
       stdParams.setHelmChartIds(executionArgs.getHelmCharts().stream().map(HelmChart::getUuid).collect(toList()));
     }
-    if (isNotEmpty(executionArgs.getWorkflowVariables())) {
+    if (hasSome(executionArgs.getWorkflowVariables())) {
       stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
     }
     // Setting  exclude hosts with same artifact
@@ -1326,7 +1325,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
     // The workflow execution is direct workflow execution and not in Pipeline or trigger.
-    if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
+    if (trigger == null && user != null && hasNone(pipelineExecutionId)) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
     }
@@ -1334,7 +1333,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-        new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
+        new DeploymentCtx(appId, hasSome(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
         environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
@@ -1342,7 +1341,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflow.setOrchestrationWorkflow(
         workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow, executionArgs.getWorkflowVariables()));
 
-    if (isEmpty(workflow.getAccountId())) {
+    if (hasNone(workflow.getAccountId())) {
       workflow.setAccountId(accountId);
     }
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
@@ -1386,17 +1385,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   void validateExecutionArgsHosts(List<String> hosts, WorkflowExecution workflowExecution, Workflow workflow) {
-    if (isEmpty(hosts)) {
+    if (hasNone(hosts)) {
       return;
     }
 
     List<String> serviceIds = workflowExecution.getServiceIds();
-    if (isEmpty(serviceIds) || serviceIds.size() > 1) {
+    if (hasNone(serviceIds) || serviceIds.size() > 1) {
       throw new InvalidRequestException("Execution Hosts only supported for single service workflow", USER);
     }
 
     List<DeploymentType> deploymentTypes = workflow.getDeploymentTypes();
-    if (isEmpty(deploymentTypes) || deploymentTypes.size() > 1) {
+    if (hasNone(deploymentTypes) || deploymentTypes.size() > 1) {
       throw new InvalidRequestException("Execution Hosts only supported for single deployment type", USER);
     }
 
@@ -1481,7 +1480,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private boolean parameterizedArtifactStreamsPresent(List<ArtifactVariable> artifactVariables) {
     boolean foundParameterized = false;
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         if (artifactVariable.getArtifactStreamMetadata() != null) {
           foundParameterized = true;
@@ -1500,7 +1499,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       ExecutionArgs executionArgs, ContextElement... contextElements) {
     // Resolve artifact source parameters and collect artifacts before starting execution
     List<Artifact> artifacts = collectArtifacts(workflowExecution, executionArgs.getArtifactVariables(), app.getUuid());
-    if (isNotEmpty(artifacts)) {
+    if (hasSome(artifacts)) {
       addArtifactsToWorkflowExecution(workflowExecution, stdParams, executionArgs, artifacts);
       updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getUuid(),
           workflowExecution.getArtifacts(), executionArgs.getArtifacts());
@@ -1528,7 +1527,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .filter(ExecutionInterruptKeys.executionUuid, workflowExecution.getUuid())
             .filter(ExecutionInterruptKeys.executionInterruptType, ABORT_ALL)
             .asList();
-    if (isNotEmpty(executionInterrupts)) {
+    if (hasSome(executionInterrupts)) {
       interruptRegistered = true;
     }
     return interruptRegistered;
@@ -1628,13 +1627,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void addArtifactsToRuntimeWorkflowExecution(WorkflowExecution workflowExecution,
       WorkflowStandardParams stdParams, ExecutionArgs executionArgs, List<Artifact> newArtifacts,
       List<ArtifactVariable> newArtifactVariables) {
-    newArtifacts = isEmpty(newArtifacts) ? new ArrayList<>() : newArtifacts;
-    newArtifactVariables = isEmpty(newArtifactVariables) ? new ArrayList<>() : newArtifactVariables;
-    List<Artifact> existingArtifacts = isNotEmpty(workflowExecution.getArtifacts())
+    newArtifacts = hasNone(newArtifacts) ? new ArrayList<>() : newArtifacts;
+    newArtifactVariables = hasNone(newArtifactVariables) ? new ArrayList<>() : newArtifactVariables;
+    List<Artifact> existingArtifacts = hasSome(workflowExecution.getArtifacts())
         ? new ArrayList<>(workflowExecution.getArtifacts())
         : new ArrayList<>();
     List<ArtifactVariable> existingArtifactVariables =
-        isNotEmpty(workflowExecution.getExecutionArgs().getArtifactVariables())
+        hasSome(workflowExecution.getExecutionArgs().getArtifactVariables())
         ? new ArrayList<>(workflowExecution.getExecutionArgs().getArtifactVariables())
         : new ArrayList<>();
 
@@ -1653,15 +1652,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void addArtifactsToWorkflowExecution(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       ExecutionArgs executionArgs, List<Artifact> artifacts) {
-    if (isNotEmpty(artifacts)) {
-      if (isNotEmpty(workflowExecution.getArtifacts())) {
+    if (hasSome(artifacts)) {
+      if (hasSome(workflowExecution.getArtifacts())) {
         List<Artifact> workflowExecutionArtifacts = workflowExecution.getArtifacts();
         workflowExecutionArtifacts.addAll(artifacts);
         workflowExecution.setArtifacts(workflowExecutionArtifacts);
       } else {
         workflowExecution.setArtifacts(artifacts);
       }
-      if (isNotEmpty(executionArgs.getArtifacts())) {
+      if (hasSome(executionArgs.getArtifacts())) {
         List<Artifact> executionArgsArtifacts = executionArgs.getArtifacts();
         executionArgsArtifacts.addAll(artifacts);
         executionArgs.setArtifacts(executionArgsArtifacts);
@@ -1669,12 +1668,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionArgs.setArtifacts(artifacts);
       }
       List<String> artifactIds = new ArrayList<>();
-      if (isNotEmpty(artifacts)) {
+      if (hasSome(artifacts)) {
         for (Artifact artifact : artifacts) {
           artifactIds.add(artifact.getUuid());
         }
       }
-      if (isNotEmpty(stdParams.getArtifactIds())) {
+      if (hasSome(stdParams.getArtifactIds())) {
         List<String> stdParamsArtifactIds = stdParams.getArtifactIds();
         stdParamsArtifactIds.addAll(artifactIds);
         stdParams.setArtifactIds(stdParamsArtifactIds);
@@ -1689,7 +1688,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<Artifact> artifacts = new ArrayList<>();
     Queue<Future<BuildDetails>> futures = new ConcurrentLinkedQueue<>();
     List<ArtifactStream> artifactStreams = new ArrayList<>();
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         if (artifactVariable.getArtifactStreamMetadata() != null) {
           String artifactStreamId = artifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
@@ -1733,7 +1732,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
       String message = stringBuilder.toString();
-      if (isNotEmpty(message)) {
+      if (hasSome(message)) {
         workflowExecution.setStatus(FAILED);
         workflowExecution.setMessage(message);
         updateStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), FAILED, message);
@@ -1790,7 +1789,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // set pipeline variables
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       Map<String, String> workflowVariables = workflowExecution.getExecutionArgs().getWorkflowVariables();
-      if (isNotEmpty(workflowVariables)) {
+      if (hasSome(workflowVariables)) {
         stdParams.getWorkflowElement().setVariables(new HashMap<>(workflowVariables));
       }
     }
@@ -1879,10 +1878,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshEnvSummary(WorkflowExecution workflowExecution, Set<String> keywords) {
-    if (isNotEmpty(workflowExecution.getEnvIds())) {
+    if (hasSome(workflowExecution.getEnvIds())) {
       List<EnvSummary> environmentSummaries =
           environmentService.obtainEnvironmentSummaries(workflowExecution.getAppId(), workflowExecution.getEnvIds());
-      if (isNotEmpty(environmentSummaries)) {
+      if (hasSome(environmentSummaries)) {
         for (EnvSummary envSummary : environmentSummaries) {
           workflowExecution.setEnvironments(environmentSummaries);
           if (envSummary.getUuid().equals(workflowExecution.getEnvId())) {
@@ -1941,7 +1940,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    if (isEmpty(executionArgs.getArtifacts())) {
+    if (hasNone(executionArgs.getArtifacts())) {
       return;
     }
 
@@ -1951,7 +1950,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .filter(Objects::nonNull)
                                    .distinct()
                                    .collect(toList());
-    if (isEmpty(artifactIds)) {
+    if (hasNone(artifactIds)) {
       return;
     }
 
@@ -1964,11 +1963,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Filter out the artifacts that do not belong to the workflow.
     List<String> serviceIds =
-        isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+        hasNone(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
     Set<String> artifactStreamIds = new HashSet<>();
     serviceIds.forEach(serviceId -> {
       List<String> ids = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
-      if (isNotEmpty(ids)) {
+      if (hasSome(ids)) {
         artifactStreamIds.addAll(ids);
       }
     });
@@ -2001,7 +2000,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<ServiceElement> services = new ArrayList<>();
     filteredArtifacts.forEach(artifact -> {
       List<Service> relatedServices = artifactStreamServiceBindingService.listServices(artifact.getArtifactStreamId());
-      if (isEmpty(relatedServices)) {
+      if (hasNone(relatedServices)) {
         return;
       }
 
@@ -2024,7 +2023,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   public void populateRollbackArtifacts(
       WorkflowExecution workflowExecution, List<String> infraMappingList, WorkflowStandardParams stdParams) {
-    if (EmptyPredicate.isNotEmpty(infraMappingList)) {
+    if (hasSome(infraMappingList)) {
       List<Artifact> rollbackArtifacts = obtainLastGoodDeployedArtifacts(workflowExecution, infraMappingList);
       stdParams.setRollbackArtifactIds(rollbackArtifacts.stream().map(Artifact::getUuid).collect(toList()));
       workflowExecution.setRollbackArtifacts(rollbackArtifacts);
@@ -2033,7 +2032,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateHelmChartsInWorkflowExecution(
       WorkflowExecution workflowExecution, Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
-    if (isEmpty(executionArgs.getHelmCharts())) {
+    if (hasNone(executionArgs.getHelmCharts())) {
       return;
     }
     List<String> helmChartIds = executionArgs.getHelmCharts()
@@ -2051,14 +2050,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<String> serviceIds =
-        isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+        hasNone(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
 
     List<HelmChart> filteredHelmCharts =
         helmCharts.stream().filter(chart -> serviceIds.contains(chart.getServiceId())).collect(toList());
 
     filteredHelmCharts.forEach(helmChart -> {
       keywords.addAll(Arrays.asList(helmChart.getName(), helmChart.getVersion(), helmChart.getDescription()));
-      if (isNotEmpty(helmChart.getMetadata())) {
+      if (hasSome(helmChart.getMetadata())) {
         keywords.addAll(helmChart.getMetadata().values());
       }
     });
@@ -2079,8 +2078,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setArtifactIds(filteredArtifacts.stream().map(Artifact::getUuid).collect(toList()));
 
     List<String> serviceIds =
-        isEmpty(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
-    if (isNotEmpty(filteredArtifacts)) {
+        hasNone(workflowExecution.getServiceIds()) ? new ArrayList<>() : workflowExecution.getServiceIds();
+    if (hasSome(filteredArtifacts)) {
       executionArgs.setArtifactIdNames(
           filteredArtifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
       filteredArtifacts.forEach(artifact -> {
@@ -2112,7 +2111,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Set<String> serviceIdsSet = new HashSet<>();
     List<ServiceElement> services = new ArrayList<>();
-    if (isNotEmpty(serviceIds)) {
+    if (hasSome(serviceIds)) {
       for (String serviceId : serviceIds) {
         if (serviceIdsSet.contains(serviceId)) {
           continue;
@@ -2131,7 +2130,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private static void removeDuplicates(List<Artifact> artifacts) {
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return;
     }
 
@@ -2282,7 +2281,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   List<String> trimExecutionArgsHosts(List<String> hosts) {
-    if (isEmpty(hosts)) {
+    if (hasNone(hosts)) {
       return Collections.emptyList();
     }
     return hosts.stream().map(StringUtils::trim).collect(Collectors.toList());
@@ -2294,7 +2293,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       executionArgs.setHosts(Collections.emptyList());
       return;
     }
-    if (isEmpty(executionArgs.getHosts())) {
+    if (hasNone(executionArgs.getHosts())) {
       throw new InvalidRequestException(
           "Host list can't be empty when Target To Specific Hosts option is enabled", USER);
     }
@@ -2388,7 +2387,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
+      if (hasSome(workflowExecution.getArtifacts()) && hasNone(previousArtifacts)) {
         throw new InvalidRequestException("No previous artifact found to rollback to");
       }
 
@@ -2416,7 +2415,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new InvalidRequestException("Rollback is not available for older deployment");
       }
 
-      if (isEmpty(workflowExecution.getServiceIds()) || workflowExecution.getServiceIds().size() != 1) {
+      if (hasNone(workflowExecution.getServiceIds()) || workflowExecution.getServiceIds().size() != 1) {
         throw new InvalidRequestException("Rollback Execution is not available for multi Service workflow");
       }
 
@@ -2444,7 +2443,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
+      if (hasSome(workflowExecution.getArtifacts()) && hasNone(previousArtifacts)) {
         throw new InvalidRequestException("No artifact found in previous execution");
       }
 
@@ -2493,7 +2492,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .order(Sort.descending(WorkflowExecutionKeys.createdAt));
     final List<WorkflowExecution> workflowExecutionList = query.asList(new FindOptions().limit(2));
 
-    if (isEmpty(workflowExecutionList)) {
+    if (hasNone(workflowExecutionList)) {
       throw new InvalidRequestException(
           "Not able to find previous successful workflowExecutions for workflowExecution: "
           + workflowExecution.getName());
@@ -2568,7 +2567,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     setArtifactsFromArtifactVariables(executionArgs);
 
-    if (isEmpty(executionArgs.getHelmCharts()) && isNotEmpty(executionArgs.getManifestVariables())) {
+    if (hasNone(executionArgs.getHelmCharts()) && hasSome(executionArgs.getManifestVariables())) {
       List<HelmChart> manifests =
           executionArgs.getManifestVariables()
               .stream()
@@ -2602,7 +2601,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void setArtifactsFromArtifactVariables(ExecutionArgs executionArgs) {
-    if (isEmpty(executionArgs.getArtifacts()) && isNotEmpty(executionArgs.getArtifactVariables())) {
+    if (hasNone(executionArgs.getArtifacts()) && hasSome(executionArgs.getArtifactVariables())) {
       // Artifact Variables are passed but not artifacts. For backwards compatibility, set artifacts in executionArgs.
       List<Artifact> artifacts = executionArgs.getArtifactVariables()
                                      .stream()
@@ -2773,7 +2772,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         continue;
       }
       EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-      if (isEmpty(envStateExecutionData.getWorkflowExecutionId())) {
+      if (hasNone(envStateExecutionData.getWorkflowExecutionId())) {
         continue;
       }
       WorkflowExecution workflowExecution2 =
@@ -2832,7 +2831,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId, String pipelineStageElementId) {
-    if (isNotEmpty(pipelineStageElementId)) {
+    if (hasSome(pipelineStageElementId)) {
       return workflowExecutionServiceHelper.fetchWorkflowVariablesForRunningExecution(
           appId, workflowExecutionId, pipelineStageElementId);
     }
@@ -2842,7 +2841,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public DeploymentMetadata fetchDeploymentMetadataRunningPipeline(String appId, Map<String, String> workflowVariables,
       boolean withDefaultArtifact, String workflowExecutionId, String pipelineStageElementId) {
-    if (isEmpty(workflowExecutionId) || isEmpty(pipelineStageElementId)) {
+    if (hasNone(workflowExecutionId) || hasNone(pipelineStageElementId)) {
       throw new InvalidRequestException(
           "ExecutionId and PipelineStageElementId is required to check Inputs for a running execution");
     }
@@ -2861,7 +2860,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     notNullCheck("Couldnt load a pipeline associated with given executionId: " + workflowExecutionId, pipeline);
 
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    if (isEmpty(pipelineStages)) {
+    if (hasNone(pipelineStages)) {
       throw new InvalidRequestException("The given pipeline does not contain any stage");
     }
 
@@ -2942,7 +2941,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .build();
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-    if (isEmpty(pageResponse)) {
+    if (hasNone(pageResponse)) {
       return false;
     }
     return true;
@@ -2958,7 +2957,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .project(WorkflowExecutionKeys.uuid, true)
                                              .project(WorkflowExecutionKeys.name, true)
                                              .asList();
-    if (isEmpty(executions)) {
+    if (hasNone(executions)) {
       return Collections.emptyList();
     }
     return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
@@ -2973,7 +2972,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .project(WorkflowExecutionKeys.uuid, true)
                                              .project(WorkflowExecutionKeys.name, true)
                                              .asList();
-    if (isEmpty(executions)) {
+    if (hasNone(executions)) {
       return Collections.emptyList();
     }
     return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
@@ -2989,7 +2988,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .project(WorkflowExecutionKeys.uuid, true)
                                              .project(WorkflowExecutionKeys.name, true)
                                              .asList();
-    if (isEmpty(executions)) {
+    if (hasNone(executions)) {
       return Collections.emptyList();
     }
     return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
@@ -3026,7 +3025,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineExecutionId);
     notNullCheck("Invalid executionId: " + pipelineExecutionId, pipelineExecution);
     // Map WF variables from pipeline variables
-    if (isNotEmpty(executionArgs.getArtifacts())) {
+    if (hasSome(executionArgs.getArtifacts())) {
       executionArgs.setArtifacts(executionArgs.getArtifacts()
                                      .stream()
                                      .map(t -> artifactService.get(pipelineExecution.getAccountId(), t.getUuid()))
@@ -3046,7 +3045,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     notNullCheck("Couldnt continue thie pipelineStage, might be expired", workflowStandardParams);
     List<Artifact> artifacts = executionArgs.getArtifacts();
-    if (isNotEmpty(artifacts)) {
+    if (hasSome(artifacts)) {
       addArtifactsToRuntimeWorkflowExecution(
           pipelineExecution, workflowStandardParams, executionArgs, artifacts, executionArgs.getArtifactVariables());
       updateWorkflowExecutionArtifactsAndArtifactVariables(appId, pipelineExecutionId, pipelineExecution.getArtifacts(),
@@ -3191,7 +3190,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Map<String, String> wfVariables = getWFVarFromPipelineVar(
         executionArgs.getWorkflowVariables(), pipelineExecution, pipeline, workflow, pipelineStageElementId);
-    if (isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+    if (hasNone(runtimeInputsConfig.getRuntimeInputVariables())) {
       throw new InvalidRequestException(
           "NO Runtime Input Vars for the given PipelineStage: \" + pipelineStageElementId");
     }
@@ -3228,7 +3227,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    if (isNotEmpty(extraVars)) {
+    if (hasSome(extraVars)) {
       throw new InvalidRequestException(
           "Cannot override value for variables: " + extraVars.toString() + " These are not marked runtime in stage");
     }
@@ -3242,7 +3241,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void validateArtifactOverrides(List<Artifact> existingArtifacts, List<Artifact> newArtifacts) {
-    if (isEmpty(existingArtifacts) || isEmpty(newArtifacts)) {
+    if (hasNone(existingArtifacts) || hasNone(newArtifacts)) {
       return;
     }
     if (existingArtifacts.stream()
@@ -3272,7 +3271,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .map(Variable::getName)
                                    .filter(t -> !runtimeVariableValues.containsKey(t))
                                    .collect(toList());
-    if (isNotEmpty(missingVars)) {
+    if (hasSome(missingVars)) {
       throw new InvalidRequestException(
           "Please provide value for required runtime variables: " + missingVars.toString());
     }
@@ -3282,7 +3281,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     User user = UserThreadLocal.get();
     if (user != null) {
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
-      if (isNotEmpty(pipeline.getEnvIds())) {
+      if (hasSome(pipeline.getEnvIds())) {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
       }
     }
@@ -3346,7 +3345,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                     .in(ExecutionStatus.activeStatuses())
                                                     .project(WorkflowExecutionKeys.uuid, true)
                                                     .asList();
-    return !isEmpty(runningExecutions);
+    return !hasNone(runningExecutions);
   }
 
   @Override
@@ -3404,7 +3403,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                        .build())
             .collect(toList());
 
-    if (isNotEmpty(stateExecutionInstance.getInterruptHistory())) {
+    if (hasSome(stateExecutionInstance.getInterruptHistory())) {
       wingsPersistence.createQuery(ExecutionInterrupt.class)
           .filter(ExecutionInterruptKeys.appId, appId)
           .field(ID_KEY)
@@ -3539,7 +3538,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       try (HIterator<StateExecutionInstance> stateExecutionInstances = new HIterator<>(query.fetch())) {
         for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
           // for older executions stored in DB
-          if (isEmpty(stateExecutionInstance.getSubGraphFilterId())) {
+          if (hasNone(stateExecutionInstance.getSubGraphFilterId())) {
             populateNodeInstanceIdMapOlderExecutions(
                 selectedNodes, repeaterId, nodesInstancesIdMap, stateExecutionInstance);
           } else {
@@ -3743,7 +3742,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PageResponse<StateExecutionInstance> pageResponse =
         wingsPersistence.query(StateExecutionInstance.class, pageRequest);
 
-    if (isEmpty(pageResponse)) {
+    if (hasNone(pageResponse)) {
       return;
     }
 
@@ -3758,7 +3757,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       ElementStateExecutionData elementStateExecutionData =
           (ElementStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
-      if (isEmpty(elementStateExecutionData.getElementStatusSummary())) {
+      if (hasNone(elementStateExecutionData.getElementStatusSummary())) {
         continue;
       }
       for (ElementExecutionSummary summary : elementStateExecutionData.getElementStatusSummary()) {
@@ -3897,7 +3896,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .greaterThanOrEq(workflowExecution.getCreatedAt())
             .asList();
 
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       breakdown.setSuccess(0);
     }
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
@@ -3907,7 +3906,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
       List<ElementExecutionSummary> elementStatusSummary = phaseExecutionData.getElementStatusSummary();
-      if (isEmpty(elementStatusSummary)) {
+      if (hasNone(elementStatusSummary)) {
         continue;
       }
       for (ElementExecutionSummary elementExecutionSummary : elementStatusSummary) {
@@ -3950,7 +3949,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<String> resolvedInfraMappingIds;
     resolvedInfraMappingIds = workflowExecution.getInfraMappingIds();
-    if (isEmpty(resolvedInfraMappingIds)) {
+    if (hasNone(resolvedInfraMappingIds)) {
       return 0;
     }
     try {
@@ -3977,7 +3976,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .project(StateExecutionInstanceKeys.contextElements, false)
             .asList();
 
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       return null;
     }
 
@@ -4036,7 +4035,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           if (stateExecutionData instanceof HelmDeployStateExecutionData) {
             HelmDeployStateExecutionData helmDeployStateExecutionData =
                 (HelmDeployStateExecutionData) stateExecutionData;
-            if (isNotEmpty(helmDeployStateExecutionData.getNewInstanceStatusSummaries())) {
+            if (hasSome(helmDeployStateExecutionData.getNewInstanceStatusSummaries())) {
               instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
@@ -4048,7 +4047,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         } else if (nextStateType == StateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
               (KubernetesSteadyStateCheckExecutionData) next.fetchStateExecutionData();
-          if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
+          if (hasSome(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {
             instanceStatusSummaries.addAll(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries());
           }
         } else if (nextStateType == StateType.K8S_DEPLOYMENT_ROLLING || nextStateType == StateType.K8S_CANARY_DEPLOY
@@ -4056,7 +4055,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof K8sStateExecutionData) {
             K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) stateExecutionData;
-            if (isNotEmpty(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
+            if (hasSome(k8sStateExecutionData.getNewInstanceStatusSummaries())) {
               instanceStatusSummaries.addAll(k8sStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
@@ -4069,7 +4068,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           if (stateExecutionData instanceof InstanceFetchStateExecutionData) {
             InstanceFetchStateExecutionData instanceFetchStateExecutionData =
                 (InstanceFetchStateExecutionData) stateExecutionData;
-            if (isNotEmpty(instanceFetchStateExecutionData.getNewInstanceStatusSummaries())) {
+            if (hasSome(instanceFetchStateExecutionData.getNewInstanceStatusSummaries())) {
               instanceStatusSummaries.addAll(instanceFetchStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
@@ -4077,7 +4076,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             && next.fetchStateExecutionData() instanceof AzureAppServiceSlotSetupExecutionData) {
           AzureAppServiceSlotSetupExecutionData appServiceSetupStateExecutionData =
               (AzureAppServiceSlotSetupExecutionData) next.fetchStateExecutionData();
-          if (isNotEmpty(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries())) {
+          if (hasSome(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries())) {
             instanceStatusSummaries.addAll(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries());
           }
         }
@@ -4134,7 +4133,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .asList();
 
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       return null;
     }
 
@@ -4159,7 +4158,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<String> parentInstanceIds = new ArrayList<>();
     parentInstanceIds.add(stateExecutionInstanceId);
 
-    while (isNotEmpty(parentInstanceIds)) {
+    while (hasSome(parentInstanceIds)) {
       try (HIterator<StateExecutionInstance> iterator =
                new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
                                    .filter(StateExecutionInstanceKeys.appId, appId)
@@ -4208,7 +4207,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .filter(StateExecutionInstanceKeys.stateType, ARTIFACT_COLLECTION.name())
             .asList();
 
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       return null;
     }
 
@@ -4264,7 +4263,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private boolean containsBuildExecutionSummary(
       List<BuildExecutionSummary> buildExecutionSummaries, BuildExecutionSummary buildExecutionSummary) {
-    if (isEmpty(buildExecutionSummaries) || buildExecutionSummary == null) {
+    if (hasNone(buildExecutionSummaries) || buildExecutionSummary == null) {
       return false;
     }
 
@@ -4306,7 +4305,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                            .mapToInt(i -> i)
                            .sum();
     } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
-        && isNotEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
+        && hasSome(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
       for (PipelineStageExecution pipelineStageExecution :
           workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
         if (pipelineStageExecution == null || pipelineStageExecution.getWorkflowExecutions() == null) {
@@ -4343,7 +4342,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           }
 
           List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-          if (isEmpty(pipelineStageExecutions)) {
+          if (hasNone(pipelineStageExecutions)) {
             throw new InvalidBaselineConfigurationException("No workflows have been executed for this pipeline.");
           }
           pipelineStageExecutions.forEach(
@@ -4360,7 +4359,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowExecutions.stream().map(execution -> execution.getUuid()).collect(Collectors.toList()));
       Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
 
-      if (!isEmpty(workflowExecutions)) {
+      if (!hasNone(workflowExecutions)) {
         workflowExecutions.forEach(stageExecution -> {
           String executionUuid = stageExecution.getUuid();
           List<StateExecutionInstance> stateExecutionInstances =
@@ -4398,7 +4397,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       log.info("execution baseline {}", baselines);
-      if (isEmpty(baselines)) {
+      if (hasNone(baselines)) {
         throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
             "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.")
             .addParam("message",
@@ -4560,13 +4559,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       findOptions = findOptions.skip(1);
     }
 
-    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+    if (hasSome(workflowExecution.getInfraMappingIds())) {
       workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
     }
 
     addressInefficientQueries(workflowExecutionQuery);
 
-    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+    if (hasSome(workflowExecution.getInfraMappingIds())) {
       findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
@@ -4583,13 +4582,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       findOptions = findOptions.skip(1);
     }
 
-    if (isNotEmpty(infraMappingList)) {
+    if (hasSome(infraMappingList)) {
       workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, infraMappingList);
     }
 
     addressInefficientQueries(workflowExecutionQuery);
 
-    if (isNotEmpty(infraMappingList)) {
+    if (hasSome(infraMappingList)) {
       findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
@@ -4645,7 +4644,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return true;
     }
 
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       try {
         if (isBlank(appId) || isBlank(workflowId)) {
           return true;
@@ -4678,7 +4677,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addOrder(WorkflowExecutionKeys.createdAt, OrderType.ASC)
             .addFilter(WorkflowExecutionKeys.workflowId, EQ, workflowExecution.getWorkflowId());
 
-    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+    if (hasSome(workflowExecution.getInfraMappingIds())) {
       pageRequestBuilder.addFilter(
           WorkflowExecutionKeys.infraMappingIds, IN, workflowExecution.getInfraMappingIds().toArray());
     }
@@ -4702,7 +4701,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     ApprovalAuthorization approvalAuthorization = new ApprovalAuthorization();
     approvalAuthorization.setAuthorized(true);
 
-    if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
+    if (hasSome(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
       approvalAuthorization.setAuthorized(false);
     }
 
@@ -4751,7 +4750,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Workflow Step Artifacts
     List<Artifact> artifacts = workflowExecution.getArtifacts();
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return;
     }
 
@@ -4846,7 +4845,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter(WorkflowExecutionKeys.status, Operator.EQ, ExecutionStatus.SUCCESS)
             .addOrder(WorkflowExecutionKeys.createdAt, OrderType.DESC)
             .build();
-    if (!isEmpty(serviceId)) {
+    if (!hasNone(serviceId)) {
       pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, EQ, serviceId);
     }
     final PageResponse<WorkflowExecution> workflowExecutions = listExecutions(pageRequest, false, true, false, false);
@@ -4861,7 +4860,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     boolean modified = false;
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     List<String> infraMappingIds = workflowExecution.getInfraMappingIds();
-    if (isNotEmpty(infraMappingIds)) {
+    if (hasSome(infraMappingIds)) {
       if (!infraMappingIds.contains(infraMappingId)) {
         infraMappingIds.add(infraMappingId);
         modified = true;
@@ -4955,7 +4954,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution) {
     Map<String, Object> infrastructureDetails = new LinkedHashMap<>();
 
-    if (isNotEmpty(execution.getInfraMappingIds())) {
+    if (hasSome(execution.getInfraMappingIds())) {
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(appId, execution.getInfraMappingIds().get(0));
 
@@ -4999,7 +4998,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(List<String> entityIds) {
-    if (EmptyPredicate.isEmpty(entityIds)) {
+    if (hasNone(entityIds)) {
       return Collections.emptyList();
     }
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
@@ -5133,7 +5132,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     }
     List<String> infraDefId = lastWE.getInfraDefinitionIds();
-    if (isEmpty(infraDefId) || infraDefId.size() != 1) {
+    if (hasNone(infraDefId) || infraDefId.size() != 1) {
       // Only allowing on demand rollback for workflow deploying single infra definition.
       log.info("On demand rollback not available, Infra definition size not equal to 1 {}", lastWE);
       return false;
@@ -5170,7 +5169,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public boolean isMultiService(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("Workflow Execution cannot be null", workflowExecution);
-    return isNotEmpty(workflowExecution.getServiceIds()) && workflowExecution.getServiceIds().size() > 1;
+    return hasSome(workflowExecution.getServiceIds()) && workflowExecution.getServiceIds().size() > 1;
   }
 
   @Override
@@ -5240,7 +5239,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   public Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return null;
     }
     Map<String, String> deploymentTags = new HashMap<>();
@@ -5255,7 +5254,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter(WorkflowExecutionKeys.accountId, accountId)
                                          .filter(WorkflowExecutionKeys.tags + ".name", key);
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       query.field(WorkflowExecutionKeys.tags + ".value").equal(value);
     }
 

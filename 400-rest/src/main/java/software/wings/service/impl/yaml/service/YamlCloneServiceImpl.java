@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
@@ -11,7 +12,6 @@ import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -179,7 +179,7 @@ public class YamlCloneServiceImpl implements YamlCloneService {
           gitFileChanges, accountId, folderNode, folderNode.getDirectoryPath().getPath(), includeFiles, errorMessages);
 
       // If yamlConversion fails for any files, propogate that message to UI with failure
-      if (EmptyPredicate.isNotEmpty(errorMessages.get())) {
+      if (hasSome(errorMessages.get())) {
         StringBuilder builder = new StringBuilder("Following Errors Happened\n");
         errorMessages.get().forEach(message -> builder.append(message).append(", "));
         return getRestResponseForFailure(builder.toString());

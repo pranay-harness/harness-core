@@ -14,8 +14,8 @@ import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
@@ -173,7 +173,7 @@ public class BuildJobEnvInfoBuilder {
     if (sharedPaths != null) {
       int index = 0;
       for (String path : sharedPaths) {
-        if (isEmpty(path)) {
+        if (hasNone(path)) {
           continue;
         }
 
@@ -210,7 +210,7 @@ public class BuildJobEnvInfoBuilder {
       } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig =
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
-        if (isNotEmpty(parallelStepElementConfig.getSections())) {
+        if (hasSome(parallelStepElementConfig.getSections())) {
           for (ExecutionWrapperConfig executionWrapperInParallel : parallelStepElementConfig.getSections()) {
             if (executionWrapperInParallel.getStep() == null || executionWrapperInParallel.getStep().isNull()) {
               continue;
@@ -308,7 +308,7 @@ public class BuildJobEnvInfoBuilder {
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> envvars =
         resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvVariables(), false);
-    if (!isEmpty(envvars)) {
+    if (!hasNone(envvars)) {
       stepEnvVars.putAll(envvars);
     }
     return ContainerDefinitionInfo.builder()
@@ -343,7 +343,7 @@ public class BuildJobEnvInfoBuilder {
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> envvars =
         resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
-    if (!isEmpty(envvars)) {
+    if (!hasNone(envvars)) {
       stepEnvVars.putAll(envvars);
     }
     return ContainerDefinitionInfo.builder()
@@ -374,7 +374,7 @@ public class BuildJobEnvInfoBuilder {
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> settings =
         resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
-    if (!isEmpty(settings)) {
+    if (!hasNone(settings)) {
       for (Map.Entry<String, String> entry : settings.entrySet()) {
         String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
         envVarMap.put(key, entry.getValue());
@@ -411,7 +411,7 @@ public class BuildJobEnvInfoBuilder {
 
   private List<SecretNGVariable> getSecretVariables(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-    if (isEmpty(stageElementConfig.getVariables())) {
+    if (hasNone(stageElementConfig.getVariables())) {
       return Collections.emptyList();
     }
 
@@ -442,7 +442,7 @@ public class BuildJobEnvInfoBuilder {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
     List<ExecutionWrapperConfig> executionWrappers = integrationStageConfig.getExecution().getSteps();
-    if (isEmpty(executionWrappers)) {
+    if (hasNone(executionWrappers)) {
       return Collections.emptyMap();
     }
 
@@ -523,7 +523,7 @@ public class BuildJobEnvInfoBuilder {
   private Map<String, String> getEnvVariables(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(stageElementConfig.getVariables())) {
+    if (hasNone(stageElementConfig.getVariables())) {
       return Collections.emptyMap();
     }
 
@@ -561,7 +561,7 @@ public class BuildJobEnvInfoBuilder {
     if (resource != null && resource.getLimits() != null && resource.getLimits().getMemory() != null) {
       String memoryLimitMemoryQuantity =
           resolveStringParameter("memory", stepType, stepId, resource.getLimits().getMemory(), false);
-      if (isNotEmpty(memoryLimitMemoryQuantity) && !UNRESOLVED_PARAMETER.equals(memoryLimitMemoryQuantity)) {
+      if (hasSome(memoryLimitMemoryQuantity) && !UNRESOLVED_PARAMETER.equals(memoryLimitMemoryQuantity)) {
         memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, MemoryQuantityUnit.Mi);
       }
     }
@@ -572,7 +572,7 @@ public class BuildJobEnvInfoBuilder {
     Integer cpuLimit = ciExecutionServiceConfig.getDefaultCPULimit();
     if (resource != null && resource.getLimits() != null && resource.getLimits().getCpu() != null) {
       String cpuLimitQuantity = resolveStringParameter("cpu", stepType, stepId, resource.getLimits().getCpu(), false);
-      if (isNotEmpty(cpuLimitQuantity) && !UNRESOLVED_PARAMETER.equals(cpuLimitQuantity)) {
+      if (hasSome(cpuLimitQuantity) && !UNRESOLVED_PARAMETER.equals(cpuLimitQuantity)) {
         cpuLimit = QuantityUtils.getCpuQuantityValueInUnit(cpuLimitQuantity, DecimalQuantityUnit.m);
       }
     }
@@ -599,7 +599,7 @@ public class BuildJobEnvInfoBuilder {
       executionWrapperMemoryRequest = getStepMemoryLimit(stepElementConfig);
     } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
       ParallelStepElementConfig parallel = IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
-      if (isNotEmpty(parallel.getSections())) {
+      if (hasSome(parallel.getSections())) {
         for (ExecutionWrapperConfig wrapper : parallel.getSections()) {
           executionWrapperMemoryRequest += getExecutionWrapperMemoryRequest(wrapper);
         }
@@ -663,7 +663,7 @@ public class BuildJobEnvInfoBuilder {
     } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
       ParallelStepElementConfig parallelStepElement =
           IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
-      if (isNotEmpty(parallelStepElement.getSections())) {
+      if (hasSome(parallelStepElement.getSections())) {
         for (ExecutionWrapperConfig wrapper : parallelStepElement.getSections()) {
           executionWrapperCpuRequest += getExecutionWrapperCpuRequest(wrapper);
         }

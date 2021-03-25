@@ -1,7 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.batch.processing.config.k8s.recommendation.ResourceId;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -41,7 +41,7 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
   @Override
   public void savePodWorkload(String accountId, PodInfo podInfo) {
     Owner topLevelOwner = podInfo.getTopLevelOwner();
-    if (isNotEmpty(topLevelOwner.getLabelsMap())) {
+    if (hasSome(topLevelOwner.getLabelsMap())) {
       final CacheKey cacheKey = new CacheKey(podInfo.getClusterId(), topLevelOwner.getUid());
       saved.get(cacheKey,
           key

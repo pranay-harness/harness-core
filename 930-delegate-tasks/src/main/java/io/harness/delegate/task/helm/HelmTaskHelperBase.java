@@ -1,7 +1,7 @@
 package io.harness.delegate.task.helm;
 
 import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.USER_PASSWORD;
@@ -122,7 +122,7 @@ public class HelmTaskHelperBase {
       String workingDirectory, HelmVersion helmVersion) {
     String repoAddCommand =
         getHttpRepoAddCommandWithoutPassword(repoName, chartRepoUrl, username, workingDirectory, helmVersion);
-    String evaluatedPassword = isEmpty(getPassword(password)) ? StringUtils.EMPTY : "--password *******";
+    String evaluatedPassword = hasNone(getPassword(password)) ? StringUtils.EMPTY : "--password *******";
 
     return repoAddCommand.replace(PASSWORD, evaluatedPassword);
   }
@@ -169,7 +169,7 @@ public class HelmTaskHelperBase {
   }
 
   public ProcessResult executeCommand(String command, String directoryPath, String errorMessage, long timeoutInMillis) {
-    errorMessage = isEmpty(errorMessage) ? "" : errorMessage;
+    errorMessage = hasNone(errorMessage) ? "" : errorMessage;
     ProcessExecutor processExecutor = createProcessExecutor(command, directoryPath, timeoutInMillis);
 
     try {

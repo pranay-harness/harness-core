@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -64,7 +64,7 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
     putNotNull(
         executionDetails, "revision", ExecutionDataValue.builder().displayName("Revision").value(revision).build());
 
-    if (isNotEmpty(metadata)) {
+    if (hasSome(metadata)) {
       putNotNull(executionDetails, "metadata",
           ExecutionDataValue.builder()
               .displayName("Meta-Data")

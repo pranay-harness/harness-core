@@ -1,6 +1,6 @@
 package software.wings.service.impl.elk;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Arrays.asList;
 
@@ -41,7 +41,7 @@ public class ElkLogFetchRequest {
     this.indices = indices;
     this.hostnameField = hostnameField;
     this.messageField = messageField;
-    this.timestampField = isEmpty(timestampField) ? this.timestampField : timestampField;
+    this.timestampField = hasNone(timestampField) ? this.timestampField : timestampField;
     this.hosts = hosts;
     this.startTime = startTime;
     this.endTime = endTime;

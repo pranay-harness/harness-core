@@ -1,11 +1,11 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -61,7 +61,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   public Artifact collectNewArtifacts(String appId, ArtifactStream artifactStream, String buildNumber) {
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), artifactStream.getSettingId());
-    if (EmptyPredicate.isNotEmpty(builds)) {
+    if (hasSome(builds)) {
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {
@@ -95,7 +95,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
           artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(
           artifactStream.fetchAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
-      if (isEmpty(builds)) {
+      if (hasNone(builds)) {
         return new ArrayList<>();
       }
 

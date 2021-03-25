@@ -1,6 +1,6 @@
 package io.harness.event.usagemetrics;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -133,14 +133,14 @@ public class UsageMetricsEventPublisher {
                                         .integerData(integerData)
                                         .data(objectData)
                                         .build();
-    if (isEmpty(eventInfo.getListData())) {
+    if (hasNone(eventInfo.getListData())) {
       log.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);
     }
     return DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
   }
 
   public void publishInstanceTimeSeries(String accountId, long timestamp, List<Instance> instances) {
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return;
     }
 
@@ -151,7 +151,7 @@ public class UsageMetricsEventPublisher {
         instances.stream().collect(groupingBy(Instance::getInfraMappingId));
 
     infraMappingInstancesMap.values().forEach(instanceList -> {
-      if (isEmpty(instanceList)) {
+      if (hasNone(instanceList)) {
         return;
       }
 

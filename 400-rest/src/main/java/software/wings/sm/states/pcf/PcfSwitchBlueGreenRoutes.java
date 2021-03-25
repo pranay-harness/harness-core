@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -14,7 +15,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -173,8 +173,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
       SetupSweepingOutputPcf setupSweepingOutputPcf) {
     List<String> existingAppNames;
 
-    if (setupSweepingOutputPcf != null
-        && EmptyPredicate.isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
+    if (setupSweepingOutputPcf != null && hasSome(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
       existingAppNames = setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                              .stream()
                              .map(PcfAppSetupTimeDetails::getApplicationName)

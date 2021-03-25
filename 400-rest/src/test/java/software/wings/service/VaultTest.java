@@ -3,7 +3,7 @@ package software.wings.service;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -1546,7 +1546,7 @@ public class VaultTest extends WingsBaseTest {
                                                 .filter(EncryptedDataKeys.accountId, accountId)
                                                 .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
+    assertThat(hasNone(encryptedFileData.get(0).getParents())).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
@@ -1569,7 +1569,7 @@ public class VaultTest extends WingsBaseTest {
                             .filter(EncryptedDataKeys.type, CONFIG_FILE)
                             .asList();
     assertThat(encryptedFileData).hasSize(1);
-    assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
+    assertThat(hasNone(encryptedFileData.get(0).getParents())).isFalse();
 
     int numOfAccess = 7;
     for (int i = 0; i < numOfAccess; i++) {

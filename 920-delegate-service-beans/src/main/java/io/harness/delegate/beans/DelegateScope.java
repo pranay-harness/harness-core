@@ -1,6 +1,6 @@
 package io.harness.delegate.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
@@ -68,8 +68,7 @@ public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAwar
   private List<String> infrastructureDefinitions;
 
   public boolean isValid() {
-    return (isNotEmpty(taskTypes)) || (isNotEmpty(environmentTypes)) || (isNotEmpty(applications))
-        || (isNotEmpty(environments)) || (isNotEmpty(serviceInfrastructures)) || (isNotEmpty(infrastructureDefinitions))
-        || (isNotEmpty(services));
+    return (hasSome(taskTypes)) || (hasSome(environmentTypes)) || (hasSome(applications)) || (hasSome(environments))
+        || (hasSome(serviceInfrastructures)) || (hasSome(infrastructureDefinitions)) || (hasSome(services));
   }
 }

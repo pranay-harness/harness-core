@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
@@ -24,7 +24,7 @@ public interface AccountType {
   Set<String> allAccountTypes = ImmutableSet.of(TRIAL, ESSENTIALS, COMMUNITY, PAID);
 
   static boolean isValid(String type) {
-    if (isEmpty(type)) {
+    if (hasNone(type)) {
       return false;
     }
 
@@ -40,7 +40,7 @@ public interface AccountType {
   }
 
   static boolean isCommunity(String type) {
-    if (isEmpty(type)) {
+    if (hasNone(type)) {
       return false;
     }
     if (!isValid(type)) {

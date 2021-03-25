@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
@@ -300,7 +299,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   private ApplicationSummary getMostRecentInactiveApplication(ExecutionLogCallback executionLogCallback,
       ApplicationSummary activeApplicationSummary, PcfCommandSetupRequest pcfCommandSetupRequest,
       List<ApplicationSummary> previousReleases) {
-    if (isEmpty(previousReleases)) {
+    if (hasNone(previousReleases)) {
       return null;
     }
 
@@ -323,7 +322,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   private ApplicationSummary findActiveApplication(ExecutionLogCallback executionLogCallback,
       PcfCommandSetupRequest pcfCommandSetupRequest, PcfRequestConfig pcfRequestConfig,
       List<ApplicationSummary> previousReleases) throws PivotalClientApiException {
-    if (isEmpty(previousReleases)) {
+    if (hasNone(previousReleases)) {
       return null;
     }
 
@@ -352,7 +351,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void printExistingApplicationsDetails(
       ExecutionLogCallback executionLogCallback, List<ApplicationSummary> previousReleases) {
-    if (EmptyPredicate.isEmpty(previousReleases)) {
+    if (hasNone(previousReleases)) {
       executionLogCallback.saveExecutionLog("# No Existing applications found");
     } else {
       StringBuilder appNames = new StringBuilder(color("# Existing applications: ", White, Bold));
@@ -379,11 +378,11 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     List<String> varFiles = setupRequest.getPcfManifestsPackage().getVariableYmls();
-    if (isNotEmpty(varFiles)) {
+    if (hasSome(varFiles)) {
       varFiles = varFiles.stream().filter(StringUtils::isNotBlank).collect(toList());
     }
 
-    return isNotEmpty(varFiles);
+    return hasSome(varFiles);
   }
 
   @VisibleForTesting
@@ -474,7 +473,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       PcfCommandSetupRequest pcfCommandSetupRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ApplicationSummary activeApplication, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException {
-    if (EmptyPredicate.isEmpty(previousReleases)) {
+    if (hasNone(previousReleases)) {
       return;
     }
 
@@ -489,7 +488,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     // We will keep most recent/active one as is, and downsize olderActiveVersionCountToKeep - 1
     // apps to 0, so they will be deleted in next deployment.
     int olderValidAppsFound = 1;
-    if (isNotEmpty(previousReleases) && previousReleases.size() > 1) {
+    if (hasSome(previousReleases) && previousReleases.size() > 1) {
       for (int index = previousReleases.size() - 1; index >= 0; index--) {
         ApplicationSummary applicationSummary = previousReleases.get(index);
         if (activeApplication != null && applicationSummary.getName().equals(activeApplication.getName())) {
@@ -505,7 +504,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       }
     }
 
-    if (isNotEmpty(appsDeleted)) {
+    if (hasSome(appsDeleted)) {
       executionLogCallback.saveExecutionLog(new StringBuilder(128)
                                                 .append("# Done Deleting older applications. ")
                                                 .append("Deleted Total ")
@@ -557,7 +556,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
 
       // Unmap routes from application having 0 instances
-      if (isNotEmpty(applicationDetail.getUrls())) {
+      if (hasSome(applicationDetail.getUrls())) {
         pcfDeploymentManager.unmapRouteMapForApplication(
             pcfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
       }

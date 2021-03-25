@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -84,7 +84,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     String resolvedServiceField = getResolvedFieldValue(context, DynatraceStateKeys.serviceEntityId, serviceEntityId);
 
     Set<String> entityIdsToQuery = new HashSet<>();
-    if (isNotEmpty(resolvedServiceField)) {
+    if (hasSome(resolvedServiceField)) {
       List<String> resolvedServiceIds = Arrays.asList(resolvedServiceField.split(","));
       resolvedServiceIds.replaceAll(String::trim);
 
@@ -98,12 +98,12 @@ public class DynatraceState extends AbstractMetricAnalysisState {
         // we will do the resolution for serviceID only if it is not empty
         // this is because already existing setups will not have this field.
         String validatedServiceId = null;
-        if (isNotEmpty(resolvedServiceEntityId)) {
+        if (hasSome(resolvedServiceEntityId)) {
           // if this is a name, get the corresponding ID.
           try {
             validatedServiceId =
                 dynaTraceService.resolveDynatraceServiceNameToId(resolvedConnectorId, resolvedServiceEntityId);
-            if (isNotEmpty(validatedServiceId)) {
+            if (hasSome(validatedServiceId)) {
               resolvedServiceEntityId = validatedServiceId;
             }
           } catch (Exception ex) {

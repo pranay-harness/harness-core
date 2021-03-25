@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.utils.Utils.escapifyString;
@@ -156,11 +156,11 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
           String commandDir =
               isNotBlank(execCommandUnit.getCommandPath()) ? "'" + execCommandUnit.getCommandPath().trim() + "'" : "";
           String commandString = execCommandUnit.getCommandString();
-          boolean includeTailFunctions = isNotEmpty(execCommandUnit.getTailPatterns())
+          boolean includeTailFunctions = hasSome(execCommandUnit.getTailPatterns())
               || StringUtils.contains(commandString, "harness_utils_start_tail_log_verification")
               || StringUtils.contains(commandString, "harness_utils_wait_for_tail_log_verification");
           StringBuilder preparedCommand = new StringBuilder(getInitCommand(commandDir, includeTailFunctions));
-          if (isEmpty(execCommandUnit.getTailPatterns())) {
+          if (hasNone(execCommandUnit.getTailPatterns())) {
             preparedCommand.append(commandString);
           } else {
             try (StringWriter stringWriter = new StringWriter()) {

@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.execution;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
@@ -46,12 +47,12 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
     }
     String pipelineInfoJson = RecastOrchestrationUtils.toDocumentJson(
         executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto));
-    if (EmptyPredicate.isNotEmpty(pipelineInfoJson)) {
+    if (hasSome(pipelineInfoJson)) {
       executionSummaryUpdateRequest.setPipelineModuleInfoJson(pipelineInfoJson);
     }
     String stageInfoJson = RecastOrchestrationUtils.toDocumentJson(
         executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto));
-    if (EmptyPredicate.isNotEmpty(stageInfoJson)) {
+    if (hasSome(stageInfoJson)) {
       executionSummaryUpdateRequest.setNodeModuleInfoJson(stageInfoJson);
     }
     try {

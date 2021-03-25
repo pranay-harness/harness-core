@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.resolver;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
@@ -24,14 +24,14 @@ public interface Resolver<T extends StepTransput> {
   };
 
   default String consume(@NotNull Ambiance ambiance, @NotNull String name, T value, String groupName) {
-    if (EmptyPredicate.isEmpty(groupName)) {
+    if (hasNone(groupName)) {
       return consumeInternal(ambiance, name, value, -1);
     }
     if (groupName.equals(ResolverUtils.GLOBAL_GROUP_SCOPE)) {
       return consumeInternal(ambiance, name, value, 0);
     }
 
-    if (EmptyPredicate.isEmpty(ambiance.getLevelsList())) {
+    if (hasNone(ambiance.getLevelsList())) {
       throw new GroupNotFoundException(groupName);
     }
 

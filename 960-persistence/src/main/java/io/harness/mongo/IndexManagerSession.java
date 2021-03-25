@@ -1,6 +1,6 @@
 package io.harness.mongo;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
 import static io.harness.data.structure.ListUtils.oneAndOnlyOne;
@@ -572,7 +572,7 @@ public class IndexManagerSession {
       if (okToDropIndexes) {
         IndexManagerCollectionSession collectionSession = createCollectionSession(collection);
         List<String> obsoleteIndexes = collectionSession.obsoleteIndexes(creators.keySet());
-        if (isNotEmpty(obsoleteIndexes)) {
+        if (hasSome(obsoleteIndexes)) {
           // Make sure that all indexes that we have are operational, we check that they have being seen since
           // at least a day
           Date tooNew = tooNew();
@@ -642,7 +642,7 @@ public class IndexManagerSession {
                                            .filter(name -> !name.startsWith("!!!test"))
                                            .collect(toList());
 
-    if (isNotEmpty(obsoleteCollections)) {
+    if (hasSome(obsoleteCollections)) {
       log.error("Unknown mongo collections detected: {}\n"
               + "Please create migration to delete them or add them to the whitelist.",
           join(", ", obsoleteCollections));

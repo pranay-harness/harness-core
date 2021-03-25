@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
@@ -686,7 +686,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   boolean isHelm3(String cliResponse) {
-    return isNotEmpty(cliResponse) && cliResponse.toLowerCase().startsWith("v3.");
+    return hasSome(cliResponse) && cliResponse.toLowerCase().startsWith("v3.");
   }
 
   @Override
@@ -727,7 +727,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private List<ReleaseInfo> parseHelmReleaseCommandOutput(String listReleaseOutput, HelmCommandType helmCommandType)
       throws IOException {
-    if (isEmpty(listReleaseOutput)) {
+    if (hasNone(listReleaseOutput)) {
       return new ArrayList<>();
     }
     CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
@@ -758,7 +758,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private List<RepoListInfo> parseHelmAddRepoOutput(String listReleaseOutput) throws IOException {
-    if (isEmpty(listReleaseOutput)) {
+    if (hasNone(listReleaseOutput)) {
       return new ArrayList<>();
     }
 
@@ -799,7 +799,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     log.info(commandResponse.getOutput());
     return commandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
-        && isEmpty(commandResponse.getReleaseInfoList());
+        && hasNone(commandResponse.getReleaseInfoList());
   }
 
   private boolean checkDeleteReleaseNeeded(HelmInstallCommandRequest commandRequest) {
@@ -807,7 +807,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     log.info(commandResponse.getOutput());
     if (commandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      if (isEmpty(commandResponse.getReleaseInfoList())) {
+      if (hasNone(commandResponse.getReleaseInfoList())) {
         return false;
       }
 
@@ -846,7 +846,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
           Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
 
-      if (isNotEmpty(gitFetchFilesResult.getFiles())) {
+      if (hasSome(gitFetchFilesResult.getFiles())) {
         executionLogCallback.saveExecutionLog(
             "Found " + gitFetchFilesResult.getFiles().size() + " value yaml files from git\n");
 
@@ -907,8 +907,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           }
         }
 
-        if (isNotEmpty(valuesYamlFilesFromGit)) {
-          if (isEmpty(commandRequest.getVariableOverridesYamlFiles())) {
+        if (hasSome(valuesYamlFilesFromGit)) {
+          if (hasNone(commandRequest.getVariableOverridesYamlFiles())) {
             commandRequest.setVariableOverridesYamlFiles(valuesYamlFilesFromGit);
           } else {
             List<String> variableOverridesYamlFiles = new ArrayList<>();
@@ -937,8 +937,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     if (helmCommandRequest.getChartSpecification() != null
-        && isNotEmpty(helmCommandRequest.getChartSpecification().getChartUrl())
-        && isNotEmpty(helmCommandRequest.getRepoName())) {
+        && hasSome(helmCommandRequest.getChartSpecification().getChartUrl())
+        && hasSome(helmCommandRequest.getRepoName())) {
       executionLogCallback.saveExecutionLog(
           "Adding helm repository " + helmCommandRequest.getChartSpecification().getChartUrl(), LogLevel.INFO,
           CommandExecutionStatus.RUNNING);
@@ -1039,7 +1039,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     HelmCliResponse helmCliResponse = helmClient.searchChart(request, chartInfo);
     List<SearchInfo> searchInfos = parseHelmSearchCommandOutput(helmCliResponse.getOutput());
 
-    if (isEmpty(searchInfos)) {
+    if (hasNone(searchInfos)) {
       return null;
     }
     SearchInfo searchInfo = searchInfos.get(0);
@@ -1090,7 +1090,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private List<SearchInfo> parseHelmSearchCommandOutput(String searchOutput) throws IOException {
-    if (isEmpty(searchOutput)) {
+    if (hasNone(searchOutput)) {
       return new ArrayList<>();
     }
 

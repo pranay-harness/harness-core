@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -19,7 +19,6 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.DuplicateFieldException;
@@ -94,7 +93,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Override
   public String updateGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate) {
-    if (isEmpty(gcpKmsConfig.getUuid())) {
+    if (hasNone(gcpKmsConfig.getUuid())) {
       String message = "Cannot have id as empty when updating secret manager configuration";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
@@ -207,32 +206,30 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     Pattern keyValidator = Pattern.compile("^[0-9a-zA-Z-_]+$");
     Pattern locationValidator = Pattern.compile("^[0-9a-zA-Z-]+$");
 
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getName()) || !nameValidator.matcher(gcpKmsConfig.getName()).find()) {
+    if (hasNone(gcpKmsConfig.getName()) || !nameValidator.matcher(gcpKmsConfig.getName()).find()) {
       String message =
           "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getProjectId())
-        || !nameValidator.matcher(gcpKmsConfig.getProjectId()).find()) {
+    if (hasNone(gcpKmsConfig.getProjectId()) || !nameValidator.matcher(gcpKmsConfig.getProjectId()).find()) {
       String message =
           "Project name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getKeyRing()) || !keyValidator.matcher(gcpKmsConfig.getKeyRing()).find()) {
+    if (hasNone(gcpKmsConfig.getKeyRing()) || !keyValidator.matcher(gcpKmsConfig.getKeyRing()).find()) {
       String message = "Key ring cannot be empty and can only have alphanumeric, hyphen and underscore characters";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getKeyName()) || !keyValidator.matcher(gcpKmsConfig.getKeyName()).find()) {
+    if (hasNone(gcpKmsConfig.getKeyName()) || !keyValidator.matcher(gcpKmsConfig.getKeyName()).find()) {
       String message = "Key name cannot be empty and can only have alphanumeric, hyphen and underscore characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getRegion())
-        || !locationValidator.matcher(gcpKmsConfig.getRegion()).find()) {
+    if (hasNone(gcpKmsConfig.getRegion()) || !locationValidator.matcher(gcpKmsConfig.getRegion()).find()) {
       String message = "Location cannot be empty and can only have alphanumeric and hyphen characters.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
 
-    if (EmptyPredicate.isEmpty(gcpKmsConfig.getCredentials())) {
+    if (hasNone(gcpKmsConfig.getCredentials())) {
       String message = "Credentials file is not uploaded.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
     }
@@ -258,7 +255,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   private EncryptedData getEncryptedDataForSecretField(GcpKmsConfig gcpKmsConfig, char[] credentials) {
-    EncryptedData encryptedData = isNotEmpty(credentials) ? encryptLocal(credentials) : null;
+    EncryptedData encryptedData = hasSome(credentials) ? encryptLocal(credentials) : null;
     if (gcpKmsConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -301,7 +298,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Can not delete global KMS secret manager", USER);
     }
 
-    if (isNotEmpty(gcpKmsConfig.getCredentials()) && !isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
+    if (hasSome(gcpKmsConfig.getCredentials()) && !isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       wingsPersistence.delete(EncryptedData.class, String.valueOf(gcpKmsConfig.getCredentials()));
       log.info("Deleted encrypted auth token record {} associated with GCP KMS '{}'", gcpKmsConfig.getCredentials(),
           gcpKmsConfig.getName());

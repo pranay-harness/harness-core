@@ -1,13 +1,13 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.PageRequest;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.export.ExportExecutionsResourceService;
 import io.harness.execution.export.request.ExportExecutionsRequestHelper;
@@ -105,7 +105,7 @@ public class ExportExecutionsResource {
       throw new InvalidRequestException("No filters provided for selecting executions to export");
     }
 
-    if (EmptyPredicate.isNotEmpty(tagFilter)) {
+    if (hasSome(tagFilter)) {
       workflowExecutionService.addTagFilterToPageRequest(pageRequest, tagFilter);
     }
     return wingsPersistence.convertToQuery(WorkflowExecution.class, pageRequest);

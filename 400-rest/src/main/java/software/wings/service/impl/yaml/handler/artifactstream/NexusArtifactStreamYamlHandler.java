@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -27,7 +27,7 @@ public class NexusArtifactStreamYamlHandler
     super.toYaml(yaml, bean);
     yaml.setRepositoryName(bean.getJobname());
     yaml.setArtifactPaths(bean.getArtifactPaths());
-    if (isNotEmpty(bean.getArtifactPaths())) {
+    if (hasSome(bean.getArtifactPaths())) {
       yaml.setGroupId(bean.getGroupId());
     } else {
       yaml.setImageName(bean.getImageName());
@@ -40,10 +40,10 @@ public class NexusArtifactStreamYamlHandler
     } else {
       yaml.setMetadataOnly(true);
     }
-    if (isNotEmpty(bean.getExtension())) {
+    if (hasSome(bean.getExtension())) {
       yaml.setExtension(bean.getExtension());
     }
-    if (isNotEmpty(bean.getClassifier())) {
+    if (hasSome(bean.getClassifier())) {
       yaml.setClassifier(bean.getClassifier());
     }
     return yaml;
@@ -53,13 +53,13 @@ public class NexusArtifactStreamYamlHandler
   protected void toBean(NexusArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
-    if (isEmpty(yaml.getRepositoryFormat())) {
+    if (hasNone(yaml.getRepositoryFormat())) {
       throw new InvalidRequestException("Repository Format is mandatory");
     }
-    if (isEmpty(yaml.getRepositoryName())) {
+    if (hasNone(yaml.getRepositoryName())) {
       throw new InvalidRequestException("Repository Name is mandatory");
     }
-    if (isNotEmpty(yaml.getArtifactPaths())) {
+    if (hasSome(yaml.getArtifactPaths())) {
       bean.setArtifactPaths(yaml.getArtifactPaths());
       bean.setGroupId(yaml.getGroupId());
     } else {

@@ -1,8 +1,8 @@
 package io.harness.pms.filter.creation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
@@ -27,27 +27,27 @@ public class FilterCreationResponse {
   @Default List<String> stageNames = new ArrayList<>();
 
   public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
-    if (EmptyPredicate.isEmpty(resolvedDependencies)) {
+    if (hasNone(resolvedDependencies)) {
       return;
     }
     resolvedDependencies.values().forEach(this::addResolvedDependency);
   }
 
   public void addReferredEntities(List<EntityDetailProtoDTO> refferedEntities) {
-    if (EmptyPredicate.isEmpty(refferedEntities)) {
+    if (hasNone(refferedEntities)) {
       return;
     }
-    if (EmptyPredicate.isEmpty(this.referredEntities)) {
+    if (hasNone(this.referredEntities)) {
       this.referredEntities = new ArrayList<>();
     }
     this.referredEntities.addAll(refferedEntities);
   }
 
   public void addStageNames(List<String> stageNames) {
-    if (EmptyPredicate.isEmpty(stageNames)) {
+    if (hasNone(stageNames)) {
       return;
     }
-    if (EmptyPredicate.isEmpty(this.stageNames)) {
+    if (hasNone(this.stageNames)) {
       this.stageNames = new ArrayList<>();
     }
     this.stageNames.addAll(stageNames);
@@ -67,7 +67,7 @@ public class FilterCreationResponse {
   }
 
   public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       return;
     }
     fields.values().forEach(this::addDependency);
@@ -93,23 +93,23 @@ public class FilterCreationResponse {
       finalBlobResponseBuilder.setFilter(pipelineFilter.toJson());
     }
 
-    if (isNotEmpty(dependencies)) {
+    if (hasSome(dependencies)) {
       for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
         finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
 
-    if (isNotEmpty(resolvedDependencies)) {
+    if (hasSome(resolvedDependencies)) {
       for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
         finalBlobResponseBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
 
-    if (isNotEmpty(referredEntities)) {
+    if (hasSome(referredEntities)) {
       finalBlobResponseBuilder.addAllReferredEntities(referredEntities);
     }
 
-    if (isNotEmpty(stageNames)) {
+    if (hasSome(stageNames)) {
       finalBlobResponseBuilder.addAllStageNames(stageNames);
     }
 

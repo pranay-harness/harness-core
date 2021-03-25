@@ -2,8 +2,8 @@ package io.harness.cvng.analysis.entities;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
@@ -48,7 +48,7 @@ public final class TimeSeriesShortTermHistory implements PersistentEntity, UuidA
   private byte[] compressedMetricHistories;
 
   public byte[] getCompressedMetricHistories() {
-    if (isEmpty(compressedMetricHistories)) {
+    if (hasNone(compressedMetricHistories)) {
       return new byte[0];
     }
 
@@ -56,7 +56,7 @@ public final class TimeSeriesShortTermHistory implements PersistentEntity, UuidA
   }
 
   public void compressMetricHistories() {
-    if (isNotEmpty(transactionMetricHistories)) {
+    if (hasSome(transactionMetricHistories)) {
       try {
         setCompressedMetricHistories(compressString(JsonUtils.asJson(transactionMetricHistories)));
         setTransactionMetricHistories(null);
@@ -67,7 +67,7 @@ public final class TimeSeriesShortTermHistory implements PersistentEntity, UuidA
   }
 
   public void deCompressMetricHistories() {
-    if (isNotEmpty(compressedMetricHistories)) {
+    if (hasSome(compressedMetricHistories)) {
       try {
         String decompressedMetricHistories = deCompressString(compressedMetricHistories);
         setTransactionMetricHistories(
@@ -124,7 +124,7 @@ public final class TimeSeriesShortTermHistory implements PersistentEntity, UuidA
         txnMetricHistoryMap.put(txn, new HashMap<>());
       }
 
-      if (isNotEmpty(transactionMetricHistory.getMetricHistoryList())) {
+      if (hasSome(transactionMetricHistory.getMetricHistoryList())) {
         transactionMetricHistory.getMetricHistoryList().forEach(metricHistory -> {
           String metricName = metricHistory.getMetricName();
           if (!txnMetricHistoryMap.get(txn).containsKey(metricName)) {

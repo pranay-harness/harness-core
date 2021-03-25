@@ -2,7 +2,7 @@ package io.harness.perpetualtask;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -102,7 +102,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
     return DelegateTask.builder()
         .accountId(accountId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-        .tags(isNotEmpty(taskData.getAwsConfig().getTag()) ? singletonList(taskData.getAwsConfig().getTag()) : null)
+        .tags(hasSome(taskData.getAwsConfig().getTag()) ? singletonList(taskData.getAwsConfig().getTag()) : null)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(AWS_EC2_TASK.name())

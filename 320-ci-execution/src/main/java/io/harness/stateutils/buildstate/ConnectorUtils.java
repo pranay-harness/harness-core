@@ -1,6 +1,6 @@
 package io.harness.stateutils.buildstate;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
@@ -91,7 +91,7 @@ public class ConnectorUtils {
 
   public Map<String, ConnectorDetails> getConnectorDetailsMap(NGAccess ngAccess, Set<String> connectorNameSet) {
     Map<String, ConnectorDetails> connectorDetailsMap = new HashMap<>();
-    if (isNotEmpty(connectorNameSet)) {
+    if (hasSome(connectorNameSet)) {
       for (String connectorIdentifier : connectorNameSet) {
         ConnectorDetails connectorDetails = getConnectorDetails(ngAccess, connectorIdentifier);
         connectorDetailsMap.put(connectorDetails.getIdentifier(), connectorDetails);

@@ -1,11 +1,10 @@
 package io.harness.ngpipeline.inputset.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity.CDInputSetEntityKeys;
 import io.harness.ngpipeline.inputset.beans.resource.InputSetListType;
@@ -24,16 +23,16 @@ public class InputSetFilterHelper {
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipeIdentifier, InputSetListType type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
+    if (hasSome(accountId)) {
       criteria.and(BaseInputSetEntityKeys.accountId).is(accountId);
     }
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       criteria.and(BaseInputSetEntityKeys.orgIdentifier).is(orgIdentifier);
     }
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       criteria.and(BaseInputSetEntityKeys.projectIdentifier).is(projectIdentifier);
     }
-    if (isNotEmpty(pipeIdentifier)) {
+    if (hasSome(pipeIdentifier)) {
       criteria.and(BaseInputSetEntityKeys.pipelineIdentifier).is(pipeIdentifier);
     }
     criteria.and(BaseInputSetEntityKeys.deleted).is(deleted);
@@ -42,7 +41,7 @@ public class InputSetFilterHelper {
       criteria.and(BaseInputSetEntityKeys.inputSetType).is(getInputSetType(type));
     }
 
-    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       Criteria searchCriteria =
           new Criteria().orOperator(where(BaseInputSetEntityKeys.name)
                                         .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),

@@ -1,6 +1,6 @@
 package io.harness.artifactory;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -76,7 +76,7 @@ public class ArtifactoryServiceImpl {
     try {
       builder.setUrl(getBaseUrl(artifactoryConfig));
       if (artifactoryConfig.isHasCredentials()) {
-        if (isEmpty(artifactoryConfig.getPassword())) {
+        if (hasNone(artifactoryConfig.getPassword())) {
           throw new ArtifactoryServerException(
               "Password is a required field along with Username", ErrorCode.INVALID_ARTIFACT_SERVER, USER);
         }

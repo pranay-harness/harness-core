@@ -1,7 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
@@ -74,7 +74,7 @@ public class ArtifactStreamPTaskHelper {
 
   private String create(String accountId, ArtifactCollectionPTaskClientParams clientParams) {
     Map<String, String> clientParamMap = new HashMap<>();
-    if (isEmpty(clientParams.getArtifactStreamId())) {
+    if (hasNone(clientParams.getArtifactStreamId())) {
       throw new InvalidRequestException(
           "Failed to create Perpetual Task as Artifact Stream Id is missing from clientParams");
     }

@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -8,7 +9,6 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -184,7 +184,7 @@ public class NGTriggerResource {
     Criteria criteria = TriggerFilterHelper.createCriteriaForGetList(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, null, searchTerm, false);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
@@ -225,7 +225,7 @@ public class NGTriggerResource {
     Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(
         null, null, null, Arrays.asList(repoURL), searchTerm, false, false);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

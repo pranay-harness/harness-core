@@ -1,6 +1,8 @@
 package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -11,7 +13,6 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome.ManifestsOutcomeBuilder;
 import io.harness.cdng.service.beans.ServiceConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -84,7 +85,7 @@ public class ManifestStep {
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to KubernetesServiceSpec
-    if (EmptyPredicate.isNotEmpty(serviceSpecManifests)) {
+    if (hasSome(serviceSpecManifests)) {
       identifierToManifestMap = serviceSpecManifests.stream().collect(Collectors.toMap(serviceSpecManifest
           -> serviceSpecManifest.getManifest().getIdentifier(),
           serviceSpecManifest -> serviceSpecManifest.getManifest().getManifestAttributes(), (a, b) -> b));
@@ -117,7 +118,7 @@ public class ManifestStep {
 
   private Map<String, List<ManifestOutcome>> getAllOverrideSets(List<ManifestOverrideSets> allOverrideSets) {
     Map<String, List<ManifestOutcome>> manifestOverridesMap = new HashMap<>();
-    if (EmptyPredicate.isEmpty(allOverrideSets)) {
+    if (hasNone(allOverrideSets)) {
       return manifestOverridesMap;
     }
     for (ManifestOverrideSets overrideSet : allOverrideSets) {
@@ -132,7 +133,7 @@ public class ManifestStep {
 
   private void applyManifestOverlay(
       Map<String, ManifestAttributes> identifierToManifestMap, List<ManifestConfigWrapper> overrideManifests) {
-    if (EmptyPredicate.isNotEmpty(overrideManifests)) {
+    if (hasSome(overrideManifests)) {
       overrideManifests.forEach(stageOverrideManifest -> {
         if (identifierToManifestMap.containsKey(stageOverrideManifest.getManifest().getIdentifier())) {
           identifierToManifestMap.put(stageOverrideManifest.getManifest().getIdentifier(),

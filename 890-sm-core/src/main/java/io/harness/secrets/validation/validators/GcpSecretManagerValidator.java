@@ -1,8 +1,8 @@
 package io.harness.secrets.validation.validators;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GCP_SECRET_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -52,13 +52,13 @@ public class GcpSecretManagerValidator extends BaseSecretValidator {
   }
 
   private void verifyFileSizeWithinLimit(byte[] fileContent) {
-    if (isNotEmpty(fileContent) && fileContent.length > GCP_SECRET_CONTENT_SIZE_LIMIT) {
+    if (hasSome(fileContent) && fileContent.length > GCP_SECRET_CONTENT_SIZE_LIMIT) {
       throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR, GCP_SECRET_FILE_SIZE_ERROR, USER_SRE);
     }
   }
 
   private void verifyValueSizeWithinLimit(String secretText) {
-    if (isNotEmpty(secretText) && secretText.getBytes().length > GCP_SECRET_CONTENT_SIZE_LIMIT) {
+    if (hasSome(secretText) && secretText.getBytes().length > GCP_SECRET_CONTENT_SIZE_LIMIT) {
       throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR, GCP_SECRET_CONTENT_SIZE_ERROR, USER_SRE);
     }
   }
@@ -85,7 +85,7 @@ public class GcpSecretManagerValidator extends BaseSecretValidator {
   private void checkIfSecretCanBeUpdated(HarnessSecret secretText, EncryptedRecord existingRecord) {
     String secretName =
         existingRecord.getEncryptionKey() != null ? existingRecord.getEncryptionKey() : existingRecord.getName();
-    if (isEmpty(secretText.getName())) {
+    if (hasNone(secretText.getName())) {
       throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR, "Null or Empty Secret Name is not allowed", USER);
     } else if (!secretText.getName().equals(secretName)) {
       throw new SecretManagementException(

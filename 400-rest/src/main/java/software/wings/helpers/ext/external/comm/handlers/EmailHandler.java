@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.external.comm.handlers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -79,7 +79,7 @@ public class EmailHandler implements CollaborationHandler {
         boolean result = false;
         try {
           Properties props = new Properties();
-          if (isNotEmpty(smtpConfig.getPassword())) {
+          if (hasSome(smtpConfig.getPassword())) {
             props.setProperty("mail.smtp.auth", "true");
           }
           SmtpConfig config = kryoSerializer.clone(smtpConfig);
@@ -94,7 +94,7 @@ public class EmailHandler implements CollaborationHandler {
           Session session = Session.getInstance(props, null);
           Transport transport = session.getTransport("smtp");
           transport.connect(config.getHost(), config.getPort(), config.getUsername(),
-              isNotEmpty(config.getPassword()) ? new String(config.getPassword()) : null);
+              hasSome(config.getPassword()) ? new String(config.getPassword()) : null);
           transport.close();
           result = true;
 

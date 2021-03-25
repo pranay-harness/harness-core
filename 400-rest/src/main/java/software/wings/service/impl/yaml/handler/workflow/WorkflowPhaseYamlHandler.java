@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -76,13 +76,13 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String infraDefName = null;
     String deploymentTypeString = yaml.getType();
 
-    if (isNotEmpty(yaml.getInfraDefinitionName())) {
+    if (hasSome(yaml.getInfraDefinitionName())) {
       InfrastructureDefinition infrastructureDefinition =
           infrastructureDefinitionService.getInfraDefByName(appId, envId, yaml.getInfraDefinitionName());
       infraDefId = infrastructureDefinition != null ? infrastructureDefinition.getUuid() : null;
       infraDefName = infrastructureDefinition != null ? infrastructureDefinition.getName() : null;
 
-    } else if (envId != null && isNotEmpty(yaml.getInfraMappingName())) {
+    } else if (envId != null && hasSome(yaml.getInfraMappingName())) {
       InfrastructureMapping infraMapping =
           infraMappingService.getInfraMappingByName(appId, envId, yaml.getInfraMappingName());
       infraMappingId = infraMapping != null ? infraMapping.getUuid() : null;
@@ -90,7 +90,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     String serviceId = null;
-    if (isNotEmpty(yaml.getServiceName())) {
+    if (hasSome(yaml.getServiceName())) {
       Service service = serviceResourceService.getServiceByName(appId, yaml.getServiceName());
       serviceId = service != null ? service.getUuid() : null;
     }
@@ -196,7 +196,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     String deploymentType = Utils.getStringFromEnum(bean.getDeploymentType());
     String serviceName = null;
-    if (isNotEmpty(bean.getServiceId())) {
+    if (hasSome(bean.getServiceId())) {
       Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
       serviceName = service != null ? service.getName() : null;
     }
@@ -205,7 +205,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String infraDefId = bean.getInfraDefinitionId();
     String infraDefName = null;
     InfrastructureDefinition infrastructureDefinition = null;
-    if (isNotEmpty(infraDefId)) {
+    if (hasSome(infraDefId)) {
       infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId);
       if (infrastructureDefinition != null) {
         infraDefName = infrastructureDefinition.getName();
@@ -213,7 +213,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
-    if (isNotEmpty(infraDefId) && infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
+    if (hasSome(infraDefId) && infrastructureDefinition == null && !bean.checkInfraDefinitionTemplatized()) {
       String message = format(
           "Infra-definition:%s could not be found for workflowPhase:%s, for app:%s", infraDefId, bean.getName(), appId);
       throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);

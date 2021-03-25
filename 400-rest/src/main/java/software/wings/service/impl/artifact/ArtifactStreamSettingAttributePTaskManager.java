@@ -1,7 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
@@ -47,7 +47,7 @@ public class ArtifactStreamSettingAttributePTaskManager implements SettingAttrib
     try (AutoLogContext ignore1 = new AccountLogContext(currSettingAttribute.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new SettingAttributeLogContext(currSettingAttribute.getUuid(), OVERRIDE_ERROR)) {
       List<ArtifactStream> artifactStreams = artifactStreamService.listAllBySettingId(currSettingAttribute.getUuid());
-      if (isEmpty(artifactStreams)) {
+      if (hasNone(artifactStreams)) {
         return;
       }
 

@@ -1,6 +1,7 @@
 package io.harness.integration;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SRIRAM;
@@ -796,8 +797,8 @@ public class LogMLIntegrationTest extends VerificationIntegrationBase {
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.isBaseLineCreated()).isFalse();
     assertThat(logAnalysisRecord.getControl_clusters()).hasSize(1);
-    assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
-    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
+    assertThat(hasNone(logAnalysisRecord.getTest_clusters())).isTrue();
+    assertThat(hasNone(logAnalysisRecord.getTest_events())).isTrue();
 
     LogMLFeedback mlFeedback = LogMLFeedback.builder()
                                    .stateExecutionId(stateExecutionId)
@@ -881,10 +882,10 @@ public class LogMLIntegrationTest extends VerificationIntegrationBase {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.isBaseLineCreated()).isTrue();
-    assertThat(isEmpty(logAnalysisRecord.getControl_clusters())).isTrue();
-    assertThat(isEmpty(logAnalysisRecord.getTest_clusters())).isTrue();
+    assertThat(hasNone(logAnalysisRecord.getControl_clusters())).isTrue();
+    assertThat(hasNone(logAnalysisRecord.getTest_clusters())).isTrue();
     assertThat(logAnalysisRecord.getUnknown_clusters()).hasSize(1);
-    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isFalse();
+    assertThat(hasNone(logAnalysisRecord.getTest_events())).isFalse();
   }
 
   @Test
@@ -1582,6 +1583,6 @@ public class LogMLIntegrationTest extends VerificationIntegrationBase {
         analysisService.getLogAnalysisRecords(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId, 0, false);
     assertThat(logAnalysisRecord.getControl_events()).hasSize(1);
     assertThat(logAnalysisRecord.getControl_events().get("20000").get(0).getText()).isEqualTo("ignore");
-    assertThat(isEmpty(logAnalysisRecord.getTest_events())).isTrue();
+    assertThat(hasNone(logAnalysisRecord.getTest_events())).isTrue();
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.manifest;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 
@@ -46,7 +46,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
   @Override
   public Collection<CustomSourceFile> fetchValues(@NotNull CustomManifestSource source, String workingDirectory,
       String activityId, LogCallback logCallback) throws IOException {
-    if (isNotEmpty(source.getScript())) {
+    if (hasSome(source.getScript())) {
       executeScript(source.getScript(), workingDirectory, activityId, logCallback);
     }
     return readFilesContent(workingDirectory, source.getFilePaths());
@@ -59,7 +59,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
 
   private void downloadCustomSource(CustomManifestSource source, String outputDirectory, String workingDirectory,
       LogCallback logCallback) throws IOException {
-    if (isNotEmpty(source.getScript())) {
+    if (hasSome(source.getScript())) {
       executeScript(source.getScript(), workingDirectory, SHELL_SCRIPT_TASK_ID, logCallback);
     }
     copyFiles(workingDirectory, outputDirectory, source.getFilePaths());
@@ -81,7 +81,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
   }
 
   private void cleanup(String path) {
-    if (isNotEmpty(path)) {
+    if (hasSome(path)) {
       try {
         FileUtils.deleteDirectory(new File(path));
       } catch (IOException e) {

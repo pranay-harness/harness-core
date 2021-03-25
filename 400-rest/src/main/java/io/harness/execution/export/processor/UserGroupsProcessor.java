@@ -1,7 +1,7 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.metadata.ApprovalMetadata;
@@ -38,12 +38,12 @@ public class UserGroupsProcessor implements ExportExecutionsProcessor {
     }
 
     PipelineExecutionMetadata pipelineExecutionMetadata = (PipelineExecutionMetadata) executionMetadata;
-    if (isEmpty(pipelineExecutionMetadata.getStages())) {
+    if (hasNone(pipelineExecutionMetadata.getStages())) {
       return;
     }
 
     for (PipelineStageExecutionMetadata stage : pipelineExecutionMetadata.getStages()) {
-      if (stage == null || stage.getApprovalData() == null || isEmpty(stage.getApprovalData().getUserGroupIds())) {
+      if (stage == null || stage.getApprovalData() == null || hasNone(stage.getApprovalData().getUserGroupIds())) {
         continue;
       }
 
@@ -59,13 +59,13 @@ public class UserGroupsProcessor implements ExportExecutionsProcessor {
 
     List<UserGroup> userGroups =
         userGroupService.fetchUserGroupNamesFromIdsUsingSecondary(userGroupIdToApprovalMetadata.keySet());
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       return;
     }
 
     for (UserGroup userGroup : userGroups) {
       Collection<ApprovalMetadata> approvalMetadataCollection = userGroupIdToApprovalMetadata.get(userGroup.getUuid());
-      if (isEmpty(approvalMetadataCollection)) {
+      if (hasNone(approvalMetadataCollection)) {
         continue;
       }
 

@@ -10,7 +10,7 @@ import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -384,13 +384,13 @@ public class AzureVMSSSetupState extends AbstractAzureState {
     if (azureLoadBalancerDetail == null) {
       invalidFields.put("azureLoadBalancerDetail", "Azure Load balancer detail is required");
     } else {
-      if (isEmpty(azureLoadBalancerDetail.getLoadBalancerName())) {
+      if (hasNone(azureLoadBalancerDetail.getLoadBalancerName())) {
         invalidFields.put("azureLoadBalancerDetail", "Load balancer name cannot be empty");
       }
-      if (isEmpty(azureLoadBalancerDetail.getProdBackendPool())) {
+      if (hasNone(azureLoadBalancerDetail.getProdBackendPool())) {
         invalidFields.put("productionBackendPool", "Production backend pool is required");
       }
-      if (isEmpty(azureLoadBalancerDetail.getStageBackendPool())) {
+      if (hasNone(azureLoadBalancerDetail.getStageBackendPool())) {
         invalidFields.put("stageBackendPool", "Stage backend pool is required");
       }
     }

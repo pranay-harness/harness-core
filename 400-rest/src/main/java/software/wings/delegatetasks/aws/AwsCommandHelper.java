@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -52,6 +52,6 @@ public class AwsCommandHelper {
 
   public List<String> nonEmptyTag(AwsConfig awsConfig) {
     String tag = awsConfig.getTag();
-    return isNotEmpty(tag) ? singletonList(tag) : null;
+    return hasSome(tag) ? singletonList(tag) : null;
   }
 }

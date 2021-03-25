@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.deployment.InstanceDetails;
 
@@ -44,7 +44,7 @@ public class SetupTestNodeData {
     this.instanceElement = instanceElement;
     this.hostExpression = hostExpression;
     this.workflowId = workflowId;
-    this.guid = isEmpty(guid) ? stateType.name() + workflowId + settingId : guid;
+    this.guid = hasNone(guid) ? stateType.name() + workflowId + settingId : guid;
     this.stateType = stateType;
     this.toTime = toTime;
     this.fromTime = fromTime;

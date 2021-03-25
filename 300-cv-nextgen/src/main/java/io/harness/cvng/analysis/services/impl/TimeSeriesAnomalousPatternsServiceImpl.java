@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -32,7 +32,7 @@ public class TimeSeriesAnomalousPatternsServiceImpl implements TimeSeriesAnomalo
 
     // change the filter to verificationTaskId
 
-    if (isNotEmpty(patternsToSave.getAnomalies())) {
+    if (hasSome(patternsToSave.getAnomalies())) {
       int size = patternsToSave.getAnomalies().size();
       Instant startCompress = Instant.now();
       log.info("Start compress for verificationTaskId {}, size {}, time {}", verificationTaskId, size, startCompress);

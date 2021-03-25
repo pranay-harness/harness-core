@@ -2,7 +2,7 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.isPresent;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
@@ -55,7 +55,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
 
     interrupt.setState(PROCESSING);
-    if (isEmpty(interrupts)) {
+    if (hasNone(interrupts)) {
       return interruptService.save(interrupt);
     }
     interrupts.stream()

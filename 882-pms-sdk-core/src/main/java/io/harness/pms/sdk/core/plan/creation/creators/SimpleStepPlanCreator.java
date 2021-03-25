@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
@@ -27,7 +28,7 @@ public abstract class SimpleStepPlanCreator implements PartialPlanCreator<YamlFi
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     Set<String> stepTypes = getSupportedStepTypes();
-    if (EmptyPredicate.isEmpty(stepTypes)) {
+    if (hasNone(stepTypes)) {
       return Collections.emptyMap();
     }
     return Collections.singletonMap("step", stepTypes);

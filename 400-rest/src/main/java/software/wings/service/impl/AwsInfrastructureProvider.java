@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -97,7 +97,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     } else {
       instances = listFilteredHosts(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
     }
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       List<Host> awsHosts =
           instances.stream()
               .map(instance -> {
@@ -185,7 +185,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       instances = listFilteredHosts(awsInstanceInfrastructure, awsConfig, encryptedDataDetails,
           infrastructureDefinition.getDeploymentType(), infrastructureDefinition.getAppId());
     }
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       List<Host> awsHosts =
           instances.stream()
               .map(instance
@@ -395,15 +395,15 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsElbHelperServiceManager.listApplicationLoadBalancers(awsConfig,
-        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
+    return awsElbHelperServiceManager.listApplicationLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, hasSome(appId) ? appId : null, null), region, appId);
   }
 
   public List<AwsLoadBalancerDetails> listApplicationLoadBalancers(
       SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsElbHelperServiceManager.listApplicationLoadBalancerDetails(awsConfig,
-        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
+    return awsElbHelperServiceManager.listApplicationLoadBalancerDetails(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, hasSome(appId) ? appId : null, null), region, appId);
   }
 
   public List<String> listElasticBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
@@ -434,8 +434,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsElbHelperServiceManager.listClassicLoadBalancers(awsConfig,
-        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
+    return awsElbHelperServiceManager.listClassicLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, hasSome(appId) ? appId : null, null), region, appId);
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {

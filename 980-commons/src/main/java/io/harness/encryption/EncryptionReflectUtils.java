@@ -1,8 +1,8 @@
 package io.harness.encryption;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -45,7 +45,7 @@ public class EncryptionReflectUtils {
 
   private static Encrypted getEncryptedAnnotation(@NotNull Field field) {
     Encrypted a = field.getAnnotation(Encrypted.class);
-    if (a == null || !a.value() || isEmpty(a.fieldName())) {
+    if (a == null || !a.value() || hasNone(a.fieldName())) {
       throw new InvalidArgumentsException(
           String.format("The field %s declared in %s is not annotated correctly with encryption annotation",
               field.getName(), field.getDeclaringClass()),
@@ -60,7 +60,7 @@ public class EncryptionReflectUtils {
     List<Field> declaredAndInheritedFields =
         ReflectionUtils.getDeclaredAndInheritedFields(object.getClass(), f -> f.getName().equals(encryptedFieldName));
 
-    if (isNotEmpty(declaredAndInheritedFields)) {
+    if (hasSome(declaredAndInheritedFields)) {
       return declaredAndInheritedFields.get(0);
     }
 

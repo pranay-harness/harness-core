@@ -1,5 +1,7 @@
 package io.harness.batch.processing.anomalydetection.alerts;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static com.slack.api.model.block.composition.BlockCompositions.plainText;
 import static org.apache.commons.text.StrSubstitutor.replace;
 
@@ -9,7 +11,6 @@ import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityKeys;
 import io.harness.ccm.anomaly.entities.EntityType;
 import io.harness.ccm.anomaly.url.HarnessUrl;
 import io.harness.ccm.anomaly.utility.AnomalyUtility;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 
 import com.google.inject.Singleton;
@@ -109,7 +110,7 @@ public class SlackMessageGenerator {
   }
 
   public String addClusterInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getClusterId())) {
+    if (hasSome(anomaly.getClusterId())) {
       if (anomaly.getEntityType() == EntityType.CLUSTER) {
         templateString = templateString + "*Cluster* : <${CLUSTER_URL}|${" + AnomalyEntityKeys.clusterName + "}> ";
       } else {
@@ -119,7 +120,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addNamespaceInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getNamespace())) {
+    if (hasSome(anomaly.getNamespace())) {
       if (anomaly.getEntityType().equals(EntityType.NAMESPACE)) {
         templateString =
             templateString + " \n> *Namespace* : <${NAMESPACE_URL}|${" + AnomalyEntityKeys.namespace + "}>";
@@ -130,7 +131,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addWorkloadInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getWorkloadName())) {
+    if (hasSome(anomaly.getWorkloadName())) {
       if (anomaly.getEntityType().equals(EntityType.WORKLOAD)) {
         templateString =
             templateString + " \n> *Workload* : <${WORKLOAD_URL}|${" + AnomalyEntityKeys.workloadName + "}>";
@@ -141,7 +142,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addGcpProjectInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpProject())) {
+    if (hasSome(anomaly.getGcpProject())) {
       if (anomaly.getEntityType().equals(EntityType.GCP_PROJECT)) {
         templateString = templateString + "*Project* : <${GCP_PROJECT_URL}|${" + AnomalyEntityKeys.gcpProject + "}>";
       } else {
@@ -151,7 +152,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addGcpProductInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpProduct())) {
+    if (hasSome(anomaly.getGcpProduct())) {
       if (anomaly.getEntityType().equals(EntityType.GCP_PRODUCT)) {
         templateString =
             templateString + " \n> *Product* : <${GCP_PRODUCT_URL}|${" + AnomalyEntityKeys.gcpProduct + "}>";
@@ -162,7 +163,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addGcpSkuInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getGcpSKUDescription())) {
+    if (hasSome(anomaly.getGcpSKUDescription())) {
       if (anomaly.getEntityType().equals(EntityType.GCP_SKU_ID)) {
         templateString =
             templateString + " \n> *Sku* : <${GCP_SKU_URL}|${" + AnomalyEntityKeys.gcpSKUDescription + "}>";
@@ -173,7 +174,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addAwsAccountInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getAwsAccount())) {
+    if (hasSome(anomaly.getAwsAccount())) {
       if (anomaly.getEntityType().equals(EntityType.AWS_ACCOUNT)) {
         templateString = templateString + "*Account* : <${AWS_ACCOUNT_URL}|${" + AnomalyEntityKeys.awsAccount + "}>";
       } else {
@@ -183,7 +184,7 @@ public class SlackMessageGenerator {
     return templateString;
   }
   public String addAwsServiceInfo(String templateString, AnomalyEntity anomaly) {
-    if (EmptyPredicate.isNotEmpty(anomaly.getAwsService())) {
+    if (hasSome(anomaly.getAwsService())) {
       if (anomaly.getEntityType().equals(EntityType.AWS_SERVICE)) {
         templateString =
             templateString + " \n> *Service* : <${AWS_SERVICE_URL}|${" + AnomalyEntityKeys.awsService + "}>";

@@ -1,6 +1,6 @@
 package io.harness.ng.core.invites.remote;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -57,7 +57,7 @@ public class RolesResource {
     List<Role> rolesList = new ArrayList<>();
     List<String> projectRolesList = Arrays.asList("Project Admin", "Project Member", "Project Viewer");
     List<String> orgRolesList = Arrays.asList("Organization Admin", "Organization Member", "Organization Viewer");
-    if (isEmpty(projectIdentifier)) {
+    if (hasNone(projectIdentifier)) {
       for (String roleName : orgRolesList) {
         Role role =
             Role.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).name(roleName).build();

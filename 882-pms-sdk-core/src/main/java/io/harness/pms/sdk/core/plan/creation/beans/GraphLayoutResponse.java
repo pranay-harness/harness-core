@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
@@ -17,7 +18,7 @@ public class GraphLayoutResponse {
   String startingNodeId;
 
   public void addLayoutNodes(Map<String, GraphLayoutNode> layoutNodes) {
-    if (EmptyPredicate.isEmpty(layoutNodes)) {
+    if (hasNone(layoutNodes)) {
       return;
     }
     layoutNodes.values().forEach(this::addLayoutNode);
@@ -36,10 +37,10 @@ public class GraphLayoutResponse {
   }
 
   public void mergeStartingNodeId(String otherStartingNodeId) {
-    if (EmptyPredicate.isEmpty(otherStartingNodeId)) {
+    if (hasNone(otherStartingNodeId)) {
       return;
     }
-    if (EmptyPredicate.isEmpty(startingNodeId)) {
+    if (hasNone(startingNodeId)) {
       startingNodeId = otherStartingNodeId;
       return;
     }

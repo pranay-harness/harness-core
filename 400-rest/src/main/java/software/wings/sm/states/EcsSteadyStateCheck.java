@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -117,7 +117,7 @@ public class EcsSteadyStateCheck extends State {
               .accountId(app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
               .waitId(activity.getUuid())
-              .tags(isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
+              .tags(hasSome(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
                         .async(true)
                         .taskType(TaskType.ECS_STEADY_STATE_CHECK_TASK.name())

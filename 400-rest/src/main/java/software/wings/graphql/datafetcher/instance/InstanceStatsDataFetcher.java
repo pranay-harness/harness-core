@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -82,7 +82,7 @@ public class InstanceStatsDataFetcher
     groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList, groupByTime);
 
     if (groupByTime != null) {
-      if (isNotEmpty(filters)) {
+      if (hasSome(filters)) {
         filters.forEach(filter -> {
           // TODO No use of newFilters here, check and delete it if not required
           List<QLInstanceFilter> newFilters = new ArrayList<>();
@@ -112,7 +112,7 @@ public class InstanceStatsDataFetcher
         });
       }
 
-      if (isNotEmpty(groupByEntityList)) {
+      if (hasSome(groupByEntityList)) {
         if (featureFlagService.isEnabled(
                 FeatureName.CUSTOM_DASHBOARD_INSTANCE_FETCH_LONGER_RETENTION_DATA, accountId)) {
           return timeSeriesDataHelper.getTimeSeriesAggregatedDataUsingNewAggregators(
@@ -125,7 +125,7 @@ public class InstanceStatsDataFetcher
         return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
       }
     } else {
-      if (isNotEmpty(filters)) {
+      if (hasSome(filters)) {
         Optional<QLInstanceFilter> timeFilter =
             filters.stream().filter(filter -> filter.getCreatedAt() != null).findFirst();
         if (timeFilter.isPresent()) {
@@ -140,7 +140,7 @@ public class InstanceStatsDataFetcher
 
       instanceMongoHelper.setQuery(accountId, filters, query);
 
-      if (isNotEmpty(groupByList)) {
+      if (hasSome(groupByList)) {
         if (groupByList.size() == 1) {
           QLInstanceEntityAggregation firstLevelAggregation = groupByEntityList.get(0);
           String entityIdColumn = getMongoFieldName(firstLevelAggregation);
@@ -199,13 +199,13 @@ public class InstanceStatsDataFetcher
   }
 
   private QLIdFilter getMergedIdFilter(Set<String> entityIds, QLIdFilter idFilter) {
-    if (isEmpty(entityIds)) {
+    if (hasNone(entityIds)) {
       return idFilter;
     }
 
     if (idFilter != null) {
       String[] values = idFilter.getValues();
-      Set<String> valueSet = isNotEmpty(values) ? Sets.newHashSet(values) : Sets.newHashSet();
+      Set<String> valueSet = hasSome(values) ? Sets.newHashSet(values) : Sets.newHashSet();
       valueSet.addAll(entityIds);
       return QLIdFilter.builder().operator(QLIdOperator.IN).values(valueSet.toArray(new String[0])).build();
     } else {

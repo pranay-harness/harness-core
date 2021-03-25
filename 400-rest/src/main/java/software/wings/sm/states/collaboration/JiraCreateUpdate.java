@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -18,7 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
@@ -187,7 +187,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(customFields)) {
+    if (hasSome(customFields)) {
       JiraCreateMetaResponse createMetadata = createMeta == null
           ? jiraHelperService.getCreateMetadata(jiraConnectorId, null, project, accountId, context.getAppId())
           : createMeta;
@@ -245,7 +245,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
     if (jiraAction == JiraAction.UPDATE_TICKET) {
       List<String> issueIds = parseExpression(issueId);
-      if (EmptyPredicate.isEmpty(issueIds)) {
+      if (hasNone(issueIds)) {
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("No valid issueId after parsing: " + issueId)
@@ -518,7 +518,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   }
 
   private void parseCustomFieldsDateTimeNumber(ExecutionContext context, Map<String, String> idToNameMap) {
-    if (isNotEmpty(customFields)) {
+    if (hasSome(customFields)) {
       for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
         JiraCustomFieldValue value = customField.getValue();
         String customFieldName = idToNameMap.get(customField.getKey());
@@ -632,7 +632,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private String getDateTime(Matcher matcher, Long val1) {
     long val2;
     String group4 = matcher.group(4);
-    if (isNotEmpty(group4)) {
+    if (hasSome(group4)) {
       val2 = Long.parseLong(group4);
       if (matcher.group(3).equals("+")) {
         return String.valueOf(val1 + val2);
@@ -680,7 +680,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private String getDateValue(Matcher matcher, Long val1) {
     long val2;
     String group4 = matcher.group(4);
-    if (isNotEmpty(group4)) {
+    if (hasSome(group4)) {
       val2 = Long.parseLong(group4);
       if (matcher.group(3).equals("+")) {
         return new SimpleDateFormat(DATE_ISO_FORMAT).format(new Date(val1 + val2));
@@ -696,7 +696,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     List<String> issueIds;
     issueId = issueId.replaceAll("[\\[\\](){}?:!.,;]+", " ").trim();
     issueIds = Arrays.asList(issueId.split(" "));
-    return issueIds.stream().filter(EmptyPredicate::isNotEmpty).map(String::trim).collect(Collectors.toList());
+    return issueIds.stream().filter(HasPredicate::hasSome).map(String::trim).collect(Collectors.toList());
   }
 
   private void renderExpressions(ExecutionContext context) {
@@ -709,7 +709,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     summary = context.renderExpression(summary);
     description = context.renderExpression(description);
     comment = context.renderExpression(comment);
-    if (EmptyPredicate.isNotEmpty(customFields)) {
+    if (hasSome(customFields)) {
       Map<String, JiraCustomFieldValue> renderedCustomFields = new HashMap<>();
       customFields.forEach((key, value) -> {
         JiraCustomFieldValue rendered = new JiraCustomFieldValue();
@@ -794,12 +794,12 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
-    if (isEmpty(jiraConnectorId) || isEmpty(project) || isEmpty(issueType)) {
+    if (hasNone(jiraConnectorId) || hasNone(project) || hasNone(issueType)) {
       log.info("Connector Id not present in Jira State");
       results.put("Required Fields missing", "Connector, Project and IssueType must be provided.");
       return results;
     }
-    if (isNotEmpty(customFields)) {
+    if (hasSome(customFields)) {
       for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
         if (customField.getValue() == null) {
           log.info("Field value null for a custom field selected: " + customField.getKey());

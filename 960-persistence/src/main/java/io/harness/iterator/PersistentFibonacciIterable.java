@@ -1,8 +1,8 @@
 package io.harness.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -18,7 +18,7 @@ public interface PersistentFibonacciIterable extends PersistentIrregularIterable
 
   default boolean recalculateTimestamps(
       List<Long> timestamps, boolean skipMissing, Long throttled, Duration coef, Duration max) {
-    if (isEmpty(timestamps)) {
+    if (hasNone(timestamps)) {
       long currentItem = throttled;
 
       long i_1 = 0;
@@ -37,7 +37,7 @@ public interface PersistentFibonacciIterable extends PersistentIrregularIterable
 
     // Take this item here, before we cleanup the list and potentially make it empty. We would like to align the items
     // based on the last previous one, instead of now, if they depend on each other.
-    long time = isNotEmpty(timestamps) ? timestamps.get(timestamps.size() - 1) : now;
+    long time = hasSome(timestamps) ? timestamps.get(timestamps.size() - 1) : now;
 
     boolean removed = skipMissing && removeMissed(now, timestamps);
 

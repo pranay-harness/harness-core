@@ -2,8 +2,8 @@ package io.harness.delegate.event.handler;
 
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.TRIGGER_PROFILE_SCRIPT_EXECUTION_WF;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toSet;
@@ -67,15 +67,15 @@ public class DelegateProfileEventHandler implements DelegateProfileObserver {
     }
 
     if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, updatedProfile.getAccountId())) {
-      boolean selectorsChanged = (isEmpty(originalProfile.getSelectors()) && isNotEmpty(updatedProfile.getSelectors()))
-          || (isNotEmpty(originalProfile.getSelectors()) && isEmpty(updatedProfile.getSelectors()))
-          || (isNotEmpty(originalProfile.getSelectors()) && isNotEmpty(updatedProfile.getSelectors())
+      boolean selectorsChanged = (hasNone(originalProfile.getSelectors()) && hasSome(updatedProfile.getSelectors()))
+          || (hasSome(originalProfile.getSelectors()) && hasNone(updatedProfile.getSelectors()))
+          || (hasSome(originalProfile.getSelectors()) && hasSome(updatedProfile.getSelectors())
               && !CollectionUtils.isEqualCollection(originalProfile.getSelectors(), updatedProfile.getSelectors()));
 
       boolean scopingRulesChanged =
-          (isEmpty(originalProfile.getScopingRules()) && isNotEmpty(updatedProfile.getScopingRules()))
-          || (isNotEmpty(originalProfile.getScopingRules()) && isEmpty(updatedProfile.getScopingRules()))
-          || (isNotEmpty(originalProfile.getScopingRules()) && isNotEmpty(updatedProfile.getScopingRules())
+          (hasNone(originalProfile.getScopingRules()) && hasSome(updatedProfile.getScopingRules()))
+          || (hasSome(originalProfile.getScopingRules()) && hasNone(updatedProfile.getScopingRules()))
+          || (hasSome(originalProfile.getScopingRules()) && hasSome(updatedProfile.getScopingRules())
               && !CollectionUtils.isEqualCollection(
                   originalProfile.getScopingRules(), updatedProfile.getScopingRules()));
 

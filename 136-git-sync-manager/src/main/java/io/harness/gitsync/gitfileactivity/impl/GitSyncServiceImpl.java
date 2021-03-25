@@ -1,8 +1,8 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -12,7 +12,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.prev
 import static org.springframework.data.mongodb.core.aggregation.Fields.UNDERSCORE_ID;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFileChange;
@@ -100,7 +99,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private void updateStatusOnProcessingFailure(
       List<ChangeWithErrorMsg> changeWithErrorMsgs, String accountId, YamlGitConfigDTO yamlGitConfig) {
-    if (isEmpty(changeWithErrorMsgs)) {
+    if (hasNone(changeWithErrorMsgs)) {
       return;
     }
     changeWithErrorMsgs.forEach(changeWithErrorMsg -> {
@@ -114,7 +113,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private void addActivityForExtraErrorsIfMessageChanged(List<ChangeWithErrorMsg> changesFailed, boolean isFullSync,
       String commitMessage, String accountId, YamlGitConfigDTO yamlGitConfig) {
-    if (isEmpty(changesFailed)) {
+    if (hasNone(changesFailed)) {
       return;
     }
     List<String> nameOfFilesProcessedInCommit = getNameOfFilesProcessed(changesFailed);
@@ -154,7 +153,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private List<String> getNameOfFilesProcessed(List<ChangeWithErrorMsg> changeWithErrorMsgs) {
-    if (isEmpty(changeWithErrorMsgs)) {
+    if (hasNone(changeWithErrorMsgs)) {
       return Collections.emptyList();
     }
     return changeWithErrorMsgs.stream()
@@ -195,7 +194,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   public boolean isChangeFromGit(GitFileChange change) {
     try {
-      return change.isSyncFromGit() && isNotEmpty(change.getProcessingCommitId());
+      return change.isSyncFromGit() && hasSome(change.getProcessingCommitId());
     } catch (Exception ex) {
       log.error(format("Error while checking if change is from git: %s", ex));
     }
@@ -205,7 +204,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public void logActivityForSuccessfulFiles(
       List<GitFileChange> gitFileChanges, String accountId, String commitMessage, YamlGitConfigDTO yamlGitConfig) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(
@@ -243,7 +242,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       boolean isGitToHarness, boolean isFullSync, String errorMessage, String commitId, String commitMessage,
       YamlGitConfigDTO yamlGitConfig) {
     try {
-      if (isEmpty(changeList)) {
+      if (hasNone(changeList)) {
         return null;
       }
       final List<GitFileActivity> activities =
@@ -264,7 +263,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public void updateStatusOfGitFileActivity(
       final String commitId, final List<String> fileNames, Status status, String errorMessage, String accountId) {
-    if (EmptyPredicate.isEmpty(fileNames)) {
+    if (hasNone(fileNames)) {
       return;
     }
     try {
@@ -282,7 +281,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   public void markActivityWithSkippedFiles(List<GitFileChange> skippedChangeList, String message, String accountId) {
-    if (isEmpty(skippedChangeList)) {
+    if (hasNone(skippedChangeList)) {
       return;
     }
     updateStatusOfGitFileActivity(skippedChangeList.get(0).getProcessingCommitId(),
@@ -365,7 +364,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       Boolean gitToHarness, GitCommit.Status status, YamlGitConfigDTO yamlGitConfig) {
     try {
       List<GitFileActivity> gitFileActivities = getFileActivitesForCommit(commitId, accountId);
-      if (isEmpty(gitFileActivities)) {
+      if (hasNone(gitFileActivities)) {
         return null;
       }
       return createGitFileActivitySummary(gitFileActivities, gitToHarness, status);
@@ -382,7 +381,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private GitFileActivitySummary createGitFileActivitySummary(
       List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommit.Status status) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return null;
     }
     GitFileActivity gitFileActivity = gitFileActivities.get(0);

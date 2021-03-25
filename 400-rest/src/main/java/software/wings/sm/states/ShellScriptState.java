@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.DISABLE_WINRM_COMMAND_ENCODING;
 import static io.harness.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -274,7 +274,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   ShellScriptEnvironmentVariables buildSweepingOutput(Map<String, String> sweepingOutputEnvVariables) {
     SimpleEncryption encryption = new SimpleEncryption();
 
-    if (isEmpty(sweepingOutputEnvVariables)) {
+    if (hasNone(sweepingOutputEnvVariables)) {
       return null;
     }
     List<String> outputVarsList = new ArrayList<>();
@@ -356,7 +356,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     if (!executeOnDelegate) {
       if (connectionType == ConnectionType.SSH) {
-        if (!isEmpty(getTemplateExpressions())) {
+        if (!hasNone(getTemplateExpressions())) {
           TemplateExpression sshConfigExp =
               templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
           if (sshConfigExp != null) {
@@ -364,7 +364,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           }
         }
 
-        if (isEmpty(sshKeyRef)) {
+        if (hasNone(sshKeyRef)) {
           throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
         }
@@ -430,18 +430,18 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     List<String> allTags = newArrayList();
     List<String> renderedTags = newArrayList();
     String cloudProviderTag = getTagFromCloudProvider(containerServiceParams);
-    if (isNotEmpty(cloudProviderTag)) {
+    if (hasSome(cloudProviderTag)) {
       allTags.add(cloudProviderTag);
     }
 
-    if (isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       allTags.addAll(delegateSelectors);
     }
 
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       allTags.addAll(tags);
     }
-    if (isNotEmpty(allTags)) {
+    if (hasSome(allTags)) {
       for (String tag : allTags) {
         renderedTags.add(context.renderExpression(tag));
       }
@@ -586,14 +586,14 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   public WinRmConnectionAttributes setupWinrmCredentials(String connectionAttributes, ExecutionContext context) {
     WinRmConnectionAttributes winRmConnectionAttributes = null;
 
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression winRmConfigExp =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
       if (winRmConfigExp != null) {
         connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
       }
     }
-    if (isEmpty(connectionAttributes)) {
+    if (hasNone(connectionAttributes)) {
       throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
     }

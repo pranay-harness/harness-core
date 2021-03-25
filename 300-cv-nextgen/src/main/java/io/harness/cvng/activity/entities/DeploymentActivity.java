@@ -1,7 +1,7 @@
 package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -71,7 +71,7 @@ public class DeploymentActivity extends Activity {
         "Verification job details cannot be "
             + "empty for a deployment activity");
     getVerificationJobRuntimeDetails().forEach(verificationJob -> {
-      Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
+      Preconditions.checkNotNull(hasNone(verificationJob.getVerificationJobIdentifier()),
           "The verification job identifier is a required parameter for deployment activities");
     });
   }

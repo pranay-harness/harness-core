@@ -1,7 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -10,7 +10,6 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -51,6 +50,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -178,9 +178,9 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
 
     List<String> instanceIds = fetchAllDeploymentInstances(
-        awsConfig, encryptedDataDetails, region, deploymentId, asList(InstanceStatus.Succeeded.name()));
+        awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
 
-    if (isNotEmpty(instanceIds)) {
+    if (hasSome(instanceIds)) {
       DescribeInstancesRequest describeInstancesRequest =
           awsHelperService.getDescribeInstancesRequestWithRunningFilter().withInstanceIds(instanceIds);
 
@@ -213,7 +213,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     ListDeploymentInstancesResult listDeploymentInstancesResult;
     ListDeploymentInstancesRequest listDeploymentInstancesRequest =
         new ListDeploymentInstancesRequest().withDeploymentId(deploymentId);
-    if (isNotEmpty(instanceStatusList)) {
+    if (hasSome(instanceStatusList)) {
       listDeploymentInstancesRequest.withInstanceStatusFilter(instanceStatusList);
     }
 

@@ -1,7 +1,7 @@
 package io.harness.waiter;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -83,7 +83,7 @@ public class NotifyResponseCleaner implements Runnable {
           }
 
           for (WaitInstance waitInstance : waitInstances) {
-            if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+            if (hasNone(waitInstance.getWaitingOnCorrelationIds())) {
               if (waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
                 waitNotifyEngine.sendNotification(waitInstance);
               }
@@ -103,7 +103,7 @@ public class NotifyResponseCleaner implements Runnable {
   }
 
   private void deleteObsoleteResponses(List<String> deleteResponses) {
-    if (isNotEmpty(deleteResponses)) {
+    if (hasSome(deleteResponses)) {
       log.info("Deleting {} not needed responses", deleteResponses.size());
       persistence.deleteOnServer(persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                      .field(NotifyResponseKeys.uuid)

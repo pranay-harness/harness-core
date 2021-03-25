@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
@@ -28,7 +28,7 @@ public class ServiceVariableYamlHelper {
   public void convertArtifactVariableToYaml(
       String accountId, ServiceVariable serviceVariable, List<AllowedValueYaml> allowedValueYamlList) {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-      if (isNotEmpty(serviceVariable.getAllowedList())) {
+      if (hasSome(serviceVariable.getAllowedList())) {
         for (String id : serviceVariable.getAllowedList()) {
           ArtifactStream as = artifactStreamService.get(id);
           if (as != null) {

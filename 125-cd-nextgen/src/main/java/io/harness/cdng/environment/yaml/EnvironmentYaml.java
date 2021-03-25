@@ -1,9 +1,10 @@
 package io.harness.cdng.environment.yaml;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
 import io.harness.common.SwaggerConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -37,10 +38,10 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {
     EnvironmentYaml resultant = this;
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
+    if (hasSome(overrideConfig.getName())) {
       resultant = resultant.withName(overrideConfig.getName());
     }
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getIdentifier())) {
+    if (hasSome(overrideConfig.getIdentifier())) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());
     }
     if (!ParameterField.isNull(overrideConfig.getDescription())) {
@@ -49,7 +50,7 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
     if (overrideConfig.getType() != null) {
       resultant = resultant.withType(overrideConfig.getType());
     }
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getTags())) {
+    if (hasSome(overrideConfig.getTags())) {
       resultant = resultant.withTags(overrideConfig.getTags());
     }
     return resultant;

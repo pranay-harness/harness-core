@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.PARALLEL_STEP_GROUP_ROLLBACK_PLAN_CREATOR;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -50,7 +50,7 @@ public class ParallelStepGroupRollbackPlanCreator extends AbstractPlanCreatorWit
       ParallelStepElement parallelStepElement, ExecutionPlanCreationContext context) {
     List<ExecutionPlanCreatorResponse> stepGroupsRollbackPlanList = new ArrayList<>();
     for (ExecutionWrapper section : parallelStepElement.getSections()) {
-      if (section instanceof StepGroupElement && isNotEmpty(((StepGroupElement) section).getRollbackSteps())) {
+      if (section instanceof StepGroupElement && hasSome(((StepGroupElement) section).getRollbackSteps())) {
         final ExecutionPlanCreator<StepGroupElement> executionRollbackPlanCreator =
             executionPlanCreatorHelper.getExecutionPlanCreator(
                 CDPlanCreatorType.STEP_GROUP_ROLLBACK_PLAN_CREATOR.getName(), (StepGroupElement) section, context,
@@ -74,7 +74,7 @@ public class ParallelStepGroupRollbackPlanCreator extends AbstractPlanCreatorWit
     RollbackOptionalChildrenParametersBuilder rollbackOptionalChildrenParametersBuilder =
         RollbackOptionalChildrenParameters.builder();
     for (ExecutionWrapper section : parallelStepElement.getSections()) {
-      if (section instanceof StepGroupElement && isNotEmpty(((StepGroupElement) section).getRollbackSteps())) {
+      if (section instanceof StepGroupElement && hasSome(((StepGroupElement) section).getRollbackSteps())) {
         RollbackNode rollbackNode = RollbackNode.builder()
                                         .nodeId(iterator.next().getStartingNodeId())
                                         .dependentNodeIdentifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER + "."

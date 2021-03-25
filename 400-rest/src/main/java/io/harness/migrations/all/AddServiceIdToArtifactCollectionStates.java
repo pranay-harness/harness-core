@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -61,7 +61,7 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
              wingsPersistence.createQuery(Service.class).filter(ServiceKeys.accountId, accountId).fetch())) {
       for (Service service : services) {
         List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
-        if (isEmpty(artifactStreamIds)) {
+        if (hasNone(artifactStreamIds)) {
           continue;
         }
 
@@ -101,13 +101,13 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     // Skip if orchestration workflow has no workflow phases.
-    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+    if (hasNone(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       return;
     }
 
     for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
       // Skip if workflow phase has no phase steps.
-      if (isEmpty(workflowPhase.getPhaseSteps())) {
+      if (hasNone(workflowPhase.getPhaseSteps())) {
         continue;
       }
 
@@ -116,13 +116,13 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
       boolean updated = false;
       for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
         // Skip if phase step is not of type COLLECT_ARTIFACT or has no workflow steps.
-        if (PhaseStepType.COLLECT_ARTIFACT != phaseStep.getPhaseStepType() || isEmpty(phaseStep.getSteps())) {
+        if (PhaseStepType.COLLECT_ARTIFACT != phaseStep.getPhaseStepType() || hasNone(phaseStep.getSteps())) {
           continue;
         }
 
         for (GraphNode step : phaseStep.getSteps()) {
           // Skip if step is not of type ARTIFACT_COLLECTION or has no properties.
-          if (!StateType.ARTIFACT_COLLECTION.name().equals(step.getType()) || isEmpty(step.getProperties())) {
+          if (!StateType.ARTIFACT_COLLECTION.name().equals(step.getType()) || hasNone(step.getProperties())) {
             continue;
           }
 

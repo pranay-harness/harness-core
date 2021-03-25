@@ -1,7 +1,7 @@
 package software.wings.sm.states.mixin;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
@@ -20,7 +20,7 @@ public interface SweepingOutputStateMixin {
 
   default void handleSweepingOutput(
       SweepingOutputService sweepingOutputService, ExecutionContext context, Object data) {
-    if (isEmpty(getSweepingOutputName())) {
+    if (hasNone(getSweepingOutputName())) {
       return;
     }
 

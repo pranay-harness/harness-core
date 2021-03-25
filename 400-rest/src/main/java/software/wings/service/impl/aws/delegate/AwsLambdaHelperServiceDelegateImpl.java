@@ -3,8 +3,8 @@ package software.wings.service.impl.aws.delegate;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
@@ -147,7 +147,7 @@ public class AwsLambdaHelperServiceDelegateImpl
                                         .withFunctionName(request.getFunctionName())
                                         .withQualifier(request.getQualifier())
                                         .withLogType(LogType.Tail);
-      if (isNotEmpty(request.getPayload())) {
+      if (hasSome(request.getPayload())) {
         invokeRequest.setPayload(request.getPayload());
       }
       tracker.trackLambdaCall("Invoke Function");
@@ -307,7 +307,7 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   private void createFunctionAlias(AWSLambdaClient lambdaClient, String functionName, String functionVersion,
       List<String> evaluatedAliases, ExecutionLogCallback logCallback) {
-    if (isNotEmpty(evaluatedAliases)) {
+    if (hasSome(evaluatedAliases)) {
       evaluatedAliases.forEach(alias -> {
         logCallback.saveExecutionLog(format("Creating Function Alias: [%s]", alias));
         tracker.trackLambdaCall("Create Function Alias");
@@ -475,25 +475,25 @@ public class AwsLambdaHelperServiceDelegateImpl
         lambdaClient.listAliases(new ListAliasesRequest().withFunctionName(functionName));
 
     List<String> newAliases = new ArrayList<>();
-    if (isNotEmpty(evaluatedAliases)) {
+    if (hasSome(evaluatedAliases)) {
       newAliases.addAll(evaluatedAliases.stream()
                             .filter(alias
                                 -> listAliasesResult.getAliases().stream().noneMatch(
                                     aliasConfiguration -> aliasConfiguration.getName().equals(alias)))
                             .collect(toList()));
     }
-    if (isNotEmpty(newAliases)) {
+    if (hasSome(newAliases)) {
       createFunctionAlias(
           lambdaClient, functionName, publishVersionResult.getVersion(), newAliases, executionLogCallback);
     }
 
     List<String> updateAlias = new ArrayList<>();
-    if (isNotEmpty(evaluatedAliases)) {
+    if (hasSome(evaluatedAliases)) {
       updateAlias.addAll(evaluatedAliases.stream()
                              .filter(alias -> newAliases != null && newAliases.stream().noneMatch(s -> s.equals(alias)))
                              .collect(toList()));
     }
-    if (isNotEmpty(updateAlias)) {
+    if (hasSome(updateAlias)) {
       updateFunctionAlias(
           lambdaClient, functionName, publishVersionResult.getVersion(), updateAlias, executionLogCallback);
     }
@@ -557,10 +557,10 @@ public class AwsLambdaHelperServiceDelegateImpl
       AwsLambdaVpcConfig lambdaVpcConfig, List<String> evaluatedAliases, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Deploying Lambda with following configuration", INFO);
 
-    if (isNotEmpty(functionParams.getBucket())) {
+    if (hasSome(functionParams.getBucket())) {
       executionLogCallback.saveExecutionLog("S3 Bucket: " + functionParams.getBucket(), INFO);
     }
-    if (isNotEmpty(functionParams.getKey())) {
+    if (hasSome(functionParams.getKey())) {
       executionLogCallback.saveExecutionLog("Bucket Key: " + functionParams.getKey(), INFO);
     }
 
@@ -572,16 +572,16 @@ public class AwsLambdaHelperServiceDelegateImpl
     executionLogCallback.saveExecutionLog("IAM role ARN: " + roleArn, INFO);
     executionLogCallback.saveExecutionLog("VPC: " + lambdaVpcConfig.getVpcId(), INFO);
 
-    if (isNotEmpty(lambdaVpcConfig.getSubnetIds())) {
+    if (hasSome(lambdaVpcConfig.getSubnetIds())) {
       executionLogCallback.saveExecutionLog("Subnet: " + Joiner.on(",").join(lambdaVpcConfig.getSubnetIds(), INFO));
     }
 
-    if (isNotEmpty(lambdaVpcConfig.getSecurityGroupIds())) {
+    if (hasSome(lambdaVpcConfig.getSecurityGroupIds())) {
       executionLogCallback.saveExecutionLog(
           "Security Groups: " + Joiner.on(",").join(lambdaVpcConfig.getSecurityGroupIds()), INFO);
     }
 
-    if (isNotEmpty(evaluatedAliases)) {
+    if (hasSome(evaluatedAliases)) {
       executionLogCallback.saveExecutionLog("Function Aliases: " + Joiner.on(",").join(evaluatedAliases), INFO);
     }
   }
@@ -635,7 +635,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
 
-    if (isEmpty(artifactFiles)) {
+    if (hasNone(artifactFiles)) {
       throw new InvalidArgumentsException(Pair.of("Artifact", "is not available"));
     }
 
@@ -696,16 +696,16 @@ public class AwsLambdaHelperServiceDelegateImpl
       ExecutionLogCallback logCallback, AWSLambdaClient lambdaClient) {
     String functionArn = functionResult.getConfiguration().getFunctionArn();
     Map<String, String> existingTags = functionResult.getTags();
-    if (isNotEmpty(existingTags)) {
+    if (hasSome(existingTags)) {
       List<String> keysToRemove =
           existingTags.entrySet().stream().map(Entry::getKey).filter(key -> !key.startsWith("aws:")).collect(toList());
-      if (isNotEmpty(keysToRemove)) {
+      if (hasSome(keysToRemove)) {
         logCallback.saveExecutionLog(format("Untagging existing tags from the function: [%s]", functionArn));
         tracker.trackLambdaCall("Untag Function");
         lambdaClient.untagResource(new UntagResourceRequest().withResource(functionArn).withTagKeys(keysToRemove));
       }
     }
-    if (isEmpty(functionTags)) {
+    if (hasNone(functionTags)) {
       logCallback.saveExecutionLog("No new tags to be put.");
       return;
     }

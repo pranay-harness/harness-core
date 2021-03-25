@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -353,13 +353,13 @@ public class EcsBlueGreenServiceSetup extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private boolean shouldUseSpecificListenerRule(String prodListenerRuleArn, String stageListenerRuleArn) {
-    if (isNotEmpty(prodListenerRuleArn) && isNotEmpty(stageListenerRuleArn)) {
+    if (hasSome(prodListenerRuleArn) && hasSome(stageListenerRuleArn)) {
       return true;
-    } else if (isEmpty(prodListenerRuleArn) && isEmpty(stageListenerRuleArn)) {
+    } else if (hasNone(prodListenerRuleArn) && hasNone(stageListenerRuleArn)) {
       return false;
     } else {
       String emptyRuleType = "Prod";
-      if (isNotEmpty(prodListenerRuleArn)) {
+      if (hasSome(prodListenerRuleArn)) {
         emptyRuleType = "Stage";
       }
       throw new InvalidArgumentsException(
@@ -471,16 +471,16 @@ public class EcsBlueGreenServiceSetup extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(prodListenerArn)) {
+    if (hasNone(prodListenerArn)) {
       invalidFields.put(PROD_LISTENER, "Prod Listener ARN name must be specified");
     }
-    if (isEmpty(stageListenerArn)) {
+    if (hasNone(stageListenerArn)) {
       invalidFields.put(STAGE_LISTENER, "Stage Listener ARN must be specified");
     }
-    if (isEmpty(maxInstances) && "runningInstances".equalsIgnoreCase(desiredInstanceCount)) {
+    if (hasNone(maxInstances) && "runningInstances".equalsIgnoreCase(desiredInstanceCount)) {
       invalidFields.put("Max Instances", "Max Instances must be specified");
     }
-    if (isEmpty(loadBalancerName)) {
+    if (hasNone(loadBalancerName)) {
       invalidFields.put(WorkflowServiceHelper.ELB, "Elastic Load Balancer must be specified");
     }
     return invalidFields;

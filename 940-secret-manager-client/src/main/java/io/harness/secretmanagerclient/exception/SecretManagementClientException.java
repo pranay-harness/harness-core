@@ -1,6 +1,7 @@
 package io.harness.secretmanagerclient.exception;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -37,7 +38,7 @@ public class SecretManagementClientException extends WingsException {
   public SecretManagementClientException(
       ErrorCode errorCode, Throwable cause, EnumSet<ReportTarget> reportTargets, Map<String, String> params) {
     super(null, cause, errorCode, Level.ERROR, reportTargets, null);
-    if (EmptyPredicate.isNotEmpty(params)) {
+    if (hasSome(params)) {
       params.forEach(this::param);
     }
   }

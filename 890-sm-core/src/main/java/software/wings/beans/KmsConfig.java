@@ -5,7 +5,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
@@ -92,7 +92,7 @@ public class KmsConfig extends SecretManagerConfig {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>(
         Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
             region, maskingEvaluator)));
-    if (isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }
@@ -106,10 +106,10 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    if (isNotEmpty(this.secretKey)) {
+    if (hasSome(this.secretKey)) {
       this.secretKey = SECRET_MASK;
     }
-    if (isNotEmpty(this.getKmsArn())) {
+    if (hasSome(this.getKmsArn())) {
       this.kmsArn = SECRET_MASK;
     }
   }

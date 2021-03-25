@@ -1,6 +1,6 @@
 package io.harness.cdng.artifact.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.NGConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -8,7 +8,6 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
@@ -45,7 +44,7 @@ public class ArtifactUtils {
               + getLogInfo(artifactListConfig.getPrimary().getArtifactConfig(),
                   artifactListConfig.getPrimary().getSourceType()));
     }
-    if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
+    if (hasSome(artifactListConfig.getSidecars())) {
       artifacts.addAll(artifactListConfig.getSidecars()
                            .stream()
                            .map(s -> s.getSidecar().getArtifactConfig())
@@ -64,7 +63,7 @@ public class ArtifactUtils {
     if (keyBuilder == null) {
       throw new InvalidRequestException("Key string builder cannot be null");
     }
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       keyBuilder.append(NGConstants.STRING_CONNECTOR).append(value);
     }
   }

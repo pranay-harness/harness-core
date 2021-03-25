@@ -1,11 +1,11 @@
 package io.harness.ng.core.environment.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -143,7 +143,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
       throw new UnexpectedException(
           "Error while deleting the Environment as was not able to check entity reference records.");
     }
-    if (EmptyPredicate.isNotEmpty(referredByEntities)) {
+    if (hasSome(referredByEntities)) {
       throw new InvalidRequestException(
           String.format("Could not delete the Environment %s as it is referenced by other entities - "
                   + referredByEntities.toString(),
@@ -156,7 +156,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   private void setName(Environment requestEnvironment) {
-    if (isEmpty(requestEnvironment.getName())) {
+    if (hasNone(requestEnvironment.getName())) {
       requestEnvironment.setName(requestEnvironment.getIdentifier());
     }
   }

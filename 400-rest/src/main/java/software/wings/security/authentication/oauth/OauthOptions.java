@@ -1,7 +1,7 @@
 package software.wings.security.authentication.oauth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -57,7 +57,7 @@ public class OauthOptions {
     log.info("Creating OAuth SSO Request for user");
     OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
 
-    if (null == oauthSettings || isEmpty(oauthSettings.getAllowedProviders())) {
+    if (null == oauthSettings || hasNone(oauthSettings.getAllowedProviders())) {
       throw new WingsException("Could not fetch OAuth settings");
     }
 

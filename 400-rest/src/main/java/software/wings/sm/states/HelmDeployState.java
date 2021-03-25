@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
@@ -308,7 +308,7 @@ public class HelmDeployState extends State {
   }
 
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
-    if (chartSpec == null || (isEmpty(chartSpec.getChartName()) && isEmpty(chartSpec.getChartUrl()))) {
+    if (chartSpec == null || (hasNone(chartSpec.getChartName()) && hasNone(chartSpec.getChartUrl()))) {
       throw new InvalidRequestException(
           "Invalid chart specification. " + (chartSpec == null ? "Chart Specification is null" : chartSpec.toString()),
           WingsException.USER);
@@ -365,7 +365,7 @@ public class HelmDeployState extends State {
   }
 
   private String getImageName(String yamlFileContent, String imageNameTag, String domainName) {
-    if (isNotEmpty(domainName)) {
+    if (hasSome(domainName)) {
       Pattern pattern = ContainerTask.compileRegexPattern(domainName);
       Matcher matcher = pattern.matcher(yamlFileContent);
       if (!matcher.find()) {
@@ -456,7 +456,7 @@ public class HelmDeployState extends State {
       List<ReleaseInfo> releaseInfoList =
           ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
               .getReleaseInfoList();
-      prevVersion = isEmpty(releaseInfoList)
+      prevVersion = hasNone(releaseInfoList)
           ? 0
           : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
     } else {
@@ -873,7 +873,7 @@ public class HelmDeployState extends State {
     if (gitFileConfig != null) {
       evaluateGitFileConfig(context);
       List<TemplateExpression> templateExpressions = getTemplateExpressions();
-      if (isNotEmpty(templateExpressions)) {
+      if (hasSome(templateExpressions)) {
         TemplateExpression configIdExpression =
             templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectorId");
         SettingAttribute settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
@@ -1183,7 +1183,7 @@ public class HelmDeployState extends State {
     List<String> helmValueOverridesYamlFiles = getOrderedValuesYamlList(valuesFiles);
 
     List<String> helmValueOverridesYamlFilesEvaluated = new ArrayList<>();
-    if (isNotEmpty(helmValueOverridesYamlFiles)) {
+    if (hasSome(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
               .filter(StringUtils::isNotBlank)
@@ -1387,7 +1387,7 @@ public class HelmDeployState extends State {
           }
         }
 
-        if (isNotEmpty(helmInstallCommandResponse.getContainerInfoList())) {
+        if (hasSome(helmInstallCommandResponse.getContainerInfoList())) {
           summary.setContainerInfoList(helmInstallCommandResponse.getContainerInfoList());
         }
 

@@ -1,7 +1,7 @@
 package software.wings.service.impl.prometheus;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -84,7 +84,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     PrometheusMetricDataResponse responseDataFromDelegateForServiceLevel =
         metricDataResponseByTimeSeries.values().iterator().next();
     boolean isLoadPresentForServiceLevel = responseDataFromDelegateForServiceLevel != null
-        && isNotEmpty(responseDataFromDelegateForServiceLevel.getData().getResult());
+        && hasSome(responseDataFromDelegateForServiceLevel.getData().getResult());
 
     if (setupTestNodeData.isServiceLevel()) {
       VerificationNodeDataSetupResponse responseForServiceLevel =
@@ -98,7 +98,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     }
 
     // make a call with hostname
-    if (isEmpty(metricDataResponseByTimeSeries)) {
+    if (hasNone(metricDataResponseByTimeSeries)) {
       // provider was reachable based on first find but something happened in the call with host.
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -188,7 +188,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
    * @return
    */
   private String updateUrlByHostName(String url, String hostName) {
-    if (isEmpty(hostName)) {
+    if (hasNone(hostName)) {
       return url.substring(0, url.lastIndexOf('{'));
     } else {
       return url.replace(HOST_NAME_PLACE_HOLDER, hostName);
@@ -212,7 +212,7 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
 
   public Map<String, List<APMMetricInfo>> apmMetricEndPointsFetchInfo(List<TimeSeries> timeSeriesInfos) {
     Map<String, List<APMMetricInfo>> rv = new HashMap<>();
-    if (isEmpty(timeSeriesInfos)) {
+    if (hasNone(timeSeriesInfos)) {
       return rv;
     }
     renderFetchQueries(timeSeriesInfos);

@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.steps.io;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
@@ -21,7 +21,7 @@ public class ResponseDataMapper {
 
   public Map<String, ResponseData> fromResponseDataProto(Map<String, ByteString> byteStringMap) {
     Map<String, ResponseData> responseDataMap = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(byteStringMap)) {
+    if (hasSome(byteStringMap)) {
       byteStringMap.forEach(
           (k, v) -> responseDataMap.put(k, (ResponseData) kryoSerializer.asInflatedObject(v.toByteArray())));
     }
@@ -30,7 +30,7 @@ public class ResponseDataMapper {
 
   public Map<String, ByteString> toResponseDataProto(Map<String, ResponseData> responseDataMap) {
     Map<String, ByteString> byteStringMap = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(responseDataMap)) {
+    if (hasSome(responseDataMap)) {
       responseDataMap.forEach((k, v) -> {
         if (v instanceof BinaryResponseData) {
           // This implies this is coming from the PMS driver module. Eventually this will be the only way

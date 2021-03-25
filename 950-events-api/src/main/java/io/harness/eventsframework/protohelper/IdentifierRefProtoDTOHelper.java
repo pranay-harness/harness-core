@@ -1,8 +1,9 @@
 package io.harness.eventsframework.protohelper;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
@@ -38,7 +39,7 @@ public class IdentifierRefProtoDTOHelper {
       identifierRefBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
     }
 
-    if (EmptyPredicate.isNotEmpty(metadata)) {
+    if (hasSome(metadata)) {
       identifierRefBuilder.putAllMetadata(metadata);
     }
 

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -36,7 +36,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   private List<NameValuePair.Yaml> getLogOptionsYaml(List<LogOption> logOptionList) {
-    if (isEmpty(logOptionList)) {
+    if (hasNone(logOptionList)) {
       return Collections.emptyList();
     }
     return logOptionList.stream()
@@ -45,7 +45,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   private List<LogOption> getLogOptions(List<NameValuePair.Yaml> yamlList) {
-    if (isEmpty(yamlList)) {
+    if (hasNone(yamlList)) {
       return Collections.emptyList();
     }
 

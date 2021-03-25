@@ -32,8 +32,8 @@ import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
@@ -279,11 +279,11 @@ public class K8BuildSetupUtils {
       Map<String, ConnectorConversionInfo> connectorRefs, Map<String, String> volumeToMountPath, String workDirPath,
       String logPrefix, List<SecretVariableDetails> secretVariableDetails) {
     Map<String, String> envVars = new HashMap<>(commonEnvVars);
-    if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
+    if (hasSome(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
     }
     Map<String, ConnectorDetails> stepConnectorDetails = emptyMap();
-    if (isNotEmpty(containerDefinitionInfo.getStepIdentifier()) && isNotEmpty(connectorRefs)) {
+    if (hasSome(containerDefinitionInfo.getStepIdentifier()) && hasSome(connectorRefs)) {
       ConnectorConversionInfo connectorConversionInfo = connectorRefs.get(containerDefinitionInfo.getStepIdentifier());
       if (connectorConversionInfo != null) {
         ConnectorDetails connectorDetails =
@@ -337,7 +337,7 @@ public class K8BuildSetupUtils {
   private Map<String, String> createEnvVariableForSecret(List<SecretVariableDetails> secretVariableDetails) {
     Map<String, String> envVars = new HashMap<>();
 
-    if (isNotEmpty(secretVariableDetails)) {
+    if (hasSome(secretVariableDetails)) {
       List<String> secretEnvNames =
           secretVariableDetails.stream()
               .map(secretVariableDetail -> { return secretVariableDetail.getSecretVariableDTO().getName(); })
@@ -388,7 +388,7 @@ public class K8BuildSetupUtils {
       ContainerDefinitionInfo containerDefinitionInfo, List<SecretVariableDetails> scriptsSecretVariableDetails) {
     List<SecretVariableDetails> secretVariableDetails = new ArrayList<>();
     secretVariableDetails.addAll(scriptsSecretVariableDetails);
-    if (isNotEmpty(containerDefinitionInfo.getSecretVariables())) {
+    if (hasSome(containerDefinitionInfo.getSecretVariables())) {
       containerDefinitionInfo.getSecretVariables().forEach(
           secretVariable -> secretVariableDetails.add(secretUtils.getSecretVariableDetails(ngAccess, secretVariable)));
     }
@@ -614,7 +614,7 @@ public class K8BuildSetupUtils {
         throw new IllegalArgumentException("CI codebase spec is not set");
       }
 
-      if (isEmpty(ciCodebase.getRepoName())) {
+      if (hasNone(ciCodebase.getRepoName())) {
         throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
       }
 

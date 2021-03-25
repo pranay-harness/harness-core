@@ -2,8 +2,8 @@ package io.harness.event.handler.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.CATEGORY;
@@ -168,7 +168,7 @@ public class EventPublishHelper {
   public void publishSSOEvent(String accountId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_SSO);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -199,7 +199,7 @@ public class EventPublishHelper {
   public void publishSetupCV247Event(String accountId, String cvConfigId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_CV_24X7);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -229,7 +229,7 @@ public class EventPublishHelper {
                                                    .build();
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId, pageRequest);
 
-    if (isEmpty(cvConfigurations)) {
+    if (hasNone(cvConfigurations)) {
       return false;
     }
 
@@ -243,7 +243,7 @@ public class EventPublishHelper {
   public void publishSetupRbacEvent(String accountId, String entityId, EntityType entityType) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_RBAC);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -273,7 +273,7 @@ public class EventPublishHelper {
                                                .build();
       PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
       List<UserGroup> userGroups = pageResponse.getResponse();
-      if (isEmpty(userGroups)) {
+      if (hasNone(userGroups)) {
         return false;
       }
 
@@ -310,7 +310,7 @@ public class EventPublishHelper {
 
       PageResponse<User> pageResponse = userService.list(pageRequest, false);
       List<User> users = pageResponse.getResponse();
-      if (isEmpty(users)) {
+      if (hasNone(users)) {
         return false;
       }
 
@@ -333,7 +333,7 @@ public class EventPublishHelper {
   public void publishSetupIPWhitelistingEvent(String accountId, String whitelistId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_IP_WHITELISTING);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -363,7 +363,7 @@ public class EventPublishHelper {
                                              .build();
     PageResponse<Whitelist> pageResponse = whitelistService.list(accountId, pageRequest);
     List<Whitelist> whitelistConfigs = pageResponse.getResponse();
-    if (isEmpty(whitelistConfigs)) {
+    if (hasNone(whitelistConfigs)) {
       return false;
     }
 
@@ -377,7 +377,7 @@ public class EventPublishHelper {
   public void publishSetup2FAEvent(String accountId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.SETUP_2FA);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -475,7 +475,7 @@ public class EventPublishHelper {
                                             .build();
     PageResponse<Delegate> pageResponse = delegateService.list(pageRequest);
     List<Delegate> delegates = pageResponse.getResponse();
-    if (isEmpty(delegates)) {
+    if (hasNone(delegates)) {
       return false;
     }
 
@@ -489,7 +489,7 @@ public class EventPublishHelper {
   public void publishWorkflowCreatedEvent(Workflow workflow, String accountId) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.FIRST_WORKFLOW_CREATED);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -529,7 +529,7 @@ public class EventPublishHelper {
                                             .build();
     PageResponse<Workflow> pageResponse = workflowService.listWorkflows(pageRequest);
     List<Workflow> workflows = pageResponse.getResponse();
-    if (isEmpty(workflows)) {
+    if (hasNone(workflows)) {
       return false;
     }
 
@@ -557,7 +557,7 @@ public class EventPublishHelper {
   }
 
   public void publishTrialUserSignupEvent(String inviteId, String email, UserInvite userInvite) {
-    if (isEmpty(email)) {
+    if (hasNone(email)) {
       return;
     }
 
@@ -578,7 +578,7 @@ public class EventPublishHelper {
   }
 
   public void publishTrialUserSignupEvent(String email, String userName, String inviteId, String companyName) {
-    if (isEmpty(email)) {
+    if (hasNone(email)) {
       return;
     }
 
@@ -586,7 +586,7 @@ public class EventPublishHelper {
   }
 
   public void publishJoinAccountEvent(String email, String name, String companyName) {
-    if (isEmpty(email)) {
+    if (hasNone(email)) {
       return;
     }
 
@@ -594,13 +594,13 @@ public class EventPublishHelper {
   }
 
   public void publishTechStackEvent(String accountId, Set<TechStack> techStacks) {
-    if (isEmpty(accountId) || isEmpty(techStacks)) {
+    if (hasNone(accountId) || hasNone(techStacks)) {
       return;
     }
 
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(EventType.TECH_STACK);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -658,7 +658,7 @@ public class EventPublishHelper {
     }
 
     List<Account> accounts = user.getAccounts();
-    if (isEmpty(accounts)) {
+    if (hasNone(accounts)) {
       return false;
     }
 
@@ -674,7 +674,7 @@ public class EventPublishHelper {
     Set<String> reportedMarketoCampaigns = user.getReportedMarketoCampaigns();
     Set<String> reportedSegmentTracks = user.getReportedSegmentTracks();
 
-    if (isEmpty(reportedMarketoCampaigns) || isEmpty(reportedSegmentTracks)) {
+    if (hasNone(reportedMarketoCampaigns) || hasNone(reportedSegmentTracks)) {
       return false;
     }
 
@@ -686,7 +686,7 @@ public class EventPublishHelper {
     // only report event if not reported already
     Set<String> reportedSegmentTracks = user.getReportedSegmentTracks();
 
-    if (isEmpty(reportedSegmentTracks)) {
+    if (hasNone(reportedSegmentTracks)) {
       return false;
     }
 
@@ -720,7 +720,7 @@ public class EventPublishHelper {
       return false;
     }
 
-    if (oneTimeOnly && isNotEmpty(account.getAccountEvents()) && account.getAccountEvents().contains(accountEvent)) {
+    if (oneTimeOnly && hasSome(account.getAccountEvents()) && account.getAccountEvents().contains(accountEvent)) {
       return false;
     }
 
@@ -747,7 +747,7 @@ public class EventPublishHelper {
     List<ContinuousVerificationExecutionMetaData> cvExecutionMetaDataList =
         continuousVerificationService.getCVDeploymentData(cvPageRequest);
 
-    if (!isEmpty(cvExecutionMetaDataList)) {
+    if (!hasNone(cvExecutionMetaDataList)) {
       Account account = accountService.get(accountId);
       Map<String, String> properties = new HashMap<>();
       properties.put("accountId", accountId);
@@ -827,13 +827,13 @@ public class EventPublishHelper {
 
       String userEmail = createdBy.getEmail();
 
-      if (isEmpty(userEmail)) {
+      if (hasNone(userEmail)) {
         log.info("CreatedBy user email is null for execution id {}", workflowExecutionId);
         return;
       }
 
       String userId = createdBy.getUuid();
-      if (isEmpty(userId)) {
+      if (hasNone(userId)) {
         log.info("CreatedBy user id is null for execution id {}", workflowExecutionId);
         return;
       }
@@ -886,7 +886,7 @@ public class EventPublishHelper {
         workflowExecutionService.listExecutions(executionPageRequest, false);
     List<WorkflowExecution> workflowExecutions = executionPageResponse.getResponse();
 
-    if (isNotEmpty(workflowExecutions)) {
+    if (hasSome(workflowExecutions)) {
       WorkflowExecution workflowExecution = workflowExecutions.get(0);
       if (workflowExecutionId.equals(workflowExecution.getUuid())) {
         publishEvent(EventType.FIRST_DEPLOYMENT_EXECUTED, getProperties(accountId, userEmail));
@@ -921,7 +921,7 @@ public class EventPublishHelper {
     properties.put(COMPANY_NAME, userInvite.getCompanyName());
 
     List<String> freemiumProducts = userInvite.getFreemiumProducts();
-    if (isNotEmpty(freemiumProducts)) {
+    if (hasSome(freemiumProducts)) {
       properties.put(FREEMIUM_PRODUCTS, String.join(", ", freemiumProducts));
     }
     Boolean freemiumAssistedOption = userInvite.getFreemiumAssistedOption();
@@ -946,7 +946,7 @@ public class EventPublishHelper {
   public void publishCustomEvent(String accountId, String customEvent) {
     String userEmail = checkIfMarketoOrSegmentIsEnabledAndGetUserEmail(customEvent);
 
-    if (isEmpty(userEmail)) {
+    if (hasNone(userEmail)) {
       return;
     }
 
@@ -1007,7 +1007,7 @@ public class EventPublishHelper {
       properties.put(EMAIL_ID, userEmail);
       properties.put(ACCOUNT_EVENT, String.valueOf(true));
       properties.put(CUSTOM_EVENT_NAME, accountEvent.getCustomMsg());
-      if (isNotEmpty(accountEvent.getCategory())) {
+      if (hasSome(accountEvent.getCategory())) {
         properties.put(CATEGORY, accountEvent.getCategory());
       }
       publishEvent(EventType.CUSTOM, properties);

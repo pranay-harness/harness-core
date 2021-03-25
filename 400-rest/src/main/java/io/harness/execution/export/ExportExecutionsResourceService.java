@@ -1,12 +1,13 @@
 package io.harness.execution.export;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExportExecutionsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.export.formatter.JsonFormatter;
@@ -127,7 +128,7 @@ public class ExportExecutionsResourceService {
       throw new InvalidRequestException("No user params provided to export executions request");
     }
 
-    if (EmptyPredicate.isEmpty(userParams.getUserGroupIds())) {
+    if (hasNone(userParams.getUserGroupIds())) {
       return;
     }
 
@@ -137,13 +138,13 @@ public class ExportExecutionsResourceService {
     }
 
     List<UserGroup> userGroups = userGroupService.fetchUserGroupNamesFromIds(userParams.getUserGroupIds());
-    if (EmptyPredicate.isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       throw new InvalidRequestException("Invalid user groups provided");
     }
 
     Set<String> userGroupIdsSet = new HashSet<>(userParams.getUserGroupIds());
     userGroupIdsSet.removeAll(userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList()));
-    if (EmptyPredicate.isNotEmpty(userGroupIdsSet)) {
+    if (hasSome(userGroupIdsSet)) {
       throw new InvalidRequestException(format("Invalid user groups: [%s]", String.join(",", userGroupIdsSet)));
     }
   }

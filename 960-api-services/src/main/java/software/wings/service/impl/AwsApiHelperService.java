@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
@@ -177,7 +177,7 @@ public class AwsApiHelperService {
   public void handleAmazonClientException(AmazonClientException amazonClientException) {
     log.error("AWS API Client call exception", amazonClientException);
     String errorMessage = amazonClientException.getMessage();
-    if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
+    if (hasSome(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
       throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
               + " have required permissions.",
           amazonClientException, USER);

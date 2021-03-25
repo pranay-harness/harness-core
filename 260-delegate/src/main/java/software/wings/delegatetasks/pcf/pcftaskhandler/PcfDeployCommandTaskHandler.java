@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -247,7 +247,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       PcfAppAutoscalarRequestData appAutoscalarRequestData, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException, IOException {
     if (pcfCommandDeployRequest.isUseAppAutoscalar() && pcfCommandDeployRequest.getPcfManifestsPackage() != null
-        && isNotEmpty(pcfCommandDeployRequest.getPcfManifestsPackage().getAutoscalarManifestYml())
+        && hasSome(pcfCommandDeployRequest.getPcfManifestsPackage().getAutoscalarManifestYml())
         && pcfCommandDeployRequest.getMaxCount() <= pcfCommandDeployRequest.getUpdateCount()) {
       // This is autoscalar file inside workingDirectory
       String filePath =

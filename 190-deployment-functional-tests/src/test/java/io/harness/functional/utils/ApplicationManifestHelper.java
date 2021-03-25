@@ -1,6 +1,6 @@
 package io.harness.functional.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.manifest.CustomSourceConfig;
 
@@ -30,7 +30,7 @@ public class ApplicationManifestHelper {
   public void createCustomManifest(
       String appId, String serviceId, String envId, String scriptResource, String path, AppManifestKind kind) {
     String customManifestScript = "";
-    if (isNotEmpty(scriptResource)) {
+    if (hasSome(scriptResource)) {
       customManifestScript = getResourceContent(scriptResource);
     }
 

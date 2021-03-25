@@ -1,6 +1,6 @@
 package software.wings.beans.shellscript.provisioner;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -49,14 +49,14 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
-    if (isNotEmpty(encryptedVariables)) {
+    if (hasSome(encryptedVariables)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedVariables.values()) {
         executionCapabilities.addAll(
             EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
                 Arrays.asList(encryptedDataDetail), maskingEvaluator));
       }
     }
-    if (isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       executionCapabilities.add(SelectorCapability.builder().selectors(new HashSet<>(delegateSelectors)).build());
     }
 

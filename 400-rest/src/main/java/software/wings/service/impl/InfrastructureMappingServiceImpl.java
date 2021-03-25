@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.DASH;
@@ -323,7 +323,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         break;
       case InfrastructureType.AWS_INSTANCE:
         AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
-        if (isEmpty(awsInfrastructureMapping.getHostConnectionType())) {
+        if (hasNone(awsInfrastructureMapping.getHostConnectionType())) {
           awsInfrastructureMapping.setHostConnectionType(awsInfrastructureMapping.isUsePublicDns()
                   ? HostConnectionType.PUBLIC_DNS.name()
                   : HostConnectionType.PRIVATE_DNS.name());
@@ -341,7 +341,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           "Ignore validation for InfraMapping as skipValidation is marked true. Infra mapping coming from yaml or Infra def");
       return;
     }
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
+    if (hasSome(infraMapping.getProvisionerId())) {
       return;
     }
 
@@ -424,10 +424,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateProvisionerConfig(InfrastructureMapping infraMapping) {
-    if (isEmpty(infraMapping.getProvisionerId())) {
+    if (hasNone(infraMapping.getProvisionerId())) {
       return;
     }
-    if (isEmpty(infraMapping.getBlueprints())) {
+    if (hasNone(infraMapping.getBlueprints())) {
       throw new InvalidRequestException("Blueprints can't be empty with Provisioner", USER);
     }
     BlueprintProcessor.validateKeys(infraMapping, infraMapping.getBlueprints());
@@ -526,32 +526,32 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("hostConnectionAttrs", infrastructureMapping.getHostConnectionAttrs());
     }
 
-    if (isNotEmpty(infrastructureMapping.getName())) {
+    if (hasSome(infrastructureMapping.getName())) {
       keyValuePairs.put("name", infrastructureMapping.getName());
     } else {
       fieldsToRemove.add("name");
     }
 
-    if (isNotEmpty(infrastructureMapping.getDisplayName())) {
+    if (hasSome(infrastructureMapping.getDisplayName())) {
       keyValuePairs.put(InfrastructureMappingKeys.displayName, infrastructureMapping.getDisplayName());
     } else {
       fieldsToRemove.add(InfrastructureMappingKeys.displayName);
     }
 
-    if (isNotEmpty(infrastructureMapping.getInfrastructureDefinitionId())) {
+    if (hasSome(infrastructureMapping.getInfrastructureDefinitionId())) {
       keyValuePairs.put(
           InfrastructureMappingKeys.infrastructureDefinitionId, infrastructureMapping.getInfrastructureDefinitionId());
     } else {
       fieldsToRemove.add(InfrastructureMappingKeys.infrastructureDefinitionId);
     }
 
-    if (isNotEmpty(infrastructureMapping.getProvisionerId())) {
+    if (hasSome(infrastructureMapping.getProvisionerId())) {
       keyValuePairs.put(InfrastructureMapping.PROVISIONER_ID_KEY, infrastructureMapping.getProvisionerId());
     } else {
       fieldsToRemove.add(InfrastructureMapping.PROVISIONER_ID_KEY);
     }
 
-    if (isNotEmpty(infrastructureMapping.getBlueprints())) {
+    if (hasSome(infrastructureMapping.getBlueprints())) {
       keyValuePairs.put(InfrastructureMappingKeys.blueprints, infrastructureMapping.getBlueprints());
     } else {
       fieldsToRemove.add(InfrastructureMappingKeys.blueprints);
@@ -583,12 +583,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(gcpKubernetesInfrastructureMapping, skipValidation, null);
-      if (isNotEmpty(gcpKubernetesInfrastructureMapping.getClusterName())) {
+      if (hasSome(gcpKubernetesInfrastructureMapping.getClusterName())) {
         keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
       } else {
         fieldsToRemove.add("clusterName");
       }
-      if (isNotEmpty(gcpKubernetesInfrastructureMapping.getNamespace())) {
+      if (hasSome(gcpKubernetesInfrastructureMapping.getNamespace())) {
         keyValuePairs.put("namespace", gcpKubernetesInfrastructureMapping.getNamespace());
       } else {
         fieldsToRemove.add("namespace");
@@ -608,15 +608,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(azureInfrastructureMapping, skipValidation, null);
 
-      if (isNotEmpty(azureInfrastructureMapping.getSubscriptionId())) {
+      if (hasSome(azureInfrastructureMapping.getSubscriptionId())) {
         keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
       }
 
-      if (isNotEmpty(azureInfrastructureMapping.getResourceGroup())) {
+      if (hasSome(azureInfrastructureMapping.getResourceGroup())) {
         keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
       }
 
-      if (isNotEmpty(azureInfrastructureMapping.getTags())) {
+      if (hasSome(azureInfrastructureMapping.getTags())) {
         keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
       }
 
@@ -643,7 +643,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("region");
       }
-      if (isNotEmpty(awsInfrastructureMapping.getLoadBalancerId())) {
+      if (hasSome(awsInfrastructureMapping.getLoadBalancerId())) {
         keyValuePairs.put("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
       } else {
         fieldsToRemove.add("loadBalancerId");
@@ -667,7 +667,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       } else {
         fieldsToRemove.add("awsInstanceFilter");
       }
-      if (isNotEmpty(awsInfrastructureMapping.getAutoScalingGroupName())) {
+      if (hasSome(awsInfrastructureMapping.getAutoScalingGroupName())) {
         keyValuePairs.put("autoScalingGroupName", awsInfrastructureMapping.getAutoScalingGroupName());
       } else {
         fieldsToRemove.add("autoScalingGroupName");
@@ -682,8 +682,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         fieldsToRemove.add("region");
       }
       if (lambdaInfraStructureMapping.getVpcId() == null) {
-        if (isNotEmpty(lambdaInfraStructureMapping.getSubnetIds())
-            || isNotEmpty(lambdaInfraStructureMapping.getSecurityGroupIds())) {
+        if (hasSome(lambdaInfraStructureMapping.getSubnetIds())
+            || hasSome(lambdaInfraStructureMapping.getSecurityGroupIds())) {
           throw new InvalidRequestException("Subnets or Security Groups can't be added without any VPC.");
         }
         fieldsToRemove.addAll(Arrays.asList("vpcId", "subnetIds", "securityGroupIds"));
@@ -710,17 +710,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       PhysicalInfrastructureMapping physicalInfrastructureMapping =
           (PhysicalInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(physicalInfrastructureMapping, skipValidation, null);
-      if (isNotEmpty(physicalInfrastructureMapping.hosts())) {
+      if (hasSome(physicalInfrastructureMapping.hosts())) {
         keyValuePairs.put("hosts", physicalInfrastructureMapping.hosts());
       } else {
         fieldsToRemove.add("hosts");
       }
-      if (isNotEmpty(physicalInfrastructureMapping.getHostNames())) {
+      if (hasSome(physicalInfrastructureMapping.getHostNames())) {
         keyValuePairs.put("hostNames", physicalInfrastructureMapping.getHostNames());
       } else {
         fieldsToRemove.add("hostNames");
       }
-      if (isNotEmpty(physicalInfrastructureMapping.getLoadBalancerId())) {
+      if (hasSome(physicalInfrastructureMapping.getLoadBalancerId())) {
         keyValuePairs.put("loadBalancerId", physicalInfrastructureMapping.getLoadBalancerId());
       } else {
         fieldsToRemove.add("loadBalancerId");
@@ -730,11 +730,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (PhysicalInfrastructureMappingWinRm) infrastructureMapping;
       validateInfraMapping(infrastructureMapping, skipValidation, null);
 
-      if (isNotEmpty(physicalInfrastructureMappingWinRm.getLoadBalancerId())) {
+      if (hasSome(physicalInfrastructureMappingWinRm.getLoadBalancerId())) {
         keyValuePairs.put("loadBalancerId", physicalInfrastructureMappingWinRm.getLoadBalancerId());
       }
 
-      if (isNotEmpty(physicalInfrastructureMappingWinRm.getHostNames())) {
+      if (hasSome(physicalInfrastructureMappingWinRm.getHostNames())) {
         keyValuePairs.put("hostNames", physicalInfrastructureMappingWinRm.getHostNames());
       }
 
@@ -804,13 +804,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           fieldsToRemove.add("stageTargetGroupArns");
         }
       } else if (AmiDeploymentType.SPOTINST == savedAwsAmiInfrastructureMapping.getAmiDeploymentType()) {
-        if (isNotEmpty(awsAmiInfrastructureMapping.getSpotinstCloudProvider())) {
+        if (hasSome(awsAmiInfrastructureMapping.getSpotinstCloudProvider())) {
           keyValuePairs.put(AwsAmiInfrastructureMappingKeys.spotinstCloudProvider,
               awsAmiInfrastructureMapping.getSpotinstCloudProvider());
         } else {
           fieldsToRemove.add(AwsAmiInfrastructureMappingKeys.spotinstCloudProvider);
         }
-        if (isNotEmpty(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson())) {
+        if (hasSome(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson())) {
           keyValuePairs.put(AwsAmiInfrastructureMappingKeys.spotinstElastiGroupJson,
               awsAmiInfrastructureMapping.getSpotinstElastiGroupJson());
         } else {
@@ -891,7 +891,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
     // If an entry exists with the given default name get the next revision number
-    if (isNotEmpty(response)) {
+    if (hasSome(response)) {
       name = Utils.getNameWithNextRevision(
           response.getResponse().stream().map(InfrastructureMapping::getName).collect(toList()), name);
     }
@@ -903,13 +903,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
 
-    if (isEmpty(infraMapping.getRegion())) {
+    if (hasNone(infraMapping.getRegion())) {
       throw new InvalidRequestException("Region is required.");
     }
-    if (isEmpty(infraMapping.getClusterName())) {
+    if (hasNone(infraMapping.getClusterName())) {
       throw new InvalidRequestException("Cluster Name is required.");
     }
-    if (isEmpty(infraMapping.getLaunchType())) {
+    if (hasNone(infraMapping.getLaunchType())) {
       throw new InvalidRequestException("Launch Type can't be empty");
     }
 
@@ -924,16 +924,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateFargateSpecificRequiredFields(EcsInfrastructureMapping infraMapping) {
-    if (isEmpty(infraMapping.getExecutionRole())) {
+    if (hasNone(infraMapping.getExecutionRole())) {
       throw new InvalidRequestException("execution role is required with Fargate Launch Type.");
     }
-    if (isEmpty(infraMapping.getVpcId())) {
+    if (hasNone(infraMapping.getVpcId())) {
       throw new InvalidRequestException("vpc-id is required with Fargate Launch Type.");
     }
-    if (isEmpty(infraMapping.getSecurityGroupIds())) {
+    if (hasNone(infraMapping.getSecurityGroupIds())) {
       throw new InvalidRequestException("security-groupIds are required with Fargate Launch Type.");
     }
-    if (isEmpty(infraMapping.getSubnetIds())) {
+    if (hasNone(infraMapping.getSubnetIds())) {
       throw new InvalidRequestException("subnet-ids are required with Fargate Launch Type.");
     }
   }
@@ -941,7 +941,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @VisibleForTesting
   public void validateAwsInfraMapping(AwsInfrastructureMapping infraMapping) {
     if (infraMapping.isProvisionInstances()) {
-      if (isEmpty(infraMapping.getAutoScalingGroupName())) {
+      if (hasNone(infraMapping.getAutoScalingGroupName())) {
         throw new InvalidRequestException(
             "Auto Scaling group must not be empty when provision instances is true.", USER);
       }
@@ -954,7 +954,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     }
 
-    if (isEmpty(infraMapping.getHostConnectionType())) {
+    if (hasNone(infraMapping.getHostConnectionType())) {
       throw new InvalidRequestException("Host Connection Type can't be empty", USER);
     }
   }
@@ -963,14 +963,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void validateGcpInfraMapping(GcpKubernetesInfrastructureMapping infraMapping) {
     String clusterName = infraMapping.getClusterName();
     String namespace = infraMapping.getNamespace();
-    if (isEmpty(clusterName)) {
+    if (hasNone(clusterName)) {
       throw new InvalidRequestException("Cluster name can't be empty");
     }
-    if (isEmpty(namespace)) {
+    if (hasNone(namespace)) {
       throw new InvalidRequestException("Namespace can't be empty");
     }
     if (DeploymentType.KUBERNETES.name().equals(infraMapping.getDeploymentType())) {
-      if (isEmpty(infraMapping.getReleaseName())) {
+      if (hasNone(infraMapping.getReleaseName())) {
         throw new InvalidRequestException("Release name can't be empty");
       }
     }
@@ -1006,11 +1006,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateAzureInfraMapping(AzureInfrastructureMapping infraMapping) {
-    if (isEmpty(infraMapping.getComputeProviderType()) || !infraMapping.getComputeProviderType().equals(AZURE.name())) {
+    if (hasNone(infraMapping.getComputeProviderType()) || !infraMapping.getComputeProviderType().equals(AZURE.name())) {
       throw new InvalidRequestException("Compute Provider type is empty or not correct for Azure Infra mapping.", USER);
     }
 
-    if (isEmpty(infraMapping.getSubscriptionId())) {
+    if (hasNone(infraMapping.getSubscriptionId())) {
       throw new InvalidRequestException("Subscription Id must not be empty for Azure Infra mapping.", USER);
     }
 
@@ -1021,13 +1021,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.", USER);
     }
 
-    if (isEmpty(infraMapping.getInfraMappingType())) {
+    if (hasNone(infraMapping.getInfraMappingType())) {
       throw new InvalidRequestException("Infra mapping type must not be empty for Azure Infra mapping.", USER);
     }
   }
 
   private void validateAzureKubernetesInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
+    if (hasSome(infraMapping.getProvisionerId())) {
       return;
     }
     KubernetesHelperService.validateNamespace(infraMapping.getNamespace());
@@ -1077,7 +1077,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
 
-    if (isNotEmpty(infraMapping.getProvisionerId())) {
+    if (hasSome(infraMapping.getProvisionerId())) {
       return;
     }
 
@@ -1126,19 +1126,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   void handleEcsInfraMapping(Map<String, Object> keyValuePairs, Set<String> fieldsToRemove,
       EcsInfrastructureMapping ecsInfrastructureMapping) {
-    if (isNotEmpty(ecsInfrastructureMapping.getClusterName())) {
+    if (hasSome(ecsInfrastructureMapping.getClusterName())) {
       keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
     } else {
       fieldsToRemove.add("clusterName");
     }
 
-    if (isNotEmpty(ecsInfrastructureMapping.getRegion())) {
+    if (hasSome(ecsInfrastructureMapping.getRegion())) {
       keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
     } else {
       fieldsToRemove.add("region");
     }
 
-    if (isNotEmpty(ecsInfrastructureMapping.getLaunchType())) {
+    if (hasSome(ecsInfrastructureMapping.getLaunchType())) {
       keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
     } else {
       fieldsToRemove.add("launchType");
@@ -1157,13 +1157,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validatePhysicalInfrastructureMapping(PhysicalInfrastructureMapping infraMapping) {
-    if (isEmpty(infraMapping.getHostNames())) {
+    if (hasNone(infraMapping.getHostNames())) {
       throw new InvalidRequestException("Host names must not be empty", USER);
     }
   }
 
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
-    if (isEmpty(infraMapping.getHostNames())) {
+    if (hasNone(infraMapping.getHostNames())) {
       throw new InvalidRequestException("Host names must not be empty", USER);
     }
 
@@ -1196,11 +1196,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @VisibleForTesting
   public void validateAwsAmiInfrastructureMapping(AwsAmiInfrastructureMapping infrastructureMapping) {
-    if (isEmpty(infrastructureMapping.getRegion())) {
+    if (hasNone(infrastructureMapping.getRegion())) {
       throw new InvalidRequestException("Region is mandatory");
     }
     if (AmiDeploymentType.AWS_ASG == infrastructureMapping.getAmiDeploymentType()
-        && isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
+        && hasNone(infrastructureMapping.getAutoScalingGroupName())) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
     }
   }
@@ -1210,19 +1210,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
 
-    if (isEmpty(infrastructureMapping.getBaseVMSSName())) {
+    if (hasNone(infrastructureMapping.getBaseVMSSName())) {
       throw new InvalidRequestException("Base VMSS name should not be empty");
     }
 
-    if (isEmpty(infrastructureMapping.getSubscriptionId())) {
+    if (hasNone(infrastructureMapping.getSubscriptionId())) {
       throw new InvalidRequestException("Subscription Id should not be empty");
     }
 
-    if (isEmpty(infrastructureMapping.getResourceGroupName())) {
+    if (hasNone(infrastructureMapping.getResourceGroupName())) {
       throw new InvalidRequestException("Resource group name should not be empty");
     }
 
-    if (isEmpty(infrastructureMapping.getUserName())) {
+    if (hasNone(infrastructureMapping.getUserName())) {
       throw new InvalidRequestException("User name should not be empty");
     }
 
@@ -1231,13 +1231,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (PASSWORD == infrastructureMapping.getVmssAuthType()) {
-      if (isEmpty(infrastructureMapping.getPasswordSecretTextName())) {
+      if (hasNone(infrastructureMapping.getPasswordSecretTextName())) {
         throw new InvalidRequestException("Password should not be empty");
       }
     }
 
     if (SSH_PUBLIC_KEY == infrastructureMapping.getVmssAuthType()) {
-      if (isEmpty(infrastructureMapping.getHostConnectionAttrs())) {
+      if (hasNone(infrastructureMapping.getHostConnectionAttrs())) {
         throw new InvalidRequestException("SSH Public Key should not be empty");
       }
     }
@@ -1248,11 +1248,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
 
-    if (isEmpty(infrastructureMapping.getSubscriptionId())) {
+    if (hasNone(infrastructureMapping.getSubscriptionId())) {
       throw new InvalidRequestException("Subscription Id should not be empty");
     }
 
-    if (isEmpty(infrastructureMapping.getResourceGroup())) {
+    if (hasNone(infrastructureMapping.getResourceGroup())) {
       throw new InvalidRequestException("Subscription Id should not be empty");
     }
   }
@@ -1335,7 +1335,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     List<String> refPipelines = pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(appId, infraMappingId);
-    if (isNotEmpty(refPipelines)) {
+    if (hasSome(refPipelines)) {
       throw new InvalidRequestException(
           format("Service Infrastructure is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
               plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
@@ -1343,7 +1343,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     List<String> refTriggers = triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(appId, infraMappingId);
-    if (isNotEmpty(refTriggers)) {
+    if (hasSome(refTriggers)) {
       throw new InvalidRequestException(
           format("Service Infrastructure is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
               plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
@@ -1407,8 +1407,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
-      if (isNotEmpty(pyInfraMapping.getProvisionerId())) {
-        if (isNotEmpty(pyInfraMapping.hosts())) {
+      if (hasSome(pyInfraMapping.getProvisionerId())) {
+        if (hasSome(pyInfraMapping.hosts())) {
           return pyInfraMapping.hosts();
         } else {
           throw new InvalidRequestException(
@@ -1869,7 +1869,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("Compute Provider", computeProviderSetting);
     String region = extractRegionFromInfraMapping(infrastructureMapping);
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return Collections.emptyMap();
     }
 
@@ -1981,7 +1981,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     String region = extractRegionFromInfraMapping(infrastructureMapping);
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       return Collections.emptyList();
     }
 
@@ -2100,7 +2100,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       PhysicalInfrastructureMappingBase physicalInfraMapping =
           (PhysicalInfrastructureMappingBase) infrastructureMapping;
       if (infrastructureMapping.getProvisionerId() != null) {
-        if (isEmpty(physicalInfraMapping.hosts())) {
+        if (hasNone(physicalInfraMapping.hosts())) {
           return emptyList();
         }
         return physicalInfraMapping.hosts().stream().map(Host::getHostName).collect(Collectors.toList());
@@ -2273,7 +2273,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     notNullCheck("Compute Provider", computeProviderSetting);
     String region = infrastructureMapping.getRegion();
-    if (isEmpty(region)) {
+    if (hasNone(region)) {
       // case that could happen since we support dynamic infra for Ami Asg
       return AwsAsgGetRunningCountData.builder()
           .asgName(DEFAULT_AMI_ASG_NAME)
@@ -2455,7 +2455,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds) {
-    if (isNotEmpty(infraMappingIds)) {
+    if (hasSome(infraMappingIds)) {
       return wingsPersistence.createQuery(InfrastructureMapping.class)
           .filter(InfrastructureMappingKeys.appId, appId)
           .field("uuid")
@@ -2468,7 +2468,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public String getInfraMappingsByServiceAndInfraDefinitionIds(
       String appId, String serviceId, String infraDefinitionId) {
-    if (isNotEmpty(serviceId) && isNotEmpty(infraDefinitionId)) {
+    if (hasSome(serviceId) && hasSome(infraDefinitionId)) {
       InfrastructureMapping infraMapping =
           wingsPersistence.createQuery(InfrastructureMapping.class)
               .filter(InfrastructureMappingKeys.appId, appId)
@@ -2495,7 +2495,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public List<String> fetchCloudProviderIds(String appId, List<String> infraMappingIds) {
-    if (isNotEmpty(infraMappingIds)) {
+    if (hasSome(infraMappingIds)) {
       List<InfrastructureMapping> infrastructureMappings =
           wingsPersistence.createQuery(InfrastructureMapping.class)
               .project(InfrastructureMappingKeys.appId, true)

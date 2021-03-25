@@ -8,8 +8,8 @@ import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.execution.ExecutionSource;
@@ -58,7 +58,7 @@ public class CILiteEngineStepGroupUtils {
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (integrationStageConfig.getExecution() == null || isEmpty(integrationStageConfig.getExecution().getSteps())) {
+    if (integrationStageConfig.getExecution() == null || hasNone(integrationStageConfig.getExecution().getSteps())) {
       return mainEngineExecutionSections;
     }
 
@@ -81,7 +81,7 @@ public class CILiteEngineStepGroupUtils {
       if (isLiteEngineStep(executionWrapper)) {
         liteEngineExecutionSections.add(executionWrapper);
       } else if (isCIManagerStep(executionWrapper)) {
-        if (isNotEmpty(liteEngineExecutionSections)) {
+        if (hasSome(liteEngineExecutionSections)) {
           liteEngineCounter++;
           ExecutionWrapperConfig liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
@@ -98,7 +98,7 @@ public class CILiteEngineStepGroupUtils {
       }
     }
 
-    if (isNotEmpty(liteEngineExecutionSections)) {
+    if (hasSome(liteEngineExecutionSections)) {
       liteEngineCounter++;
       ExecutionWrapperConfig liteEngineStepExecutionWrapper =
           fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
@@ -173,7 +173,7 @@ public class CILiteEngineStepGroupUtils {
   private CIStepExecEnvironment validateAndFetchParallelStepsType(ParallelStepElementConfig parallel) {
     CIStepExecEnvironment ciStepExecEnvironment = null;
 
-    if (isNotEmpty(parallel.getSections())) {
+    if (hasSome(parallel.getSections())) {
       for (ExecutionWrapperConfig executionWrapper : parallel.getSections()) {
         if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
           StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);

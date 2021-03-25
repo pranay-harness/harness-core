@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.beans.FeatureName.IRSA_FOR_EKS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
@@ -18,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -362,7 +361,7 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    if (hasNone(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
     }
   }
@@ -471,28 +470,28 @@ public class SettingValidationService {
   private void validateHostConnectionAttributes(HostConnectionAttributes hostConnectionAttributes) {
     if (hostConnectionAttributes.getAuthenticationScheme() != null
         && hostConnectionAttributes.getAuthenticationScheme() == AuthenticationScheme.SSH_KEY) {
-      if (isEmpty(hostConnectionAttributes.getUserName())) {
+      if (hasNone(hostConnectionAttributes.getUserName())) {
         throw new InvalidRequestException("Username field is mandatory in SSH Configuration", USER);
       }
       if (hostConnectionAttributes.isKeyless()) {
-        if (isEmpty(hostConnectionAttributes.getKeyPath())) {
+        if (hasNone(hostConnectionAttributes.getKeyPath())) {
           throw new InvalidRequestException("Private key file path is not specified", USER);
         }
       } else {
         if (hostConnectionAttributes.getAccessType() != null
             && hostConnectionAttributes.getAccessType() == AccessType.USER_PASSWORD) {
-          if (isEmpty(hostConnectionAttributes.getSshPassword())) {
+          if (hasNone(hostConnectionAttributes.getSshPassword())) {
             throw new InvalidRequestException("Password field is mandatory in SSH Configuration", USER);
           }
-        } else if (isEmpty(hostConnectionAttributes.getKey())) {
+        } else if (hasNone(hostConnectionAttributes.getKey())) {
           if (hostConnectionAttributes.isVaultSSH()) {
-            if (isEmpty(hostConnectionAttributes.getPublicKey())) {
+            if (hasNone(hostConnectionAttributes.getPublicKey())) {
               throw new InvalidRequestException("Public key is not specified", USER);
             }
-            if (isEmpty(hostConnectionAttributes.getRole())) {
+            if (hasNone(hostConnectionAttributes.getRole())) {
               throw new InvalidRequestException("SSH Secret Engine role is not specified", USER);
             }
-            if (isEmpty(hostConnectionAttributes.getSshVaultConfigId())) {
+            if (hasNone(hostConnectionAttributes.getSshVaultConfigId())) {
               throw new InvalidRequestException("SSH Secret Engine reference is not specified", USER);
             }
           } else {

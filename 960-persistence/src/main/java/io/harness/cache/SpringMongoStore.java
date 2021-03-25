@@ -1,11 +1,12 @@
 package io.harness.cache;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.cache.SpringCacheEntity.SpringCacheEntityKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.KryoSerializer;
 import io.harness.springdata.HMongoTemplate;
 
@@ -54,7 +55,7 @@ public class SpringMongoStore implements DistributedStore {
   }
 
   private String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
-    if (EmptyPredicate.isEmpty(params)) {
+    if (hasNone(params)) {
       return format("%s/%d/%d/%d", key, VERSION, algorithmId, structureHash);
     }
     return format("%s/%d/%d/%d%d", key, VERSION, algorithmId, structureHash, Objects.hash(params.toArray()));

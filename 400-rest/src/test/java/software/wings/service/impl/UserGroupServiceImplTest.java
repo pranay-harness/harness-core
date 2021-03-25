@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -66,7 +66,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMSettingService;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
@@ -1062,7 +1062,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
         .stream()
         .map(AppPermission::getAppFilter)
         .map(Filter::getIds)
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .reduce(new HashSet<>(), (a, b) -> {
           a.addAll(b);
           return a;
@@ -1090,7 +1090,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   private AppPermission createAppPermission(String filterType, PermissionType permissionType, List<String> appIds) {
     Set<String> ids = new HashSet<>();
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       ids.addAll(appIds);
     }
     return new AppPermission(

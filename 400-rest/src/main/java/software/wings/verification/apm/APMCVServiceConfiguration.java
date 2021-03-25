@@ -1,7 +1,7 @@
 package software.wings.verification.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -66,14 +66,14 @@ public class APMCVServiceConfiguration extends CVConfiguration {
   }
 
   public boolean validate() {
-    if (isEmpty(metricCollectionInfos) || isAllThroughput()) {
+    if (hasNone(metricCollectionInfos) || isAllThroughput()) {
       return false;
     }
 
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
       if (!metricCollectionInfo.getCollectionUrl().contains("${start_time}")
           && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
-        if (isEmpty(metricCollectionInfo.getCollectionBody())
+        if (hasNone(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
                 && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
           return false;
@@ -82,7 +82,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
 
       if (!metricCollectionInfo.getCollectionUrl().contains("${end_time}")
           && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
-        if (isEmpty(metricCollectionInfo.getCollectionBody())
+        if (hasNone(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
                 && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
           return false;
@@ -94,7 +94,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
   }
 
   private boolean isAllThroughput() {
-    if (isEmpty(metricCollectionInfos)) {
+    if (hasNone(metricCollectionInfos)) {
       return false;
     }
     AtomicBoolean isAllThroughput = new AtomicBoolean(true);
@@ -112,7 +112,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
 
     Map<String, String> metricNameTxnNameMap = new HashMap<>();
 
-    if (isNotEmpty(metricCollectionInfoList)) {
+    if (hasSome(metricCollectionInfoList)) {
       for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfoList) {
         String txnName = metricCollectionInfo.getResponseMapping().getTxnNameFieldValue() == null
             ? "*"
@@ -133,7 +133,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
 
   private boolean validateErrorOrResponseTime() {
     AtomicBoolean isValidConfig = new AtomicBoolean(true);
-    if (isEmpty(metricCollectionInfos)) {
+    if (hasNone(metricCollectionInfos)) {
       // not a valid configuration
       return false;
     }
@@ -161,7 +161,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     Map<String, List<MetricCollectionInfo>> txnNameInfoMap = new HashMap<>();
     metricCollectionInfos.forEach(metricCollectionInfo -> {
       final String txnName = metricCollectionInfo.getResponseMapping().getTxnNameFieldValue();
-      if (isNotEmpty(txnName)) {
+      if (hasSome(txnName)) {
         if (!txnNameInfoMap.containsKey(txnName)) {
           txnNameInfoMap.put(txnName, new ArrayList<>());
         }
@@ -169,7 +169,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
       }
     });
 
-    if (isNotEmpty(txnNameInfoMap)) {
+    if (hasSome(txnNameInfoMap)) {
       txnNameInfoMap.forEach((txnName, metricInfoList) -> {
         // if this metricInfoList has an error/response time, it should have throughput also.
         hasErrorOrTime.set(false);

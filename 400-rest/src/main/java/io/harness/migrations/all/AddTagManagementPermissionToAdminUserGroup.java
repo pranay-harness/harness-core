@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -36,7 +36,7 @@ public class AddTagManagementPermissionToAdminUserGroup implements Migration {
           AccountPermissions accountPermissions = userGroup.getAccountPermissions();
           if (accountPermissions != null) {
             Set<PermissionType> accountPermissionsSet = accountPermissions.getPermissions();
-            if (isNotEmpty(accountPermissionsSet)) {
+            if (hasSome(accountPermissionsSet)) {
               if (accountPermissionsSet.contains(PermissionType.ACCOUNT_MANAGEMENT)) {
                 accountPermissionsSet.add(PermissionType.TAG_MANAGEMENT);
                 userGroupService.updatePermissions(userGroup);

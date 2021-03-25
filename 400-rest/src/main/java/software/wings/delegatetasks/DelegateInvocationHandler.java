@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -62,7 +62,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
             .tags(syncTaskContext.getTags());
 
     String awsConfigTag = getAwsConfigTags(args);
-    if (isNotEmpty(awsConfigTag)) {
+    if (hasSome(awsConfigTag)) {
       builder.tags(singletonList(awsConfigTag));
     }
     RemoteMethodReturnValueData returnValueData = delegateService.executeTask(builder.build());
@@ -74,7 +74,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
   }
 
   private String getAwsConfigTags(Object[] args) {
-    if (isNotEmpty(args)) {
+    if (hasSome(args)) {
       for (Object arg : args) {
         if (arg instanceof AwsConfig) {
           return ((AwsConfig) arg).getTag();

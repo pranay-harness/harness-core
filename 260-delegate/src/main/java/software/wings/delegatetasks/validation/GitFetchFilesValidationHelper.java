@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -30,6 +31,6 @@ public class GitFetchFilesValidationHelper {
       return false;
     }
 
-    return isEmpty(gitClient.validate(gitConfig));
+    return hasNone(gitClient.validate(gitConfig));
   }
 }

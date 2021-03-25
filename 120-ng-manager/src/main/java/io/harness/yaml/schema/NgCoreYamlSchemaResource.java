@@ -1,7 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 
@@ -58,7 +58,7 @@ public class NgCoreYamlSchemaResource implements YamlSchemaResource {
       schema = yamlSchemaProvider.updateArrayFieldAtSecondLevelInSchema(
           schema, CONNECTOR_TYPES, ENUM_NODE, entitySubtype.getDisplayName());
     }
-    if (isNotEmpty(identifier)) {
+    if (hasSome(identifier)) {
       schema = yamlSchemaProvider.upsertInObjectFieldAtSecondLevelInSchema(
           schema, NGCommonEntityConstants.IDENTIFIER_KEY, CONST_NODE, identifier);
     }

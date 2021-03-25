@@ -22,7 +22,7 @@ import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_
 import static io.harness.azure.model.AzureConstants.VMSS_IDS_IS_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -200,7 +200,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     if (isBlank(resourceGroupName)) {
       throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
     }
-    if (isEmpty(virtualMachineScaleSetName)) {
+    if (hasNone(virtualMachineScaleSetName)) {
       return Optional.empty();
     }
 

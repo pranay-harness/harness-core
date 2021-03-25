@@ -1,7 +1,7 @@
 package software.wings.service.impl.workflow.creation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -46,7 +46,7 @@ public class MultiPhaseWorkflowCreator extends WorkflowCreator {
   private void addWorkflowPhases(Workflow workflow) {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+    if (hasSome(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
       canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
       workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));

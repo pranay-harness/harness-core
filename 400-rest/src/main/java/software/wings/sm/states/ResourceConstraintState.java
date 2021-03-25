@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.unhandled;
@@ -135,7 +135,7 @@ public class ResourceConstraintState extends State {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = restraintService.get(accountId, resourceConstraintId);
 
-    if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
+    if (hasSome(notificationEvents) && notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
     }
 
@@ -219,7 +219,7 @@ public class ResourceConstraintState extends State {
           .build();
     }
 
-    if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.BLOCKED)) {
+    if (hasSome(notificationEvents) && notificationEvents.contains(NotificationEvent.BLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION);
     }
 
@@ -228,7 +228,7 @@ public class ResourceConstraintState extends State {
 
   private void sendNotification(
       String accountId, ExecutionContext context, ResourceConstraint resourceConstraint, NotificationMessageType type) {
-    if (isEmpty(notificationGroups)) {
+    if (hasNone(notificationGroups)) {
       return;
     }
 
@@ -254,7 +254,7 @@ public class ResourceConstraintState extends State {
 
       // Note that there is a race between determining to block the state and the time we obtain the blocking items
       // At least in theory the usages being empty is possible.
-      if (isNotEmpty(usages)) {
+      if (hasSome(usages)) {
         final ResourceConstraintUsage resourceConstraintUsage = usages.iterator().next();
         final ActiveScope activeScope = resourceConstraintUsage.getActiveScopes().iterator().next();
 

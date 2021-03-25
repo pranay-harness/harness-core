@@ -1,9 +1,10 @@
 package io.harness;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
@@ -31,7 +32,7 @@ public class IdentifierRefProtoUtils {
     if (isNotBlank(projectIdentifier)) {
       identifierRefBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
     }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getMetadata())) {
+    if (hasSome(identifierRef.getMetadata())) {
       identifierRefBuilder.putAllMetadata(identifierRef.getMetadata());
     }
     return identifierRefBuilder.build();

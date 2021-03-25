@@ -1,6 +1,7 @@
 package io.harness.pms.expressions.functors;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.FunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
@@ -20,7 +21,7 @@ public class AccountFunctor implements LateBindingValue {
   @Override
   public Object bind() {
     String accountId = AmbianceHelper.getAccountId(ambiance);
-    if (EmptyPredicate.isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       return null;
     }
 

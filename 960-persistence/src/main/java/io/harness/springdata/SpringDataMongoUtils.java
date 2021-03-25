@@ -1,6 +1,6 @@
 package io.harness.springdata;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -33,7 +33,7 @@ public class SpringDataMongoUtils {
   }
 
   public void populateInFilter(Criteria criteria, String fieldName, List<?> values) {
-    if (isNotEmpty(values)) {
+    if (hasSome(values)) {
       criteria.and(fieldName).in(values);
     }
   }

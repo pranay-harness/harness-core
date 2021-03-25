@@ -2,8 +2,8 @@ package software.wings.common;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.InstanceElementListParam.INSTANCE_LIST_PARAMS;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
@@ -218,7 +218,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private PartitionElement getInstancesPartition() {
     List<ContextElement> partitions = context.getContextElementList(ContextElementType.PARTITION);
-    if (isEmpty(partitions)) {
+    if (hasNone(partitions)) {
       return null;
     }
 
@@ -246,7 +246,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
-    if (isEmpty(req.getFilters())) {
+    if (hasNone(req.getFilters())) {
       return null;
     }
     req.addFilter("appId", Operator.EQ, app.getUuid());
@@ -268,7 +268,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
     }
 
-    if (isNotEmpty(instanceIds)) {
+    if (hasSome(instanceIds)) {
       Map<String, InstanceElement> map =
           elements.stream().collect(Collectors.toMap(InstanceElement::getUuid, Function.identity()));
       elements = new ArrayList<>();
@@ -285,13 +285,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private void applyServiceInstanceIdsFilter(PageRequestBuilder pageRequest) {
     ServiceInstanceIdsParam serviceInstanceIdsParam = getServiceInstanceIdsParam();
     if (serviceInstanceIdsParam != null) {
-      if (isNotEmpty(instanceIds)) {
+      if (hasSome(instanceIds)) {
         Collection<String> commonInstanceIds =
             intersection(asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[0]);
       } else {
         List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();
-        if (isNotEmpty(instanceIds)) {
+        if (hasSome(instanceIds)) {
           this.instanceIds = instanceIds.toArray(new String[0]);
         } else {
           pageRequest.addFilter(ID_KEY, Operator.IN, emptyList());
@@ -300,7 +300,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
 
-    if (isNotEmpty(instanceIds)) {
+    if (hasSome(instanceIds)) {
       pageRequest.addFilter(ID_KEY, Operator.IN, Arrays.copyOf(instanceIds, instanceIds.length, Object[].class));
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
@@ -321,7 +321,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return true, if is wild char present
    */
   public static boolean isWildCharPresent(String... names) {
-    if (isEmpty(names)) {
+    if (hasNone(names)) {
       return false;
     }
     for (String name : names) {
@@ -335,7 +335,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private void applyServiceTemplatesFilter(String appId, String envId, PageRequestBuilder pageRequest) {
     List<Service> services = null;
     List<ServiceTemplate> serviceTemplates = null;
-    if (isEmpty(serviceTemplateNames)) {
+    if (hasNone(serviceTemplateNames)) {
       services = getServices(appId);
       serviceTemplates = getServiceTemplates(appId, envId, services, serviceTemplateNames);
     } else {
@@ -347,7 +347,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       }
     }
 
-    if (isNotEmpty(serviceTemplates)) {
+    if (hasSome(serviceTemplates)) {
       pageRequest.withLimit(UNLIMITED).addFilter(
           "serviceTemplate", Operator.IN, serviceTemplates.stream().map(ServiceTemplate::getUuid).toArray());
     }
@@ -390,11 +390,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
                                                 .addFilter("appId", Operator.EQ, appId)
                                                 .addFilter("envId", Operator.EQ, envId)
                                                 .addOrder(ServiceTemplate.CREATED_AT_KEY, OrderType.ASC);
-    if (isNotEmpty(services)) {
+    if (hasSome(services)) {
       pageRequestBuilder.addFilter(
           "serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray());
     }
-    if (isNotEmpty(names)) {
+    if (hasSome(names)) {
       pageRequestBuilder.addFilter(
           "name", Operator.IN, Arrays.copyOf(serviceTemplateNames, serviceTemplateNames.length, Object[].class));
     }

@@ -1,7 +1,7 @@
 package io.harness.pms.triggers.webhook.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
@@ -87,7 +87,7 @@ public class TriggerWebhookExecutionServiceImpl
       List<WebhookEventResponse> responseList = result.getResponses();
 
       // Remove any null values if present in list
-      if (isNotEmpty(responseList)) {
+      if (hasSome(responseList)) {
         responseList = responseList.stream().filter(Objects::nonNull).collect(Collectors.toList());
       }
 
@@ -108,7 +108,7 @@ public class TriggerWebhookExecutionServiceImpl
   }
 
   private boolean discardEmptyOrInvalidPayloadEvents(List<WebhookEventResponse> responseList) {
-    if (isEmpty(responseList)) {
+    if (hasNone(responseList)) {
       return true;
     }
     if (responseList.size() == 1 && responseList.get(0).getFinalStatus() == INVALID_PAYLOAD) {
@@ -131,7 +131,7 @@ public class TriggerWebhookExecutionServiceImpl
   }
 
   private boolean isScmConnectivityFailed(WebhookEventProcessingResult result) {
-    return isNotEmpty(result.getResponses())
+    return hasSome(result.getResponses())
         && result.getResponses().get(0).getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED;
   }
 

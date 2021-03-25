@@ -1,10 +1,10 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-
-import io.harness.data.structure.EmptyPredicate;
 
 import java.util.Collections;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class PyWinrmArgs {
   }
 
   private String buildEnvironmentStrForCommandLine() {
-    if (environmentMap == null || EmptyPredicate.isEmpty(environmentMap)) {
+    if (environmentMap == null || hasNone(environmentMap)) {
       return String.format("%s", Collections.emptyMap());
     }
     return environmentMap.entrySet()

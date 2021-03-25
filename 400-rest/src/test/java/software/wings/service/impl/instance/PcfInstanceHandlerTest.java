@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -417,13 +417,13 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     Status status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
     assertTrue(status.isSuccess());
     assertTrue(status.isRetryable());
-    assertTrue(isEmpty(status.getErrorMessage()));
+    assertTrue(hasNone(status.getErrorMessage()));
 
     when(pcfHelperService.getInstanceCount(pcfCommandExecutionResponse)).thenReturn(0);
     status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
     assertTrue(status.isSuccess());
     assertFalse(status.isRetryable());
-    assertTrue(isEmpty(status.getErrorMessage()));
+    assertTrue(hasNone(status.getErrorMessage()));
   }
 
   @Test

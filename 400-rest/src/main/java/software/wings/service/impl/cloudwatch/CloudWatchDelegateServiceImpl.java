@@ -1,6 +1,6 @@
 package software.wings.service.impl.cloudwatch;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
@@ -79,7 +79,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     AmazonCloudWatchClient cloudWatchClient =
         awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config);
     // Fetch ELB Metrics
-    if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
+    if (!hasNone(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
       setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(
           (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
             callables.add(()
@@ -95,7 +95,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     }
 
     // Fetch EC2 Metrics
-    if (!isEmpty(setupTestNodeData.getEc2Metrics())) {
+    if (!hasNone(setupTestNodeData.getEc2Metrics())) {
       setupTestNodeData.getEc2Metrics().forEach(cloudWatchMetric
           -> callables.add(()
                                -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
@@ -109,7 +109,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     }
 
     // Fetch ECS Metrics
-    if (!isEmpty(setupTestNodeData.getEcsMetrics())) {
+    if (!hasNone(setupTestNodeData.getEcsMetrics())) {
       setupTestNodeData.getEcsMetrics().forEach(
           (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
             callables.add(()
@@ -125,7 +125,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     }
 
     // Fetch Lambda Metrics
-    if (!isEmpty(setupTestNodeData.getLambdaFunctionsMetrics())) {
+    if (!hasNone(setupTestNodeData.getLambdaFunctionsMetrics())) {
       setupTestNodeData.getLambdaFunctionsMetrics().forEach(
           (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
             callables.add(()

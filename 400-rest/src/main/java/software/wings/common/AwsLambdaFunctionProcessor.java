@@ -1,7 +1,7 @@
 package software.wings.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
@@ -85,7 +85,7 @@ public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
     }
 
     List<AwsLambdaFunctionElement> awsLambdaFunctionElementList = new ArrayList<>();
-    if (isEmpty(awsLambdaContextElement.getFunctionArns())) {
+    if (hasNone(awsLambdaContextElement.getFunctionArns())) {
       log.error("awsLambdaContextElement.getFunctionArns() is null or empty in the context");
       return awsLambdaFunctionElementList;
     }

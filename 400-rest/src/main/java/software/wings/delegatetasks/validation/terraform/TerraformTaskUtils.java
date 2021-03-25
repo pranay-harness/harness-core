@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.provision.TerraformConstants.VAR_FILE_FORMAT;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -64,7 +64,7 @@ public class TerraformTaskUtils {
       directory = null;
     }
 
-    if (!isEmpty(filePathList)) {
+    if (!hasNone(filePathList)) {
       filePathList.forEach(file -> {
         String pathForFile = Paths.get(userDir, directory, file).toString();
         builder.append(String.format(VAR_FILE_FORMAT, pathForFile));

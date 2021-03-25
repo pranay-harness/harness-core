@@ -1,6 +1,6 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.exception.InvalidRequestException;
@@ -31,7 +31,7 @@ public class PipelineDtoMapper {
       throw new YamlException(ex.getMessage(), USER);
     }
 
-    if (isEmpty(ngPipeline.getStages())) {
+    if (hasNone(ngPipeline.getStages())) {
       throw new InvalidRequestException("stages cannot be empty for the given pipeline");
     }
 
@@ -74,7 +74,7 @@ public class PipelineDtoMapper {
 
   private int getNumberOfStages(NgPipeline pipeline) {
     List<StageElementWrapper> stages = pipeline.getStages();
-    if (isEmpty(stages)) {
+    if (hasNone(stages)) {
       return 0;
     }
     int count = 0;

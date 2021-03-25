@@ -1,5 +1,7 @@
 package io.harness.ngpipeline.inputset.resources;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -8,7 +10,6 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -162,7 +163,7 @@ public class InputSetResource {
 
     Map<String, String> invalidIdentifiers =
         inputSetEntityValidationHelper.validateOverlayInputSetEntity(overlayInputSetEntity);
-    if (EmptyPredicate.isNotEmpty(invalidIdentifiers)) {
+    if (hasSome(invalidIdentifiers)) {
       return ResponseDTO.newResponse(
           InputSetElementMapper.writeOverlayResponseDTO(overlayInputSetEntity, invalidIdentifiers));
     }
@@ -224,7 +225,7 @@ public class InputSetResource {
 
     Map<String, String> invalidIdentifiers =
         inputSetEntityValidationHelper.validateOverlayInputSetEntity(overlayInputSetEntity);
-    if (EmptyPredicate.isNotEmpty(invalidIdentifiers)) {
+    if (hasSome(invalidIdentifiers)) {
       return ResponseDTO.newResponse(
           InputSetElementMapper.writeOverlayResponseDTO(overlayInputSetEntity, invalidIdentifiers));
     }
@@ -262,7 +263,7 @@ public class InputSetResource {
     Criteria criteria = InputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, BaseInputSetEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

@@ -1,7 +1,7 @@
 package software.wings.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
@@ -145,7 +145,7 @@ public class ApplicationManifestUtils {
 
     // Need service manifest for opensift deployments in case if any of the params overrides is reusing script from
     // service manifest
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId()) && isNotEmpty(appManifestMap)
+    if (featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId()) && hasSome(appManifestMap)
         && OC_PARAMS == appManifestKind) {
       applicationManifest = getApplicationManifestForService(context);
       if (applicationManifest != null && applicationManifest.getStoreType() == CUSTOM_OPENSHIFT_TEMPLATE) {
@@ -314,7 +314,7 @@ public class ApplicationManifestUtils {
         (GitFetchFilesFromMultipleRepoResult) response.getGitCommandResult();
 
     Multimap<K8sValuesLocation, String> valuesFiles = ArrayListMultimap.create();
-    if (gitCommandResult == null || isEmpty(gitCommandResult.getFilesFromMultipleRepo())) {
+    if (gitCommandResult == null || hasNone(gitCommandResult.getFilesFromMultipleRepo())) {
       return valuesFiles.asMap();
     }
 
@@ -337,8 +337,8 @@ public class ApplicationManifestUtils {
       K8sValuesLocation location, ApplicationManifest appManifest, Map<String, GitFile> gitFiles) {
     // Will always expect to get only single file from application Service manifest or none if doesn't exists
     // In other cases will get the first file from the root repo
-    if (K8sValuesLocation.Service == location || isEmpty(appManifest.getGitFileConfig().getFilePathList())) {
-      return isNotEmpty(gitFiles) ? singletonList(gitFiles.values().iterator().next().getFileContent()) : emptyList();
+    if (K8sValuesLocation.Service == location || hasNone(appManifest.getGitFileConfig().getFilePathList())) {
+      return hasSome(gitFiles) ? singletonList(gitFiles.values().iterator().next().getFileContent()) : emptyList();
     }
 
     return appManifest.getGitFileConfig()
@@ -555,7 +555,7 @@ public class ApplicationManifestUtils {
     }
 
     Map<HelmSubCommandType, String> resultValueMap = new HashMap<>();
-    if (isNotEmpty(helmCommandFlagConfig.getValueMap())) {
+    if (hasSome(helmCommandFlagConfig.getValueMap())) {
       for (Map.Entry<HelmSubCommand, String> entry : helmCommandFlagConfig.getValueMap().entrySet()) {
         resultValueMap.put(entry.getKey().getSubCommandType(), entry.getValue());
       }
@@ -624,7 +624,7 @@ public class ApplicationManifestUtils {
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
       CustomManifestValuesFetchResponse response) {
     Multimap<K8sValuesLocation, String> valuesFiles = ArrayListMultimap.create();
-    if (isEmpty(response.getValuesFilesContentMap())) {
+    if (hasNone(response.getValuesFilesContentMap())) {
       return valuesFiles.asMap();
     }
 
@@ -646,9 +646,9 @@ public class ApplicationManifestUtils {
   private Collection<String> getOrderedCustomFiles(ExecutionContext context, K8sValuesLocation location,
       ApplicationManifest appManifest, Map<String, CustomSourceFile> sourceFiles) {
     List<String> filePathList = getCustomSourceFilePathList(context, location, appManifest);
-    if (K8sValuesLocation.Service == location || isEmpty(filePathList)) {
-      return isNotEmpty(sourceFiles) ? singletonList(sourceFiles.values().iterator().next().getFileContent())
-                                     : emptyList();
+    if (K8sValuesLocation.Service == location || hasNone(filePathList)) {
+      return hasSome(sourceFiles) ? singletonList(sourceFiles.values().iterator().next().getFileContent())
+                                  : emptyList();
     }
 
     return filePathList.stream()

@@ -1,9 +1,10 @@
 package io.harness.executionplan.plancreator;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -44,7 +45,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     final String nodeId = generateUuid();
     String nodeName;
 
-    if (EmptyPredicate.isEmpty(stepElement.getName())) {
+    if (hasNone(stepElement.getName())) {
       nodeName = stepElement.getIdentifier();
     } else {
       nodeName = stepElement.getName();
@@ -54,7 +55,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     // Add Step dependencies.
     GenericStepInfo genericStepInfo = (GenericStepInfo) stepElement.getStepSpecType();
     Map<String, StepDependencySpec> stepDependencyMap = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(stepDependencyMap)) {
+    if (hasSome(stepDependencyMap)) {
       stepDependencyMap.forEach(
           (key, value) -> stepDependencyService.attachDependency(value, planNodeBuilder, context));
     }

@@ -2,7 +2,7 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
@@ -164,7 +164,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     // TODO: This is temporary code till we migrate all the triggers
     if (condition != null && WEBHOOK == condition.getConditionType()) {
       WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) condition;
-      if (isNotEmpty(webHookTriggerCondition.getParameters())) {
+      if (hasSome(webHookTriggerCondition.getParameters())) {
         if (workflowVariables == null) {
           workflowVariables = new LinkedHashMap<>();
         }

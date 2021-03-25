@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -85,13 +85,13 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     ElastiGroup oldElastiGroup = swapRoutesParameters.getOldElastiGroup();
     String oldElastiGroupId = (oldElastiGroup != null) ? oldElastiGroup.getId() : EMPTY;
 
-    if (isNotEmpty(newElastiGroupId)) {
+    if (hasSome(newElastiGroupId)) {
       logCallback.saveExecutionLog(
           format("Sending request to rename Elastigroup with Id: [%s] to [%s]", newElastiGroupId, prodElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
           ElastiGroupRenameRequest.builder().name(prodElastiGroupName).build());
     }
-    if (isNotEmpty(oldElastiGroupId)) {
+    if (hasSome(oldElastiGroupId)) {
       logCallback.saveExecutionLog(
           format("Sending request to rename Elastigroup with Id: [%s] to [%s]", oldElastiGroup, stageElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
@@ -104,7 +104,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     logCallback.saveExecutionLog("Route Updated Successfully", INFO, SUCCESS);
 
     // Downsize if configured on state
-    if (swapRoutesParameters.isDownsizeOldElastiGroup() && isNotEmpty(oldElastiGroupId)) {
+    if (swapRoutesParameters.isDownsizeOldElastiGroup() && hasSome(oldElastiGroupId)) {
       ElastiGroup temp = ElastiGroup.builder()
                              .id(oldElastiGroupId)
                              .name(stageElastiGroupName)
@@ -134,7 +134,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     int steadyStateTimeOut = getTimeOut(swapRoutesParameters.getSteadyStateTimeOut());
     ExecutionLogCallback logCallback;
 
-    if (oldElastiGroup != null && isNotEmpty(oldElastiGroupId)) {
+    if (oldElastiGroup != null && hasSome(oldElastiGroupId)) {
       ElastiGroup temp = ElastiGroup.builder()
                              .id(oldElastiGroupId)
                              .name(prodElastiGroupName)
@@ -160,7 +160,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
 
     restoreRoutesToOriginalStateIfChanged(awsConfig, swapRoutesParameters);
 
-    if (isNotEmpty(newElastiGroupId)) {
+    if (hasSome(newElastiGroupId)) {
       // Downsize new elastiGrup
       ElastiGroup temp = ElastiGroup.builder()
                              .id(newElastiGroupId)
@@ -226,7 +226,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
             .get(0)
             .getDefaultActions()
             .stream()
-            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
+            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && hasSome(action.getTargetGroupArn()))
             .findFirst();
 
     if (optionalAction.isPresent()
@@ -241,7 +241,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   private void restoreRoutesToOriginalStateIfChanged(
       AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) {
     ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
-    if (isEmpty(swapRoutesParameters.getLBdetailsForBGDeploymentList())) {
+    if (hasNone(swapRoutesParameters.getLBdetailsForBGDeploymentList())) {
       logCallback.saveExecutionLog("No Action Needed", INFO, SUCCESS);
       return;
     }

@@ -2,8 +2,8 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_CONTAINER_DEPLOYMENTS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -23,7 +23,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
@@ -178,7 +178,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         } else {
           if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
             ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
-            if (isNotEmpty(syncResponse.getControllerName())
+            if (hasSome(syncResponse.getControllerName())
                 && !syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName())) {
               continue;
             }
@@ -264,14 +264,14 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), containerInfraMapping.getAppId(),
         instancesInDB.size(), latestContainerInfoMap.keySet().size(), instancesToBeAdded.size(),
         instanceIdsToBeDeleted.size());
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
 
     DeploymentSummary deploymentSummary;
-    if (isNotEmpty(instancesToBeAdded)) {
+    if (hasSome(instancesToBeAdded)) {
       // newDeploymentInfo would be null in case of sync job.
-      if (!deploymentSummaryMap.containsKey(containerMetadata) && isNotEmpty(instancesInDB)) {
+      if (!deploymentSummaryMap.containsKey(containerMetadata) && hasSome(instancesInDB)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
           log.warn("Couldn't find an instance from a previous deployment");
@@ -457,7 +457,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         containerMetadata.getNamespace(), containerMetadata.getReleaseName(), currentPods.size(),
         instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
 
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
       log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
@@ -539,7 +539,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   @VisibleForTesting
   Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries,
       Multimap<ContainerMetadata, Instance> containerInstances, ContainerInfrastructureMapping containerInfraMapping) {
-    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+    if (hasNone(newDeploymentSummaries)) {
       return emptyMap();
     }
 
@@ -562,11 +562,11 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         boolean isControllerNamesRetrievable = emptyIfNull(containerDeploymentInfo.getContainerInfoList())
                                                    .stream()
                                                    .map(io.harness.container.ContainerInfo::getWorkloadName)
-                                                   .anyMatch(EmptyPredicate::isNotEmpty);
+                                                   .anyMatch(HasPredicate::hasSome);
         /*
          We need controller names only if release name is not set
          */
-        if (isControllerNamesRetrievable || isEmpty(containerDeploymentInfo.getContainerInfoList())) {
+        if (isControllerNamesRetrievable || hasNone(containerDeploymentInfo.getContainerInfoList())) {
           Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap, namespace);
 
           log.info(
@@ -602,7 +602,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           namespaces.add(deploymentInfo.getNamespace());
         }
 
-        if (isNotEmpty(deploymentInfo.getNamespaces())) {
+        if (hasSome(deploymentInfo.getNamespaces())) {
           namespaces.addAll(deploymentInfo.getNamespaces());
         }
 
@@ -653,7 +653,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                             .type(type)
                             .containerServiceName(containerSvcName)
                             .namespace(namespace)
-                            .releaseName(isNotEmpty(releaseName) ? releaseName : null)
+                            .releaseName(hasSome(releaseName) ? releaseName : null)
                             .build(),
             instance);
       } else {
@@ -667,7 +667,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     Multimap<ContainerMetadata, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
 
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 
@@ -696,7 +696,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           namespaces.add(deploymentInfo.getNamespace());
         }
 
-        if (isNotEmpty(deploymentInfo.getNamespaces())) {
+        if (hasSome(deploymentInfo.getNamespaces())) {
           namespaces.addAll(deploymentInfo.getNamespaces());
         }
 
@@ -833,9 +833,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     // Filter out null values
-    List<String> serviceNames = containerSvcNameSet.stream().filter(EmptyPredicate::isNotEmpty).collect(toList());
+    List<String> serviceNames = containerSvcNameSet.stream().filter(HasPredicate::hasSome).collect(toList());
 
-    if (isEmpty(serviceNames)) {
+    if (hasNone(serviceNames)) {
       log.warn(
           "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
           stateExecutionInstanceId);
@@ -898,7 +898,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private void addToDeploymentInfoWithNames(String clusterName, String namespace,
       List<ContainerServiceData> containerServiceDataList, List<DeploymentInfo> containerDeploymentInfoWithNames) {
-    if (isNotEmpty(containerServiceDataList)) {
+    if (hasSome(containerServiceDataList)) {
       containerServiceDataList.forEach(containerServiceData
           -> containerDeploymentInfoWithNames.add(ContainerDeploymentInfoWithNames.builder()
                                                       .containerSvcName(containerServiceData.getName())
@@ -1163,7 +1163,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
     if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
       ContainerDeploymentInfoWithNames deploymentInfoWithNames = (ContainerDeploymentInfoWithNames) deploymentInfo;
-      String keyName = isNotEmpty(deploymentInfoWithNames.getUniqueNameIdentifier())
+      String keyName = hasSome(deploymentInfoWithNames.getUniqueNameIdentifier())
           ? deploymentInfoWithNames.getUniqueNameIdentifier()
           : deploymentInfoWithNames.getContainerSvcName();
 
@@ -1173,7 +1173,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       ContainerDeploymentKey key = ContainerDeploymentKey.builder().labels(info.getLabels()).build();
 
       // For Helm
-      if (EmptyPredicate.isNotEmpty(info.getNewVersion())) {
+      if (hasSome(info.getNewVersion())) {
         key.setNewVersion(info.getNewVersion());
       }
       return key;
@@ -1238,7 +1238,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   private Status getK8sPerpetualTaskStatus(K8sTaskExecutionResponse response) {
     boolean success = response.getCommandExecutionStatus() == SUCCESS;
     K8sInstanceSyncResponse k8sInstanceSyncResponse = (K8sInstanceSyncResponse) response.getK8sTaskResponse();
-    boolean deleteTask = success && isEmpty(k8sInstanceSyncResponse.getK8sPodInfoList());
+    boolean deleteTask = success && hasNone(k8sInstanceSyncResponse.getK8sPodInfoList());
     String errorMessage = success ? null : response.getErrorMessage();
 
     return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
@@ -1246,7 +1246,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private Status getContainerSyncPerpetualTaskStatus(ContainerSyncResponse response) {
     boolean success = response.getCommandExecutionStatus() == SUCCESS;
-    boolean deleteTask = success && isEmpty(response.getContainerInfoList());
+    boolean deleteTask = success && hasNone(response.getContainerInfoList());
     String errorMessage = success ? null : response.getErrorMessage();
 
     return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();

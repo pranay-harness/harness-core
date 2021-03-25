@@ -2,7 +2,7 @@ package io.harness.perpetualtask.instancesync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -83,7 +83,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClient implements PerpetualTask
     return DelegateTask.builder()
         .accountId(accountId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-        .tags(isNotEmpty(perpetualTaskData.awsConfig.getTag())
+        .tags(hasSome(perpetualTaskData.awsConfig.getTag())
                 ? Collections.singletonList(perpetualTaskData.awsConfig.getTag())
                 : null)
         .data(TaskData.builder()

@@ -1,7 +1,7 @@
 package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import static io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 
@@ -119,7 +119,7 @@ public abstract class SecretManagerConfig
   private List<String> templatizedFields;
 
   public boolean isTemplatized() {
-    return !isEmpty(templatizedFields);
+    return !hasNone(templatizedFields);
   }
 
   public abstract void maskSecrets();

@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.EmbeddedUser;
 
@@ -74,7 +74,7 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
   @Override
   public String getDefaultName() {
     List<String> parts = new ArrayList();
-    if (isNotEmpty(getComputeProviderName())) {
+    if (hasSome(getComputeProviderName())) {
       parts.add(getComputeProviderName().toLowerCase());
     }
 

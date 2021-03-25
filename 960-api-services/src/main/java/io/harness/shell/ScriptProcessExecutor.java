@@ -1,6 +1,6 @@
 package io.harness.shell;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
@@ -78,7 +78,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     File workingDirectory;
     try {
-      if (isEmpty(config.getWorkingDirectory())) {
+      if (hasNone(config.getWorkingDirectory())) {
         String directoryPath = defaultParentWorkingDirectory + config.getExecutionId();
         createDirectoryIfDoesNotExist(directoryPath);
         workingDirectory = new File(directoryPath);
@@ -93,7 +93,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
 
       Map<String, String> environment = config.getEnvironment();
 
-      if (!isEmpty(config.getKubeConfigContent())) {
+      if (!hasNone(config.getKubeConfigContent())) {
         try (FileOutputStream outputStream = new FileOutputStream(kubeConfigFile)) {
           outputStream.write(config.getKubeConfigContent().getBytes(Charset.forName("UTF-8")));
           environment.put(HARNESS_KUBE_CONFIG_PATH, kubeConfigFile.getCanonicalPath());
@@ -136,7 +136,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       } catch (RuntimeException | InterruptedException | TimeoutException e) {
         saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
       } finally {
-        if (isEmpty(config.getWorkingDirectory())) {
+        if (hasNone(config.getWorkingDirectory())) {
           deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
         } else {
           deleteFileIfExists(scriptFile.getAbsolutePath());
@@ -199,7 +199,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     File workingDirectory;
 
-    if (isEmpty(config.getWorkingDirectory())) {
+    if (hasNone(config.getWorkingDirectory())) {
       String directoryPath = defaultParentWorkingDirectory + config.getExecutionId();
       createDirectoryIfDoesNotExist(directoryPath);
       workingDirectory = new File(directoryPath);
@@ -214,7 +214,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
 
     Map<String, String> environment = config.getEnvironment();
 
-    if (!isEmpty(config.getKubeConfigContent())) {
+    if (!hasNone(config.getKubeConfigContent())) {
       try (FileOutputStream outputStream = new FileOutputStream(kubeConfigFile)) {
         outputStream.write(config.getKubeConfigContent().getBytes(Charset.forName("UTF-8")));
         environment.put(HARNESS_KUBE_CONFIG_PATH, kubeConfigFile.getCanonicalPath());
@@ -289,7 +289,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       handleException(executionDataBuilder, envVariablesMap, commandExecutionStatus, e,
           format("Exception occurred in Script execution. Reason: %s", e));
     } finally {
-      if (isEmpty(config.getWorkingDirectory())) {
+      if (hasNone(config.getWorkingDirectory())) {
         deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       } else {
         deleteFileIfExists(scriptFile.getAbsolutePath());

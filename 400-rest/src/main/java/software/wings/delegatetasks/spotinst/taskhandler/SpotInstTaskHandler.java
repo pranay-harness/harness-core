@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -195,7 +195,7 @@ public abstract class SpotInstTaskHandler {
 
   AwsElbListener getListenerOnPort(
       List<AwsElbListener> listeners, int port, String loadBalancerName, ExecutionLogCallback logCallback) {
-    if (isEmpty(listeners)) {
+    if (hasNone(listeners)) {
       String message = format("Did not find any listeners for load balancer: [%s]", loadBalancerName);
       log.error(message);
       logCallback.saveExecutionLog(message);
@@ -218,8 +218,8 @@ public abstract class SpotInstTaskHandler {
       ExecutionLogCallback waitLogCallback, int targetInstances) throws Exception {
     List<ElastiGroupInstanceHealth> instanceHealths =
         spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
-    int currentTotalCount = isEmpty(instanceHealths) ? 0 : instanceHealths.size();
-    int currentHealthyCount = isEmpty(instanceHealths)
+    int currentTotalCount = hasNone(instanceHealths) ? 0 : instanceHealths.size();
+    int currentHealthyCount = hasNone(instanceHealths)
         ? 0
         : (int) instanceHealths.stream().filter(health -> "HEALTHY".equals(health.getHealthStatus())).count();
     if (targetInstances == 0) {
@@ -254,7 +254,7 @@ public abstract class SpotInstTaskHandler {
       String spotInstAccountId, String elastiGroupId) throws Exception {
     List<ElastiGroupInstanceHealth> instanceHealths =
         spotInstHelperServiceDelegate.listElastiGroupInstancesHealth(spotInstToken, spotInstAccountId, elastiGroupId);
-    if (isEmpty(instanceHealths)) {
+    if (hasNone(instanceHealths)) {
       return emptyList();
     }
     List<String> instanceIds = instanceHealths.stream().map(ElastiGroupInstanceHealth::getInstanceId).collect(toList());

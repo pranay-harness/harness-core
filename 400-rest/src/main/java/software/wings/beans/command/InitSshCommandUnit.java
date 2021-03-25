@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -135,7 +135,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     }
     try {
       List<String> commandUnitFiles = getCommandUnitFiles();
-      if (isNotEmpty(commandUnitFiles)) {
+      if (hasSome(commandUnitFiles)) {
         commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
             : commandExecutionStatus;
@@ -248,7 +248,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
       List<String> returnValue = Lists.newArrayList(commandFile);
 
-      if (isNotEmpty(execCommandUnit.getTailPatterns())) {
+      if (hasSome(execCommandUnit.getTailPatterns())) {
         String tailWrapperFileName =
             "harnesstailwrapper" + DigestUtils.md5Hex(prefix + execCommandUnit.getName() + activityId);
         String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();

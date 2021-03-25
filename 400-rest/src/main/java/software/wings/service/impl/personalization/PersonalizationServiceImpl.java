@@ -1,6 +1,6 @@
 package software.wings.service.impl.personalization;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
@@ -63,7 +63,7 @@ public class PersonalizationServiceImpl implements PersonalizationService {
   @Override
   public Personalization fetch(String accountId, String userId, List<String> objects) {
     final Query<Personalization> query = prepareQuery(accountId, userId);
-    if (isNotEmpty(objects)) {
+    if (hasSome(objects)) {
       query.project(PersonalizationKeys.accountId, true);
       query.project(PersonalizationKeys.userId, true);
 

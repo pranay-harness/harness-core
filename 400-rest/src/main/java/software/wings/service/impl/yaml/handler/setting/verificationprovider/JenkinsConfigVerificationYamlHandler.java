@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.HarnessException;
 
@@ -44,7 +44,7 @@ public class JenkinsConfigVerificationYamlHandler
     VerificationYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    if (isEmpty(yaml.getAuthMechanism())) {
+    if (hasNone(yaml.getAuthMechanism())) {
       yaml.setAuthMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT);
     }
     JenkinsConfig config = JenkinsConfig.builder()

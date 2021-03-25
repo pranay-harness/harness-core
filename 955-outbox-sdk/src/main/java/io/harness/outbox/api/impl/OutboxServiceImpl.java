@@ -1,7 +1,7 @@
 package io.harness.outbox.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -55,7 +55,7 @@ public class OutboxServiceImpl implements OutboxService {
     if (pageRequest == null) {
       pageRequest = this.pageRequest;
     }
-    if (isEmpty(pageRequest.getSortOrders())) {
+    if (hasNone(pageRequest.getSortOrders())) {
       pageRequest.setSortOrders(this.pageRequest.getSortOrders());
     }
     return pageRequest;

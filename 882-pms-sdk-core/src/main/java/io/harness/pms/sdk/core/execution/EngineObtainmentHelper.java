@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -22,7 +22,7 @@ public class EngineObtainmentHelper {
   public StepInputPackage obtainInputPackage(Ambiance ambiance, List<RefObject> refObjects) {
     StepInputPackageBuilder inputPackageBuilder = StepInputPackage.builder();
 
-    if (!isEmpty(refObjects)) {
+    if (!hasNone(refObjects)) {
       for (RefObject refObject : refObjects) {
         Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
         inputPackageBuilder.input(

@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
@@ -42,6 +42,6 @@ public class LogMLAnalysisSummary {
   private long baselineEndTime;
 
   public boolean isEmptyResult() {
-    return isEmpty(testClusters) && isEmpty(unknownClusters) && isEmpty(controlClusters) && isEmpty(ignoreClusters);
+    return hasNone(testClusters) && hasNone(unknownClusters) && hasNone(controlClusters) && hasNone(ignoreClusters);
   }
 }

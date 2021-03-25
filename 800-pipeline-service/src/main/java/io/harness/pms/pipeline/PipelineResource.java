@@ -1,5 +1,7 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
@@ -7,7 +9,6 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
@@ -181,7 +182,7 @@ public class PipelineResource implements YamlSchemaResource {
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
@@ -239,7 +240,7 @@ public class PipelineResource implements YamlSchemaResource {
         pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier, filterIdentifier,
             (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status, myDeployments);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

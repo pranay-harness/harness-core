@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.inputset.mappers;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
@@ -140,7 +141,7 @@ public class InputSetElementMapper {
   public OverlayInputSetResponseDTO writeOverlayResponseDTO(
       BaseInputSetEntity overlayInputSetEntity, Map<String, String> invalidIdentifiers) {
     List<String> references = ((OverlayInputSetEntity) overlayInputSetEntity).getInputSetReferences();
-    boolean isErrorResponse = EmptyPredicate.isNotEmpty(invalidIdentifiers);
+    boolean isErrorResponse = hasSome(invalidIdentifiers);
     return OverlayInputSetResponseDTO.builder()
         .accountId(overlayInputSetEntity.getAccountId())
         .orgIdentifier(overlayInputSetEntity.getOrgIdentifier())
@@ -202,7 +203,7 @@ public class InputSetElementMapper {
 
     Map<String, InputSetErrorResponseDTO> uuidToErrorResponseMap = new HashMap<>();
 
-    if (EmptyPredicate.isNotEmpty(mergeInputSetResponse.getUuidToErrorResponseMap())) {
+    if (hasSome(mergeInputSetResponse.getUuidToErrorResponseMap())) {
       for (Map.Entry<String, VisitorErrorResponseWrapper> entry :
           mergeInputSetResponse.getUuidToErrorResponseMap().entrySet()) {
         List<InputSetErrorDTO> errorDTOS = new LinkedList<>();

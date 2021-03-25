@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_INFRA_STATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -61,7 +61,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
@@ -186,7 +185,7 @@ public class PcfCommandTaskHelper {
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
       PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
-    if (isEmpty(upsizeList)) {
+    if (hasNone(upsizeList)) {
       executionLogCallback.saveExecutionLog("No application To Upsize");
       return;
     }
@@ -320,7 +319,7 @@ public class PcfCommandTaskHelper {
         downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
 
     // Application that is downsized
-    if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
+    if (hasSome(applicationDetailAfterResize.getInstanceDetails())) {
       applicationDetailAfterResize.getInstanceDetails().forEach(instance
           -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                          .applicationId(applicationDetailAfterResize.getId())
@@ -373,7 +372,7 @@ public class PcfCommandTaskHelper {
     String fileName =
         System.currentTimeMillis() + pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactName();
 
-    if (isNotEmpty(pcfCommandSetupRequest.getArtifactProcessingScript())) {
+    if (hasSome(pcfCommandSetupRequest.getArtifactProcessingScript())) {
       return processArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback, artifactFileStream,
           FilenameUtils.getName(fileName));
     }
@@ -486,7 +485,7 @@ public class PcfCommandTaskHelper {
     String accountId = pcfCommandSetupRequest.getAccountId();
     List<Pair<String, String>> fileIds = Lists.newArrayList();
 
-    if (isEmpty(pcfCommandSetupRequest.getArtifactFiles())) {
+    if (hasNone(pcfCommandSetupRequest.getArtifactFiles())) {
       throw new InvalidArgumentsException(Pair.of("Artifact", "is not available"));
     }
 
@@ -495,7 +494,7 @@ public class PcfCommandTaskHelper {
              delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
       String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
 
-      if (isNotEmpty(pcfCommandSetupRequest.getArtifactProcessingScript())) {
+      if (hasSome(pcfCommandSetupRequest.getArtifactProcessingScript())) {
         return processArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback, inputStream, fileName);
       }
 
@@ -702,7 +701,7 @@ public class PcfCommandTaskHelper {
   }
 
   private String getRouteString(List<String> routeMaps) {
-    if (EmptyPredicate.isEmpty(routeMaps)) {
+    if (hasNone(routeMaps)) {
       return StringUtils.EMPTY;
     }
 
@@ -727,7 +726,7 @@ public class PcfCommandTaskHelper {
 
     List<Map> applicationMaps = (List<Map>) map.get(APPLICATION_YML_ELEMENT);
 
-    if (isEmpty(applicationMaps)) {
+    if (hasNone(applicationMaps)) {
       throw new InvalidArgumentsException(
           Pair.of("Manifest.yml does not have any elements under \'applications\'", manifestYaml));
     }
@@ -777,7 +776,7 @@ public class PcfCommandTaskHelper {
       String dockerImagePath = artifactStreamAttributes.getMetadata().get(IMAGE_MANIFEST_YML_ELEMENT);
       String username = getUsername(pcfCommandSetupRequest);
       dockerDetails.put(IMAGE_MANIFEST_YML_ELEMENT, dockerImagePath);
-      if (!isEmpty(username)) {
+      if (!hasNone(username)) {
         dockerDetails.put(USERNAME_MANIFEST_YML_ELEMENT, username);
       }
       applicationToBeUpdated.put(DOCKER_MANIFEST_YML_ELEMENT, dockerDetails);
@@ -789,19 +788,19 @@ public class PcfCommandTaskHelper {
     SettingAttribute serverSetting = pcfCommandSetupRequest.getArtifactStreamAttributes().getServerSetting();
     if (serverSetting.getValue() instanceof DockerConfig) {
       DockerConfig dockerConfig = (DockerConfig) serverSetting.getValue();
-      username = isEmpty(dockerConfig.getPassword()) ? EMPTY : dockerConfig.getUsername();
+      username = hasNone(dockerConfig.getPassword()) ? EMPTY : dockerConfig.getUsername();
     } else if (serverSetting.getValue() instanceof AwsConfig) {
       AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
-      username = isEmpty(awsConfig.getSecretKey()) ? EMPTY : String.valueOf(awsConfig.getAccessKey());
+      username = hasNone(awsConfig.getSecretKey()) ? EMPTY : String.valueOf(awsConfig.getAccessKey());
     } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
-      username = isEmpty(artifactoryConfig.getPassword()) ? EMPTY : artifactoryConfig.getUsername();
+      username = hasNone(artifactoryConfig.getPassword()) ? EMPTY : artifactoryConfig.getUsername();
     } else if (serverSetting.getValue() instanceof GcpConfig) {
       GcpConfig gcpConfig = (GcpConfig) serverSetting.getValue();
-      username = isEmpty(gcpConfig.getServiceAccountKeyFileContent()) ? EMPTY : "_json_key";
+      username = hasNone(gcpConfig.getServiceAccountKeyFileContent()) ? EMPTY : "_json_key";
     } else if (serverSetting.getValue() instanceof NexusConfig) {
       NexusConfig nexusConfig = (NexusConfig) serverSetting.getValue();
-      username = isEmpty(nexusConfig.getPassword()) ? EMPTY : nexusConfig.getUsername();
+      username = hasNone(nexusConfig.getPassword()) ? EMPTY : nexusConfig.getUsername();
     }
     return username;
   }
@@ -906,7 +905,7 @@ public class PcfCommandTaskHelper {
   }
 
   private boolean shouldUseRandomRoute(Map applicationToBeUpdated, PcfCommandSetupRequest setupRequest) {
-    return manifestContainsRandomRouteElement(applicationToBeUpdated) || isEmpty(setupRequest.getRouteMaps());
+    return manifestContainsRandomRouteElement(applicationToBeUpdated) || hasNone(setupRequest.getRouteMaps());
   }
 
   private boolean manifestContainsRandomRouteElement(Map applicationToBeUpdated) {
@@ -945,7 +944,7 @@ public class PcfCommandTaskHelper {
   }
 
   public void printFileNamesInExecutionLogs(List<String> filePathList, ExecutionLogCallback executionLogCallback) {
-    if (EmptyPredicate.isEmpty(filePathList)) {
+    if (hasNone(filePathList)) {
       return;
     }
 
@@ -957,7 +956,7 @@ public class PcfCommandTaskHelper {
 
   public ApplicationSummary findCurrentActiveApplication(List<ApplicationSummary> previousReleases,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    if (isEmpty(previousReleases)) {
+    if (hasNone(previousReleases)) {
       return null;
     }
 
@@ -974,7 +973,7 @@ public class PcfCommandTaskHelper {
       }
     }
 
-    if (isNotEmpty(activeVersions) && activeVersions.size() > 1) {
+    if (hasSome(activeVersions) && activeVersions.size() > 1) {
       StringBuilder msgBuilder =
           new StringBuilder(256)
               .append("Invalid PCF Deployment State. Found Multiple applications having Env variable as ")

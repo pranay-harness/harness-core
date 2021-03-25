@@ -6,8 +6,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.provision.TerraformConstants.BACKEND_CONFIGS_KEY;
@@ -418,11 +418,11 @@ public abstract class TerraformProvisionState extends State {
       TfVarSource tfVarSource = terraformExecutionData.getTfVarSource();
       List<String> targets = terraformExecutionData.getTargets();
 
-      if (isNotEmpty(targets)) {
+      if (hasSome(targets)) {
         others.put(TARGETS_KEY, targets);
       }
 
-      if (isNotEmpty(tfVarFiles)) {
+      if (hasSome(tfVarFiles)) {
         others.put(TF_VAR_FILES_KEY, tfVarFiles);
       }
 
@@ -438,7 +438,7 @@ public abstract class TerraformProvisionState extends State {
         }
       }
 
-      if (isNotEmpty(workspace)) {
+      if (hasSome(workspace)) {
         others.put(WORKSPACE_KEY, workspace);
       }
 
@@ -449,7 +449,7 @@ public abstract class TerraformProvisionState extends State {
     } else {
       if (getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
         if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-          if (isNotEmpty(getTargets())) {
+          if (hasSome(getTargets())) {
             saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
           } else {
             deleteTerraformConfig(context, terraformExecutionData);
@@ -460,14 +460,14 @@ public abstract class TerraformProvisionState extends State {
 
     fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
         terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
-    if (isNotEmpty(workspace)) {
+    if (hasSome(workspace)) {
       updateProvisionerWorkspaces(terraformProvisioner, workspace);
     }
   }
 
   private void collectVariables(Map<String, Object> others, List<NameValuePair> nameValuePairList, String varsKey,
       String encyptedVarsKey, boolean valueTypeCanBeNull) {
-    if (isNotEmpty(nameValuePairList)) {
+    if (hasSome(nameValuePairList)) {
       others.put(varsKey,
           nameValuePairList.stream()
               .filter(item -> item.getValue() != null)
@@ -483,11 +483,11 @@ public abstract class TerraformProvisionState extends State {
 
   protected void updateProvisionerWorkspaces(
       TerraformInfrastructureProvisioner terraformProvisioner, String workspace) {
-    if (isNotEmpty(terraformProvisioner.getWorkspaces()) && terraformProvisioner.getWorkspaces().contains(workspace)) {
+    if (hasSome(terraformProvisioner.getWorkspaces()) && terraformProvisioner.getWorkspaces().contains(workspace)) {
       return;
     }
     List<String> workspaces =
-        isNotEmpty(terraformProvisioner.getWorkspaces()) ? terraformProvisioner.getWorkspaces() : new ArrayList<>();
+        hasSome(terraformProvisioner.getWorkspaces()) ? terraformProvisioner.getWorkspaces() : new ArrayList<>();
     workspaces.add(workspace);
     terraformProvisioner.setWorkspaces(workspaces);
     infrastructureProvisionerService.update(terraformProvisioner);
@@ -499,11 +499,11 @@ public abstract class TerraformProvisionState extends State {
 
   protected static List<NameValuePair> validateAndFilterVariables(
       List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
-    Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
+    Map<String, String> variableTypesMap = hasSome(provisionerVariables)
         ? provisionerVariables.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValueType))
         : new HashMap<>();
     List<NameValuePair> validVariables = new ArrayList<>();
-    if (isNotEmpty(workflowVariables)) {
+    if (hasSome(workflowVariables)) {
       workflowVariables.stream()
           .distinct()
           .filter(variable -> variableTypesMap.containsKey(variable.getName()))
@@ -523,7 +523,7 @@ public abstract class TerraformProvisionState extends State {
 
   private ExecutionResponse executeInternalInherited(ExecutionContext context, String activityId) {
     List<TerraformProvisionInheritPlanElement> allPlanElements = context.getContextElementList(TERRAFORM_INHERIT_PLAN);
-    if (isEmpty(allPlanElements)) {
+    if (hasNone(allPlanElements)) {
       throw new InvalidRequestException(
           "No previous Terraform plan execution found. Unable to inherit configuration from Terraform Plan");
     }
@@ -547,10 +547,10 @@ public abstract class TerraformProvisionState extends State {
     String entityId = generateEntityId(context, workspace);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
     GitConfig gitConfig = gitUtilsManager.getGitConfig(element.getSourceRepoSettingId());
-    if (isNotEmpty(element.getSourceRepoReference())) {
+    if (hasSome(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
       String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
-      if (isNotEmpty(branch)) {
+      if (hasSome(branch)) {
         gitConfig.setBranch(branch);
       }
     } else {
@@ -560,7 +560,7 @@ public abstract class TerraformProvisionState extends State {
     List<NameValuePair> allBackendConfigs = element.getBackendConfigs();
     Map<String, String> backendConfigs = null;
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
-    if (isNotEmpty(allBackendConfigs)) {
+    if (hasSome(allBackendConfigs)) {
       backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
       encryptedBackendConfigs =
           infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
@@ -569,7 +569,7 @@ public abstract class TerraformProvisionState extends State {
     List<NameValuePair> allVariables = element.getVariables();
     Map<String, String> textVariables = null;
     Map<String, EncryptedDataDetail> encryptedTextVariables = null;
-    if (isNotEmpty(allVariables)) {
+    if (hasSome(allVariables)) {
       textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
       encryptedTextVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
@@ -578,7 +578,7 @@ public abstract class TerraformProvisionState extends State {
     List<NameValuePair> allEnvVars = element.getEnvironmentVariables();
     Map<String, String> envVars = null;
     Map<String, EncryptedDataDetail> encryptedEnvVars = null;
-    if (isNotEmpty(allEnvVars)) {
+    if (hasSome(allEnvVars)) {
       envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvVars);
       encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(allEnvVars, context.getAppId());
     }
@@ -632,7 +632,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private List<String> getRenderedTaskTags(String rawTag, ExecutionContextImpl executionContext) {
-    if (isEmpty(rawTag)) {
+    if (hasNone(rawTag)) {
       return null;
     }
     return singletonList(executionContext.renderExpression(rawTag));
@@ -686,12 +686,12 @@ public abstract class TerraformProvisionState extends State {
         : null;
 
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
-    if (isNotEmpty(branch)) {
+    if (hasSome(branch)) {
       gitConfig.setBranch(branch);
     }
-    if (isNotEmpty(terraformProvisioner.getCommitId())) {
+    if (hasSome(terraformProvisioner.getCommitId())) {
       String commitId = context.renderExpression(terraformProvisioner.getCommitId());
-      if (isNotEmpty(commitId)) {
+      if (hasSome(commitId)) {
         gitConfig.setReference(commitId);
       }
     }
@@ -716,7 +716,7 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedEnvironmentVars = null;
     List<NameValuePair> rawVariablesList = new ArrayList<>();
 
-    if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs) || isNotEmpty(this.environmentVariables)) {
+    if (hasSome(this.variables) || hasSome(this.backendConfigs) || hasSome(this.environmentVariables)) {
       List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
       rawVariablesList.addAll(validVariables);
@@ -747,7 +747,7 @@ public abstract class TerraformProvisionState extends State {
         if (fileMetadata != null && fileMetadata.getMetadata() != null) {
           variables = extractData(fileMetadata, VARIABLES_KEY);
           Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
-          if (isNotEmpty(rawVariables)) {
+          if (hasSome(rawVariables)) {
             rawVariablesList.addAll(extractVariables(rawVariables, "TEXT"));
           }
 
@@ -756,7 +756,7 @@ public abstract class TerraformProvisionState extends State {
           encryptedVariables = extractEncryptedData(context, fileMetadata, ENCRYPTED_VARIABLES_KEY);
           Map<String, Object> rawEncryptedVariables =
               (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
-          if (isNotEmpty(rawEncryptedVariables)) {
+          if (hasSome(rawEncryptedVariables)) {
             rawVariablesList.addAll(extractVariables(rawEncryptedVariables, "ENCRYPTED_TEXT"));
           }
 
@@ -766,17 +766,17 @@ public abstract class TerraformProvisionState extends State {
           encryptedEnvironmentVars = extractEncryptedData(context, fileMetadata, ENCRYPTED_ENVIRONMENT_VARS_KEY);
 
           List<String> targets = (List<String>) fileMetadata.getMetadata().get(TARGETS_KEY);
-          if (isNotEmpty(targets)) {
+          if (hasSome(targets)) {
             setTargets(targets);
           }
 
           List<String> tfVarFiles = (List<String>) fileMetadata.getMetadata().get(TF_VAR_FILES_KEY);
-          if (isNotEmpty(tfVarFiles)) {
+          if (hasSome(tfVarFiles)) {
             setTfVarFiles(tfVarFiles);
           }
 
           String tfVarGitFileConnectorId = (String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_CONNECTOR_ID_KEY);
-          if (isNotEmpty(tfVarGitFileConnectorId)) {
+          if (hasSome(tfVarGitFileConnectorId)) {
             GitFileConfig gitFileConfig =
                 GitFileConfig.builder()
                     .connectorId(tfVarGitFileConnectorId)
@@ -795,7 +795,7 @@ public abstract class TerraformProvisionState extends State {
     TfVarSource tfVarSource = null;
 
     // Currently we allow only one tfVar source
-    if (isNotEmpty(tfVarFiles)) {
+    if (hasSome(tfVarFiles)) {
       tfVarSource = fetchTfVarScriptRepositorySource(context);
     } else if (null != tfVarGitFileConfig) {
       tfVarSource = fetchTfVarGitSource(context);
@@ -850,7 +850,7 @@ public abstract class TerraformProvisionState extends State {
 
   protected TfVarSource getTfVarSource(ExecutionContext context) {
     TfVarSource tfVarSource = null;
-    if (isNotEmpty(tfVarFiles)) {
+    if (hasSome(tfVarFiles)) {
       tfVarSource = fetchTfVarScriptRepositorySource(context);
     } else if (null != tfVarGitFileConfig) {
       tfVarSource = fetchTfVarGitSource(context);
@@ -876,7 +876,7 @@ public abstract class TerraformProvisionState extends State {
 
     String filePath = tfVarGitFileConfig.getFilePath();
 
-    if (isNotEmpty(filePath)) {
+    if (hasSome(filePath)) {
       List<String> multipleFiles = splitCommaSeparatedFilePath(filePath);
       tfVarGitFileConfig.setFilePathList(multipleFiles);
     }
@@ -890,7 +890,7 @@ public abstract class TerraformProvisionState extends State {
 
   private Map<String, String> extractData(FileMetadata fileMetadata, String dataKey) {
     Map<String, Object> rawData = (Map<String, Object>) fileMetadata.getMetadata().get(dataKey);
-    if (isNotEmpty(rawData)) {
+    if (hasSome(rawData)) {
       return infrastructureProvisionerService.extractUnresolvedTextVariables(extractVariables(rawData, "TEXT"));
     }
     return null;
@@ -900,7 +900,7 @@ public abstract class TerraformProvisionState extends State {
       ExecutionContext context, FileMetadata fileMetadata, String encryptedDataKey) {
     Map<String, Object> rawData = (Map<String, Object>) fileMetadata.getMetadata().get(encryptedDataKey);
     Map<String, EncryptedDataDetail> encryptedData = null;
-    if (isNotEmpty(rawData)) {
+    if (hasSome(rawData)) {
       encryptedData = infrastructureProvisionerService.extractEncryptedTextVariables(
           extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId());
     }
@@ -909,7 +909,7 @@ public abstract class TerraformProvisionState extends State {
 
   private Map<String, String> extractBackendConfigs(ExecutionContext context, FileMetadata fileMetadata) {
     Map<String, Object> rawBackendConfigs = (Map<String, Object>) fileMetadata.getMetadata().get(BACKEND_CONFIGS_KEY);
-    if (isNotEmpty(rawBackendConfigs)) {
+    if (hasSome(rawBackendConfigs)) {
       return infrastructureProvisionerService.extractTextVariables(
           extractVariables(rawBackendConfigs, "TEXT"), context);
     }
@@ -930,18 +930,18 @@ public abstract class TerraformProvisionState extends State {
 
   protected String handleDefaultWorkspace(String workspace) {
     // Default is as good as no workspace
-    return isNotEmpty(workspace) && workspace.equals("default") ? null : workspace;
+    return hasSome(workspace) && workspace.equals("default") ? null : workspace;
   }
 
   private List<String> getRenderedTfVarFiles(List<String> tfVarFiles, ExecutionContext context) {
-    if (isEmpty(tfVarFiles)) {
+    if (hasNone(tfVarFiles)) {
       return tfVarFiles;
     }
     return tfVarFiles.stream().map(context::renderExpression).collect(toList());
   }
 
   protected List<String> resolveTargets(List<String> targets, ExecutionContext context) {
-    if (isEmpty(targets)) {
+    if (hasNone(targets)) {
       return targets;
     }
     return targets.stream().map(context::renderExpression).collect(toList());
@@ -985,7 +985,7 @@ public abstract class TerraformProvisionState extends State {
   protected String generateEntityId(ExecutionContext context, String workspace) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String envId = executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : EMPTY;
-    return isEmpty(workspace) ? (provisionerId + "-" + envId) : (provisionerId + "-" + envId + "-" + workspace);
+    return hasNone(workspace) ? (provisionerId + "-" + envId) : (provisionerId + "-" + envId + "-" + workspace);
   }
 
   protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
@@ -1068,7 +1068,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
-    return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+    return hasNone(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                                     : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
   }
 }

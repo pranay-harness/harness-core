@@ -3,8 +3,8 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_CLUSTER_RESOURCE;
 import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -59,7 +59,7 @@ public class LogClusterServiceImpl implements LogClusterService {
   @Override
   public List<String> scheduleL1ClusteringTasks(AnalysisInput input) {
     List<LearningEngineTask> clusterTasks = new ArrayList<>(buildClusterTasksForLogL1Clustering(input));
-    if (isNotEmpty(clusterTasks)) {
+    if (hasSome(clusterTasks)) {
       learningEngineTaskService.createLearningEngineTasks(clusterTasks);
     }
     log.info("Scheduled {} log cluster tasks for input {} and clusterLevel L1", clusterTasks.size(), input);
@@ -108,7 +108,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     Instant timeForL2Task = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(1, ChronoUnit.MINUTES);
     List<LogClusterDTO> clusterLogs = getClusteredLogData(
         input.getVerificationTaskId(), input.getStartTime(), input.getEndTime(), LogClusterLevel.L1);
-    if (isEmpty(clusterLogs)) {
+    if (hasNone(clusterLogs)) {
       return Optional.empty();
     }
     VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(

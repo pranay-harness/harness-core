@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.command.Command.Builder.aCommand;
 
@@ -400,7 +400,7 @@ public class Command extends Base implements CommandUnit {
   public boolean isArtifactNeeded() {
     Set<String> serviceArtifactVariableNames = new HashSet<>();
     updateServiceArtifactVariableNames(serviceArtifactVariableNames);
-    return isNotEmpty(serviceArtifactVariableNames);
+    return hasSome(serviceArtifactVariableNames);
   }
 
   @Override
@@ -411,12 +411,12 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore
   @Override
   public void updateServiceArtifactVariableNames(Set<String> serviceArtifactVariableNames) {
-    if (isNotEmpty(templateVariables)) { // when command linked to service
+    if (hasSome(templateVariables)) { // when command linked to service
       for (Variable variable : templateVariables) {
         ExpressionEvaluator.updateServiceArtifactVariableNames(variable.getValue(), serviceArtifactVariableNames);
       }
     }
-    if (isNotEmpty(commandUnits)) {
+    if (hasSome(commandUnits)) {
       commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
     }
   }

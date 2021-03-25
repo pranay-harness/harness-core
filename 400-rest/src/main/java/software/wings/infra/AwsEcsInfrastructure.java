@@ -1,8 +1,8 @@
 package software.wings.infra;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
@@ -10,7 +10,7 @@ import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.annotation.IncludeFieldMap;
@@ -98,7 +98,7 @@ public class AwsEcsInfrastructure
   @Override
   public void applyExpressions(
       Map<String, Object> resolvedExpressions, String appId, String envId, String infraDefinitionId) {
-    if (isNotEmpty(resolvedExpressions)) {
+    if (hasSome(resolvedExpressions)) {
       for (Map.Entry<String, Object> expression : resolvedExpressions.entrySet()) {
         Object value = expression.getValue();
         switch (expression.getKey()) {
@@ -137,16 +137,16 @@ public class AwsEcsInfrastructure
   }
 
   private void ensureSetString(String field, String errorMessage) {
-    if (isEmpty(field)) {
+    if (hasNone(field)) {
       throw new InvalidRequestException(errorMessage);
     }
   }
 
   private void ensureSetStringArray(List<String> fields, String errorMessage) {
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       throw new InvalidRequestException(errorMessage);
     }
-    if (fields.stream().anyMatch(EmptyPredicate::isEmpty)) {
+    if (fields.stream().anyMatch(HasPredicate::hasNone)) {
       throw new InvalidRequestException(errorMessage);
     }
   }

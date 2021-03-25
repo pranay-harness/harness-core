@@ -1,6 +1,6 @@
 package io.harness.shell;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
 import static io.harness.shell.AccessType.KEY_SU_APP_USER;
@@ -111,7 +111,7 @@ public class SshSessionManager {
     disconnectSession(executionId, hostName, session);
 
     List<Session> simplexSessionList = simplexSessions.remove(key);
-    if (isNotEmpty(simplexSessionList)) {
+    if (hasSome(simplexSessionList)) {
       simplexSessionList.forEach(s -> disconnectSession(executionId, hostName, s));
     }
   }

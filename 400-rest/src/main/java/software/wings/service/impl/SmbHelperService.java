@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
 import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -181,14 +181,14 @@ public class SmbHelperService {
         for (String artifactPath : artifactPaths) {
           // buildNos map has artifact path to traverse and corresponding build nos.
           buildNos = getArtifactBuildNumbers(smbConfig, encryptionDetails, artifactPath);
-          if (isNotEmpty(buildNos)) {
+          if (hasSome(buildNos)) {
             String searchPattern = getFileSearchPattern(artifactPath);
             String path = getFileParentPath(artifactPath);
 
             // for each folder construct build details
             for (Entry<String, String> entry : buildNos.entrySet()) {
               List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
-              if (buildNos.get(entry.getKey()) != null && isNotEmpty(buildNos.get(entry.getKey()))) {
+              if (buildNos.get(entry.getKey()) != null && hasSome(buildNos.get(entry.getKey()))) {
                 Map<String, String> map = new HashMap<>();
                 map.put(BuildMetadataKeys.artifactPath.name(), entry.getKey());
                 buildDetailsListForArtifactPath.add(aBuildDetails()

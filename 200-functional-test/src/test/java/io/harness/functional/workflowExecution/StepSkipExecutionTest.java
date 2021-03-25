@@ -1,5 +1,6 @@
 package io.harness.functional.workflowExecution;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -27,7 +28,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -366,7 +366,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
       nodes.add(start);
     }
 
-    if (start.getGroup() != null && EmptyPredicate.isNotEmpty(start.getGroup().getElements())) {
+    if (start.getGroup() != null && hasSome(start.getGroup().getElements())) {
       for (GraphNode el : start.getGroup().getElements()) {
         addAllHttpNodes(nodes, el);
       }

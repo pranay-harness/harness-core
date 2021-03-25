@@ -1,6 +1,6 @@
 package software.wings.service.impl.instana;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
@@ -22,10 +22,10 @@ public class InstanaInfraParams {
   private String query;
 
   public void validateFields(Map<String, String> errors) {
-    if (isEmpty(metrics)) {
+    if (hasNone(metrics)) {
       errors.put("infraParams." + InfraParamsKeys.metrics, "select at least one metric value.");
     }
-    if (isEmpty(query)) {
+    if (hasNone(query)) {
       errors.put("infraParams." + InfraParamsKeys.query, "query is a required field.");
     }
     if (query != null && !query.contains(VERIFICATION_HOST_PLACEHOLDER)) {

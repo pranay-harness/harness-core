@@ -1,7 +1,8 @@
 package io.harness.ngpipeline.pipeline.beans.yaml;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.common.SwaggerConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
@@ -59,10 +60,10 @@ public class NgPipeline implements Pipeline, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
-    if (EmptyPredicate.isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       variables.forEach(variable -> visitableChildren.add("variables", variable));
     }
-    if (EmptyPredicate.isNotEmpty(stages)) {
+    if (hasSome(stages)) {
       stages.forEach(stage -> visitableChildren.add("stages", stage));
     }
     return visitableChildren;

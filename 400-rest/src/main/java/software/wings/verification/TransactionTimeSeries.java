@@ -1,7 +1,7 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import software.wings.metrics.RiskLevel;
 
@@ -31,15 +31,15 @@ public class TransactionTimeSeries implements Comparable<TransactionTimeSeries> 
 
   @Override
   public int compareTo(@NotNull TransactionTimeSeries o) {
-    if (isEmpty(o.metricTimeSeries) && isEmpty(this.metricTimeSeries)) {
+    if (hasNone(o.metricTimeSeries) && hasNone(this.metricTimeSeries)) {
       return this.transactionName.compareTo(o.transactionName);
     }
 
-    if (isEmpty(this.metricTimeSeries) && isNotEmpty(o.metricTimeSeries)) {
+    if (hasNone(this.metricTimeSeries) && hasSome(o.metricTimeSeries)) {
       return -1;
     }
 
-    if (isNotEmpty(this.metricTimeSeries) && isEmpty(o.metricTimeSeries)) {
+    if (hasSome(this.metricTimeSeries) && hasNone(o.metricTimeSeries)) {
       return 1;
     }
 
@@ -78,8 +78,7 @@ public class TransactionTimeSeries implements Comparable<TransactionTimeSeries> 
     }
 
     // compare the first metric list of both and order
-    if (isNotEmpty(this.metricTimeSeries.first().getTimeSeries())
-        && isNotEmpty(o.metricTimeSeries.first().getTimeSeries())) {
+    if (hasSome(this.metricTimeSeries.first().getTimeSeries()) && hasSome(o.metricTimeSeries.first().getTimeSeries())) {
       AtomicInteger numEmptyThis = new AtomicInteger(0);
       AtomicInteger numEmptyOther = new AtomicInteger(0);
 

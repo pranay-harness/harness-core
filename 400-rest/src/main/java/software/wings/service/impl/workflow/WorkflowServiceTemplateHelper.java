@@ -2,8 +2,8 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
@@ -95,10 +95,10 @@ public class WorkflowServiceTemplateHelper {
     populatePropertiesFromWorkflow(canaryOrchestrationWorkflow.getPostDeploymentSteps());
 
     // Update Workflow Phase steps
-    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+    if (hasSome(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
         List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-        if (isNotEmpty(phaseSteps)) {
+        if (hasSome(phaseSteps)) {
           for (PhaseStep phaseStep : phaseSteps) {
             populatePropertiesFromWorkflow(phaseStep);
           }
@@ -109,7 +109,7 @@ public class WorkflowServiceTemplateHelper {
     // Update Rollback Phase Steps
     if (canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
-        if (isNotEmpty(workflowPhase.getPhaseSteps())) {
+        if (hasSome(workflowPhase.getPhaseSteps())) {
           for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
             populatePropertiesFromWorkflow(phaseStep);
           }
@@ -177,7 +177,7 @@ public class WorkflowServiceTemplateHelper {
   private void checkStepProperties(GraphNode oldNode, GraphNode newNode) {
     if (StepType.HELM_DEPLOY.toString().equals(oldNode.getType()) && oldNode.getType().equals(newNode.getType())) {
       String oldValue = (String) oldNode.getProperties().get(HelmDeployStateKeys.helmReleaseNamePrefix);
-      if (isNotEmpty(oldValue)) {
+      if (hasSome(oldValue)) {
         newNode.getProperties().put(HelmDeployStateKeys.helmReleaseNamePrefix, oldValue);
       }
     }
@@ -286,7 +286,7 @@ public class WorkflowServiceTemplateHelper {
     }
     if (workflowPhase != null) {
       List<TemplateExpression> phaseTemplateExpressions = workflowPhase.getTemplateExpressions();
-      if (isEmpty(phaseTemplateExpressions)) {
+      if (hasNone(phaseTemplateExpressions)) {
         phaseTemplateExpressions = new ArrayList<>();
       }
       // It means, user templatizing it from phase level
@@ -374,7 +374,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static String getTemplatizedEnvVariableName(List<Variable> variables) {
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       return variables.stream()
           .filter((Variable variable) -> ENVIRONMENT == variable.obtainEntityType())
           .map(Variable::getName)
@@ -385,7 +385,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static Variable getEnvVariable(List<Variable> variables) {
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       return variables.stream()
           .filter((Variable variable) -> ENVIRONMENT == variable.obtainEntityType())
           .findFirst()
@@ -399,7 +399,7 @@ public class WorkflowServiceTemplateHelper {
    */
   public static void templatizeServiceInfra(OrchestrationWorkflow orchestrationWorkflow, WorkflowPhase workflowPhase,
       List<TemplateExpression> phaseTemplateExpressions, Service service) {
-    if (isEmpty(orchestrationWorkflow.getUserVariables())) {
+    if (hasNone(orchestrationWorkflow.getUserVariables())) {
       return;
     }
     List<String> serviceInfraVariables =
@@ -434,7 +434,7 @@ public class WorkflowServiceTemplateHelper {
    */
   public static void templatizeInfraDefinition(OrchestrationWorkflow orchestrationWorkflow, WorkflowPhase workflowPhase,
       List<TemplateExpression> phaseTemplateExpressions, Service service) {
-    if (isEmpty(orchestrationWorkflow.getUserVariables())) {
+    if (hasNone(orchestrationWorkflow.getUserVariables())) {
       return;
     }
     List<String> infraDefinitionVariables =
@@ -481,7 +481,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static List<String> getServiceInfrastructureWorkflowVariables(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new ArrayList<>();
     }
     return variables.stream()
@@ -493,7 +493,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static List<String> getInfraDefinitionWorkflowVariables(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new ArrayList<>();
     }
     return variables.stream()
@@ -505,7 +505,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static List<Variable> getInfraDefCompleteWorkflowVariables(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new ArrayList<>();
     }
     return variables.stream()
@@ -516,7 +516,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static List<String> getServiceWorkflowVariables(List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return new ArrayList<>();
     }
     return variables.stream()
@@ -556,7 +556,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static void transformEnvTemplateExpressions(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
-    if (isNotEmpty(workflow.getTemplateExpressions())) {
+    if (hasSome(workflow.getTemplateExpressions())) {
       Optional<TemplateExpression> envExpression =
           workflow.getTemplateExpressions()
               .stream()
@@ -645,7 +645,7 @@ public class WorkflowServiceTemplateHelper {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       // Go over all phases
       List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-      if (isNotEmpty(workflowPhases)) {
+      if (hasSome(workflowPhases)) {
         for (WorkflowPhase workflowPhase : workflowPhases) {
           setArtifactType(workflowPhase.getServiceId(), workflowPhase.fetchServiceTemplateExpression());
         }

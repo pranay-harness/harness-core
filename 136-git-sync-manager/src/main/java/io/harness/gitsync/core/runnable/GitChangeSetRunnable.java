@@ -1,8 +1,8 @@
 package io.harness.gitsync.core.runnable;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -199,7 +199,7 @@ public class GitChangeSetRunnable implements Runnable {
    * If it was already applied, delegate won't do anything.
    */
   void retryAnyStuckYamlChangeSet(List<String> runningAccountIdList) {
-    if (isEmpty(runningAccountIdList)) {
+    if (hasNone(runningAccountIdList)) {
       return;
     }
 
@@ -207,7 +207,7 @@ public class GitChangeSetRunnable implements Runnable {
     List<YamlChangeSet> stuckChangeSets =
         gitChangeSetRunnableHelper.getStuckYamlChangeSets(yamlChangeSetService, runningAccountIdList);
 
-    if (isNotEmpty(stuckChangeSets)) {
+    if (hasSome(stuckChangeSets)) {
       // Map Acc vs such yamlChangeSets (with multigit support, there can be more than 1 for an account)
       Map<String, List<YamlChangeSet>> accountIdToStuckChangeSets =
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));

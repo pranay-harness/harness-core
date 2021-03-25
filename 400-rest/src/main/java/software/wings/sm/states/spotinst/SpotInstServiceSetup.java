@@ -1,8 +1,8 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
@@ -167,7 +167,7 @@ public class SpotInstServiceSetup extends State {
         int max = DEFAULT_ELASTIGROUP_MAX_INSTANCES;
         int target = DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
         List<ElastiGroup> groupToBeDownsized = spotInstSetupTaskResponse.getGroupToBeDownsized();
-        if (isNotEmpty(groupToBeDownsized)) {
+        if (hasSome(groupToBeDownsized)) {
           ElastiGroup elastiGroupToBeDownsized = groupToBeDownsized.get(0);
           if (elastiGroupToBeDownsized != null) {
             ElastiGroupCapacity capacity = elastiGroupToBeDownsized.getCapacity();
@@ -242,7 +242,7 @@ public class SpotInstServiceSetup extends State {
   }
 
   private ElastiGroup fetchOldElasticGroup(SpotInstSetupTaskResponse spotInstSetupTaskResponse) {
-    if (isEmpty(spotInstSetupTaskResponse.getGroupToBeDownsized())) {
+    if (hasNone(spotInstSetupTaskResponse.getGroupToBeDownsized())) {
       return null;
     }
 
@@ -263,13 +263,13 @@ public class SpotInstServiceSetup extends State {
       return emptyMap();
     }
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(minInstances)) {
+    if (hasNone(minInstances)) {
       invalidFields.put("minInstances", "Min Instances is needed");
     }
-    if (isEmpty(maxInstances)) {
+    if (hasNone(maxInstances)) {
       invalidFields.put("maxInstances", "Max Instances is needed");
     }
-    if (isEmpty(targetInstances)) {
+    if (hasNone(targetInstances)) {
       invalidFields.put("targetInstances", "Target Instances is needed");
     }
     return invalidFields;

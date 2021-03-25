@@ -2,8 +2,8 @@ package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.nullIfEmpty;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
@@ -12,7 +12,6 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.PipelineExecution;
@@ -57,8 +56,8 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
 
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
     List<PipelineStage> pipelineStages = pipelineExecution.getPipeline().getPipelineStages();
-    if (isEmpty(pipelineStageExecutions) || isEmpty(pipelineStages)) {
-      if (isNotEmpty(pipelineStageExecutions) || isNotEmpty(pipelineStages)) {
+    if (hasNone(pipelineStageExecutions) || hasNone(pipelineStages)) {
+      if (hasSome(pipelineStageExecutions) || hasSome(pipelineStages)) {
         throwIncompatibleStagesException(pipelineExecution);
       }
 
@@ -106,8 +105,7 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
         .skipCondition(SkipConditionMetadata.fromPipelineStageExecution(pipelineStageExecution, pipelineStage))
         .approvalData(
             isApproval ? ApprovalMetadata.fromStateExecutionData(pipelineStageExecution.getStateExecutionData()) : null)
-        .workflowExecution(
-            EmptyPredicate.isEmpty(workflowExecutionMetadataList) ? null : workflowExecutionMetadataList.get(0))
+        .workflowExecution(hasNone(workflowExecutionMetadataList) ? null : workflowExecutionMetadataList.get(0))
         .timing(TimingMetadata.fromStartAndEndTimeObjects(
             pipelineStageExecution.getStartTs(), pipelineStageExecution.getEndTs()))
         .build();

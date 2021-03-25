@@ -1,7 +1,7 @@
 package io.harness.workers.background.critical.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -107,7 +107,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
                                                         .leaseDuration(leaseDuration)
                                                         .accountId(artifactStream.getAccountId())
                                                         .build());
-      if (isNotEmpty(permitId)) {
+      if (hasSome(permitId)) {
         log.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
             artifactStream.getFailedCronAttempts(), TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
         artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);

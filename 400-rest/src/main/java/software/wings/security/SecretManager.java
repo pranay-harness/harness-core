@@ -1,7 +1,7 @@
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
@@ -134,7 +134,7 @@ public class SecretManager {
                                .withIssuer(ISSUER)
                                .withIssuedAt(new Date())
                                .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
-      if (!isEmpty(claims)) {
+      if (!hasNone(claims)) {
         claims.forEach(jwtBuilder::withClaim);
       }
       return jwtBuilder.sign(algorithm);
@@ -150,7 +150,7 @@ public class SecretManager {
                                .withIssuer(ISSUER)
                                .withIssuedAt(new Date())
                                .withExpiresAt(new Date(System.currentTimeMillis() + tokenValidDuration));
-      if (!isEmpty(claims)) {
+      if (!hasNone(claims)) {
         claims.forEach(jwtBuilder::withClaim);
       }
       return jwtBuilder.sign(algorithm);

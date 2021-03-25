@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.tasks.Cd1SetupFields.APP_ID_FIELD;
 import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
 import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
@@ -177,7 +177,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     if (scopingValues != null) {
       String entityValues = String.join(",", retrieveScopingRuleEntitiesNames(entityKey, scopingValues.getValueList()));
 
-      if (isNotEmpty(entityValues)) {
+      if (hasSome(entityValues)) {
         descriptionBuilder.append(entityName).append(": ").append(entityValues).append("; ");
       }
     }
@@ -245,7 +245,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   private List<ProfileSelector> convertToProfileSelector(List<String> selectors) {
-    if (isEmpty(selectors)) {
+    if (hasNone(selectors)) {
       return Collections.emptyList();
     }
 
@@ -286,7 +286,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
       delegateProfileGrpcBuilder.setStartupScript(delegateProfile.getStartupScript());
     }
 
-    if (isNotEmpty(delegateProfile.getSelectors())) {
+    if (hasSome(delegateProfile.getSelectors())) {
       delegateProfileGrpcBuilder.addAllSelectors(
           delegateProfile.getSelectors()
               .stream()
@@ -294,7 +294,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
               .collect(Collectors.toList()));
     }
 
-    if (isNotEmpty(delegateProfile.getScopingRules())) {
+    if (hasSome(delegateProfile.getScopingRules())) {
       delegateProfileGrpcBuilder.addAllScopingRules(convert(delegateProfile.getScopingRules()));
     }
 
@@ -330,12 +330,12 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
           ENV_TYPE_FIELD, ScopingValues.newBuilder().addValue(scopingRule.getEnvironmentTypeId()).build());
     }
 
-    if (isNotEmpty(scopingRule.getEnvironmentIds())) {
+    if (hasSome(scopingRule.getEnvironmentIds())) {
       scopingEntities.put(
           ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
     }
 
-    if (isNotEmpty(scopingRule.getServiceIds())) {
+    if (hasSome(scopingRule.getServiceIds())) {
       scopingEntities.put(
           SERVICE_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getServiceIds()).build());
     }
@@ -370,14 +370,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
                                                       .build());
     }
 
-    if (isNotEmpty(delegateProfileGrpc.getSelectorsList())) {
+    if (hasSome(delegateProfileGrpc.getSelectorsList())) {
       delegateProfileDetailsBuilder.selectors(delegateProfileGrpc.getSelectorsList()
                                                   .stream()
                                                   .map(ProfileSelector::getSelector)
                                                   .collect(Collectors.toList()));
     }
 
-    if (isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
+    if (hasSome(delegateProfileGrpc.getScopingRulesList())) {
       delegateProfileDetailsBuilder.scopingRules(
           delegateProfileGrpc.getScopingRulesList()
               .stream()
@@ -407,11 +407,11 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
       pageRequestGrpcBuilder.setLimit(pageRequest.getLimit());
     }
 
-    if (!isEmpty(pageRequest.getFieldsExcluded())) {
+    if (!hasNone(pageRequest.getFieldsExcluded())) {
       pageRequestGrpcBuilder.addAllFieldsExcluded(pageRequest.getFieldsExcluded());
     }
 
-    if (!isEmpty(pageRequest.getFieldsIncluded())) {
+    if (!hasNone(pageRequest.getFieldsIncluded())) {
       pageRequestGrpcBuilder.addAllFieldsIncluded(pageRequest.getFieldsIncluded());
     }
 
@@ -476,14 +476,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   }
 
   private void validateScopingRules(List<ScopingRuleDetails> scopingRules) {
-    if (isEmpty(scopingRules)) {
+    if (hasNone(scopingRules)) {
       return;
     }
 
     Set<String> appIds = new HashSet<>();
 
     for (ScopingRuleDetails scopingRule : scopingRules) {
-      if (isEmpty(scopingRule.getApplicationId())) {
+      if (hasNone(scopingRule.getApplicationId())) {
         throw new InvalidArgumentsException("The Scoping rule requires application!");
       }
 

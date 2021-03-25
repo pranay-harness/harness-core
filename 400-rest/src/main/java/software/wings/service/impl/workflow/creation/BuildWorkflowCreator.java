@@ -1,8 +1,8 @@
 package software.wings.service.impl.workflow.creation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -37,7 +37,7 @@ public class BuildWorkflowCreator extends WorkflowCreator {
 
   private void addWorkflowPhases(Workflow workflow) {
     BuildWorkflow buildWorkflow = (BuildWorkflow) workflow.getOrchestrationWorkflow();
-    if (isEmpty(buildWorkflow.getWorkflowPhases())) {
+    if (hasNone(buildWorkflow.getWorkflowPhases())) {
       WorkflowPhase workflowPhase = aWorkflowPhase().build();
       attachWorkflowPhase(workflow, workflowPhase);
     }
@@ -48,7 +48,7 @@ public class BuildWorkflowCreator extends WorkflowCreator {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
 
     // No need to generate phase steps if it's already created
-    if (isNotEmpty(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+    if (hasSome(workflowPhase.getPhaseSteps()) && orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases().add(workflowPhase);
       return;
     }

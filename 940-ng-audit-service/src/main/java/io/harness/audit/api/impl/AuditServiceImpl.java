@@ -3,7 +3,7 @@ package io.harness.audit.api.impl;
 import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.System.currentTimeMillis;
@@ -65,26 +65,26 @@ public class AuditServiceImpl implements AuditService {
     if (auditFilterPropertiesDTO == null) {
       return criteriaList.get(0);
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
+    if (hasSome(auditFilterPropertiesDTO.getScopes())) {
       criteriaList.add(getScopeCriteria(auditFilterPropertiesDTO.getScopes()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
+    if (hasSome(auditFilterPropertiesDTO.getResources())) {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
+    if (hasSome(auditFilterPropertiesDTO.getModules())) {
       criteriaList.add(Criteria.where(AuditEventKeys.module).in(auditFilterPropertiesDTO.getModules()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
+    if (hasSome(auditFilterPropertiesDTO.getActions())) {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
+    if (hasSome(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
       criteriaList.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
                            .elemMatch(Criteria.where(KeyValuePairKeys.key)
                                           .is(ENVIRONMENT_IDENTIFIER_KEY)
                                           .and(KeyValuePairKeys.value)
                                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers())));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
+    if (hasSome(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
     }
     criteriaList.add(
@@ -105,9 +105,9 @@ public class AuditServiceImpl implements AuditService {
     resourceScopes.forEach(resourceScope -> {
       Criteria criteria =
           Criteria.where(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(resourceScope.getAccountIdentifier());
-      if (isNotEmpty(resourceScope.getOrgIdentifier())) {
+      if (hasSome(resourceScope.getOrgIdentifier())) {
         criteria.and(AuditEventKeys.ORG_IDENTIFIER_KEY).is(resourceScope.getOrgIdentifier());
-        if (isNotEmpty(resourceScope.getProjectIdentifier())) {
+        if (hasSome(resourceScope.getProjectIdentifier())) {
           criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
         }
       }
@@ -120,11 +120,11 @@ public class AuditServiceImpl implements AuditService {
     List<Criteria> criteriaList = new ArrayList<>();
     resources.forEach(resource -> {
       Criteria criteria = Criteria.where(AuditEventKeys.RESOURCE_TYPE_KEY).is(resource.getType());
-      if (isNotEmpty(resource.getIdentifier())) {
+      if (hasSome(resource.getIdentifier())) {
         criteria.and(AuditEventKeys.RESOURCE_IDENTIFIER_KEY).is(resource.getIdentifier());
       }
       List<KeyValuePair> labels = resource.getLabels();
-      if (isNotEmpty(labels)) {
+      if (hasSome(labels)) {
         labels.forEach(label
             -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
                    .elemMatch(Criteria.where(KeyValuePairKeys.key)
@@ -141,7 +141,7 @@ public class AuditServiceImpl implements AuditService {
     List<Criteria> criteriaList = new ArrayList<>();
     principals.forEach(principal -> {
       Criteria criteria = Criteria.where(AuditEventKeys.PRINCIPAL_TYPE_KEY).is(principal.getType());
-      if (isNotEmpty(principal.getIdentifier())) {
+      if (hasSome(principal.getIdentifier())) {
         criteria.and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY).is(principal.getIdentifier());
       }
       criteriaList.add(criteria);

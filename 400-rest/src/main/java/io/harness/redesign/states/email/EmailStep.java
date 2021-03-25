@@ -1,7 +1,7 @@
 package io.harness.redesign.states.email;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
@@ -73,7 +73,7 @@ public class EmailStep implements SyncExecutable<EmailStepParameters> {
 
   private List<String> getEmailAddressList(String address) {
     List<String> addressList = new ArrayList<>();
-    if (isNotEmpty(address)) {
+    if (hasSome(address)) {
       addressList.addAll(COMMA_SPLITTER.splitToList(address));
     }
     return addressList;

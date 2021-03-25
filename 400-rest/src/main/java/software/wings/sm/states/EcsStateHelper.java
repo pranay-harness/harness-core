@@ -4,8 +4,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 import static io.harness.exception.FailureType.TIMEOUT;
@@ -40,7 +40,6 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
@@ -171,7 +170,7 @@ public class EcsStateHelper {
         : EcsConvention.getTaskFamily(app.getName(), ecsSetupStateConfig.getServiceName(), env.getName());
 
     List<AwsElbConfig> renderedAwsElbConfigList = null;
-    if (EmptyPredicate.isNotEmpty(ecsSetupStateConfig.getAwsElbConfigs())) {
+    if (hasSome(ecsSetupStateConfig.getAwsElbConfigs())) {
       renderedAwsElbConfigList =
           ecsSetupStateConfig.getAwsElbConfigs()
               .stream()
@@ -191,7 +190,7 @@ public class EcsStateHelper {
       EcsContainerTask ecsContainerTask = (EcsContainerTask) containerTask;
       ecsContainerTask.getContainerDefinitions()
           .stream()
-          .filter(containerDefinition -> isNotEmpty(containerDefinition.getCommands()))
+          .filter(containerDefinition -> hasSome(containerDefinition.getCommands()))
           .forEach(containerDefinition
               -> containerDefinition.setCommands(
                   containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));
@@ -271,7 +270,7 @@ public class EcsStateHelper {
 
   private List<AwsAutoScalarConfig> getNewAwsAutoScalarConfigListWithRenderedExpression(
       List<AwsAutoScalarConfig> awsAutoScalarConfigs, ExecutionContext context) {
-    if (isEmpty(awsAutoScalarConfigs)) {
+    if (hasNone(awsAutoScalarConfigs)) {
       return awsAutoScalarConfigs;
     }
 
@@ -356,7 +355,7 @@ public class EcsStateHelper {
     DelegateTask delegateTask = getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK,
         activityId, environment, ecsInfrastructureMapping, new Object[] {ecsCommandRequest, encryptedDataDetails},
         serviceSteadyStateTimeout);
-    delegateTask.setTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
+    delegateTask.setTags(hasSome(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
 
     delegateService.queueTask(delegateTask);
 
@@ -629,12 +628,12 @@ public class EcsStateHelper {
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     EcsSetupContextVariableHolderBuilder builder = EcsSetupContextVariableHolder.builder();
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
       builder.serviceVariables(serviceVariables);
     }
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
-    if (isNotEmpty(safeDisplayServiceVariables)) {
+    if (hasSome(safeDisplayServiceVariables)) {
       safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
       builder.safeDisplayServiceVariables(safeDisplayServiceVariables);
     }
@@ -729,7 +728,7 @@ public class EcsStateHelper {
                       .parameters(new Object[] {ecsCommandRequest, ecsSetUpDataBag.getEncryptedDataDetails()})
                       .timeout(MINUTES.toMillis(ecsSetUpDataBag.getServiceSteadyStateTimeout()))
                       .build())
-            .tags(isNotEmpty(ecsSetUpDataBag.getAwsConfig().getTag())
+            .tags(hasSome(ecsSetUpDataBag.getAwsConfig().getTag())
                     ? singletonList(ecsSetUpDataBag.getAwsConfig().getTag())
                     : null)
             .setupAbstraction(
@@ -869,7 +868,7 @@ public class EcsStateHelper {
   // This will be used later to add existing containerInfos as well.
   private void setNewInstanceFlag(
       List<InstanceElement> instanceElements, boolean flag, List<InstanceElement> finalInstanceElements) {
-    if (isNotEmpty(instanceElements)) {
+    if (hasSome(instanceElements)) {
       instanceElements.forEach(instanceElement -> { instanceElement.setNewInstance(flag); });
       finalInstanceElements.addAll(instanceElements);
     }
@@ -889,7 +888,7 @@ public class EcsStateHelper {
     InstanceElementListParam listParam = InstanceElementListParam.builder().build();
 
     if (deployResponse != null) {
-      if (isNotEmpty(deployResponse.getContainerInfos())) {
+      if (hasSome(deployResponse.getContainerInfos())) {
         List<InstanceStatusSummary> instanceStatusSummaries =
             containerDeploymentHelper.getInstanceStatusSummaries(context, deployResponse.getContainerInfos());
         executionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
@@ -950,7 +949,7 @@ public class EcsStateHelper {
   }
 
   private List<InstanceDetails> generateEcsInstanceDetails(List<InstanceElement> allInstanceElements) {
-    if (isEmpty(allInstanceElements)) {
+    if (hasNone(allInstanceElements)) {
       return emptyList();
     }
 
@@ -1006,7 +1005,7 @@ public class EcsStateHelper {
 
     List<InstanceStatusSummary> instanceStatusSummariesForPreviousContainers = new ArrayList<>();
 
-    if (isNotEmpty(previousContainerInfos)) {
+    if (hasSome(previousContainerInfos)) {
       instanceStatusSummariesForPreviousContainers.addAll(
           containerDeploymentHelper.getInstanceStatusSummaries(context, previousContainerInfos));
       allInstanceElements.addAll(instanceStatusSummariesForPreviousContainers.stream()
@@ -1024,9 +1023,8 @@ public class EcsStateHelper {
             .accountId(deployDataBag.getApp().getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
             .waitId(activity.getUuid())
-            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
-                    ? singletonList(deployDataBag.getAwsConfig().getTag())
-                    : null)
+            .tags(hasSome(deployDataBag.getAwsConfig().getTag()) ? singletonList(deployDataBag.getAwsConfig().getTag())
+                                                                 : null)
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.ECS_COMMAND_TASK.name())
@@ -1060,7 +1058,7 @@ public class EcsStateHelper {
             .accountId(ecsRunTaskDataBag.getApplicationAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsRunTaskDataBag.getApplicationAccountId())
             .waitId(waitId)
-            .tags(isNotEmpty(ecsRunTaskDataBag.getAwsConfig().getTag())
+            .tags(hasSome(ecsRunTaskDataBag.getAwsConfig().getTag())
                     ? singletonList(ecsRunTaskDataBag.getAwsConfig().getTag())
                     : null)
             .data(TaskData.builder()
@@ -1159,7 +1157,7 @@ public class EcsStateHelper {
 
   @VisibleForTesting
   List<ContainerServiceData> reverse(List<ContainerServiceData> serviceData) {
-    if (isEmpty(serviceData)) {
+    if (hasNone(serviceData)) {
       return emptyList();
     }
     return serviceData.stream()
@@ -1232,7 +1230,7 @@ public class EcsStateHelper {
 
   int renderTimeout(String expr, ExecutionContext context, int defaultValue) {
     int retVal = defaultValue;
-    if (isNotEmpty(expr)) {
+    if (hasSome(expr)) {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
       } catch (NumberFormatException e) {
@@ -1262,9 +1260,8 @@ public class EcsStateHelper {
             .accountId(deployDataBag.getApp().getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
             .waitId(activity.getUuid())
-            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
-                    ? singletonList(deployDataBag.getAwsConfig().getTag())
-                    : null)
+            .tags(hasSome(deployDataBag.getAwsConfig().getTag()) ? singletonList(deployDataBag.getAwsConfig().getTag())
+                                                                 : null)
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.ECS_COMMAND_TASK.name())

@@ -1,6 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -117,7 +117,7 @@ class CustomSecretsManagerUtils {
   static Set<EncryptedDataParams> obtainTestVariables(String connectorId) {
     Set<EncryptedDataParams> testVariables = new HashSet<>();
     testVariables.add(EncryptedDataParams.builder().name("var1").value("value").build());
-    if (!isEmpty(connectorId)) {
+    if (!hasNone(connectorId)) {
       testVariables.add(EncryptedDataParams.builder().name("connectorId").value(connectorId).build());
     }
     return testVariables;

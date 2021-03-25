@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -29,7 +30,7 @@ public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, T config) {
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
     String startingNodeId = getStartingNodeId(config);
-    if (EmptyPredicate.isNotEmpty(startingNodeId)) {
+    if (hasSome(startingNodeId)) {
       finalResponse.setStartingNodeId(startingNodeId);
     }
 

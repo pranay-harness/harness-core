@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
@@ -340,11 +340,11 @@ public class HelmClientImpl implements HelmClient {
   private String getChartReference(HelmChartSpecification chartSpecification) {
     String chartReference = chartSpecification.getChartName();
 
-    if (isNotEmpty(chartSpecification.getChartUrl())) {
+    if (hasSome(chartSpecification.getChartUrl())) {
       chartReference = chartReference + " --repo " + chartSpecification.getChartUrl();
     }
 
-    if (isNotEmpty(chartSpecification.getChartVersion())) {
+    if (hasSome(chartSpecification.getChartVersion())) {
       chartReference = chartReference + " --version " + chartSpecification.getChartVersion();
     }
 
@@ -353,7 +353,7 @@ public class HelmClientImpl implements HelmClient {
 
   private String constructValueOverrideFile(List<String> valuesYamlFiles) throws IOException, ExecutionException {
     StringBuilder fileOverrides = new StringBuilder();
-    if (isNotEmpty(valuesYamlFiles)) {
+    if (hasSome(valuesYamlFiles)) {
       for (String yamlFileContent : valuesYamlFiles) {
         String md5Hash = DigestUtils.md5Hex(yamlFileContent);
         String overrideFilePath = OVERRIDE_FILE_PATH.replace("${CONTENT_HASH}", md5Hash);
@@ -386,7 +386,7 @@ public class HelmClientImpl implements HelmClient {
   }
 
   private String applyKubeConfigToCommand(String command, String kubeConfigLocation) {
-    if (isNotEmpty(kubeConfigLocation)) {
+    if (hasSome(kubeConfigLocation)) {
       return command.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
     } else {
       return command.replace("KUBECONFIG=${KUBECONFIG_PATH}", EMPTY).trim();
@@ -395,7 +395,7 @@ public class HelmClientImpl implements HelmClient {
 
   private String applyCommandFlags(String command, HelmCommandRequest commandRequest, HelmCliCommandType commandType) {
     String flags = isBlank(commandRequest.getCommandFlags()) ? "" : commandRequest.getCommandFlags();
-    if (null != commandRequest.getHelmCommandFlag() && isNotEmpty(commandRequest.getHelmCommandFlag().getValueMap())) {
+    if (null != commandRequest.getHelmCommandFlag() && hasSome(commandRequest.getHelmCommandFlag().getValueMap())) {
       return HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(),
           commandRequest.getHelmCommandFlag().getValueMap(), commandRequest.getHelmVersion());
     }

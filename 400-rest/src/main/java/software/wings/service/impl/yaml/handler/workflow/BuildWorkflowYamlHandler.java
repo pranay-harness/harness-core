@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -25,7 +25,7 @@ public class BuildWorkflowYamlHandler extends WorkflowYamlHandler<BuildWorkflowY
         BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow();
 
     List<WorkflowPhase> phaseList = workflowInfo.getPhaseList();
-    if (isNotEmpty(phaseList)) {
+    if (hasSome(phaseList)) {
       WorkflowPhase workflowPhase = phaseList.get(0);
       workflow.infraMappingId(workflowPhase.getInfraMappingId()).serviceId(workflowPhase.getServiceId());
     }

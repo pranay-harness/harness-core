@@ -1,6 +1,7 @@
 package io.harness.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID_LIMIT_IN_DAYS;
@@ -115,7 +116,7 @@ public class WorkflowVerificationTaskPoller {
   private void schedulePredictiveDataCollectionCronJob(AnalysisContext context) {
     if (context != null && PREDICTIVE == context.getComparisonStrategy()) {
       String cvConfigUuid = context.getPredictiveCvConfigId();
-      if (isNotEmpty(cvConfigUuid)) {
+      if (hasSome(cvConfigUuid)) {
         return;
       }
       log.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);

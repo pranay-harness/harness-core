@@ -4,7 +4,7 @@
 
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -74,7 +74,7 @@ public class CatalogServiceImpl implements CatalogService {
     if (catalogs == null) {
       return null;
     }
-    if (isEmpty(catalogTypes)) {
+    if (hasNone(catalogTypes)) {
       return catalogs;
     }
 

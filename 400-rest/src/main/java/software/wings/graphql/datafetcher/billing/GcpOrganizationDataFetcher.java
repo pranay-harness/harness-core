@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -31,7 +31,7 @@ public class GcpOrganizationDataFetcher
     accountChecker.checkIsCeEnabled(accountId);
     String uuid = arguments.getUuid();
     List<GcpOrganization> gcpOrganizations;
-    if (isNotEmpty(uuid)) {
+    if (hasSome(uuid)) {
       gcpOrganizations = Collections.singletonList(gcpOrganizationService.get(uuid));
     } else {
       gcpOrganizations = gcpOrganizationService.list(accountId);

@@ -6,8 +6,8 @@ import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
@@ -223,7 +223,7 @@ public class NGTriggerElementMapper {
     } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_AMZ_SNS_MESSAGE_TYPE)) {
       webhookSourceRepo = AWS_CODECOMMIT;
       List<String> headerValues = webhookEventPayloadParser.getHeaderValue(headers, X_AMZ_SNS_MESSAGE_TYPE);
-      if (isNotEmpty(headerValues)) {
+      if (hasSome(headerValues)) {
         isConfirmationMessage = headerValues.stream().anyMatch(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE::equalsIgnoreCase);
       }
     } else {
@@ -284,7 +284,7 @@ public class NGTriggerElementMapper {
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);
 
     List<Integer> executions = generateLastWeekActivityData(ngTriggerEntity);
-    if (isNotEmpty(executions)) {
+    if (hasSome(executions)) {
       ngTriggerDetailsResponseDTO.executions(executions);
     }
 
@@ -319,7 +319,7 @@ public class NGTriggerElementMapper {
   @VisibleForTesting
   Integer[] prepareExecutionDataArray(long startTime, List<TriggerEventHistory> triggerActivityList) {
     Integer[] executions = new Integer[] {0, 0, 0, 0, 0, 0, 0};
-    if (isNotEmpty(triggerActivityList)) {
+    if (hasSome(triggerActivityList)) {
       List<Long> timeStamps =
           triggerActivityList.stream().map(event -> event.getCreatedAt()).sorted().collect(Collectors.toList());
       timeStamps.forEach(timeStamp -> {
@@ -339,7 +339,7 @@ public class NGTriggerElementMapper {
         triggerEventHistoryRepository.findFirst1ByAccountIdAndOrgIdentifierAndProjectIdentifierAndTriggerIdentifier(
             ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
             ngTriggerEntity.getIdentifier(), Sort.by(TriggerEventHistoryKeys.createdAt).descending());
-    if (!isEmpty(triggerEventHistoryList)) {
+    if (!hasNone(triggerEventHistoryList)) {
       return Optional.of(triggerEventHistoryList.get(0));
     }
     return Optional.empty();

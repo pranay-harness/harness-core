@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.features.utils.ServiceUtils.getServicesPageRequest;
 import static software.wings.features.utils.ServiceUtils.getServicesWithTemplateLibrary;
@@ -82,7 +82,7 @@ public class WorkflowPreDeploymentValidator {
     }
 
     if (!templateLibraryFeature.isAvailable(accountType)
-        && isNotEmpty(getServicesWithTemplateLibrary(
+        && hasSome(getServicesWithTemplateLibrary(
             getServicesForAccount(workflow.getAccountId(), workflow.getOrchestrationWorkflow().getServiceIds())))) {
       validationErrorList.add(getValidationError(
           getWorkflowServiceRestrictedFeatureErrorMsg(workflow.getName()), TemplateLibraryFeature.FEATURE_NAME));

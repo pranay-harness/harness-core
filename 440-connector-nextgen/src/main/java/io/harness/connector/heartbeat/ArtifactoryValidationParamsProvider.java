@@ -1,6 +1,6 @@
 package io.harness.connector.heartbeat;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorInfoDTO;
@@ -23,7 +23,7 @@ public class ArtifactoryValidationParamsProvider implements ConnectorValidationP
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     final ArtifactoryConnectorDTO connectorConfig = (ArtifactoryConnectorDTO) connectorInfoDTO.getConnectorConfig();
     DecryptableEntity decryptableEntity = null;
-    if (isNotEmpty(connectorConfig.getDecryptableEntities())) {
+    if (hasSome(connectorConfig.getDecryptableEntities())) {
       decryptableEntity = connectorConfig.getDecryptableEntities().get(0);
     }
     final List<EncryptedDataDetail> encryptionDetail =

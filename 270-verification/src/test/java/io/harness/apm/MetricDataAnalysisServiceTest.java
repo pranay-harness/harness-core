@@ -1,7 +1,7 @@
 package io.harness.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
@@ -225,7 +225,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
 
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis).hasSize(1);
-    assertThat(isNotEmpty(metricsAnalysis.iterator().next().getMetricAnalyses())).isTrue();
+    assertThat(hasSome(metricsAnalysis.iterator().next().getMetricAnalyses())).isTrue();
   }
 
   @Test
@@ -808,7 +808,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
         }
       });
     }
-    assertThat(isEmpty(timeSeriesMLAnalysisRecord.getTransactions())).isFalse();
+    assertThat(hasNone(timeSeriesMLAnalysisRecord.getTransactions())).isFalse();
     assertThat(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()).isNull();
     metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.APP_DYNAMICS, appId, stateExecutionId,
         workflowExecutionId, generateUuid(), (int) analysisMinute, learningEngineAnalysisTask.getUuid(), generateUuid(),

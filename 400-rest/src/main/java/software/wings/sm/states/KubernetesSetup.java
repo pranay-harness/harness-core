@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
@@ -121,12 +121,12 @@ public class KubernetesSetup extends ContainerServiceSetup {
         computedConfigFiles.stream().filter(ConfigFile::isEncrypted).collect(toList());
 
     List<String[]> plainConfigFiles = null;
-    if (isNotEmpty(plainConfigFileList)) {
+    if (hasSome(plainConfigFileList)) {
       plainConfigFiles = getConfigFileContent(app, plainConfigFileList);
     }
 
     List<String[]> encryptedConfigFiles = null;
-    if (isNotEmpty(encryptedConfigFileList)) {
+    if (hasSome(encryptedConfigFileList)) {
       encryptedConfigFiles = getConfigFileContent(app, encryptedConfigFileList);
     }
 
@@ -143,7 +143,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
       kubernetesContainerTask.getContainerDefinitions()
           .stream()
-          .filter(containerDefinition -> isNotEmpty(containerDefinition.getCommands()))
+          .filter(containerDefinition -> hasSome(containerDefinition.getCommands()))
           .forEach(containerDefinition
               -> containerDefinition.setCommands(
                   containerDefinition.getCommands().stream().map(context::renderExpression).collect(toList())));

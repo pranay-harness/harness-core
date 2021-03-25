@@ -1,6 +1,6 @@
 package io.harness.configuration;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 /**
  * Enum to identify the deploymode. Hazelcast , delegate may use this enum for their custom behaviors in respective
@@ -25,7 +25,7 @@ public enum DeployMode {
   }
 
   public static boolean isOnPrem(String deployMode) {
-    if (isEmpty(deployMode)) {
+    if (hasNone(deployMode)) {
       return false;
     }
 

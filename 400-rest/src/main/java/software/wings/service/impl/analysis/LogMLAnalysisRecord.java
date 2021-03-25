@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
@@ -175,7 +175,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
   }
 
   public void decompressLogAnalysisRecord() {
-    if (isNotEmpty(protoSerializedAnalyisDetails)) {
+    if (hasSome(protoSerializedAnalyisDetails)) {
       try {
         LogMLAnalysisRecordDetails analysisRecordDetails =
             LogMLAnalysisRecordDetails.parseFrom(EncodingUtils.deCompressBytes(protoSerializedAnalyisDetails));
@@ -276,7 +276,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       return;
     }
 
-    if (isNotEmpty(this.getAnalysisDetailsCompressedJson())) {
+    if (hasSome(this.getAnalysisDetailsCompressedJson())) {
       try {
         String decompressedAnalysisDetailsJson = deCompressString(this.getAnalysisDetailsCompressedJson());
         LogMLAnalysisRecord logAnalysisDetails =
@@ -296,7 +296,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
 
   public void compressLogAnalysisRecord() {
     LogMLAnalysisRecordDetails.Builder detailsBuilder = LogMLAnalysisRecordDetails.newBuilder();
-    if (isNotEmpty(unknown_events)) {
+    if (hasSome(unknown_events)) {
       unknown_events.forEach(splunkAnalysisClusters -> {
         final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
         splunkAnalysisClusters.forEach(splunkAnalysisCluster
@@ -305,7 +305,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(test_events)) {
+    if (hasSome(test_events)) {
       test_events.forEach((key, splunkAnalysisClusters) -> {
         final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
         splunkAnalysisClusters.forEach(splunkAnalysisCluster
@@ -314,7 +314,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(control_events)) {
+    if (hasSome(control_events)) {
       control_events.forEach((key, splunkAnalysisClusters) -> {
         final LogAnalysisClusterList.Builder clusterListBuilder = LogAnalysisClusterList.newBuilder();
         splunkAnalysisClusters.forEach(splunkAnalysisCluster
@@ -323,7 +323,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(control_clusters)) {
+    if (hasSome(control_clusters)) {
       control_clusters.forEach((key, analysisClusterMap) -> {
         LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
         analysisClusterMap.forEach(
@@ -333,7 +333,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(unknown_clusters)) {
+    if (hasSome(unknown_clusters)) {
       unknown_clusters.forEach((key, analysisClusterMap) -> {
         LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
         analysisClusterMap.forEach(
@@ -343,7 +343,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(test_clusters)) {
+    if (hasSome(test_clusters)) {
       test_clusters.forEach((key, analysisClusterMap) -> {
         LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
         analysisClusterMap.forEach(
@@ -353,7 +353,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(ignore_clusters)) {
+    if (hasSome(ignore_clusters)) {
       ignore_clusters.forEach((key, analysisClusterMap) -> {
         LogAnalysisClusterMap.Builder clusterMapBuilder = LogAnalysisClusterMap.newBuilder();
         analysisClusterMap.forEach(
@@ -363,7 +363,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(frequency_patterns)) {
+    if (hasSome(frequency_patterns)) {
       frequency_patterns.forEach((key, frequencyPattern) -> {
         LogMLAnalysisRecordProto.FrequencyPattern.Builder frequencyPatternBuilder =
             LogMLAnalysisRecordProto.FrequencyPattern.newBuilder()
@@ -384,7 +384,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
       });
     }
 
-    if (isNotEmpty(log_analysis_result)) {
+    if (hasSome(log_analysis_result)) {
       log_analysis_result.forEach((key, logAnalysisResult) -> {
         LogMLAnalysisRecordProto.LogAnalysisResult.Builder logAnalysisResultBuilder =
             LogMLAnalysisRecordProto.LogAnalysisResult.newBuilder()
@@ -410,7 +410,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
 
   private LogAnalysisCluster convertToLogAnalysisCluster(SplunkAnalysisCluster splunkAnalysisCluster) {
     List<LogAnalysisMessageFrequency> messageFrequenciesList = new ArrayList<>();
-    if (isNotEmpty(splunkAnalysisCluster.getMessage_frequencies())) {
+    if (hasSome(splunkAnalysisCluster.getMessage_frequencies())) {
       splunkAnalysisCluster.getMessage_frequencies().forEach(messageFrequency
           -> messageFrequenciesList.add(
               LogAnalysisMessageFrequency.newBuilder()
@@ -451,7 +451,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
 
   private SplunkAnalysisCluster convertToSplunkAnalysisCluster(LogAnalysisCluster logAnalysisCluster) {
     List<MessageFrequency> messageFrequencies = new ArrayList<>();
-    if (isNotEmpty(logAnalysisCluster.getMessageFrequenciesList())) {
+    if (hasSome(logAnalysisCluster.getMessageFrequenciesList())) {
       logAnalysisCluster.getMessageFrequenciesList().forEach(logAnalysisMessageFrequency
           -> messageFrequencies.add(
               MessageFrequency.builder()
@@ -473,7 +473,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
     splunkAnalysisCluster.setX(logAnalysisCluster.getX());
     splunkAnalysisCluster.setY(logAnalysisCluster.getY());
     splunkAnalysisCluster.setFeedback_id(
-        isEmpty(logAnalysisCluster.getFeedbackId()) ? null : logAnalysisCluster.getFeedbackId());
+        hasNone(logAnalysisCluster.getFeedbackId()) ? null : logAnalysisCluster.getFeedbackId());
     splunkAnalysisCluster.setDiff_tags(logAnalysisCluster.getDiffTagsList());
     splunkAnalysisCluster.setAlert_score(logAnalysisCluster.getAlertScore());
     splunkAnalysisCluster.setTest_score(logAnalysisCluster.getTestScore());
@@ -482,7 +482,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
     splunkAnalysisCluster.setControl_label(logAnalysisCluster.getControlLabel());
     splunkAnalysisCluster.setRisk_level(logAnalysisCluster.getRiskLevel());
     splunkAnalysisCluster.setPriority(
-        isEmpty(logAnalysisCluster.getPriority()) ? null : FeedbackPriority.valueOf(logAnalysisCluster.getPriority()));
+        hasNone(logAnalysisCluster.getPriority()) ? null : FeedbackPriority.valueOf(logAnalysisCluster.getPriority()));
 
     return splunkAnalysisCluster;
   }

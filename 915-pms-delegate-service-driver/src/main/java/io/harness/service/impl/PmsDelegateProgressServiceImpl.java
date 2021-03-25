@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.DelegateTaskProgressResponse.DelegateTaskProgressResponseKeys;
 
 import static java.lang.System.currentTimeMillis;
@@ -67,7 +67,7 @@ public class PmsDelegateProgressServiceImpl implements DelegateProgressService {
   }
 
   private boolean deleteProcessedResponses(Set<String> responsesToBeDeleted) {
-    if (isEmpty(responsesToBeDeleted)) {
+    if (hasNone(responsesToBeDeleted)) {
       return true;
     }
     boolean deleteSuccessful = false;

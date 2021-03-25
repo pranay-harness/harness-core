@@ -1,6 +1,6 @@
 package io.harness.beans.yaml.extended.container.quantity;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.exception.InvalidArgumentsException;
@@ -23,7 +23,7 @@ public class MemoryQuantity {
   @JsonCreator
   public static MemoryQuantity fromString(String quantity) {
     try {
-      if (isEmpty(quantity)) {
+      if (hasNone(quantity)) {
         return null;
       }
 

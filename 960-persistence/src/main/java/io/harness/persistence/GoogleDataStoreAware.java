@@ -1,6 +1,6 @@
 package io.harness.persistence;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.BlobValue;
@@ -65,7 +65,7 @@ public interface GoogleDataStoreAware extends PersistentEntity {
   }
 
   static void addFieldIfNotEmpty(Builder builder, String key, String value, boolean excludeFromIndex) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return;
     }
 
@@ -97,7 +97,7 @@ public interface GoogleDataStoreAware extends PersistentEntity {
   }
 
   static <T> void addFieldIfNotEmpty(Builder builder, String key, Collection value, Class<T> clazz) {
-    if (isEmpty(value)) {
+    if (hasNone(value)) {
       return;
     }
 

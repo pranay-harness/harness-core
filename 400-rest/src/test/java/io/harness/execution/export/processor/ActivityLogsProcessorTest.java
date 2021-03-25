@@ -1,6 +1,7 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static software.wings.beans.Log.Builder.aLog;
@@ -22,7 +23,6 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExportExecutionsException;
 import io.harness.execution.export.metadata.ActivityCommandUnitMetadata;
 import io.harness.execution.export.metadata.ApprovalMetadata;
@@ -276,8 +276,7 @@ public class ActivityLogsProcessorTest extends CategoryTest {
 
     when(logService.list(anyString(), any())).thenAnswer(invocation -> {
       PageRequest<Log> pageRequest = invocation.getArgumentAt(1, PageRequest.class);
-      if (pageRequest == null
-          || (EmptyPredicate.isNotEmpty(pageRequest.getOffset()) && !"0".equals(pageRequest.getOffset()))) {
+      if (pageRequest == null || (hasSome(pageRequest.getOffset()) && !"0".equals(pageRequest.getOffset()))) {
         return aPageResponse().withResponse(Collections.emptyList()).build();
       }
 

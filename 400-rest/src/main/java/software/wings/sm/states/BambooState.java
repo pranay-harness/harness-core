@@ -5,7 +5,7 @@ import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -168,7 +168,7 @@ public class BambooState extends State {
     String evaluatedPlanName = context.renderExpression(planName);
 
     List<ParameterEntry> evaluatedParameters = new ArrayList<>();
-    if (isNotEmpty(parameters)) {
+    if (hasSome(parameters)) {
       parameters.forEach(parameterEntry -> {
         ParameterEntry evaluatedParameterEntry = new ParameterEntry();
         evaluatedParameterEntry.setKey(parameterEntry.getKey());
@@ -178,7 +178,7 @@ public class BambooState extends State {
     }
 
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (hasSome(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
         FilePathAssertionEntry evaluatedPathAssertionEntry = new FilePathAssertionEntry();
         evaluatedPathAssertionEntry.setFilePath(context.renderExpression(filePathAssertionEntry.getFilePath()));
@@ -256,11 +256,11 @@ public class BambooState extends State {
   public List<String> getPatternsForRequiredContextElementType() {
     List<String> patterns = new ArrayList<>();
     patterns.add(planName);
-    if (isNotEmpty(parameters)) {
+    if (hasSome(parameters)) {
       parameters.forEach(parameterEntry -> patterns.add(parameterEntry.getValue()));
     }
 
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (hasSome(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> patterns.add(filePathAssertionEntry.getFilePath()));
     }
     return patterns;

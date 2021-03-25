@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
@@ -55,7 +55,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
                     aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, application.getUuid()).build())
                 .getResponse();
 
-        if (isNotEmpty(workflows)) {
+        if (hasSome(workflows)) {
           for (Workflow workflow : workflows) {
             try {
               updateWorkflow(workflow);
@@ -93,10 +93,10 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
 
         for (WorkflowPhase phase : workflowPhases) {
           List<PhaseStep> phaseSteps = phase.getPhaseSteps();
-          if (isNotEmpty(phaseSteps)) {
+          if (hasSome(phaseSteps)) {
             for (PhaseStep phaseStep : phaseSteps) {
               List<GraphNode> steps = phaseStep.getSteps();
-              if (isNotEmpty(steps)) {
+              if (hasSome(steps)) {
                 for (GraphNode node : steps) {
                   if (StateType.AWS_AMI_SERVICE_SETUP.name().equals(node.getType())) {
                     workflowModified = true;
@@ -105,7 +105,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
                       properties = new HashMap<>();
                     }
                     int desiredInstances = DEFAULT_AMI_ASG_DESIRED_INSTANCES;
-                    if (isNotEmpty(properties)) {
+                    if (hasSome(properties)) {
                       Object o = properties.get(MAX_INTANCES_KEY);
                       if (o instanceof Integer) {
                         desiredInstances = (Integer) o;

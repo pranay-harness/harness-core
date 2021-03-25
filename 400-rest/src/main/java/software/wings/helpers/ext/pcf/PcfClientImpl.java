@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
@@ -550,7 +550,7 @@ public class PcfClientImpl implements PcfClient {
             getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
 
         ProcessResult processResult = processExecutor.execute();
-        appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+        appAutoscalarInstalled = hasSome(processResult.outputUTF8());
       }
     } catch (InterruptedException e) {
       throw new PivotalClientApiException("check for App Autoscalar Binding failed", e);
@@ -578,7 +578,7 @@ public class PcfClientImpl implements PcfClient {
 
         ProcessResult processResult = executor.execute();
         String output = processResult.outputUTF8();
-        if (isEmpty(output)) {
+        if (hasNone(output)) {
           logCallback.saveExecutionLog("\n# No App Autoscalar Bound to App");
         } else {
           logCallback.saveExecutionLog("# App Autoscalar Current State: " + output);
@@ -737,7 +737,7 @@ public class PcfClientImpl implements PcfClient {
     ArtifactStreamAttributes artifactStreamAttributes = requestData.getSetupRequest().getArtifactStreamAttributes();
     if (artifactStreamAttributes.isDockerBasedDeployment()) {
       char[] password = getPassword(artifactStreamAttributes);
-      if (!isEmpty(password)) {
+      if (!hasNone(password)) {
         environmentMapForPcfExecutor.put(CF_DOCKER_CREDENTIALS, String.valueOf(password));
       }
     }
@@ -751,7 +751,7 @@ public class PcfClientImpl implements PcfClient {
     }
 
     PcfManifestFileData pcfManifestFileData = requestData.getPcfManifestFileData();
-    if (isNotEmpty(pcfManifestFileData.getVarFiles())) {
+    if (hasSome(pcfManifestFileData.getVarFiles())) {
       pcfManifestFileData.getVarFiles().forEach(varsFile -> {
         if (varsFile != null) {
           builder.append(" --vars-file ").append(varsFile.getAbsoluteFile());
@@ -794,7 +794,7 @@ public class PcfClientImpl implements PcfClient {
       String endpointUrl, String configPathVar, String pluginHomeAbsPath) {
     final Map<String, String> map = new HashMap<>();
     map.put(CF_HOME, configPathVar);
-    if (isNotEmpty(pluginHomeAbsPath)) {
+    if (hasSome(pluginHomeAbsPath)) {
       map.put(CF_PLUGIN_HOME, pluginHomeAbsPath);
     }
     addProxyPropertyIfRequired(endpointUrl, map);
@@ -803,7 +803,7 @@ public class PcfClientImpl implements PcfClient {
 
   private void addProxyPropertyIfRequired(String endpointUrl, Map<String, String> map) {
     String proxyHostName = Http.getProxyHostName();
-    if (!Http.shouldUseNonProxy(endpointUrl) && isNotEmpty(proxyHostName)) {
+    if (!Http.shouldUseNonProxy(endpointUrl) && hasSome(proxyHostName)) {
       String authDetails = "";
       if (Http.getProxyPassword() != null && Http.getProxyUserName() != null) {
         authDetails = String.format("%s:%s@", Http.getProxyUserName(), Http.getProxyPassword());
@@ -919,7 +919,7 @@ public class PcfClientImpl implements PcfClient {
       }
     }
 
-    if (isNotEmpty(applicationManifest.getEnvironmentVariables())) {
+    if (hasSome(applicationManifest.getEnvironmentVariables())) {
       for (Map.Entry<String, Object> entry : applicationManifest.getEnvironmentVariables().entrySet()) {
         builder.environmentVariable(entry.getKey(), entry.getValue());
       }
@@ -943,7 +943,7 @@ public class PcfClientImpl implements PcfClient {
 
   private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, Builder builder) {
     // Set routeMaps
-    if (isNotEmpty(pcfRequestConfig.getRouteMaps())) {
+    if (hasSome(pcfRequestConfig.getRouteMaps())) {
       List<org.cloudfoundry.operations.applications.Route> routeList =
           pcfRequestConfig.getRouteMaps()
               .stream()
@@ -1166,7 +1166,7 @@ public class PcfClientImpl implements PcfClient {
   @Override
   public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    if (isEmpty(paths)) {
+    if (hasNone(paths)) {
       return Collections.EMPTY_LIST;
     }
 
@@ -1350,7 +1350,7 @@ public class PcfClientImpl implements PcfClient {
     }
 
     List<Route> routes = getRouteMapsByNames(Arrays.asList(route), pcfRequestConfig);
-    if (isNotEmpty(routes)) {
+    if (hasSome(routes)) {
       return Optional.of(routes.get(0));
     }
 
@@ -1554,7 +1554,7 @@ public class PcfClientImpl implements PcfClient {
       Set<String> domainNames = allDomainsForSpace.stream().map(Domain::getName).collect(toSet());
       logCallback.saveExecutionLog(format("Found domain names: [%s]", join(", ", domainNames)));
 
-      if (isNotEmpty(routes)) {
+      if (hasSome(routes)) {
         int exitcode;
         String command;
         Map<String, String> env =
@@ -1568,10 +1568,10 @@ public class PcfClientImpl implements PcfClient {
           } else {
             StringBuilder stringBuilder = new StringBuilder(
                 format("%s %s %s", operation, pcfRequestConfig.getApplicationName(), info.getDomain()));
-            if (isNotEmpty(info.getHostName())) {
+            if (hasSome(info.getHostName())) {
               stringBuilder.append(format(" --hostname %s ", info.getHostName()));
             }
-            if (isNotEmpty(info.getPath())) {
+            if (hasSome(info.getPath())) {
               stringBuilder.append(format(" --path %s ", info.getPath()));
             }
             command = stringBuilder.toString();
@@ -1608,7 +1608,7 @@ public class PcfClientImpl implements PcfClient {
         }
       }
 
-      if (isNotEmpty(envVars)) {
+      if (hasSome(envVars)) {
         int exitcode;
         String command;
         Map<String, String> env =
@@ -1665,7 +1665,7 @@ public class PcfClientImpl implements PcfClient {
         }
       }
 
-      if (isNotEmpty(varNames)) {
+      if (hasSome(varNames)) {
         int exitcode;
         String command;
         Map<String, String> env =
@@ -1713,7 +1713,7 @@ public class PcfClientImpl implements PcfClient {
     List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
     List<String> routesNeedToBeCreated = findRoutesNeedToBeCreated(routes, routeList);
 
-    if (isNotEmpty(routesNeedToBeCreated)) {
+    if (hasSome(routesNeedToBeCreated)) {
       List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
       Set<String> domainNames = allDomainsForSpace.stream().map(Domain::getName).collect(toSet());
       createRoutesThatDoNotExists(routesNeedToBeCreated, domainNames, pcfRequestConfig);
@@ -1771,7 +1771,7 @@ public class PcfClientImpl implements PcfClient {
 
   @VisibleForTesting
   List<String> findRoutesNeedToBeCreated(List<String> routes, List<Route> routeList) {
-    if (isNotEmpty(routes)) {
+    if (hasSome(routes)) {
       Set<String> routesExisting = routeList.stream().map(this::getPathFromRouteMap).collect(toSet());
       return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
     }
@@ -1915,13 +1915,13 @@ public class PcfClientImpl implements PcfClient {
 
   private static Optional<ProxyConfiguration> getProxyConfiguration(String url) {
     String proxyHostName = Http.getProxyHostName();
-    if (Http.shouldUseNonProxy(url) || isEmpty(proxyHostName)) {
+    if (Http.shouldUseNonProxy(url) || hasNone(proxyHostName)) {
       return Optional.empty();
     }
 
     Optional<Integer> port = Optional.empty();
     String proxyPort = Http.getProxyPort();
-    if (isNotEmpty(proxyPort)) {
+    if (hasSome(proxyPort)) {
       port = Optional.of(Integer.parseInt(proxyPort));
     }
 

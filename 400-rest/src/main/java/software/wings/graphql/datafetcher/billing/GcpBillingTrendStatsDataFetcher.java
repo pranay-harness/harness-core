@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -45,7 +45,7 @@ public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<Cl
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
       List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
     accountChecker.checkIsCeEnabled(accountId);
-    Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
+    Preconditions.checkFalse(hasNone(filters), "Missing filters.");
     // find the start date from the conditions
     Optional<CloudBillingFilter> startTimeFilter = filters.stream().filter(f -> f.getStartTime() != null).findFirst();
     if (!startTimeFilter.isPresent() || startTimeFilter.get().getStartTime() == null) {

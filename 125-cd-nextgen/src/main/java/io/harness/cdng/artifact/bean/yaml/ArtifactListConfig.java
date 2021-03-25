@@ -1,6 +1,6 @@
 package io.harness.cdng.artifact.bean.yaml;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
@@ -41,7 +41,7 @@ public class ArtifactListConfig implements Visitable {
       this.primary.getArtifactConfig().setPrimaryArtifact(true);
     }
     this.sidecars = sidecars;
-    if (isNotEmpty(sidecars)) {
+    if (hasSome(sidecars)) {
       for (SidecarArtifactWrapper sidecar : this.sidecars) {
         sidecar.getSidecar().getArtifactConfig().setIdentifier(sidecar.getSidecar().getIdentifier());
         sidecar.getSidecar().getArtifactConfig().setPrimaryArtifact(false);
@@ -53,7 +53,7 @@ public class ArtifactListConfig implements Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("primary", primary);
-    if (isNotEmpty(sidecars)) {
+    if (hasSome(sidecars)) {
       sidecars.forEach(sidecar -> children.add("sidecars", sidecar));
     }
     return children;

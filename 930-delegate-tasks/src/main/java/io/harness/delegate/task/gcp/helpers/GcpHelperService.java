@@ -1,6 +1,6 @@
 package io.harness.delegate.task.gcp.helpers;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
@@ -174,7 +174,7 @@ public class GcpHelperService {
   }
 
   private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
-    if (isEmpty(serviceAccountKeyFileContent)) {
+    if (hasNone(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
     }
   }

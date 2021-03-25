@@ -1,7 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
@@ -44,7 +44,7 @@ public class AbstractSchemaChecker {
 
   void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
       throws IOException, ClassNotFoundException {
-    if (isEmpty(yamlSchemaRootClasses)) {
+    if (hasNone(yamlSchemaRootClasses)) {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =

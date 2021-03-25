@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
@@ -114,7 +114,7 @@ public class DSConfigServiceImpl implements DSConfigService {
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     List<CVConfig> cvConfigs = cvConfigService.listByMonitoringSources(
         accountId, orgIdentifier, projectIdentifier, Lists.newArrayList(identifier));
-    Preconditions.checkState(isNotEmpty(cvConfigs), "No configurations found with identifier %s", identifier);
+    Preconditions.checkState(hasSome(cvConfigs), "No configurations found with identifier %s", identifier);
 
     Map<String, List<CVConfig>> groupById =
         cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getIdentifier, Collectors.toList()));
@@ -147,7 +147,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   }
 
   private List<MonitoringSourceDTO> groupDSConfigsByMonitoringSources(List<CVConfig> cvConfigs) {
-    if (isEmpty(cvConfigs)) {
+    if (hasNone(cvConfigs)) {
       return Collections.emptyList();
     }
     Map<String, List<CVConfig>> groupByMonitoringSource =
@@ -159,7 +159,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   }
 
   private MonitoringSourceDTO createMonitoringSourceDTO(List<CVConfig> cvConfigsGroupedByMonitoringSource) {
-    Preconditions.checkState(isNotEmpty(cvConfigsGroupedByMonitoringSource), "The number of configs in the group is 0");
+    Preconditions.checkState(hasSome(cvConfigsGroupedByMonitoringSource), "The number of configs in the group is 0");
     MonitoringSourceDTOBuilder monitoringSourceDTOBuilder = MonitoringSourceDTO.builder();
     populateCommonFieldsOfMonitoringSource(cvConfigsGroupedByMonitoringSource, monitoringSourceDTOBuilder);
     return monitoringSourceDTOBuilder.build();
@@ -177,7 +177,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     Set<String> servicesList =
         cvConfigsGroupedByMonitoringSource.stream().map(CVConfig::getServiceIdentifier).collect(Collectors.toSet());
     monitoringSourceDTOBuilder.importedAt(importedAtTime);
-    monitoringSourceDTOBuilder.numberOfServices(isNotEmpty(servicesList) ? servicesList.size() : 0);
+    monitoringSourceDTOBuilder.numberOfServices(hasSome(servicesList) ? servicesList.size() : 0);
     monitoringSourceDTOBuilder.type(firstCVConfig.getType());
   }
 
@@ -186,7 +186,7 @@ public class DSConfigServiceImpl implements DSConfigService {
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     List<CVConfig> cvConfigs = cvConfigService.listByMonitoringSources(
         accountId, orgIdentifier, projectIdentifier, Lists.newArrayList(identifier));
-    Preconditions.checkState(isNotEmpty(cvConfigs), "The number of configs in the group is 0");
+    Preconditions.checkState(hasSome(cvConfigs), "The number of configs in the group is 0");
     CVConfig firstCVConfigForReference = cvConfigs.get(0);
     int numberOfEnvironments = nextGenService.getEnvironmentCount(firstCVConfigForReference.getAccountId(),
         firstCVConfigForReference.getOrgIdentifier(), firstCVConfigForReference.getProjectIdentifier());
@@ -195,7 +195,7 @@ public class DSConfigServiceImpl implements DSConfigService {
 
   private MonitoringSourceImportStatus createImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    Preconditions.checkState(isNotEmpty(cvConfigsGroupedByMonitoringSource), "The number of configs in the group is 0");
+    Preconditions.checkState(hasSome(cvConfigsGroupedByMonitoringSource), "The number of configs in the group is 0");
     CVConfig firstCVConfig = cvConfigsGroupedByMonitoringSource.get(0);
     MonitoringSourceImportStatusCreator monitoringSourceImportStatusCreator = injector.getInstance(
         Key.get(MonitoringSourceImportStatusCreator.class, Names.named(firstCVConfig.getType().name())));

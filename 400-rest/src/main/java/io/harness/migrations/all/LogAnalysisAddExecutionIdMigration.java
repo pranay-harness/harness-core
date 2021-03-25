@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -36,7 +36,7 @@ public class LogAnalysisAddExecutionIdMigration implements Migration {
                                  .fetch())) {
       while (iterator.hasNext()) {
         final LogMLAnalysisRecord logMLAnalysisRecord = iterator.next();
-        if (isNotEmpty(logMLAnalysisRecord.getWorkflowExecutionId())) {
+        if (hasSome(logMLAnalysisRecord.getWorkflowExecutionId())) {
           log.info("For analysis {} wqrkflow execution id is already set to {}", logMLAnalysisRecord.getUuid(),
               logMLAnalysisRecord.getWorkflowExecutionId());
           continue;
@@ -51,7 +51,7 @@ public class LogAnalysisAddExecutionIdMigration implements Migration {
         }
 
         final String workflowExecutionId = stateExecutionInstance.getExecutionUuid();
-        if (isEmpty(workflowExecutionId)) {
+        if (hasNone(workflowExecutionId)) {
           log.info("For analysis {} and state {} no workflow execution was set", logMLAnalysisRecord.getUuid(),
               logMLAnalysisRecord.getStateExecutionId());
           continue;

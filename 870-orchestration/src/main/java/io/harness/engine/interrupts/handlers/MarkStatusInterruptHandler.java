@@ -1,6 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
@@ -35,7 +35,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   }
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
-    if (isEmpty(interrupt.getNodeExecutionId())) {
+    if (hasNone(interrupt.getNodeExecutionId())) {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for MARK_SUCCESS interrupt");
     }
 

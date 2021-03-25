@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 
@@ -82,7 +82,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     }
 
     CommandExecutionStatus result = CommandExecutionStatus.SUCCESS;
-    if (isNotEmpty(configFiles)) {
+    if (hasSome(configFiles)) {
       for (ConfigFile configFile : configFiles) {
         File destFile = new File(configFile.getRelativeFilePath());
         String path = destinationParentPath + "/" + (isNotBlank(destFile.getParent()) ? destFile.getParent() : "");

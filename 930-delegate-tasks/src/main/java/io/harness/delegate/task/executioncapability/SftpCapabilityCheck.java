@@ -1,6 +1,6 @@
 package io.harness.delegate.task.executioncapability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
@@ -79,7 +79,7 @@ public class SftpCapabilityCheck implements CapabilityCheck, ProtoCapabilityChec
       log.error("SFTP server {} could not be reached. Exception Message {}", sftpUrl, e.getMessage());
     }
 
-    if (isEmpty(hostKeyVerifier)) {
+    if (hasNone(hostKeyVerifier)) {
       log.error("SFTP server {} host key could not be verified.", sftpUrl);
       return false;
     }

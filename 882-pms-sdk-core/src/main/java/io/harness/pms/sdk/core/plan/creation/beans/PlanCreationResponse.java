@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -33,7 +34,7 @@ public class PlanCreationResponse {
   }
 
   public void mergeContext(Map<String, PlanCreationContextValue> contextMap) {
-    if (EmptyPredicate.isEmpty(contextMap)) {
+    if (hasNone(contextMap)) {
       return;
     }
     for (Map.Entry<String, PlanCreationContextValue> entry : contextMap.entrySet()) {
@@ -54,7 +55,7 @@ public class PlanCreationResponse {
   }
 
   public void addNodes(Map<String, PlanNode> newNodes) {
-    if (EmptyPredicate.isEmpty(newNodes)) {
+    if (hasNone(newNodes)) {
       return;
     }
     newNodes.values().forEach(this::addNode);
@@ -75,7 +76,7 @@ public class PlanCreationResponse {
   }
 
   public void addDependencies(Map<String, YamlField> fields) {
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       return;
     }
     fields.values().forEach(this::addDependency);
@@ -109,10 +110,10 @@ public class PlanCreationResponse {
   }
 
   public void mergeStartingNodeId(String otherStartingNodeId) {
-    if (EmptyPredicate.isEmpty(otherStartingNodeId)) {
+    if (hasNone(otherStartingNodeId)) {
       return;
     }
-    if (EmptyPredicate.isEmpty(startingNodeId)) {
+    if (hasNone(startingNodeId)) {
       startingNodeId = otherStartingNodeId;
       return;
     }

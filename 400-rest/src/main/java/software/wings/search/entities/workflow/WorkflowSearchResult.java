@@ -1,9 +1,9 @@
 package software.wings.search.entities.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
@@ -41,7 +41,7 @@ public class WorkflowSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(WorkflowView workflowView) {
-    if (EmptyPredicate.isNotEmpty(workflowView.getDeployments())) {
+    if (hasSome(workflowView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(workflowView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(workflowView);
@@ -49,7 +49,7 @@ public class WorkflowSearchResult extends SearchResult {
   }
 
   public void setAudits(List<RelatedAuditView> audits) {
-    if (EmptyPredicate.isNotEmpty(audits)) {
+    if (hasSome(audits)) {
       this.audits = audits;
       this.auditsCount = audits.size();
     } else {
@@ -59,7 +59,7 @@ public class WorkflowSearchResult extends SearchResult {
   }
 
   private void setAudits(WorkflowView workflowView) {
-    if (EmptyPredicate.isNotEmpty(workflowView.getAudits())) {
+    if (hasSome(workflowView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(workflowView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(workflowView);
@@ -67,7 +67,7 @@ public class WorkflowSearchResult extends SearchResult {
   }
 
   public void setDeployments(List<RelatedDeploymentView> deployments) {
-    if (EmptyPredicate.isNotEmpty(deployments)) {
+    if (hasSome(deployments)) {
       this.deployments = deployments;
       this.deploymentsCount = deployments.size();
     } else {

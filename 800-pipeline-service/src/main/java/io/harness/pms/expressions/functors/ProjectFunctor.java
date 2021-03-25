@@ -1,6 +1,7 @@
 package io.harness.pms.expressions.functors;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.FunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
@@ -25,8 +26,7 @@ public class ProjectFunctor implements LateBindingValue {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
-    if (EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(orgIdentifier)
-        || EmptyPredicate.isEmpty(projectIdentifier)) {
+    if (hasNone(accountId) || hasNone(orgIdentifier) || hasNone(projectIdentifier)) {
       return null;
     }
 

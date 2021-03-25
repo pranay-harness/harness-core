@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
@@ -118,7 +118,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     // Check if artifact variable being updated exists.
     List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
 
@@ -126,7 +126,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     if (!name.equals(artifactStreamBinding.getName())) {
       List<ServiceVariable> collidingVariables =
           fetchArtifactServiceVariableByName(appId, serviceId, artifactStreamBinding.getName());
-      if (isNotEmpty(collidingVariables)) {
+      if (hasSome(collidingVariables)) {
         throw new InvalidRequestException(
             format("Artifact variable with name [%s] already exists in service", artifactStreamBinding.getName()),
             USER);
@@ -158,7 +158,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       throw new InvalidRequestException("Artifact stream binding does not exist", USER);
     }
 
@@ -215,7 +215,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   private ArtifactStreamBinding getInternal(String appId, String serviceId, String name) {
     List<ServiceVariable> variables = fetchArtifactServiceVariableByName(appId, serviceId, name);
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return null;
     }
 
@@ -345,7 +345,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     List<ServiceVariable> serviceVariables = fetchArtifactServiceVariables(service.getAppId(), service.getUuid());
-    if (isEmpty(serviceVariables)) {
+    if (hasNone(serviceVariables)) {
       return new ArrayList<>();
     }
 
@@ -378,7 +378,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   private List<ArtifactStream> listArtifactStreams(List<String> artifactStreamIds) {
-    if (isEmpty(artifactStreamIds)) {
+    if (hasNone(artifactStreamIds)) {
       return new ArrayList<>();
     }
     return artifactStreamService.listByIds(artifactStreamIds);
@@ -399,7 +399,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     List<ServiceVariable> serviceVariables =
         getServiceVariablesByArtifactStreamId(appId, artifactStream.getAccountId(), artifactStreamId);
-    if (isEmpty(serviceVariables)) {
+    if (hasNone(serviceVariables)) {
       return new ArrayList<>();
     }
 
@@ -419,7 +419,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     List<ServiceVariable> serviceVariables =
         getServiceVariablesByArtifactStreamId(artifactStream.getAccountId(), artifactStreamId);
-    if (isEmpty(serviceVariables)) {
+    if (hasNone(serviceVariables)) {
       return new ArrayList<>();
     }
 
@@ -445,13 +445,13 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     List<ServiceVariable> serviceVariables =
         getServiceVariablesByArtifactStreamId(appId, artifactStream.getAccountId(), artifactStreamId);
-    if (isEmpty(serviceVariables)) {
+    if (hasNone(serviceVariables)) {
       return new ArrayList<>();
     }
 
     List<String> serviceIds =
         serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return new ArrayList<>();
     }
 
@@ -471,13 +471,13 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
     List<ServiceVariable> serviceVariables =
         getServiceVariablesByArtifactStreamId(artifactStream.getAccountId(), artifactStreamId);
-    if (isEmpty(serviceVariables)) {
+    if (hasNone(serviceVariables)) {
       return new ArrayList<>();
     }
 
     List<String> serviceIds =
         serviceVariables.stream().map(ServiceVariable::getEntityId).distinct().collect(Collectors.toList());
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return new ArrayList<>();
     }
 
@@ -498,7 +498,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   @Override
   public Service getService(String appId, String artifactStreamId, boolean throwException) {
     List<Service> services = listServices(appId, artifactStreamId);
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       if (throwException) {
         log.info(ARTIFACT_STREAM_DEBUG_LOG + "Deleting artifact stream {} from getService", artifactStreamId);
         artifactStreamService.delete(appId, artifactStreamId);
@@ -517,7 +517,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   private String getServiceId(String appId, List<String> serviceIds, String artifactStreamId, boolean throwException) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       if (throwException) {
         artifactStreamService.delete(appId, artifactStreamId);
         throw new InvalidArtifactServerException(
@@ -534,7 +534,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     // Only applicable for feature flag off as after the refactor artifact streams are unrelated to services.
     // We can't fetch the artifact stream here as it is most likely already deleted from the DB.
     List<Service> services = serviceResourceService.listByArtifactStreamId(artifactStreamId);
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return;
     }
 
@@ -558,11 +558,11 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public void processServiceVariables(List<ServiceVariable> serviceVariables) {
-    if (isNotEmpty(serviceVariables)) {
+    if (hasSome(serviceVariables)) {
       for (ServiceVariable serviceVariable : serviceVariables) {
         List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
         if (Type.ARTIFACT == serviceVariable.getType()) {
-          if (isNotEmpty(serviceVariable.getAllowedList())) {
+          if (hasSome(serviceVariable.getAllowedList())) {
             for (String artifactStreamId : serviceVariable.getAllowedList()) {
               ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
               if (artifactStream == null) {
@@ -581,11 +581,11 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public void processVariables(List<Variable> variables) {
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       for (Variable variable : variables) {
         List<ArtifactStreamSummary> artifactStreams = new ArrayList<>();
         if (VariableType.ARTIFACT == variable.getType()) {
-          if (isNotEmpty(variable.getAllowedList())) {
+          if (hasSome(variable.getAllowedList())) {
             for (String artifactStreamId : variable.getAllowedList()) {
               ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
               if (artifactStream == null) {

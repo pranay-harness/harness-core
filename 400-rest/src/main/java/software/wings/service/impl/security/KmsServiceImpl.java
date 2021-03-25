@@ -2,7 +2,8 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -18,7 +19,6 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
@@ -200,7 +200,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   private EncryptedData saveOrUpdateEncryptedRecord(String accountId, KmsConfig kmsConfig, String newKeyToUpdate,
       String oldKeyId, EncryptedData encryptedData, String keySuffix) {
     // if there is a key to update save the encrypted data
-    if (isNotEmpty(newKeyToUpdate) && encryptedData != null) {
+    if (hasSome(newKeyToUpdate) && encryptedData != null) {
       encryptedData.setAccountId(accountId);
       encryptedData.setType(KMS);
       encryptedData.setName(kmsConfig.getName() + keySuffix);
@@ -214,7 +214,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void cleanUpEncryptedRecordEntry(String accountId, String keyIdToDelete) {
-    if (isNotEmpty(keyIdToDelete)) {
+    if (hasSome(keyIdToDelete)) {
       wingsPersistence.delete(accountId, EncryptedData.class, keyIdToDelete);
     }
   }
@@ -296,7 +296,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
     }
     if (kmsConfig.isAssumeStsRoleOnDelegate() || kmsConfig.isAssumeIamRoleOnDelegate()) {
-      if (EmptyPredicate.isEmpty(kmsConfig.getDelegateSelectors())) {
+      if (hasNone(kmsConfig.getDelegateSelectors())) {
         String message = "Delegate Selectors cannot be empty if you're Assuming AWS Role";
         throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
       }

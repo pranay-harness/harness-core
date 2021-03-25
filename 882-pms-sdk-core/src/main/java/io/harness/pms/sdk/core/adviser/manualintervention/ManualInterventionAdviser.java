@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.adviser.manualintervention;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -51,7 +51,7 @@ public class ManualInterventionAdviser implements Adviser {
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserParameters parameters = extractParameters(advisingEvent);
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
-    if (failureInfo != null && parameters != null && !isEmpty(failureInfo.getFailureTypesList())) {
+    if (failureInfo != null && parameters != null && !hasNone(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
@@ -60,7 +60,7 @@ public class ManualInterventionAdviser implements Adviser {
 
   private ManualInterventionAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
     byte[] adviserParameters = advisingEvent.getAdviserParameters();
-    if (isEmpty(adviserParameters)) {
+    if (hasNone(adviserParameters)) {
       return null;
     }
     return (ManualInterventionAdviserParameters) kryoSerializer.asObject(adviserParameters);

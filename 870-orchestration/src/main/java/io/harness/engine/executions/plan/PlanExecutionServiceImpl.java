@@ -1,7 +1,7 @@
 package io.harness.engine.executions.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -123,7 +123,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     return Ambiance.newBuilder()
         .setPlanExecutionId(planExecution.getUuid())
         .putAllSetupAbstractions(
-            isEmpty(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
+            hasNone(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
         .setMetadata(
             planExecution.getMetadata() == null ? ExecutionMetadata.newBuilder().build() : planExecution.getMetadata())
         .build();

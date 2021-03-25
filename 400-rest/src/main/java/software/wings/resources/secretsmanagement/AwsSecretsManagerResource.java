@@ -1,7 +1,7 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
@@ -65,8 +65,8 @@ public class AwsSecretsManagerResource {
     if (!featureFlagService.isEnabled(FeatureName.AWS_SM_ASSUME_IAM_ROLE, accountId)) {
       // none of the below values should be set if Feature is not enabled
       boolean usingAssumeRoleFeatures = secretsManagerConfig.isAssumeIamRoleOnDelegate()
-          || secretsManagerConfig.isAssumeStsRoleOnDelegate() || isNotEmpty(secretsManagerConfig.getDelegateSelectors())
-          || isNotEmpty(secretsManagerConfig.getRoleArn()) || isNotEmpty(secretsManagerConfig.getExternalName());
+          || secretsManagerConfig.isAssumeStsRoleOnDelegate() || hasSome(secretsManagerConfig.getDelegateSelectors())
+          || hasSome(secretsManagerConfig.getRoleArn()) || hasSome(secretsManagerConfig.getExternalName());
       if (usingAssumeRoleFeatures) {
         throw new SecretManagementException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR,
             "Feature flag " + FeatureName.AWS_SM_ASSUME_IAM_ROLE + " is not enabled for account:" + accountId,

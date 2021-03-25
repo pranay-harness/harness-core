@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.TaskType.CUSTOM_APM_COLLECT_METRICS_V2;
 
@@ -123,7 +123,7 @@ public class CustomAPMDataCollectionInfo extends MetricsDataCollectionInfo {
 
   @JsonIgnore
   public boolean isCanaryUrlPresent() {
-    return isNotEmpty(canaryMetricInfos);
+    return hasSome(canaryMetricInfos);
   }
 
   @Override

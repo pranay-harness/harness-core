@@ -2,7 +2,7 @@ package io.harness.cvng.migration.list;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -59,7 +59,7 @@ public class AddDeploymentMonitoringSourcePerpetualTask implements CVNGMigration
                     Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()));
         oldToNewWorkerIdmap.put(
             monitoringSourcePerpetualTask.getDataCollectionWorkerId(), getNewWorkerId(monitoringSourcePerpetualTask));
-        if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
+        if (hasSome(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
           dataCollectionTaskService.deletePerpetualTasks(
               monitoringSourcePerpetualTask.getAccountId(), monitoringSourcePerpetualTask.getPerpetualTaskId());
         }

@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQUEST_PARAM;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -380,7 +380,7 @@ public class AwsCodeDeployState extends State {
       commandStateExecutionData.setCodeDeployDeploymentId(commandExecutionData.getDeploymentId());
       commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
 
-      if (isNotEmpty(instanceElements)) {
+      if (hasSome(instanceElements)) {
         // This sweeping element will be used by verification or other consumers.
         List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(instanceElements);
         boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);

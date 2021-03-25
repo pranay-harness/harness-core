@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
@@ -87,7 +87,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
           buildSourceExecutionResponse, artifactStreamId);
     }
     try {
-      if (isEmpty(builds)) {
+      if (hasNone(builds)) {
         log.warn(
             "ASYNC_ARTIFACT_CLEANUP: Skipping because of empty builds list for accountId:[{}] artifactStreamId:[{}]",
             accountId, artifactStreamId);
@@ -95,7 +95,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       }
 
       List<Artifact> artifacts = processBuilds(artifactStream);
-      if (isNotEmpty(artifacts)) {
+      if (hasSome(artifacts)) {
         log.info("[{}] artifacts deleted for artifactStreamId {}",
             artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
       }
@@ -177,7 +177,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
             featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifactStream.getAccountId()));
     Map<String, BuildDetails> buildDetailsMap;
-    if (isEmpty(buildDetails)) {
+    if (hasNone(buildDetails)) {
       buildDetailsMap = Collections.emptyMap();
     } else {
       Function<BuildDetails, String> buildDetailsKeyFn = ArtifactCollectionUtils.getBuildDetailsKeyFn(
@@ -206,7 +206,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
   private void cleanupDockerArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
     Set<String> buildNumbers =
-        isEmpty(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getNumber).collect(Collectors.toSet());
+        hasNone(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
     try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
@@ -216,7 +216,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       }
     }
 
-    if (isEmpty(deletedArtifactsNew)) {
+    if (hasNone(deletedArtifactsNew)) {
       return;
     }
 
@@ -226,7 +226,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
   private void cleanupAMIArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
     Set<String> revisionNumbers =
-        isEmpty(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getRevision).collect(Collectors.toSet());
+        hasNone(builds) ? new HashSet<>() : builds.stream().map(BuildDetails::getRevision).collect(Collectors.toSet());
     List<Artifact> artifactsToBeDeleted = new ArrayList<>();
     try (HIterator<Artifact> artifacts = new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
@@ -236,7 +236,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       }
     }
 
-    if (isEmpty(artifactsToBeDeleted)) {
+    if (hasNone(artifactsToBeDeleted)) {
       return;
     }
 

@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -95,7 +95,7 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
 
     GraphQLContext context = (GraphQLContext) contextObj;
     String accountId = context.get("accountId");
-    if (isEmpty(accountId)) {
+    if (hasNone(accountId)) {
       throw new WingsException("Cannot extract accountId from environment");
     }
 

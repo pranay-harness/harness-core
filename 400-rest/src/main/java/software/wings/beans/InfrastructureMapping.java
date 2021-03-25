@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
@@ -428,7 +428,7 @@ public abstract class InfrastructureMapping
   }
 
   public String getDisplayName() {
-    return isNotEmpty(displayName) ? displayName : name;
+    return hasSome(displayName) ? displayName : name;
   }
 
   @Data

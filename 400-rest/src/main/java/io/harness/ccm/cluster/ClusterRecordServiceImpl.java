@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
@@ -84,7 +84,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   @Override
   public List<ClusterRecord> list(String accountId, String clusterType, String cloudProviderId) {
     List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, false);
-    if (isNotEmpty(clusterType)) {
+    if (hasSome(clusterType)) {
       clusterRecords = clusterRecords.stream()
                            .filter(clusterRecord -> clusterRecord.getCluster().getClusterType().equals(clusterType))
                            .collect(Collectors.toList());
@@ -179,7 +179,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     switch (infraMappingInfrastructureProvider.getInfrastructureType()) {
       case AWS_ECS:
         AwsEcsInfrastructure ecsInfrastructure = (AwsEcsInfrastructure) infraMappingInfrastructureProvider;
-        if (isNotEmpty(ecsInfrastructure.getClusterName())) {
+        if (hasSome(ecsInfrastructure.getClusterName())) {
           cluster = EcsCluster.builder()
                         .cloudProviderId(ecsInfrastructure.getCloudProviderId())
                         .region(ecsInfrastructure.getRegion())
@@ -244,7 +244,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
         break;
       case AWS_ECS:
         EcsInfrastructureMapping ecsInfraMapping = (EcsInfrastructureMapping) infraMapping;
-        if (isNotEmpty(ecsInfraMapping.getClusterName())) {
+        if (hasSome(ecsInfraMapping.getClusterName())) {
           cluster = EcsCluster.builder()
                         .cloudProviderId(ecsInfraMapping.getComputeProviderSettingId())
                         .region(ecsInfraMapping.getRegion())

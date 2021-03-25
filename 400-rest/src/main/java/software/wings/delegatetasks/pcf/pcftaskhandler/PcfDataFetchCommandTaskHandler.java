@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
@@ -121,7 +121,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
                 applicationSummary -> pcfCommandTaskHelper.getRevisionFromReleaseName(applicationSummary.getName())))
             .collect(toList());
 
-    if (isNotEmpty(applicationSummaries)) {
+    if (hasSome(applicationSummaries)) {
       count = applicationSummaries.get(applicationSummaries.size() - 1).getRunningInstances();
     }
 

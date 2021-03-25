@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -41,7 +41,7 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
    */
   public String getUrl() {
     try {
-      return isEmpty(url) ? "" : url.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
+      return hasNone(url) ? "" : url.replaceAll("`", URLEncoder.encode("`", "UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new WingsException("Unsupported encoding exception while encoding backticks in " + url);
     }

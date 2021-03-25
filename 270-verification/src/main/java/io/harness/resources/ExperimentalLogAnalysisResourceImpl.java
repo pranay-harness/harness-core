@@ -1,6 +1,7 @@
 package io.harness.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -76,7 +77,7 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
       if (workflowExecution != null) {
         mlAnalysisResponse.setWorkflowExecutionId(workflowExecution.getUuid());
         mlAnalysisResponse.setEnvId(
-            isEmpty(workflowExecution.getEnvId()) ? "build-workflow" : workflowExecution.getEnvId());
+            hasNone(workflowExecution.getEnvId()) ? "build-workflow" : workflowExecution.getEnvId());
       }
 
       mlAnalysisResponse.setAppId(applicationId);

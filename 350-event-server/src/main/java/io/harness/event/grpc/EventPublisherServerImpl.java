@@ -1,7 +1,7 @@
 package io.harness.event.grpc;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
@@ -64,14 +64,14 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
           .map(publishMessage -> toPublishedMessage(accountId, publishMessage))
           .filter(Objects::nonNull)
           .forEach(publishedMessage -> {
-            if (isEmpty(publishedMessage.getCategory())) {
+            if (hasNone(publishedMessage.getCategory())) {
               withoutCategory.add(publishedMessage);
             } else {
               withCategory.add(publishedMessage);
             }
           });
 
-      if (isNotEmpty(withoutCategory)) {
+      if (hasSome(withoutCategory)) {
         try {
           hPersistence.saveIgnoringDuplicateKeys(withoutCategory);
         } catch (Exception e) {

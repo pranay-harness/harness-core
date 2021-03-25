@@ -5,8 +5,8 @@ import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.toDBO;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.Role;
@@ -81,7 +81,7 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
     }
 
-    if (!isEmpty(scopeIdentifier)) {
+    if (!hasNone(scopeIdentifier)) {
       Scope scope = scopeService.buildScopeFromScopeIdentifier(scopeIdentifier);
       criteria.and(RoleDBOKeys.allowedScopeLevels).is(scope.getLevel().toString());
     }
@@ -144,7 +144,7 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(roleFilter.getScopeIdentifier());
     }
 
-    if (isNotEmpty(roleFilter.getScopeIdentifier()) && !roleFilter.isIncludeChildScopes()) {
+    if (hasSome(roleFilter.getScopeIdentifier()) && !roleFilter.isIncludeChildScopes()) {
       Scope scope = scopeService.buildScopeFromScopeIdentifier(roleFilter.getScopeIdentifier());
       criteria.and(RoleDBOKeys.allowedScopeLevels).is(scope.getLevel().toString());
     }

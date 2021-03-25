@@ -9,7 +9,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.joining;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
@@ -33,7 +33,7 @@ public class ExceptionLogger {
 
   protected static String calculateErrorMessage(WingsException exception, List<ResponseMessage> responseMessages) {
     return Stream.of(calculateResponseMessage(responseMessages), "Exception occurred: " + exception.getMessage())
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .collect(joining("\n"));
   }
 

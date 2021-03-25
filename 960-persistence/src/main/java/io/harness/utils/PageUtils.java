@@ -1,6 +1,6 @@
 package io.harness.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -19,7 +19,7 @@ public class PageUtils {
   private final String COMMA_SEPARATOR = ",";
 
   public static Pageable getPageRequest(int page, int size, List<String> sort) {
-    if (isEmpty(sort)) {
+    if (hasNone(sort)) {
       return org.springframework.data.domain.PageRequest.of(page, size);
     }
 

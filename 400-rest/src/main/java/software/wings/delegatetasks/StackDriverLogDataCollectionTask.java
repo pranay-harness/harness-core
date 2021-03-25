@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -132,14 +132,14 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
             log.info("Total no. of log records found : {}", entries.size());
             for (LogEntry entry : entries) {
               long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
-              String logMessageField = isNotEmpty(dataCollectionInfo.getLogMessageField())
+              String logMessageField = hasSome(dataCollectionInfo.getLogMessageField())
                   ? dataCollectionInfo.getLogMessageField()
                   : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
               String logMessage = JsonPath.read(entry.toString(), logMessageField);
               String host = JsonPath.read(entry.toString(),
-                  isNotEmpty(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
-                                                                    : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
-              if (isEmpty(logMessage) || isEmpty(host)) {
+                  hasSome(dataCollectionInfo.getHostnameField()) ? dataCollectionInfo.getHostnameField()
+                                                                 : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
+              if (hasNone(logMessage) || hasNone(host)) {
                 log.error(
                     "either log message or host is empty for stateExId {} cvConfigId {}. Log message field: {} host field: {} entry: {} ",
                     dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getCvConfigId(), logMessageField,

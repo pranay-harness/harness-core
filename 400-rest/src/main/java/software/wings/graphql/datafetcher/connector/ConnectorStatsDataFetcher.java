@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -38,7 +38,7 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
       List<QLConnectorAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
-    if (isNotEmpty(groupBy)) {
+    if (hasSome(groupBy)) {
       groupByList = groupBy.stream()
                         .filter(g -> g != null && g.getTypeAggregation() != null)
                         .map(g -> g.getTypeAggregation().name())

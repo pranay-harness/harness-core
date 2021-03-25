@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -66,7 +66,7 @@ public class AWS4SignerForAuthorizationHeader {
     }
     headers.put("Host", hostHeader);
 
-    if (isNotEmpty(awsToken)) {
+    if (hasSome(awsToken)) {
       headers.put("X-Amz-Security-Token", awsToken);
     }
 
@@ -130,7 +130,7 @@ public class AWS4SignerForAuthorizationHeader {
    * headers must be included in the signing process.
    */
   private static String getCanonicalizedHeaderString(Map<String, String> headers) {
-    if (isEmpty(headers)) {
+    if (hasNone(headers)) {
       return "";
     }
 
@@ -176,13 +176,13 @@ public class AWS4SignerForAuthorizationHeader {
       return "/";
     }
     String path = endpoint.getPath();
-    if (isEmpty(path)) {
+    if (hasNone(path)) {
       return "/";
     }
 
     String encodedPath = urlEncode(path, true);
     String baseUrl = endpoint.getProtocol() + "://" + endpoint.getAuthority();
-    if (isNotEmpty(encodedPath) && encodedPath.charAt(0) == '/') {
+    if (hasSome(encodedPath) && encodedPath.charAt(0) == '/') {
       return withEndpoint ? baseUrl + encodedPath : encodedPath;
     } else {
       return withEndpoint ? baseUrl + "/".concat(encodedPath) : "/".concat(encodedPath);

@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
@@ -180,9 +180,8 @@ public class AwsAmiSwitchRoutesState extends State {
                       .parameters(new Object[] {routesRequest})
                       .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
                       .build())
-            .tags(isNotEmpty(routesRequest.getAwsConfig().getTag())
-                    ? singletonList(routesRequest.getAwsConfig().getTag())
-                    : null)
+            .tags(hasSome(routesRequest.getAwsConfig().getTag()) ? singletonList(routesRequest.getAwsConfig().getTag())
+                                                                 : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())

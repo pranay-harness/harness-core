@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.secretManager;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -57,7 +57,7 @@ public class SecretManagersDataFetcher
 
   @Override
   protected void populateFilters(List<QLSecretManagerFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
     filters.forEach(filter -> {

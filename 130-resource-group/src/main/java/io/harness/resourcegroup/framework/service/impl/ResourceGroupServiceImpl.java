@@ -1,7 +1,7 @@
 package io.harness.resourcegroup.framework.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ACCOUNT;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
@@ -151,7 +151,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PageRequest pageRequest, String searchTerm) {
-    if (isEmpty(pageRequest.getSortOrders())) {
+    if (hasNone(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
@@ -175,7 +175,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
-    if (TRUE.equals(resourceGroup.getFullScopeSelected()) && isNotEmpty(resourceGroup.getResourceSelectors())) {
+    if (TRUE.equals(resourceGroup.getFullScopeSelected()) && hasSome(resourceGroup.getResourceSelectors())) {
       return false;
     }
 

@@ -2,8 +2,8 @@ package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.nullIfEmpty;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -18,7 +18,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MetadataUtils {
   public <T, U> List<U> map(List<T> input, Function<T, U> fn) {
-    if (isEmpty(input)) {
+    if (hasNone(input)) {
       return null;
     }
 
@@ -26,7 +26,7 @@ public class MetadataUtils {
   }
 
   public <T> List<T> dedup(List<T> input, Function<T, String> fn) {
-    if (isNotEmpty(input)) {
+    if (hasSome(input)) {
       HashSet<String> seen = new HashSet<>();
       input.removeIf(el -> {
         String value = fn.apply(el);
@@ -38,7 +38,7 @@ public class MetadataUtils {
   }
 
   public <T extends GraphNodeVisitable> void acceptMultiple(GraphNodeVisitor visitor, List<T> graphNodes) {
-    if (isEmpty(graphNodes)) {
+    if (hasNone(graphNodes)) {
       return;
     }
 

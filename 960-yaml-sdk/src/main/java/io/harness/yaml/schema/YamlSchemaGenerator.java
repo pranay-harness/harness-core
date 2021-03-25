@@ -1,8 +1,8 @@
 package io.harness.yaml.schema;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.BOOL_TYPE_NODE;
@@ -224,23 +224,23 @@ public class YamlSchemaGenerator {
       final SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo = swaggerDefinitionsMetaInfoMap.get(name);
       List<ObjectNode> allOfNodeContents = new ArrayList<>();
       // conditionals
-      if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
+      if (!hasNone(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
         addConditionalAndCleanupFields(swaggerDefinitionsMetaInfoMap, mapper, name, value, allOfNodeContents);
       }
       // oneof mapping
-      if (!isEmpty(swaggerDefinitionsMetaInfo.getOneOfMappings())) {
+      if (!hasNone(swaggerDefinitionsMetaInfo.getOneOfMappings())) {
         addExtraRequiredNodes(mapper, swaggerDefinitionsMetaInfo, allOfNodeContents);
       }
       // field multiple property
-      if (!isEmpty(swaggerDefinitionsMetaInfo.getFieldPossibleTypes())) {
+      if (!hasNone(swaggerDefinitionsMetaInfo.getFieldPossibleTypes())) {
         addPossibleValuesInFields(mapper, value, swaggerDefinitionsMetaInfo);
       }
       // enum property
-      if (isNotEmpty(swaggerDefinitionsMetaInfo.getFieldEnumData())) {
+      if (hasSome(swaggerDefinitionsMetaInfo.getFieldEnumData())) {
         addEnumProperty(value, swaggerDefinitionsMetaInfo.getFieldEnumData());
       }
 
-      if (isNotEmpty(allOfNodeContents)) {
+      if (hasSome(allOfNodeContents)) {
         if (value.has(SchemaConstants.ALL_OF_NODE)) {
           final ArrayNode allOfNode = (ArrayNode) value.findValue(SchemaConstants.ALL_OF_NODE);
           allOfNode.addAll(allOfNodeContents);

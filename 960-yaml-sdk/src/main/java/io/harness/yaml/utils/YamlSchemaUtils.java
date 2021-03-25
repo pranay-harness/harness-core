@@ -1,8 +1,8 @@
 package io.harness.yaml.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -65,7 +65,7 @@ public class YamlSchemaUtils {
   public String getSwaggerName(Class<?> clazz) {
     try {
       ApiModel declaredAnnotation = clazz.getDeclaredAnnotation(ApiModel.class);
-      if (!isEmpty(declaredAnnotation.value())) {
+      if (!hasNone(declaredAnnotation.value())) {
         return declaredAnnotation.value();
       }
     } catch (NullPointerException e) {
@@ -82,7 +82,7 @@ public class YamlSchemaUtils {
   public String getSchemaPathForEntityType(EntityType entityType, String schemaBasePath) {
     final String yamlName = entityType.getYamlName();
     String resourcePath = yamlName + File.separator + YamlConstants.SCHEMA_FILE_NAME;
-    return isEmpty(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
+    return hasNone(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
   }
 
   public String getSnippetIndexPathForEntityType(
@@ -96,7 +96,7 @@ public class YamlSchemaUtils {
    */
   public String getFieldName(Field field) {
     if (field.getAnnotation(ApiModelProperty.class) != null
-        && isNotEmpty(field.getAnnotation(ApiModelProperty.class).name())) {
+        && hasSome(field.getAnnotation(ApiModelProperty.class).name())) {
       return field.getAnnotation(ApiModelProperty.class).name();
     }
     if (field.getAnnotation(JsonProperty.class) != null) {
@@ -154,10 +154,10 @@ public class YamlSchemaUtils {
    */
   public JsonSubTypes getJsonSubTypes(Field field) {
     JsonSubTypes annotation = field.getAnnotation(JsonSubTypes.class);
-    if (annotation == null || isEmpty(annotation.value())) {
+    if (annotation == null || hasNone(annotation.value())) {
       annotation = field.getType().getAnnotation(JsonSubTypes.class);
     }
-    if (annotation == null || isEmpty(annotation.value())) {
+    if (annotation == null || hasNone(annotation.value())) {
       return null;
     }
     return annotation;

@@ -1,7 +1,7 @@
 package software.wings.security.encryption.migration;
 
 import static io.harness.beans.FeatureName.ACTIVE_MIGRATION_FROM_AWS_KMS_TO_GCP_KMS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
@@ -92,7 +92,7 @@ public class EncryptedDataAwsKmsToGcpKmsMigrationHandler implements MongoPersist
             "Feature flag {} is enabled globally hence registering EncryptedDataAwsKmsToGcpKmsMigrationHandler iterators",
             ACTIVE_MIGRATION_FROM_AWS_KMS_TO_GCP_KMS);
         filterExpander = getFilterQuery();
-      } else if (!isEmpty(featureFlag.getAccountIds())) {
+      } else if (!hasNone(featureFlag.getAccountIds())) {
         log.info(
             "Feature flag {} is enabled for accounts {} hence registering EncryptedDataAwsKmsToGcpKmsMigrationHandler iterators",
             ACTIVE_MIGRATION_FROM_AWS_KMS_TO_GCP_KMS, featureFlag.getAccountIds().toString());

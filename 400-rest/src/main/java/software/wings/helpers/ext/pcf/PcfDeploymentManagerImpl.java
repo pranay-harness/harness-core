@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
@@ -20,7 +21,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.LogLevel;
 import io.harness.pcf.PcfUtils;
@@ -192,7 +192,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
 
     boolean reachedDesiredState = false;
-    if (EmptyPredicate.isNotEmpty(applicationDetail.getInstanceDetails())) {
+    if (hasSome(applicationDetail.getInstanceDetails())) {
       int count = (int) applicationDetail.getInstanceDetails()
                       .stream()
                       .filter(instanceDetail -> "RUNNING".equals(instanceDetail.getState()))
@@ -417,7 +417,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
     ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
-    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+    if (applicationEnvironments != null && hasSome(applicationEnvironments.getUserProvided())) {
       for (String statusKey : STATUS_ENV_VARIABLES) {
         if (applicationEnvironments.getUserProvided().containsKey(statusKey)
             && HARNESS__ACTIVE__IDENTIFIER.equals(applicationEnvironments.getUserProvided().get(statusKey))) {
@@ -442,7 +442,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   private void removeOldStatusVariableIfExist(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
-    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+    if (applicationEnvironments != null && hasSome(applicationEnvironments.getUserProvided())) {
       Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
       if (userProvided.containsKey(HARNESS__STATUS__INDENTIFIER)) {
         pcfClient.unsetEnvVariablesForApplication(
@@ -456,7 +456,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
     ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
-    if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
+    if (applicationEnvironments != null && hasSome(applicationEnvironments.getUserProvided())) {
       Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
       for (String statusKey : STATUS_ENV_VARIABLES) {
         if (userProvided.containsKey(statusKey)) {

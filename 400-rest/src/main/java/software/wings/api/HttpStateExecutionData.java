@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -142,7 +142,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
     putNotNull(
         executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
-    if (isNotEmpty(headers)) {
+    if (hasSome(headers)) {
       String headerStr = headers.stream()
                              .map(headerPair -> headerPair.getKey() + ":" + headerPair.getValue())
                              .collect(Collectors.joining(","));

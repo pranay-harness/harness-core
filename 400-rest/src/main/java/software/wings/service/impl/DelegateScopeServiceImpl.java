@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -164,15 +164,15 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
         persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate
-                                         -> (isNotEmpty(delegate.getIncludeScopes())
+                                         -> (hasSome(delegate.getIncludeScopes())
                                                 && delegate.getIncludeScopes().stream().anyMatch(
                                                     scope -> scope.getUuid().equals(delegateScopeId)))
-                                             || (isNotEmpty(delegate.getExcludeScopes())
+                                             || (hasSome(delegate.getExcludeScopes())
                                                  && delegate.getExcludeScopes().stream().anyMatch(
                                                      scope -> scope.getUuid().equals(delegateScopeId))))
                                      .map(Delegate::getHostName)
                                      .collect(toList());
-    if (isNotEmpty(delegateNames)) {
+    if (hasSome(delegateNames)) {
       String message = format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
           delegateScope.getName(), Joiner.on(", ").join(delegateNames));
       throw new InvalidRequestException(message, USER);

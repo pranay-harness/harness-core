@@ -1,7 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -700,7 +700,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   }
 
   List<InstanceElement> fetchInstanceElementList(List<K8sPod> podList, boolean treatAllPodsAsNew) {
-    if (isEmpty(podList)) {
+    if (hasNone(podList)) {
       return Collections.emptyList();
     }
 
@@ -941,7 +941,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   }
 
   public Set<String> fetchNamespacesFromK8sPodList(List<K8sPod> k8sPodList) {
-    if (isEmpty(k8sPodList)) {
+    if (hasNone(k8sPodList)) {
       return new HashSet<>();
     }
 

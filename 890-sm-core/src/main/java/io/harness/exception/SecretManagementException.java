@@ -1,9 +1,9 @@
 package io.harness.exception;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 
@@ -43,7 +43,7 @@ public class SecretManagementException extends WingsException {
   public SecretManagementException(
       ErrorCode errorCode, Throwable cause, EnumSet<ReportTarget> reportTargets, Map<String, String> params) {
     super(null, cause, errorCode, Level.ERROR, reportTargets, null);
-    if (EmptyPredicate.isNotEmpty(params)) {
+    if (hasSome(params)) {
       params.forEach(this::param);
     }
   }

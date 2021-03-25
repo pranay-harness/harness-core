@@ -1,6 +1,6 @@
 package io.harness.mongo.iterator;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -133,7 +133,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
             List<Long> nextIterations =
                 ((PersistentIrregularIterable) entity)
                     .recalculateNextIterations(fieldName, schedulingType == IRREGULAR_SKIP_MISSED, throttled);
-            if (isNotEmpty(nextIterations)) {
+            if (hasSome(nextIterations)) {
               persistenceProvider.updateEntityField(entity, nextIterations, clazz, fieldName);
             }
 

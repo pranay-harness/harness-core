@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -27,7 +27,7 @@ public class ConnectorQueryHelper {
   @Inject protected DataFetcherUtils utils;
 
   public void setQuery(List<QLConnectorFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

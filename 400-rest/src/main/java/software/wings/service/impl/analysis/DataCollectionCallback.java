@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
@@ -115,7 +115,7 @@ public class DataCollectionCallback implements NotifyCallback {
   }
 
   private void alertIfNecessary(DataCollectionTaskStatus status, String errorMessage) {
-    if (isEmpty(cvConfigId)) {
+    if (hasNone(cvConfigId)) {
       return;
     }
     final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);

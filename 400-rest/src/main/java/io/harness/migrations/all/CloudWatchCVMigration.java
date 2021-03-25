@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -45,25 +45,25 @@ public class CloudWatchCVMigration implements Migration {
           log.info("running migration for {} ", cloudWatchCVConfiguration);
 
           log.info("running migration for {}", AwsNameSpace.ELB);
-          if (isNotEmpty(cloudWatchCVConfiguration.getLoadBalancerMetrics())) {
+          if (hasSome(cloudWatchCVConfiguration.getLoadBalancerMetrics())) {
             cloudWatchCVConfiguration.getLoadBalancerMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ELB, metrics));
           }
 
           log.info("running migration for {}", AwsNameSpace.ECS);
-          if (isNotEmpty(cloudWatchCVConfiguration.getEcsMetrics())) {
+          if (hasSome(cloudWatchCVConfiguration.getEcsMetrics())) {
             cloudWatchCVConfiguration.getEcsMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.ECS, metrics));
           }
 
           log.info("running migration for {}", AwsNameSpace.LAMBDA);
-          if (isNotEmpty(cloudWatchCVConfiguration.getLambdaFunctionsMetrics())) {
+          if (hasSome(cloudWatchCVConfiguration.getLambdaFunctionsMetrics())) {
             cloudWatchCVConfiguration.getLambdaFunctionsMetrics().forEach(
                 (loadBalancer, metrics) -> cloudWatchService.setStatisticsAndUnit(AwsNameSpace.LAMBDA, metrics));
           }
 
           log.info("running migration for {}", AwsNameSpace.EC2);
-          if (isNotEmpty(cloudWatchCVConfiguration.getEc2Metrics())) {
+          if (hasSome(cloudWatchCVConfiguration.getEc2Metrics())) {
             cloudWatchService.setStatisticsAndUnit(AwsNameSpace.EC2, cloudWatchCVConfiguration.getEc2Metrics());
           }
 

@@ -1,10 +1,10 @@
 package software.wings.search.entities.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.mongo.changestreams.ChangeType;
 
@@ -82,11 +82,11 @@ public class WorkflowChangeHandler implements ChangeHandler {
       EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (EmptyPredicate.isNotEmpty(toBeAddedWorkflowIds)) {
+      if (hasSome(toBeAddedWorkflowIds)) {
         result = searchDao.appendToListInMultipleDocuments(
             WorkflowSearchEntity.TYPE, fieldToUpdate, toBeAddedWorkflowIds, newElement);
       }
-      if (EmptyPredicate.isNotEmpty(toBeDeletedWorkflowIds)) {
+      if (hasSome(toBeDeletedWorkflowIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
                 WorkflowSearchEntity.TYPE, fieldToUpdate, toBeDeletedWorkflowIds, pipeline.getUuid());

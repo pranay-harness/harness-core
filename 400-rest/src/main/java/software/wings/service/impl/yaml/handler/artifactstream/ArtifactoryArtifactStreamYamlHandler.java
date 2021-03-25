@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -23,7 +23,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
-    if (isNotEmpty(bean.getArtifactPattern())) {
+    if (hasSome(bean.getArtifactPattern())) {
       yaml.setArtifactPattern(bean.getArtifactPattern());
     } else {
       yaml.setImageName(bean.getImageName());
@@ -45,7 +45,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     super.toBean(artifactStream, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
     artifactStream.setArtifactPaths(yaml.getArtifactPaths());
-    if (isNotEmpty(yaml.getArtifactPattern())) {
+    if (hasSome(yaml.getArtifactPattern())) {
       artifactStream.setArtifactPattern(yaml.getArtifactPattern());
     } else {
       artifactStream.setImageName(yaml.getImageName());

@@ -2,8 +2,8 @@ package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
@@ -20,7 +20,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 
@@ -139,7 +138,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
               .collect(Collectors.toList())
         : null;
 
-    if (isNotEmpty(artifactSelectionList)) {
+    if (hasSome(artifactSelectionList)) {
       for (ArtifactSelection.Yaml artifactSelectionYAML : artifactSelectionList) {
         if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
           artifactSelectionYAML.setPipelineName(null);
@@ -243,7 +242,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     List<ManifestSelection> manifestSelections = new ArrayList<>();
     boolean helmArtifactEnabled =
         trigger == null || featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId());
-    if (helmArtifactEnabled && isNotEmpty(yaml.getManifestSelections())) {
+    if (helmArtifactEnabled && hasSome(yaml.getManifestSelections())) {
       yaml.getManifestSelections().forEach(manifestSelectionYaml -> {
         if (workflowType == ORCHESTRATION) {
           manifestSelectionYaml.setPipelineName(null);
@@ -305,12 +304,12 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       String accountId, String appId, Pipeline pipeline, List<TriggerVariable> triggerVariables) {
     Map<String, String> workflowVariables = Maps.newLinkedHashMap();
 
-    if (isEmpty(triggerVariables)) {
+    if (hasNone(triggerVariables)) {
       return workflowVariables;
     }
 
     List<Variable> variables = pipeline.getPipelineVariables();
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return workflowVariables;
     }
     for (TriggerVariable variable : triggerVariables) {
@@ -322,7 +321,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         continue;
       }
       String valueForBean = null;
-      if (isNotEmpty(entityType)
+      if (hasSome(entityType)
           && (entityType.equals(INFRASTRUCTURE_DEFINITION.name())
               || entityType.equals(INFRASTRUCTURE_MAPPING.name()))) {
         valueForBean = getValueForInfraVariable(triggerVariables, variable, pipeline, accountId, appId, variableOrg);
@@ -345,7 +344,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     if (infraVarInPipeline != null) {
       Map<String, Object> metadata = infraVarInPipeline.getMetadata();
       // get envId from Metadata
-      if (isNotEmpty(metadata) && metadata.get(Variable.ENV_ID) != null) {
+      if (hasSome(metadata) && metadata.get(Variable.ENV_ID) != null) {
         envId = (String) metadata.get(Variable.ENV_ID);
         return workflowYAMLHelper.getWorkflowVariableValueBean(
             accountId, envId, appId, variable.getEntityType(), variable.getValue(), infraVarInPipeline);
@@ -354,7 +353,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     // look for an env variable in pipeline having infra var as related field and get its value from trigger variables.
     for (Variable var : pipelineVariables) {
       Map<String, Object> metadata = var.getMetadata();
-      if (isNotEmpty(metadata) && ENVIRONMENT == var.obtainEntityType()
+      if (hasSome(metadata) && ENVIRONMENT == var.obtainEntityType()
           && Arrays.asList(var.obtainRelatedField().split(",")).contains(variable.getName())) {
         TriggerVariable envVarInTrigger =
             triggerVariables.stream().filter(t -> t.getName().equals(var.getName())).findFirst().orElse(null);
@@ -416,10 +415,10 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
     notNullCheck("Workflow does not exist " + workflow.getName(), workflow.getOrchestrationWorkflow());
     List<Variable> variables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return workflowVariables;
     }
-    if (isNotEmpty(triggerVariable)) {
+    if (hasSome(triggerVariable)) {
       triggerVariable.forEach((TriggerVariable variable) -> {
         String entityType = variable.getEntityType();
         String variableName = variable.getName();
@@ -439,12 +438,12 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
   private List<TriggerVariable> convertToTriggerYamlVariables(
       String appId, Map<String, String> workflowVariables, List<Variable> userVariables) {
-    if (EmptyPredicate.isEmpty(workflowVariables)) {
+    if (hasNone(workflowVariables)) {
       return null;
     }
     List<TriggerVariable> triggerVariables = new ArrayList<>();
 
-    if (isEmpty(userVariables)) {
+    if (hasNone(userVariables)) {
       userVariables = new ArrayList<>();
     }
 
@@ -462,7 +461,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         String entryValue = entry.getValue();
         triggerVariables.add(workflowVariable);
 
-        if (isNotEmpty(entryValue)) {
+        if (hasSome(entryValue)) {
           String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(appId, entryValue, entityType);
           if (variableValue != null) {
             workflowVariable.setValue(variableValue);
@@ -481,7 +480,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       log.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
           workflow.getUuid(), workflow.getEnvId());
 
-      if (isNotEmpty(variables)) {
+      if (hasSome(variables)) {
         TriggerVariable workflowEnvVariable =
             variables.stream()
                 .filter((TriggerVariable variable) -> ENVIRONMENT.name().equals(variable.getEntityType()))

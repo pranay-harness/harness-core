@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static java.util.stream.Collectors.toList;
@@ -8,7 +9,6 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -111,7 +111,7 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
   @Override
   public List<MetricAlarm> fetchAlarmsByName(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<Alarm> alarms) {
-    if (EmptyPredicate.isEmpty(alarms)) {
+    if (hasNone(alarms)) {
       return Collections.EMPTY_LIST;
     }
 

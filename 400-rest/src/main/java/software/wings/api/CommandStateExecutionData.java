@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -90,7 +90,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
-    if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
+    if (hasSome(appId) && hasSome(activityId) && activityService != null) {
       if (countsByStatuses == null) {
         try {
           List<CommandUnitDetails> commandUnits = activityService.getCommandUnits(appId, activityId);
@@ -161,10 +161,10 @@ public class CommandStateExecutionData extends StateExecutionData {
   public StepExecutionSummary getStepExecutionSummary() {
     CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
     populateStepExecutionSummary(commandStepExecutionSummary);
-    if (isNotEmpty(newInstanceData)) {
+    if (hasSome(newInstanceData)) {
       commandStepExecutionSummary.setNewInstanceData(newInstanceData);
     }
-    if (isNotEmpty(oldInstanceData)) {
+    if (hasSome(oldInstanceData)) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
     if (isNotBlank(namespace)) {

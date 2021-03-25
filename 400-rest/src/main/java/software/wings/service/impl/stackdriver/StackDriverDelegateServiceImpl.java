@@ -1,7 +1,7 @@
 package software.wings.service.impl.stackdriver;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -102,11 +102,11 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
     long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
 
-    if (!isEmpty(setupTestNodeData.getMetricDefinitions())) {
+    if (!hasNone(setupTestNodeData.getMetricDefinitions())) {
       setupTestNodeData.getMetricDefinitions().forEach(metricDefinition -> {
         ListTimeSeriesResponse response = getTimeSeriesResponse(
             monitoring, projectResource, gcpConfig, metricDefinition, startTime, endTime, apiCallLog.copy(), hostName);
-        if (isNotEmpty(response) && isNotEmpty(response.getTimeSeries())) {
+        if (hasSome(response) && hasSome(response.getTimeSeries())) {
           responses.add(response);
           Preconditions.checkState(response.getTimeSeries().size() == 1,
               "Multiple time series values are returned for metric name " + metricDefinition.getMetricName()
@@ -119,7 +119,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(
-            VerificationLoadResponse.builder().isLoadPresent(isNotEmpty(responses)).loadResponse(responses).build())
+            VerificationLoadResponse.builder().isLoadPresent(hasSome(responses)).loadResponse(responses).build())
         .dataForNode(responses)
         .build();
   }
@@ -138,7 +138,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
               .list(projectId)
               .execute()
               .getItems();
-      if (isNotEmpty(regions)) {
+      if (hasSome(regions)) {
         return regions.stream().map(Region::getName).collect(Collectors.toList());
       }
     } catch (Exception e) {
@@ -161,7 +161,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
               .list(projectId, region)
               .execute()
               .getItems();
-      if (isNotEmpty(forwardingRulesByRegion)) {
+      if (hasSome(forwardingRulesByRegion)) {
         return forwardingRulesByRegion.stream().collect(
             Collectors.toMap(ForwardingRule::getIPAddress, ForwardingRule::getName));
       }
@@ -194,7 +194,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       StackDriverMetricDefinition metricDefinition, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
       String hostName) {
     String filter = metricDefinition.getFilter();
-    if (isNotEmpty(hostName)) {
+    if (hasSome(hostName)) {
       filter = CustomDataCollectionUtils.resolveField(filter, "${host}", hostName);
     }
 
@@ -290,7 +290,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
             .loadResponse(VerificationLoadResponse.builder()
-                              .isLoadPresent(isNotEmpty(serviceLevelLoad))
+                              .isLoadPresent(hasSome(serviceLevelLoad))
                               .loadResponse(serviceLevelLoad)
                               .build())
             .build();
@@ -306,24 +306,24 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     }
     List<LogElement> logElements = new ArrayList<>();
     int clusterLabel = 0;
-    if (isNotEmpty(entries)) {
+    if (hasSome(entries)) {
       log.info("Total no. of log records found : {}", entries.size());
       for (LogEntry entry : entries) {
         LogElement logElement;
         try {
           String logMessage = JsonPath.read(entry.toString(),
-              isNotEmpty(setupTestNodeData.getMessageField()) ? setupTestNodeData.getMessageField()
-                                                              : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD);
+              hasSome(setupTestNodeData.getMessageField()) ? setupTestNodeData.getMessageField()
+                                                           : STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD);
           String host = JsonPath.read(entry.toString(),
-              isNotEmpty(setupTestNodeData.getHostnameField()) ? setupTestNodeData.getHostnameField()
-                                                               : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
+              hasSome(setupTestNodeData.getHostnameField()) ? setupTestNodeData.getHostnameField()
+                                                            : STACKDRIVER_DEFAULT_HOST_NAME_FIELD);
 
-          if (isEmpty(host) || isEmpty(logMessage)) {
+          if (hasNone(host) || hasNone(logMessage)) {
             continue;
           }
 
           long timeStamp = new DateTime(entry.getTimestamp()).getMillis();
-          if (isNotEmpty(logMessage)) {
+          if (hasSome(logMessage)) {
             logElement = LogElement.builder()
                              .query(setupTestNodeData.getQuery())
                              .logCollectionMinute((int) TimeUnit.MILLISECONDS.toMinutes(timeStamp))
@@ -344,7 +344,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(VerificationLoadResponse.builder()
-                          .isLoadPresent(isNotEmpty(serviceLevelLoad))
+                          .isLoadPresent(hasSome(serviceLevelLoad))
                           .loadResponse(serviceLevelLoad)
                           .build())
         .dataForNode(logElements)
@@ -393,7 +393,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       request.setFilter(queryField);
       request.setProjectIds(Collections.singletonList(projectId));
       request.setPageSize(fetchNextPage ? 1000 : 10);
-      if (isNotEmpty(nextPageToken)) {
+      if (hasSome(nextPageToken)) {
         request.setPageToken(nextPageToken);
         apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
                                          .name("Next Page Token")
@@ -432,7 +432,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       apiCallLog.addFieldToResponse(HttpStatus.SC_OK, response, ThirdPartyApiCallLog.FieldType.JSON);
       delegateLogService.save(gcpConfig.getAccountId(), apiCallLog);
       nextPageToken = response.getNextPageToken();
-      if (isNotEmpty(response.getEntries())) {
+      if (hasSome(response.getEntries())) {
         logEntries.addAll(response.getEntries());
       }
 
@@ -450,7 +450,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
         }
         break;
       }
-    } while (hasReachedRateLimit || (fetchNextPage && isNotEmpty(response) && isNotEmpty(response.getNextPageToken())));
+    } while (hasReachedRateLimit || (fetchNextPage && hasSome(response) && hasSome(response.getNextPageToken())));
 
     return logEntries;
   }
@@ -503,7 +503,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
                                                     .encryptedDataDetails(encryptionDetails)
                                                     .build(),
         startTime, endTime, true, false);
-    if (isEmpty(logEntries)) {
+    if (hasNone(logEntries)) {
       return null;
     }
     return logEntries.get(0);

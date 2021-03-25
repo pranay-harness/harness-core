@@ -1,6 +1,6 @@
 package io.harness.functional;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -152,7 +152,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.listAppManifests(service.getAppId(), service.getUuid());
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       applicationManifestService.create(applicationManifest);
     } else {
       boolean found = false;

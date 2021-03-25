@@ -1,9 +1,10 @@
 package io.harness.delegate.task.artifacts.gcr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
@@ -48,7 +49,7 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
     if (gcpConnectorDTO.getCredential() != null) {
       if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
         GcpDelegateDetailsDTO delegateDetailsDTO = (GcpDelegateDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
-        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelectors())) {
+        if (hasSome(delegateDetailsDTO.getDelegateSelectors())) {
           return singletonList(
               SelectorCapability.builder().selectors(delegateDetailsDTO.getDelegateSelectors()).build());
         }

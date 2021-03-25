@@ -6,7 +6,7 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.govern.Switch.unhandled;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -105,7 +105,7 @@ public class StateMachineExecutionSimulator {
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
-    if (isEmpty(res)) {
+    if (hasNone(res)) {
       log.error("No service instance found for the ids: {}", serviceInstanceIds);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
@@ -183,7 +183,7 @@ public class StateMachineExecutionSimulator {
     if (state instanceof RepeatState) {
       String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
       List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
-      if (isEmpty(repeatElements)) {
+      if (hasNone(repeatElements)) {
         log.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return;
       }

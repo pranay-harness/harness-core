@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -43,7 +43,7 @@ public class AwsS3HelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       tracker.trackS3Call("List Buckets");
       AmazonS3Client client = getAmazonS3Client(awsConfig);
       List<Bucket> buckets = client.listBuckets();
-      if (isEmpty(buckets)) {
+      if (hasNone(buckets)) {
         return emptyList();
       }
       return buckets.stream().map(Bucket::getName).collect(toList());

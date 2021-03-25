@@ -1,6 +1,7 @@
 package io.harness.testframework.restutils;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
@@ -46,7 +47,7 @@ public class InfraProvisionerRestUtils {
                                 .contentType(ContentType.JSON)
                                 .delete("/infrastructure-provisioners/" + provisionerId)
                                 .as(RestResponse.class);
-    if (EmptyPredicate.isNotEmpty(response.getResponseMessages())) {
+    if (hasSome(response.getResponseMessages())) {
       throw new EmptyRestResponseException(
           "/infrastructure-provisioners/" + provisionerId, String.valueOf(response.getResponseMessages()));
     }

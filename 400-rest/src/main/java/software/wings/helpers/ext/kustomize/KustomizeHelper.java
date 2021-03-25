@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.kustomize;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -19,14 +19,14 @@ public class KustomizeHelper {
     if (config == null) {
       return;
     }
-    if (isNotEmpty(config.getKustomizeDirPath())) {
+    if (hasSome(config.getKustomizeDirPath())) {
       String kustomizeDirPath = config.getKustomizeDirPath().trim();
       kustomizeDirPath = render(
           context, kustomizeDirPath, String.format("Unable to render kustomize directory path : %s", kustomizeDirPath));
       config.setKustomizeDirPath(kustomizeDirPath);
     }
 
-    if (isNotEmpty(config.getPluginRootDir())) {
+    if (hasSome(config.getPluginRootDir())) {
       String pluginRootDir = config.getPluginRootDir().trim();
       pluginRootDir = render(
           context, pluginRootDir, String.format("Unable to render plugin root directory path : %s", pluginRootDir));

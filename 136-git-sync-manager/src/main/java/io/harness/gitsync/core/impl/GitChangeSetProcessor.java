@@ -2,7 +2,7 @@ package io.harness.gitsync.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.gitsync.gitfileactivity.beans.GitFileActivity.Status.SKIPPED;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -126,7 +126,7 @@ public class GitChangeSetProcessor {
   }
 
   private List<GitFileChange> getFileChangesOfCommit(List<GitFileChange> gitFileChanges) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return gitFileChanges;
     }
     return gitFileChanges.stream().filter(change -> !change.isChangeFromAnotherCommit()).collect(toList());
@@ -134,7 +134,7 @@ public class GitChangeSetProcessor {
 
   private void addProcessingCommitDetailsToChangeList(String processingCommitId, Long processingCommitTimeMs,
       String processingCommitMessage, List<GitFileChange> gitFileChanges) {
-    if (isEmpty(gitFileChanges)) {
+    if (hasNone(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> {
@@ -184,7 +184,7 @@ public class GitChangeSetProcessor {
 
   @VisibleForTesting
   void applySyncFromGit(List<GitFileChange> gitFileChangeList) {
-    if (isEmpty(gitFileChangeList)) {
+    if (hasNone(gitFileChangeList)) {
       return;
     }
 

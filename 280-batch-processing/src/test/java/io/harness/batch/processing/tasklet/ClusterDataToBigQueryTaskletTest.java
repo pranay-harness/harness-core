@@ -38,7 +38,6 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
-
 @RunWith(MockitoJUnitRunner.class)
 public class ClusterDataToBigQueryTaskletTest extends CategoryTest {
   public static final String BILLING_DATA = "billing_data";

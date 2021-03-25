@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -76,7 +76,7 @@ public class AddDuplicateFieldToCVFeedbacks implements Migration {
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest = PageRequestBuilder.aPageRequest().build();
     List<CVFeedbackRecord> feedbackRecords = dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest);
     feedbackRecords.forEach(cvFeedbackRecord -> {
-      if (isNotEmpty(cvFeedbackRecord.getAccountId()) && !cvFeedbackRecord.getAccountId().equals(HARNESS_ACCOUNT)) {
+      if (hasSome(cvFeedbackRecord.getAccountId()) && !cvFeedbackRecord.getAccountId().equals(HARNESS_ACCOUNT)) {
         dataStoreService.delete(CVFeedbackRecord.class, cvFeedbackRecord.getUuid());
       }
     });
@@ -110,7 +110,7 @@ public class AddDuplicateFieldToCVFeedbacks implements Migration {
       // get all envs for the app and save those as duplicates
       List<String> envIds = environmentService.getEnvIdsByApp(record.getAppId());
       envIds.remove(envId);
-      if (isNotEmpty(envIds)) {
+      if (hasSome(envIds)) {
         envIds.forEach(environment -> {
           recordList.add(CVFeedbackRecord.builder()
                              .accountId(accountId)

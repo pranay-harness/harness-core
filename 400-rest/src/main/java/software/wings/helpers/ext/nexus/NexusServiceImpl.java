@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
@@ -362,7 +362,7 @@ public class NexusServiceImpl implements NexusService {
   @Override
   public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String groupId, String artifactName, String extension, String classifier) {
-    if (isEmpty(extension) && isEmpty(classifier)) {
+    if (hasNone(extension) && hasNone(classifier)) {
       return true;
     }
     try {

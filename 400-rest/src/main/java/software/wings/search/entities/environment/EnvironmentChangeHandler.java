@@ -1,9 +1,9 @@
 package software.wings.search.entities.environment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.mongo.changestreams.ChangeType;
 
@@ -84,11 +84,11 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       EntityInfo entityInfo = new EntityInfo(workflow.getUuid(), workflow.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (EmptyPredicate.isNotEmpty(toBeAddedEnvIds)) {
+      if (hasSome(toBeAddedEnvIds)) {
         result = searchDao.appendToListInMultipleDocuments(
             EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeAddedEnvIds, newElement);
       }
-      if (EmptyPredicate.isNotEmpty(toBeDeletedEnvIds)) {
+      if (hasSome(toBeDeletedEnvIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
                 EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeDeletedEnvIds, changeEvent.getUuid());

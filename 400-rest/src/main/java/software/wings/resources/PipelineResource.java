@@ -5,7 +5,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 
@@ -83,7 +83,7 @@ public class PipelineResource {
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
       @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
       @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 

@@ -1,11 +1,10 @@
 package io.harness.ng.core.entitysetupusage.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageQueryFilterHelper;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
@@ -138,7 +137,7 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   @Override
   public Boolean flushSave(List<EntitySetupUsage> entitySetupUsage, EntityType entityTypeFromChannel,
       boolean deleteOldReferredByRecords, String accountId) {
-    if (isEmpty(entitySetupUsage)) {
+    if (hasNone(entitySetupUsage)) {
       return true;
     }
     if (deleteOldReferredByRecords) {
@@ -152,7 +151,7 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   }
 
   private Boolean saveMultiple(List<EntitySetupUsage> entitySetupUsages) {
-    if (isEmpty(entitySetupUsages)) {
+    if (hasNone(entitySetupUsages)) {
       return true;
     }
 
@@ -165,7 +164,7 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   public List<EntitySetupUsage> filterSetupUsageByEntityTypes(
       List<EntitySetupUsage> entitySetupUsages, EntityType entityTypeAllowed) {
-    return EmptyPredicate.isEmpty(entitySetupUsages)
+    return hasNone(entitySetupUsages)
         ? Collections.emptyList()
         : entitySetupUsages.stream()
               .filter(entitySetupUsage -> {

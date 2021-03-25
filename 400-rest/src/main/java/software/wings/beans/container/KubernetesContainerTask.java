@@ -1,7 +1,7 @@
 package software.wings.beans.container;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesHelperService.toYaml;
 
@@ -148,7 +148,7 @@ public class KubernetesContainerTask extends ContainerTask {
   @Override
   public void validateAdvanced() {
     // Instantiating doesn't work when service variable expressions are used so only check for placeholder
-    if (isEmpty(getAdvancedConfig())) {
+    if (hasNone(getAdvancedConfig())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args", "Kubernetes advanced configuration is empty.");
     }
@@ -190,7 +190,7 @@ public class KubernetesContainerTask extends ContainerTask {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
 
-      if (isNotEmpty(domainName)) {
+      if (hasSome(domainName)) {
         Pattern pattern = ContainerTask.compileRegexPattern(domainName);
         Matcher matcher = pattern.matcher(configTemplate);
         if (!matcher.find()) {

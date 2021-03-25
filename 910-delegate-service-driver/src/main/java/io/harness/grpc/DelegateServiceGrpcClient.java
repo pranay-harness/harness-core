@@ -1,6 +1,6 @@
 package io.harness.grpc;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
@@ -138,7 +138,7 @@ public class DelegateServiceGrpcClient {
                                                                .setDetails(taskDetails)
                                                                .setForceExecute(forceExecute);
 
-      if (isNotEmpty(capabilities)) {
+      if (hasSome(capabilities)) {
         submitTaskRequestBuilder.addAllCapabilities(
             capabilities.stream()
                 .map(capability
@@ -148,7 +148,7 @@ public class DelegateServiceGrpcClient {
                 .collect(toList()));
       }
 
-      if (isNotEmpty(taskSelectors)) {
+      if (hasSome(taskSelectors)) {
         submitTaskRequestBuilder.addAllSelectors(
             taskSelectors.stream()
                 .map(selector -> TaskSelector.newBuilder().setSelector(selector).build())

@@ -1,8 +1,8 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
@@ -128,7 +128,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
         stateExecutionData.setNewElastigroupName(newElastigroupFromDelegate.getName());
       }
       List<ElastiGroup> groupsToBeDownsized = spotinstTrafficShiftAlbSetupResponse.getElastiGroupsToBeDownsized();
-      if (isNotEmpty(groupsToBeDownsized)) {
+      if (hasSome(groupsToBeDownsized)) {
         ElastiGroup elastigroupToBeDownsized = groupsToBeDownsized.get(0);
         if (elastigroupToBeDownsized != null) {
           if (useCurrentRunningCount) {
@@ -276,10 +276,10 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(elastigroupNamePrefix)) {
+    if (hasNone(elastigroupNamePrefix)) {
       invalidFields.put("elastigroupNamePrefix", "Elastigroup Name is needed");
     }
-    if (isEmpty(lbDetails)) {
+    if (hasNone(lbDetails)) {
       invalidFields.put("lbDetails", "Load balancers are required");
     }
     return invalidFields;

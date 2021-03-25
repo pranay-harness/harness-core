@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.System.currentTimeMillis;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -37,7 +37,7 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
   @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
   public void run() {
     try {
-      if (isNotEmpty(syncTaskWaitMap)) {
+      if (hasSome(syncTaskWaitMap)) {
         Query query = query(where("_id").in(syncTaskWaitMap.keySet()));
         query.fields().include("_id");
         List<String> completedSyncTasks =

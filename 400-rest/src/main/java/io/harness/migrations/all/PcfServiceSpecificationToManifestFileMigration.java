@@ -1,7 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -53,7 +53,7 @@ public class PcfServiceSpecificationToManifestFileMigration implements Migration
         } else {
           List<ManifestFile> manifestFiles = applicationManifestService.getManifestFilesByAppManifestId(
               applicationManifest.getAppId(), applicationManifest.getUuid());
-          needsMigration = isEmpty(manifestFiles);
+          needsMigration = hasNone(manifestFiles);
         }
 
         if (!needsMigration) {

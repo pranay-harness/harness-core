@@ -1,6 +1,6 @@
 package io.harness.pms.plan.creation;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -16,14 +16,14 @@ public class NodeTypeLookupServiceImpl implements NodeTypeLookupService {
   @Override
   public String findNodeTypeServiceName(String nodeType) {
     Map<String, Map<String, Set<String>>> map = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
-    if (isEmpty(map)) {
+    if (hasNone(map)) {
       throw new InvalidRequestException("Supported Types Map is empty");
     }
     for (Map.Entry<String, Map<String, Set<String>>> entry : map.entrySet()) {
       Set<String> supportedNodeTypes = new HashSet<>();
       for (Set<String> stringSet : entry.getValue().values()) {
         supportedNodeTypes.addAll(stringSet);
-        if (isEmpty(supportedNodeTypes)) {
+        if (hasNone(supportedNodeTypes)) {
           continue;
         }
 

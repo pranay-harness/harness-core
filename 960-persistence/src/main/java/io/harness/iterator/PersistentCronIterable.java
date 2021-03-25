@@ -1,7 +1,7 @@
 package io.harness.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -28,7 +28,7 @@ public interface PersistentCronIterable extends PersistentIrregularIterable {
     // Take this item here, before we cleanup the list and potentially make it empty. We would like to align the items
     // based on the last previous one, instead of now, if they depend on each other.
     ZonedDateTime time =
-        isNotEmpty(times) ? Instant.ofEpochMilli(times.get(times.size() - 1)).atZone(ZoneOffset.UTC) : now;
+        hasSome(times) ? Instant.ofEpochMilli(times.get(times.size() - 1)).atZone(ZoneOffset.UTC) : now;
 
     final long epochMilli = now.toInstant().toEpochMilli();
 

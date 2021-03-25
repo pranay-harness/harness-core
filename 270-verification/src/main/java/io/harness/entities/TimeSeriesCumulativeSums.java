@@ -2,7 +2,8 @@ package io.harness.entities;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
@@ -76,7 +77,7 @@ public class TimeSeriesCumulativeSums extends Base implements AccountAccess {
   private String tag;
 
   public void compressMetricSums() {
-    if (isEmpty(transactionMetricSums)) {
+    if (hasNone(transactionMetricSums)) {
       return;
     }
     try {
@@ -88,7 +89,7 @@ public class TimeSeriesCumulativeSums extends Base implements AccountAccess {
   }
 
   public void decompressMetricSums() {
-    if (isEmpty(compressedMetricSums)) {
+    if (hasNone(compressedMetricSums)) {
       return;
     }
     try {

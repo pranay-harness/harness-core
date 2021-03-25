@@ -1,7 +1,8 @@
 package io.harness.jobs;
 
 import static io.harness.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -108,7 +109,7 @@ public class LogMLAnalysisGenerator implements Runnable {
       final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
       final boolean isBaselineCreated =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-          || !isEmpty(lastWorkflowExecutionId);
+          || !hasNone(lastWorkflowExecutionId);
 
       String testInputUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
           + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
@@ -135,7 +136,7 @@ public class LogMLAnalysisGenerator implements Runnable {
           + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&logCollectionMinute=" + logAnalysisMinute
           + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + uuid + "&stateType=" + context.getStateType();
 
-      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+      if (!hasNone(context.getPrevWorkflowExecutionId())) {
         logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
       }
 
@@ -179,7 +180,7 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                 .stateType(context.getStateType());
 
-        if (!isEmpty(feedback_url)) {
+        if (!hasNone(feedback_url)) {
           experimentalAnalysisTaskBuilder.feedback_url(feedback_url);
         }
         if (isBaselineCreated) {
@@ -231,7 +232,7 @@ public class LogMLAnalysisGenerator implements Runnable {
                                 .stateType(context.getStateType())
                                 .analysis_failure_url(failureUrl);
 
-      if (!isEmpty(feedback_url)) {
+      if (!hasNone(feedback_url)) {
         analysisTaskBuilder.feedback_url(feedback_url);
       }
 
@@ -264,7 +265,7 @@ public class LogMLAnalysisGenerator implements Runnable {
 
     final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
     final boolean isBaselineCreated = context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-        || !isEmpty(lastWorkflowExecutionId);
+        || !hasNone(lastWorkflowExecutionId);
 
     String logAnalysisSaveUrl = "/verification/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId

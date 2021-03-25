@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
@@ -97,7 +97,7 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
   protected DataCollectionTaskResult initDataCollection(TaskParameters parameters) {
     dataCollectionInfo = (CustomLogDataCollectionInfo) parameters;
     log.info("Log collection - dataCollectionInfo: {}", dataCollectionInfo);
-    if (!isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
+    if (!hasNone(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
         decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
@@ -243,7 +243,7 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
     }
     private Map<String, String> getStringsToMask() {
       Map<String, String> maskFields = new HashMap<>();
-      if (isNotEmpty(decryptedFields)) {
+      if (hasSome(decryptedFields)) {
         decryptedFields.forEach((k, v) -> { maskFields.put(v, "<" + k + ">"); });
       }
       return maskFields;
@@ -273,7 +273,7 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
         // So we're taking care of both.
         String[] urlAndBody = url.split(URL_BODY_APPENDER);
         url = urlAndBody[0];
-        if (isEmpty(body)) {
+        if (hasNone(body)) {
           bodyStr = urlAndBody.length > 1 ? urlAndBody[1] : "";
         } else {
           bodyStr = JsonUtils.asJson(body);
@@ -286,10 +286,10 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             CustomDataCollectionUtils.resolvedUrl(bodyStr, host, startTime, endTime, dataCollectionInfo.getQuery());
         String bodyToLog = resolvedBodyStr;
         resolvedBodyStr = resolveDollarReferencesOfSecrets(resolvedBodyStr);
-        Map<String, Object> resolvedBody = isNotEmpty(resolvedBodyStr) ? new JSONObject(resolvedBodyStr).toMap() : null;
+        Map<String, Object> resolvedBody = hasSome(resolvedBodyStr) ? new JSONObject(resolvedBodyStr).toMap() : null;
 
         Call<Object> request;
-        if (isNotEmpty(resolvedBody)) {
+        if (hasSome(resolvedBody)) {
           request = getRestClient(dataCollectionInfo.getBaseUrl())
                         .postCollect(resolvedUrl, headersBiMap, optionsBiMap, resolvedBody);
         } else {
@@ -355,7 +355,7 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             List<LogElement> logs = new ArrayList<>();
             String tempHost = dataCollectionInfo.getHosts().iterator().next();
             Map<String, String> additionalHeaders = fetchAdditionalHeaders(dataCollectionInfo);
-            if (isNotEmpty(additionalHeaders)) {
+            if (hasSome(additionalHeaders)) {
               if (dataCollectionInfo.getHeaders() == null) {
                 dataCollectionInfo.setHeaders(new HashMap<>());
               }

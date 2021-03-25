@@ -1,7 +1,7 @@
 package io.harness.redesign.states.http;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -94,7 +94,7 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
                     .putAllValues(ImmutableMap.of("pipelineExecutionId", ambiance.getPlanExecutionId(), "stepId",
                         Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance))))
                     .build());
-    if (isNotEmpty(capabilities)) {
+    if (hasSome(capabilities)) {
       requestBuilder.addAllCapabilities(
           capabilities.stream()
               .map(capability

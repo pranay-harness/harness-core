@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.application;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -37,7 +37,7 @@ public class ApplicationStatsDataFetcher
       List<QLApplicationAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
     final Class entityClass = Application.class;
     final List<String> groupByEntityList = new ArrayList<>();
-    if (isNotEmpty(groupByList)) {
+    if (hasSome(groupByList)) {
       groupByList.forEach(groupBy -> {
         if (groupBy.getEntityAggregation() != null) {
           groupByEntityList.add(groupBy.getEntityAggregation().name());

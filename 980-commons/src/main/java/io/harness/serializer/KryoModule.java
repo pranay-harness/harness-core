@@ -1,6 +1,6 @@
 package io.harness.serializer;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.testing.TestExecution;
 
@@ -34,7 +34,7 @@ public class KryoModule extends AbstractModule {
     Set<Class<? extends KryoRegistrar>> registrars = registrarsProvider.get();
 
     reflectionRegistrars.removeAll(registrars);
-    if (isNotEmpty(reflectionRegistrars)) {
+    if (hasSome(reflectionRegistrars)) {
       throw new IllegalStateException(String.format("You are missing %s", reflectionRegistrars));
     }
   }

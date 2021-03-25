@@ -1,7 +1,7 @@
 package io.harness.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
@@ -369,7 +369,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
                 Set<String> tags = getTags(cvConfiguration.getUuid());
                 List<MLExperiments> experiments = get24x7Experiments(MLAnalysisType.TIME_SERIES.name());
-                if (isEmpty(tags)) {
+                if (hasNone(tags)) {
                   LearningEngineAnalysisTask learningEngineAnalysisTask = createLearningEngineAnalysisTask(
                       accountId, cvConfiguration, analysisStartMinute, endMinute, null);
 
@@ -431,7 +431,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     if (template != null) {
       template.getMetricTemplates().forEach((key, value) -> {
-        if (isNotEmpty(value.getTags())) {
+        if (hasSome(value.getTags())) {
           tags.addAll(value.getTags());
         }
       });
@@ -986,7 +986,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               // there can be a race between finding all the host for a min and le finishing the cluster task and
               // deleting L0 data
-              if (isEmpty(hosts)) {
+              if (hasNone(hosts)) {
                 log.info("For {} minute {} did not find hosts for level {} continuing...", cvConfiguration.getUuid(),
                     logRecordMinute, ClusterLevel.L0);
                 logAnalysisService.saveClusteredLogData(cvConfiguration.getAppId(), cvConfiguration.getUuid(),
@@ -1177,7 +1177,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 Set<String> hosts =
                     logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
                         cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L0, ClusterLevel.H0);
-                if (isNotEmpty(hosts)) {
+                if (hasSome(hosts)) {
                   log.info(
                       "For CV config {} there is still node data clustering is pending for {} for minute {}. Skipping L2 clustering",
                       cvConfiguration.getUuid(), hosts, logRecordMinute);
@@ -1186,7 +1186,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
                 hosts = logAnalysisService.getHostsForMinute(cvConfiguration.getAppId(), LogDataRecordKeys.cvConfigId,
                     cvConfiguration.getUuid(), logRecordMinute, ClusterLevel.L1, ClusterLevel.H1);
-                if (isEmpty(hosts)) {
+                if (hasNone(hosts)) {
                   log.info("For CV config {} there is no clustering data present for minute {}. Skipping L2 clustering",
                       cvConfiguration.getUuid(), logRecordMinute);
                   return;
@@ -1354,7 +1354,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           }
           Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
               logAnalysisService.getUserFeedback(cvConfiguration.getUuid(), null, cvConfiguration.getAppId());
-          boolean areAllFeedbacksEmpty = feedbacks.entrySet().stream().allMatch(entry -> isEmpty(entry.getValue()));
+          boolean areAllFeedbacksEmpty = feedbacks.entrySet().stream().allMatch(entry -> hasNone(entry.getValue()));
 
           if (areAllFeedbacksEmpty) {
             logAnalysisService.createAndUpdateFeedbackAnalysis(
@@ -1804,7 +1804,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     LogDataRecordKeys.cvConfigId, cvConfiguration.getUuid(), l2Min, ClusterLevel.L1, ClusterLevel.H1,
                     ClusterLevel.L0, ClusterLevel.H0);
 
-                if (isNotEmpty(hosts)) {
+                if (hasSome(hosts)) {
                   log.info(
                       "For CV config {} there is still lustering pending for {} for minute {}. Skipping Log Data Analysis",
                       cvConfiguration.getUuid(), hosts, l2Min);
@@ -1916,8 +1916,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .analysis_save_url(getSaveUrlForExperimentalTask(taskId))
             .log_analysis_get_url(logAnalysisGetUrl)
             .ml_analysis_type(MLAnalysisType.LOG_ML)
-            .test_input_url(isEmpty(testInputUrl) ? null : testInputUrl + "&" + IS_EXPERIMENTAL + "=true")
-            .control_input_url(isEmpty(controlInputUrl) ? null : controlInputUrl + "&" + IS_EXPERIMENTAL + "=true")
+            .test_input_url(hasNone(testInputUrl) ? null : testInputUrl + "&" + IS_EXPERIMENTAL + "=true")
+            .control_input_url(hasNone(controlInputUrl) ? null : controlInputUrl + "&" + IS_EXPERIMENTAL + "=true")
             .test_nodes(Sets.newHashSet(DUMMY_HOST_NAME))
             .feature_name("NEURAL_NET")
             .is24x7Task(true)
@@ -1949,7 +1949,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         toBeDeleted.add((ObjectId) next.get(ID_KEY));
       }
     }
-    if (isNotEmpty(toBeDeleted)) {
+    if (hasSome(toBeDeleted)) {
       log.info("deleting locks {}", toBeDeleted);
       collection.remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", toBeDeleted.toArray())));
     }
@@ -1991,7 +1991,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void triggerTimeSeriesAlert(String cvConfigId, double riskScore, long analysisMinute) {
-    if (isEmpty(cvConfigId)) {
+    if (hasNone(cvConfigId)) {
       return;
     }
     final CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
@@ -2042,10 +2042,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public void triggerLogAnalysisAlertIfNecessary(
       String cvConfigId, LogMLAnalysisRecord mlAnalysisResponse, int analysisMinute) {
-    if (isEmpty(cvConfigId)) {
+    if (hasNone(cvConfigId)) {
       return;
     }
-    if (isEmpty(mlAnalysisResponse.getUnknown_clusters())) {
+    if (hasNone(mlAnalysisResponse.getUnknown_clusters())) {
       log.info("No unknown clusters for {} for min {}. No alerts will be triggered");
       return;
     }
@@ -2066,7 +2066,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Map<Integer, LogAnalysisResult> logAnalysisResult = mlAnalysisResponse.getLog_analysis_result();
 
       mlAnalysisResponse.getUnknown_clusters().forEach((clusterLabel, analysisClusterMap) -> {
-        if (isNotEmpty(analysisClusterMap)) {
+        if (hasSome(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
           if (splunkAnalysisCluster.getPriority() == null
@@ -2086,7 +2086,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       });
     } else {
       mlAnalysisResponse.getUnknown_clusters().forEach((clusterLabel, analysisClusterMap) -> {
-        if (isNotEmpty(analysisClusterMap)) {
+        if (hasSome(analysisClusterMap)) {
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
           if (splunkAnalysisCluster.getPriority() == null

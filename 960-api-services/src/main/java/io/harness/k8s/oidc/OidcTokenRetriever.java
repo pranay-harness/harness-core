@@ -1,6 +1,6 @@
 package io.harness.k8s.oidc;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -71,7 +71,7 @@ public class OidcTokenRetriever {
                                  .filter(individualScopeStr -> isOtherThanDefaultNeededScope(individualScopeStr))
                                  .collect(toList());
 
-    if (isNotEmpty(scopeList)) {
+    if (hasSome(scopeList)) {
       scopeList.forEach(individualScopeStr -> stringBuilder.append(SPACE).append(individualScopeStr));
     }
 

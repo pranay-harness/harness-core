@@ -1,7 +1,7 @@
 package io.harness.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
@@ -141,7 +141,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     if (!analysisTask.is24x7Task()) {
       query = query.filter(LearningEngineAnalysisTaskKeys.control_nodes, analysisTask.getControl_nodes());
     }
-    if (isNotEmpty(analysisTask.getTag())) {
+    if (hasSome(analysisTask.getTag())) {
       query = query.filter(LearningEngineAnalysisTaskKeys.tag, analysisTask.getTag());
     }
     LearningEngineAnalysisTask learningEngineAnalysisTask = query.get();
@@ -208,7 +208,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, task24x7);
     }
 
-    if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
+    if (taskTypes.isPresent() && hasSome(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
     }
 
@@ -284,7 +284,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .field(LearningEngineExperimentalAnalysisTaskKeys.retry)
             .lessThan(LearningEngineExperimentalAnalysisTask.RETRIES);
 
-    if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
+    if (taskTypes.isPresent() && hasSome(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
     }
 
@@ -476,11 +476,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
 
     if (analysisTask.is24x7Task()) {
-      Preconditions.checkState(isNotEmpty(analysisTask.getCvConfigId()));
+      Preconditions.checkState(hasSome(analysisTask.getCvConfigId()));
       // TODO figure out and implement what to do for service guard tasks
       return false;
     } else {
-      Preconditions.checkState(isNotEmpty(analysisTask.getState_execution_id()));
+      Preconditions.checkState(hasSome(analysisTask.getState_execution_id()));
     }
     // TODO: Looks like this is not getting called from LE now. Test this once LE start calling this method.
     cvActivityLogService
@@ -556,7 +556,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       serviceId = fieldValue;
     } else if (AnalysisContextKeys.stateExecutionId.equals(fieldName)) {
       serviceId = getServiceIdFromStateExecutionId(fieldValue);
-      if (isEmpty(serviceId)) {
+      if (hasNone(serviceId)) {
         return false;
       }
     } else {
@@ -570,7 +570,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .build();
     List<SupervisedTrainingStatus> trainingStatuses =
         dataStoreService.list(SupervisedTrainingStatus.class, supervisedTrainingStatusPageRequest);
-    if (isNotEmpty(trainingStatuses)) {
+    if (hasSome(trainingStatuses)) {
       if (trainingStatuses.size() > 1) {
         log.info("More than one supervised training status found for service {} : {}", serviceId, trainingStatuses);
         return false;

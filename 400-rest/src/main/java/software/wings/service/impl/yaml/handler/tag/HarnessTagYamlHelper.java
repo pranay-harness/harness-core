@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.tag;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -59,7 +59,7 @@ public class HarnessTagYamlHelper {
     Map<String, String> harnessTags = new LinkedHashMap<>();
     tagLinks.forEach(harnessTagLink -> harnessTags.put(harnessTagLink.getKey(), harnessTagLink.getValue()));
 
-    if (isNotEmpty(harnessTags)) {
+    if (hasSome(harnessTags)) {
       yaml.setTags(harnessTags);
     }
   }
@@ -81,13 +81,13 @@ public class HarnessTagYamlHelper {
 
     String accountId = changeContext.getChange().getAccountId();
     String appId = ((ApplicationAccess) entity).getAppId();
-    if (isEmpty(appId)) {
+    if (hasNone(appId)) {
       appId = GLOBAL_APP_ID;
     }
 
     BaseEntityYaml yaml = (BaseEntityYaml) changeContext.getYaml();
     Map<String, String> tagsFromYaml = yaml.getTags();
-    if (isEmpty(tagsFromYaml)) {
+    if (hasNone(tagsFromYaml)) {
       tagsFromYaml = new HashMap<>();
     }
 
@@ -144,7 +144,7 @@ public class HarnessTagYamlHelper {
 
     // We don't want to generate multiple yaml changeSets. Once all the tags are processed, then push to git
     // Don't push to git if nothing changed. Avoid generating unnecessary changesets
-    if (isEmpty(tagsToBeAdded) && isEmpty(tagsToBeRemoved)) {
+    if (hasNone(tagsToBeAdded) && hasNone(tagsToBeRemoved)) {
       return;
     }
 
@@ -176,14 +176,14 @@ public class HarnessTagYamlHelper {
   public List<HarnessTagAbstractYaml> getHarnessTagsYamlList(List<HarnessTag> harnessTags) {
     List<HarnessTagAbstractYaml> harnessTagsYamlList = new ArrayList<>();
 
-    if (isEmpty(harnessTags)) {
+    if (hasNone(harnessTags)) {
       return harnessTagsYamlList;
     }
 
     for (HarnessTag harnessTag : harnessTags) {
       List<String> allowedValues = new ArrayList<>();
 
-      if (isNotEmpty(harnessTag.getAllowedValues())) {
+      if (hasSome(harnessTag.getAllowedValues())) {
         allowedValues = new ArrayList<>(harnessTag.getAllowedValues());
       }
 
@@ -199,7 +199,7 @@ public class HarnessTagYamlHelper {
     Map<String, Set<String>> currentTagsMap = new HashMap<>();
     for (HarnessTag harnessTag : currentTags) {
       Set<String> allowedValues = new HashSet<>();
-      if (isNotEmpty(harnessTag.getAllowedValues())) {
+      if (hasSome(harnessTag.getAllowedValues())) {
         allowedValues = harnessTag.getAllowedValues();
       }
 
@@ -208,10 +208,10 @@ public class HarnessTagYamlHelper {
 
     List<HarnessTagAbstractYaml> updatedTags = yaml.getTag();
     Map<String, Set<String>> updatedTagsMap = new HashMap<>();
-    if (isNotEmpty(updatedTags)) {
+    if (hasSome(updatedTags)) {
       for (HarnessTagAbstractYaml harnessTagAbstractYaml : updatedTags) {
         Set<String> allowedValues = new HashSet<>();
-        if (isNotEmpty(harnessTagAbstractYaml.getAllowedValues())) {
+        if (hasSome(harnessTagAbstractYaml.getAllowedValues())) {
           allowedValues = new HashSet<>(harnessTagAbstractYaml.getAllowedValues());
         }
 
@@ -260,7 +260,7 @@ public class HarnessTagYamlHelper {
   public void deleteTags(Yaml yaml, String accountId, boolean syncFromGit) {
     List<HarnessTagAbstractYaml> tags = yaml.getTag();
 
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       for (HarnessTagAbstractYaml harnessTagAbstractYaml : tags) {
         harnessTagService.deleteTag(accountId, harnessTagAbstractYaml.getName(), syncFromGit);
       }

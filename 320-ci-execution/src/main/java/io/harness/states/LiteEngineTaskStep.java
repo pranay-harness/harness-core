@@ -2,7 +2,7 @@ package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -164,7 +164,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       } else {
         ImageDetails imageDetails = serviceContainer.getContainerImageDetails().getImageDetails();
         String image = imageDetails.getName();
-        if (isEmpty(imageDetails.getTag())) {
+        if (hasNone(imageDetails.getTag())) {
           image += format(":%s", imageDetails.getTag());
         }
         serviceDependencyList.add(ServiceDependency.builder()

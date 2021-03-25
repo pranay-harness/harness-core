@@ -14,8 +14,8 @@ import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -99,7 +99,7 @@ public class GraphRenderer {
   }
 
   static ExecutionStatus aggregateStatus(List<ExecutionStatus> statuses) {
-    if (isEmpty(statuses)) {
+    if (hasNone(statuses)) {
       return null;
     }
 
@@ -183,7 +183,7 @@ public class GraphRenderer {
 
     messages = messages.stream().distinct().collect(toList());
 
-    if (isEmpty(messages)) {
+    if (hasNone(messages)) {
       return null;
     }
 
@@ -414,7 +414,7 @@ public class GraphRenderer {
     }
 
     void populateParentAndPreviousForSubGraph() {
-      if (isEmpty(instanceIdMap)) {
+      if (hasNone(instanceIdMap)) {
         return;
       }
       for (StateExecutionInstance instance : instanceIdMap.values()) {
@@ -423,7 +423,7 @@ public class GraphRenderer {
     }
 
     GraphNode generateHierarchyNode() {
-      if (isEmpty(instanceIdMap)) {
+      if (hasNone(instanceIdMap)) {
         return null;
       }
 
@@ -526,7 +526,7 @@ public class GraphRenderer {
             .hasInspection(instance.isHasInspection())
             .selectionLogsTrackingForTasksEnabled(instance.isSelectionLogsTrackingForTasksEnabled());
 
-    if (isNotEmpty(instance.getDelegateTasksDetails())) {
+    if (hasSome(instance.getDelegateTasksDetails())) {
       instance.getDelegateTasksDetails()
           .stream()
           .map(delegateTaskDetails -> {

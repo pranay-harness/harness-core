@@ -1,7 +1,7 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryptors.KmsEncryptor;
@@ -27,7 +27,7 @@ public class LocalEncryptor implements KmsEncryptor {
 
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
-    if (isEmpty(encryptedRecord.getEncryptionKey())) {
+    if (hasNone(encryptedRecord.getEncryptionKey())) {
       return null;
     }
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptedRecord.getEncryptionKey());

@@ -1,6 +1,6 @@
 package io.harness.openshift;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.openshift.OpenShiftConstants.COMMAND_TIMEOUT;
 import static io.harness.openshift.OpenShiftConstants.OC_BINARY_PATH;
 import static io.harness.openshift.OpenShiftConstants.PROCESS_COMMAND;
@@ -30,7 +30,7 @@ public class OpenShiftClientImpl implements OpenShiftClient {
     StringBuilder processCommand = new StringBuilder(
         PROCESS_COMMAND.replace(OC_BINARY_PATH, ocBinaryPath).replace(TEMPLATE_FILE_PATH, templateFilePath));
 
-    if (isNotEmpty(paramsFilePaths)) {
+    if (hasSome(paramsFilePaths)) {
       for (String paramsFilePath : paramsFilePaths) {
         processCommand.append(" --param-file ").append(paramsFilePath);
       }

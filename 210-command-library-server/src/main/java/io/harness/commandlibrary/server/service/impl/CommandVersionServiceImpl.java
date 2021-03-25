@@ -13,7 +13,7 @@ import io.harness.commandlibrary.server.beans.CommandManifest.CommandManifestKey
 import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnsupportedOperationException;
@@ -121,7 +121,7 @@ public class CommandVersionServiceImpl implements CommandVersionService {
     final Optional<CommandEntity> commandEntityOpt =
         commandService.getCommandEntity(commandStoreName, commandManifest.getName());
 
-    commandEntityOpt.map(CommandEntity::getLatestVersion).filter(EmptyPredicate::isNotEmpty).ifPresent(lastVersion -> {
+    commandEntityOpt.map(CommandEntity::getLatestVersion).filter(HasPredicate::hasSome).ifPresent(lastVersion -> {
       if (versionCompare(lastVersion, commandManifest.getVersion()) > 0) {
         throw new InvalidArgumentsException(
             format("version [%s] should be higher than latest version [%s]", commandManifest.getVersion(), lastVersion),

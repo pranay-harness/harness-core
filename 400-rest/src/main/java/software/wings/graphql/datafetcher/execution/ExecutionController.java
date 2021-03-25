@@ -1,8 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -178,7 +178,7 @@ public class ExecutionController {
   private Artifact getArtifactFromId(QLArtifactIdInput artifactId, Service service) {
     String artifactIdVal = artifactId.getArtifactId();
 
-    if (isEmpty(artifactIdVal)) {
+    if (hasNone(artifactIdVal)) {
       throw new InvalidRequestException("Artifact Id cannot be empty for serviceInput: " + service.getName(), USER);
     }
 
@@ -194,7 +194,7 @@ public class ExecutionController {
   public boolean validateVariableValue(String appId, String value, Variable variable, String envId) {
     EntityType entityType = variable.obtainEntityType();
     if (entityType != null) {
-      if (isEmpty(value)) {
+      if (hasNone(value)) {
         throw new InvalidRequestException("Please provide a non empty value for " + variable.getName(), USER);
       }
       switch (entityType) {
@@ -225,13 +225,13 @@ public class ExecutionController {
   }
 
   public String getEnvId(String envVarName, String appId, List<QLVariableInput> variableInputs) {
-    if (!isEmpty(variableInputs)) {
+    if (!hasNone(variableInputs)) {
       QLVariableInput envVarInput =
           variableInputs.stream().filter(t -> envVarName.equals(t.getName())).findFirst().orElse(null);
       if (envVarInput != null) {
         QLVariableValue envVarValue = envVarInput.getVariableValue();
         notNullCheck(envVarInput.getName() + " has no variable value present", envVarValue, USER);
-        if (isEmpty(envVarValue.getValue())) {
+        if (hasNone(envVarValue.getValue())) {
           throw new InvalidRequestException("Please provide a non empty value for " + envVarInput.getName(), USER);
         }
         switch (envVarValue.getType()) {
@@ -258,12 +258,12 @@ public class ExecutionController {
   private Artifact getArtifactFromBuildNumber(QLBuildNumberInput buildNumber, Service service) {
     String artifactSourceName = buildNumber.getArtifactSourceName();
 
-    if (isEmpty(artifactSourceName)) {
+    if (hasNone(artifactSourceName)) {
       throw new InvalidRequestException(
           "Artifact Source name cannot be empty for serviceInput: " + service.getName(), USER);
     }
 
-    if (isEmpty(buildNumber.getBuildNumber())) {
+    if (hasNone(buildNumber.getBuildNumber())) {
       throw new InvalidRequestException("Build Number cannot be empty for serviceInput: " + service.getName(), USER);
     }
 
@@ -302,12 +302,12 @@ public class ExecutionController {
       QLParameterizedArtifactSourceInput parameterizedArtifactSourceInput, Service service) {
     String artifactSourceName = parameterizedArtifactSourceInput.getArtifactSourceName();
 
-    if (isEmpty(artifactSourceName)) {
+    if (hasNone(artifactSourceName)) {
       throw new InvalidRequestException(
           "Artifact Source name cannot be empty for serviceInput: " + service.getName(), USER);
     }
 
-    if (isEmpty(parameterizedArtifactSourceInput.getBuildNumber())) {
+    if (hasNone(parameterizedArtifactSourceInput.getBuildNumber())) {
       throw new InvalidRequestException("Build Number cannot be empty for serviceInput: " + service.getName(), USER);
     }
 
@@ -320,7 +320,7 @@ public class ExecutionController {
           "Parameterized Artifact Source valueType cannot be used for non-parameterized artifact source");
     } else {
       List<QLParameterValueInput> parameterValueInputs = parameterizedArtifactSourceInput.getParameterValueInputs();
-      if (isEmpty(parameterValueInputs)) {
+      if (hasNone(parameterValueInputs)) {
         throw new InvalidRequestException(
             "Artifact Source is parameterized. However, runtime values for parameters not provided", USER);
       }
@@ -412,7 +412,7 @@ public class ExecutionController {
   void validateRestrictedVarsHaveAllowedValues(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
     Map<String, List<String>> allowedValuesMap =
         workflowVariables.stream()
-            .filter(variable -> isNotEmpty(variable.getAllowedList()))
+            .filter(variable -> hasSome(variable.getAllowedList()))
             .collect(Collectors.toMap(Variable::getName, Variable::getAllowedList));
     variableInputs.stream()
         .filter(input

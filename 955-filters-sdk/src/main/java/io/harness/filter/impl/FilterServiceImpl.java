@@ -1,7 +1,7 @@
 package io.harness.filter.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 import static io.harness.filter.dto.FilterVisibility.ONLY_CREATOR;
 
@@ -166,7 +166,7 @@ public class FilterServiceImpl implements FilterService {
   public Page<FilterDTO> list(int page, int size, String accountId, String orgIdentifier, String projectIdentifier,
       List<String> filterIds, FilterType type) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(filterIds)) {
+    if (hasSome(filterIds)) {
       criteria.and(FilterKeys.identifier).in(filterIds);
     }
     criteria.and(FilterKeys.accountIdentifier).in(accountId);

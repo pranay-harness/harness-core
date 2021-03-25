@@ -1,7 +1,7 @@
 package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -41,7 +41,7 @@ public class ArtifactLabelEvaluator extends LateBindingMap {
              artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
       List<Map<String, String>> labelsList =
           buildSourceService.getLabels(artifactStream, Collections.singletonList(buildNo));
-      if (isNotEmpty(labelsList)) {
+      if (hasSome(labelsList)) {
         Optional<Map<String, String>> labelMap = labelsList.stream().findFirst();
         if (labelMap.isPresent()) {
           dockerLabels.putAll(labelMap.get());

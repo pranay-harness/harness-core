@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -334,7 +334,7 @@ public class TriggerServiceHelper {
 
     List<Map<String, Object>> artifactList = new ArrayList<>();
     List<Map<String, Object>> manifestList = new ArrayList<>();
-    if (isNotEmpty(trigger.getArtifactSelections())) {
+    if (hasSome(trigger.getArtifactSelections())) {
       if (services != null) {
         for (Service service : services) {
           Map<String, Object> artifacts = new HashMap<>();
@@ -342,7 +342,7 @@ public class TriggerServiceHelper {
           artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
           artifacts.put("artifactSourceName", service.getName() + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
           Map<String, Object> parameterMap = addParametersForArtifactStream(service, trigger.getArtifactSelections());
-          if (isNotEmpty(parameterMap)) {
+          if (hasSome(parameterMap)) {
             artifacts.put("artifactVariables", parameterMap);
           }
           artifactList.add(artifacts);
@@ -352,7 +352,7 @@ public class TriggerServiceHelper {
     String placeholder = "_PLACEHOLDER";
     boolean helmArtifactEnabled =
         featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId());
-    if (helmArtifactEnabled && isNotEmpty(trigger.getManifestSelections()) && services != null) {
+    if (helmArtifactEnabled && hasSome(trigger.getManifestSelections()) && services != null) {
       for (Service service : services) {
         Map<String, Object> helmCharts = new HashMap<>();
         helmCharts.put("service", service.getName());
@@ -360,7 +360,7 @@ public class TriggerServiceHelper {
         manifestList.add(helmCharts);
       }
     }
-    if (isNotEmpty(templatizedServiceVars)) {
+    if (hasSome(templatizedServiceVars)) {
       for (String service : templatizedServiceVars) {
         Map<String, Object> artifacts = new HashMap<>();
         Map<String, Object> helmCharts = new HashMap<>();
@@ -401,7 +401,7 @@ public class TriggerServiceHelper {
               format("Artifact stream with id %s not found", artifactSelection.getArtifactStreamId()), artifactStream);
           if (artifactStream.isArtifactStreamParameterized()) {
             List<String> parameters = artifactStream.fetchArtifactStreamParameters();
-            if (isNotEmpty(parameters)) {
+            if (hasSome(parameters)) {
               for (String parameter : parameters) {
                 parameterMap.put(parameter, parameter.toUpperCase() + "_PLACE_HOLDER");
               }
@@ -419,7 +419,7 @@ public class TriggerServiceHelper {
   }
 
   public static void addParameter(List<String> parameters, List<Variable> variables, boolean includeEntityType) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return;
     }
 
@@ -436,14 +436,14 @@ public class TriggerServiceHelper {
 
   public List<String> obtainCollectedArtifactServiceIds(ExecutionArgs executionArgs) {
     final List<Artifact> artifacts = executionArgs.getArtifacts();
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return new ArrayList<>();
     }
 
     Set<String> artifactServiceIds = new HashSet<>();
     artifacts.forEach(artifact -> {
       List<String> serviceIds = artifactStreamServiceBindingService.listServiceIds(artifact.getArtifactStreamId());
-      if (isNotEmpty(serviceIds)) {
+      if (hasSome(serviceIds)) {
         artifactServiceIds.addAll(serviceIds);
       }
     });
@@ -460,7 +460,7 @@ public class TriggerServiceHelper {
     Map<String, String> triggerWorkflowVariableValues =
         trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
     for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
-      if (isNotEmpty(entry.getValue())) {
+      if (hasSome(entry.getValue())) {
         if (entry.getKey().startsWith("ServiceInfra") && ORCHESTRATION == trigger.getWorkflowType()) {
           String infraMappingVarName = entry.getKey();
           String infraDefVarName = infraMappingVarName.replace("ServiceInfra", "InfraDefinition");
@@ -472,7 +472,7 @@ public class TriggerServiceHelper {
     }
     triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
                                         .stream()
-                                        .filter(variableEntry -> isNotEmpty(variableEntry.getValue()))
+                                        .filter(variableEntry -> hasSome(variableEntry.getValue()))
                                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     // Current update variables present in only Workflow
@@ -481,9 +481,9 @@ public class TriggerServiceHelper {
       List<String> updatedVariablesNames = updatedVariables != null
           ? updatedVariables.stream().map(Variable::getName).collect(toList())
           : new ArrayList<>();
-      if (isNotEmpty(triggerWorkflowVariableValues)) {
+      if (hasSome(triggerWorkflowVariableValues)) {
         triggerWorkflowVariableValues.entrySet().removeIf(
-            entry -> !updatedVariablesNames.contains(entry.getKey()) || isEmpty(entry.getValue()));
+            entry -> !updatedVariablesNames.contains(entry.getKey()) || hasNone(entry.getValue()));
       }
     }
     return triggerWorkflowVariableValues;
@@ -503,7 +503,7 @@ public class TriggerServiceHelper {
       throw new WingsException("Invalid Build/Tag Filter", USER);
     }
 
-    if (isEmpty(artifact.getArtifactFiles())) {
+    if (hasNone(artifact.getArtifactFiles())) {
       if (pattern.matcher(artifact.getBuildNo()).find()) {
         log.info(
             "Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter, artifact.getBuildNo());
@@ -515,7 +515,7 @@ public class TriggerServiceHelper {
                                              .stream()
                                              .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
                                              .collect(toList());
-      if (isNotEmpty(artifactFiles)) {
+      if (hasSome(artifactFiles)) {
         log.info("Artifact file names matches with the given artifact filter");
         artifact.setArtifactFiles(artifactFiles);
         return true;

@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 @Slf4j
 public abstract class BatchProcessingTestBase extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();

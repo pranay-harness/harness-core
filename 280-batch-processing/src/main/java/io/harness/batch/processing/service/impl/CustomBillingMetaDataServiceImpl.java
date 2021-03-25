@@ -1,6 +1,6 @@
 package io.harness.batch.processing.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
@@ -73,7 +73,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
       Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
       Map<String, VMInstanceBillingData> awsEC2BillingData =
           bigQueryHelperService.getAwsBillingData(startAt, endTime, awsDataSetId);
-      return isNotEmpty(awsEC2BillingData);
+      return hasSome(awsEC2BillingData);
     }
     return Boolean.TRUE;
   }

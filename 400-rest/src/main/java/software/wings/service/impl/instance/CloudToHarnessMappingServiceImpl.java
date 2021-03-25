@@ -2,7 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
@@ -425,7 +425,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
 
     List<Account> accounts = user.getAccounts();
-    if (isNotEmpty(accounts)) {
+    if (hasSome(accounts)) {
       accounts.forEach(account -> decryptLicenseInfo(account, false));
     }
 
@@ -461,9 +461,9 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
 
     byte[] encryptedLicenseInfo = account.getEncryptedLicenseInfo();
-    if (isNotEmpty(encryptedLicenseInfo)) {
+    if (hasSome(encryptedLicenseInfo)) {
       byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
-      if (isNotEmpty(decryptedBytes)) {
+      if (hasSome(decryptedBytes)) {
         LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
         account.setLicenseInfo(licenseInfo);
       } else {

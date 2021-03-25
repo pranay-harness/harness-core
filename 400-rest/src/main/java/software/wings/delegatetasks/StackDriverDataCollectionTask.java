@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -324,7 +324,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
       List<TimeSeries> dataPoints = response.getTimeSeries();
 
-      if (!isEmpty(dataPoints)) {
+      if (!hasNone(dataPoints)) {
         dataPoints.forEach(datapoint -> datapoint.getPoints().forEach(point -> {
           long timeStamp = stackDriverDelegateService.getTimeStamp(point.getInterval().getEndTime());
           NewRelicMetricDataRecord newRelicMetricDataRecord =
@@ -406,7 +406,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       long startTime = collectionStartTime;
       long endTime = startTime + TimeUnit.MINUTES.toMillis(1);
 
-      if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect())) {
+      if (!hasNone(dataCollectionInfo.getTimeSeriesToCollect())) {
         Map<String, String> hostToGroupNameMap = new HashMap<>();
         if (is24X7Task()) {
           hostToGroupNameMap.put("dummyHost", DEFAULT_GROUP_NAME);

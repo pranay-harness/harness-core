@@ -1,6 +1,6 @@
 package io.harness.ng.core.mapper;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.EMPTY_MAP;
@@ -16,7 +16,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TagMapper {
   public static List<NGTag> convertToList(Map<String, String> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return EMPTY_LIST;
     }
 
@@ -27,7 +27,7 @@ public class TagMapper {
   }
 
   public static Map<String, String> convertToMap(List<NGTag> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return EMPTY_MAP;
     }
 

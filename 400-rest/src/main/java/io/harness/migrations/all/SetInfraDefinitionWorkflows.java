@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
@@ -87,7 +87,7 @@ public class SetInfraDefinitionWorkflows {
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
 
     boolean rollbackModified = false;
-    if (!isEmpty(rollbackWorkflowPhaseIdMap)) {
+    if (!hasNone(rollbackWorkflowPhaseIdMap)) {
       rollbackModified = migrateRollbackWorkflowPhaseIdMap(workflow, rollbackWorkflowPhaseIdMap, workflow.getAppId());
     }
     modified = modified || rollbackModified;
@@ -97,7 +97,7 @@ public class SetInfraDefinitionWorkflows {
       case BLUE_GREEN:
       case ROLLING:
         // check infra templatised in workflow
-        if (!isEmpty(workflow.getTemplateExpressions())
+        if (!hasNone(workflow.getTemplateExpressions())
             && workflow.getTemplateExpressions()
                     .stream()
                     .filter(t -> t.getFieldName().equals(WorkflowKeys.infraMappingId))
@@ -195,7 +195,7 @@ public class SetInfraDefinitionWorkflows {
       }
       modified.add(setInfraDefFromInfraMapping(workflow, workflowPhase));
     }
-    if (isEmpty(modified)) {
+    if (hasNone(modified)) {
       return false;
     }
     return modified.stream().anyMatch(t -> t.equals(true));
@@ -215,7 +215,7 @@ public class SetInfraDefinitionWorkflows {
       }
       modified.add(setInfraDefFromInfraMapping(workflow, workflowPhase));
     }
-    if (isEmpty(modified)) {
+    if (hasNone(modified)) {
       return false;
     }
     return modified.stream().anyMatch(t -> t.equals(true));

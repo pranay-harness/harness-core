@@ -1,6 +1,6 @@
 package io.harness.delegate.task.artifactory;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.artifactory.ArtifactoryServiceImpl;
@@ -31,7 +31,7 @@ public class ArtifactoryValidationHandler implements ConnectorValidationHandler 
     final ArtifactoryConnectorDTO artifactoryConnectorDTO =
         ((ArtifactoryValidationParams) connectorValidationParams).getArtifactoryConnectorDTO();
     final List<EncryptedDataDetail> encryptedDataDetails = artifactoryValidationParams.getEncryptedDataDetails();
-    if (isNotEmpty(artifactoryConnectorDTO.getDecryptableEntities())) {
+    if (hasSome(artifactoryConnectorDTO.getDecryptableEntities())) {
       decryptionService.decrypt(artifactoryConnectorDTO.getDecryptableEntities().get(0), encryptedDataDetails);
     }
     final ArtifactoryConfigRequest artifactoryConfigRequest =

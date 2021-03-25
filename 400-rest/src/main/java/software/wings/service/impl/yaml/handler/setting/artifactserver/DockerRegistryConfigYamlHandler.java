@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
@@ -69,7 +69,7 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
   }
 
   private List<String> getDelegateSelectors(List<String> delegateSelectors) {
-    return isNotEmpty(delegateSelectors)
+    return hasSome(delegateSelectors)
         ? delegateSelectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList())
         : new ArrayList<>();
   }

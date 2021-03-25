@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -41,7 +41,7 @@ public class ServiceNameMigrationIfEmpty implements Migration {
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
           log.info("Services: {} updated", i);
         }
-        if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
+        if (hasNone(service.getName()) || hasNone(service.getName().trim())) {
           bulkWriteOperation
               .find(wingsPersistence.createQuery(Service.class).filter(Service.ID, service.getUuid()).getQueryObject())
               .updateOne(new BasicDBObject("$set",

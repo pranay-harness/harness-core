@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.artifactSource.batch;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
@@ -51,7 +51,7 @@ public class ArtifactSourceBatchDataLoader implements MappedBatchLoader<String, 
   public Map<String, QLArtifactSource> getArtifactSourceMap(@NotNull Set<String> artifactSourceIds) {
     List<ArtifactStream> artifactStreamList = artifactStreamService.listByIds(artifactSourceIds);
     Map<String, QLArtifactSource> result = new HashMap<>();
-    if (isNotEmpty(artifactStreamList)) {
+    if (hasSome(artifactStreamList)) {
       for (ArtifactStream artifactStream : artifactStreamList) {
         if (!artifactStream.isArtifactStreamParameterized()) {
           result.put(artifactStream.getUuid(), populateArtifactSource(artifactStream));

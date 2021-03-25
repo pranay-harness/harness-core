@@ -1,9 +1,9 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -34,7 +34,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
 
   public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities)
       throws ProducerShutdownException {
-    if (EmptyPredicate.isEmpty(referredEntities)) {
+    if (hasNone(referredEntities)) {
       return;
     }
     EntityDetailProtoDTO pipelineDetails =

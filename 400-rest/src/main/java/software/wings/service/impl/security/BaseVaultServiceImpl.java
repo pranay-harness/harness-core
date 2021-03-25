@@ -2,8 +2,8 @@ package software.wings.service.impl.security;
 
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -58,12 +58,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     BaseVaultConfig baseVaultConfig = wingsPersistence.get(BaseVaultConfig.class, vaultConfigId);
     checkNotNull(baseVaultConfig, "No SSH vault config found with id " + vaultConfigId);
 
-    if (isNotEmpty(baseVaultConfig.getAuthToken())) {
+    if (hasSome(baseVaultConfig.getAuthToken())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getAuthToken());
       log.info("Deleted encrypted auth token record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getAuthToken(), baseVaultConfig.getName());
     }
-    if (isNotEmpty(baseVaultConfig.getSecretId())) {
+    if (hasSome(baseVaultConfig.getSecretId())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getSecretId());
       log.info("Deleted encrypted secret id record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getSecretId(), baseVaultConfig.getName());
@@ -146,7 +146,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   public BaseVaultConfig getBaseVaultConfig(String accountId, String entityId) {
-    if (isEmpty(accountId) || isEmpty(entityId)) {
+    if (hasNone(accountId) || hasNone(entityId)) {
       return new VaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
@@ -206,7 +206,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         BaseVaultConfigKeys.authToken, settingVariableTypes);
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
     // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
+    if (hasSome(secretId)) {
       String secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
           BaseVaultConfigKeys.secretId, settingVariableTypes);
       savedVaultConfig.setSecretId(secretIdEncryptedDataId);
@@ -253,8 +253,8 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
 
     // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
-      if (isNotEmpty(secretIdEncryptedDataId)) {
+    if (hasSome(secretId)) {
+      if (hasSome(secretIdEncryptedDataId)) {
         secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
             SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
       } else {

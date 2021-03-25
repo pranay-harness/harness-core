@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -58,7 +58,7 @@ public class BugsnagCVConfigurationYamlHandler extends LogsCVConfigurationYamlHa
           }
         }
       }
-      if (isEmpty(yaml.getOrgName()) || isEmpty(yaml.getProjectName())) {
+      if (hasNone(yaml.getOrgName()) || hasNone(yaml.getProjectName())) {
         final String errMsg = String.format(
             "Bugsnag Organization Name or Project Name is empty during conversion to yaml. OrganizationId %s, ProjectId %s",
             ((BugsnagCVConfiguration) bean).getOrgId(), ((BugsnagCVConfiguration) bean).getProjectId());

@@ -2,8 +2,8 @@ package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -85,7 +85,7 @@ public class TwoFactorAuthenticationManager {
     getDefaultAccount(user).ifPresent(account -> checkIfOperationIsAllowed(account.getUuid()));
 
     settings.setTwoFactorAuthenticationEnabled(true);
-    if (isNotEmpty(user.getAccounts())) {
+    if (hasSome(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.ENABLE_2FA);
         log.info("Auditing enabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
@@ -105,7 +105,7 @@ public class TwoFactorAuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled() && user.getTwoFactorAuthenticationMechanism() != null) {
         log.info("Disabling 2FA for User={}, tfEnabled={}, tfMechanism={}", user.getEmail(),
             user.isTwoFactorAuthenticationEnabled(), user.getTwoFactorAuthenticationMechanism());
-        if (isNotEmpty(user.getAccounts())) {
+        if (hasSome(user.getAccounts())) {
           user.getAccounts().forEach(account -> {
             auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.DISABLE_2FA);
             log.info("Auditing disabling of 2FA for user={} in account={}", user.getName(), account.getAccountName());
@@ -121,7 +121,7 @@ public class TwoFactorAuthenticationManager {
   }
 
   private boolean isAllowed2FADisable(User user) {
-    if (isEmpty(user.getAccounts())) {
+    if (hasNone(user.getAccounts())) {
       return false;
     } else {
       Optional<Account> defaultAccount = getDefaultAccount(user);
@@ -131,7 +131,7 @@ public class TwoFactorAuthenticationManager {
 
   private Optional<Account> getDefaultAccount(User user) {
     String defaultAccountId = user.getDefaultAccountId();
-    if (isEmpty(defaultAccountId)) {
+    if (hasNone(defaultAccountId)) {
       if (user.getAccounts() != null) {
         defaultAccountId = user.getAccounts().get(0).getUuid();
       } else {

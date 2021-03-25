@@ -1,6 +1,6 @@
 package io.harness.gitsync.gittoharness;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.EntityType;
 import io.harness.gitsync.ChangeSet;
@@ -48,7 +48,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     Map<String, FileProcessingResponse> processingResponseMap = initializeProcessingResponse(changeSets);
     String accountId = changeSets.getAccountId();
 
-    if (isEmpty(changeSets.getChangeSetList())) {
+    if (hasNone(changeSets.getChangeSetList())) {
       return ProcessingResponse.newBuilder().setAccountId(accountId).build();
     }
     if (preProcessStage(changeSets, processingResponseMap)) {
@@ -149,7 +149,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
                                                                              .setStatus(status)
                                                                              .setAccountId(responseValue.getAccountId())
                                                                              .setId(responseValue.getId());
-    if (!isEmpty(message)) {
+    if (!hasNone(message)) {
       fileProcessingResponseBuilder.setErrorMsg(message);
     }
     response.put(key, fileProcessingResponseBuilder.build());

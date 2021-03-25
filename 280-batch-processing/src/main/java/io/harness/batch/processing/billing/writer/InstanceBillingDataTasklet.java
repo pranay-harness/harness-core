@@ -4,7 +4,7 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.get
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
@@ -208,12 +208,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
           eksFargateResourceIds.add(instanceData.getInstanceId());
         }
       });
-      if (isNotEmpty(resourceIds)) {
+      if (hasSome(resourceIds)) {
         awsCustomBillingService.updateAwsEC2BillingDataCache(
             new ArrayList<>(resourceIds), startTime, endTime, awsDataSetId);
       }
 
-      if (isNotEmpty(eksFargateResourceIds)) {
+      if (hasSome(eksFargateResourceIds)) {
         log.info("Updating EKS Fargate Cache for Resource Id's List of Size: {}", eksFargateResourceIds.size());
         awsCustomBillingService.updateEksFargateDataCache(
             new ArrayList<>(eksFargateResourceIds), startTime, endTime, awsDataSetId);

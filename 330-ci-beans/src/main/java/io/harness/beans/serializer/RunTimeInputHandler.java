@@ -1,7 +1,7 @@
 package io.harness.beans.serializer;
 
 import static io.harness.common.NGExpressionUtils.matchesInputSetPattern;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -104,7 +104,7 @@ public class RunTimeInputHandler {
   public String resolveStringParameterWithDefaultValue(String fieldName, String stepType, String stepIdentifier,
       ParameterField<String> parameterField, boolean isMandatory, String defaultValue) {
     if (parameterField == null) {
-      if (isMandatory && isEmpty(defaultValue)) {
+      if (isMandatory && hasNone(defaultValue)) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
                 stepIdentifier));
@@ -118,7 +118,7 @@ public class RunTimeInputHandler {
 
     // It only checks input set pattern. Variable can be resolved on lite engine.
     if (parameterField.isExpression() && matchesInputSetPattern(parameterField.getExpressionValue())) {
-      if (isMandatory && isEmpty(defaultValue)) {
+      if (isMandatory && hasNone(defaultValue)) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
                 stepIdentifier));

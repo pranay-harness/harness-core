@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
@@ -127,7 +127,7 @@ public class PcfHelperService {
           validatePcfInstanceSyncResponse(pcfApplicationName, organization, space, pcfCommandExecutionResponse);
 
       // creates the response based on the count of instances it has got.
-      if (isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
+      if (hasSome(pcfInstanceSyncResponse.getInstanceIndices())) {
         return getPcfInstanceInfoList(pcfInstanceSyncResponse);
       }
 

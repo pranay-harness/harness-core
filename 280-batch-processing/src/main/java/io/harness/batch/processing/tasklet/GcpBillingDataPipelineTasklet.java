@@ -1,6 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -67,7 +67,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
           List<BillingDataPipelineRecord> billingDataPipelineRecords =
               billingDataPipelineRecordDao.listByGcpBillingAccountDataset(gcpBillingAccount.getAccountId(),
                   gcpBillingAccount.getBqProjectId(), gcpBillingAccount.getBqDatasetId());
-          return isEmpty(billingDataPipelineRecords);
+          return hasNone(billingDataPipelineRecords);
         })
         .forEach(gcpBillingAccount -> {
           String dstDataSetId = billingDataPipelineService.createDataSet(account);

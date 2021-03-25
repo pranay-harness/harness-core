@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -51,7 +51,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     FunctionSpecificationYamlHandler functionSpecYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION);
     List<FunctionSpecification> functionSpecificationList = lambdaSpecification.getFunctions();
-    if (isNotEmpty(functionSpecificationList)) {
+    if (hasSome(functionSpecificationList)) {
       functionSpecYamlList =
           functionSpecificationList.stream()
               .map(functionSpecification -> functionSpecYamlHandler.toYaml(functionSpecification, appId))
@@ -98,7 +98,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
     // function specification
     List<FunctionSpecification> functionSpecList = Lists.newArrayList();
-    if (isNotEmpty(yaml.getFunctions())) {
+    if (hasSome(yaml.getFunctions())) {
       FunctionSpecificationYamlHandler functionSpecYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION);
       functionSpecList = yaml.getFunctions()

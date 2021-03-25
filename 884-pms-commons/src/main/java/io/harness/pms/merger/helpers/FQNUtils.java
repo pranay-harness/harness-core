@@ -1,6 +1,7 @@
 package io.harness.pms.merger.helpers;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -133,7 +134,7 @@ public class FQNUtils {
 
   private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     String uuidKey = getUuidKey(list);
-    if (EmptyPredicate.isEmpty(uuidKey)) {
+    if (hasNone(uuidKey)) {
       res.put(baseFQN, list);
       return;
     }
@@ -270,7 +271,7 @@ public class FQNUtils {
       ArrayNode list, FQN baseFQN, Map<FQN, Object> fqnMap, Map<String, Object> res, String topKey) {
     List<Object> topKeyList = new ArrayList<>();
     String uuidKey = getUuidKey(list);
-    if (EmptyPredicate.isEmpty(uuidKey)) {
+    if (hasNone(uuidKey)) {
       if (fqnMap.containsKey(baseFQN)) {
         topKeyList.add(list);
         res.put(topKey, topKeyList);

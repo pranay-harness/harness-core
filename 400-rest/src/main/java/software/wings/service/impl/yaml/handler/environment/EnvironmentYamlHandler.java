@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.environment;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -111,7 +111,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   private Map<String, String> serviceTemplateIdToName(
       String appId, Map<String, String> configMapYamlByServiceTemplateId) {
-    if (isEmpty(configMapYamlByServiceTemplateId)) {
+    if (hasNone(configMapYamlByServiceTemplateId)) {
       return Collections.emptyMap();
     }
     Set<String> uuids = configMapYamlByServiceTemplateId.keySet();
@@ -125,7 +125,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                                                    .build();
     List<ServiceTemplate> serviceTemplates = getRequiredServiceTemplates(pageSize, pageRequest);
 
-    if (isEmpty(serviceTemplates) || serviceTemplates.size() != uuids.size()) {
+    if (hasNone(serviceTemplates) || serviceTemplates.size() != uuids.size()) {
       Set<String> retrievedIds = serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toSet());
       Set<String> invalidIds = Sets.symmetricDifference(retrievedIds, uuids);
       throw new UnexpectedException(format("Could not find Service Templates with id %s", invalidIds));
@@ -139,7 +139,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   private Map<String, String> serviceTemplateNameToId(
       String appId, Map<String, String> configMapYamlByServiceTemplateName) {
-    if (isEmpty(configMapYamlByServiceTemplateName)) {
+    if (hasNone(configMapYamlByServiceTemplateName)) {
       return Collections.emptyMap();
     }
     Set<String> names = configMapYamlByServiceTemplateName.keySet();
@@ -153,7 +153,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                                                    .build();
     List<ServiceTemplate> serviceTemplates = getRequiredServiceTemplates(pageSize, pageRequest);
 
-    if (isEmpty(serviceTemplates) || serviceTemplates.size() != names.size()) {
+    if (hasNone(serviceTemplates) || serviceTemplates.size() != names.size()) {
       Set<String> retrievedNames = serviceTemplates.stream().map(ServiceTemplate::getName).collect(Collectors.toSet());
       Set<String> invalidNames = Sets.symmetricDifference(retrievedNames, names);
       throw new UnexpectedException(format("Could not find Service Templates with names %s", invalidNames));
@@ -188,7 +188,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         environment.getAppId(), environment.getUuid(), OBTAIN_VALUE);
     serviceVariableList.addAll(serviceVariablesForAllServices);
 
-    if (isEmpty(environment.getServiceTemplates())) {
+    if (hasNone(environment.getServiceTemplates())) {
       return serviceVariableList;
     }
     environment.getServiceTemplates().forEach(serviceTemplate -> {
@@ -344,7 +344,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       Map<ServiceVariableKey, ServiceVariable> existingVariableMap) {
     List<VariableOverrideYaml> configVarsToAdd = new ArrayList<>();
 
-    if (isEmpty(yamlVariableOverrideList)) {
+    if (hasNone(yamlVariableOverrideList)) {
       return configVarsToAdd;
     }
 
@@ -364,7 +364,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       Map<ServiceVariableKey, ServiceVariable> existingVariableMap) {
     List<VariableOverrideYaml> configVarsToUpdate = new ArrayList<>();
 
-    if (isEmpty(yamlVariableOverrideList)) {
+    if (hasNone(yamlVariableOverrideList)) {
       return configVarsToUpdate;
     }
 
@@ -402,12 +402,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   private List<ServiceVariable> getConfigVariablesToDelete(List<VariableOverrideYaml> yamlVariableOverrideList,
       Map<ServiceVariableKey, ServiceVariable> existingVariableMap) {
     List<ServiceVariable> configVarsToDelete = new ArrayList<>();
-    if (isEmpty(existingVariableMap)) {
+    if (hasNone(existingVariableMap)) {
       return configVarsToDelete;
     }
 
     Map<ServiceVariableKey, VariableOverrideYaml> yamlVariableOverrideMap = new HashMap<>();
-    if (isNotEmpty(yamlVariableOverrideList)) {
+    if (hasSome(yamlVariableOverrideList)) {
       for (VariableOverrideYaml variableOverrideYaml : yamlVariableOverrideList) {
         ServiceVariableKey serviceVariableKey = ServiceVariableKey.builder()
                                                     .name(variableOverrideYaml.getName())
@@ -514,13 +514,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       notNullCheck("No service found for given name: " + parentServiceName, service, USER);
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
-      if (isEmpty(templateRefKeysByService)) {
+      if (hasNone(templateRefKeysByService)) {
         throw new InvalidRequestException(
             "Unable to locate a service template for the given service: " + parentServiceName);
       }
 
       String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
-      if (isEmpty(serviceTemplateId)) {
+      if (hasNone(serviceTemplateId)) {
         throw new InvalidRequestException(
             "Unable to locate a service template with the given service: " + parentServiceName + " and env: " + envId);
       }

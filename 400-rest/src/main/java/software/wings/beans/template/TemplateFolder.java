@@ -1,6 +1,6 @@
 package software.wings.beans.template;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -118,7 +118,7 @@ public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
   }
 
   public void addChild(TemplateFolder child) {
-    if (isEmpty(children)) {
+    if (hasNone(children)) {
       children = new ArrayList<>();
     }
     children.add(child);

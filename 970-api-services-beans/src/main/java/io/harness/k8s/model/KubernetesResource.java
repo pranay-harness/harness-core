@@ -1,6 +1,6 @@
 package io.harness.k8s.model;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
@@ -366,13 +366,13 @@ public class KubernetesResource {
       V1Secret v1Secret = Yaml.loadAs(spec, V1Secret.class);
 
       final String redacted = "***";
-      if (isNotEmpty(v1Secret.getData())) {
+      if (hasSome(v1Secret.getData())) {
         for (Entry e : v1Secret.getData().entrySet()) {
           e.setValue(redacted);
         }
       }
 
-      if (isNotEmpty(v1Secret.getStringData())) {
+      if (hasSome(v1Secret.getStringData())) {
         for (Entry e : v1Secret.getStringData().entrySet()) {
           e.setValue(redacted);
         }
@@ -507,7 +507,7 @@ public class KubernetesResource {
     CustomDeploymentStrategyParams customParams = strategy.getCustomParams();
     if (customParams != null) {
       List<V1EnvVar> environment = customParams.getEnvironment();
-      if (isNotEmpty(environment)) {
+      if (hasSome(environment)) {
         for (V1EnvVar v1EnvVar : environment) {
           if (isConfigMap) {
             updateConfigMapInEnvVars(v1EnvVar, transformer);
@@ -552,17 +552,17 @@ public class KubernetesResource {
   }
 
   private void updateConfigMapRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(containers)) {
+    if (hasSome(containers)) {
       for (V1Container v1Container : containers) {
         notNullCheck("The container or initContainer list contains empty elements. Please remove the empty elements",
             v1Container);
-        if (isNotEmpty(v1Container.getEnv())) {
+        if (hasSome(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
             updateConfigMapInEnvVars(v1EnvVar, transformer);
           }
         }
 
-        if (isNotEmpty(v1Container.getEnvFrom())) {
+        if (hasSome(v1Container.getEnvFrom())) {
           for (V1EnvFromSource v1EnvFromSource : v1Container.getEnvFrom()) {
             V1ConfigMapEnvSource v1ConfigMapRef = v1EnvFromSource.getConfigMapRef();
             if (v1ConfigMapRef != null) {
@@ -587,7 +587,7 @@ public class KubernetesResource {
   }
 
   private void updateConfigMapRefInVolumes(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(v1PodSpec.getVolumes())) {
+    if (hasSome(v1PodSpec.getVolumes())) {
       for (V1Volume v1Volume : v1PodSpec.getVolumes()) {
         V1ConfigMapVolumeSource v1ConfigMap = v1Volume.getConfigMap();
         if (v1ConfigMap != null) {
@@ -622,7 +622,7 @@ public class KubernetesResource {
   }
 
   private void updateSecretRefInImagePullSecrets(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(v1PodSpec.getImagePullSecrets())) {
+    if (hasSome(v1PodSpec.getImagePullSecrets())) {
       for (V1LocalObjectReference v1ImagePullSecret : v1PodSpec.getImagePullSecrets()) {
         String name = v1ImagePullSecret.getName();
         v1ImagePullSecret.setName((String) transformer.apply(name));
@@ -631,7 +631,7 @@ public class KubernetesResource {
   }
 
   private void updateSecretRefInVolumes(V1PodSpec v1PodSpec, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(v1PodSpec.getVolumes())) {
+    if (hasSome(v1PodSpec.getVolumes())) {
       for (V1Volume v1Volume : v1PodSpec.getVolumes()) {
         V1SecretVolumeSource v1Secret = v1Volume.getSecret();
         if (v1Secret != null) {
@@ -653,15 +653,15 @@ public class KubernetesResource {
   }
 
   private void updateSecretRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
-    if (isNotEmpty(containers)) {
+    if (hasSome(containers)) {
       for (V1Container v1Container : containers) {
-        if (isNotEmpty(v1Container.getEnv())) {
+        if (hasSome(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
             updateSecretRefInEnvVar(v1EnvVar, transformer);
           }
         }
 
-        if (isNotEmpty(v1Container.getEnvFrom())) {
+        if (hasSome(v1Container.getEnvFrom())) {
           for (V1EnvFromSource v1EnvFromSource : v1Container.getEnvFrom()) {
             V1SecretEnvSource v1SecretRef = v1EnvFromSource.getSecretRef();
             if (v1SecretRef != null) {

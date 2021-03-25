@@ -1,7 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
@@ -203,7 +203,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   public Artifact collectNewArtifacts(String appId, ArtifactStream artifactStream, String buildNumber) {
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), artifactStream.getSettingId());
-    if (isNotEmpty(builds)) {
+    if (hasSome(builds)) {
       Optional<BuildDetails> buildDetails =
           builds.stream().filter(build -> buildNumber.equals(build.getNumber())).findFirst();
       if (buildDetails.isPresent()) {

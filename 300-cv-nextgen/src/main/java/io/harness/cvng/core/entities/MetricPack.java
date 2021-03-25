@@ -1,6 +1,6 @@
 package io.harness.cvng.core.entities;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -133,7 +133,7 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
           .type(type)
           .validationPath(validationPath)
           .included(included)
-          .thresholds(isEmpty(thresholds)
+          .thresholds(hasNone(thresholds)
                   ? new ArrayList<>()
                   : thresholds.stream().map(TimeSeriesThreshold::toDTO).collect(Collectors.toList()))
           .build();

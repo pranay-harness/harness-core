@@ -1,6 +1,6 @@
 package io.harness.beans.serializer;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -39,7 +39,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   public Execution convertExecutionElement(ExecutionElementConfig executionElement,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, Map<String, String> stepLogKeys) {
     List<Step> protoSteps = new LinkedList<>();
-    if (isEmpty(executionElement.getSteps())) {
+    if (hasNone(executionElement.getSteps())) {
       return Execution.newBuilder().build();
     }
 
@@ -78,7 +78,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   private Integer getPort(LiteEngineTaskStepInfo liteEngineTaskStepInfo, String stepIdentifier) {
     K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
-    if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
+    if (hasNone(podSetupInfo.getPodSetupInfoList())) {
       return null;
     }
 

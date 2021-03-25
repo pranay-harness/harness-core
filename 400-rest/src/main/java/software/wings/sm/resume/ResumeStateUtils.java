@@ -1,8 +1,8 @@
 package software.wings.sm.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -55,7 +55,7 @@ public class ResumeStateUtils {
                                                             .executionStatus(stateExecutionInstance.getStatus())
                                                             .errorMessage(stateExecutionData.getErrorMsg())
                                                             .stateExecutionData(stateExecutionData);
-    if (isNotEmpty(stateExecutionInstance.getContextElements())) {
+    if (hasSome(stateExecutionInstance.getContextElements())) {
       // Copy context elements for build workflow.
       List<ContextElement> contextElements = stateExecutionInstance.getContextElements()
                                                  .stream()
@@ -63,7 +63,7 @@ public class ResumeStateUtils {
                                                      -> el.getElementType() == ContextElementType.ARTIFACT
                                                          || el.getElementType() == ContextElementType.ARTIFACT_VARIABLE)
                                                  .collect(Collectors.toList());
-      if (isNotEmpty(contextElements)) {
+      if (hasSome(contextElements)) {
         executionResponseBuilder.contextElements(contextElements);
       }
     }
@@ -95,7 +95,7 @@ public class ResumeStateUtils {
     }
 
     // Copy outputs from EnvState.
-    if (isNotEmpty(fromWorkflowExecutionIds)) {
+    if (hasSome(fromWorkflowExecutionIds)) {
       for (String fromWorkflowExecutionId : fromWorkflowExecutionIds) {
         try (HIterator<SweepingOutputInstance> instancesHIterator = new HIterator<>(
                  sweepingOutputService
@@ -108,7 +108,7 @@ public class ResumeStateUtils {
       }
     }
 
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return;
     }
 

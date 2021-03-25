@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.readBlob;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
@@ -127,15 +127,15 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataR
             BlobValue.newBuilder(Blob.copyFrom(compressString(getLogLine()))).setExcludeFromIndexes(true).build());
       }
 
-      if (isNotEmpty(getHostName())) {
+      if (hasSome(getHostName())) {
         logEntityBuilder.set(LogKeys.hostName, getHostName());
       }
 
-      if (isNotEmpty(getAppId())) {
+      if (hasSome(getAppId())) {
         logEntityBuilder.set(LogKeys.appId, getAppId());
       }
 
-      if (isNotEmpty(getCommandUnitName())) {
+      if (hasSome(getCommandUnitName())) {
         logEntityBuilder.set(LogKeys.commandUnitName, getCommandUnitName());
       }
 
@@ -143,7 +143,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataR
         logEntityBuilder.set(LogKeys.validUntil, validUntil.getTime());
       }
 
-      if (isNotEmpty(getAccountId())) {
+      if (hasSome(getAccountId())) {
         logEntityBuilder.set(LogKeys.accountId, getAccountId());
       }
 
@@ -167,7 +167,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataR
                               .build();
     try {
       byte[] compressedLogLine = readBlob(entity, LogKeys.compressedLogLine);
-      if (isNotEmpty(compressedLogLine)) {
+      if (hasSome(compressedLogLine)) {
         logObject.setLogLine(deCompressString(compressedLogLine));
       } else {
         logObject.setLogLine(readString(entity, LogKeys.logLine));

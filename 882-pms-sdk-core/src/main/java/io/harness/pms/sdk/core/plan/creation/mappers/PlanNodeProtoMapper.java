@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.plan.creation.mappers;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -20,9 +20,9 @@ public class PlanNodeProtoMapper {
     PlanNodeProto.Builder builder =
         PlanNodeProto.newBuilder()
             .setUuid(node.getUuid())
-            .setName(isEmpty(node.getName()) ? "" : node.getName())
+            .setName(hasNone(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
-            .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
+            .setIdentifier(hasNone(node.getIdentifier()) ? "" : node.getIdentifier())
             .setStepParameters(node.getStepParameters() == null
                     ? ""
                     : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
@@ -53,9 +53,9 @@ public class PlanNodeProtoMapper {
     PlanNodeProto.Builder builder =
         PlanNodeProto.newBuilder()
             .setUuid(node.getUuid())
-            .setName(isEmpty(node.getName()) ? "" : node.getName())
+            .setName(hasNone(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
-            .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
+            .setIdentifier(hasNone(node.getIdentifier()) ? "" : node.getIdentifier())
             .setStepParameters(node.getStepParameters() == null
                     ? ""
                     : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))

@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.service.impl.FileServiceUtils.FILE_PATH_SEPARATOR;
@@ -87,7 +87,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
     String accountId = fileMetadata.getAccountId();
     String fileUuid = fileMetadata.getFileUuid();
-    if (isEmpty(fileUuid)) {
+    if (hasNone(fileUuid)) {
       fileUuid = UUIDGenerator.generateUuid();
     }
     String gcsFileName = accountId + FILE_PATH_SEPARATOR + fileUuid;
@@ -119,7 +119,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
     String accountId = baseFile.getAccountId();
     String fileUuid = baseFile.getFileUuid();
-    if (isEmpty(fileUuid)) {
+    if (hasNone(fileUuid)) {
       fileUuid = UUIDGenerator.generateUuid();
     }
     String gcsFileName = accountId + FILE_PATH_SEPARATOR + fileUuid;
@@ -303,11 +303,11 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
   void initialize() {
     String googleCredentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
-    if (isEmpty(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
+    if (hasNone(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCredentialsPath);
     }
 
-    if (isEmpty(configuration.getClusterName())) {
+    if (hasNone(configuration.getClusterName())) {
       throw new WingsException("Cluster name should be configured when google cloud storage is used for file storage!");
     }
 
@@ -431,7 +431,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     if (version != null) {
       updateOperations.set("version", version);
     }
-    if (isNotEmpty(others)) {
+    if (hasSome(others)) {
       updateOperations.set("others", others);
     }
 

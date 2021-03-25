@@ -1,7 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.NotificationConstants.ABORTED_COLOR;
 import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
@@ -40,7 +40,7 @@ public class EmailDispatcher {
   @Inject private EmailNotificationService emailNotificationService;
 
   public void dispatch(List<Notification> notifications, List<String> toAddress) {
-    if (isEmpty(toAddress)) {
+    if (hasNone(toAddress)) {
       return;
     }
 
@@ -51,7 +51,7 @@ public class EmailDispatcher {
       }
     }
 
-    if (isEmpty(validToAddresses)) {
+    if (hasNone(validToAddresses)) {
       log.info("No valid email addresses in: {}", toAddress);
       return;
     }

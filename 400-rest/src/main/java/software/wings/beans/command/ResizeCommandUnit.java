@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
@@ -72,7 +72,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   private void deregisterAutoScalarsIfExists(ContextData contextData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
     if (resizeParams.isPreviousEcsAutoScalarsAlreadyRemoved()
-        || isEmpty(resizeParams.getPreviousAwsAutoScalarConfigs())) {
+        || hasNone(resizeParams.getPreviousAwsAutoScalarConfigs())) {
       return;
     }
 
@@ -90,7 +90,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
                 .withScalableDimension(target.getScalableDimension()));
 
         // If Target exists, delete it
-        if (isNotEmpty(result.getScalableTargets())) {
+        if (hasSome(result.getScalableTargets())) {
           executionLogCallback.saveExecutionLog("De-registering Scalable Target :" + target.getResourceId());
           awsAppAutoScalingService.deregisterScalableTarget(resizeParams.getRegion(),
               (AwsConfig) contextData.settingAttribute.getValue(), contextData.encryptedDataDetails,
@@ -122,7 +122,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     if (resizeParams.getAwsAutoScalarConfigForNewService() == null
-        || isEmpty(resizeParams.getAwsAutoScalarConfigForNewService())) {
+        || hasNone(resizeParams.getAwsAutoScalarConfigForNewService())) {
       executionLogCallback.saveExecutionLog("No Autoscalar config provided.");
       return;
     }
@@ -141,7 +141,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.encryptedDataDetails, executionLogCallback, scalableTarget);
 
-        if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+        if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
           for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
@@ -176,7 +176,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     // This is for services those are being upsized in Rollbak
     List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
 
-    if (isEmpty(awsAutoScalarConfigs)) {
+    if (hasNone(awsAutoScalarConfigs)) {
       executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
       return;
     }
@@ -195,11 +195,11 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
                 .withScalableDimension(scalableTarget.getScalableDimension())
                 .withServiceNamespace(ServiceNamespace.Ecs));
 
-        if (isEmpty(result.getScalableTargets())) {
+        if (hasNone(result.getScalableTargets())) {
           ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
               awsConfig, contextData.encryptedDataDetails, executionLogCallback, scalableTarget);
 
-          if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+          if (hasSome(awsAutoScalarConfig.getScalingPolicyJson())) {
             for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
               ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
                   scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
@@ -228,7 +228,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
             .withServiceNamespace(ServiceNamespace.Ecs)
             .withResourceIds(Arrays.asList(resourceId)));
 
-    if (isEmpty(targetsResult.getScalableTargets())) {
+    if (hasNone(targetsResult.getScalableTargets())) {
       return;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Base.ID_KEY2;
 
@@ -43,7 +43,7 @@ public class LogDataRecordsMigration implements Migration {
 
       String uuId = (String) next.get("_id");
       String appId = (String) next.get("applicationId");
-      if (isEmpty(appId)) {
+      if (hasNone(appId)) {
         continue;
       }
       bulkWriteOperation.find(wingsPersistence.createQuery(LogDataRecord.class).filter(ID_KEY2, uuId).getQueryObject())

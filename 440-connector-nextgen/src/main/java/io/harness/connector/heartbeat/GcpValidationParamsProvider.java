@@ -1,6 +1,6 @@
 package io.harness.connector.heartbeat;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorInfoDTO;
@@ -25,7 +25,7 @@ public class GcpValidationParamsProvider implements ConnectorValidationParamsPro
     final GcpConnectorDTO connectorConfig = (GcpConnectorDTO) connectorInfoDTO.getConnectorConfig();
     final List<DecryptableEntity> decryptableEntityList = connectorConfig.getDecryptableEntities();
     DecryptableEntity decryptableEntity = null;
-    if (isNotEmpty(decryptableEntityList)) {
+    if (hasSome(decryptableEntityList)) {
       decryptableEntity = decryptableEntityList.get(0);
     }
     final List<EncryptedDataDetail> encryptionDetail =

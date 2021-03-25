@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -88,14 +89,14 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
         if (resizeParams.isRollbackAllPhases()) {
           // Roll back to original counts
           executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
-          if (isNotEmpty(originalServiceCounts)) {
+          if (hasSome(originalServiceCounts)) {
             newInstanceDataList = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : originalServiceCounts.entrySet()) {
               newInstanceDataList.add(
                   ContainerServiceData.builder().desiredCount(entry.getValue()).name(entry.getKey()).build());
             }
           }
-          if (isNotEmpty(oldInstanceDataList)) {
+          if (hasSome(oldInstanceDataList)) {
             ecsDeployCommandTaskHelper.setDesiredToOriginal(oldInstanceDataList, originalServiceCounts);
           }
         }
@@ -187,7 +188,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize, boolean timeoutErrorSupported) {
-    if (isNotEmpty(instanceData)) {
+    if (hasSome(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
               .flatMap(data -> executeResize(contextData, data, executionLogCallback, timeoutErrorSupported).stream())
@@ -208,7 +209,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   private void resizeInstancesRedesigned(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize, boolean timeoutErrorSupported) {
-    if (isNotEmpty(instanceData)) {
+    if (hasSome(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
               .flatMap(data

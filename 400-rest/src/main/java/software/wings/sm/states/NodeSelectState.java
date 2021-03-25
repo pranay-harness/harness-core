@@ -4,8 +4,8 @@ import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
@@ -175,7 +175,7 @@ public abstract class NodeSelectState extends State {
     String errorMessage = buildServiceInstancesErrorMessage(
         serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
-    if (isNotEmpty(errorMessage) && !nodesOverriddenFromExecutionHosts) {
+    if (hasSome(errorMessage) && !nodesOverriddenFromExecutionHosts) {
       return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
     }
 
@@ -233,7 +233,7 @@ public abstract class NodeSelectState extends State {
                                                      .contextElement(serviceIdParamElement)
                                                      .notifyElement(serviceIdParamElement)
                                                      .stateExecutionData(selectedNodeExecutionData);
-    if (isEmpty(serviceInstances)) {
+    if (hasNone(serviceInstances)) {
       if (!excludeHostsWithSameArtifact) {
         executionResponse.errorMessage("No nodes selected");
       } else {
@@ -291,7 +291,7 @@ public abstract class NodeSelectState extends State {
   @VisibleForTesting
   List<InstanceDetails> generateInstanceDetailsFromServiceInstances(
       List<ServiceInstance> serviceInstances, String appId, String envId, boolean isNewInstance) {
-    if (isNotEmpty(serviceInstances)) {
+    if (hasSome(serviceInstances)) {
       List<String> hostIds = serviceInstances.stream().map(ServiceInstance::getHostId).collect(toList());
       List<Host> hosts = emptyIfNull(hostService.getHostsByHostIds(appId, envId, hostIds));
       return hosts.stream().map(host -> buildInstanceDetailFromHost(host, isNewInstance)).collect(toList());
@@ -317,7 +317,7 @@ public abstract class NodeSelectState extends State {
 
   boolean processExecutionHosts(String appId, Builder selectionParams, WorkflowStandardParams workflowStandardParams,
       StringBuilder message, String workflowExecutionId) {
-    if (workflowStandardParams != null && isNotEmpty(workflowStandardParams.getExecutionHosts())
+    if (workflowStandardParams != null && hasSome(workflowStandardParams.getExecutionHosts())
         && featureFlagService.isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, appService.getAccountIdByAppId(appId))) {
       List<StateExecutionInstance> stateExecutionInstancesForPhases =
           workflowExecutionService.getStateExecutionInstancesForPhases(workflowExecutionId);
@@ -355,12 +355,12 @@ public abstract class NodeSelectState extends State {
     }
 
     String errorMessage = null;
-    if (isEmpty(serviceInstances)) {
+    if (hasNone(serviceInstances)) {
       StringBuilder msg = new StringBuilder(256);
       msg.append("No nodes were selected. ");
       if (specificHosts) {
         msg.append("'Use Specific Hosts' was chosen ");
-        if (isEmpty(hostNames)) {
+        if (hasNone(hostNames)) {
           msg.append("but no host names were specified. ");
         } else {
           msg.append("with ").append(plural("host", hostNames.size())).append(' ').append(hostNames);
@@ -381,7 +381,7 @@ public abstract class NodeSelectState extends State {
           .append(hostExclusionList.size() == 1 ? " instance has" : " instances have")
           .append(" already been deployed. \n\n");
 
-      if (isNotEmpty(hostNames)) {
+      if (hasSome(hostNames)) {
         msg.append("The service infrastructure [")
             .append(infraMapping.getName())
             .append("] does not have ")
@@ -408,7 +408,7 @@ public abstract class NodeSelectState extends State {
     } else if (serviceInstances.size() > DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
       Account account = accountService.get(requireNonNull(context.getApp()).getAccountId());
       if (account == null
-          || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
+          || (account.getLicenseInfo() != null && hasSome(account.getLicenseInfo().getAccountType())
               && AccountType.COMMUNITY.equals(account.getLicenseInfo().getAccountType()))) {
         errorMessage = "The license for this account does not allow more than "
             + DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
@@ -421,7 +421,7 @@ public abstract class NodeSelectState extends State {
   @VisibleForTesting
   int renderInstanceCount(ExecutionContext context) {
     int count = 0;
-    if (isNotEmpty(instanceCount)) {
+    if (hasSome(instanceCount)) {
       try {
         count = Integer.parseInt(context.renderExpression(instanceCount));
         if (count <= 0) {
@@ -440,7 +440,7 @@ public abstract class NodeSelectState extends State {
 
   private List<ServiceInstance> excludeHostsWithTheSameArtifactDeployed(ExecutionContext context, String appId,
       String serviceId, String inframappingId, List<ServiceInstance> serviceInstances) {
-    if (isEmpty(serviceInstances)) {
+    if (hasNone(serviceInstances)) {
       return serviceInstances;
     }
     // TODO: ASR: change this.
@@ -468,7 +468,7 @@ public abstract class NodeSelectState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
-    if (specificHosts && isEmpty(hostNames)) {
+    if (specificHosts && hasNone(hostNames)) {
       invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Hostnames must be specified");
     }
     return invalidFieldMessages;

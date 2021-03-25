@@ -1,8 +1,8 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
@@ -145,7 +145,7 @@ public class NewRelicMetricValueDefinition {
 
   private double getValueForComparison(Set<NewRelicMetricDataRecord> records) {
     double value;
-    if (isEmpty(records)) {
+    if (hasNone(records)) {
       value = -1;
     } else {
       List<Double> testValues;
@@ -183,7 +183,7 @@ public class NewRelicMetricValueDefinition {
   public List<NewRelicMetricHostAnalysisValue> getTestHostValues(Set<NewRelicMetricDataRecord> testRecords) {
     List<NewRelicMetricHostAnalysisValue> hostAnalysisValues = new ArrayList<>();
     Map<String, Set<NewRelicMetricDataRecord>> recordsSplitByHosts = new HashMap<>();
-    if (isNotEmpty(testRecords)) {
+    if (hasSome(testRecords)) {
       testRecords.forEach(testRecord -> {
         if (!recordsSplitByHosts.containsKey(testRecord.getHost())) {
           recordsSplitByHosts.put(testRecord.getHost(), new HashSet<>());

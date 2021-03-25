@@ -3,7 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.analysis.entities.LearningEngineTask;
@@ -48,7 +48,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
             .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
     // TODO: add ordering based on createdAt.
 
-    if (isNotEmpty(taskType)) {
+    if (hasSome(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);
     }
 
@@ -75,7 +75,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
 
   @Override
   public Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds) {
-    if (isNotEmpty(taskIds)) {
+    if (hasSome(taskIds)) {
       Map<String, ExecutionStatus> taskStatuses = new HashMap<>();
       List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
                                            .field(LearningEngineTaskKeys.uuid)
@@ -94,7 +94,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
           taskStatuses.put(task.getUuid(), task.getTaskStatus());
         });
       }
-      if (isNotEmpty(timedOutTaskIds)) {
+      if (hasSome(timedOutTaskIds)) {
         UpdateOperations updateOperations = hPersistence.createUpdateOperations(LearningEngineTask.class)
                                                 .set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.TIMEOUT);
         Query<LearningEngineTask> timeoutQuery =

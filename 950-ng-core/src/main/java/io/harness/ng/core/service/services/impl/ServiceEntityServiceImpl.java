@@ -1,11 +1,11 @@
 package io.harness.ng.core.service.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -149,7 +149,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       throw new UnexpectedException(
           "Error while deleting the Service as was not able to check entity reference records.");
     }
-    if (EmptyPredicate.isNotEmpty(referredByEntities)) {
+    if (hasSome(referredByEntities)) {
       throw new InvalidRequestException(String.format(
           "Could not delete the Service %s as it is referenced by other entities - " + referredByEntities.toString(),
           serviceEntity.getIdentifier()));
@@ -157,7 +157,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   private void setNameIfNotPresent(ServiceEntity requestService) {
-    if (isEmpty(requestService.getName())) {
+    if (hasNone(requestService.getName())) {
       requestService.setName(requestService.getIdentifier());
     }
   }
@@ -212,7 +212,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   private void validateTheServicesList(List<ServiceEntity> serviceEntities) {
-    if (isEmpty(serviceEntities)) {
+    if (hasNone(serviceEntities)) {
       return;
     }
     serviceEntities.forEach(serviceEntity
@@ -221,7 +221,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   private void populateDefaultNameIfNotPresent(List<ServiceEntity> serviceEntities) {
-    if (isEmpty(serviceEntities)) {
+    if (hasNone(serviceEntities)) {
       return;
     }
     serviceEntities.forEach(this::setNameIfNotPresent);

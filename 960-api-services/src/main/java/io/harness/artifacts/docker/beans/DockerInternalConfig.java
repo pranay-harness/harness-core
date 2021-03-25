@@ -1,6 +1,6 @@
 package io.harness.artifacts.docker.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import lombok.Builder;
 import lombok.ToString;
@@ -16,7 +16,7 @@ public class DockerInternalConfig {
   boolean isCertValidationRequired;
 
   public boolean hasCredentials() {
-    return isNotEmpty(username);
+    return hasSome(username);
   }
 
   public String getDockerRegistryUrl() {

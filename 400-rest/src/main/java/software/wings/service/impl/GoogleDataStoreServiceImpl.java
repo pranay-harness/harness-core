@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -54,7 +54,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   @Inject
   public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence) {
     String googleCredentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
-    if (isEmpty(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
+    if (hasNone(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCredentialsPath);
     }
     mongoDataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
@@ -62,7 +62,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate) {
-    if (isEmpty(records)) {
+    if (hasNone(records)) {
       return;
     }
     List<List<T>> batches = Lists.partition(records, DATA_STORE_BATCH_SIZE);
@@ -261,7 +261,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     final Builder queryBuilder = Query.newEntityQueryBuilder()
                                      .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                                      .setFilter(createCompositeFilter(pageRequest));
-    if (isNotEmpty(pageRequest.getOrders())) {
+    if (hasSome(pageRequest.getOrders())) {
       pageRequest.getOrders().forEach(sortOrder -> {
         switch (sortOrder.getOrderType()) {
           case DESC:
@@ -276,11 +276,11 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
       });
     }
 
-    if (isNotEmpty(pageRequest.getLimit()) && !pageRequest.getLimit().equals(UNLIMITED)) {
+    if (hasSome(pageRequest.getLimit()) && !pageRequest.getLimit().equals(UNLIMITED)) {
       queryBuilder.setLimit(Integer.parseInt(pageRequest.getLimit()));
     }
 
-    if (isNotEmpty(pageRequest.getOffset())) {
+    if (hasSome(pageRequest.getOffset())) {
       queryBuilder.setOffset(Integer.parseInt(pageRequest.getOffset()));
     }
 
@@ -289,7 +289,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
-    if (isEmpty(pageRequest.getLimit()) || pageRequest.getLimit().equals(UNLIMITED)) {
+    if (hasNone(pageRequest.getLimit()) || pageRequest.getLimit().equals(UNLIMITED)) {
       return 0;
     }
 
@@ -306,7 +306,7 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   @Nullable
   private <T extends GoogleDataStoreAware> CompositeFilter createCompositeFilter(PageRequest<T> pageRequest) {
     CompositeFilter compositeFilter = null;
-    if (isNotEmpty(pageRequest.getFilters())) {
+    if (hasSome(pageRequest.getFilters())) {
       List<PropertyFilter> propertyFilters = new ArrayList<>();
       pageRequest.getFilters()
           .stream()

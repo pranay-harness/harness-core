@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 
@@ -170,7 +170,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
                       .parameters(new Object[] {trafficShiftRequest})
                       .timeout(TimeUnit.MINUTES.toMillis(setupElement.getAutoScalingSteadyStateTimeout()))
                       .build())
-            .tags(isNotEmpty(trafficShiftRequest.getAwsConfig().getTag())
+            .tags(hasSome(trafficShiftRequest.getAwsConfig().getTag())
                     ? singletonList(trafficShiftRequest.getAwsConfig().getTag())
                     : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
@@ -218,7 +218,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(newAutoScalingGroupWeightExpr)) {
+    if (hasNone(newAutoScalingGroupWeightExpr)) {
       invalidFields.put("newAutoScalingGroupWeightExpr", "New Autoscaling Group weight is needed");
     }
     return invalidFields;

@@ -1,6 +1,6 @@
 package io.harness.event;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
@@ -28,7 +28,7 @@ public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventH
     NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
     String nodeExecutionId = nodeExecutionProto.getUuid();
     String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
-    if (isEmpty(nodeExecutionId)) {
+    if (hasNone(nodeExecutionId)) {
       return orchestrationGraph;
     }
     try {

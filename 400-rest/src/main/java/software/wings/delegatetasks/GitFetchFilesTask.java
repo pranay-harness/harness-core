@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
@@ -14,7 +15,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -75,7 +75,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     log.info("Running GitFetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId());
 
-    String executionLogName = isEmpty(taskParams.getExecutionLogName()) ? FetchFiles : taskParams.getExecutionLogName();
+    String executionLogName = hasNone(taskParams.getExecutionLogName()) ? FetchFiles : taskParams.getExecutionLogName();
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId(), executionLogName);
@@ -141,15 +141,14 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     }
 
     List<String> filePathsToFetch = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(gitFileConfig.getTaskSpecFilePath())
-        || EmptyPredicate.isNotEmpty(gitFileConfig.getServiceSpecFilePath())) {
+    if (hasSome(gitFileConfig.getTaskSpecFilePath()) || hasSome(gitFileConfig.getServiceSpecFilePath())) {
       filePathsToFetch.add(gitFileConfig.getTaskSpecFilePath());
       if (!gitFileConfig.isUseInlineServiceDefinition()) {
         filePathsToFetch.add(gitFileConfig.getServiceSpecFilePath());
       }
       executionLogCallback.saveExecutionLog("\nFetching following Task and Service Spec files :");
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
-    } else if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {
+    } else if (hasSome(gitFileConfig.getFilePathList())) {
       filePathsToFetch = gitFileConfig.getFilePathList();
       executionLogCallback.saveExecutionLog("\nFetching following Files :");
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);

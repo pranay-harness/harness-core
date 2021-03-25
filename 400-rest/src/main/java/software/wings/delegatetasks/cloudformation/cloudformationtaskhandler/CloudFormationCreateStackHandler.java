@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY;
@@ -15,7 +15,6 @@ import static java.util.stream.Collectors.toMap;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -88,7 +87,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       executionLogCallback.saveExecutionLog(format("# Starting to Update stack with name: %s", stack.getStackName()));
       UpdateStackRequest updateStackRequest =
           new UpdateStackRequest().withStackName(stack.getStackName()).withParameters(getCfParams(updateRequest));
-      if (EmptyPredicate.isNotEmpty(updateRequest.getCloudFormationRoleArn())) {
+      if (hasSome(updateRequest.getCloudFormationRoleArn())) {
         updateStackRequest.withRoleARN(updateRequest.getCloudFormationRoleArn());
       } else {
         executionLogCallback.saveExecutionLog(
@@ -153,7 +152,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       CloudFormationCreateStackRequest createRequest, ExecutionLogCallback executionLogCallback) {
     CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     String stackName;
-    if (isNotEmpty(createRequest.getCustomStackName())) {
+    if (hasSome(createRequest.getCustomStackName())) {
       stackName = createRequest.getCustomStackName();
     } else {
       stackName = stackNamePrefix + createRequest.getStackNameSuffix();
@@ -162,7 +161,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       executionLogCallback.saveExecutionLog(format("# Creating stack with name: %s", stackName));
       CreateStackRequest createStackRequest =
           new CreateStackRequest().withStackName(stackName).withParameters(getCfParams(createRequest));
-      if (EmptyPredicate.isNotEmpty(createRequest.getCloudFormationRoleArn())) {
+      if (hasSome(createRequest.getCloudFormationRoleArn())) {
         createStackRequest.withRoleARN(createRequest.getCloudFormationRoleArn());
       } else {
         executionLogCallback.saveExecutionLog(
@@ -382,7 +381,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     createBuilder.existingStackInfo(existingStackInfo);
     createBuilder.stackId(stack.getStackId());
     List<Output> outputs = stack.getOutputs();
-    if (isNotEmpty(outputs)) {
+    if (hasSome(outputs)) {
       createBuilder.cloudFormationOutputMap(
           outputs.stream().collect(toMap(Output::getOutputKey, Output::getOutputValue)));
     }
@@ -407,12 +406,12 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     builder.region(cloudFormationCreateStackRequest.getRegion());
     builder.customStackName(cloudFormationCreateStackRequest.getCustomStackName());
     List<NameValuePair> variables = newArrayList();
-    if (isNotEmpty(cloudFormationCreateStackRequest.getVariables())) {
+    if (hasSome(cloudFormationCreateStackRequest.getVariables())) {
       for (Entry<String, String> variable : cloudFormationCreateStackRequest.getVariables().entrySet()) {
         variables.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
       }
     }
-    if (isNotEmpty(cloudFormationCreateStackRequest.getEncryptedVariables())) {
+    if (hasSome(cloudFormationCreateStackRequest.getEncryptedVariables())) {
       for (Entry<String, EncryptedDataDetail> encVariable :
           cloudFormationCreateStackRequest.getEncryptedVariables().entrySet()) {
         variables.add(new NameValuePair(
@@ -438,11 +437,11 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   private List<Parameter> getCfParams(CloudFormationCreateStackRequest cloudFormationCreateStackRequest)
       throws Exception {
     List<Parameter> allParams = newArrayList();
-    if (isNotEmpty(cloudFormationCreateStackRequest.getVariables())) {
+    if (hasSome(cloudFormationCreateStackRequest.getVariables())) {
       cloudFormationCreateStackRequest.getVariables().forEach(
           (key, value) -> allParams.add(new Parameter().withParameterKey(key).withParameterValue(value)));
     }
-    if (isNotEmpty(cloudFormationCreateStackRequest.getEncryptedVariables())) {
+    if (hasSome(cloudFormationCreateStackRequest.getEncryptedVariables())) {
       for (Map.Entry<String, EncryptedDataDetail> entry :
           cloudFormationCreateStackRequest.getEncryptedVariables().entrySet()) {
         allParams.add(

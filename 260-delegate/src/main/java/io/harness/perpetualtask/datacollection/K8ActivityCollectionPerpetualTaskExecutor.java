@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.datacollection;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -91,9 +91,9 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
             String workLoadName = v1Event.getInvolvedObject().getName();
 
             activitySourceDTO.getActivitySourceConfigs().forEach(activitySourceConfig -> {
-              if ((isEmpty(activitySourceConfig.getNamespaceRegex())
+              if ((hasNone(activitySourceConfig.getNamespaceRegex())
                       && activitySourceConfig.getNamespace().equals(namespace))
-                  || (isNotEmpty(activitySourceConfig.getNamespaceRegex())
+                  || (hasSome(activitySourceConfig.getNamespaceRegex())
                       && Pattern.compile(activitySourceConfig.getNamespaceRegex()).matcher(namespace).matches())) {
                 if (workLoadName.contains(activitySourceConfig.getWorkloadName())) {
                   kubernetesActivitiesStoreService.save(taskParams.getAccountId(),

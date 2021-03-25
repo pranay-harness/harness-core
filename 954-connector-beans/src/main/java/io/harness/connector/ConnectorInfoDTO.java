@@ -1,7 +1,7 @@
 package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -43,11 +43,11 @@ public class ConnectorInfoDTO {
 
   // Adding custom setters for Jackson to set empty string as null
   public void setOrgIdentifier(String orgIdentifier) {
-    this.orgIdentifier = isEmpty(orgIdentifier) ? null : orgIdentifier;
+    this.orgIdentifier = hasNone(orgIdentifier) ? null : orgIdentifier;
   }
 
   public void setProjectIdentifier(String projectIdentifier) {
-    this.projectIdentifier = isEmpty(projectIdentifier) ? null : projectIdentifier;
+    this.projectIdentifier = hasNone(projectIdentifier) ? null : projectIdentifier;
   }
 
   @Builder
@@ -57,8 +57,8 @@ public class ConnectorInfoDTO {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
-    this.orgIdentifier = isEmpty(orgIdentifier) ? null : orgIdentifier;
-    this.projectIdentifier = isEmpty(projectIdentifier) ? null : projectIdentifier;
+    this.orgIdentifier = hasNone(orgIdentifier) ? null : orgIdentifier;
+    this.projectIdentifier = hasNone(projectIdentifier) ? null : projectIdentifier;
     this.tags = tags;
     this.connectorType = connectorType;
     this.connectorConfig = connectorConfig;

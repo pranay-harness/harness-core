@@ -3,8 +3,8 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
@@ -183,7 +183,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
 
   private List<InstanceElement> getInstanceElementDetails(
       List<Instance> instances, ExecutionContext context, AwsAmiInfrastructureMapping infrastructureMapping) {
-    if (isEmpty(instances)) {
+    if (hasNone(instances)) {
       return Collections.emptyList();
     }
     return awsStateHelper.generateInstanceElements(instances, infrastructureMapping, context);
@@ -278,7 +278,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
                       .parameters(new Object[] {request})
                       .timeout(TimeUnit.MINUTES.toMillis(request.getAutoScalingSteadyStateTimeout()))
                       .build())
-            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, envType)
             .build();

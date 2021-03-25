@@ -1,6 +1,6 @@
 package io.harness.delegate.task.gcp.request;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -28,7 +28,7 @@ public abstract class GcpRequest extends ConnectorTaskParams implements Executio
   private GcpManualDetailsDTO gcpManualDetailsDTO;
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    if (isNotEmpty(delegateSelectors)) {
+    if (hasSome(delegateSelectors)) {
       return singletonList(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
     return emptyList();

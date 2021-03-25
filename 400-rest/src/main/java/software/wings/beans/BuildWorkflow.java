@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.common.WorkflowConstants.WORKFLOW_VALIDATION_MESSAGE;
@@ -45,7 +45,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(toList());
-      if (isNotEmpty(invalidChildren)) {
+      if (hasSome(invalidChildren)) {
         setValid(false);
         invalid += invalidChildren.toString();
       }

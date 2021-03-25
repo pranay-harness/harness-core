@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -246,7 +246,7 @@ public class DelegateSetupResource {
         delegate.setIncludeScopes(null);
         delegate.setExcludeScopes(null);
       } else {
-        if (isNotEmpty(delegateScopes.getIncludeScopeIds())) {
+        if (hasSome(delegateScopes.getIncludeScopeIds())) {
           delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
                                         .stream()
                                         .map(s -> delegateScopeService.get(accountId, s))
@@ -255,7 +255,7 @@ public class DelegateSetupResource {
         } else {
           delegate.setIncludeScopes(null);
         }
-        if (isNotEmpty(delegateScopes.getExcludeScopeIds())) {
+        if (hasSome(delegateScopes.getExcludeScopeIds())) {
           delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
                                         .stream()
                                         .map(s -> delegateScopeService.get(accountId, s))

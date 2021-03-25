@@ -1,7 +1,7 @@
 package io.harness.delegate.task.manifests;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogHelper.color;
@@ -90,7 +90,7 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
         if (fetchFileConfig.isDefaultSource()) {
           workingDirectory = customManifestService.getWorkingDirectory();
           defaultSourceWorkingDirectory = workingDirectory;
-        } else if (isEmpty(customManifestSource.getScript()) && isNotEmpty(defaultSourceWorkingDirectory)) {
+        } else if (hasNone(customManifestSource.getScript()) && hasSome(defaultSourceWorkingDirectory)) {
           workingDirectory = defaultSourceWorkingDirectory;
           logCallback.saveExecutionLog("Reusing execution output from service manifest.");
         } else {
@@ -136,7 +136,7 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
   }
 
   private void logFilePathList(List<String> filePathList, LogCallback logCallback) {
-    if (isEmpty(filePathList)) {
+    if (hasNone(filePathList)) {
       logCallback.saveExecutionLog("Empty file list. Skip.");
       return;
     }

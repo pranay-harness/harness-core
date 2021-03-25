@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.MAX_RETRIES;
@@ -98,7 +98,7 @@ public class RequestExecutor {
   }
 
   private String maskRequiredFieldsFromCallLogs(String field, Map<String, String> patternsToMask) {
-    if (isNotEmpty(patternsToMask)) {
+    if (hasSome(patternsToMask)) {
       for (Map.Entry<String, String> entry : patternsToMask.entrySet()) {
         field = field.replace(entry.getKey(), entry.getValue());
       }
@@ -147,7 +147,7 @@ public class RequestExecutor {
                                        .build());
       if (request.request().body() != null) {
         String body = bodyToString(request.request());
-        if (isNotEmpty(body)) {
+        if (hasSome(body)) {
           body = maskRequiredFieldsFromCallLogs(body, patternsToMask);
           apiCallLog.addFieldToRequest(
               ThirdPartyApiCallField.builder().name("body").value(body).type(FieldType.JSON).build());

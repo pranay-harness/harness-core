@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -237,7 +237,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                      .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
                                      .map(Delegate::getHostName)
                                      .collect(toList());
-    if (isNotEmpty(delegateNames)) {
+    if (hasSome(delegateNames)) {
       String message = format("Delegate profile [%s] could not be deleted because it's used by these delegates [%s]",
           delegateProfile.getName(), String.join(", ", delegateNames));
       throw new InvalidRequestException(message, USER);

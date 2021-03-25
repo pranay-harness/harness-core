@@ -1,7 +1,7 @@
 package software.wings.collect;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -50,7 +50,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
     Artifact artifact = artifactService.get(artifactId);
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
-    if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
+    if (hasNone(responseData.getData())) { // Error in Downloading artifact file
       log.warn(
           "Artifact file collection failed for artifactId: [{}]. Marking content status as NOT_DOWNLOADED to retry next artifac check",
           artifactId);

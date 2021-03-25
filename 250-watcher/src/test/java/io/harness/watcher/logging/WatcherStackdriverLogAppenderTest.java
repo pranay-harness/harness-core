@@ -1,6 +1,6 @@
 package io.harness.watcher.logging;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.RemoteStackdriverLogAppender.MIN_BATCH_SIZE;
 import static io.harness.logging.RemoteStackdriverLogAppender.logLevelToSeverity;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -102,7 +102,7 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   private void waitForMessage(Level level, String message) {
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
     await().atMost(5L, TimeUnit.SECONDS).until(() -> {
-      if (isEmpty(logQueue)) {
+      if (hasNone(logQueue)) {
         return false;
       }
 

@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helpers.ext.vault.VaultRestClientFactory.getFullPath;
@@ -155,12 +155,12 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateReference(String accountId, String path, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
+    return hasSome(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
   }
 
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
-    if (isEmpty(encryptedRecord.getEncryptionKey()) && isEmpty(encryptedRecord.getPath())) {
+    if (hasNone(encryptedRecord.getEncryptionKey()) && hasNone(encryptedRecord.getPath())) {
       return null;
     }
     VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
@@ -184,7 +184,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
 
   private char[] fetchSecretInternal(EncryptedRecord data, VaultConfig vaultConfig) throws IOException {
     String fullPath =
-        isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
+        hasNone(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
     long startTime = System.currentTimeMillis();
     log.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
@@ -192,7 +192,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         VaultRestClientFactory.create(vaultConfig)
             .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
 
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       log.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),
           System.currentTimeMillis() - startTime);
       return value.toCharArray();

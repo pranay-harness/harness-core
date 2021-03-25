@@ -1,8 +1,8 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -23,7 +23,7 @@ public class GraphGroupMetadata implements GraphNodeVisitable {
   ExecutionStrategy executionStrategy;
 
   public void accept(GraphNodeVisitor visitor) {
-    if (isEmpty(elements)) {
+    if (hasNone(elements)) {
       return;
     }
 
@@ -33,14 +33,14 @@ public class GraphGroupMetadata implements GraphNodeVisitable {
   }
 
   static GraphGroupMetadata fromGraphGroup(GraphGroup graphGroup) {
-    if (graphGroup == null || isEmpty(graphGroup.getElements())) {
+    if (graphGroup == null || hasNone(graphGroup.getElements())) {
       return null;
     }
 
     List<List<GraphNodeMetadata>> elements = new ArrayList<>();
     for (GraphNode node : graphGroup.getElements()) {
       List<GraphNodeMetadata> currElement = GraphNodeMetadata.fromOriginGraphNode(node);
-      if (isNotEmpty(currElement)) {
+      if (hasSome(currElement)) {
         elements.add(currElement);
       }
     }

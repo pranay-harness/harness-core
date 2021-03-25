@@ -1,5 +1,7 @@
 package io.harness.delegate.task.git;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
@@ -7,7 +9,6 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.git.model.GitFile;
 import io.harness.logging.LogCallback;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @Singleton
 public class GitFetchFilesTaskHelper {
   public void printFileNamesInExecutionLogs(LogCallback executionLogCallback, List<GitFile> files) {
-    if (EmptyPredicate.isEmpty(files)) {
+    if (hasNone(files)) {
       return;
     }
 
@@ -29,7 +30,7 @@ public class GitFetchFilesTaskHelper {
   }
 
   public void printFileNamesInExecutionLogs(List<String> filePathList, LogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(filePathList)) {
+    if (hasNone(filePathList)) {
       return;
     }
 

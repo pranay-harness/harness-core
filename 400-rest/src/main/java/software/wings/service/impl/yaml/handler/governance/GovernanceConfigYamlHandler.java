@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.governance;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
@@ -89,7 +90,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
         yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_FREEZE_CONFIG, TIME_RANGE_BASED_YAML_TYPE);
 
     List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(yaml.getTimeRangeBasedFreezeConfigs())) {
+    if (hasSome(yaml.getTimeRangeBasedFreezeConfigs())) {
       for (TimeRangeBasedFreezeConfig.Yaml entry : yaml.getTimeRangeBasedFreezeConfigs()) {
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, entry);
         timeRangeBasedFreezeConfigs.add(

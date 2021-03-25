@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -113,7 +113,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           String queueItemUrl = queueReference != null ? queueReference.getQueueItemUrlPart() : null;
 
           // Check if jenkins job start is successful
-          if (queueReference != null && isNotEmpty(queueItemUrl)) {
+          if (queueReference != null && hasSome(queueItemUrl)) {
             if (jenkinsConfig.isUseConnectorUrlForJobExecution()) {
               queueItemUrl = updateQueueItemUrl(queueItemUrl, jenkinsConfig.getJenkinsUrl());
               queueReference = createQueueReference(queueItemUrl);

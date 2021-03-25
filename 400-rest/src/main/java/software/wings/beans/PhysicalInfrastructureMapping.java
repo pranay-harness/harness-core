@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -37,7 +37,7 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> blueprintProperties, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
-    if (isEmpty(blueprintProperties)) {
+    if (hasNone(blueprintProperties)) {
       throw new InvalidRequestException("Infra Provisioner Mapping inputs can't be empty");
     }
     List<Map<String, Object>> hostList = (List<Map<String, Object>>) blueprintProperties.get("hostArrayPath");
@@ -67,12 +67,12 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
             host.getProperties().put(entry.getKey(), hostAttributes.get(entry.getKey()));
         }
       }
-      if (isEmpty(host.getPublicDns())) {
+      if (hasNone(host.getPublicDns())) {
         throw new InvalidRequestException("Hostname can't be empty");
       }
       hosts.add(host);
     }
-    if (isEmpty(hosts)) {
+    if (hasNone(hosts)) {
       throw new InvalidRequestException("Host list can't be empty", WingsException.USER);
     }
     hosts(hosts);

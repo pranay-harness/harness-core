@@ -5,7 +5,7 @@ package io.harness.delegate.task.citasks.cik8handler.container;
  * private git repositories using basic auth and SSH keys.
  */
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -80,7 +80,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     notNullCheck("gitConnectorDetails has to be specified for Remote", gitConnectorDetails);
 
     GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnectorDetails.getConnectorConfig();
-    if (isEmpty(branchName)) {
+    if (hasNone(branchName)) {
       branchName = gitConfigDTO.getBranchName();
     }
 

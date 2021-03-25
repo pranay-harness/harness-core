@@ -9,8 +9,8 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -371,7 +371,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         updateOperations.unset("configMapYaml");
       }
 
-      if (isNotEmpty(environment.getConfigMapYamlByServiceTemplateId())) {
+      if (hasSome(environment.getConfigMapYamlByServiceTemplateId())) {
         updateOperations.set("configMapYamlByServiceTemplateId", environment.getConfigMapYamlByServiceTemplateId());
       } else {
         updateOperations.unset("configMapYamlByServiceTemplateId");
@@ -383,7 +383,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         updateOperations.unset("helmValueYaml");
       }
 
-      if (isNotEmpty(environment.getHelmValueYamlByServiceTemplateId())) {
+      if (hasSome(environment.getHelmValueYamlByServiceTemplateId())) {
         updateOperations.set("helmValueYamlByServiceTemplateId", environment.getHelmValueYamlByServiceTemplateId());
       } else {
         updateOperations.unset("helmValueYamlByServiceTemplateId");
@@ -427,7 +427,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<EnvSummary> obtainEnvironmentSummaries(String appId, List<String> envIds) {
-    if (isEmpty(envIds)) {
+    if (hasNone(envIds)) {
       return new ArrayList<>();
     }
     List<Environment> environments = wingsPersistence.createQuery(Environment.class)
@@ -463,7 +463,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     List<Service> services = new ArrayList<>();
     Environment environment = get(appId, envId, true);
     List<ServiceTemplate> serviceTemplates = environment.getServiceTemplates();
-    if (isEmpty(serviceTemplates)) {
+    if (hasNone(serviceTemplates)) {
       return services;
     }
     List<String> serviceIds = new ArrayList<>();
@@ -472,7 +472,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       // For each service template id check if it has service or config overrides
       List<ServiceVariable> serviceVariableOverrides = serviceVariableService.getServiceVariablesByTemplate(
           environment.getAppId(), environment.getUuid(), serviceTemplate, MASKED);
-      if (isNotEmpty(serviceVariableOverrides)) {
+      if (hasSome(serviceVariableOverrides)) {
         // This service template has at least on service overrides
         includeServiceId = true;
       }
@@ -480,7 +480,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         // For each service template id check if it has service or config overrides
         List<ConfigFile> overrideConfigFiles = configService.getConfigFileByTemplate(
             environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
-        if (isNotEmpty(overrideConfigFiles)) {
+        if (hasSome(overrideConfigFiles)) {
           // This service template has at least one service overrides
           includeServiceId = true;
         }
@@ -504,7 +504,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   @Nonnull
   public List<String> getNames(@NotEmpty String accountId, @Nonnull List<String> envIds) {
-    if (isEmpty(envIds)) {
+    if (hasNone(envIds)) {
       return Collections.emptyList();
     }
     return wingsPersistence.createQuery(Environment.class)
@@ -548,7 +548,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     List<String> runningExecutions =
         workflowExecutionService.runningExecutionsForEnvironment(environment.getAppId(), environment.getUuid());
-    if (isNotEmpty(runningExecutions)) {
+    if (hasSome(runningExecutions)) {
       throw new InvalidRequestException(
           format("Environment:[%s] couldn't be deleted. [%d] Running executions present: [%s]", environment.getName(),
               runningExecutions.size(), String.join(", ", runningExecutions)),
@@ -632,7 +632,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Map<String, List<Base>> getAppIdEnvMap(Set<String> appIds) {
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       return new HashMap<>();
     }
     PageRequest<Environment> pageRequest = aPageRequest()
@@ -652,7 +652,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Map<String, Set<String>> getAppIdEnvIdMapByType(Set<String> appIds, EnvironmentType environmentType) {
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       return new HashMap<>();
     }
 
@@ -681,7 +681,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       final Environment sourceEnvironment = get(appId, envId, true);
       final Environment clonedEnvironment = sourceEnvironment.cloneInternal();
       String description = cloneMetadata.getEnvironment().getDescription();
-      if (isEmpty(description)) {
+      if (hasNone(description)) {
         description = "Cloned from environment " + sourceEnvironment.getName();
       }
       clonedEnvironment.setName(cloneMetadata.getEnvironment().getName());
@@ -705,7 +705,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           List<ServiceTemplate> serviceTemplateList =
               serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
           ServiceTemplate clonedServiceTemplate = null;
-          if (isNotEmpty(serviceTemplateList)) {
+          if (hasSome(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {
@@ -758,7 +758,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         envId = cloneMetadata.getEnvironment().getUuid();
       }
       Environment sourceEnvironment = get(appId, envId, true);
-      if (isEmpty(description)) {
+      if (hasNone(description)) {
         description =
             "Cloned from environment " + sourceEnvironment.getName() + " of application " + sourceApplication.getName();
       }
@@ -797,7 +797,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             List<ServiceTemplate> serviceTemplateList =
                 serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
             ServiceTemplate clonedServiceTemplate = null;
-            if (isNotEmpty(serviceTemplateList)) {
+            if (hasSome(serviceTemplateList)) {
               clonedServiceTemplate = serviceTemplateList.get(0);
             }
             if (clonedServiceTemplate == null) {
@@ -930,7 +930,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   private void cloneAppManifests(String appId, String clonedEnvId, String originalEnvId) {
     List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvId(appId, originalEnvId);
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return;
     }
 
@@ -1012,7 +1012,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         configMapYamls.remove(serviceTemplateId);
       }
       UpdateOperations<Environment> updateOperations;
-      if (isNotEmpty(configMapYamls)) {
+      if (hasSome(configMapYamls)) {
         updateOperations = wingsPersistence.createUpdateOperations(Environment.class)
                                .set("configMapYamlByServiceTemplateId", configMapYamls);
       } else {
@@ -1039,14 +1039,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                .get();
     if (savedEnv != null) {
       Map<String, String> configMapYamlByServiceTemplateId = new HashMap<>();
-      if (isNotEmpty(savedEnv.getConfigMapYamlByServiceTemplateId())) {
+      if (hasSome(savedEnv.getConfigMapYamlByServiceTemplateId())) {
         configMapYamlByServiceTemplateId.putAll(savedEnv.getConfigMapYamlByServiceTemplateId());
       }
-      if (isNotEmpty(configMapYamlByServiceTemplateId)) {
+      if (hasSome(configMapYamlByServiceTemplateId)) {
         configMapYamlByServiceTemplateId.remove(serviceTemplateId);
 
         UpdateOperations<Environment> updateOperations;
-        if (isNotEmpty(configMapYamlByServiceTemplateId)) {
+        if (hasSome(configMapYamlByServiceTemplateId)) {
           updateOperations = wingsPersistence.createUpdateOperations(Environment.class)
                                  .set("configMapYamlByServiceTemplateId", configMapYamlByServiceTemplateId);
         } else {

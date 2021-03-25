@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
@@ -49,7 +49,7 @@ public class AddAccountIdToStateExecutionInstance implements Migration {
         List<Key<Application>> appIdKeyList =
             wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).asKeyList();
 
-        if (isNotEmpty(appIdKeyList)) {
+        if (hasSome(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());
           accountIdToAppIdMap.put(accountId, appIdSet);

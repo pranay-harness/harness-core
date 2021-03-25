@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -123,7 +123,7 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
   default QLData getQLData(DataFetcherUtils utils, NameService nameService, WingsPersistence wingsPersistence,
       String accountId, List<F> filters, Class entityClass, List<String> groupByAsStringList) {
     Query query = populateFilters(utils, wingsPersistence, accountId, filters, entityClass);
-    if (isNotEmpty(groupByAsStringList)) {
+    if (hasSome(groupByAsStringList)) {
       if (groupByAsStringList.size() == 1) {
         return getAggregatedData(wingsPersistence, nameService, groupByAsStringList, entityClass, query);
       } else if (groupByAsStringList.size() == 2) {

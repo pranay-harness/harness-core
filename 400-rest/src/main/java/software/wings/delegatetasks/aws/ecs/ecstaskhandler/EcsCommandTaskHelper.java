@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -58,7 +58,7 @@ public class EcsCommandTaskHelper {
     }
 
     List<ScalingPolicy> scalingPolicies = appAutoScalingService.getScalingPolicyFromJson(policyJson);
-    if (isNotEmpty(scalingPolicies)) {
+    if (hasSome(scalingPolicies)) {
       scalingPolicies.forEach(scalingPolicy -> {
         scalingPolicy.withResourceId(resourceId).withScalableDimension(scalableDimention);
         PutScalingPolicyResult result = upsertScalingPolicyIfRequired(
@@ -96,14 +96,14 @@ public class EcsCommandTaskHelper {
   public void updateCloudWatchMetricWithPolicyCreated(String region, AwsConfig awsConfig, String policyArn,
       List<Alarm> alarms, AwsAppAutoScalingHelperServiceDelegate appAutoScalingService,
       ExecutionLogCallback executionLogCallback, List<EncryptedDataDetail> encryptionDetails) {
-    if (isEmpty(alarms)) {
+    if (hasNone(alarms)) {
       return;
     }
 
     // this is = aws cloudwatch describe-alarms --alarm-names
     List<MetricAlarm> metricAlarms =
         appAutoScalingService.fetchAlarmsByName(region, awsConfig, encryptionDetails, alarms);
-    if (isEmpty(metricAlarms)) {
+    if (hasNone(metricAlarms)) {
       return;
     }
 
@@ -112,7 +112,7 @@ public class EcsCommandTaskHelper {
     metricAlarms = metricAlarms.stream()
                        .filter(metricAlarm -> updateAlarmWithPolicyRequired(policyArn, metricAlarm))
                        .collect(toList());
-    if (isEmpty(metricAlarms)) {
+    if (hasNone(metricAlarms)) {
       return;
     }
 
@@ -136,7 +136,7 @@ public class EcsCommandTaskHelper {
   }
 
   private boolean updateAlarmWithPolicyRequired(String policyArn, MetricAlarm metricAlarm) {
-    return isEmpty(metricAlarm.getAlarmActions()) || !metricAlarm.getAlarmActions().contains(policyArn);
+    return hasNone(metricAlarm.getAlarmActions()) || !metricAlarm.getAlarmActions().contains(policyArn);
   }
 
   public String getResourceIdForEcsService(String serviceName, String clusterName) {

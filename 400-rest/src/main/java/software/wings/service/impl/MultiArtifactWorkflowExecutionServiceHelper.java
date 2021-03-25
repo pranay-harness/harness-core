@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.VariableType.ARTIFACT;
@@ -38,7 +38,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
   public void saveArtifactsToSweepingOutput(
       ExecutionArgs executionArgs, WorkflowExecution workflowExecution, String workflowId, String accountId) {
     Map<String, Object> workflowVariables = resolveArtifactVariables(executionArgs, workflowId, accountId);
-    if (isNotEmpty(workflowVariables)) {
+    if (hasSome(workflowVariables)) {
       sweepingOutputService.save(SweepingOutputServiceImpl
                                      .prepareSweepingOutputBuilder(workflowExecution.getAppId(), null,
                                          workflowExecution.getUuid(), null, null, SweepingOutputInstance.Scope.WORKFLOW)
@@ -51,7 +51,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
   private Map<String, Object> resolveArtifactVariables(
       ExecutionArgs executionArgs, String workflowId, String accountId) {
     Map<String, Object> variables = new HashMap<>();
-    if (isEmpty(executionArgs.getArtifactVariables())) {
+    if (hasNone(executionArgs.getArtifactVariables())) {
       return variables;
     }
     for (ArtifactVariable variable : executionArgs.getArtifactVariables()) {
@@ -76,7 +76,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
               "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
         }
         // allowed list is empty
-        if (isEmpty(variable.getAllowedList())) {
+        if (hasNone(variable.getAllowedList())) {
           throw new InvalidRequestException(
               "Workflow variable [" + variable.getName() + "] does not contain any artifact streams", USER);
         }
@@ -95,7 +95,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
 
   private Artifact setVariables(
       String key, Object value, Map<String, Object> variableMap, VariableType variableType, String accountId) {
-    if (!isEmpty(key) && !key.equals("null")) {
+    if (!hasNone(key) && !key.equals("null")) {
       if (variableType == ARTIFACT) {
         Artifact artifact = artifactService.get(accountId, String.valueOf(value));
         if (artifact != null) {
@@ -113,7 +113,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
   List<Artifact> filterArtifactsForExecution(
       List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution, String accountId) {
     List<Artifact> artifacts = new ArrayList<>();
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable variable : artifactVariables) {
         if (variable.getEntityType() == null) {
           throw new InvalidRequestException(
@@ -125,19 +125,19 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
         }
         switch (variable.getEntityType()) {
           case WORKFLOW:
-            if (isNotEmpty(workflowExecution.getWorkflowIds())
+            if (hasSome(workflowExecution.getWorkflowIds())
                 && workflowExecution.getWorkflowIds().contains(variable.getEntityId())) {
               findArtifactForArtifactVariable(accountId, artifacts, variable);
             }
             break;
           case ENVIRONMENT:
-            if (isNotEmpty(workflowExecution.getEnvIds())
+            if (hasSome(workflowExecution.getEnvIds())
                 && workflowExecution.getEnvIds().contains(variable.getEntityId())) {
               findArtifactForArtifactVariable(accountId, artifacts, variable);
             }
             break;
           case SERVICE:
-            if (isNotEmpty(workflowExecution.getServiceIds())
+            if (hasSome(workflowExecution.getServiceIds())
                 && workflowExecution.getServiceIds().contains(variable.getEntityId())) {
               findArtifactForArtifactVariable(accountId, artifacts, variable);
             }

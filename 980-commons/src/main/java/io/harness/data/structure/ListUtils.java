@@ -17,11 +17,7 @@ public class ListUtils {
     if (strings == null) {
       return null;
     }
-    return strings.stream()
-        .filter(Objects::nonNull)
-        .map(String::trim)
-        .filter(EmptyPredicate::isNotEmpty)
-        .collect(toList());
+    return strings.stream().filter(Objects::nonNull).map(String::trim).filter(HasPredicate::hasSome).collect(toList());
   }
 
   public static <V> List<V> addSafely(V value, List<V> list) {

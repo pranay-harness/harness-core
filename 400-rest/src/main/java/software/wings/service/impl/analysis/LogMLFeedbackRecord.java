@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
@@ -124,7 +124,7 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
       addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.stateType, stateType.name(), true);
     }
 
-    if (isNotEmpty(comment)) {
+    if (hasSome(comment)) {
       addFieldIfNotEmpty(recordBuilder, LogMLFeedbackRecordKeys.comment, comment, true);
     }
 
@@ -152,17 +152,17 @@ public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
             .build();
 
     final String comment = readString(entity, LogMLFeedbackRecordKeys.comment);
-    if (isNotEmpty(comment)) {
+    if (hasSome(comment)) {
       dataRecord.setComment(comment);
     }
 
     final String stateType = readString(entity, LogMLFeedbackRecordKeys.stateType);
-    if (isNotEmpty(stateType)) {
+    if (hasSome(stateType)) {
       dataRecord.setStateType(StateType.valueOf(stateType));
     }
 
     final String supervisedLabel = readString(entity, LogMLFeedbackRecordKeys.supervisedLabel);
-    if (isNotEmpty(supervisedLabel)) {
+    if (hasSome(supervisedLabel)) {
       dataRecord.setSupervisedLabel(supervisedLabel);
     }
 

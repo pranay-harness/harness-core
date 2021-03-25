@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.container;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -73,7 +73,7 @@ public class ContainerDeploymentManagerHelper {
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
       List<ContainerInfo> containerInfos, ServiceTemplateElement serviceTemplateElement) {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    if (isNotEmpty(containerInfos)) {
+    if (hasSome(containerInfos)) {
       for (ContainerInfo containerInfo : containerInfos) {
         InstanceElement instanceElement = buildInstanceElement(serviceTemplateElement, containerInfo);
         ExecutionStatus status =

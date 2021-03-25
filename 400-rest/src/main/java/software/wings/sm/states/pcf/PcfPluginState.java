@@ -3,7 +3,8 @@ package software.wings.sm.states.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -21,7 +22,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -208,7 +208,7 @@ public class PcfPluginState extends State {
     List<String> serviceManifestPrefixPathList = findPathFromScript(
         rendredScript, FILE_START_SERVICE_MANIFEST_PATTERN, FILE_START_SERVICE_MANIFEST_REGEX, FILE_END_REGEX);
 
-    if (!(isEmpty(repoRoot) || "/".equals(repoRoot))) {
+    if (!(hasNone(repoRoot) || "/".equals(repoRoot))) {
       serviceManifestPrefixPathList = serviceManifestPrefixPathList.stream()
                                           .map(path -> repoRoot + path)
                                           .map(this::removeTrailingSlash)
@@ -306,11 +306,10 @@ public class PcfPluginState extends State {
 
   private String resolveRenderedScript(
       String renderedScriptString, PcfPluginStateExecutionData pcfPluginStateExecutionData) {
-    if (EmptyPredicate.isNotEmpty(renderedScriptString)) {
+    if (hasSome(renderedScriptString)) {
       return renderedScriptString;
     }
-    if (pcfPluginStateExecutionData != null
-        && EmptyPredicate.isNotEmpty(pcfPluginStateExecutionData.getRenderedScriptString())) {
+    if (pcfPluginStateExecutionData != null && hasSome(pcfPluginStateExecutionData.getRenderedScriptString())) {
       return pcfPluginStateExecutionData.getRenderedScriptString();
     }
     return "";
@@ -432,7 +431,7 @@ public class PcfPluginState extends State {
 
   private List<FileData> prepareFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript, ExecutionContext context) {
-    if (EmptyPredicate.isEmpty(pathsFromScript)) {
+    if (hasNone(pathsFromScript)) {
       return Collections.emptyList();
     }
     Map<String, String> pathToContentMap;
@@ -456,7 +455,7 @@ public class PcfPluginState extends State {
 
   private Map<String, String> getLocalFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript) {
-    if (EmptyPredicate.isEmpty(pathsFromScript)) {
+    if (hasNone(pathsFromScript)) {
       return Collections.emptyMap();
     }
     return CollectionUtils
@@ -475,7 +474,7 @@ public class PcfPluginState extends State {
       if (fetchFilesResult != null) {
         final GitFetchFilesResult serviceManifestFetchResult =
             MapUtils.emptyIfNull(fetchFilesResult.getFilesFromMultipleRepo()).get(K8sValuesLocation.Service.name());
-        if (serviceManifestFetchResult != null && EmptyPredicate.isNotEmpty(serviceManifestFetchResult.getFiles())) {
+        if (serviceManifestFetchResult != null && hasSome(serviceManifestFetchResult.getFiles())) {
           return serviceManifestFetchResult.getFiles().stream().collect(
               Collectors.toMap(GitFile::getFilePath, GitFile::getFileContent));
         }
@@ -487,11 +486,10 @@ public class PcfPluginState extends State {
 
   private List<String> resolveFilePathsInScript(
       List<String> pathsFromScript, PcfPluginStateExecutionData pcfPluginStateExecutionData) {
-    if (EmptyPredicate.isNotEmpty(pathsFromScript)) {
+    if (hasSome(pathsFromScript)) {
       return pathsFromScript;
     }
-    if (pcfPluginStateExecutionData != null
-        && EmptyPredicate.isNotEmpty(pcfPluginStateExecutionData.getFilePathsInScript())) {
+    if (pcfPluginStateExecutionData != null && hasSome(pcfPluginStateExecutionData.getFilePathsInScript())) {
       return pcfPluginStateExecutionData.getFilePathsInScript();
     }
     return Collections.emptyList();

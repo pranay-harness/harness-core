@@ -1,7 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -85,7 +85,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
 
     heatMaps.forEach(heatMap -> risks.add(heatMap.getRiskScore()));
 
-    if (isNotEmpty(risks)) {
+    if (hasSome(risks)) {
       double max = Collections.max(risks);
       return Optional.of(Risk.getRiskFromRiskScore(max));
     } else {
@@ -179,7 +179,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
                 HealthVerificationHeatMapKeys.riskScore, accumulator("$last", HealthVerificationHeatMapKeys.riskScore)))
         .aggregate(HealthVerificationHeatMap.class)
         .forEachRemaining(healthVerificationHeatMap -> { allRisks.add(healthVerificationHeatMap.getRiskScore()); });
-    if (isEmpty(allRisks) || overallRisk >= Collections.max(allRisks)) {
+    if (hasNone(allRisks) || overallRisk >= Collections.max(allRisks)) {
       // update the activityLevel riskScore
       updateRiskScoreInDB(activity.getUuid(), AggregationLevel.ACTIVITY, healthVerificationPeriod, cvConfig, activity,
           overallRisk, endTime);

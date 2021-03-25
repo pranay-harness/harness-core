@@ -8,7 +8,7 @@ import static io.harness.azure.model.AzureConstants.NO_SCALING_POLICY_DURING_DOW
 import static io.harness.azure.model.AzureConstants.SKIP_RESIZE_SCALE_SET;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -146,7 +146,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
   private void createAndLogSkipDownSizeMessage(
       AzureVMSSDeployTaskParameters deployTaskParameters, String scaleSetName) {
     String message = format("BG deployment, hence skipping downsize production scale set: [%s] in deploy step",
-        isEmpty(scaleSetName) ? EMPTY : scaleSetName);
+        hasNone(scaleSetName) ? EMPTY : scaleSetName);
     handleExecutionLog(
         deployTaskParameters, message, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
   }
@@ -175,7 +175,7 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
 
   private void createAndLogSkipReSizeMessage(AzureVMSSDeployTaskParameters deployTaskParameters,
       String scaleCommandUnit, String waitCommandUnit, String scaleSetName) {
-    String message = format(SKIP_RESIZE_SCALE_SET, isEmpty(scaleSetName) ? EMPTY : scaleSetName);
+    String message = format(SKIP_RESIZE_SCALE_SET, hasNone(scaleSetName) ? EMPTY : scaleSetName);
     handleExecutionLog(deployTaskParameters, message, scaleCommandUnit, waitCommandUnit);
   }
 
@@ -287,11 +287,11 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     ExecutionLogCallback logCallBack = getLogCallBack(deployTaskParameters, DEPLOYMENT_STATUS);
     logCallBack.saveExecutionLog(
         format("Total number of new instances deployed for Scale Set: [%s] is [%d] ",
-            isEmpty(newVirtualMachineScaleSetName) ? "" : newVirtualMachineScaleSetName, newScaleSetInstancesSize),
+            hasNone(newVirtualMachineScaleSetName) ? "" : newVirtualMachineScaleSetName, newScaleSetInstancesSize),
         INFO);
     logCallBack.saveExecutionLog(
         format("Total number of instances of old Scale Set: [%s] is [%d]",
-            isEmpty(oldVirtualMachineScaleSetName) ? "" : oldVirtualMachineScaleSetName, oldScaleSetInstancesSize),
+            hasNone(oldVirtualMachineScaleSetName) ? "" : oldVirtualMachineScaleSetName, oldScaleSetInstancesSize),
         INFO, SUCCESS);
 
     return AzureVMSSTaskExecutionResponse.builder()

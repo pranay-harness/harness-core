@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
 import static io.harness.constants.Constants.X_HARNESS_WEBHOOK_TOKEN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_CUSTOM_TRIGGER_FOUND_FOR_PROJECT;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 
@@ -50,7 +50,7 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
     List<NGTriggerEntity> ngTriggerEntities = ngTriggerService.findTriggersForCustomWehbook(
         triggerWebhookEvent, fetchCustomWebhookAuthTokenFromHeader(triggerWebhookEvent), false, true);
 
-    if (isEmpty(ngTriggerEntities)) {
+    if (hasNone(ngTriggerEntities)) {
       String msg = "No Custom trigger found for Project:" + projectId;
       log.info(msg);
       return WebhookEventMappingResponse.builder()
@@ -60,7 +60,7 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
     }
 
     // Filtering Triggers based on webhookTokenAuthType(inline or ref)
-    if (isEmpty(ngTriggerEntities)) {
+    if (hasNone(ngTriggerEntities)) {
       ngTriggerEntities =
           ngTriggerEntities.stream()
               .filter(ngTriggerEntity
@@ -84,7 +84,7 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
       }
     }
 
-    if (isEmpty(triggerDetailEligible)) {
+    if (hasNone(triggerDetailEligible)) {
       String msg = "No trigger matched payload after condition evaluation for project: " + projectId;
       log.info(msg);
       return WebhookEventMappingResponse.builder()

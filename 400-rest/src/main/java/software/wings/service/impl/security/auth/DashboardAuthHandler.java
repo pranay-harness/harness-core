@@ -1,7 +1,7 @@
 package software.wings.service.impl.security.auth;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.dashboard.Action;
@@ -51,7 +51,7 @@ public class DashboardAuthHandler {
     Query<DashboardSettings> query = wingsPersistence.createQuery(DashboardSettings.class);
     query.filter("accountId", accountId);
     if (!isDashboardAdmin) {
-      if (isEmpty(userGroups)) {
+      if (hasNone(userGroups)) {
         query.filter("createdBy", user.getUuid());
       } else {
         Set<String> userGroupIdSet = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
@@ -127,7 +127,7 @@ public class DashboardAuthHandler {
       }
 
       Set<Action> actions = dashboardPermissions.get(dashboardSettings.getUuid());
-      if (isNotEmpty(actions)) {
+      if (hasSome(actions)) {
         // If user canUpdate/canDelete from account admin privilege. It should not be taken away because of
         // shared dashboard settings.
         dashboardSettings.setCanUpdate(dashboardSettings.isCanManage() || actions.contains(Action.MANAGE)
@@ -148,7 +148,7 @@ public class DashboardAuthHandler {
     }
 
     Set<PermissionType> permissions = accountPermissionSummary.getPermissions();
-    if (isEmpty(permissions)) {
+    if (hasNone(permissions)) {
       return false;
     }
 
@@ -178,7 +178,7 @@ public class DashboardAuthHandler {
 
     final Set<PermissionType> permissions = userPermissionInfo.getAccountPermissionSummary().getPermissions();
 
-    if (isEmpty(permissions)) {
+    if (hasNone(permissions)) {
       throw new InvalidRequestException("User not authorized", ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
     if (!(permissions.contains(PermissionType.MANAGE_CUSTOM_DASHBOARDS)
@@ -205,12 +205,12 @@ public class DashboardAuthHandler {
     UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
     Map<String, Set<Action>> dashboardPermissions = userPermissionInfo.getDashboardPermissions();
 
-    if (isEmpty(dashboardPermissions)) {
+    if (hasNone(dashboardPermissions)) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
 
     Set<Action> actions = dashboardPermissions.get(dashboardSettings.getUuid());
-    if (isEmpty(actions)) {
+    if (hasNone(actions)) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
 
@@ -246,7 +246,7 @@ public class DashboardAuthHandler {
     UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
     Map<String, Set<Action>> dashboardPermissions = userPermissionInfo.getDashboardPermissions();
 
-    if (isEmpty(dashboardPermissions)) {
+    if (hasNone(dashboardPermissions)) {
       return null;
     }
 

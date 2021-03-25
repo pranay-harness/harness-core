@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 
@@ -218,7 +218,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   @VisibleForTesting
   List<InstanceStatsByEnvironment> constructInstanceStatsForService(
       String serviceId, List<ServiceAggregationInfo> serviceAggregationInfoList) {
-    if (isEmpty(serviceAggregationInfoList)) {
+    if (hasNone(serviceAggregationInfoList)) {
       return emptyList();
     }
 
@@ -295,7 +295,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
             .instanceStatsByArtifactList(currentArtifactList);
 
     List<SyncStatus> syncStatusList = serverlessInstanceService.getSyncStatus(appId, serviceId, envInfo.getId());
-    if (isNotEmpty(syncStatusList)) {
+    if (hasSome(syncStatusList)) {
       boolean hasSyncIssues = hasSyncIssues(syncStatusList);
       instanceStatsByEnvironmentBuilder.infraMappingSyncStatusList(syncStatusList);
       instanceStatsByEnvironmentBuilder.hasSyncIssues(hasSyncIssues);
@@ -474,7 +474,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
       }
     }
 
-    if (isNotEmpty(instanceList)) {
+    if (hasSome(instanceList)) {
       HashSet<ServerlessInstance> instanceSet = new HashSet<>(instanceList);
       log.info("Instances reported {}, set count {}", counter, instanceSet.size());
     } else {
@@ -499,7 +499,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   Query<ServerlessInstance> getInstanceQuery(
       String accountId, List<String> appIds, boolean includeDeleted, long timestamp) {
     Query<ServerlessInstance> query = wingsPersistence.createQuery(ServerlessInstance.class);
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       query.field(ServerlessInstanceKeys.appId).in(appIds);
     } else {
       UserRequestContext userRequestContext = getUserContext();
@@ -510,12 +510,12 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
 
           if (includeDeleted && isUserAccountAdmin(accountId)) {
             Set<String> deletedAppIds = detectDeletedAppIds(accountId, timestamp);
-            if (isNotEmpty(deletedAppIds)) {
+            if (hasSome(deletedAppIds)) {
               finalAllowedAppIdSet.addAll(deletedAppIds);
             }
           }
 
-          if (isNotEmpty(finalAllowedAppIdSet)) {
+          if (hasSome(finalAllowedAppIdSet)) {
             if (userRequestContext.getUserPermissionInfo().isHasAllAppAccess()) {
               query.filter(ACCOUNT_ID, accountId);
             } else {

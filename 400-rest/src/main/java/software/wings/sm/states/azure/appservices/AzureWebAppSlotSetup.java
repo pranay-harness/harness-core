@@ -1,8 +1,8 @@
 package software.wings.sm.states.azure.appservices;
 
 import static io.harness.azure.model.AzureConstants.SECRET_REF_FIELS_NAME;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SETUP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
@@ -145,7 +145,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   }
 
   private String getWebAppUrl(AzureWebAppSlotSetupResponse slotSetupTaskResponse) {
-    if (isEmpty(slotSetupTaskResponse.getAzureAppDeploymentData())) {
+    if (hasNone(slotSetupTaskResponse.getAzureAppDeploymentData())) {
       return EMPTY;
     }
     AzureAppDeploymentData azureAppDeploymentData = slotSetupTaskResponse.getAzureAppDeploymentData().get(0);
@@ -301,7 +301,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
       ExecutionContext context, ExecutionStatus executionStatus, AzureWebAppSlotSetupResponse slotSetupTaskResponse) {
     AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
     List<InstanceElement> instanceElements = getInstanceElements(context, slotSetupTaskResponse, stateExecutionData);
-    if (isNotEmpty(instanceElements)) {
+    if (hasSome(instanceElements)) {
       List<InstanceStatusSummary> newInstanceStatusSummaries =
           azureVMSSStateHelper.getInstanceStatusSummaries(executionStatus, instanceElements);
       stateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);

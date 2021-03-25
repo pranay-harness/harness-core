@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 
@@ -307,14 +307,14 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     String accountId = appService.getAccountIdByAppId(appId);
     List<HarnessTagLink> harnessTagLinks = harnessTagService.getTagLinksWithEntityId(accountId, workflowId);
     List<NameValuePair> resolvedTags = new ArrayList<>();
-    if (isNotEmpty(harnessTagLinks)) {
+    if (hasSome(harnessTagLinks)) {
       for (HarnessTagLink harnessTagLink : harnessTagLinks) {
         String tagKey = context.renderExpression(harnessTagLink.getKey());
         // checking string equals null as the jexl library seems to be returning the string "null" in some cases when
         // the expression can't be evaluated instead of returning the original expression
         // if key can't be evaluated, don't store it
         // if the evaluated key contains . or contains some unresolved expressions like ${service.name} don't store it
-        if (isEmpty(tagKey) || tagKey.equals("null")
+        if (hasNone(tagKey) || tagKey.equals("null")
             || (harnessTagLink.getKey().startsWith("${") && harnessTagLink.getKey().equals(tagKey))
             || tagKey.contains(".") || tagKey.contains("${") || wingsVariablePattern.matcher(tagKey).find()) {
           continue;
@@ -333,7 +333,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   @VisibleForTesting
   public void addTagsToWorkflowExecution(List<NameValuePair> resolvedTags) {
-    if (isNotEmpty(resolvedTags)) {
+    if (hasSome(resolvedTags)) {
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                            .filter(WorkflowExecutionKeys.appId, appId)
                                            .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
@@ -400,7 +400,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       if (workflowExecution.getWorkflowType() != null) {
         properties.put(Keys.DEPLOYMENT_TYPE, getDeploymentType(workflowExecution));
         if (WorkflowType.ORCHESTRATION == workflowExecution.getWorkflowType()
-            && isNotEmpty(workflowExecution.getServiceIds())) {
+            && hasSome(workflowExecution.getServiceIds())) {
           properties.put(Keys.SERVICE_ID, workflowExecution.getServiceIds().get(0));
         }
       }

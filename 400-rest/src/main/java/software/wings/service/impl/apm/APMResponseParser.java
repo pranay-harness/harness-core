@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
@@ -39,7 +39,7 @@ public class APMResponseParser {
       for (APMMetricInfo metricInfo : data.getMetricInfos()) {
         VerificationResponseParser apmResponseParser = new VerificationResponseParser();
         for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
-          if (!isEmpty(responseMapper.getJsonPath())) {
+          if (!hasNone(responseMapper.getJsonPath())) {
             apmResponseParser.put(
                 responseMapper.getJsonPath().split("\\."), responseMapper.getFieldName(), responseMapper.getRegexs());
           }

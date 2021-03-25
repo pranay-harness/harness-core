@@ -1,7 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.model.EventType;
@@ -33,7 +33,7 @@ public class PagerDutyEventDispatcher {
       return;
     }
 
-    if (isEmpty(notifications)) {
+    if (hasNone(notifications)) {
       return;
     }
 

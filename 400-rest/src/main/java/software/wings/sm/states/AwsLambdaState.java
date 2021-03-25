@@ -2,8 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -188,7 +188,7 @@ public class AwsLambdaState extends State {
     updateAwsLambdaExecutionSummaries(context, wfResponse);
     List<FunctionMeta> functionMetas = emptyList();
     List<AwsLambdaFunctionResult> functionResults = wfResponse.getFunctionResults();
-    if (isNotEmpty(functionResults)) {
+    if (hasSome(functionResults)) {
       functionMetas = functionResults.stream()
                           .filter(AwsLambdaFunctionResult::isSuccess)
                           .map(AwsLambdaFunctionResult::getFunctionMeta)
@@ -223,7 +223,7 @@ public class AwsLambdaState extends State {
       }
 
       List<AwsLambdaFunctionResult> functionResults = wfResponse.getFunctionResults();
-      if (isEmpty(functionResults)) {
+      if (hasNone(functionResults)) {
         return;
       }
 
@@ -352,7 +352,7 @@ public class AwsLambdaState extends State {
     artifactStreamAttributes.getMetadata().put(
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
 
-    if (isEmpty(specification.getFunctions())) {
+    if (hasNone(specification.getFunctions())) {
       logService.batchedSave(singletonList(logBuilder.but().logLine("No Lambda function to deploy.").build()));
       activityService.updateStatus(activity.getUuid(), activity.getAppId(), SUCCESS);
       List<FunctionMeta> functionArns = new ArrayList<>();
@@ -380,8 +380,8 @@ public class AwsLambdaState extends State {
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-              .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
-                                                                  : null)
+              .tags(
+                  hasSome(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
                         .async(true)
                         .taskType(AWS_LAMBDA_TASK.name())
@@ -459,7 +459,7 @@ public class AwsLambdaState extends State {
   }
 
   protected List<String> getEvaluatedAliases(ExecutionContext context) {
-    if (isNotEmpty(aliases)) {
+    if (hasSome(aliases)) {
       return aliases.stream().map(context::renderExpression).collect(toList());
     }
     return emptyList();
@@ -483,7 +483,7 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.artifactStreamAttributes(artifactStreamAttributes);
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
 
-    if (isNotEmpty(aliases)) {
+    if (hasSome(aliases)) {
       wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
     }
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
@@ -499,7 +499,7 @@ public class AwsLambdaState extends State {
 
     List<AwsLambdaFunctionParams> functionParams = new ArrayList<>();
     List<FunctionSpecification> functions = specification.getFunctions();
-    if (isNotEmpty(functions)) {
+    if (hasSome(functions)) {
       functions.forEach(functionSpecification -> {
         AwsLambdaFunctionParamsBuilder functionParamsBuilder = AwsLambdaFunctionParams.builder();
         functionParamsBuilder.key(context.renderExpression(artifact.getMetadata().get("key")));
@@ -521,7 +521,7 @@ public class AwsLambdaState extends State {
 
   protected Map<String, String> getFunctionTags(ExecutionContext context) {
     Map<String, String> functionTags = new HashMap<>();
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       tags.forEach(tag -> { functionTags.put(tag.getKey(), context.renderExpression(tag.getValue())); });
     }
     return functionTags;

@@ -1,7 +1,7 @@
 package io.harness.event.timeseries.processor;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -71,7 +71,7 @@ public class VerificationEventProcessor {
       List<ContinuousVerificationExecutionMetaData> cvExecutionMetaDataList =
           continuousVerificationService.getCVDeploymentData(cvPageRequest);
 
-      if (!isEmpty(cvExecutionMetaDataList)) {
+      if (!hasNone(cvExecutionMetaDataList)) {
         boolean rolledback = Boolean.valueOf(properties.get("rollback"));
         String workflowStatus = properties.get("workflowStatus");
         String rollbackType = properties.get("rollbackType");

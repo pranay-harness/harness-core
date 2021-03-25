@@ -1,7 +1,7 @@
 package io.harness.aws;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
@@ -94,7 +94,7 @@ public class AwsClientImpl implements AwsClient {
     try {
       tracker.trackEC2Call("Get CodeCommit client");
       AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
-      if (isNotEmpty(repo)) {
+      if (hasSome(repo)) {
         amazonCodeCommitClient.getRepository(new GetRepositoryRequest().withRepositoryName(repo));
       } else {
         amazonCodeCommitClient.listRepositories(new ListRepositoriesRequest());
@@ -109,9 +109,9 @@ public class AwsClientImpl implements AwsClient {
 
   private void checkCredentials(AwsConfig awsConfig) {
     if (!awsConfig.isEc2IamCredentials()) {
-      if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
+      if (hasNone(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
         throw new InvalidRequestException("Access Key should not be empty");
-      } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
+      } else if (hasNone(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
         throw new InvalidRequestException("Secret Key should not be empty");
       }
     }
@@ -119,7 +119,7 @@ public class AwsClientImpl implements AwsClient {
 
   @Override
   public void confirmSnsSubscription(String confirmationMessage, String topicArnString) {
-    if (isEmpty(topicArnString)) {
+    if (hasNone(topicArnString)) {
       throw new InvalidRequestException("Topic arn can't be empty");
     }
     String region = Arn.fromString(topicArnString).getRegion();
@@ -319,7 +319,7 @@ public class AwsClientImpl implements AwsClient {
     final AmazonIdentityManagement iam = getAwsIAMClient(credentialsProvider);
     final SimulatePrincipalPolicyRequest request =
         new SimulatePrincipalPolicyRequest().withPolicySourceArn(policySourceArn).withActionNames(actionNames);
-    if (isNotEmpty(resourceArns)) {
+    if (hasSome(resourceArns)) {
       request.withResourceArns(resourceArns);
     }
 

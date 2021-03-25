@@ -1,6 +1,7 @@
 package io.harness.walktree.visitor.entityreference;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.ParentQualifier;
@@ -66,7 +67,7 @@ public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitabl
       EntityReferenceExtractor entityReferenceExtractor = (EntityReferenceExtractor) helperClassInstance;
       Set<EntityDetailProtoDTO> newReferences = entityReferenceExtractor.addReference(
           currentElement, accountIdentifier, orgIdentifier, projectIdentifier, this.getContextMap());
-      if (EmptyPredicate.isNotEmpty(newReferences)) {
+      if (hasSome(newReferences)) {
         entityReferenceSet.addAll(newReferences);
       }
     }

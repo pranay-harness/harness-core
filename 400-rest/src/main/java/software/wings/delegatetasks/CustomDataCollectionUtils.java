@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -26,7 +26,7 @@ public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
   public static String resolveField(String string, String fieldToResolve, String value) {
-    if (isEmpty(string)) {
+    if (hasNone(string)) {
       return string;
     }
     String result = string;
@@ -103,7 +103,7 @@ public class CustomDataCollectionUtils {
 
   public static String getConcatenatedQuery(Set<String> queries, String separator) {
     String concatenatedQuery = null;
-    if (isNotEmpty(queries) && isNotEmpty(separator)) {
+    if (hasSome(queries) && hasSome(separator)) {
       StringBuilder hostQueryBuilder = new StringBuilder();
       queries.forEach(host -> {
         if (!hostQueryBuilder.toString().isEmpty()) {
@@ -112,7 +112,7 @@ public class CustomDataCollectionUtils {
         hostQueryBuilder.append(host);
       });
       concatenatedQuery = hostQueryBuilder.toString();
-    } else if (isNotEmpty(queries) && queries.size() == 1) {
+    } else if (hasSome(queries) && queries.size() == 1) {
       concatenatedQuery = new ArrayList<>(queries).get(0);
     } else {
       log.error("Incorrect combination of query and separator");

@@ -5,8 +5,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.exception.WingsException.USER;
@@ -171,7 +171,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (serviceId != null) {
       List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId);
-      if (isNotEmpty(artifactStreamIds)) {
+      if (hasSome(artifactStreamIds)) {
         pageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, artifactStreamIds.toArray());
       } else {
         return aPageResponse().withResponse(new ArrayList<Artifact>()).build();
@@ -185,7 +185,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public PageResponse<Artifact> listArtifactsForService(String serviceId, PageRequest<Artifact> pageRequest) {
     if (serviceId != null) {
       List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
-      if (isNotEmpty(artifactStreamIds)) {
+      if (hasSome(artifactStreamIds)) {
         pageRequest.addFilter(ArtifactKeys.artifactStreamId, IN, artifactStreamIds.toArray());
       } else {
         return aPageResponse().withResponse(new ArrayList<Artifact>()).build();
@@ -288,7 +288,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public boolean deleteArtifactsByUniqueKey(ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, Collection<String> artifactKeys) {
-    if (isEmpty(artifactKeys)) {
+    if (hasNone(artifactKeys)) {
       return true;
     }
 
@@ -309,7 +309,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   private void setAccountId(Artifact artifact) {
-    if (isEmpty(artifact.getAccountId())) {
+    if (hasNone(artifact.getAccountId())) {
       if (artifact.fetchAppId() != null && !artifact.fetchAppId().equals(GLOBAL_APP_ID)) {
         artifact.setAccountId(appService.getAccountIdByAppId(artifact.fetchAppId()));
       } else {
@@ -454,7 +454,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public File download(String accountId, String artifactId) {
     Artifact artifact = get(accountId, artifactId);
-    if (artifact == null || artifact.getStatus() != READY || isEmpty(artifact.getArtifactFiles())) {
+    if (artifact == null || artifact.getStatus() != READY || hasNone(artifact.getArtifactFiles())) {
       return null;
     }
 
@@ -506,7 +506,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return true;
     }
 
-    if (isNotEmpty(artifact.getArtifactFiles())) {
+    if (hasSome(artifact.getArtifactFiles())) {
       List<String> artifactIds = asList(artifactId);
       List<String> artifactFileUuids = collectArtifactFileIds(artifact);
       deleteArtifacts(artifactIds.toArray(), artifactFileUuids);
@@ -522,21 +522,21 @@ public class ArtifactServiceImpl implements ArtifactService {
     List<String> artifactIdsWithFiles = new ArrayList<>();
     List<String> artifactFileIds = new ArrayList<>();
     for (Artifact artifact : artifacts) {
-      if (isNotEmpty(artifact.getArtifactFiles())) {
+      if (hasSome(artifact.getArtifactFiles())) {
         artifactIdsWithFiles.add(artifact.getUuid());
         List<String> ids = collectArtifactFileIds(artifact);
-        if (isNotEmpty(ids)) {
+        if (hasSome(ids)) {
           artifactFileIds.addAll(ids);
         }
       } else {
         artifactIds.add(artifact.getUuid());
       }
     }
-    if (isNotEmpty(artifactIds)) {
+    if (hasSome(artifactIds)) {
       wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
-    if (isNotEmpty(artifactIdsWithFiles)) {
+    if (hasSome(artifactIdsWithFiles)) {
       deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileIds);
     }
   }
@@ -555,10 +555,10 @@ public class ArtifactServiceImpl implements ArtifactService {
     List<String> artifactFileIds = new ArrayList<>();
     try (HIterator<Artifact> iterator = new HIterator<>(artifactQuery.fetch())) {
       for (Artifact artifact : iterator) {
-        if (isNotEmpty(artifact.getArtifactFiles())) {
+        if (hasSome(artifact.getArtifactFiles())) {
           artifactIdsWithFiles.add(artifact.getUuid());
           List<String> ids = collectArtifactFileIds(artifact);
-          if (isNotEmpty(ids)) {
+          if (hasSome(ids)) {
             artifactFileIds.addAll(ids);
           }
         } else {
@@ -566,11 +566,11 @@ public class ArtifactServiceImpl implements ArtifactService {
         }
       }
     }
-    if (isNotEmpty(artifactIds)) {
+    if (hasSome(artifactIds)) {
       wingsPersistence.getCollection(DEFAULT_STORE, "artifacts")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
-    if (isNotEmpty(artifactIdsWithFiles)) {
+    if (hasSome(artifactIdsWithFiles)) {
       deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileIds);
     }
   }
@@ -616,7 +616,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                             .withLimit("100")
                                             .build();
     List<Artifact> artifacts = listArtifactsForService(pageRequest);
-    return isEmpty(artifacts) ? null : artifacts.get(0);
+    return hasNone(artifacts) ? null : artifacts.get(0);
   }
 
   @Override
@@ -665,7 +665,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return artifact;
     }
 
-    if (artifact.getContentStatus() == null && !isEmpty(artifact.getArtifactFiles())) {
+    if (artifact.getContentStatus() == null && !hasNone(artifact.getArtifactFiles())) {
       log.info(
           "Artifact {} content status empty. It means it is already downloaded. Updating artifact content status as DOWNLOADED",
           artifactId);
@@ -699,7 +699,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         return DELETED;
       }
       if (artifact.getContentStatus() == null) {
-        if (!isEmpty(artifact.getArtifactFiles())) {
+        if (!hasNone(artifact.getArtifactFiles())) {
           updateStatus(artifact.getUuid(), artifact.getAccountId(), APPROVED, DOWNLOADED);
           return DOWNLOADED;
         } else {
@@ -746,13 +746,13 @@ public class ArtifactServiceImpl implements ArtifactService {
                                               .hasAnyOf(singletonList(DOWNLOADED))
                                               .order(Sort.descending(CREATED_AT_KEY))
                                               .asList(new FindOptions().skip(retentionSize));
-    if (isEmpty(toBeDeletedArtifacts)) {
+    if (hasNone(toBeDeletedArtifacts)) {
       return;
     }
 
     toBeDeletedArtifacts =
-        toBeDeletedArtifacts.stream().filter(artifact -> isNotEmpty(artifact.getArtifactFiles())).collect(toList());
-    if (isEmpty(toBeDeletedArtifacts)) {
+        toBeDeletedArtifacts.stream().filter(artifact -> hasSome(artifact.getArtifactFiles())).collect(toList());
+    if (hasNone(toBeDeletedArtifacts)) {
       return;
     }
 
@@ -788,7 +788,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   private void deleteArtifacts(String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
     try {
       List<String> artifactFileIds = getArtifactFileIds(toBeDeletedArtifacts);
-      if (isNotEmpty(artifactFileIds)) {
+      if (hasSome(artifactFileIds)) {
         Object[] artifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray();
         deleteArtifacts(artifactIds, artifactFileIds);
       }
@@ -821,7 +821,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   private void deleteArtifactFiles(List<String> artifactFileIds) {
-    if (isEmpty(artifactFileIds)) {
+    if (hasNone(artifactFileIds)) {
       return;
     }
     for (String fileId : artifactFileIds) {

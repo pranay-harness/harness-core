@@ -1,8 +1,8 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -52,14 +52,14 @@ public class SlackMessageDispatcher {
    */
   @Deprecated
   public void dispatch(List<Notification> notifications, List<String> channels) {
-    if (isEmpty(channels)) {
+    if (hasNone(channels)) {
       return;
     }
 
     String accountId = notifications.get(0).getAccountId();
     List<SettingAttribute> settingAttributes =
         settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SLACK.name());
-    if (isEmpty(settingAttributes)) {
+    if (hasNone(settingAttributes)) {
       log.warn("No slack configuration found ");
       return;
     }
@@ -83,7 +83,7 @@ public class SlackMessageDispatcher {
   }
 
   public void dispatch(List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
-    if (isEmpty(notifications)) {
+    if (hasNone(notifications)) {
       return;
     }
 
@@ -100,7 +100,7 @@ public class SlackMessageDispatcher {
         boolean isChannelNameEmpty = true;
         // Fetch Channel and add to Notification Template Variables
         String slackChannel = stripToEmpty(slackConfig.getName());
-        if (isNotEmpty(slackChannel)) {
+        if (hasSome(slackChannel)) {
           isChannelNameEmpty = false;
           if (slackChannel.charAt(0) != '#') {
             slackChannel = "#" + slackChannel;

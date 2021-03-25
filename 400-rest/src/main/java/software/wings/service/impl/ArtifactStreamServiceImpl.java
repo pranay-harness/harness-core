@@ -5,8 +5,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.STARTS_WITH;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -204,13 +204,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
       List<ArtifactStream> filteredArtifactStreams = pageResponse.getResponse();
 
-      if (isNotEmpty(filteredArtifactStreams)) {
+      if (hasSome(filteredArtifactStreams)) {
         filteredArtifactStreams = filterArtifactStreamsAndArtifactsWithCount(
             accountId, artifactSearchString, maxArtifacts, filteredArtifactStreams);
       }
 
       List<ArtifactStream> resp;
-      if (isEmpty(filteredArtifactStreams)) {
+      if (hasNone(filteredArtifactStreams)) {
         resp = Collections.emptyList();
       } else {
         int total = filteredArtifactStreams.size();
@@ -251,7 +251,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                           .project(ArtifactKeys.uiDisplayName, true)
                                           .project(ArtifactKeys.metadata, true)
                                           .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
-      if (isNotEmpty(artifactSearchString)) {
+      if (hasSome(artifactSearchString)) {
         // NOTE: Might be inefficient for artifact streams having large number of artifacts.
         artifactQuery.or(artifactQuery.criteria(ArtifactKeys.uiDisplayName).containsIgnoreCase(artifactSearchString),
             artifactQuery.criteria(ArtifactKeys.metadata_buildNo).containsIgnoreCase(artifactSearchString));
@@ -267,7 +267,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
 
       List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(maxArtifacts));
-      if (isEmpty(artifacts)) {
+      if (hasNone(artifacts)) {
         continue;
       }
 
@@ -458,7 +458,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
-    if (!artifactStream.isAutoPopulate() && isEmpty(artifactStream.getName())) {
+    if (!artifactStream.isAutoPopulate() && hasNone(artifactStream.getName())) {
       throw new InvalidRequestException("Artifact source name is mandatory", USER);
     }
 
@@ -469,7 +469,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (artifactStream instanceof CustomArtifactStream) {
         ((CustomArtifactStream) artifactStream).setScripts(((CustomArtifactStream) artifactStream1).getScripts());
       }
-      if (isEmpty(artifactStream.getTemplateVariables())) {
+      if (hasNone(artifactStream.getTemplateVariables())) {
         artifactStream.setTemplateVariables(artifactStream1.getTemplateVariables());
       } else {
         if (validate && !streamParameterized) {
@@ -633,7 +633,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       //      pageRequest);
       // If an entry exists with the given default name
       //      if (isNotEmpty(response) || isNotEmpty(connectorResponse)) {
-      if (isNotEmpty(response)) {
+      if (hasSome(response)) {
         name = Utils.getNameWithNextRevision(
             response.getResponse().stream().map(ArtifactStream::getName).collect(toList()), name);
       }
@@ -725,7 +725,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       executorService.submit(() -> triggerService.updateByArtifactStream(artifactStream.getUuid()));
     }
 
-    if (isEmpty(artifactStream.getName())) {
+    if (hasNone(artifactStream.getName())) {
       throw new InvalidRequestException("Please provide valid artifact name", USER);
     }
 
@@ -775,7 +775,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables, false);
         // Merge incoming template variables from payload with the template variables computed above
         // incoming template variable values get precedence over the computed values
-        if (isNotEmpty(artifactStream.getTemplateVariables()) && isNotEmpty(templateVariables)) {
+        if (hasSome(artifactStream.getTemplateVariables()) && hasSome(templateVariables)) {
           for (Variable templateVariable : templateVariables) {
             for (Variable artifactStreamVariable : artifactStream.getTemplateVariables()) {
               if (templateVariable.getName().equals(artifactStreamVariable.getName())) {
@@ -996,7 +996,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateServiceVariableUsages(String artifactStreamId) {
     List<Service> services = artifactStreamServiceBindingService.listServices(artifactStreamId);
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return;
     }
 
@@ -1007,7 +1007,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateWorkflowUsages(String artifactStreamId) {
     List<Workflow> workflows = artifactStreamServiceBindingService.listWorkflows(artifactStreamId);
-    if (isEmpty(workflows)) {
+    if (hasNone(workflows)) {
       return;
     }
     List<String> workflowNames = workflows.stream().map(Workflow::getName).collect(toList());
@@ -1018,12 +1018,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void validateTriggerUsages(String accountId, String appId, String artifactStreamId) {
     List<String> triggerNames;
     List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-    if (isEmpty(triggers)) {
+    if (hasNone(triggers)) {
       return;
     }
     triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
-    if (isNotEmpty(triggerNames)) {
+    if (hasSome(triggerNames)) {
       throw new InvalidRequestException(
           format("Artifact Stream associated as a trigger action to triggers [%s]", String.join(", ", triggerNames)),
           USER);
@@ -1153,7 +1153,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean artifactStreamsExistForService(String appId, String serviceId) {
-    return isNotEmpty(artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId));
+    return hasSome(artifactStreamServiceBindingService.listArtifactStreamIds(appId, serviceId));
   }
 
   @Override
@@ -1305,7 +1305,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     List<ArtifactStream> artifactStreams = listByAppId(appId);
-    if (isEmpty(artifactStreams)) {
+    if (hasNone(artifactStreams)) {
       return new HashMap<>();
     }
 
@@ -1352,7 +1352,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<ArtifactStream> listByIds(Collection<String> artifactStreamIds) {
-    if (isEmpty(artifactStreamIds)) {
+    if (hasNone(artifactStreamIds)) {
       return new ArrayList<>();
     }
 
@@ -1361,7 +1361,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                .in(artifactStreamIds)
                                                .asList();
 
-    if (isNotEmpty(artifactStreams)) {
+    if (hasSome(artifactStreams)) {
       List<ArtifactStream> orderedArtifactStreams = new ArrayList<>();
       Map<String, ArtifactStream> artifactStreamMap =
           artifactStreams.stream().collect(Collectors.toMap(ArtifactStream::getUuid, Function.identity()));
@@ -1389,7 +1389,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                                      .fetch())) {
         for (Service service : serviceHIterator) {
           List<String> artifactStreamIds = service.getArtifactStreamIds();
-          if (isEmpty(artifactStreamIds)) {
+          if (hasNone(artifactStreamIds)) {
             continue;
           }
 
@@ -1418,7 +1418,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                                    .fetch())) {
       for (Service service : serviceHIterator) {
         List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
-        if (isEmpty(artifactStreamIds)) {
+        if (hasNone(artifactStreamIds)) {
           continue;
         }
 
@@ -1530,7 +1530,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Set<String> artifactStreamIds = new HashSet<>();
     serviceResourceService.findServicesByApp(appId).forEach(service -> {
       List<String> serviceArtifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
-      if (isNotEmpty(serviceArtifactStreamIds)) {
+      if (hasSome(serviceArtifactStreamIds)) {
         artifactStreamIds.addAll(serviceArtifactStreamIds);
       }
     });

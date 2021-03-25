@@ -1,6 +1,6 @@
 package io.harness.cdng.creator.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -65,7 +65,7 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
-    if (service != null && isNotEmpty(service.getName())) {
+    if (service != null && hasSome(service.getName())) {
       cdFilter.serviceName(service.getName());
     }
 
@@ -76,12 +76,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
     if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+        && hasSome(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
     }
 
     if (infrastructure != null && infrastructure.getInfrastructureDefinition() != null
-        && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
+        && hasSome(infrastructure.getInfrastructureDefinition().getType())) {
       cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }
 

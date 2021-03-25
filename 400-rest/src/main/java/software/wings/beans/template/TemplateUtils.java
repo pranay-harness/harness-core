@@ -1,6 +1,6 @@
 package software.wings.beans.template;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.VariableType.ARTIFACT;
 
@@ -50,7 +50,7 @@ public class TemplateUtils {
   }
 
   public Map<String, Object> processTemplateVariables(ExecutionContext context, List<Variable> variables) {
-    if (isEmpty(variables)) {
+    if (hasNone(variables)) {
       return null;
     }
     Map<String, Object> map = new HashMap<>();

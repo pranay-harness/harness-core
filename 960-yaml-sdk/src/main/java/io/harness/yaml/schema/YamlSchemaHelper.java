@@ -1,7 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -31,7 +31,7 @@ public class YamlSchemaHelper {
   }
 
   public void initializeSchemaMaps(Map<EntityType, JsonNode> schemas) {
-    if (isNotEmpty(yamlSchemaRootClasses)) {
+    if (hasSome(yamlSchemaRootClasses)) {
       yamlSchemaRootClasses.forEach(yamlSchemaRootClass -> {
         final EntityType entityType = yamlSchemaRootClass.getEntityType();
         try {

@@ -2,8 +2,8 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -67,11 +67,11 @@ public class AddRestrictionsToSecrets implements Migration {
 
       secretTextList.forEach(secretText -> {
         if (secretText.getUsageRestrictions() != null
-            && isNotEmpty(secretText.getUsageRestrictions().getAppEnvRestrictions())) {
+            && hasSome(secretText.getUsageRestrictions().getAppEnvRestrictions())) {
           return;
         }
 
-        if (isEmpty(secretText.getAppIds())) {
+        if (hasNone(secretText.getAppIds())) {
           return;
         }
 

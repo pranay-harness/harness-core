@@ -2,8 +2,8 @@ package io.harness.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HPersistence.returnNewOptions;
@@ -74,7 +74,7 @@ public class SecretsDaoImpl implements SecretsDao {
   @Override
   public Optional<EncryptedData> getSecretByKeyOrPath(
       String accountId, EncryptionType encryptionType, String key, String path) {
-    if (isEmpty(key) && isEmpty(path)) {
+    if (hasNone(key) && hasNone(path)) {
       throw new SecretManagementException(
           SECRET_MANAGEMENT_ERROR, "Both key and path cannot be empty when trying to access secrets", USER);
     }
@@ -85,12 +85,12 @@ public class SecretsDaoImpl implements SecretsDao {
         .equal(encryptionType)
         .criteria(EncryptedDataKeys.ngMetadata)
         .equal(null);
-    if (isNotEmpty(key) && isNotEmpty(path)) {
+    if (hasSome(key) && hasSome(path)) {
       query.and(query.or(query.criteria(EncryptedDataKeys.encryptionKey).equal(key),
           query.criteria(EncryptedDataKeys.path).equal(path)));
-    } else if (isNotEmpty(key)) {
+    } else if (hasSome(key)) {
       query.criteria(EncryptedDataKeys.encryptionKey).equal(key);
-    } else if (isNotEmpty(path)) {
+    } else if (hasSome(path)) {
       query.criteria(EncryptedDataKeys.path).equal(path);
     }
     return Optional.ofNullable(query.get());

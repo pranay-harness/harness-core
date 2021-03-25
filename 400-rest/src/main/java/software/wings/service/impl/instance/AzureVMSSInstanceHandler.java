@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.FeatureName.AZURE_VMSS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -75,7 +75,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
     Multimap<String, Instance> vmssIdToInstancesInDbMap = getCurrentInstancesInDb(appId, infraMappingId);
     Set<String> vmssIds = vmssIdToInstancesInDbMap.keySet();
-    if (isEmpty(vmssIds)) {
+    if (hasNone(vmssIds)) {
       return;
     }
 
@@ -90,7 +90,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
   @Override
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    if (isEmpty(deploymentSummaries)) {
+    if (hasNone(deploymentSummaries)) {
       return;
     }
 
@@ -109,7 +109,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     allVMSSIds.addAll(
         deploymentSummaries.stream().map(summary -> summary.getAzureVMSSDeploymentKey().getVmssId()).collect(toSet()));
 
-    if (isNotEmpty(allVMSSIds)) {
+    if (hasSome(allVMSSIds)) {
       allVMSSIds.forEach(vmssId -> {
         Map<String, AzureVMData> latestVMIdToVMDataMap = getLatestInstancesForVMSS(azureConfig, encryptedDataDetails,
             infrastructureMapping.getSubscriptionId(), infrastructureMapping.getResourceGroupName(), vmssId, appId);
@@ -134,7 +134,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     Multimap<String, Instance> vmssIdToInstancesInDbMap =
         getCurrentInstancesInDb(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     Map<String, AzureVMData> vmDataMap = new HashMap<>();
-    if (isNotEmpty(vmData)) {
+    if (hasSome(vmData)) {
       vmData.forEach(data -> vmDataMap.put(data.getId(), data));
     }
     String vmssId = azureVMSSTaskResponse.getVmssId();
@@ -162,7 +162,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     List<AzureVMData> vmData = azureVMSSTaskResponse.getVmData();
 
     boolean success = SUCCESS == azureVMSSTaskExecutionResponse.getCommandExecutionStatus();
-    boolean deleteTask = success && isEmpty(vmData);
+    boolean deleteTask = success && hasNone(vmData);
     String errorMessage = success ? null : azureVMSSTaskExecutionResponse.getErrorMessage();
     return Status.builder().success(success).errorMessage(errorMessage).retryable(!deleteTask).build();
   }
@@ -173,7 +173,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     Map<String, AzureVMData> vmDataMap = new HashMap<>();
     List<AzureVMData> azureVMData = azureVMSSHelperServiceManager.listVMSSVirtualMachines(
         azureConfig, subscriptionId, resourceGroupName, vmssId, encryptedDataDetails, appId);
-    if (isNotEmpty(azureVMData)) {
+    if (hasSome(azureVMData)) {
       azureVMData.forEach(data -> vmDataMap.put(data.getId(), data));
     }
     return vmDataMap;
@@ -203,9 +203,9 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
     handleAzureVMDelete(vmIdToInstanceInDbMap, latestVMIdToVMDataMap);
 
     Set<String> vmIdsToBeAdded = difference(latestVMIdToVMDataMap.keySet(), vmIdToInstanceInDbMap.keySet());
-    if (isNotEmpty(vmIdsToBeAdded)) {
+    if (hasSome(vmIdsToBeAdded)) {
       DeploymentSummary finalDeploymentSummary;
-      if (deploymentSummary == null && isNotEmpty(currentInstancesInDb)) {
+      if (deploymentSummary == null && hasSome(currentInstancesInDb)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
           log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
@@ -252,7 +252,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
         instanceIdsToBeDeleted.add(instance.getUuid());
       }
     });
-    if (isNotEmpty(instanceIdsToBeDeleted)) {
+    if (hasSome(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
       log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
@@ -261,7 +261,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
   private Multimap<String, Instance> getCurrentInstancesInDb(String appId, String infraMappingId) {
     Multimap<String, Instance> vmssIdToInstancesMap = ArrayListMultimap.create();
     List<Instance> instances = getInstances(appId, infraMappingId);
-    if (isNotEmpty(instances)) {
+    if (hasSome(instances)) {
       instances.forEach(instance -> {
         InstanceInfo instanceInfo = instance.getInstanceInfo();
         if (instanceInfo instanceof AzureVMSSInstanceInfo) {
@@ -274,7 +274,7 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
   }
 
   private Map<String, Instance> getVMIdToInstanceInDbMap(Collection<Instance> currentInstancesInDb) {
-    if (isEmpty(currentInstancesInDb)) {
+    if (hasNone(currentInstancesInDb)) {
       return emptyMap();
     }
 
@@ -305,13 +305,13 @@ public class AzureVMSSInstanceHandler extends InstanceHandler implements Instanc
         AzureVMSSDeployExecutionSummary azureVMSSDeployExecutionSummary =
             (AzureVMSSDeployExecutionSummary) stepExecutionSummaryOptional.get();
         List<DeploymentInfo> deploymentInfoList = new ArrayList<>();
-        if (isNotEmpty(azureVMSSDeployExecutionSummary.getNewVirtualMachineScaleSetId())) {
+        if (hasSome(azureVMSSDeployExecutionSummary.getNewVirtualMachineScaleSetId())) {
           deploymentInfoList.add(AzureVMSSDeploymentInfo.builder()
                                      .vmssId(azureVMSSDeployExecutionSummary.getNewVirtualMachineScaleSetId())
                                      .vmssName(azureVMSSDeployExecutionSummary.getNewVirtualMachineScaleSetName())
                                      .build());
         }
-        if (isNotEmpty(azureVMSSDeployExecutionSummary.getOldVirtualMachineScaleSetId())) {
+        if (hasSome(azureVMSSDeployExecutionSummary.getOldVirtualMachineScaleSetId())) {
           deploymentInfoList.add(AzureVMSSDeploymentInfo.builder()
                                      .vmssId(azureVMSSDeployExecutionSummary.getOldVirtualMachineScaleSetId())
                                      .vmssName(azureVMSSDeployExecutionSummary.getOldVirtualMachineScaleSetName())

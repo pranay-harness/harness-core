@@ -3,8 +3,8 @@ package io.harness.dashboard;
 import static io.harness.beans.PageRequest.DEFAULT_PAGE_SIZE;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.steps.resourcerestraint.beans.ResourceConstraint.ACCOUNT_ID_KEY;
 
@@ -66,7 +66,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, savedDashboardSettings, Type.CREATE);
     Map<String, String> properties = new HashMap<>();
     properties.put("module", "Dashboards");
-    properties.put("shared", isEmpty(savedDashboardSettings.getPermissions()) ? "false" : "true");
+    properties.put("shared", hasNone(savedDashboardSettings.getPermissions()) ? "false" : "true");
     properties.put("dashboardName", savedDashboardSettings.getName());
     properties.put("groupId", accountId);
     AccountEvent accountEvent = AccountEvent.builder()
@@ -94,7 +94,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     updateOperations.set(DashboardSettings.keys.data, dashboardSettings.getData());
     updateOperations.set(DashboardSettings.keys.name, dashboardSettings.getName());
     updateOperations.set(DashboardSettings.keys.description, dashboardSettings.getDescription());
-    if (isNotEmpty(dashboardSettings.getPermissions())) {
+    if (hasSome(dashboardSettings.getPermissions())) {
       List<DashboardAccessPermissions> flattenedList = flattenPermissions(dashboardSettings.getPermissions());
       updateOperations.set(keys.permissions, flattenedList);
     } else {
@@ -135,7 +135,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   }
 
   public List<DashboardAccessPermissions> flattenPermissions(List<DashboardAccessPermissions> permissions) {
-    if (isEmpty(permissions)) {
+    if (hasNone(permissions)) {
       return permissions;
     }
 
@@ -152,22 +152,22 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
 
   private Map<String, Set<Action>> getPermissionMap(List<DashboardAccessPermissions> permissions) {
     Map<String, Set<Action>> map = new HashMap<>();
-    if (isEmpty(permissions)) {
+    if (hasNone(permissions)) {
       return map;
     }
     permissions.forEach(permission -> {
       List<String> userGroups = permission.getUserGroups();
-      if (isEmpty(userGroups)) {
+      if (hasNone(userGroups)) {
         return;
       }
 
       userGroups.forEach(userGroup -> {
-        if (isEmpty(permission.getAllowedActions())) {
+        if (hasNone(permission.getAllowedActions())) {
           return;
         }
 
         Set<Action> currentActions = map.get(userGroup);
-        if (isEmpty(currentActions)) {
+        if (hasNone(currentActions)) {
           currentActions = new HashSet<>();
           map.put(userGroup, currentActions);
         }

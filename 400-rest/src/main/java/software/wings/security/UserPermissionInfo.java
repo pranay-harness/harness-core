@@ -1,7 +1,7 @@
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.PermissionType;
 
@@ -39,7 +39,7 @@ public class UserPermissionInfo {
   }
 
   public boolean hasAccountPermission(PermissionType permissionType) {
-    return accountPermissionSummary != null && isNotEmpty(accountPermissionSummary.getPermissions())
+    return accountPermissionSummary != null && hasSome(accountPermissionSummary.getPermissions())
         && accountPermissionSummary.getPermissions().contains(permissionType);
   }
 }

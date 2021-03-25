@@ -1,6 +1,6 @@
 package io.harness.terraform;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.terraform.TerraformConstants.DEFAULT_TERRAFORM_COMMAND_TIMEOUT;
 
 import static java.lang.String.format;
@@ -40,7 +40,7 @@ public class TerraformClientImpl implements TerraformClient {
       String scriptDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
     String command = format("terraform init -input=false %s",
-        isEmpty(terraformInitCommandRequest.getTfBackendConfigsFilePath())
+        hasNone(terraformInitCommandRequest.getTfBackendConfigsFilePath())
             ? EMPTY
             : format("-backend-config=%s", terraformInitCommandRequest.getTfBackendConfigsFilePath()));
 

@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -36,12 +36,12 @@ public class CVLogsIngestionTest extends WingsBaseTest {
   @Ignore("This is used by QA to generate load for sumo")
   public void generateSumoLog() throws Exception {
     String sumoUrl = System.getProperty("sumo.url");
-    if (isEmpty(sumoUrl)) {
+    if (hasNone(sumoUrl)) {
       throw new IllegalArgumentException("sumo.url not provided");
     }
 
     String hostsArg = System.getProperty("sumo.hosts");
-    if (isEmpty(sumoUrl)) {
+    if (hasNone(sumoUrl)) {
       throw new IllegalArgumentException("sumo.hosts not provided");
     }
 

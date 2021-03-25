@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -46,7 +46,7 @@ public class AddWhitelistedDomainsToAccountMigration implements Migration {
              wingsPersistence.createQuery(OauthSettings.class).filter(SSOSettingsKeys.type, SSOType.OAUTH).fetch())) {
       while (ssoSettingsHIterator.hasNext()) {
         OauthSettings ssoSettings = ssoSettingsHIterator.next();
-        if (isEmpty(ssoSettings.getFilter())) {
+        if (hasNone(ssoSettings.getFilter())) {
           log.info("Filter associated with SSOSetting {} is empty. Ignoring ...", ssoSettings.getUuid());
           continue;
         }
@@ -62,7 +62,7 @@ public class AddWhitelistedDomainsToAccountMigration implements Migration {
           String filter = ssoSettings.getFilter();
 
           List<String> domains = Arrays.asList(filter.split("\\s*,\\s*"));
-          if (isEmpty(domains)) {
+          if (hasNone(domains)) {
             log.info("List of domains for SSOSetting {} is empty. Ignoring ...");
             continue;
           }

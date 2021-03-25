@@ -1,7 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -186,7 +186,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
         }
       }
     }
-    if (isNotEmpty(secretTypes)) {
+    if (hasSome(secretTypes)) {
       criteria = criteria.and(SecretKeys.type).in(secretTypes);
     }
     if (!StringUtils.isEmpty(searchTerm)) {

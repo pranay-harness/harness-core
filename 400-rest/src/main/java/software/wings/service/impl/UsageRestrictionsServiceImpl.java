@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -17,7 +17,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.UsageRestrictionException;
 import io.harness.exception.WingsException;
@@ -123,18 +123,18 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       boolean isScopedToAccount) {
     boolean hasNoRestrictions = hasNoRestrictions(entityUsageRestrictions);
 
-    if (isNotEmpty(appIdFromRequest) && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
+    if (hasSome(appIdFromRequest) && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
       if (hasNoRestrictions || isScopedToAccount) {
         return false;
       }
 
       Map<String, Set<String>> appEnvMapFromEntityRestrictions =
           getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdEnvMap);
-      if (isNotEmpty(envIdFromRequest)) {
+      if (hasSome(envIdFromRequest)) {
         // Restrict it to both app and env
         Set<String> envIds = appEnvMapFromEntityRestrictions.get(appIdFromRequest);
 
-        if (isEmpty(envIds)) {
+        if (hasNone(envIds)) {
           return false;
         }
 
@@ -169,7 +169,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   public boolean hasNoRestrictions(UsageRestrictions usageRestrictions) {
     // Observed some entities having empty usage restrictions. Covering that case.
     // Could have been due to a ui bug at some point.
-    return usageRestrictions == null || isEmpty(usageRestrictions.getAppEnvRestrictions());
+    return usageRestrictions == null || hasNone(usageRestrictions.getAppEnvRestrictions());
   }
 
   private boolean hasAllEnvAccess(UsageRestrictions usageRestrictions) {
@@ -188,14 +188,14 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return isAccountAdmin;
     }
 
-    if (isEmpty(appEnvMapFromPermissions) || restrictionsFromUserPermissions == null
-        || isEmpty(restrictionsFromUserPermissions.getAppEnvRestrictions())) {
+    if (hasNone(appEnvMapFromPermissions) || restrictionsFromUserPermissions == null
+        || hasNone(restrictionsFromUserPermissions.getAppEnvRestrictions())) {
       return false;
     }
 
     UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
     // We want to first check if the restrictions from user permissions is not null
-    if (isEmpty(appEnvMapFromEntityRestrictions)) {
+    if (hasNone(appEnvMapFromEntityRestrictions)) {
       return hasAnyCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
     }
 
@@ -208,12 +208,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           }
 
           Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
-          if (isEmpty(envIdsFromRestrictions)) {
+          if (hasNone(envIdsFromRestrictions)) {
             return hasAnyCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
           Set<String> envIdsOfUser = appEnvMapFromPermissions.get(appId);
-          if (isEmpty(envIdsOfUser)) {
+          if (hasNone(envIdsOfUser)) {
             return false;
           }
 
@@ -287,13 +287,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Map<String, AppPermissionSummary> appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
 
-    if (isEmpty(appPermissionMap)) {
+    if (hasNone(appPermissionMap)) {
       return appEnvMap;
     }
 
     Set<Entry<String, AppPermissionSummary>> entrySet = appPermissionMap.entrySet();
 
-    if (isEmpty(entrySet)) {
+    if (hasNone(entrySet)) {
       return appEnvMap;
     }
 
@@ -315,13 +315,13 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
 
       Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
-      if (isEmpty(envPermissions)) {
+      if (hasNone(envPermissions)) {
         return;
       }
 
       Set<EnvInfo> envInfoSet = envPermissions.get(action);
 
-      if (isEmpty(envInfoSet)) {
+      if (hasNone(envInfoSet)) {
         return;
       }
 
@@ -336,7 +336,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       Set<AppEnvRestriction> appEnvRestrictions, Map<String, List<Base>> appIdEnvMap) {
     Map<String, Set<String>> appEnvMap = new HashMap<>();
 
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return appEnvMap;
     }
 
@@ -344,7 +344,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
       Set<String> appSet = getAppIdsByFilter(appFilter, appIdEnvMap.keySet());
 
-      if (isEmpty(appSet)) {
+      if (hasNone(appSet)) {
         return;
       }
 
@@ -354,7 +354,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         // Multimap is deliberately not used since we want to be able to insert the key with null values.
         Set<String> valueSet = appEnvMap.computeIfAbsent(appId, k -> new HashSet<>());
 
-        if (!isEmpty(envIdsByFilter)) {
+        if (!hasNone(envIdsByFilter)) {
           valueSet.addAll(envIdsByFilter);
         }
       });
@@ -387,12 +387,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Set<String> filterTypes = envFilter.getFilterTypes();
 
-    if (isEmpty(filterTypes)) {
+    if (hasNone(filterTypes)) {
       return envSet;
     }
 
     List<Base> envList = appIdEnvMap.get(appId);
-    if (isEmpty(envList)) {
+    if (hasNone(envList)) {
       return envSet;
     }
 
@@ -439,7 +439,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     userGroupList.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-      if (isEmpty(appPermissions)) {
+      if (hasNone(appPermissions)) {
         return;
       }
 
@@ -480,7 +480,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       });
     });
 
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return null;
     }
 
@@ -501,7 +501,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         userGroupService.listByAccountId(userRequestContext.getAccountId(), user, true);
     userGroupsByAccountId.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-      if (isEmpty(appPermissions)) {
+      if (hasNone(appPermissions)) {
         return;
       }
 
@@ -515,7 +515,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
         GenericEntityFilter appFilter = appPermission.getAppFilter();
         Set<String> appIdsByFilter = authHandler.getAppIdsByFilter(accountId, appFilter);
-        if (isEmpty(appIdsByFilter)) {
+        if (hasNone(appIdsByFilter)) {
           return;
         }
 
@@ -548,7 +548,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     EnvFilterBuilder envFilterBuilder = EnvFilter.builder();
     Set<String> envFilterTypes = Sets.newHashSet();
 
-    if (isEmpty(workflowFilter.getFilterTypes())) {
+    if (hasNone(workflowFilter.getFilterTypes())) {
       return envFilterBuilder.build();
     }
 
@@ -590,7 +590,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Map<String, String> appMap =
         pageResponse.getResponse().stream().collect(Collectors.toMap(Base::getUuid, Application::getName));
 
-    if (isEmpty(appMap)) {
+    if (hasNone(appMap)) {
       return RestrictionsSummary.builder()
           .hasAllAppAccess(true)
           .hasAllNonProdEnvAccess(true)
@@ -667,7 +667,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return false;
     }
 
@@ -675,7 +675,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
       if (appFilter == null || appFilter.getFilterType() == null || envFilter == null
-          || isEmpty(envFilter.getFilterTypes())) {
+          || hasNone(envFilter.getFilterTypes())) {
         return false;
       } else {
         return (appFilter.getFilterType().equals(GenericEntityFilter.FilterType.ALL)
@@ -695,7 +695,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return false;
     }
 
@@ -713,7 +713,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return false;
     }
 
@@ -724,7 +724,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public UsageRestrictions getUsageRestrictionsFromJson(String usageRestrictionsString) {
     // TODO use a bean param instead. It wasn't working for some reason.
-    if (EmptyPredicate.isNotEmpty(usageRestrictionsString)) {
+    if (hasSome(usageRestrictionsString)) {
       try {
         return JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
       } catch (Exception ex) {
@@ -737,12 +737,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId) {
     Set<AppEnvRestriction> appEnvRestrictions = Sets.newHashSet();
-    if (isNotEmpty(appId)) {
+    if (hasSome(appId)) {
       GenericEntityFilter appFilter = GenericEntityFilter.builder()
                                           .filterType(GenericEntityFilter.FilterType.SELECTED)
                                           .ids(Sets.newHashSet(appId))
                                           .build();
-      if (isNotEmpty(envId)) {
+      if (hasSome(envId)) {
         AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder()
                                                   .appFilter(appFilter)
                                                   .envFilter(EnvFilter.builder()
@@ -753,7 +753,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         appEnvRestrictions.add(appEnvRestriction);
       } else {
         Set<EnvFilter> envFilters = getEnvFilterForApp(accountId, appId);
-        if (isEmpty(envFilters)) {
+        if (hasNone(envFilters)) {
           return null;
         }
         envFilters.forEach(envFilter -> {
@@ -847,7 +847,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public boolean isUsageRestrictionsSubset(
       String accountId, UsageRestrictions usageRestrictions, UsageRestrictions parentRestrictions) {
-    if (usageRestrictions == null || isEmpty(usageRestrictions.getAppEnvRestrictions())) {
+    if (usageRestrictions == null || hasNone(usageRestrictions.getAppEnvRestrictions())) {
       return true;
     }
     if (parentRestrictions == null) {
@@ -863,7 +863,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private boolean isUsageRestrictionsSubsetInternal(UsageRestrictions usageRestrictions,
       Map<String, Set<String>> appEnvMap, UsageRestrictions parentRestrictions,
       Map<String, Set<String>> parentAppEnvMap) {
-    if (isEmpty(appEnvMap)) {
+    if (hasNone(appEnvMap)) {
       return hasAllCommonEnv(usageRestrictions, parentRestrictions);
     }
     UsageRestrictions entityUsageRestrictionsFinal = usageRestrictions;
@@ -873,11 +873,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         return false;
       }
       Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
-      if (isEmpty(envIdsFromRestrictions)) {
+      if (hasNone(envIdsFromRestrictions)) {
         return hasAllCommonEnv(appId, entityUsageRestrictionsFinal, parentRestrictions);
       }
       Set<String> envIdsFromUserPermissions = parentAppEnvMap.get(appId);
-      if (isEmpty(envIdsFromUserPermissions)) {
+      if (hasNone(envIdsFromUserPermissions)) {
         return false;
       }
       return envIdsFromUserPermissions.containsAll(envIdsFromRestrictions);
@@ -1019,7 +1019,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
 
       Set<String> setupEnvIds = setupUsage.getValue();
-      if (isEmpty(setupEnvIds)) {
+      if (hasNone(setupEnvIds)) {
         continue;
       }
 
@@ -1299,12 +1299,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public UsageRestrictions getMaximumAllowedUsageRestrictionsForUser(
       String accountId, UsageRestrictions usageRestrictions) {
-    if (!hasUserContext() || usageRestrictions == null || isEmpty(usageRestrictions.getAppEnvRestrictions())) {
+    if (!hasUserContext() || usageRestrictions == null || hasNone(usageRestrictions.getAppEnvRestrictions())) {
       return usageRestrictions;
     }
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap = getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE);
     UsageRestrictions userUsageRestrictions = restrictionsAndAppEnvMap.getUsageRestrictions();
-    if (userUsageRestrictions == null || isEmpty(usageRestrictions.getAppEnvRestrictions())) {
+    if (userUsageRestrictions == null || hasNone(usageRestrictions.getAppEnvRestrictions())) {
       return UsageRestrictions.builder().appEnvRestrictions(new HashSet<>()).build();
     }
     return getCommonRestrictions(usageRestrictions, userUsageRestrictions);
@@ -1336,7 +1336,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Set<AppEnvRestriction> appEnvRestrictions =
         usageRestrictions == null ? Collections.emptySet() : usageRestrictions.getAppEnvRestrictions();
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return count;
     }
 
@@ -1347,12 +1347,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
         Set<String> appIds = appFilter.getIds();
 
-        if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && isNotEmpty(appIds)
+        if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && hasSome(appIds)
             && appIds.contains(appId)) {
           appIds.remove(appId);
           count++;
 
-          if (isEmpty(appFilter.getIds())) {
+          if (hasNone(appFilter.getIds())) {
             continue;
           }
         }
@@ -1361,11 +1361,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         Set<String> envIds = envFilter.getIds();
         Set<String> filterTypes = envFilter.getFilterTypes();
 
-        if (filterTypes.contains(EnvFilter.FilterType.SELECTED) && isNotEmpty(envIds) && envIds.contains(envId)) {
+        if (filterTypes.contains(EnvFilter.FilterType.SELECTED) && hasSome(envIds) && envIds.contains(envId)) {
           envIds.remove(envId);
           count++;
 
-          if (isEmpty(envFilter.getIds())) {
+          if (hasNone(envFilter.getIds())) {
             continue;
           }
         }
@@ -1393,26 +1393,26 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       EnvFilter envFilter = appEnvRestriction.getEnvFilter();
 
       String appId = null;
-      if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && isNotEmpty(appFilter.getIds())) {
+      if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && hasSome(appFilter.getIds())) {
         appId = appFilter.getIds().iterator().next();
         if (!existingAppIds.contains(appId)) {
           appFilter.getIds().remove(appId);
           count++;
         }
 
-        if (isEmpty(appFilter.getIds())) {
+        if (hasNone(appFilter.getIds())) {
           continue;
         }
       }
 
-      if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && isNotEmpty(envFilter.getIds())) {
+      if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && hasSome(envFilter.getIds())) {
         String envId = envFilter.getIds().iterator().next();
         if (appId != null && !existingEnvIds.contains(envId)) {
           envFilter.getIds().remove(envId);
           count++;
         }
 
-        if (isEmpty(envFilter.getIds())) {
+        if (hasNone(envFilter.getIds())) {
           continue;
         }
       }
@@ -1440,9 +1440,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         }
 
         if (appFilter.getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)) {
-          if (isEmpty(appFilter.getIds())) {
+          if (hasNone(appFilter.getIds())) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
-          } else if (appFilter.getIds().stream().anyMatch(EmptyPredicate::isEmpty)) {
+          } else if (appFilter.getIds().stream().anyMatch(HasPredicate::hasNone)) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
           }
         }
@@ -1453,7 +1453,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         }
 
         Set<String> envFilterTypes = envFilter.getFilterTypes();
-        if (envFilter == null || isEmpty(envFilterTypes)) {
+        if (envFilter == null || hasNone(envFilterTypes)) {
           throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
         }
 
@@ -1467,9 +1467,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           if (envFilterTypes.size() != 1) {
             throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
           } else {
-            if (isEmpty(envFilter.getIds())) {
+            if (hasNone(envFilter.getIds())) {
               throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
-            } else if (envFilter.getIds().stream().anyMatch(EmptyPredicate::isEmpty)) {
+            } else if (envFilter.getIds().stream().anyMatch(HasPredicate::hasNone)) {
               throw new WingsException(ErrorCode.INVALID_USAGE_RESTRICTION, USER);
             }
           }
@@ -1529,9 +1529,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Set<String> commonFilterTypes = new HashSet<>();
     Set<String> commonIds = new HashSet<>();
 
-    if (isNotEmpty(envFilter1.getIds())) {
+    if (hasSome(envFilter1.getIds())) {
       commonIds.addAll(getCommonEnvIds(envFilter1.getIds(), envFilter2));
-    } else if (isNotEmpty(envFilter2.getIds())) {
+    } else if (hasSome(envFilter2.getIds())) {
       commonIds.addAll(getCommonEnvIds(envFilter2.getIds(), envFilter1));
     } else {
       commonFilterTypes.addAll(envFilter1.getFilterTypes());
@@ -1555,7 +1555,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private Set<String> getCommonEnvIds(Set<String> ids, EnvFilter envFilter) {
     Set<String> commonIds = new HashSet<>();
-    if (isNotEmpty(envFilter.getIds())) {
+    if (hasSome(envFilter.getIds())) {
       commonIds.addAll(ids);
       commonIds.retainAll(envFilter.getIds());
     } else {

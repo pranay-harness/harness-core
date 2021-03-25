@@ -23,7 +23,7 @@ import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_NOT_ASSIGNED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
@@ -34,7 +34,6 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -252,7 +251,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   private CEClusterHealth getClusterHealth(ClusterRecord clusterRecord) {
     List<CEError> errors = getErrors(clusterRecord);
     return CEClusterHealth.builder()
-        .isHealthy(isEmpty(errors))
+        .isHealthy(hasNone(errors))
         .clusterId(clusterRecord.getUuid())
         .clusterName(clusterRecord.getCluster().getClusterName())
         .clusterRecord(clusterRecord)
@@ -361,7 +360,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       }
     }
 
-    if (isEmpty(messages)) {
+    if (hasNone(messages)) {
       if (lastEventTimestamp <= 0) {
         messages.add("No events received. It typically takes 3 to 5 minutes to start receiving events.");
       } else {
@@ -376,7 +375,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     SettingValue cloudProvider = settingsService.get(cloudProviderId).getValue();
     if (cloudProvider instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig k8sCloudProvider = (KubernetesClusterConfig) cloudProvider;
-      delegateName = !EmptyPredicate.isEmpty(k8sCloudProvider.getDelegateSelectors())
+      delegateName = !hasNone(k8sCloudProvider.getDelegateSelectors())
           ? k8sCloudProvider.getDelegateSelectors().iterator().next()
           : null;
     } else if (cloudProvider instanceof AwsConfig) {

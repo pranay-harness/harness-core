@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -68,7 +68,7 @@ public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration 
                 if (instanceInfo instanceof K8sPodInfo) {
                   List<K8sContainerInfo> containers = ((K8sPodInfo) instanceInfo).getContainers();
 
-                  if (isEmpty(containers)) {
+                  if (hasNone(containers)) {
                     continue;
                   }
 

@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.steps.io;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.pms.sdk.core.data.StepTransput;
 
@@ -17,7 +17,7 @@ public class StepInputPackage {
   @Singular List<ResolvedRefInput> inputs;
 
   public List<StepTransput> findByRefKey(String refKey) {
-    if (isEmpty(inputs)) {
+    if (hasNone(inputs)) {
       return Collections.emptyList();
     }
     return inputs.stream()

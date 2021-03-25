@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.azure.devops;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.execute;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getAuthHeader;
@@ -21,7 +23,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
@@ -97,7 +98,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
     List<AzureArtifactsPackageVersion> azureArtifactsPackageVersions =
         listPackageVersions(azureArtifactsConfig, encryptionDetails, artifactStreamAttributes.getProject(),
             artifactStreamAttributes.getFeed(), artifactStreamAttributes.getPackageId());
-    if (EmptyPredicate.isEmpty(azureArtifactsPackageVersions)) {
+    if (hasNone(azureArtifactsPackageVersions)) {
       return Collections.emptyList();
     }
 
@@ -159,7 +160,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
         execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                     .listFeeds(getAuthHeader(azureArtifactsConfig)))
             .getValue();
-    if (isBlank(project) && EmptyPredicate.isNotEmpty(azureArtifactsFeeds)) {
+    if (isBlank(project) && hasSome(azureArtifactsFeeds)) {
       // Filter out feeds that belong to a project.
       azureArtifactsFeeds =
           azureArtifactsFeeds.stream().filter(feed -> feed.getProject() == null).collect(Collectors.toList());
@@ -216,7 +217,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
       AzureArtifactsPackageVersion packageVersion =
           execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                       .getPackageVersion(getAuthHeader(azureArtifactsConfig), feed, packageId, versionId));
-      if (packageVersion == null || EmptyPredicate.isEmpty(packageVersion.getFiles())) {
+      if (packageVersion == null || hasNone(packageVersion.getFiles())) {
         return Collections.emptyList();
       }
 
@@ -268,7 +269,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
         AzureArtifactsPackageVersion packageVersion =
             execute(getAzureArtifactsRestClient(azureArtifactsConfig.getAzureDevopsUrl(), project)
                         .getPackageVersion(authHeader, feed, packageId, versionId));
-        if (packageVersion == null || EmptyPredicate.isEmpty(packageVersion.getFiles())) {
+        if (packageVersion == null || hasNone(packageVersion.getFiles())) {
           return;
         }
 

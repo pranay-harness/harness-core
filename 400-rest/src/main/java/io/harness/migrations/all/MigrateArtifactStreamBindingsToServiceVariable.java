@@ -1,8 +1,9 @@
 package io.harness.migrations.all;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -63,7 +64,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
                              .stream()
                              .map(Application::getUuid)
                              .collect(Collectors.toSet());
-    if (EmptyPredicate.isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       log.info("No applications found for account " + accountId
           + ". Not migrating artifact stream bindings to service variable.");
       return;
@@ -90,7 +91,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
                                                                    .project(ServiceKeys.artifactStreamIds, true)
                                                                    .fetch())) {
       for (Service service : serviceHIterator) {
-        if (EmptyPredicate.isEmpty(service.getArtifactStreamIds())) {
+        if (hasNone(service.getArtifactStreamIds())) {
           continue;
         }
 
@@ -133,8 +134,8 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
   }
 
   private static boolean areListEqual(List<String> list1, List<String> list2) {
-    if (EmptyPredicate.isEmpty(list1) || EmptyPredicate.isEmpty(list2)) {
-      return EmptyPredicate.isEmpty(list1) && EmptyPredicate.isEmpty(list2);
+    if (hasNone(list1) || hasNone(list2)) {
+      return hasNone(list1) && hasNone(list2);
     }
 
     Set<String> set1 = new HashSet<>(list1);

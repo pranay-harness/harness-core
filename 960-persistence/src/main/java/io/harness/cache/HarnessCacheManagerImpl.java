@@ -2,7 +2,7 @@ package io.harness.cache;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.cache.CacheBackend.CAFFEINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -45,7 +45,7 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
     if (isCacheDisabled(cacheName)) {
       return new NoOpCache<>();
     }
-    String cacheNamespace = isEmpty(cacheConfig.getCacheNamespace())
+    String cacheNamespace = hasNone(cacheConfig.getCacheNamespace())
         ? CACHE_PREFIX
         : cacheConfig.getCacheNamespace().concat("/").concat(CACHE_PREFIX);
     String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
@@ -72,7 +72,7 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
   }
 
   private boolean isCacheDisabled(String cacheName) {
-    if (isEmpty(cacheConfig.getDisabledCaches())) {
+    if (hasNone(cacheConfig.getDisabledCaches())) {
       return false;
     }
     Optional<String> disabledCacheName =

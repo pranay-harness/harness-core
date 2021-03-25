@@ -1,6 +1,7 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
@@ -28,14 +29,14 @@ public class PlanCreationBlobResponseUtils {
 
   public void mergeContext(
       PlanCreationBlobResponse.Builder builder, Map<String, PlanCreationContextValue> contextValueMap) {
-    if (EmptyPredicate.isEmpty(contextValueMap)) {
+    if (hasNone(contextValueMap)) {
       return;
     }
     builder.putAllContext(contextValueMap);
   }
 
   public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
-    if (EmptyPredicate.isEmpty(newNodes)) {
+    if (hasNone(newNodes)) {
       return;
     }
     newNodes.values().forEach(newNode -> addNode(builder, newNode));
@@ -48,7 +49,7 @@ public class PlanCreationBlobResponseUtils {
   }
 
   public void addDependencies(PlanCreationBlobResponse.Builder builder, Map<String, YamlFieldBlob> fieldBlobs) {
-    if (EmptyPredicate.isEmpty(fieldBlobs)) {
+    if (hasNone(fieldBlobs)) {
       return;
     }
     fieldBlobs.forEach((key, value) -> addDependency(builder, key, value));
@@ -63,10 +64,10 @@ public class PlanCreationBlobResponseUtils {
   }
 
   public void mergeStartingNodeId(PlanCreationBlobResponse.Builder builder, String otherStartingNodeId) {
-    if (EmptyPredicate.isEmpty(otherStartingNodeId)) {
+    if (hasNone(otherStartingNodeId)) {
       return;
     }
-    if (EmptyPredicate.isEmpty(builder.getStartingNodeId())) {
+    if (hasNone(builder.getStartingNodeId())) {
       builder.setStartingNodeId(otherStartingNodeId);
       return;
     }
@@ -80,7 +81,7 @@ public class PlanCreationBlobResponseUtils {
     if (response.getGraphLayoutInfo() != null) {
       String otherStartingNodeId = response.getGraphLayoutInfo().getStartingNodeId();
       GraphLayoutInfo.Builder layoutNodeInfo = GraphLayoutInfo.newBuilder();
-      if (EmptyPredicate.isEmpty(builder.getGraphLayoutInfo().getStartingNodeId())) {
+      if (hasNone(builder.getGraphLayoutInfo().getStartingNodeId())) {
         layoutNodeInfo.setStartingNodeId(otherStartingNodeId);
       } else {
         layoutNodeInfo.setStartingNodeId(builder.getGraphLayoutInfo().getStartingNodeId());

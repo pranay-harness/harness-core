@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -578,7 +578,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       }
     }
     for (TimeSeriesOfMetric metric : insideTimeSeries.getMetricTimeSeries()) {
-      if (isNotEmpty(metric.getMetricDeeplinkUrl())) {
+      if (hasSome(metric.getMetricDeeplinkUrl())) {
         assertThat(metric.getMetricDeeplinkUrl().contains("https://harness-test.saas.appdynamics.com/controller/"))
             .isTrue();
       }

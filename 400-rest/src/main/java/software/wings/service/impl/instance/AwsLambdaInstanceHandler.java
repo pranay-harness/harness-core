@@ -3,7 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
@@ -199,7 +199,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   private void handleNonPerpetualInstanceSync(@NotNull List<DeploymentSummary> newDeploymentSummaries,
       AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, Collection<ServerlessInstance> activeInstancesInDB) {
-    if (isNotEmpty(newDeploymentSummaries)) {
+    if (hasSome(newDeploymentSummaries)) {
       handleNewDeploymentInternal(
           newDeploymentSummaries, activeInstancesInDB, awsLambdaInfraStructureMapping, awsConfig, encryptedDataDetails);
     } else {
@@ -213,7 +213,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   void deleteInstances(Collection<ServerlessInstance> instancesInDB) {
     final List<String> instanceIdsToDelete = instancesInDB.stream().map(ServerlessInstance::getUuid).collect(toList());
 
-    if (isNotEmpty(instanceIdsToDelete)) {
+    if (hasSome(instanceIdsToDelete)) {
       log.info("Deleting instance Ids ={}", instanceIdsToDelete);
       serverlessInstanceService.delete(instanceIdsToDelete);
     }
@@ -223,7 +223,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
   void handleNewDeploymentInternal(Collection<DeploymentSummary> newDeploymentSummaries,
       Collection<ServerlessInstance> activeInstancesInDB, AwsLambdaInfraStructureMapping infrastructureMapping,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isNotEmpty(newDeploymentSummaries)) {
+    if (hasSome(newDeploymentSummaries)) {
       log.info("Handling new Aws Lambda Deployments with deployment Summary Ids : [{}]",
           newDeploymentSummaries.stream().map(DeploymentSummary::getUuid).collect(joining(",")));
       // functions to delete

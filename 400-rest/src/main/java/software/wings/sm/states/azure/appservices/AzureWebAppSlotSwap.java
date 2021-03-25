@@ -1,6 +1,6 @@
 package software.wings.sm.states.azure.appservices;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SWAP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SWAP;
@@ -39,7 +39,7 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
     if (verifyIfContextElementExist(context)) {
       AzureAppServiceSlotSetupContextElement contextElement = readContextElement(context);
       String targetSlot = contextElement.getTargetSlot();
-      return !isEmpty(targetSlot);
+      return !hasNone(targetSlot);
     }
     return false;
   }

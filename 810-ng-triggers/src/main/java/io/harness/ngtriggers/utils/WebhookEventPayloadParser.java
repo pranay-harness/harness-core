@@ -3,7 +3,7 @@ package io.harness.ngtriggers.utils;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -56,7 +56,7 @@ public class WebhookEventPayloadParser {
 
   public boolean containsHeaderKey(Map<String, List<String>> headers, String key) {
     Set<String> headerKeys = headers.keySet();
-    if (isEmpty(headerKeys) || isBlank(key)) {
+    if (hasNone(headerKeys) || isBlank(key)) {
       return false;
     }
 
@@ -66,7 +66,7 @@ public class WebhookEventPayloadParser {
 
   public List<String> getHeaderValue(Map<String, List<String>> headers, String key) {
     Set<String> headerKeys = headers.keySet();
-    if (isEmpty(headerKeys) || isBlank(key)) {
+    if (hasNone(headerKeys) || isBlank(key)) {
       return Collections.emptyList();
     }
     Optional<String> caseInsensitiveKey = headerKeys.stream().filter(key::equalsIgnoreCase).findFirst();

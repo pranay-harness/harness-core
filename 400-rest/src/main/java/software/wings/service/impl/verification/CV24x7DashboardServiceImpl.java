@@ -1,7 +1,7 @@
 package software.wings.service.impl.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
@@ -84,7 +84,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed) {
     List<HeatMap> rv = Collections.synchronizedList(new ArrayList<>());
     List<CVConfiguration> cvConfigurations = getCVConfigurations(appId, serviceId);
-    if (isEmpty(cvConfigurations)) {
+    if (hasNone(cvConfigurations)) {
       log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
@@ -115,7 +115,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
                                                  .filter(CVConfigurationKeys.serviceId, serviceId)
                                                  .filter(CVConfigurationKeys.enabled24x7, true)
                                                  .asList();
-    if (isEmpty(cvConfigurations)) {
+    if (hasNone(cvConfigurations)) {
       log.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
       return new ArrayList<>();
     }
@@ -319,7 +319,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     int highRiskClusters = 0;
     int mediumRiskCluster = 0;
     int lowRiskClusters = 0;
-    if (isNotEmpty(analysisSummary.getUnknownClusters())) {
+    if (hasSome(analysisSummary.getUnknownClusters())) {
       for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
         if (clusterSummary.getScore() > LOGS_HIGH_RISK_THRESHOLD) {
           ++highRiskClusters;
@@ -361,7 +361,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
       List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null, false);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {
-        if (isNotEmpty(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
+        if (hasSome(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
             && cvFeedbackRecord.getAnalysisMinute() == analysisEndMin) {
           CLUSTER_TYPE type = cvFeedbackRecord.getClusterType();
           if (!clusterTypeRecordMap.containsKey(type)) {
@@ -391,7 +391,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
   private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
     int unexpectedFrequency = 0;
-    if (isEmpty(testClusters)) {
+    if (hasNone(testClusters)) {
       return unexpectedFrequency;
     }
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
@@ -410,7 +410,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   private void updateFeedbacksWithJira(CVConfiguration cvConfiguration, LogMLAnalysisSummary summary) {
     List<CVFeedbackRecord> cvFeedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
 
-    if (!isEmpty(cvFeedbackRecords)) {
+    if (!hasNone(cvFeedbackRecords)) {
       Map<String, CVFeedbackRecord> feedbackIdMap = new HashMap<>();
       cvFeedbackRecords.forEach(feedbackRecord -> feedbackIdMap.put(feedbackRecord.getUuid(), feedbackRecord));
       addJiraLinkToClusters(feedbackIdMap, summary.getControlClusters());
@@ -426,7 +426,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     }
     clusterSummary.forEach(controlCluster -> {
       String feedbackId = controlCluster.getLogMLFeedbackId();
-      if (isNotEmpty(feedbackId)) {
+      if (hasSome(feedbackId)) {
         // add in the Jira link if available
         if (feedbackRecordMap.containsKey(feedbackId)) {
           controlCluster.setJiraLink(feedbackRecordMap.get(feedbackId).getJiraLink());
@@ -446,7 +446,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
     if (template != null) {
       template.getMetricTemplates().forEach((key, value) -> {
-        if (isNotEmpty(value.getTags())) {
+        if (hasSome(value.getTags())) {
           tags.addAll(value.getTags());
         }
       });

@@ -1,8 +1,8 @@
 package io.harness.cache;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.lang.String.format;
@@ -37,7 +37,7 @@ public class MongoStore implements DistributedStore {
   @Inject private KryoSerializer kryoSerializer;
 
   String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
-    if (isEmpty(params)) {
+    if (hasNone(params)) {
       return format("%s/%d/%d/%d", key, version, algorithmId, structureHash);
     }
     return format("%s/%d/%d/%d%d", key, version, algorithmId, structureHash, Objects.hash(params.toArray()));
@@ -104,7 +104,7 @@ public class MongoStore implements DistributedStore {
       updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);
       updateOperations.set(CacheEntityKeys.entity, kryoSerializer.asDeflatedBytes(entity));
       updateOperations.set(CacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
-      if (isNotEmpty(accountId)) {
+      if (hasSome(accountId)) {
         updateOperations.set(CacheEntityKeys.accountId, accountId);
       }
 

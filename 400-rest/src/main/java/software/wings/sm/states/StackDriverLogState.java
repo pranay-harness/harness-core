@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
@@ -54,7 +54,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
   }
 
   public String getMessageField() {
-    if (isEmpty(messageField)) {
+    if (hasNone(messageField)) {
       return STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
     }
     return messageField;
@@ -75,7 +75,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Algorithm Sensitivity")
   @DefaultValue("MEDIUM")
   public AnalysisTolerance getAnalysisTolerance() {
-    if (isEmpty(tolerance)) {
+    if (hasNone(tolerance)) {
       return AnalysisTolerance.LOW;
     }
     return AnalysisTolerance.valueOf(tolerance);
@@ -86,7 +86,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Baseline for Risk Analysis")
   @DefaultValue("COMPARE_WITH_PREVIOUS")
   public AnalysisComparisonStrategy getComparisonStrategy() {
-    if (isEmpty(comparisonStrategy)) {
+    if (hasNone(comparisonStrategy)) {
       return AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
     }
     return AnalysisComparisonStrategy.valueOf(comparisonStrategy);
@@ -111,7 +111,7 @@ public class StackDriverLogState extends AbstractLogAnalysisState {
   @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
   @DefaultValue("15")
   public String getTimeDuration() {
-    if (isEmpty(timeDuration)) {
+    if (hasNone(timeDuration)) {
       return String.valueOf(15);
     }
     return timeDuration;

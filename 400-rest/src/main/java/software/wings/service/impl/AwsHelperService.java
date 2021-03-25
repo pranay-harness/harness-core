@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
@@ -369,11 +369,11 @@ public class AwsHelperService {
    * @return the hostname from dns name
    */
   public String getHostnameFromPrivateDnsName(String dnsName) {
-    return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
+    return hasSome(dnsName) ? dnsName.split("\\.")[0] : "";
   }
 
   public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
-    if (isEmpty(hostNameConvention)) {
+    if (hasNone(hostNameConvention)) {
       hostNameConvention = InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION;
     }
     return expressionEvaluator.substitute(hostNameConvention, context);
@@ -763,7 +763,7 @@ public class AwsHelperService {
 
     List<Service> services = new ArrayList<>();
 
-    if (isNotEmpty(listServicesResult.getServiceArns())) {
+    if (hasSome(listServicesResult.getServiceArns())) {
       do {
         services.addAll(describeServices(region, awsConfig, encryptionDetails,
             new DescribeServicesRequest()
@@ -968,7 +968,7 @@ public class AwsHelperService {
       tracker.trackELBCall("Describe Target Groups");
       List<TargetGroup> targetGroupList =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest).getTargetGroups();
-      if (isNotEmpty(targetGroupList)) {
+      if (hasSome(targetGroupList)) {
         if (targetGroupList.get(0).getTargetGroupArn().equalsIgnoreCase(targetGroupArn)) {
           return targetGroupList.get(0);
         }
@@ -1523,7 +1523,7 @@ public class AwsHelperService {
       throw new InvalidRequestException("Cannot get the role name", e);
     }
 
-    if (isEmpty(roleName)) {
+    if (hasNone(roleName)) {
       throw new InvalidRequestException("No role attached to the instance");
     }
     try {

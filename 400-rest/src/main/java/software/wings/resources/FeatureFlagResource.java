@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.beans.FeatureFlag;
@@ -46,7 +46,7 @@ public class FeatureFlagResource {
     if (user == null) {
       throw new InvalidArgumentsException("Invalid User");
     }
-    if (isEmpty(user.getEmail()) || !user.getEmail().endsWith("@harness.io")) {
+    if (hasNone(user.getEmail()) || !user.getEmail().endsWith("@harness.io")) {
       throw new UnauthorizedException("User not authorized.", USER);
     }
 

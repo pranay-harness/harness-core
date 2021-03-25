@@ -1,6 +1,6 @@
 package io.harness.mongo;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.MongoUtils.setUnsetOnInsert;
@@ -128,7 +128,7 @@ public class MongoPersistence implements HPersistence {
   public AdvancedDatastore getDatastore(Store store) {
     return datastoreMap.computeIfAbsent(store.getName(), key -> {
       Info info = storeInfo.get(store.getName());
-      if (info == null || isEmpty(info.getUri())) {
+      if (info == null || hasNone(info.getUri())) {
         return getDatastore(DEFAULT_STORE);
       }
       return MongoModule.createDatastore(morphia, info.getUri());
@@ -286,7 +286,7 @@ public class MongoPersistence implements HPersistence {
       onSave(entity);
     }
 
-    if (isEmpty(ts)) {
+    if (hasNone(ts)) {
       return;
     }
 

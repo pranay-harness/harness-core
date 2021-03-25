@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -13,7 +14,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -65,7 +65,7 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
   public Set<String> getServiceTemplateVariableExpressions(String appId, String envId, String serviceId) {
     List<String> serviceIds = serviceExpressionBuilder.getServiceIds(appId, serviceId);
 
-    if (EmptyPredicate.isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return Collections.emptySet();
     }
 

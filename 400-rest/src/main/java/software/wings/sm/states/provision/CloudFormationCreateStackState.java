@@ -1,8 +1,8 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -20,7 +20,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -134,7 +133,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   }
 
   private void ensureNonEmptyStringField(String field, String fieldName) {
-    if (isEmpty(field)) {
+    if (hasNone(field)) {
       throw new InvalidRequestException(format("Field: [%s] in provisioner is required", fieldName));
     }
   }
@@ -181,7 +180,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
       String branch = renderedGitFileConfig.getBranch();
       ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
-      if (isNotEmpty(branch)) {
+      if (hasSome(branch)) {
         gitConfig.setBranch(branch);
       }
       gitConfig.setReference(renderedGitFileConfig.getCommitId());
@@ -205,17 +204,17 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         infrastructureProvisionerService.extractTextVariables(getVariables(), executionContext);
     Map<String, String> renderedInfrastructureVariables = infrastructureVariables;
 
-    if (EmptyPredicate.isNotEmpty(infrastructureVariables.entrySet())) {
+    if (hasSome(infrastructureVariables.entrySet())) {
       renderedInfrastructureVariables = infrastructureVariables.entrySet().stream().collect(Collectors.toMap(
           e
           -> {
-            if (EmptyPredicate.isNotEmpty(e.getKey())) {
+            if (hasSome(e.getKey())) {
               return executionContext.renderExpression(e.getKey());
             }
             return e.getKey();
           },
           e -> {
-            if (EmptyPredicate.isNotEmpty(e.getValue())) {
+            if (hasSome(e.getValue())) {
               return executionContext.renderExpression(e.getValue());
             }
             return e.getValue();
@@ -226,10 +225,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId());
 
     Map<String, EncryptedDataDetail> renderedEncryptedInfrastructureVariables = encryptedInfrastructureVariables;
-    if (EmptyPredicate.isNotEmpty(encryptedInfrastructureVariables.entrySet())) {
+    if (hasSome(encryptedInfrastructureVariables.entrySet())) {
       renderedEncryptedInfrastructureVariables =
           encryptedInfrastructureVariables.entrySet().stream().collect(Collectors.toMap(e -> {
-            if (EmptyPredicate.isNotEmpty(e.getKey())) {
+            if (hasSome(e.getKey())) {
               return executionContext.renderExpression(e.getKey());
             }
             return e.getKey();
@@ -264,7 +263,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     return DelegateTask.builder()
         .accountId(executionContext.getApp().getAccountId())
         .waitId(activityId)
-        .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+        .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
         .data(TaskData.builder()
                   .async(true)
@@ -291,7 +290,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
     String branch = renderedGitFileConfig.getBranch();
     ensureNonEmptyStringField(sourceRepoSettingId, "sourceRepoSettingId");
-    if (isNotEmpty(branch)) {
+    if (hasSome(branch)) {
       gitConfig.setBranch(branch);
     }
     gitConfig.setReference(renderedGitFileConfig.getCommitId());
@@ -310,7 +309,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     DelegateTask s3FetchFileTask =
         DelegateTask.builder()
             .accountId(executionContext.getApp().getAccountId())
-            .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
+            .tags(hasSome(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
                 executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
@@ -448,22 +447,22 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       if (outputElement == null) {
         outputElement = CloudFormationOutputInfoElement.builder().build();
       }
-      if (isNotEmpty(outputs)) {
+      if (hasSome(outputs)) {
         outputElement.mergeOutputs(outputs);
       }
       ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
       Map<String, String> renderedOldStackParams = existingStackInfo.getOldStackParameters();
-      if (EmptyPredicate.isNotEmpty(existingStackInfo.getOldStackParameters())) {
+      if (hasSome(existingStackInfo.getOldStackParameters())) {
         renderedOldStackParams = existingStackInfo.getOldStackParameters().entrySet().stream().collect(Collectors.toMap(
             e
             -> {
-              if (EmptyPredicate.isNotEmpty(e.getKey())) {
+              if (hasSome(e.getKey())) {
                 return context.renderExpression(e.getKey());
               }
               return e.getKey();
             },
             e -> {
-              if (EmptyPredicate.isNotEmpty(e.getValue())) {
+              if (hasSome(e.getValue())) {
                 return context.renderExpression(e.getValue());
               }
               return e.getValue();
@@ -587,8 +586,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   }
 
   private void addNewVariables(List<Parameter> parameters) {
-    if (isNotEmpty(parameters)) {
-      if (isEmpty(getVariables())) {
+    if (hasSome(parameters)) {
+      if (hasNone(getVariables())) {
         setVariables(new ArrayList<>());
       }
       Set<String> variablesKeySet = getVariables().stream().map(NameValuePair::getName).collect(Collectors.toSet());

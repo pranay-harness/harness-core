@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
 import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
@@ -102,7 +102,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   }
 
   private void decryptFields(List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isNotEmpty(encryptedDataDetails)) {
+    if (hasSome(encryptedDataDetails)) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
         decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
@@ -154,7 +154,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     }
     if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
-      if (isNotEmpty(config.getBody())) {
+      if (hasSome(config.getBody())) {
         config.setBody(resolveDollarReferences(config.getBody()));
         body = new JSONObject(config.getBody()).toMap();
       }

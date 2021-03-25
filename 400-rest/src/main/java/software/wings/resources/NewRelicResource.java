@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -94,7 +94,7 @@ public class NewRelicResource {
   public RestResponse<List<NewRelicApplication>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     List<NewRelicApplication> applications = newRelicService.getApplications(settingId, StateType.NEW_RELIC);
-    if (!isEmpty(applications)) {
+    if (!hasNone(applications)) {
       Collections.sort(applications);
     }
     return new RestResponse<>(applications);

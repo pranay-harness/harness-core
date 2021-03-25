@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.variables;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
@@ -82,7 +83,7 @@ public class ExecutionVariableCreator extends ChildrenVariableCreator {
                                    .map(el -> el.getField(YAMLFieldNameConstants.STEP_GROUP))
                                    .filter(Objects::nonNull)
                                    .collect(Collectors.toList()));
-        if (EmptyPredicate.isNotEmpty(childYamlFields)) {
+        if (hasSome(childYamlFields)) {
           stepFields.addAll(childYamlFields);
         }
       }

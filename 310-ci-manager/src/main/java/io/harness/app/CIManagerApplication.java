@@ -1,6 +1,6 @@
 package io.harness.app;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -379,7 +379,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   private static void registerStores(CIManagerConfiguration config, Injector injector) {
     final String ciMongo = config.getHarnessCIMongo().getUri();
-    if (isNotEmpty(ciMongo) && !ciMongo.equals(config.getHarnessMongo().getUri())) {
+    if (hasSome(ciMongo) && !ciMongo.equals(config.getHarnessMongo().getUri())) {
       final HPersistence hPersistence = injector.getInstance(HPersistence.class);
       hPersistence.register(HARNESS_STORE, config.getHarnessMongo().getUri());
     }

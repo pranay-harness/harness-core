@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.validator.TagValidator.TAG_MAX_LENGTH;
 import static io.harness.rule.OwnerRule.ANKIT;
 
@@ -53,6 +53,6 @@ public class TagValidatorTest {
   }
 
   private static boolean isValidTag(String tag) {
-    return isNotEmpty(tag) && tag.length() <= TAG_MAX_LENGTH;
+    return hasSome(tag) && tag.length() <= TAG_MAX_LENGTH;
   }
 }

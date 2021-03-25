@@ -1,6 +1,6 @@
 package io.harness.delegate.task.mixin;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.delegate.beans.connector.jira.JiraCapabilityHelper;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
@@ -25,7 +25,7 @@ public class JiraCapabilityGenerator {
       executionCapabilities.addAll(
           JiraCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, capabilityDemander));
     }
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return executionCapabilities;
     }
 

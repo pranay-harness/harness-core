@@ -5,7 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -174,7 +174,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId) {
-    if (isEmpty(apiKeyEntries)) {
+    if (hasNone(apiKeyEntries)) {
       return;
     }
 
@@ -182,7 +182,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "name").build();
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<UserGroup> allUserGroupList = res.getResponse();
-    if (isEmpty(allUserGroupList)) {
+    if (hasNone(allUserGroupList)) {
       return;
     }
 
@@ -191,7 +191,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     apiKeyEntries.forEach(apiKeyEntry -> {
       List<String> userGroupIds = apiKeyEntry.getUserGroupIds();
-      if (isEmpty(userGroupIds)) {
+      if (hasNone(userGroupIds)) {
         return;
       }
 
@@ -207,7 +207,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private List<UserGroup> getUserGroupsForApiKey(List<String> userGroupIds, String accountId, boolean details) {
-    if (isEmpty(userGroupIds)) {
+    if (hasNone(userGroupIds)) {
       return Collections.emptyList();
     }
 
@@ -410,7 +410,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public void evictAndRebuildPermissions(String accountId, boolean rebuild) {
     PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
     List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
-    if (isEmpty(apiKeyEntryList)) {
+    if (hasNone(apiKeyEntryList)) {
       return;
     }
 
@@ -444,7 +444,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private void evictAndRebuildPermissionsAndRestrictions(
       String accountId, boolean rebuild, List<ApiKeyEntry> apiKeyEntryList) {
-    if (isEmpty(apiKeyEntryList)) {
+    if (hasNone(apiKeyEntryList)) {
       return;
     }
 

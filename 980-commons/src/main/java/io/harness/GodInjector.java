@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
@@ -19,7 +19,7 @@ public final class GodInjector {
   }
 
   public Injector put(String injectorName, Injector injector) {
-    if (isEmpty(injectorName)) {
+    if (hasNone(injectorName)) {
       throw new InvalidArgumentsException("Injector Name must not be empty!");
     }
     if (injector == null) {

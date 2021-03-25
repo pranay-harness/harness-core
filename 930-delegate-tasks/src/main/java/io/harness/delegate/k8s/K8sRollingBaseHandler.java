@@ -1,7 +1,7 @@
 package io.harness.delegate.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
@@ -66,7 +66,7 @@ public class K8sRollingBaseHandler {
   }
 
   public void setCustomWorkloadsInRelease(List<KubernetesResource> customWorkloads, Release release) {
-    if (isNotEmpty(customWorkloads)) {
+    if (hasSome(customWorkloads)) {
       release.setCustomWorkloads(customWorkloads);
     }
   }
@@ -120,7 +120,7 @@ public class K8sRollingBaseHandler {
       KubernetesConfig kubernetesConfig, String releaseName) throws Exception {
     List<K8sPod> k8sPods = new ArrayList<>();
 
-    if (isEmpty(managedWorkloads)) {
+    if (hasNone(managedWorkloads)) {
       return k8sPods;
     }
 
@@ -133,7 +133,7 @@ public class K8sRollingBaseHandler {
       List<K8sPod> podDetails =
           k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
-      if (isNotEmpty(podDetails)) {
+      if (hasSome(podDetails)) {
         k8sPods.addAll(podDetails);
       }
     }

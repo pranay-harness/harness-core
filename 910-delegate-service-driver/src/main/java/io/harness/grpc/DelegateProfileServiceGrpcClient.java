@@ -1,6 +1,6 @@
 package io.harness.grpc;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.delegate.AccountId;
 import io.harness.delegateprofile.AddProfileRequest;
@@ -158,7 +158,7 @@ public class DelegateProfileServiceGrpcClient {
   }
 
   private void validateScopingRules(List<ProfileScopingRule> scopingRules) {
-    if (isEmpty(scopingRules)) {
+    if (hasNone(scopingRules)) {
       return;
     }
     for (ProfileScopingRule scopingRule : scopingRules) {

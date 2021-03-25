@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.variable;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -103,7 +103,7 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
     if (type != null && type == VariableType.ARTIFACT) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         List<AllowedValueYaml> allowedValueYamlList = new ArrayList<>();
-        if (isNotEmpty(bean.getAllowedList())) {
+        if (hasSome(bean.getAllowedList())) {
           for (String id : bean.getAllowedList()) {
             ArtifactStream as = artifactStreamService.get(id);
             if (as != null) {

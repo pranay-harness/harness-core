@@ -1,7 +1,7 @@
 package io.harness.delegate.k8s;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
@@ -123,7 +123,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    if (isEmpty(managedWorkloads)) {
+    if (hasNone(managedWorkloads)) {
       k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
@@ -209,7 +209,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
       List<String> manifestHelperFiles =
-          isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
+          hasNone(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
       List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
           request.getManifestDelegateConfig(), manifestFilesDirectory, manifestHelperFiles, releaseName,
           kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
@@ -246,7 +246,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       boolean inCanaryWorkflow, boolean skipResourceVersioning) {
     try {
       managedWorkloads = getWorkloads(resources);
-      if (isNotEmpty(managedWorkloads) && !skipResourceVersioning) {
+      if (hasSome(managedWorkloads) && !skipResourceVersioning) {
         markVersionedResources(resources);
       }
 
@@ -265,7 +265,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
       k8sTaskHelperBase.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
 
-      if (isEmpty(managedWorkloads)) {
+      if (hasNone(managedWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
       } else {
         executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)

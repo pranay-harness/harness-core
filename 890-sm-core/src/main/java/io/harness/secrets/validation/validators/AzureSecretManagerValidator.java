@@ -1,7 +1,7 @@
 package io.harness.secrets.validation.validators;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -39,7 +39,7 @@ public class AzureSecretManagerValidator extends BaseSecretValidator {
   }
 
   private void verifyFileSizeWithinLimit(byte[] fileContent) {
-    if (isNotEmpty(fileContent) && fileContent.length > AZURE_SECRET_CONTENT_SIZE_LIMIT) {
+    if (hasSome(fileContent) && fileContent.length > AZURE_SECRET_CONTENT_SIZE_LIMIT) {
       String message = "Azure Secrets Manager limits secret value to " + AZURE_SECRET_CONTENT_SIZE_LIMIT + " bytes.";
       throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER_SRE);
     }

@@ -3,7 +3,7 @@ package io.harness.delegate.task.executioncapability;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
 import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -99,7 +99,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
                         || !blockingCapabilityIds.contains(capabilitySubjectPermission.getCapabilityId()))
                 .collect(Collectors.toList());
 
-        if (isNotEmpty(capabilitySubjectPermissions)) {
+        if (hasSome(capabilitySubjectPermissions)) {
           delegateService.executeBatchCapabilityCheckTask(
               delegate.getAccountId(), delegate.getUuid(), capabilitySubjectPermissions, null);
         } else {

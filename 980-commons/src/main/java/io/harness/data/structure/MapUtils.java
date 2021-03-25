@@ -1,6 +1,6 @@
 package io.harness.data.structure;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MapUtils {
   public static <K> void putIfNotEmpty(K key, String value, Map<K, String> map) {
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       map.put(key, value);
     }
   }

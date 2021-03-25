@@ -7,6 +7,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
@@ -101,7 +102,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.exception.DeploymentFreezeException;
@@ -2116,8 +2116,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
 
     Function<List<Artifact>, Boolean> checkArtifacts = artifacts
-        -> EmptyPredicate.isNotEmpty(artifacts) && artifacts.size() == 2
-        && artifacts.get(0).getUuid().equals(ARTIFACT_ID) && artifacts.get(1).getUuid().equals(artifactId1);
+        -> hasSome(artifacts) && artifacts.size() == 2 && artifacts.get(0).getUuid().equals(ARTIFACT_ID)
+        && artifacts.get(1).getUuid().equals(artifactId1);
     assertThat(checkArtifacts.apply(workflowExecution.getArtifacts())).isTrue();
     assertThat(checkArtifacts.apply(executionArgs.getArtifacts())).isTrue();
     assertThat(keywords).contains("s", "s1");

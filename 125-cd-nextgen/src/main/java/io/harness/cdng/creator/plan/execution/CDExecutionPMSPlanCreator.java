@@ -1,8 +1,9 @@
 package io.harness.cdng.creator.plan.execution;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -46,7 +47,7 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
           stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
     // Add Steps Node
-    if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
+    if (hasSome(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
       PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());
@@ -56,7 +57,7 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
     YamlField executionStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS);
 
     PlanCreationResponse planForRollback = RollbackPlanCreator.createPlanForRollback(ctx.getCurrentField());
-    if (EmptyPredicate.isNotEmpty(planForRollback.getNodes())) {
+    if (hasSome(planForRollback.getNodes())) {
       responseMap.put(
           Objects.requireNonNull(executionStepsField).getNode().getUuid() + "_combinedRollback", planForRollback);
     }

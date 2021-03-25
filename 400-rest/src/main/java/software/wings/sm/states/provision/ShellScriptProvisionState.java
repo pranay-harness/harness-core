@@ -2,7 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -232,7 +232,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
-    if (isEmpty(provisionerId)) {
+    if (hasNone(provisionerId)) {
       results.put("Required Fields missing", "Provision must be provided.");
       return results;
     }

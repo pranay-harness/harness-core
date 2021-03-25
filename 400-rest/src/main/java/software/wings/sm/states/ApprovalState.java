@@ -11,8 +11,8 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
@@ -214,7 +214,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String approvalId = generateUuid();
 
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       resolveUserGroupFromTemplate(context, executionContext);
     }
 
@@ -292,16 +292,16 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     TemplateExpression userGroupExp =
         templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), ApprovalStateKeys.userGroups);
 
-    if (userGroupExp != null && isNotEmpty(userGroupExp.getExpression())) {
+    if (userGroupExp != null && hasSome(userGroupExp.getExpression())) {
       String userGroupsString = templateExpressionProcessor.resolveTemplateExpression(context, userGroupExp);
-      if (!isEmpty(userGroupsString)) {
+      if (!hasNone(userGroupsString)) {
         userGroups = Arrays.asList(userGroupsString.split("\\s*,\\s*"));
       } else {
         throw new InvalidRequestException("User group templatised but value is not provided", USER);
       }
     }
 
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       throw new ApprovalStateException("Valid user groups not provided in Approval Step", ErrorCode.USER_GROUP_ERROR,
           Level.ERROR, WingsException.USER);
     }
@@ -403,9 +403,9 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   void setPipelineVariables(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Map<String, Object> workflowVariables = new HashMap<>();
-    if (isNotEmpty(workflowStandardParams.getWorkflowVariables())) {
+    if (hasSome(workflowStandardParams.getWorkflowVariables())) {
       workflowStandardParams.getWorkflowVariables().forEach(workflowVariables::put);
-      if (isNotEmpty(workflowVariables)) {
+      if (hasSome(workflowVariables)) {
         if (workflowStandardParams.getWorkflowElement() == null) {
           workflowStandardParams.setWorkflowElement(WorkflowElement.builder().variables(workflowVariables).build());
         } else {
@@ -748,7 +748,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       ExecutionContext context) {
     Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
 
-    if (executionData.getSnowApproval() == null || isEmpty(executionData.getSnowApproval().fetchConditions())) {
+    if (executionData.getSnowApproval() == null || hasNone(executionData.getSnowApproval().fetchConditions())) {
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -824,14 +824,14 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         context.getWorkflowExecutionId(), WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments,
         WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.infraDefinitionIds);
 
-    if (isNotEmpty(workflowExecution.getArtifacts())) {
+    if (hasSome(workflowExecution.getArtifacts())) {
       artifacts.append(
           workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, ExecutionScope.WORKFLOW, null)
               .getMessage());
     } else {
       artifacts.append("*Artifacts*: no artifacts");
     }
-    if (isNotEmpty(workflowExecution.getEnvironments())) {
+    if (hasSome(workflowExecution.getEnvironments())) {
       StringJoiner env = new StringJoiner(", ");
       workflowExecution.getEnvironments().forEach(envSummary -> env.add(envSummary.getName()));
       environments.append("*Environments*: ").append(env.toString());
@@ -843,7 +843,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .calculateEnvDetails(accountId, context.getAppId(), workflowExecution.getEnvironments())
             .getMessage();
     placeHolderValues.put("ENV", envDetailsForEmail.replace("*Environments:*", "<b>Environments:</b>"));
-    if (isNotEmpty(workflowExecution.getServiceIds())) {
+    if (hasSome(workflowExecution.getServiceIds())) {
       serviceDetails = workflowNotificationHelper.calculateServiceDetailsForAllServices(
           accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null);
       services.append("*Services*: ").append(serviceDetails.getName());
@@ -853,7 +853,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       placeHolderValues.put("SERVICE_NAMES", services.toString().replace("*Services*", "<b>Services</b>"));
     }
     List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
-    if (isNotEmpty(infraDefinitionIds)) {
+    if (hasSome(infraDefinitionIds)) {
       infraDetails = workflowNotificationHelper.calculateInfraDetails(accountId, context.getAppId(), workflowExecution);
       infrastructureDefinitions.append("*Infrastructure Definitions*: ").append(infraDetails.getName());
       placeHolderValues.put("INFRA_NAMES",
@@ -994,7 +994,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     boolean isApprovalFromSlack = approvalNotifyResponse.isApprovalFromSlack();
-    if (isNotEmpty(approvalNotifyResponse.getVariables())) {
+    if (hasSome(approvalNotifyResponse.getVariables())) {
       setVariables(approvalNotifyResponse.getVariables());
     }
 
@@ -1048,7 +1048,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       ApprovalStateExecutionData approvalNotifyResponse) {
     Map<String, Object> output = new HashMap<>();
     Map<String, Object> variableMap = new HashMap<>();
-    if (isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       for (NameValuePair expression : variables) {
         variableMap.put(expression.getName(),
             context.renderExpression(
@@ -1072,7 +1072,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
         output.put(ApprovalStateExecutionDataKeys.approvedOn, executionData.getApprovedOn());
         output.put(ApprovalStateExecutionDataKeys.comments, executionData.getComments());
-        if (isNotEmpty(executionData.getUserGroups())) {
+        if (hasSome(executionData.getUserGroups())) {
           output.put(ApprovalStateExecutionDataKeys.userGroups,
               userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
         }
@@ -1294,7 +1294,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   public static String fetchAndTrimSweepingOutputName(Map<String, Object> propertyMap) {
     String publishedVarName = propertyMap.getOrDefault(ApprovalStateKeys.sweepingOutputName, "").toString().trim();
-    if (isNotEmpty(publishedVarName)) {
+    if (hasSome(publishedVarName)) {
       propertyMap.put(ApprovalStateKeys.sweepingOutputName, publishedVarName);
     }
     return publishedVarName;

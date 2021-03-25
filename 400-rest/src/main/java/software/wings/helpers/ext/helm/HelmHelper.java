@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
@@ -49,7 +49,7 @@ public class HelmHelper {
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   public void validateHelmValueYamlFile(String helmValueYamlFile) {
-    if (isEmpty(helmValueYamlFile)) {
+    if (hasNone(helmValueYamlFile)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Helm value yaml file is empty");
     }
 
@@ -97,7 +97,7 @@ public class HelmHelper {
   public static boolean isArtifactReferencedInValuesYaml(String helmValueYamlFile) {
     Set<String> serviceArtifactVariableNames = new HashSet<>();
     updateArtifactVariableNamesReferencedInValuesYaml(helmValueYamlFile, serviceArtifactVariableNames);
-    return isNotEmpty(serviceArtifactVariableNames);
+    return hasSome(serviceArtifactVariableNames);
   }
 
   public static void updateArtifactVariableNamesReferencedInValuesYaml(

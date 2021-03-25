@@ -29,8 +29,8 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_SCM;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_TAG;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CustomExecutionSource;
@@ -77,19 +77,19 @@ public class BuildEnvironmentUtils {
       }
     } else if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
       ManualExecutionSource manualExecutionSource = (ManualExecutionSource) ciExecutionArgs.getExecutionSource();
-      if (!isEmpty(manualExecutionSource.getBranch())) {
+      if (!hasNone(manualExecutionSource.getBranch())) {
         envVarMap.put(DRONE_COMMIT_BRANCH, manualExecutionSource.getBranch());
       }
-      if (!isEmpty(manualExecutionSource.getTag())) {
+      if (!hasNone(manualExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
     } else if (ciExecutionArgs.getExecutionSource().getType() == Type.CUSTOM) {
       CustomExecutionSource customExecutionSource = (CustomExecutionSource) ciExecutionArgs.getExecutionSource();
-      if (!isEmpty(customExecutionSource.getBranch())) {
+      if (!hasNone(customExecutionSource.getBranch())) {
         envVarMap.put(DRONE_COMMIT_BRANCH, customExecutionSource.getBranch());
       }
-      if (!isEmpty(customExecutionSource.getTag())) {
+      if (!hasNone(customExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, customExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
@@ -129,7 +129,7 @@ public class BuildEnvironmentUtils {
     setEnvironmentVariable(envVarMap, DRONE_COMMIT_AUTHOR_EMAIL, baseAttributes.getAuthorEmail());
     setEnvironmentVariable(envVarMap, DRONE_COMMIT_AUTHOR_AVATAR, baseAttributes.getAuthorAvatar());
     setEnvironmentVariable(envVarMap, DRONE_COMMIT_AUTHOR_NAME, baseAttributes.getAuthorName());
-    if (isNotEmpty(baseAttributes.getAction())) {
+    if (hasSome(baseAttributes.getAction())) {
       envVarMap.put(DRONE_BUILD_ACTION, baseAttributes.getAction());
     }
     return envVarMap;

@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Collections.singletonList;
 
@@ -65,7 +65,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.AWS_LAMBDA_TASK.name())

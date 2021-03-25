@@ -1,9 +1,9 @@
 package software.wings.search.entities.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.api.DeploymentType;
 import software.wings.search.entities.related.audit.RelatedAuditView;
@@ -41,7 +41,7 @@ public class ServiceSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(ServiceView serviceView) {
-    if (EmptyPredicate.isNotEmpty(serviceView.getDeployments())) {
+    if (hasSome(serviceView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(serviceView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(serviceView);
@@ -49,7 +49,7 @@ public class ServiceSearchResult extends SearchResult {
   }
 
   public void setDeployments(List<RelatedDeploymentView> deployments) {
-    if (EmptyPredicate.isNotEmpty(deployments)) {
+    if (hasSome(deployments)) {
       this.deployments = deployments;
       this.deploymentsCount = deployments.size();
     } else {
@@ -59,7 +59,7 @@ public class ServiceSearchResult extends SearchResult {
   }
 
   private void setAudits(ServiceView serviceView) {
-    if (EmptyPredicate.isNotEmpty(serviceView.getAudits())) {
+    if (hasSome(serviceView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(serviceView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(serviceView);
@@ -67,7 +67,7 @@ public class ServiceSearchResult extends SearchResult {
   }
 
   public void setAudits(List<RelatedAuditView> audits) {
-    if (EmptyPredicate.isNotEmpty(audits)) {
+    if (hasSome(audits)) {
       this.audits = audits;
       this.auditsCount = audits.size();
     } else {

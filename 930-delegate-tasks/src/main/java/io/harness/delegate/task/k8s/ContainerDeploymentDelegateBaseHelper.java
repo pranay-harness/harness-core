@@ -1,7 +1,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -40,7 +40,7 @@ public class ContainerDeploymentDelegateBaseHelper {
 
   private List<ContainerInfo> fetchContainersUsingControllersWhenReady(KubernetesConfig kubernetesConfig,
       LogCallback executionLogCallback, List<? extends HasMetadata> controllers, List<Pod> existingPods) {
-    if (isNotEmpty(controllers)) {
+    if (hasSome(controllers)) {
       return controllers.stream()
           .filter(controller
               -> !(controller.getKind().equals("ReplicaSet") && controller.getMetadata().getOwnerReferences() != null))

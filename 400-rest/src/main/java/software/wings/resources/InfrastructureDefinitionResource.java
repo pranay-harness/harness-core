@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
@@ -9,7 +11,6 @@ import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
@@ -77,7 +78,7 @@ public class InfrastructureDefinitionResource {
   @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<InfrastructureDefinition>> listPost(
       @Context PageRequest pageRequest, ListInfraDefinitionParams listInfraDefinitionParams) {
-    if (EmptyPredicate.isNotEmpty(listInfraDefinitionParams.getDeploymentTypeFromMetaData())) {
+    if (hasSome(listInfraDefinitionParams.getDeploymentTypeFromMetaData())) {
       pageRequest.addFilter(InfrastructureDefinitionKeys.deploymentType, SearchFilter.Operator.IN,
           listInfraDefinitionParams.getDeploymentTypeFromMetaData().toArray());
     }

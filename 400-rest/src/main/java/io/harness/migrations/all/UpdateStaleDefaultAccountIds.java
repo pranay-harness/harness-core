@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -45,7 +45,7 @@ public class UpdateStaleDefaultAccountIds implements Migration {
           continue;
         }
 
-        if (isNotEmpty(user.getAccounts())) {
+        if (hasSome(user.getAccounts())) {
           Set<String> accountIds = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
 
           if (!accountIds.contains(user.getDefaultAccountId())) {

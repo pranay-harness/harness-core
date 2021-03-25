@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.Misc.normalizeExpression;
 import static io.harness.validation.Validator.notNullCheck;
@@ -298,7 +298,7 @@ public class AwsAmiServiceSetup extends State {
               .blueGreen(blueGreen)
               .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context));
 
-      String asgNamePrefix = isNotEmpty(autoScalingGroupName)
+      String asgNamePrefix = hasSome(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))
           : AsgConvention.getAsgNamePrefix(app.getName(), service.getName(), env.getName());
 
@@ -331,7 +331,7 @@ public class AwsAmiServiceSetup extends State {
               .accountId(app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
               .waitId(activity.getUuid())
-              .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
                         .async(true)
                         .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())

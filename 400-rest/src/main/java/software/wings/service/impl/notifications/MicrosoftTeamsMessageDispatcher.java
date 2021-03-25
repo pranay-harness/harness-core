@@ -1,5 +1,7 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static software.wings.common.NotificationConstants.BLUE_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
@@ -7,8 +9,6 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver;
@@ -61,7 +61,7 @@ public class MicrosoftTeamsMessageDispatcher {
   @Inject private MicrosoftTeamsNotificationService microsoftTeamsNotificationService;
 
   public void dispatch(List<Notification> notifications, String microsoftTeamsWebhookUrl) {
-    if (EmptyPredicate.isEmpty(notifications)) {
+    if (hasNone(notifications)) {
       return;
     }
     List<String> messages = new ArrayList<>();

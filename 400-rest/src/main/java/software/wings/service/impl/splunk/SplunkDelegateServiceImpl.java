@@ -1,7 +1,7 @@
 package software.wings.service.impl.splunk;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
@@ -323,7 +323,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   public SplunkValidationResponse getValidationResponse(SplunkConnectorDTO splunkConnectorDTO,
       List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
-    Preconditions.checkState(isNotEmpty(query), "query can not be empty");
+    Preconditions.checkState(hasSome(query), "query can not be empty");
     secretDecryptionService.decrypt(splunkConnectorDTO, encryptedDataDetails);
     SplunkSampleResponse splunkSampleResponse = getSamples(splunkConnectorDTO, query, requestGuid);
     Histogram histogram = getHistogram(splunkConnectorDTO, query, requestGuid);
@@ -460,7 +460,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   private String getQuery(String query, String hostNameField, String host, boolean isAdvancedQuery) {
     String searchQuery = isAdvancedQuery ? query + " " : "search " + query + " ";
-    if (!(isEmpty(host) || DUMMY_HOST_NAME.equals(host))) {
+    if (!(hasNone(host) || DUMMY_HOST_NAME.equals(host))) {
       searchQuery += hostNameField + " = " + host;
     }
     searchQuery += " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"

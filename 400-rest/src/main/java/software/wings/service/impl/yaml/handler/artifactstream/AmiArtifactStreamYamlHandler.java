@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -44,7 +44,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   protected void toBean(AmiArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
-    if (isEmpty(yaml.getRegion())) {
+    if (hasNone(yaml.getRegion())) {
       throw new InvalidRequestException("Region cannot be null or empty");
     }
     bean.setRegion(yaml.getRegion());
@@ -59,7 +59,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
-    if (isEmpty(tagList)) {
+    if (hasNone(tagList)) {
       return Lists.newArrayList();
     }
     return tagList.stream()
@@ -79,7 +79,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   private List<NameValuePair.Yaml> getFiltersYaml(List<FilterClass> filterClassList) {
-    if (isEmpty(filterClassList)) {
+    if (hasNone(filterClassList)) {
       return Lists.newArrayList();
     }
     return filterClassList.stream()

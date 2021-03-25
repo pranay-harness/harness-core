@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
@@ -75,7 +75,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
   }
 
   private boolean deleteProcessedResponses(Set<String> responsesToBeDeleted) {
-    if (isEmpty(responsesToBeDeleted)) {
+    if (hasNone(responsesToBeDeleted)) {
       return true;
     }
 

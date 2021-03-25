@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.Misc.isLong;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -154,8 +154,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
-    if (isEmpty(getTemplateExpressions())) {
-      if (isEmpty(applicationId) || isEmpty(analysisServerConfigId) || isEmpty(tierId)) {
+    if (hasNone(getTemplateExpressions())) {
+      if (hasNone(applicationId) || hasNone(analysisServerConfigId) || hasNone(tierId)) {
         results.put("Required Fields missing", "Connector, Application and tier should be provided");
         return results;
       }
@@ -302,7 +302,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       analyzedTier.setName(tier.getName());
       analyzedTier.setId(Long.parseLong(tierId));
     });
-    Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
+    Preconditions.checkState(!hasNone(analyzedTier.getName()), "failed for " + analyzedTier);
 
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     List<DelegateTask> delegateTasks = new ArrayList<>();
@@ -413,7 +413,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   @Override
   protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
-    if (!isEmpty(dependentTiersToAnalyze)) {
+    if (!hasNone(dependentTiersToAnalyze)) {
       InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
       if (DeploymentType.HELM
           == serviceResourceService.getDeploymentType(
@@ -497,7 +497,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   public static String getMetricTypeForMetric(String metricName) {
-    if (isEmpty(metricName)) {
+    if (hasNone(metricName)) {
       return null;
     }
     Map<String, TimeSeriesMetricDefinition> appDMetrics = new HashMap<>(APP_DYNAMICS_VALUES_TO_ANALYZE);

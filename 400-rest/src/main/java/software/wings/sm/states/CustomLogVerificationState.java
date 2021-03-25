@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -59,7 +59,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   public void setLogCollectionInfos(List<LogCollectionInfo> collectionInfos) {
     this.logCollectionInfos = collectionInfos;
-    if (isNotEmpty(collectionInfos)) {
+    if (hasSome(collectionInfos)) {
       this.query = collectionInfos.get(0).getCollectionUrl();
     }
   }
@@ -125,7 +125,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(logCollectionInfos)) {
+    if (hasNone(logCollectionInfos)) {
       invalidFields.put("Log Collection Info", "Log collection info should not be empty");
     }
     return invalidFields;
@@ -240,12 +240,12 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
 
     // Set the host details (if exists) in the responseMapper
-    if (!isEmpty(responseMapping.getHostJsonPath())) {
+    if (!hasNone(responseMapping.getHostJsonPath())) {
       List hostJsonList = new ArrayList();
       String hostJson = responseMapping.getHostJsonPath();
       hostJsonList.add(hostJson);
       List<String> hostRegex =
-          isEmpty(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
+          hasNone(responseMapping.getHostRegex()) ? null : Lists.newArrayList(responseMapping.getHostRegex());
       ResponseMapper hostResponseMapper =
           ResponseMapper.builder().fieldName("host").regexs(hostRegex).jsonPath(hostJsonList).build();
       responseMappers.put("host", hostResponseMapper);
@@ -294,7 +294,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     }
 
     public String getTimestampFormat() {
-      return isNotEmpty(timestampFormat) ? timestampFormat : timeStampFormat;
+      return hasSome(timestampFormat) ? timestampFormat : timeStampFormat;
     }
   }
   public enum ResponseType { JSON }

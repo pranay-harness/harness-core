@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.user;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -26,7 +26,7 @@ public class UserQueryHelper {
     this.utils = utils;
   }
   public void setQuery(List<QLUserFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
     filters.forEach(filter -> {

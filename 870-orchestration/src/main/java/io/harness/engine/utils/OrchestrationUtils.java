@@ -1,9 +1,9 @@
 package io.harness.engine.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.run.NodeRunCheck;
 import io.harness.engine.skip.SkipCheck;
 import io.harness.execution.NodeExecution;
@@ -26,7 +26,7 @@ public class OrchestrationUtils {
 
   public NodeRunCheck shouldRunExecution(
       Ambiance ambiance, String whenCondition, EngineExpressionService engineExpressionService) {
-    if (EmptyPredicate.isEmpty(whenCondition)) {
+    if (hasNone(whenCondition)) {
       return NodeRunCheck.builder().isSuccessful(false).whenCondition(whenCondition).build();
     }
     try {
@@ -49,7 +49,7 @@ public class OrchestrationUtils {
 
   public SkipCheck shouldSkipNodeExecution(
       Ambiance ambiance, String skipCondition, EngineExpressionService engineExpressionService) {
-    if (EmptyPredicate.isEmpty(skipCondition)) {
+    if (hasNone(skipCondition)) {
       return SkipCheck.builder().isSuccessful(false).skipCondition(skipCondition).build();
     }
     try {

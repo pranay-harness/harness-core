@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -35,11 +35,11 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
     notEmptyCheck("Invalid assertion expression in yaml file path: " + yamlFilePath, yaml.getAssertionExpression());
 
     List<String> stepIds = null;
-    if (Scope.SPECIFIC_STEPS.name().equals(yaml.getScope()) && isNotEmpty(yaml.getSteps())) {
+    if (Scope.SPECIFIC_STEPS.name().equals(yaml.getScope()) && hasSome(yaml.getSteps())) {
       PhaseStep phaseStep =
           (PhaseStep) changeContext.getProperties().get(PhaseStepYamlHandler.PHASE_STEP_PROPERTY_NAME);
       notNullCheck("Invalid phase step in yaml file path: " + yamlFilePath, phaseStep);
-      if (isNotEmpty(phaseStep.getSteps())) {
+      if (hasSome(phaseStep.getSteps())) {
         stepIds = new ArrayList<>();
         Map<String, String> nameToIdMap =
             phaseStep.getSteps().stream().collect(Collectors.toMap(GraphNode::getName, GraphNode::getId));
@@ -57,10 +57,10 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
   @Override
   public Yaml toYaml(StepSkipStrategy bean, String appId) {
     List<String> steps = null;
-    if (bean.getScope() == Scope.SPECIFIC_STEPS && isNotEmpty(bean.getStepIds())) {
+    if (bean.getScope() == Scope.SPECIFIC_STEPS && hasSome(bean.getStepIds())) {
       PhaseStep phaseStep = bean.getPhaseStep();
       notNullCheck("Invalid phase step", phaseStep);
-      if (isNotEmpty(phaseStep.getSteps())) {
+      if (hasSome(phaseStep.getSteps())) {
         steps = new ArrayList<>();
         Map<String, String> idToNameMap =
             phaseStep.getSteps().stream().collect(Collectors.toMap(GraphNode::getId, GraphNode::getName));

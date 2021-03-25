@@ -4,7 +4,7 @@ import static io.harness.batch.processing.config.k8s.recommendation.estimators.C
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.customRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.guaranteedRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.recommendedRecommender;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
@@ -106,7 +106,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
       Map<String, ContainerState> containerStates = new WorkloadState(recommendation).getContainerStateMap();
       int minNumDays = Integer.MAX_VALUE;
-      if (isNotEmpty(containerRecommendations)) {
+      if (hasSome(containerRecommendations)) {
         final double factor = 1.0 / containerRecommendations.size();
         final long containerMinCpuMilliCores = ResourceAmountUtils.scaleResourceAmount(podMinCpuMilliCores, factor);
         final long containerMinMemoryBytes = ResourceAmountUtils.scaleResourceAmount(podMinMemoryBytes, factor);

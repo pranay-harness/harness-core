@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -40,7 +40,7 @@ public class EnvironmentQueryHelper {
   @Inject protected TagHelper tagHelper;
 
   public void setQuery(List<QLEnvironmentFilter> filters, Query query, String accountId) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

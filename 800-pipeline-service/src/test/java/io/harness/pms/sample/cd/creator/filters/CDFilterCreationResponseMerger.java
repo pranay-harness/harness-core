@@ -1,6 +1,6 @@
 package io.harness.pms.sample.cd.creator.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
@@ -19,15 +19,15 @@ public class CDFilterCreationResponseMerger implements FilterCreationResponseMer
     CdFilter finalCdFilter = (CdFilter) finalResponse.getPipelineFilter();
     CdFilter currentCdFilter = (CdFilter) current.getPipelineFilter();
 
-    if (isNotEmpty(currentCdFilter.getDeploymentTypes())) {
+    if (hasSome(currentCdFilter.getDeploymentTypes())) {
       finalCdFilter.addDeploymentTypes(currentCdFilter.getDeploymentTypes());
     }
 
-    if (isNotEmpty(currentCdFilter.getEnvironmentNames())) {
+    if (hasSome(currentCdFilter.getEnvironmentNames())) {
       finalCdFilter.addEnvironmentNames(currentCdFilter.getEnvironmentNames());
     }
 
-    if (isNotEmpty(currentCdFilter.getServiceNames())) {
+    if (hasSome(currentCdFilter.getServiceNames())) {
       finalCdFilter.addServiceNames(currentCdFilter.getServiceNames());
     }
   }

@@ -1,8 +1,8 @@
 package software.wings.beans.approval;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -33,7 +33,7 @@ public class Criteria {
   }
 
   public String conditionsString() {
-    if (isEmpty(conditions)) {
+    if (hasNone(conditions)) {
       return "";
     }
     return conditions.entrySet()
@@ -48,7 +48,7 @@ public class Criteria {
   }
 
   public boolean satisfied(Map<String, String> currentStatus) {
-    if (isNotEmpty(conditions) && operator != null) {
+    if (hasSome(conditions) && operator != null) {
       List<Boolean> truthValues =
           conditions.entrySet()
               .stream()

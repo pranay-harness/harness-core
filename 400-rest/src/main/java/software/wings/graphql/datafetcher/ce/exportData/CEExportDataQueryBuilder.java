@@ -1,11 +1,10 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -172,7 +171,7 @@ public class CEExportDataQueryBuilder {
   }
 
   private boolean isValidGroupBy(List<QLCEEntityGroupBy> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 5;
+    return hasSome(groupBy) && groupBy.size() <= 5;
   }
 
   protected List<QLCEEntityGroupBy> getGroupByEntity(List<QLCEGroupBy> groupBy) {
@@ -485,7 +484,7 @@ public class CEExportDataQueryBuilder {
   }
 
   private boolean checkFilter(Filter f) {
-    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+    return f.getOperator() != null && hasSome(f.getValues());
   }
 
   private DbColumn getFilterKey(QLCEFilterType type) {
@@ -536,7 +535,7 @@ public class CEExportDataQueryBuilder {
           if (tagFilter != null) {
             Set<String> entityIds = tagHelper.getEntityIdsFromTags(
                 accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
-            if (isNotEmpty(entityIds)) {
+            if (hasSome(entityIds)) {
               switch (tagFilter.getEntityType()) {
                 case APPLICATION:
                   newList.add(QLCEFilter.builder()
@@ -581,7 +580,7 @@ public class CEExportDataQueryBuilder {
               workloadNames.add(tokenizer.nextToken());
               namespaces.add(tokenizer.nextToken());
             });
-            if (isNotEmpty(workloadNames)) {
+            if (hasSome(workloadNames)) {
               newList.add(QLCEFilter.builder()
                               .workload(QLIdFilter.builder()
                                             .operator(QLIdOperator.IN)
@@ -589,7 +588,7 @@ public class CEExportDataQueryBuilder {
                                             .build())
                               .build());
             }
-            if (isNotEmpty(namespaces)) {
+            if (hasSome(namespaces)) {
               newList.add(QLCEFilter.builder()
                               .namespace(QLIdFilter.builder()
                                              .operator(QLIdOperator.IN)
@@ -694,7 +693,7 @@ public class CEExportDataQueryBuilder {
 
   private List<QLCESort> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLCESort> sortCriteria, List<CEExportDataMetadataFields> fieldNames) {
-    if (isEmpty(sortCriteria)) {
+    if (hasNone(sortCriteria)) {
       return new ArrayList<>();
     }
 
@@ -702,7 +701,7 @@ public class CEExportDataQueryBuilder {
         -> qlBillingSortCriteria.getOrder() == null
             || !fieldNames.contains(qlBillingSortCriteria.getSortType().getBillingMetaData()));
 
-    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+    if (hasSome(sortCriteria)) {
       sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
     }
     return sortCriteria;

@@ -2,8 +2,8 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.isPresent;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
@@ -48,14 +48,14 @@ public class AbortAllInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
     Interrupt savedInterrupt = validateAndSave(interrupt);
-    return isNotEmpty(savedInterrupt.getNodeExecutionId())
+    return hasSome(savedInterrupt.getNodeExecutionId())
         ? handleInterruptForNodeExecution(interrupt, interrupt.getNodeExecutionId())
         : handleInterrupt(savedInterrupt);
   }
 
   private Interrupt validateAndSave(Interrupt interrupt) {
-    return isNotEmpty(interrupt.getNodeExecutionId()) ? validateAndSaveWithNodeExecution(interrupt)
-                                                      : validateAndSaveWithoutNodeExecution(interrupt);
+    return hasSome(interrupt.getNodeExecutionId()) ? validateAndSaveWithNodeExecution(interrupt)
+                                                   : validateAndSaveWithoutNodeExecution(interrupt);
   }
 
   private Interrupt validateAndSaveWithoutNodeExecution(@Valid @NonNull Interrupt interrupt) {
@@ -73,7 +73,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.ABORT_ALL)) {
       throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
     }
-    if (isEmpty(interrupts)) {
+    if (hasNone(interrupts)) {
       return interruptService.save(interrupt);
     }
 
@@ -107,7 +107,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
                 .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
-    if (isEmpty(discontinuingNodeExecutions)) {
+    if (hasNone(discontinuingNodeExecutions)) {
       log.warn(
           "ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {} and nodeExecutionId: {}",
           updatedInterrupt.getUuid(), nodeExecutionId);
@@ -126,7 +126,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     List<NodeExecution> discontinuingNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatus(updatedInterrupt.getPlanExecutionId(), DISCONTINUING);
 
-    if (isEmpty(discontinuingNodeExecutions)) {
+    if (hasNone(discontinuingNodeExecutions)) {
       log.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
           updatedInterrupt.getUuid());
       return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);

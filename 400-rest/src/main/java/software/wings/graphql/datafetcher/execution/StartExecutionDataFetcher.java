@@ -1,12 +1,11 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
@@ -53,7 +52,7 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
       QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     try (AutoLogContext ignore0 =
              new AccountLogContext(mutationContext.getAccountId(), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      if (isEmpty(triggerExecutionInput.getEntityId())) {
+      if (hasNone(triggerExecutionInput.getEntityId())) {
         throw new InvalidRequestException("Entity Id cannot be empty", WingsException.USER);
       }
 
@@ -82,11 +81,11 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
   private void validateAppBelongsToAccount(
       QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     String appId = triggerExecutionInput.getApplicationId();
-    if (isEmpty(appId)) {
+    if (hasNone(appId)) {
       throw new InvalidRequestException("Application Id cannot be empty", WingsException.USER);
     }
     String accountIdFromApp = appService.getAccountIdByAppId(appId);
-    if (EmptyPredicate.isEmpty(accountIdFromApp) || !accountIdFromApp.equals(mutationContext.getAccountId())) {
+    if (hasNone(accountIdFromApp) || !accountIdFromApp.equals(mutationContext.getAccountId())) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
   }

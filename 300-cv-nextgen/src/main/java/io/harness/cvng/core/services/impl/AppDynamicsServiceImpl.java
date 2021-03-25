@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
@@ -98,7 +98,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     final Gson gson = new Gson();
     Type type = new TypeToken<List<AppDynamicsApplication>>() {}.getType();
     List<AppDynamicsApplication> applications = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-    if (isNotEmpty(filter)) {
+    if (hasSome(filter)) {
       applications = applications.stream()
                          .filter(appDynamicsApplication
                              -> appDynamicsApplication.getName().toLowerCase().contains(filter.trim().toLowerCase()))
@@ -132,7 +132,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     List<AppDynamicsTier> tiers = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     List<AppDynamicsTier> appDynamicsTiers = new ArrayList<>();
     tiers.forEach(appDynamicsTier -> {
-      if (isEmpty(filter) || appDynamicsTier.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+      if (hasNone(filter) || appDynamicsTier.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
         appDynamicsTiers.add(appDynamicsTier);
       }
     });
@@ -150,7 +150,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     Preconditions.checkState(
-        isNotEmpty(cvConfigsGroupedByMonitoringSource), "The cv configs belonging to a monitoring source is empty");
+        hasSome(cvConfigsGroupedByMonitoringSource), "The cv configs belonging to a monitoring source is empty");
     Set<String> applicationSet = cvConfigsGroupedByMonitoringSource.stream()
                                      .map(config -> ((AppDynamicsCVConfig) config).getApplicationName())
                                      .collect(Collectors.toSet());
@@ -164,9 +164,9 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                                                .getContent();
 
     return AppdynamicsImportStatus.builder()
-        .numberOfApplications(isNotEmpty(applicationSet) ? applicationSet.size() : 0)
-        .numberOfEnvironments(isNotEmpty(envIdentifiersList) ? envIdentifiersList.size() : 0)
-        .totalNumberOfApplications(isNotEmpty(appDynamicsApplications) ? appDynamicsApplications.size() : 0)
+        .numberOfApplications(hasSome(applicationSet) ? applicationSet.size() : 0)
+        .numberOfEnvironments(hasSome(envIdentifiersList) ? envIdentifiersList.size() : 0)
+        .totalNumberOfApplications(hasSome(appDynamicsApplications) ? appDynamicsApplications.size() : 0)
         .totalNumberOfEnvironments(totalNumberOfEnvironments)
         .build();
   }

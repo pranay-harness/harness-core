@@ -1,7 +1,7 @@
 package io.harness.eventsframework.impl.redis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static com.google.protobuf.util.Timestamps.fromMillis;
 import static java.lang.Long.parseLong;
@@ -43,11 +43,11 @@ public class RedisUtils {
       String redisPassword = redisConfig.getPassword();
       String redisUserName = redisConfig.getUserName();
 
-      if (isNotEmpty(redisUserName)) {
+      if (hasSome(redisUserName)) {
         serverConfig.setUsername(redisUserName);
       }
 
-      if (isNotEmpty(redisPassword)) {
+      if (hasSome(redisPassword)) {
         serverConfig.setPassword(redisPassword);
       }
     } else {
@@ -89,7 +89,7 @@ public class RedisUtils {
   }
 
   public List<Message> getMessageObject(Map<StreamMessageId, Map<String, String>> result) {
-    if (isEmpty(result)) {
+    if (hasNone(result)) {
       return Collections.emptyList();
     } else {
       List<Message> messages = new ArrayList<>();

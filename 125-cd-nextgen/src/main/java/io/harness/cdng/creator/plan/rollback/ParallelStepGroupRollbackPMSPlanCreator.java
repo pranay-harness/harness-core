@@ -1,10 +1,11 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters.RollbackOptionalChildrenParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -23,7 +24,7 @@ import java.util.List;
 public class ParallelStepGroupRollbackPMSPlanCreator {
   public static PlanCreationResponse createParallelStepGroupRollbackPlan(YamlField parallelStepGroup) {
     List<YamlField> stepGroupFields = PlanCreatorUtils.getStepGroupInParallelSectionHavingRollback(parallelStepGroup);
-    if (EmptyPredicate.isEmpty(stepGroupFields)) {
+    if (hasNone(stepGroupFields)) {
       return PlanCreationResponse.builder().build();
     }
 

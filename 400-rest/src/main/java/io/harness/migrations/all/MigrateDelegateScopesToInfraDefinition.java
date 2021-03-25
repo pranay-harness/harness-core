@@ -1,8 +1,9 @@
 package io.harness.migrations.all;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.persistence.HIterator;
@@ -46,7 +47,7 @@ public class MigrateDelegateScopesToInfraDefinition {
 
   private void migrate(DelegateScope scope, Account account) {
     List<String> infraMappingIds = scope.getServiceInfrastructures();
-    if (EmptyPredicate.isNotEmpty(infraMappingIds)) {
+    if (hasSome(infraMappingIds)) {
       // Using wings persistence here as no appId present
       List<InfrastructureMapping> infrastructureMappings =
           wingsPersistence.createQuery(InfrastructureMapping.class)

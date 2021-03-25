@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -47,7 +47,7 @@ public class APMCVConfigurationYamlHandler
     APMCVConfigurationYaml yaml = changeContext.getYaml();
     List<MetricCollectionInfo> metrics = yaml.getMetricCollectionInfos();
 
-    if (isEmpty(metrics)) {
+    if (hasNone(metrics)) {
       throw new WingsException("No metrics found in the yaml");
     }
 

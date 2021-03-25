@@ -1,6 +1,6 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -139,7 +139,7 @@ public class NewRelicMetricAnalysisRecord
     private String tag;
 
     public String getTag() {
-      return isEmpty(tag) ? "DEFAULT" : tag;
+      return hasNone(tag) ? "DEFAULT" : tag;
     }
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {

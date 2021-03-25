@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.Misc.normalizeExpression;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
@@ -29,7 +29,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -320,7 +319,7 @@ public class PcfSetupState extends State {
             .build();
 
     if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
-        && isNotEmpty(artifactProcessingScript)) {
+        && hasSome(artifactProcessingScript)) {
       if (pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
         throw new InvalidRequestException("Docker based deployment shouldn't contain an artifact processing script");
       }
@@ -481,7 +480,7 @@ public class PcfSetupState extends State {
         pcfStateHelper.getRouteMaps(pcfManifestsPackage.getManifestYml(), pcfInfrastructureMapping);
 
     if (blueGreen) {
-      if (isEmpty(routeMaps) && isEmpty(finalRouteMap)) {
+      if (hasNone(routeMaps) && hasNone(finalRouteMap)) {
         throw new InvalidRequestException(
             "Final Routes can not be empty for BG deployment. Make sure manifest contains routes. no-route or random-route cant be used for BG as well.");
       }
@@ -494,10 +493,10 @@ public class PcfSetupState extends State {
 
     // Add extra routes mentioned on SetupState
     List<String> finalRoutes = new ArrayList<>();
-    if (isNotEmpty(routeMaps)) {
+    if (hasSome(routeMaps)) {
       finalRoutes.addAll(routeMaps);
     }
-    if (isNotEmpty(finalRouteMap)) {
+    if (hasSome(finalRouteMap)) {
       finalRoutes.addAll(Arrays.asList(finalRouteMap));
     }
 
@@ -540,8 +539,8 @@ public class PcfSetupState extends State {
   @VisibleForTesting
   List<String> fetchTempRoutes(ExecutionContext context, PcfInfrastructureMapping pcfInfrastructureMapping) {
     List<String> tempRouteMaps =
-        isEmpty(tempRouteMap) ? pcfInfrastructureMapping.getTempRouteMap() : Arrays.asList(tempRouteMap);
-    if (isEmpty(tempRouteMaps)) {
+        hasNone(tempRouteMap) ? pcfInfrastructureMapping.getTempRouteMap() : Arrays.asList(tempRouteMap);
+    if (hasNone(tempRouteMaps)) {
       return emptyList();
     }
     tempRouteMaps = tempRouteMaps.stream().map(context::renderExpression).collect(toList());
@@ -690,8 +689,7 @@ public class PcfSetupState extends State {
     boolean isInfraUpdated = false;
     if (stateExecutionData.isUseTempRoutes()) {
       List<String> tempRoutes = stateExecutionData.getTempRouteMaps();
-      if (EmptyPredicate.isEmpty(tempRoutes)
-          || tempRoutes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
+      if (hasNone(tempRoutes) || tempRoutes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
         tempRoutes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setTempRouteMap(tempRoutes);
@@ -701,8 +699,7 @@ public class PcfSetupState extends State {
       setupSweepingOutputPcfBuilder.routeMaps(stateExecutionData.getRouteMaps());
     } else {
       List<String> routes = stateExecutionData.getRouteMaps();
-      if (EmptyPredicate.isEmpty(routes)
-          || routes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
+      if (hasNone(routes) || routes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
         routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setRouteMaps(routes);

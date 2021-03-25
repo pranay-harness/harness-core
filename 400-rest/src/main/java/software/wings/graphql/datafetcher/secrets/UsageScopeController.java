@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.secrets;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -34,7 +34,7 @@ public class UsageScopeController {
       return null;
     }
     Set<QLAppEnvScope> restrictions = usageScopes.getAppEnvScopes();
-    if (isEmpty(restrictions)) {
+    if (hasNone(restrictions)) {
       return UsageRestrictions.builder().appEnvRestrictions(null).build();
     }
     Set<AppEnvRestriction> usageRestrictions = new HashSet<>();
@@ -60,7 +60,7 @@ public class UsageScopeController {
       return null;
     }
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-    if (isEmpty(appEnvRestrictions)) {
+    if (hasNone(appEnvRestrictions)) {
       return null;
     }
     Set<QLAppEnvScope> usageScope = new HashSet<>();

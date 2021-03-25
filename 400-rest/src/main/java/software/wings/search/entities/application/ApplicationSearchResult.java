@@ -1,9 +1,9 @@
 package software.wings.search.entities.application;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.framework.EntityInfo;
@@ -40,7 +40,7 @@ public class ApplicationSearchResult extends SearchResult {
   private static final int DAYS_TO_RETAIN = 7;
 
   public void setAudits(List<RelatedAuditView> audits) {
-    if (EmptyPredicate.isNotEmpty(audits)) {
+    if (hasSome(audits)) {
       this.audits = audits;
       this.auditsCount = audits.size();
     } else {
@@ -51,7 +51,7 @@ public class ApplicationSearchResult extends SearchResult {
 
   private void setAudits(ApplicationView applicationView) {
     long startTimestampToRetainFrom = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
-    if (EmptyPredicate.isNotEmpty(applicationView.getAudits())) {
+    if (hasSome(applicationView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(applicationView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(applicationView);

@@ -1,12 +1,11 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -207,7 +206,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
   private boolean isGroupByHStore(List<QLDeploymentTagAggregation> groupByTagList) {
     boolean isGroupByHStore = false;
-    if (isNotEmpty(groupByTagList)) {
+    if (hasSome(groupByTagList)) {
       for (QLDeploymentTagAggregation tagAggregation : groupByTagList) {
         if (tagAggregation.getEntityType() == QLDeploymentTagType.DEPLOYMENT) {
           isGroupByHStore = true;
@@ -666,7 +665,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
     String tagName = "";
     String columnName = "";
-    if (isNotEmpty(groupByTagList)) {
+    if (hasSome(groupByTagList)) {
       for (QLDeploymentTagAggregation tagAggregation : groupByTagList) {
         if (tagAggregation.getEntityType() == QLDeploymentTagType.DEPLOYMENT) {
           tagName = tagAggregation.getTagName();
@@ -955,7 +954,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
   private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLDeploymentSortCriteria> sortCriteria, List<DeploymentMetaDataFields> fieldNames) {
-    if (isEmpty(sortCriteria)) {
+    if (hasNone(sortCriteria)) {
       return new ArrayList<>();
     }
 
@@ -965,7 +964,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
     sortCriteria.stream().map(s -> s.getSortType().getDeploymentMetadata()).collect(Collectors.toList());
 
-    if (EmptyPredicate.isNotEmpty(sortCriteria)) {
+    if (hasSome(sortCriteria)) {
       sortCriteria.forEach(s -> addOrderBy(selectQuery, s));
     }
     return sortCriteria;
@@ -1017,7 +1016,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                 accountId, tagFilter.getTags(), getEntityType(tagFilter.getEntityType()));
             switch (tagFilter.getEntityType()) {
               case APPLICATION:
-                if (isNotEmpty(entityIds)) {
+                if (hasSome(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .application(QLIdFilter.builder()
                                                    .operator(QLIdOperator.IN)
@@ -1027,7 +1026,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                 }
                 break;
               case SERVICE:
-                if (isNotEmpty(entityIds)) {
+                if (hasSome(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .service(QLIdFilter.builder()
                                                .operator(QLIdOperator.IN)
@@ -1037,7 +1036,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                 }
                 break;
               case ENVIRONMENT:
-                if (isNotEmpty(entityIds)) {
+                if (hasSome(entityIds)) {
                   newList.add(QLDeploymentFilter.builder()
                                   .environment(QLIdFilter.builder()
                                                    .operator(QLIdOperator.IN)
@@ -1082,14 +1081,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     Filter f = QLDeploymentFilter.getFilter(type, filter);
     if (isDeploymentTagFilter(f)) {
       List<QLTagInput> tags = ((QLDeploymentTagFilter) f).getTags();
-      if (isEmpty(tags)) {
+      if (hasNone(tags)) {
         throw new InvalidRequestException("No values are provided for Tag filter" + filter);
       }
       CustomCondition[] customConditions = new CustomCondition[tags.size()];
       for (int i = 0; i < tags.size(); i++) {
         String name = tags.get(i).getName();
         String value = tags.get(i).getValue();
-        if (isEmpty(value)) {
+        if (hasNone(value)) {
           customConditions[i] = new CustomCondition(schema.getDeploymentTable().getAlias() + ".tags"
               + " ->"
               + "'" + name + "'"
@@ -1121,7 +1120,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private void addArrayIdFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLIdFilter idFilter = (QLIdFilter) filter;
-    if (isEmpty(filter.getValues())) {
+    if (hasNone(filter.getValues())) {
       throw new RuntimeException("No values are provided for IdFilter" + filter);
     }
     CustomCondition[] customConditions = new CustomCondition[idFilter.getValues().length];
@@ -1144,7 +1143,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private void addEnvTypeFilter(SelectQuery selectQuery, QLEnvironmentTypeFilter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLEnumOperator operator = filter.getOperator();
-    if (isEmpty(filter.getValues())) {
+    if (hasNone(filter.getValues())) {
       throw new RuntimeException("No values are provided for EnvTypeFilter" + operator);
     }
     CustomCondition[] customConditions = new CustomCondition[filter.getValues().length];
@@ -1169,7 +1168,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private void addArrayStringFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
     DbColumn key = getFilterKey(type);
     QLStringFilter stringFilter = (QLStringFilter) filter;
-    if (isEmpty(filter.getValues())) {
+    if (hasNone(filter.getValues())) {
       throw new RuntimeException("No values are provided for StringFilter" + filter);
     }
     CustomCondition[] customConditions = new CustomCondition[filter.getValues().length];
@@ -1232,7 +1231,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   }
 
   private boolean checkFilter(Filter f) {
-    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+    return f.getOperator() != null && hasSome(f.getValues());
   }
 
   private void addSimpleNumberFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
@@ -1505,7 +1504,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   }
 
   private boolean isValidGroupBy(List<QLDeploymentEntityAggregation> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 2;
+    return hasSome(groupBy) && groupBy.size() <= 2;
   }
 
   private void decorateQueryWithGroupByTime(List<DeploymentMetaDataFields> fieldNames, SelectQuery selectQuery,

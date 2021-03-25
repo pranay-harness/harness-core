@@ -1,6 +1,7 @@
 package io.harness.jobs.workflow.timeseries;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
@@ -142,7 +143,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           analysisStartMin, context.getAccountId());
 
       String message = "";
-      if (isEmpty(testRecords)) {
+      if (hasNone(testRecords)) {
         message = "No test data found. Please check load. Skipping analysis for minute " + analysisMinute;
       }
 
@@ -382,7 +383,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           if (runTimeSeriesML) {
             switch (context.getComparisonStrategy()) {
               case COMPARE_WITH_PREVIOUS:
-                if (isEmpty(context.getPrevWorkflowExecutionId())) {
+                if (hasNone(context.getPrevWorkflowExecutionId())) {
                   runTimeSeriesML = false;
                   break;
                 }
@@ -508,7 +509,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           ExperimentalMetricAnalysisResource.LEARNING_EXP_URL,
           ExperimentalMetricAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL, uuid, groupName, analysisMinute);
 
-      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+      if (!hasNone(context.getPrevWorkflowExecutionId())) {
         experimentalMetricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
       }
       List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.TIME_SERIES);
@@ -621,7 +622,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
           + context.getWorkflowExecutionId() + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute="
           + analysisMinute + "&taskId=" + uuid + "&groupName=" + groupName + "&stateType=" + context.getStateType();
 
-      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+      if (!hasNone(context.getPrevWorkflowExecutionId())) {
         metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
       }
       return metricAnalysisSaveUrl;

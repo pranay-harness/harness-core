@@ -1,10 +1,10 @@
 package io.harness.governance;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.EnvironmentType;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -45,7 +45,7 @@ public abstract class GovernanceFreezeConfig implements UuidAware {
     this.description = description;
     this.applicable = applicable;
     this.appSelections = appSelections;
-    this.uuid = EmptyPredicate.isEmpty(uuid) ? generateUuid() : uuid;
+    this.uuid = hasNone(uuid) ? generateUuid() : uuid;
     this.userGroups = userGroups;
   }
 

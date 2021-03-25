@@ -1,8 +1,8 @@
 package software.wings.stencils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -120,7 +120,7 @@ public class StencilPostProcessor {
                           Stencil stencilForExpand = finalStencil;
                           DataProvider dataProvider = injector.getInstance(expand.dataProvider());
                           Map<String, String> data = dataProvider.getData(appId, args);
-                          if (isNotEmpty(data)) {
+                          if (hasSome(data)) {
                             return expandBasedOnData(stencilForExpand, data, field.getName());
                           }
 
@@ -169,7 +169,7 @@ public class StencilPostProcessor {
         setDefaultValue(value, jsonSchemaField);
         OverridingStencil overridingStencil = stencil.getOverridingStencil();
         overridingStencil.setOverridingJsonSchema(jsonSchema);
-        if (isEmpty(overridingStencil.getOverridingName())) {
+        if (hasNone(overridingStencil.getOverridingName())) {
           overridingStencil.setOverridingName(stencil.getName());
         }
         return overridingStencil;

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
@@ -35,7 +35,7 @@ public class MigrateCloudwatchCVTemplates implements Migration {
                                                   .filter(CVConfigurationKeys.stateType, StateType.CLOUD_WATCH)
                                                   .asList();
 
-    if (isNotEmpty(cloudWatchConfigs)) {
+    if (hasSome(cloudWatchConfigs)) {
       log.info("Migrating the templates of {} cloudwatch configs", cloudWatchConfigs.size());
       cloudWatchConfigs.forEach(config -> {
         // delete the existing template

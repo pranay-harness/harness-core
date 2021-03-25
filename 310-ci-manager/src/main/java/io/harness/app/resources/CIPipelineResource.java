@@ -1,6 +1,6 @@
 package io.harness.app.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
@@ -62,7 +62,7 @@ public class CIPipelineResource {
       @QueryParam("orgIdentifier") String orgId, @QueryParam("projectIdentifier") String projectId,
       @PathParam("identifier") @NotEmpty String pipelineId, @QueryParam("branch") String branch,
       @QueryParam("tag") String tag) {
-    if ((isEmpty(branch) && isEmpty(tag)) || (!isEmpty(branch) && !isEmpty(tag))) {
+    if ((hasNone(branch) && hasNone(tag)) || (!hasNone(branch) && !hasNone(tag))) {
       return ResponseDTO.newResponse(FailureDTO.toBody(Status.ERROR, ErrorCode.INVALID_REQUEST,
           String.format(
               "ERROR: Either one of branch or tag needs to be set to execute pipeline with identifier: %s in projectIdentifier  %s, orgIdentifier  %s, accountIdentifier %s",
@@ -83,7 +83,7 @@ public class CIPipelineResource {
 
     try {
       CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder().buildNumberDetails(buildNumberDetails).build();
-      if (!isEmpty(branch)) {
+      if (!hasNone(branch)) {
         ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().branch(branch).build());
       } else {
         ciExecutionArgs.setExecutionSource(ManualExecutionSource.builder().tag(tag).build());

@@ -1,6 +1,6 @@
 package io.harness.notifications.conditions;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.notifications.FilterMatcher;
 import io.harness.notifications.beans.CVAlertFilters;
@@ -44,17 +44,17 @@ public class CVFilterMatcher implements FilterMatcher {
     conditions.add(() -> alert.getType() == alertFilter.getAlertType());
 
     List<String> appIds = cvAlertFilters.getAppIds();
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       conditions.add(() -> appIds.contains(alert.getAppId()));
     }
 
     List<String> envIds = cvAlertFilters.getEnvIds();
-    if (isNotEmpty(envIds)) {
+    if (hasSome(envIds)) {
       conditions.add(() -> envIds.contains(alertData.getCvConfiguration().getEnvId()));
     }
 
     List<String> cvConfigIds = cvAlertFilters.getCvConfigIds();
-    if (isNotEmpty(cvConfigIds)) {
+    if (hasSome(cvConfigIds)) {
       conditions.add(() -> cvConfigIds.contains(alertData.getCvConfiguration().getUuid()));
     }
 

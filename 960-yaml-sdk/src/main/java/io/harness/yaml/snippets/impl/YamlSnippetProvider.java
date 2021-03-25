@@ -3,8 +3,8 @@ package io.harness.yaml.snippets.impl;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
@@ -66,13 +66,13 @@ public class YamlSnippetProvider {
   }
 
   private Set<YamlSnippetMetaData> getYamlSnippetMetaDataContainingTag(List<String> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return null;
     }
     final Map<String, Set<YamlSnippetMetaData>> tagMap = yamlSnippetHelper.getTagSnippetMap();
 
     Set<YamlSnippetMetaData> yamlSnippetMetaData = tagMap.getOrDefault(tags.get(0), null);
-    if (isEmpty(yamlSnippetMetaData)) {
+    if (hasNone(yamlSnippetMetaData)) {
       return null;
     }
     for (int i = 1; i < tags.size(); i++) {
@@ -122,17 +122,17 @@ public class YamlSnippetProvider {
         JsonNodeUtils.deletePropertiesInJsonNode(yamlWithoutWrapper, PROJECT_KEY, ORG_KEY);
       } else if (scope == Scope.ORG && yamlSnippetMetaData.isAvailableAtOrgLevel()) {
         JsonNodeUtils.deletePropertiesInJsonNode(yamlWithoutWrapper, PROJECT_KEY);
-        if (isNotEmpty(orgIdentifier)) {
+        if (hasSome(orgIdentifier)) {
           Map<String, String> propertiesToBeModified = new HashMap<>();
           propertiesToBeModified.put(ORG_KEY, orgIdentifier);
           JsonNodeUtils.updatePropertiesInJsonNode(yamlWithoutWrapper, propertiesToBeModified);
         }
       } else if (scope == Scope.PROJECT && yamlSnippetMetaData.isAvailableAtProjectLevel()) {
         Map<String, String> propertiesToBeModified = new HashMap<>();
-        if (isNotEmpty(orgIdentifier)) {
+        if (hasSome(orgIdentifier)) {
           propertiesToBeModified.put(ORG_KEY, orgIdentifier);
         }
-        if (isNotEmpty(projectIdentifier)) {
+        if (hasSome(projectIdentifier)) {
           propertiesToBeModified.put(PROJECT_KEY, projectIdentifier);
         }
         JsonNodeUtils.updatePropertiesInJsonNode(yamlWithoutWrapper, propertiesToBeModified);

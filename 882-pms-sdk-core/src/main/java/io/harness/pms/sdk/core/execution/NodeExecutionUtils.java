@@ -1,10 +1,9 @@
 package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.ResolveObjectResponse;
@@ -30,26 +29,26 @@ public class NodeExecutionUtils {
   }
 
   private static boolean isRetry(NodeExecutionProto nodeExecutionProto) {
-    return !isEmpty(nodeExecutionProto.getRetryIdsList());
+    return !hasNone(nodeExecutionProto.getRetryIdsList());
   }
 
   public ExecutableResponse obtainLatestExecutableResponse(NodeExecutionProto proto) {
     List<ExecutableResponse> executableResponses = proto.getExecutableResponsesList();
-    if (isEmpty(executableResponses)) {
+    if (hasNone(executableResponses)) {
       return null;
     }
     return executableResponses.get(executableResponses.size() - 1);
   }
 
   public Document extractObject(String json) {
-    if (EmptyPredicate.isEmpty(json)) {
+    if (hasNone(json)) {
       return null;
     }
     return RecastOrchestrationUtils.toDocumentFromJson(json);
   }
 
   public Document extractAndProcessObject(String json) {
-    if (EmptyPredicate.isEmpty(json)) {
+    if (hasNone(json)) {
       return null;
     }
     return (Document) resolveObject(RecastOrchestrationUtils.toDocumentFromJson(json));

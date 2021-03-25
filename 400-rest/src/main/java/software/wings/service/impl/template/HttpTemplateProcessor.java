@@ -1,6 +1,6 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.TemplateConstants.HTTP_HEALTH_CHECK;
 
@@ -42,26 +42,26 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
   @Override
   public void transform(Template template, Map<String, Object> properties) {
     HttpTemplate httpTemplate = (HttpTemplate) template.getTemplateObject();
-    if (isNotEmpty(httpTemplate.getUrl())) {
+    if (hasSome(httpTemplate.getUrl())) {
       properties.put(URL, httpTemplate.getUrl());
     }
-    if (isNotEmpty(httpTemplate.getMethod())) {
+    if (hasSome(httpTemplate.getMethod())) {
       properties.put(METHOD, httpTemplate.getMethod());
     }
-    if (isNotEmpty(httpTemplate.getHeader())) {
+    if (hasSome(httpTemplate.getHeader())) {
       properties.put(HEADER, httpTemplate.getHeader());
     }
-    if (isNotEmpty(httpTemplate.getHeaders())) {
+    if (hasSome(httpTemplate.getHeaders())) {
       properties.put(HEADERS,
           httpTemplate.getHeaders()
               .stream()
               .map(header -> Document.parse(JsonUtils.asJson(header)))
               .collect(Collectors.toList()));
     }
-    if (isNotEmpty(httpTemplate.getBody())) {
+    if (hasSome(httpTemplate.getBody())) {
       properties.put(BODY, httpTemplate.getBody());
     }
-    if (isNotEmpty(httpTemplate.getAssertion())) {
+    if (hasSome(httpTemplate.getAssertion())) {
       properties.put(ASSERTION, httpTemplate.getAssertion());
     }
     properties.put(TIMEOUT_MILLIS, httpTemplate.getTimeoutMillis());

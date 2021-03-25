@@ -1,12 +1,12 @@
 package io.harness.delegate.task.artifacts.gcr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.gcr.beans.GcrInternalConfig;
 import io.harness.artifacts.gcr.service.GcrApiService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
@@ -63,7 +63,7 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
       log.error("Could not get basic auth header", e);
       throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
     }
-    if (EmptyPredicate.isNotEmpty(attributesRequest.getTagRegex())) {
+    if (hasSome(attributesRequest.getTagRegex())) {
       lastSuccessfulBuild = gcrService.getLastSuccessfulBuildFromRegex(
           gcrInternalConfig, attributesRequest.getImagePath(), attributesRequest.getTagRegex());
     } else {

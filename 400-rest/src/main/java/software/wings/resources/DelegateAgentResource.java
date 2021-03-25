@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
@@ -134,7 +134,7 @@ public class DelegateAgentResource {
       DelegateConfiguration configuration = accountService.getDelegateConfiguration(accountId);
       String primaryDelegateVersion = configurationController.getPrimaryVersion();
       // Adding primary delegate to the last element of delegate versions.
-      if (isNotEmpty(configuration.getDelegateVersions())
+      if (hasSome(configuration.getDelegateVersions())
           && configuration.getDelegateVersions().remove(primaryDelegateVersion)) {
         configuration.getDelegateVersions().add(primaryDelegateVersion);
       }

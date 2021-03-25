@@ -3,12 +3,12 @@ package software.wings.service.impl.notifications;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
@@ -51,7 +51,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
-    if (isEmpty(notifications)) {
+    if (hasNone(notifications)) {
       return;
     }
 
@@ -109,7 +109,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(userGroup.getMicrosoftTeamsWebhookUrl())) {
+    if (hasSome(userGroup.getMicrosoftTeamsWebhookUrl())) {
       try {
         log.info(
             "Trying to send message to Microsoft Teams. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
@@ -126,7 +126,7 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
       return;
     }
 
-    if (EmptyPredicate.isNotEmpty(userGroup.getPagerDutyIntegrationKey())) {
+    if (hasSome(userGroup.getPagerDutyIntegrationKey())) {
       try {
         log.info("Trying to send pager duty event. userGroupId={} accountId={}", userGroup.getUuid(), accountId);
         pagerDutyEventDispatcher.dispatch(accountId, notifications, userGroup.getPagerDutyIntegrationKey());

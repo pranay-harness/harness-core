@@ -3,7 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
@@ -110,7 +110,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           localSecretManagerService.getEncryptionConfig(accountId).getUsageRestrictions());
     }
     secretManagerConfig.setScopedToAccount(false);
-    if (isEmpty(secretManagerConfig.getUuid())) {
+    if (hasNone(secretManagerConfig.getUuid())) {
       secretsManagerRBACService.canSetPermissions(accountId, secretManagerConfig);
     } else {
       SecretManagerConfig oldConfig = wingsPersistence.get(SecretManagerConfig.class, secretManagerConfig.getUuid());
@@ -211,10 +211,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String kmsId, EncryptionType encryptionType) {
-    if (encryptionType == LOCAL && isEmpty(kmsId)) {
+    if (encryptionType == LOCAL && hasNone(kmsId)) {
       kmsId = accountId;
     }
-    return isEmpty(kmsId) ? getDefaultSecretManager(accountId) : getSecretManager(accountId, kmsId);
+    return hasNone(kmsId) ? getDefaultSecretManager(accountId) : getSecretManager(accountId, kmsId);
   }
 
   @Override
@@ -441,7 +441,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   public void updateUsageRestrictions(String accountId, String secretManagerId, UsageRestrictions usageRestrictions) {
     UpdateOperations<SecretManagerConfig> updateOperations =
         wingsPersistence.createUpdateOperations(SecretManagerConfig.class);
-    if (isEmpty(usageRestrictions.getAppEnvRestrictions())) {
+    if (hasNone(usageRestrictions.getAppEnvRestrictions())) {
       updateOperations.unset(SecretManagerConfigKeys.usageRestrictions);
     } else {
       updateOperations.set(SecretManagerConfigKeys.usageRestrictions, usageRestrictions);

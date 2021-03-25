@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.usagerestrictions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
@@ -57,7 +57,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
 
   private String getAppId(GenericEntityFilter appFilter) {
     Set<String> appIds = appFilter.getIds();
-    if (isEmpty(appIds)) {
+    if (hasNone(appIds)) {
       throw new WingsException("No AppIds in app filter.");
     }
 
@@ -71,7 +71,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   private EnvFilter constructEnvFilter(GenericEntityFilter appFilter, EnvFilter.Yaml envFilterYaml) {
     EnvFilterBuilder builder = EnvFilter.builder();
 
-    if (isNotEmpty(envFilterYaml.getEntityNames())) {
+    if (hasSome(envFilterYaml.getEntityNames())) {
       String appId = getAppId(appFilter);
       Set<String> ids = envFilterYaml.getEntityNames()
                             .stream()
@@ -95,7 +95,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   private EnvFilter.Yaml constructEnvFilterYaml(GenericEntityFilter appFilter, EnvFilter envFilter) {
     EnvFilter.Yaml.YamlBuilder builder = EnvFilter.Yaml.builder();
 
-    if (isNotEmpty(envFilter.getIds())) {
+    if (hasSome(envFilter.getIds())) {
       String appId = getAppId(appFilter);
       List<String> names = envFilter.getIds()
                                .stream()
@@ -118,7 +118,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   private GenericEntityFilter constructGenericEntityFilter(GenericEntityFilter.Yaml yaml, String accountId) {
     GenericEntityFilterBuilder builder = GenericEntityFilter.builder();
 
-    if (isNotEmpty(yaml.getEntityNames())) {
+    if (hasSome(yaml.getEntityNames())) {
       Set<String> ids = yaml.getEntityNames()
                             .stream()
                             .map(entityName -> {
@@ -140,7 +140,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   private GenericEntityFilter.Yaml constructGenericEntityFilterYaml(GenericEntityFilter appFilter) {
     GenericEntityFilter.Yaml.YamlBuilder builder = GenericEntityFilter.Yaml.builder();
 
-    if (isNotEmpty(appFilter.getIds())) {
+    if (hasSome(appFilter.getIds())) {
       List<String> names = appFilter.getIds()
                                .stream()
                                .map(entityId -> {
@@ -168,7 +168,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
       return null;
     }
 
-    if (isEmpty(yaml.getAppEnvRestrictions())) {
+    if (hasNone(yaml.getAppEnvRestrictions())) {
       return null;
     }
 
@@ -187,7 +187,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
       return null;
     }
 
-    if (isEmpty(usageRestrictions.getAppEnvRestrictions())) {
+    if (hasNone(usageRestrictions.getAppEnvRestrictions())) {
       return null;
     }
 

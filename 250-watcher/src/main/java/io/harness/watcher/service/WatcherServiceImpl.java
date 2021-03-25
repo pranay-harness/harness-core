@@ -1,7 +1,7 @@
 package io.harness.watcher.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -176,7 +176,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
-    multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
+    multiVersion = hasNone(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
 
   private static final String DELEGATE_SCRIPT = "delegate.sh";
@@ -498,7 +498,7 @@ public class WatcherServiceImpl implements WatcherService {
           });
 
       String extraWatcher = messageService.getData(WATCHER_DATA, EXTRA_WATCHER, String.class);
-      if (isNotEmpty(extraWatcher)) {
+      if (hasSome(extraWatcher)) {
         shutdownWatcher(extraWatcher);
       } else {
         messageService.listChannels(WATCHER)
@@ -523,7 +523,7 @@ public class WatcherServiceImpl implements WatcherService {
       Multimap<String, String> runningVersions = LinkedHashMultimap.create();
       List<String> shutdownPendingList = new ArrayList<>();
 
-      if (isEmpty(runningDelegates)) {
+      if (hasNone(runningDelegates)) {
         if (!multiVersion) {
           if (working.compareAndSet(false, true)) {
             downloadRunScriptsBeforeRestartingDelegateAndWatcher();
@@ -650,7 +650,7 @@ public class WatcherServiceImpl implements WatcherService {
             }
           }
 
-          if (isNotEmpty(obsolete)) {
+          if (hasSome(obsolete)) {
             log.info("Obsolete processes {} no longer tracked", obsolete);
             runningDelegates.removeAll(obsolete);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
@@ -664,7 +664,7 @@ public class WatcherServiceImpl implements WatcherService {
           }
         }
 
-        if (isNotEmpty(drainingNeededList)) {
+        if (hasSome(drainingNeededList)) {
           log.info("Delegate processes {} to be drained.", drainingNeededList);
           drainingNeededList.forEach(this::drainDelegateProcess);
           Set<String> allVersions = new HashSet<>(expectedVersions);
@@ -672,7 +672,7 @@ public class WatcherServiceImpl implements WatcherService {
           removeDelegateVersionsFromCapsule(allVersions);
           cleanupOldDelegateVersions(allVersions);
         }
-        if (isNotEmpty(shutdownNeededList)) {
+        if (hasSome(shutdownNeededList)) {
           log.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
           shutdownNeededList.forEach(this::shutdownDelegate);
           if (newDelegateTimedOut && upgradePendingDelegate != null) {
@@ -680,11 +680,11 @@ public class WatcherServiceImpl implements WatcherService {
             messageService.writeMessageToChannel(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
           }
         }
-        if (isNotEmpty(restartNeededList)) {
+        if (hasSome(restartNeededList)) {
           log.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
           restartNeededList.forEach(this::shutdownDelegate);
         }
-        if (isNotEmpty(drainingRestartNeededList)) {
+        if (hasSome(drainingRestartNeededList)) {
           if (multiVersion) {
             log.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
                 drainingRestartNeededList);
@@ -695,7 +695,7 @@ public class WatcherServiceImpl implements WatcherService {
             startDelegateProcess(null, ".", drainingRestartNeededList, DELEGATE_RESTART_SCRIPT, getProcessId());
           }
         }
-        if (!multiVersion && isNotEmpty(upgradeNeededList)) {
+        if (!multiVersion && hasSome(upgradeNeededList)) {
           if (working.compareAndSet(false, true)) {
             log.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
             upgradeNeededList.forEach(
@@ -705,16 +705,16 @@ public class WatcherServiceImpl implements WatcherService {
           }
         }
 
-        if (isNotEmpty(startGrpcServerList)) {
+        if (hasSome(startGrpcServerList)) {
           startGrpcServerList.forEach(
               delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_START_GRPC));
 
           // We don't want to stop older grpc service unless one delegate agent with primary version is running.
-          if (isNotEmpty(stopGrpcServerList)) {
+          if (hasSome(stopGrpcServerList)) {
             stopGrpcServerList.forEach(
                 delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_GRPC));
           }
-        } else if (isNotEmpty(stopGrpcServerList)) {
+        } else if (hasSome(stopGrpcServerList)) {
           log.warn("Found no running delegate to start grpc server. Skipping stopping of grpc server on {}",
               stopGrpcServerList);
         }
@@ -996,7 +996,7 @@ public class WatcherServiceImpl implements WatcherService {
       File scriptFile = new File(filePath);
       String script = delegateScripts.getScriptByName(fileName);
 
-      if (isNotEmpty(script)) {
+      if (hasSome(script)) {
         Files.deleteIfExists(Paths.get(filePath));
         try (BufferedWriter writer = Files.newBufferedWriter(scriptFile.toPath())) {
           writer.write(script, 0, script.length());

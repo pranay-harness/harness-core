@@ -1,6 +1,6 @@
 package io.harness.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
@@ -165,7 +165,7 @@ public class DelegateTask
   // Following getters, setters have been added temporarily because of backward compatibility
 
   public String calcDescription() {
-    if (isEmpty(description)) {
+    if (hasNone(description)) {
       return data.getTaskType();
     }
     return description;

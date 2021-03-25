@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -41,10 +41,10 @@ public class NexusHelper {
           metadata.put(ArtifactMetadataKeys.nexusGroupId, groupId);
           metadata.put(ArtifactMetadataKeys.nexusArtifactId, artifactName);
           metadata.put(ArtifactMetadataKeys.version, version);
-          if (isNotEmpty(extension)) {
+          if (hasSome(extension)) {
             metadata.put(ArtifactMetadataKeys.extension, extension);
           }
-          if (isNotEmpty(classifier)) {
+          if (hasSome(classifier)) {
             metadata.put(ArtifactMetadataKeys.classifier, classifier);
           }
           return aBuildDetails()

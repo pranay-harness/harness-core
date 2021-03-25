@@ -4,7 +4,7 @@ import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
@@ -96,7 +96,7 @@ public class RoleResource {
   @ApiOperation(value = "Create Role", nickname = "createRole")
   public ResponseDTO<RoleResponseDTO> create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
-    if (isEmpty(roleDTO.getAllowedScopeLevels())) {
+    if (hasNone(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
     }
     return ResponseDTO.newResponse(toResponseDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));

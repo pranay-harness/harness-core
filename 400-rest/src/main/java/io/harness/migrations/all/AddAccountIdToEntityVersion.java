@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -32,7 +32,7 @@ public class AddAccountIdToEntityVersion extends AddAccountIdToAppEntities {
         List<Key<Application>> appIdKeyList =
             wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).asKeyList();
 
-        if (isNotEmpty(appIdKeyList)) {
+        if (hasSome(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());
 

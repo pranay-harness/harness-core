@@ -1,10 +1,10 @@
 package software.wings.search.entities.environment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
@@ -40,7 +40,7 @@ public class EnvironmentSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(EnvironmentView environmentView) {
-    if (EmptyPredicate.isNotEmpty(environmentView.getDeployments())) {
+    if (hasSome(environmentView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(environmentView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(environmentView);
@@ -48,7 +48,7 @@ public class EnvironmentSearchResult extends SearchResult {
   }
 
   public void setDeployments(List<RelatedDeploymentView> deployments) {
-    if (EmptyPredicate.isNotEmpty(deployments)) {
+    if (hasSome(deployments)) {
       this.deployments = deployments;
       this.deploymentsCount = deployments.size();
     } else {
@@ -58,7 +58,7 @@ public class EnvironmentSearchResult extends SearchResult {
   }
 
   public void setAudits(List<RelatedAuditView> audits) {
-    if (EmptyPredicate.isNotEmpty(audits)) {
+    if (hasSome(audits)) {
       this.audits = audits;
       this.auditsCount = audits.size();
     } else {
@@ -68,7 +68,7 @@ public class EnvironmentSearchResult extends SearchResult {
   }
 
   private void setAudits(EnvironmentView environmentView) {
-    if (EmptyPredicate.isNotEmpty(environmentView.getAudits())) {
+    if (hasSome(environmentView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(environmentView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(environmentView);

@@ -3,8 +3,8 @@ package software.wings.service.impl.template;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.TEMPLATE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -48,7 +48,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -155,7 +155,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public PageResponse<Template> list(
       PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId, boolean defaultVersion) {
-    if (isNotEmpty(galleryKeys)) {
+    if (hasSome(galleryKeys)) {
       addSearchFilterForGalleryIds(pageRequest, galleryKeys, accountId);
     }
     final PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
@@ -170,7 +170,7 @@ public class TemplateServiceImpl implements TemplateService {
   private void addSearchFilterForGalleryIds(
       PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId) {
     final List<String> galleryIds = getGalleryIds(galleryKeys, accountId);
-    if (isNotEmpty(galleryIds)) {
+    if (hasSome(galleryIds)) {
       final SearchFilter searchFilter =
           SearchFilter.builder().fieldName(TemplateKeys.galleryId).op(IN).fieldValues(galleryIds.toArray()).build();
       pageRequest.addFilter(searchFilter);
@@ -180,7 +180,7 @@ public class TemplateServiceImpl implements TemplateService {
   @NotNull
   private List<String> getGalleryIds(List<String> galleryKeys, String accountId) {
     return galleryKeys.stream()
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .map(galleryKey -> templateGalleryHelper.getGalleryByGalleryKey(galleryKey, accountId))
         .filter(Objects::nonNull)
         .map(TemplateGallery::getUuid)
@@ -237,7 +237,7 @@ public class TemplateServiceImpl implements TemplateService {
     validateOutputEnvironmentVariables(template);
     Set<String> existingKeywords = oldTemplate.getKeywords();
     Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
-    if (isNotEmpty(existingKeywords)) {
+    if (hasSome(existingKeywords)) {
       existingKeywords.remove(oldTemplate.getName().toLowerCase());
       if (oldTemplate.getDescription() != null) {
         existingKeywords.remove(oldTemplate.getDescription().toLowerCase());
@@ -317,14 +317,14 @@ public class TemplateServiceImpl implements TemplateService {
   private void saveOrUpdate(Template template) {
     TemplateFolder templateFolder;
     String galleryId = template.getGalleryId();
-    if (isEmpty(galleryId)) {
+    if (hasNone(galleryId)) {
       TemplateGallery templateGallery =
           templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
       notNullCheck("Template gallery does not exist", templateGallery, USER);
       galleryId = templateGallery.getUuid();
     }
     template.setGalleryId(galleryId);
-    if (isEmpty(template.getFolderId())) {
+    if (hasNone(template.getFolderId())) {
       notNullCheck("Template Folder Path", template.getFolderPath());
       templateFolder =
           templateFolderService.getByFolderPath(template.getAccountId(), template.getFolderPath(), galleryId);
@@ -364,7 +364,7 @@ public class TemplateServiceImpl implements TemplateService {
     validateOutputEnvironmentVariables(template);
     Set<String> existingKeywords = oldTemplate.getKeywords();
     Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
-    if (isNotEmpty(existingKeywords)) {
+    if (hasSome(existingKeywords)) {
       existingKeywords.remove(oldTemplate.getName().toLowerCase());
       if (oldTemplate.getDescription() != null) {
         existingKeywords.remove(oldTemplate.getDescription().toLowerCase());
@@ -413,7 +413,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private void validateTemplateVariables(List<Variable> templateVariables, Template oldTemplate) {
-    if (isNotEmpty(templateVariables)) {
+    if (hasSome(templateVariables)) {
       Set<String> variableNames = new HashSet<>();
 
       for (Variable variable : templateVariables) {
@@ -567,12 +567,12 @@ public class TemplateServiceImpl implements TemplateService {
       List<String> outputVarsList = new ArrayList<>();
       List<String> secretOutputVarsList = new ArrayList<>();
 
-      if (isNotEmpty(outputVars)) {
+      if (hasSome(outputVars)) {
         outputVarsList = Arrays.asList(outputVars.trim().split("\\s*,\\s*"));
         outputVarsList.replaceAll(String::trim);
       }
 
-      if (isNotEmpty(secretOutputVars)) {
+      if (hasSome(secretOutputVars)) {
         secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
         secretOutputVarsList.replaceAll(String::trim);
       }
@@ -589,7 +589,7 @@ public class TemplateServiceImpl implements TemplateService {
       Set<String> commonVars =
           outputVarsList.stream().distinct().filter(secretOutputVarsList::contains).collect(Collectors.toSet());
 
-      if (isNotEmpty(commonVars)) {
+      if (hasSome(commonVars)) {
         throw new InvalidRequestException("Output Variables cannot be Secret and String both");
       }
     }
@@ -624,7 +624,7 @@ public class TemplateServiceImpl implements TemplateService {
 
   private void setTemplateFolderForImportedTemplate(Template template) {
     String galleryId = template.getGalleryId();
-    if (isEmpty(galleryId)) {
+    if (hasNone(galleryId)) {
       TemplateGallery templateGallery =
           templateGalleryService.getByAccount(template.getAccountId(), templateGalleryService.getAccountGalleryKey());
       notNullCheck("Template gallery does not exist", templateGallery, USER);
@@ -835,7 +835,7 @@ public class TemplateServiceImpl implements TemplateService {
     List<String> templateUuids =
         templateKeys.stream().map(templateKey -> templateKey.getId().toString()).collect(Collectors.toList());
 
-    if (isEmpty(templateUuids)) {
+    if (hasNone(templateUuids)) {
       log.info("No templates under the folder {}", templateFolder.getName());
       return true;
     }
@@ -1232,7 +1232,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public Template fetchTemplateByKeywordForAccountGallery(@NotEmpty String accountId, String keyword) {
     Template template = null;
-    if (isNotEmpty(keyword)) {
+    if (hasSome(keyword)) {
       String galleryId =
           Optional
               .ofNullable(templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()))
@@ -1245,7 +1245,7 @@ public class TemplateServiceImpl implements TemplateService {
                                           .field(TemplateKeys.keywords)
                                           .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
-      if (isNotEmpty(templates)) {
+      if (hasSome(templates)) {
         template = templates.get(0);
       }
       if (template != null) {
@@ -1259,7 +1259,7 @@ public class TemplateServiceImpl implements TemplateService {
   public Template fetchTemplateByKeywordForAccountGallery(
       @NotEmpty String accountId, @NotEmpty String appId, String keyword) {
     Template template = null;
-    if (isNotEmpty(keyword)) {
+    if (hasSome(keyword)) {
       String galleryId =
           Optional
               .ofNullable(templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()))
@@ -1273,7 +1273,7 @@ public class TemplateServiceImpl implements TemplateService {
                                           .field(TemplateKeys.keywords)
                                           .contains(keyword.toLowerCase());
       List<Template> templates = templateQuery.asList();
-      if (isNotEmpty(templates)) {
+      if (hasSome(templates)) {
         template = templates.get(0);
       }
       if (template != null) {
@@ -1286,7 +1286,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Override
   public Template fetchTemplateByKeywordsForAccountGallery(@NotEmpty String accountId, Set<String> keywords) {
     Template template = null;
-    if (isNotEmpty(keywords)) {
+    if (hasSome(keywords)) {
       TemplateGallery templateGallery =
           templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey());
       Query<Template> templateQuery =
@@ -1297,7 +1297,7 @@ public class TemplateServiceImpl implements TemplateService {
               .field(Template.KEYWORDS_KEY)
               .hasAllOf(keywords.stream().map(String::toLowerCase).collect(Collectors.toList()));
       List<Template> templates = templateQuery.asList();
-      if (isNotEmpty(templates)) {
+      if (hasSome(templates)) {
         template = templates.get(0);
       }
       if (template != null) {
@@ -1313,7 +1313,7 @@ public class TemplateServiceImpl implements TemplateService {
                                         .filter(TemplateKeys.appId, GLOBAL_APP_ID)
                                         .filter(REFERENCED_TEMPLATE_ID_KEY, templateId);
     List<Template> templates = templateQuery.asList();
-    if (isNotEmpty(templates)) {
+    if (hasSome(templates)) {
       for (Template template : templates) {
         setDetailsOfTemplate(template, null);
       }
@@ -1351,7 +1351,7 @@ public class TemplateServiceImpl implements TemplateService {
 
     if (!GLOBAL_ACCOUNT_ID.equals(accountId)) {
       String referencedTemplateUri = template.getReferencedTemplateUri();
-      if (isNotEmpty(referencedTemplateUri)) {
+      if (hasSome(referencedTemplateUri)) {
         String referencedTemplateVersion = TemplateHelper.obtainTemplateVersion(referencedTemplateUri);
         template.setReferencedTemplateId(fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, referencedTemplateUri));
         if (!LATEST_TAG.equals(referencedTemplateVersion)) {
@@ -1360,7 +1360,7 @@ public class TemplateServiceImpl implements TemplateService {
           }
         }
       }
-      if (isNotEmpty(template.getFolderPath())) {
+      if (hasSome(template.getFolderPath())) {
         template.setFolderPath(template.getFolderPath().replace(HARNESS_GALLERY, accountName));
       }
     }

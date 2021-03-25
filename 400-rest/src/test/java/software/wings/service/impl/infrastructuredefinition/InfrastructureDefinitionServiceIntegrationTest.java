@@ -1,5 +1,6 @@
 package software.wings.service.impl.infrastructuredefinition;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Application.Builder.anApplication;
@@ -9,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.IntegrationTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
 
 import software.wings.api.CloudProviderType;
@@ -279,7 +279,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends IntegrationT
 
   private void setRequiredFields(InfrastructureDefinition infrastructureDefinition) {
     assert infrastructureDefinition != null;
-    if (EmptyPredicate.isEmpty(infrastructureDefinition.getEnvId())) {
+    if (hasNone(infrastructureDefinition.getEnvId())) {
       if (app1.getUuid().equals(infrastructureDefinition.getAppId())) {
         infrastructureDefinition.setEnvId(app1_env1.getUuid());
       } else if (app2.getUuid().equals(infrastructureDefinition.getAppId())) {

@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readList;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
@@ -135,7 +135,7 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, Accou
 
     Map<String, TimeSeriesMLTxnSummary> transactionSummaryMap = record.getTransactions();
 
-    if (isEmpty(transactionSummaryMap)) {
+    if (hasNone(transactionSummaryMap)) {
       return;
     }
 
@@ -152,13 +152,13 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, Accou
 
         hostSummaryMap.values().forEach(hostSummary -> {
           if (RiskLevel.LOW == RiskLevel.getRiskLevel(hostSummary.getRisk())) {
-            if (isNotEmpty(hostSummary.getControl_data())) {
+            if (hasSome(hostSummary.getControl_data())) {
               controlData.addAll(hostSummary.getControl_data());
             }
-            if (isNotEmpty(hostSummary.getTest_data())) {
+            if (hasSome(hostSummary.getTest_data())) {
               testData.addAll(hostSummary.getTest_data());
             }
-            if (isNotEmpty(hostSummary.getOptimal_data())) {
+            if (hasSome(hostSummary.getOptimal_data())) {
               optimalData.addAll(hostSummary.getOptimal_data());
             }
           }

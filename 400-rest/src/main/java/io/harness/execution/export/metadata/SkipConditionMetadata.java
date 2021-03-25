@@ -1,7 +1,7 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -23,7 +23,7 @@ public class SkipConditionMetadata {
 
   static SkipConditionMetadata fromPipelineStageExecution(
       PipelineStageExecution pipelineStageExecution, PipelineStage pipelineStage) {
-    if (pipelineStageExecution == null || pipelineStage == null || isEmpty(pipelineStage.getPipelineStageElements())) {
+    if (pipelineStageExecution == null || pipelineStage == null || hasNone(pipelineStage.getPipelineStageElements())) {
       return null;
     }
 

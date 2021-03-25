@@ -1,13 +1,13 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -58,7 +58,7 @@ public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDat
       CustomAPMDataCollectionInfo dataCollectionInfo) throws DataCollectionException {
     this.dataCollectionInfo = dataCollectionInfo;
     this.dataCollectionExecutionContext = dataCollectionExecutionContext;
-    if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {
+    if (!hasNone(dataCollectionInfo.getEncryptedDataDetails())) {
       char[] decryptedValue;
       for (EncryptedDataDetail encryptedDataDetail : dataCollectionInfo.getEncryptedDataDetails()) {
         decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail, false);
@@ -164,7 +164,7 @@ public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDat
 
   private Map<String, String> getStringsToMask() {
     Map<String, String> maskFields = new HashMap<>();
-    if (isNotEmpty(this.decryptedFields)) {
+    if (hasSome(this.decryptedFields)) {
       decryptedFields.forEach((k, v) -> { maskFields.put(v, "<" + k + ">"); });
     }
     return maskFields;
@@ -215,7 +215,7 @@ public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDat
       String resolvedBody = resolvedUrl(
           body, host, dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli());
 
-      Map<String, Object> bodyMap = isNotEmpty(resolvedBody) ? new JSONObject(resolvedBody).toMap() : new HashMap<>();
+      Map<String, Object> bodyMap = hasSome(resolvedBody) ? new JSONObject(resolvedBody).toMap() : new HashMap<>();
 
       if (APMVerificationState.Method.POST.equals(metricInfo.getMethod())) {
         callsToFetchData.add(getAPMRestClient(dataCollectionInfo.getApmConfig().getUrl())

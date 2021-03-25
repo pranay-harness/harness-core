@@ -1,8 +1,8 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -76,7 +76,7 @@ public class EncryptionServiceImpl implements EncryptionService {
   public EncryptableSetting decrypt(
       EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails, boolean fromCache) {
     log.debug("Decrypting a secret");
-    if (object.isDecrypted() || isEmpty(encryptedDataDetails)) {
+    if (object.isDecrypted() || hasNone(encryptedDataDetails)) {
       return object;
     }
 
@@ -148,7 +148,7 @@ public class EncryptionServiceImpl implements EncryptionService {
           secretUniqueIdentifier -> getDecryptedValueInternal(encryptedDataDetail));
     }
     char[] value = getDecryptedValueInternal(encryptedDataDetail);
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       secretsDelegateCacheService.put(encryptedDataDetail.getIdentifier(), value);
     }
     return value;

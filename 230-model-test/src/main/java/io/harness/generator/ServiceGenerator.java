@@ -1,7 +1,7 @@
 package io.harness.generator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_ACCOUNT;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
@@ -230,7 +230,7 @@ public class ServiceGenerator {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.listAppManifests(service.getAppId(), service.getUuid());
 
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       applicationManifestService.create(applicationManifest);
     } else {
       boolean found = false;
@@ -463,7 +463,7 @@ public class ServiceGenerator {
       Service service, String scriptResource, String path, StoreType storeType, AppManifestKind kind) {
     ApplicationManifest existing =
         applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), kind);
-    URL url = isNotEmpty(scriptResource) ? ServiceGenerator.class.getClassLoader().getResource(scriptResource) : null;
+    URL url = hasSome(scriptResource) ? ServiceGenerator.class.getClassLoader().getResource(scriptResource) : null;
     try {
       String customManifestScript = url != null ? Resources.toString(url, StandardCharsets.UTF_8) : "";
       ApplicationManifest applicationManifest =

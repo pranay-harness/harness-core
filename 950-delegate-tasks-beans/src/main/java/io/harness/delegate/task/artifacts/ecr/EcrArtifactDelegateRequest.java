@@ -1,10 +1,11 @@
 package io.harness.delegate.task.artifacts.ecr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.aws.beans.AwsInternalConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsDelegateDetailsDTO;
@@ -49,7 +50,7 @@ public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
     if (awsConnectorDTO.getCredential() != null) {
       if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
         AwsDelegateDetailsDTO delegateDetailsDTO = (AwsDelegateDetailsDTO) awsConnectorDTO.getCredential().getConfig();
-        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelectors())) {
+        if (hasSome(delegateDetailsDTO.getDelegateSelectors())) {
           return singletonList(
               SelectorCapability.builder().selectors(delegateDetailsDTO.getDelegateSelectors()).build());
         }

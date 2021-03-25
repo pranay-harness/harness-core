@@ -1,6 +1,6 @@
 package software.wings.service.impl.personalization;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -81,11 +81,11 @@ public class PersonalizationServiceTest extends WingsBaseTest {
     assertThat(remove.getSteps().getFavorites()).containsExactly(StateType.HTTP.name());
 
     final Personalization removeLast = PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertThat(isEmpty(removeLast.getSteps().getFavorites())).isTrue();
+    assertThat(hasNone(removeLast.getSteps().getFavorites())).isTrue();
 
     final Personalization removeFromEmpty =
         PersonalizationService.removeFavoriteStep(StateType.HTTP, accountId, userId);
-    assertThat(isEmpty(removeLast.getSteps().getFavorites())).isTrue();
+    assertThat(hasNone(removeLast.getSteps().getFavorites())).isTrue();
   }
 
   @Test
@@ -94,11 +94,11 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   public void testNormalizeRecent() {
     LinkedList<String> recent = null;
     PersonalizationServiceImpl.normalizeRecent(recent);
-    assertThat(isEmpty(recent)).isTrue();
+    assertThat(hasNone(recent)).isTrue();
 
     recent = new LinkedList<>();
     PersonalizationServiceImpl.normalizeRecent(recent);
-    assertThat(isEmpty(recent)).isTrue();
+    assertThat(hasNone(recent)).isTrue();
 
     recent = new LinkedList<>();
     recent.add(FOO);
@@ -227,11 +227,11 @@ public class PersonalizationServiceTest extends WingsBaseTest {
     assertThat(remove.getTemplates().getFavorites()).containsExactly(template2_id);
 
     final Personalization removeLast = PersonalizationService.removeFavoriteTemplate(template2_id, accountId, userId);
-    assertThat(isEmpty(removeLast.getTemplates().getFavorites())).isTrue();
+    assertThat(hasNone(removeLast.getTemplates().getFavorites())).isTrue();
 
     final Personalization removeFromEmpty =
         PersonalizationService.removeFavoriteTemplate(template2_id, accountId, userId);
-    assertThat(isEmpty(removeLast.getTemplates().getFavorites())).isTrue();
+    assertThat(hasNone(removeLast.getTemplates().getFavorites())).isTrue();
   }
 
   @Test

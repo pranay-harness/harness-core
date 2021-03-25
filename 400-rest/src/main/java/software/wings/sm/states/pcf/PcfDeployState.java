@@ -3,8 +3,8 @@ package software.wings.sm.states.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -286,7 +286,7 @@ public class PcfDeployState extends State {
   private Integer getInstanceCountForExistingApp(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     List<PcfAppSetupTimeDetails> appDetailsToBeDownsized = setupSweepingOutputPcf.getAppDetailsToBeDownsized();
     PcfAppSetupTimeDetails existingAppDetails = null;
-    if (isNotEmpty(appDetailsToBeDownsized)) {
+    if (hasSome(appDetailsToBeDownsized)) {
       existingAppDetails = appDetailsToBeDownsized.get(0);
     }
 
@@ -363,7 +363,7 @@ public class PcfDeployState extends State {
         .accountId(application.getAccountId())
         .newReleaseName(getApplicationNameFromSetupContext(setupSweepingOutputPcf))
         .timeoutIntervalInMin(setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
-        .downsizeAppDetail(isEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())
+        .downsizeAppDetail(hasNone(setupSweepingOutputPcf.getAppDetailsToBeDownsized())
                 ? null
                 : setupSweepingOutputPcf.getAppDetailsToBeDownsized().get(0))
         .isStandardBlueGreen(setupSweepingOutputPcf.isStandardBlueGreenWorkflow())
@@ -408,14 +408,14 @@ public class PcfDeployState extends State {
     stateExecutionData.setInstanceData(pcfDeployCommandResponse.getInstanceDataUpdated());
 
     // For now, only use newInstances. Do not use existing instances. It will be done as a part of separate story
-    List<PcfInstanceElement> pcfInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+    List<PcfInstanceElement> pcfInstanceElements = hasNone(pcfDeployCommandResponse.getPcfInstanceElements())
         ? emptyList()
         : pcfDeployCommandResponse.getPcfInstanceElements()
               .stream()
               .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
               .collect(toList());
 
-    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+    List<PcfInstanceElement> pcfOldInstanceElements = hasNone(pcfDeployCommandResponse.getPcfInstanceElements())
         ? emptyList()
         : pcfDeployCommandResponse.getPcfInstanceElements()
               .stream()

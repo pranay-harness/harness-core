@@ -3,7 +3,7 @@ package software.wings.service.impl.workflow.queuing;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.fetchIndex;
 import static io.harness.data.structure.CollectionUtils.isPresent;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
@@ -65,7 +65,7 @@ public class WorkflowConcurrencyHelper {
       }
 
       boolean resourceConstraintAdded = false;
-      if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      if (hasSome(canaryOrchestrationWorkflow.getWorkflowPhases())) {
         resourceConstraintAdded =
             addResourceConstraintForConcurrency(appId, canaryOrchestrationWorkflow, workflowVariables);
       }
@@ -150,11 +150,11 @@ public class WorkflowConcurrencyHelper {
 
   private boolean addAsFirstStepInPhaseStep(
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, boolean isDynamicInfra, List<PhaseStep> phaseSteps) {
-    return (!isDynamicInfra && isNotEmpty(phaseSteps))
+    return (!isDynamicInfra && hasSome(phaseSteps))
         || (canaryOrchestrationWorkflow.getPreDeploymentSteps() != null
             && isPresent(canaryOrchestrationWorkflow.getPreDeploymentSteps().getSteps(),
                 step -> PROVISIONER_STEP_TYPES.contains(step.getType()))
-            && isNotEmpty(phaseSteps));
+            && hasSome(phaseSteps));
   }
 
   @NotNull
@@ -185,7 +185,7 @@ public class WorkflowConcurrencyHelper {
             .put(ResourceConstraintStateKeys.acquireMode, AcquireMode.ENSURE)
             .put(ResourceConstraintStateKeys.harnessOwned, resourceConstraint.isHarnessOwned())
             .put(STATE_TIMEOUT_KEY_NAME, WEEK_TIMEOUT);
-    if (isNotEmpty(concurrencyStrategy.getNotificationGroups())) {
+    if (hasSome(concurrencyStrategy.getNotificationGroups())) {
       mapBuilder.put(ResourceConstraintStateKeys.notificationGroups, concurrencyStrategy.getNotificationGroups());
     }
     return mapBuilder.build();

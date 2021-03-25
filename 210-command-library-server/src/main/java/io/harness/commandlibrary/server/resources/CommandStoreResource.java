@@ -4,7 +4,7 @@ import static io.harness.commandlibrary.server.utils.ArchiveUtils.getAllFilePath
 import static io.harness.commandlibrary.server.utils.CommandVersionUtils.populateCommandVersionDTO;
 import static io.harness.commandlibrary.server.utils.YamlUtils.fromYaml;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -29,7 +29,7 @@ import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.commandlibrary.server.utils.ArchiveUtils;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
@@ -247,10 +247,10 @@ public class CommandStoreResource {
                                          .stream()
                                          .filter(Objects::nonNull)
                                          .map(StringUtils::trim)
-                                         .filter(EmptyPredicate::isNotEmpty)
+                                         .filter(HasPredicate::hasSome)
                                          .filter(tag -> !allowedTagsCanonicalMap.containsKey(tag.toLowerCase()))
                                          .collect(Collectors.toList());
-    if (isNotEmpty(unknownTags)) {
+    if (hasSome(unknownTags)) {
       throw new InvalidRequestException(format("these tags are not allowed = %s", unknownTags));
     }
   }

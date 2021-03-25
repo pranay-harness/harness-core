@@ -6,8 +6,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.LT;
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.ASC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import static java.util.Arrays.asList;
@@ -126,7 +126,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES, deploymentInfo.getClusterName());
         query.filter(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES,
             deploymentInfo.getContainerSvcName());
-      } else if (isNotEmpty(containerDeploymentKey.getLabels())) {
+      } else if (hasSome(containerDeploymentKey.getLabels())) {
         query.field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS).hasAllOf(containerDeploymentKey.getLabels());
       }
     } else if (deploymentSummary.getK8sDeploymentKey() != null) {
@@ -170,7 +170,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       query.filter(
           join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.instanceFetchScriptHash),
           customDeploymentKey.getInstanceFetchScriptHash());
-      if (isNotEmpty(customDeploymentKey.getTags())) {
+      if (hasSome(customDeploymentKey.getTags())) {
         query.filter(join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.tags),
             customDeploymentKey.getTags());
       }
@@ -194,11 +194,11 @@ public class DeploymentServiceImpl implements DeploymentService {
   private DeploymentKey AddDeploymentKeyFilterForContainer(
       Query<DeploymentSummary> query, DeploymentSummary deploymentSummary) {
     ContainerDeploymentKey containerDeploymentKey = deploymentSummary.getContainerDeploymentKey();
-    if (isNotEmpty(containerDeploymentKey.getContainerServiceName())) {
+    if (hasSome(containerDeploymentKey.getContainerServiceName())) {
       query.filter("containerDeploymentKey.containerServiceName", containerDeploymentKey.getContainerServiceName());
-    } else if (isNotEmpty(containerDeploymentKey.getLabels())) {
+    } else if (hasSome(containerDeploymentKey.getLabels())) {
       query.field("containerDeploymentKey.labels").hasAllOf(containerDeploymentKey.getLabels());
-      if (isNotEmpty(containerDeploymentKey.getNewVersion())) {
+      if (hasSome(containerDeploymentKey.getNewVersion())) {
         query.filter("containerDeploymentKey.newVersion", containerDeploymentKey.getNewVersion());
       }
     }

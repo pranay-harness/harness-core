@@ -1,8 +1,8 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.interrupts.RepairActionCode.isPipelineRuntimeTimeoutAction;
@@ -41,12 +41,12 @@ public class PipelineServiceValidator {
   public boolean validateRuntimeInputsConfig(
       PipelineStageElement pipelineStageElement, String accountId, List<Variable> workflowVariables) {
     RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
-    if (isEmpty(pipelineStageElement.getWorkflowVariables()) || runtimeInputsConfig == null
+    if (hasNone(pipelineStageElement.getWorkflowVariables()) || runtimeInputsConfig == null
         || pipelineStageElement.checkDisableAssertion()) {
       return true;
     }
 
-    if (isNotEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+    if (hasSome(runtimeInputsConfig.getRuntimeInputVariables())) {
       if (runtimeInputsConfig.getTimeout() < 60000) {
         throw new InvalidRequestException("Timeout value should be greater than 1 minute", USER);
       }
@@ -56,7 +56,7 @@ public class PipelineServiceValidator {
             "Timeout Action should be one of END_EXECUTION or CONTINUE_WITH_DEFAULTS", USER);
       }
       List<String> userGroupIds = runtimeInputsConfig.getUserGroupIds();
-      if (isEmpty(userGroupIds)) {
+      if (hasNone(userGroupIds)) {
         throw new InvalidRequestException("User groups should be present for Notification", USER);
       }
       for (String uid : userGroupIds) {
@@ -99,7 +99,7 @@ public class PipelineServiceValidator {
           if (entityType != null) {
             if (EntityType.SERVICE != entityType && EntityType.INFRASTRUCTURE_DEFINITION != entityType) {
               String relatedField = workflowVar.obtainRelatedField();
-              if (isNotEmpty(relatedField) && !runtimeVariables.contains(relatedField)) {
+              if (hasSome(relatedField) && !runtimeVariables.contains(relatedField)) {
                 throw new InvalidRequestException(
                     String.format("Variable %s should be runtime as %s is marked runtime", relatedField, variableName));
               }
@@ -124,7 +124,7 @@ public class PipelineServiceValidator {
             Map<String, Object> properties = pse.getProperties();
             List<Map<String, Object>> templateExpressions =
                 (List<Map<String, Object>>) properties.get("templateExpressions");
-            if (!isEmpty(templateExpressions)) {
+            if (!hasNone(templateExpressions)) {
               for (Map<String, Object> templateExpression : templateExpressions) {
                 if (templateExpression != null) {
                   String expression = (String) templateExpression.get("expression");
@@ -144,7 +144,7 @@ public class PipelineServiceValidator {
   }
 
   public static void checkUniqueApprovalPublishedVariable(Pipeline pipeline) {
-    if (isEmpty(pipeline.getPipelineStages())) {
+    if (hasNone(pipeline.getPipelineStages())) {
       return;
     }
     Map<String, String> publishedVarToStage = new HashMap<>();
@@ -152,7 +152,7 @@ public class PipelineServiceValidator {
       PipelineStageElement stageElement = pipelineStage.getPipelineStageElements().get(0);
       if (APPROVAL.name().equals(stageElement.getType())) {
         String sweepingOutputName = ApprovalState.fetchAndTrimSweepingOutputName(stageElement.getProperties());
-        if (isNotEmpty(sweepingOutputName)) {
+        if (hasSome(sweepingOutputName)) {
           if (publishedVarToStage.containsKey(sweepingOutputName)) {
             throw new InvalidRequestException(
                 format(

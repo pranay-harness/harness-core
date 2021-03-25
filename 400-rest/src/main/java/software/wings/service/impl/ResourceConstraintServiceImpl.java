@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -282,7 +282,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public void updateBlockedConstraints(Set<String> constraintIds) {
-    if (isEmpty(constraintIds)) {
+    if (hasNone(constraintIds)) {
       return;
     }
 
@@ -294,7 +294,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       for (ResourceConstraint instance : iterator) {
         final Constraint constraint = createAbstraction(instance);
         final List<ConstraintUnit> units = units(instance);
-        if (isEmpty(units)) {
+        if (hasNone(units)) {
           continue;
         }
 
@@ -573,7 +573,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
             .filter(ResourceConstraintInstanceKeys.releaseEntityId, releaseEntityId)
             .project(ResourceConstraintInstanceKeys.permits, true)
             .asList();
-    if (isNotEmpty(resourceConstraintInstances)) {
+    if (hasSome(resourceConstraintInstances)) {
       for (ResourceConstraintInstance constraintInstance : resourceConstraintInstances) {
         currentPermits += constraintInstance.getPermits();
       }

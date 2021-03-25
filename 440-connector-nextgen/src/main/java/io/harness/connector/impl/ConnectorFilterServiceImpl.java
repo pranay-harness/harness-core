@@ -1,7 +1,7 @@
 package io.harness.connector.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.Scope.ORG;
 import static io.harness.encryption.Scope.PROJECT;
@@ -68,7 +68,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     }
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
 
-    if (isEmpty(filterIdentifier) && filterProperties == null) {
+    if (hasNone(filterIdentifier) && filterProperties == null) {
       applySearchFilter(criteria, searchTerm);
       return criteria;
     }
@@ -171,7 +171,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   private Criteria getNameFilter(Criteria criteria, List<String> connectorNames) {
-    if (isEmpty(connectorNames)) {
+    if (hasNone(connectorNames)) {
       return null;
     }
     List<Criteria> criteriaForNames =
@@ -183,7 +183,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return;
     }
     criteria.and(ConnectorKeys.tags).in(TagMapper.convertToList(tags));
@@ -219,7 +219,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       return null;
     }
     String[] descriptionsWords = description.split(" ");
-    if (isNotEmpty(descriptionsWords)) {
+    if (hasSome(descriptionsWords)) {
       String pattern = getPatternForMatchingAnyOneOf(Arrays.asList(descriptionsWords));
       return where(ConnectorKeys.description).regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
     }

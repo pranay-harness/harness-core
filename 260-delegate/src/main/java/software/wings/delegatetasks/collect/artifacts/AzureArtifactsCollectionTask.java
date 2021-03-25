@@ -1,13 +1,14 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -70,7 +71,7 @@ public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
     try {
-      if (EmptyPredicate.isEmpty(parameters) || !(parameters[0] instanceof TaskParameters)) {
+      if (hasNone(parameters) || !(parameters[0] instanceof TaskParameters)) {
         throw new InvalidArgumentsException(ImmutablePair.of("args", "Invalid task parameters"));
       }
       return run((TaskParameters) parameters[0]);

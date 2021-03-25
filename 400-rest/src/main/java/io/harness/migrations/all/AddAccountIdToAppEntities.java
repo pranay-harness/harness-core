@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -44,7 +44,7 @@ public class AddAccountIdToAppEntities implements Migration {
         List<Key<Application>> appIdKeyList = wingsPersistence.createQuery(Application.class)
                                                   .filter(ApplicationKeys.accountId, account.getUuid())
                                                   .asKeyList();
-        if (isNotEmpty(appIdKeyList)) {
+        if (hasSome(appIdKeyList)) {
           Set<String> appIdSet =
               appIdKeyList.stream().map(applicationKey -> (String) applicationKey.getId()).collect(Collectors.toSet());
           bulkSetAccountId(account.getUuid(), InfrastructureProvisioner.class, appIdSet);

@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.service.execution;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Level;
@@ -96,7 +97,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     String stageInfo = request.getNodeModuleInfoJson();
     ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     String planExecutionId = request.getPlanExecutionId();
-    if (EmptyPredicate.isEmpty(stageUuid)) {
+    if (hasNone(stageUuid)) {
       return;
     }
     Document stageInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(stageInfo);

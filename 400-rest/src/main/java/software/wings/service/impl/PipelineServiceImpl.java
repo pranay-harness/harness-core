@@ -7,8 +7,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
@@ -285,7 +285,7 @@ public class PipelineServiceImpl implements PipelineService {
     List<PipelineStage> newPipelineStages = pipeline.getPipelineStages();
     List<PipelineStage> savedPipelineStages = savedPipeline.getPipelineStages();
     // Not deletion case also we dont want to handle this from yaml. YAML we consider that as source of truth
-    if (fromYaml || isEmpty(newPipelineStages) || isEmpty(savedPipelineStages)
+    if (fromYaml || hasNone(newPipelineStages) || hasNone(savedPipelineStages)
         || savedPipelineStages.size() <= newPipelineStages.size()) {
       return;
     }
@@ -317,7 +317,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   public static void ensurePipelineStageUuidAndParallelIndex(Pipeline pipeline) {
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    if (isEmpty(pipelineStages)) {
+    if (hasNone(pipelineStages)) {
       return;
     }
 
@@ -327,7 +327,7 @@ public class PipelineServiceImpl implements PipelineService {
       if (!stage.isParallel()) {
         ++parallelIndex;
       }
-      if (isEmpty(stage.getName())) {
+      if (hasNone(stage.getName())) {
         stage.setName("STAGE " + parallelIndex);
       }
       if (!stage.isParallel()) {
@@ -401,7 +401,7 @@ public class PipelineServiceImpl implements PipelineService {
     if (!runningExecutions) {
       List<String> triggerNames;
       List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
-      if (isEmpty(triggers)) {
+      if (hasNone(triggers)) {
         return;
       }
       triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
@@ -514,7 +514,7 @@ public class PipelineServiceImpl implements PipelineService {
               DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(pipeline.getAppId(),
                   workflow, pipelineStageElement.getWorkflowVariables(), null, null, Include.ARTIFACT_SERVICE);
               if (deploymentMetadata != null) {
-                if (isNotEmpty(deploymentMetadata.getArtifactRequiredServiceIds())) {
+                if (hasSome(deploymentMetadata.getArtifactRequiredServiceIds())) {
                   entityTypes.add(ARTIFACT);
                 }
               }
@@ -701,13 +701,13 @@ public class PipelineServiceImpl implements PipelineService {
   @VisibleForTesting
   void validateMultipleValuesAllowed(Pipeline pipeline, Map<String, String> variableValues) {
     List<Variable> variables = pipeline.getPipelineVariables();
-    if (isEmpty(variables) || isEmpty(variableValues)) {
+    if (hasNone(variables) || hasNone(variableValues)) {
       return;
     }
     for (Variable variable : variables) {
       if (variableValues.containsKey(variable.getName())) {
         String variableValue = variableValues.get(variable.getName());
-        if (isNotEmpty(variableValue) && variableValue.contains(",") && !variable.isAllowMultipleValues()
+        if (hasSome(variableValue) && variableValue.contains(",") && !variable.isAllowMultipleValues()
             && variable.obtainEntityType() != null) {
           throw new InvalidRequestException(format("variable %s cannot take multiple values", variable.getName()));
         }
@@ -818,7 +818,7 @@ public class PipelineServiceImpl implements PipelineService {
                   (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
             }
             deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
-            if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
+            if (!templatized && hasSome(pse.getWorkflowVariables())) {
               templatized = true;
             }
 
@@ -895,7 +895,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private boolean checkPipelineEntityParameterized(Map<String, String> pseWorkflowVaraibles, Workflow workflow) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(workflowVariables) || isEmpty(pseWorkflowVaraibles)) {
+    if (hasNone(workflowVariables) || hasNone(pseWorkflowVaraibles)) {
       return false;
     }
     boolean atleastOneEntityParameterized;
@@ -951,7 +951,7 @@ public class PipelineServiceImpl implements PipelineService {
           validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
 
           setPipelineVariables(workflow, pse, pipelineVariables, false);
-          if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
+          if (!templatized && hasSome(pse.getWorkflowVariables())) {
             templatized = true;
           }
           if (!envParameterized) {
@@ -980,7 +980,7 @@ public class PipelineServiceImpl implements PipelineService {
   void setPipelineVariables(
       Workflow workflow, PipelineStageElement pse, List<Variable> pipelineVariables, boolean withFinalValuesOnly) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isEmpty(workflowVariables)) {
+    if (hasNone(workflowVariables)) {
       return;
     }
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
@@ -989,8 +989,8 @@ public class PipelineServiceImpl implements PipelineService {
             .filter(variable -> variable.obtainEntityType() == null && !variable.isFixed())
             .collect(toList());
 
-    if (isEmpty(pseWorkflowVariables)) {
-      if (!isEmpty(workflowVariables)) {
+    if (hasNone(pseWorkflowVariables)) {
+      if (!hasNone(workflowVariables)) {
         nonEntityVariables.forEach(variable -> {
           if (!contains(pipelineVariables, variable.getName())) {
             Variable cloned = variable.cloneInternal();
@@ -1011,7 +1011,7 @@ public class PipelineServiceImpl implements PipelineService {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       boolean isRuntime = false;
-      if (runtimeInputs && isNotEmpty(runtimeVariables) && runtimeVariables.contains(variable.getName())) {
+      if (runtimeInputs && hasSome(runtimeVariables) && runtimeVariables.contains(variable.getName())) {
         isRuntime = true;
       }
       if (variable.obtainEntityType() == null) {
@@ -1067,7 +1067,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .allowMultipleValues(entityType == USER_GROUP)
                                               .mandatory(entityType != null);
 
-        if (isNotEmpty(stateType)) {
+        if (hasSome(stateType)) {
           variableBuilder.stateType(stateType);
         }
         // Set the description
@@ -1097,7 +1097,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables, Variable variable, boolean allowMulti,
       boolean isRuntime) {
     String value = pseWorkflowVariables.get(variable.getName());
-    if (isNotEmpty(value)) {
+    if (hasSome(value)) {
       String variableName = matchesVariablePattern(value) ? getName(value) : null;
       if (variableName != null) {
         // Variable is an expression - templatized pipeline.
@@ -1150,7 +1150,7 @@ public class PipelineServiceImpl implements PipelineService {
     if (!variable.isFixed()) {
       Variable newVar = null;
       String variableName = variable.getName();
-      if (isEmpty(value)) {
+      if (hasNone(value)) {
         newVar = variable.cloneInternal();
       } else if (matchesVariablePattern(value) && !value.contains(".")) {
         variableName = getName(value);
@@ -1203,14 +1203,14 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void mergeMetadataServiceVariable(Variable variable, Variable storedVar) {
-    if (isEmpty(storedVar.getMetadata())) {
+    if (hasNone(storedVar.getMetadata())) {
       throw new UnexpectedException(
           "Service variable" + storedVar.getName() + " stored without any AtifactType and Metadata");
     }
     validateArtifactType(storedVar.obtainArtifactTypeField(), variable.obtainArtifactTypeField(), storedVar.getName());
 
     String newRelatedFiledVal = joinFieldValuesMetadata(storedVar.obtainRelatedField(), variable.obtainRelatedField());
-    if (isNotEmpty(newRelatedFiledVal)) {
+    if (hasSome(newRelatedFiledVal)) {
       storedVar.getMetadata().put(Variable.RELATED_FIELD, newRelatedFiledVal);
     } else {
       storedVar.getMetadata().remove(Variable.RELATED_FIELD);
@@ -1218,14 +1218,14 @@ public class PipelineServiceImpl implements PipelineService {
 
     String newDeploymentTypedVal =
         joinFieldValuesMetadata(storedVar.obtainDeploymentTypeField(), variable.obtainDeploymentTypeField());
-    if (isNotEmpty(newDeploymentTypedVal)) {
+    if (hasSome(newDeploymentTypedVal)) {
       storedVar.getMetadata().put(Variable.DEPLOYMENT_TYPE, newDeploymentTypedVal);
     } else {
       storedVar.getMetadata().remove(Variable.DEPLOYMENT_TYPE);
     }
 
     String mergedInfraIdVal = joinFieldValuesMetadata(storedVar.obtainInfraIdField(), variable.obtainInfraIdField());
-    if (isNotEmpty(mergedInfraIdVal)) {
+    if (hasSome(mergedInfraIdVal)) {
       storedVar.getMetadata().put(Variable.INFRA_ID, mergedInfraIdVal);
     } else {
       storedVar.getMetadata().remove(Variable.INFRA_ID);
@@ -1233,7 +1233,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validateArtifactType(String storedArtifactTypeField, String newArtifactTypeField, String varName) {
-    if (isNotEmpty(storedArtifactTypeField) && isNotEmpty(newArtifactTypeField)) {
+    if (hasSome(storedArtifactTypeField) && hasSome(newArtifactTypeField)) {
       if (!storedArtifactTypeField.equals(newArtifactTypeField)) {
         throw new InvalidRequestException("The same Workflow variable name " + varName
                 + " cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.",
@@ -1243,7 +1243,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void mergeMetadataInfraVariable(Variable variable, Variable storedVar) {
-    if (isEmpty(storedVar.getMetadata())) {
+    if (hasNone(storedVar.getMetadata())) {
       throw new UnexpectedException("Infra variable" + storedVar.getName() + " stored without any Metadata");
     }
     validateEnvId(storedVar.obtainEnvIdField(), variable.obtainEnvIdField(), storedVar.getName());
@@ -1251,7 +1251,7 @@ public class PipelineServiceImpl implements PipelineService {
         storedVar.obtainDeploymentTypeField(), variable.obtainDeploymentTypeField(), storedVar.getName());
 
     String newRelatedFiledVal = joinFieldValuesMetadata(storedVar.obtainRelatedField(), variable.obtainRelatedField());
-    if (isNotEmpty(newRelatedFiledVal)) {
+    if (hasSome(newRelatedFiledVal)) {
       storedVar.getMetadata().put(Variable.RELATED_FIELD, newRelatedFiledVal);
     } else {
       storedVar.getMetadata().remove(Variable.RELATED_FIELD);
@@ -1259,7 +1259,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     String mergedServiceIdsVal =
         joinFieldValuesMetadata(storedVar.obtainServiceIdField(), variable.obtainServiceIdField());
-    if (isNotEmpty(mergedServiceIdsVal)) {
+    if (hasSome(mergedServiceIdsVal)) {
       storedVar.getMetadata().put(Variable.SERVICE_ID, mergedServiceIdsVal);
     } else {
       storedVar.getMetadata().remove(Variable.SERVICE_ID);
@@ -1267,7 +1267,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validateDeploymentType(String storedDeploymentTypeField, String newDeploymentTypeField, String name) {
-    if (isEmpty(storedDeploymentTypeField) || isEmpty(newDeploymentTypeField)) {
+    if (hasNone(storedDeploymentTypeField) || hasNone(newDeploymentTypeField)) {
       return;
     }
     if (!storedDeploymentTypeField.equals(newDeploymentTypeField)) {
@@ -1278,7 +1278,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validateEnvId(String storedEnvIdField, String newEnvIdField, String varName) {
-    if (isEmpty(storedEnvIdField) || isEmpty(newEnvIdField)) {
+    if (hasNone(storedEnvIdField) || hasNone(newEnvIdField)) {
       return;
     }
     if (!storedEnvIdField.equals(newEnvIdField)) {
@@ -1289,11 +1289,11 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private String joinFieldValuesMetadata(String storedRelatedField, String newRelatedField) {
-    if (isEmpty(storedRelatedField)) {
+    if (hasNone(storedRelatedField)) {
       return newRelatedField;
     }
 
-    if (isEmpty(newRelatedField)) {
+    if (hasNone(newRelatedField)) {
       return storedRelatedField;
     }
 
@@ -1360,7 +1360,7 @@ public class PipelineServiceImpl implements PipelineService {
       default:
         log.info("no parent fields required to be set");
     }
-    if (isNotEmpty(parentFields)) {
+    if (hasSome(parentFields)) {
       if (pipelineVariable.getMetadata().get(Variable.PARENT_FIELDS) != null) {
         Map<String, String> existingParents =
             (Map<String, String>) pipelineVariable.getMetadata().get(Variable.PARENT_FIELDS);
@@ -1521,7 +1521,7 @@ public class PipelineServiceImpl implements PipelineService {
       Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
     if (pipelineVariable.getMetadata().get("relatedField") != null) {
       String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
-      if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")
+      if (hasSome(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")
           && pseWorkflowVariables.containsKey(relatedFieldOldValue)) {
         if (ExpressionEvaluator.matchesVariablePattern(pseWorkflowVariables.get(relatedFieldOldValue))) {
           String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
@@ -1536,7 +1536,7 @@ public class PipelineServiceImpl implements PipelineService {
   private static void cloneRelatedFieldName(Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
     if (pipelineVariable.getMetadata().get("relatedField") != null) {
       String relatedFieldOldValue = String.valueOf(pipelineVariable.getMetadata().get("relatedField"));
-      if (isNotEmpty(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
+      if (hasSome(relatedFieldOldValue) && !relatedFieldOldValue.equals("null")) {
         if (ExpressionEvaluator.matchesVariablePattern(pseWorkflowVariables.get(relatedFieldOldValue))) {
           String relatedFieldNewValue = getName(pseWorkflowVariables.get(relatedFieldOldValue));
           pipelineVariable.getMetadata().put(Variable.RELATED_FIELD, relatedFieldNewValue);
@@ -1617,7 +1617,7 @@ public class PipelineServiceImpl implements PipelineService {
       Workflow workflow, PipelineStageElement pse, PipelineStage pipelineStage, Set<String> invalidStages) {
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
     Set<String> pseWorkflowVariableNames =
-        isEmpty(pseWorkflowVariables) ? new HashSet<>() : pseWorkflowVariables.keySet();
+        hasNone(pseWorkflowVariables) ? new HashSet<>() : pseWorkflowVariables.keySet();
     Set<String> workflowVariableNames = (workflow.getOrchestrationWorkflow().getUserVariables() == null)
         ? new HashSet<>()
         : (workflow.getOrchestrationWorkflow().getUserVariables().stream().map(Variable::getName).collect(toSet()));
@@ -1629,7 +1629,7 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
 
-    if (!isEmpty(missingVariables)) {
+    if (!hasNone(missingVariables)) {
       String errorMsg = String.format("Workflow Variable(s) \"%s\" updated or deleted after adding to the Pipeline",
           String.join("\", \"", missingVariables));
       pse.setValidationMessage(errorMsg);
@@ -1639,7 +1639,7 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
 
-    if (isEmpty(workflowVariableNames)) {
+    if (hasNone(workflowVariableNames)) {
       return;
     }
 
@@ -1658,7 +1658,7 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
 
-    if (!isEmpty(missingVariables)) {
+    if (!hasNone(missingVariables)) {
       String errorMsg = String.format("Workflow Variable(s) \"%s\" added or updated after adding to the Pipeline",
           String.join("\", \"", missingVariables));
       pse.setValidationMessage(errorMsg);
@@ -1836,7 +1836,7 @@ public class PipelineServiceImpl implements PipelineService {
           finalDeploymentMetadata.setArtifactVariables(new ArrayList<>());
 
           // Remove ARTIFACT_SERVICE from includeList.
-          Stream<Include> includeStream = isEmpty(includeList) ? stream(Include.values()) : stream(includeList);
+          Stream<Include> includeStream = hasNone(includeList) ? stream(Include.values()) : stream(includeList);
           includeList = includeStream.filter(include -> Include.ARTIFACT_SERVICE != include).toArray(Include[] ::new);
         }
 
@@ -1856,7 +1856,7 @@ public class PipelineServiceImpl implements PipelineService {
     mergeLists(finalDeploymentMetadata.getEnvIds(), deploymentMetadata.getEnvIds());
     mergeLists(finalDeploymentMetadata.getDeploymentTypes(), deploymentMetadata.getDeploymentTypes());
 
-    if (isNotEmpty(deploymentMetadata.getArtifactVariables())) {
+    if (hasSome(deploymentMetadata.getArtifactVariables())) {
       List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
       for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
         mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
@@ -1864,7 +1864,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, workflow.getAccountId())
-        && isNotEmpty(deploymentMetadata.getManifestVariables())) {
+        && hasSome(deploymentMetadata.getManifestVariables())) {
       List<ManifestVariable> finalManifestVariables = finalDeploymentMetadata.getManifestVariables();
       deploymentMetadata.getManifestVariables().forEach(
           manifestVariable -> mergeManifestVariable(finalManifestVariables, manifestVariable, workflow.getUuid()));
@@ -1897,7 +1897,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     List<ArtifactVariable> duplicateArtifactVariables =
         finalArtifactVariables.stream().filter(av -> av.getName().equals(artifactVariable.getName())).collect(toList());
-    if (isEmpty(duplicateArtifactVariables)) {
+    if (hasNone(duplicateArtifactVariables)) {
       addArtifactVariable(finalArtifactVariables, artifactVariable, workflowId);
       return;
     }
@@ -1930,7 +1930,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private static <T> void mergeLists(List<T> to, List<T> from) {
     // NOTE: to should not be null
-    if (isEmpty(from)) {
+    if (hasNone(from)) {
       return;
     }
 
@@ -2018,7 +2018,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private boolean isValidPipelineStageName(String name) {
-    if (isEmpty(name)) {
+    if (hasNone(name)) {
       return false;
     }
     return ALLOWED_CHARS_SET_PIPELINE_STAGE.containsAll(Sets.newHashSet(Lists.charactersOf(name)));

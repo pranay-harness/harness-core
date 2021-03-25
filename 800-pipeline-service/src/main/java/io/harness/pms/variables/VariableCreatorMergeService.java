@@ -1,7 +1,7 @@
 package io.harness.pms.variables;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 
@@ -61,15 +61,15 @@ public class VariableCreatorMergeService {
       Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
     VariablesCreationBlobResponse.Builder responseBuilder =
         VariablesCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
-    if (isEmpty(services) || isEmpty(dependencies)) {
+    if (hasNone(services) || hasNone(dependencies)) {
       return responseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    for (int i = 0; i < MAX_DEPTH && hasSome(responseBuilder.getDependenciesMap()); i++) {
       VariablesCreationBlobResponse variablesCreationBlobResponse =
           obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap());
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
-      if (isNotEmpty(responseBuilder.getDependenciesMap())) {
+      if (hasSome(responseBuilder.getDependenciesMap())) {
         VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
         VariableCreationBlobResponseUtils.mergeErrorResponses(responseBuilder, variablesCreationBlobResponse);
         return responseBuilder.build();

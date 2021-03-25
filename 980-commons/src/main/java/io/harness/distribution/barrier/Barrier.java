@@ -1,6 +1,6 @@
 package io.harness.distribution.barrier;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 import static io.harness.distribution.barrier.Barrier.State.ENDURE;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
@@ -107,7 +107,7 @@ public class Barrier {
 
           // Running parent suggests that there might be children that are in progress, but some of them
           // might failed. We need to check the children about that.
-          if (isEmpty(children)) {
+          if (hasNone(children)) {
             // If the forcer is still approaching the barrier and it has no children the barrier stands.
             result = STANDING;
           } else {

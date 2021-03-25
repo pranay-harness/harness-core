@@ -1,7 +1,7 @@
 package io.harness.yaml.snippets.helper;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -51,7 +51,7 @@ public class YamlSnippetHelper {
    */
   public void preComputeTagsAndNameMap(String snippetMetadata, YamlSchemaRootClass yamlSchemaRootClass) {
     YamlSnippets yamlSnippets = getYamlSnippets(snippetMetadata);
-    if (yamlSnippets == null || isEmpty(yamlSnippets.getYamlSnippetMetaDataList())) {
+    if (yamlSnippets == null || hasNone(yamlSnippets.getYamlSnippetMetaDataList())) {
       log.info("No Yaml Snippet found while initialising.");
       return;
     }

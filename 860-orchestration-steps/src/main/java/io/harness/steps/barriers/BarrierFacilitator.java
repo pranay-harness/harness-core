@@ -1,6 +1,6 @@
 package io.harness.steps.barriers;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
@@ -42,6 +42,6 @@ public class BarrierFacilitator implements Facilitator {
   private boolean isSingleBarrier(String identifier, String planExecutionId) {
     List<BarrierExecutionInstance> barrierExecutionInstances =
         barrierService.findByIdentifierAndPlanExecutionId(identifier, planExecutionId);
-    return isEmpty(barrierExecutionInstances) || barrierExecutionInstances.size() == 1;
+    return hasNone(barrierExecutionInstances) || barrierExecutionInstances.size() == 1;
   }
 }

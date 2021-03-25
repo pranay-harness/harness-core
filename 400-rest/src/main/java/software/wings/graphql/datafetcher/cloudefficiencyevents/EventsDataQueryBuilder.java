@@ -1,10 +1,10 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQueryMetaData.CEEventsMetaDataFields;
@@ -84,7 +84,7 @@ public class EventsDataQueryBuilder {
 
   private List<QLEventsSortCriteria> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLEventsSortCriteria> sortCriteria) {
-    if (isEmpty(sortCriteria)) {
+    if (hasNone(sortCriteria)) {
       return sortCriteria;
     } else {
       for (QLEventsSortCriteria eventsSortCriteria : sortCriteria) {
@@ -189,7 +189,7 @@ public class EventsDataQueryBuilder {
   }
 
   private boolean checkFilter(Filter f) {
-    return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
+    return f.getOperator() != null && hasSome(f.getValues());
   }
 
   private DbColumn getFilterKey(QLEventsDataFilterType type) {

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -49,7 +49,7 @@ public class OAuthAllowedProvidersListMigration implements Migration {
         String displayNameInUpperCase;
         UpdateOperations<SSOSettings> operations;
         try {
-          if (isEmpty(ssoSettings.getDisplayName())) {
+          if (hasNone(ssoSettings.getDisplayName())) {
             log.warn("Expected displayName to be non-empty");
             continue;
           }

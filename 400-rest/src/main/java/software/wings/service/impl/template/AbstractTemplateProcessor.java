@@ -1,6 +1,6 @@
 package software.wings.service.impl.template;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -100,7 +100,7 @@ public abstract class AbstractTemplateProcessor {
 
     if (!GLOBAL_ACCOUNT_ID.equals(accountId)) {
       String referencedTemplateUri = template.getReferencedTemplateUri();
-      if (isNotEmpty(referencedTemplateUri)) {
+      if (hasSome(referencedTemplateUri)) {
         String referencedTemplateVersion = TemplateHelper.obtainTemplateVersion(referencedTemplateUri);
         template.setReferencedTemplateId(
             templateService.fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, referencedTemplateUri));
@@ -110,7 +110,7 @@ public abstract class AbstractTemplateProcessor {
           }
         }
       }
-      if (isNotEmpty(template.getFolderPath())) {
+      if (hasSome(template.getFolderPath())) {
         template.setFolderPath(template.getFolderPath().replace(HARNESS_GALLERY, accountName));
       }
     }
@@ -145,7 +145,7 @@ public abstract class AbstractTemplateProcessor {
             updateNeeded = updateStep(template, updateNeeded, orchestrationWorkflow.getPostDeploymentSteps());
             // Verify in phases
             List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
-            if (isNotEmpty(workflowPhases)) {
+            if (hasSome(workflowPhases)) {
               for (WorkflowPhase workflowPhase : workflowPhases) {
                 for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                   updateNeeded = updateStep(template, updateNeeded, phaseStep);
@@ -155,7 +155,7 @@ public abstract class AbstractTemplateProcessor {
             // Update Rollback Phase Steps
             if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
               for (WorkflowPhase workflowPhase : orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
-                if (isNotEmpty(workflowPhase.getPhaseSteps())) {
+                if (hasSome(workflowPhase.getPhaseSteps())) {
                   for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                     updateNeeded = updateStep(template, updateNeeded, phaseStep);
                   }

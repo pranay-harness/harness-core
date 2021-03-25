@@ -1,7 +1,7 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
@@ -58,7 +58,7 @@ public class PrometheusResource implements LogAnalysisResource {
 
   public static Map<String, String> validateTransactions(List<TimeSeries> timeSeriesToAnalyze, boolean serviceLevel) {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(timeSeriesToAnalyze)) {
+    if (hasNone(timeSeriesToAnalyze)) {
       invalidFields.put("timeSeriesToAnalyze", "No metrics given to analyze.");
       return invalidFields;
     }
@@ -67,7 +67,7 @@ public class PrometheusResource implements LogAnalysisResource {
     timeSeriesToAnalyze.forEach(timeSeries -> {
       MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
       final String query = timeSeries.getUrl();
-      if (isEmpty(query)) {
+      if (hasNone(query)) {
         invalidFields.put(
             "No query specified for ", "Group: " + timeSeries.getTxnName() + " Metric: " + timeSeries.getMetricName());
       }
@@ -78,7 +78,7 @@ public class PrometheusResource implements LogAnalysisResource {
             "Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
       }
 
-      if (!serviceLevel && isNotEmpty(query) && !query.contains(HOST_NAME_PLACE_HOLDER)) {
+      if (!serviceLevel && hasSome(query) && !query.contains(HOST_NAME_PLACE_HOLDER)) {
         invalidFields.put(
             "Invalid query for group: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
             HOST_NAME_PLACE_HOLDER + " is not present in the url.");
@@ -141,7 +141,7 @@ public class PrometheusResource implements LogAnalysisResource {
       @QueryParam("accountId") final String accountId, @Valid PrometheusSetupTestNodeData setupTestNodeData) {
     Map<String, String> invalidFields =
         validateTransactions(setupTestNodeData.getTimeSeriesToAnalyze(), setupTestNodeData.isServiceLevel());
-    if (isNotEmpty(invalidFields)) {
+    if (hasSome(invalidFields)) {
       throw new VerificationOperationException(
           ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
     }

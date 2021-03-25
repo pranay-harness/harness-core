@@ -1,7 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -24,7 +24,7 @@ public class PipelineExpressionBuilder extends ExpressionBuilder {
   public Set<String> getExpressions(String appId, String entityId) {
     SortedSet<String> expressions = new TreeSet<>();
     Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, entityId);
-    if (pipeline == null || isEmpty(pipeline.getPipelineVariables())) {
+    if (pipeline == null || hasNone(pipeline.getPipelineVariables())) {
       return expressions;
     }
     for (Variable variable : pipeline.getPipelineVariables()) {

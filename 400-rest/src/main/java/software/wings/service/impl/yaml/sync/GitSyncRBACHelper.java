@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.sync;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
@@ -53,7 +53,7 @@ public class GitSyncRBACHelper {
   }
   public List<GitFileActivity> populateUserHasPermissionForFileField(
       List<GitFileActivity> gitFileActivities, String accountId) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return Collections.emptyList();
     }
     List<GitFileActivity> filteredFileActivities = new ArrayList<>();
@@ -71,7 +71,7 @@ public class GitSyncRBACHelper {
 
   public List<GitSyncError> populateUserHasPermissionForFileFieldInErrors(
       List<GitSyncError> errorFiles, String accountId) {
-    if (isEmpty(errorFiles)) {
+    if (hasNone(errorFiles)) {
       return Collections.emptyList();
     }
     List<GitSyncError> filteredFileActivities = new ArrayList<>();
@@ -88,7 +88,7 @@ public class GitSyncRBACHelper {
   }
 
   private List<GitSyncError> filterAccountLevelErrorsAccessibleToUser(List<GitSyncError> errors, String accountId) {
-    if (isEmpty(errors)) {
+    if (hasNone(errors)) {
       return Collections.emptyList();
     }
     List<String> yamlFilePaths = errors.stream().map(GitSyncError::getYamlFilePath).collect(Collectors.toList());
@@ -105,7 +105,7 @@ public class GitSyncRBACHelper {
 
   private List<GitFileActivity> filterAccountLevelEntitiesAccessibleToUser(
       List<GitFileActivity> gitFileActivities, String accountId) {
-    if (isEmpty(gitFileActivities)) {
+    if (hasNone(gitFileActivities)) {
       return Collections.emptyList();
     }
     List<String> yamlFilePaths =
@@ -122,7 +122,7 @@ public class GitSyncRBACHelper {
   }
 
   private Set<String> getAccountLevelFilesAccessibleToUser(List<String> accountLevelFiles, String accountId) {
-    if (isEmpty(accountLevelFiles)) {
+    if (hasNone(accountLevelFiles)) {
       return Collections.emptySet();
     }
     List<YamlFileDetails> filesBelongingToSettingAttributeCollection = new ArrayList<>();
@@ -162,7 +162,7 @@ public class GitSyncRBACHelper {
   }
 
   private Set<String> getSettingAttributeFileAccessibleToUser(List<YamlFileDetails> fileDetails, String accountId) {
-    if (isEmpty(fileDetails)) {
+    if (hasNone(fileDetails)) {
       return Collections.emptySet();
     }
     // Move it to different function
@@ -173,7 +173,7 @@ public class GitSyncRBACHelper {
             .addFilter(SettingAttributeKeys.name, IN, fileNames.toArray())
             .build();
     List<SettingAttribute> settingAttributes = settingsService.list(settingAttributePageRequest, null, null);
-    if (isEmpty(settingAttributes)) {
+    if (hasNone(settingAttributes)) {
       return Collections.emptySet();
     }
     Map<String, List<SettingCategory>> nameSettingCategoryMap = mapOfNameAndSettingAttributes(settingAttributes);

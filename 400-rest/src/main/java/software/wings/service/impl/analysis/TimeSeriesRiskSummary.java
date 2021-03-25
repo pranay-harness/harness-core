@@ -2,8 +2,8 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
@@ -59,21 +59,21 @@ public class TimeSeriesRiskSummary extends Base implements AccountAccess {
   private String tag;
 
   public void compressMaps() {
-    if (isEmpty(txnMetricRisk) && isEmpty(txnMetricLongTermPattern) && isEmpty(txnMetricRiskData)) {
+    if (hasNone(txnMetricRisk) && hasNone(txnMetricLongTermPattern) && hasNone(txnMetricRiskData)) {
       return;
     }
     try {
-      if (isNotEmpty(txnMetricRisk)) {
+      if (hasSome(txnMetricRisk)) {
         setCompressedMetricRisk(compressString(JsonUtils.asJson(txnMetricRisk)));
       }
       setTxnMetricRisk(null);
 
-      if (isNotEmpty(txnMetricLongTermPattern)) {
+      if (hasSome(txnMetricLongTermPattern)) {
         setCompressedLongTermPattern(compressString(JsonUtils.asJson(txnMetricLongTermPattern)));
       }
       setTxnMetricLongTermPattern(null);
 
-      if (isNotEmpty(txnMetricRiskData)) {
+      if (hasSome(txnMetricRiskData)) {
         setCompressedRiskData(compressString(JsonUtils.asJson(txnMetricRiskData)));
       }
       setTxnMetricRiskData(null);
@@ -83,25 +83,25 @@ public class TimeSeriesRiskSummary extends Base implements AccountAccess {
   }
 
   public void decompressMaps() {
-    if (isEmpty(compressedMetricRisk) && isEmpty(compressedLongTermPattern) && isEmpty(compressedRiskData)) {
+    if (hasNone(compressedMetricRisk) && hasNone(compressedLongTermPattern) && hasNone(compressedRiskData)) {
       return;
     }
     try {
-      if (isNotEmpty(compressedMetricRisk)) {
+      if (hasSome(compressedMetricRisk)) {
         String decompressedMetricRisk = deCompressString(compressedMetricRisk);
         setTxnMetricRisk(
             JsonUtils.asObject(decompressedMetricRisk, new TypeReference<Map<String, Map<String, Integer>>>() {}));
         setCompressedMetricRisk(null);
       }
 
-      if (isNotEmpty(compressedLongTermPattern)) {
+      if (hasSome(compressedLongTermPattern)) {
         String decompressedLongTermPattern = deCompressString(compressedLongTermPattern);
         setTxnMetricLongTermPattern(
             JsonUtils.asObject(decompressedLongTermPattern, new TypeReference<Map<String, Map<String, Integer>>>() {}));
         setCompressedLongTermPattern(null);
       }
 
-      if (isNotEmpty(compressedRiskData)) {
+      if (hasSome(compressedRiskData)) {
         String decompressedRiskData = deCompressString(compressedRiskData);
         setTxnMetricRiskData(JsonUtils.asObject(
             decompressedRiskData, new TypeReference<Map<String, Map<String, TimeSeriesRiskData>>>() {}));

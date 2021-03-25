@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -96,7 +97,7 @@ public class AzureSecretHelper {
   }
 
   private <T extends AzureAppServiceSettingDTO> void decryptSettings(Map<String, T> settings) {
-    if (isEmpty(settings)) {
+    if (hasNone(settings)) {
       return;
     }
     settings.values().forEach(this::decryptEncryptedRecordByLocalEncryptor);
@@ -130,7 +131,7 @@ public class AzureSecretHelper {
   }
 
   private <T extends AzureAppServiceSettingDTO> void encryptSettings(Map<String, T> settings, final String accountId) {
-    if (isEmpty(settings)) {
+    if (hasNone(settings)) {
       return;
     }
     settings.values().forEach(appServiceSetting -> {

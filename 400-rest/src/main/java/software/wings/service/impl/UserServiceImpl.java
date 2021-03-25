@@ -5,8 +5,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.ng.core.common.beans.Generation.NG;
@@ -443,7 +443,7 @@ public class UserServiceImpl implements UserService {
     params.put("companyName", accountJoinRequest.getCompanyName());
     params.put("note", accountJoinRequest.getNote());
     String accountAdminEmail = accountJoinRequest.getAccountAdminEmail();
-    boolean hasAccountAdminEmail = isNotEmpty(accountAdminEmail);
+    boolean hasAccountAdminEmail = hasSome(accountAdminEmail);
     User user = hasAccountAdminEmail ? getUserByEmail(accountAdminEmail) : null;
     String supportEmail = configuration.getSupportEmail();
     String to = supportEmail;
@@ -516,12 +516,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public String getUserInvitationId(String email) {
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       List<UserInvite> userInviteList = wingsPersistence.createQuery(UserInvite.class)
                                             .filter(UserInviteKeys.email, email)
                                             .order(Sort.descending("createdAt"))
                                             .asList();
-      if (isNotEmpty(userInviteList)) {
+      if (hasSome(userInviteList)) {
         return userInviteList.get(0).getUuid();
       }
     }
@@ -547,7 +547,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<User> getUserSummary(List<User> userList) {
-    if (isEmpty(userList)) {
+    if (hasNone(userList)) {
       return Collections.emptyList();
     }
     return userList.stream().map(this::getUserSummary).collect(toList());
@@ -649,13 +649,13 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserByEmail(String email) {
     User user = null;
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
       loadSupportAccounts(user);
-      if (user != null && isEmpty(user.getAccounts())) {
+      if (user != null && hasNone(user.getAccounts())) {
         user.setAccounts(newArrayList());
       }
-      if (user != null && isEmpty(user.getPendingAccounts())) {
+      if (user != null && hasNone(user.getPendingAccounts())) {
         user.setPendingAccounts(newArrayList());
       }
     }
@@ -666,7 +666,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserByEmail(String email, String accountId) {
     User user = null;
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       Query<User> query = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase());
       query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
           query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
@@ -680,7 +680,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserWithAcceptedInviteByEmail(String email, String accountId) {
     User user = null;
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       Query<User> query = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase());
       query.criteria(UserKeys.accounts).hasThisOne(accountId);
       user = query.get();
@@ -697,7 +697,7 @@ public class UserServiceImpl implements UserService {
 
   private UserInvite getUserInviteByEmailAndAccount(String email, String accountId, boolean fetchPendingInvitesOnly) {
     UserInvite userInvite = null;
-    if (isNotEmpty(email)) {
+    if (hasSome(email)) {
       Query<UserInvite> query = wingsPersistence.createQuery(UserInvite.class)
                                     .filter(UserInviteKeys.email, email)
                                     .filter(UserInviteKeys.accountId, accountId);
@@ -889,12 +889,12 @@ public class UserServiceImpl implements UserService {
     });
 
     String message = "";
-    if (isNotEmpty(alreadyAddedUsers)) {
+    if (hasSome(alreadyAddedUsers)) {
       message += "User(s) with email: " + String.join(", ", alreadyAddedUsers)
           + " are already part of the account. Please change their user groups individually on user's page."
           + "\n";
     }
-    if (isNotEmpty(alreadyInvitedUsers)) {
+    if (hasSome(alreadyInvitedUsers)) {
       message += "User(s) with email: " + String.join(", ", alreadyInvitedUsers)
           + " are already invited. Their user groups have been updated.";
     }
@@ -1019,7 +1019,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public void addUserToUserGroups(
       String accountId, User user, List<UserGroup> userGroups, boolean sendNotification, boolean toBeAudited) {
-    if (isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       return;
     }
 
@@ -1040,14 +1040,14 @@ public class UserServiceImpl implements UserService {
       }
     }
 
-    if (sendNotification && isNotEmpty(newUserGroups)) {
+    if (sendNotification && hasSome(newUserGroups)) {
       sendAddedGroupEmail(user, accountService.get(accountId), userGroups);
     }
   }
 
   private List<UserGroup> addUserToUserGroups(
       String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
-    if (isNotEmpty(userGroupIds)) {
+    if (hasSome(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
       addUserToUserGroups(accountId, user, userGroups, sendNotification, false);
       return userGroups;
@@ -1057,7 +1057,7 @@ public class UserServiceImpl implements UserService {
 
   private List<UserGroup> removeUserFromUserGroups(
       String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
-    if (isNotEmpty(userGroupIds)) {
+    if (hasSome(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
       removeUserFromUserGroups(user, userGroups, sendNotification);
       return userGroups;
@@ -1066,7 +1066,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private void removeUserFromUserGroups(User user, List<UserGroup> userGroups, boolean sendNotification) {
-    if (isNotEmpty(userGroups)) {
+    if (hasSome(userGroups)) {
       final User userFinal = user;
       userGroups.forEach(userGroup -> {
         List<String> userGroupMembers = userGroup.getMemberIds();
@@ -1303,8 +1303,8 @@ public class UserServiceImpl implements UserService {
 
     List<Account> pendingAccounts = existingUser.getPendingAccounts();
     List<Account> accounts = existingUser.getAccounts();
-    if ((isEmpty(pendingAccounts) || !pendingAccounts.contains(account))
-        && (isEmpty(accounts) || !accounts.contains(account))) {
+    if ((hasNone(pendingAccounts) || !pendingAccounts.contains(account))
+        && (hasNone(accounts) || !accounts.contains(account))) {
       log.error("Processing of InviteId: {} failed. Account missing in both pendingAccounts and accounts",
           userInvite.getUuid());
       throw new InvalidRequestException("Invite processing failed", USER);
@@ -1502,7 +1502,7 @@ public class UserServiceImpl implements UserService {
   private void saveUserAndUserGroups(User user, Account account, List<UserGroup> accountAdminGroups) {
     user.setAppId(GLOBAL_APP_ID);
     user.setEmail(user.getEmail().trim().toLowerCase());
-    if (isEmpty(user.getPasswordHash())) {
+    if (hasNone(user.getPasswordHash())) {
       user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
     }
     user.setEmailVerified(true);
@@ -1518,7 +1518,7 @@ public class UserServiceImpl implements UserService {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
     }
-    if (isEmpty(user.getName()) || isEmpty(user.getPassword())) {
+    if (hasNone(user.getName()) || hasNone(user.getPassword())) {
       throw new InvalidRequestException("User's name/password is not provided", USER);
     }
   }
@@ -1534,7 +1534,7 @@ public class UserServiceImpl implements UserService {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
     }
-    if (isEmpty(user.getName()) || (isEmpty(user.getPassword()) && isEmpty(user.getPasswordHash()))) {
+    if (hasNone(user.getName()) || (hasNone(user.getPassword()) && hasNone(user.getPasswordHash()))) {
       throw new InvalidRequestException("User's name/password is not provided", USER);
     }
 
@@ -1902,7 +1902,7 @@ public class UserServiceImpl implements UserService {
    */
   private User checkIfTwoFactorAuthenticationIsEnabledForAccount(User user, Account account) {
     String defaultAccountId = null;
-    if (isNotEmpty(user.getAccounts())) {
+    if (hasSome(user.getAccounts())) {
       defaultAccountId = authenticationUtils.getDefaultAccount(user).getUuid();
     } else {
       defaultAccountId = account.getUuid();
@@ -1989,7 +1989,7 @@ public class UserServiceImpl implements UserService {
     } else {
       updateOperations.unset(UserKeys.name);
     }
-    if (isNotEmpty(user.getAccounts())) {
+    if (hasSome(user.getAccounts())) {
       user.getAccounts().forEach(account -> {
         auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Event.Type.UPDATE);
         log.info(
@@ -2004,7 +2004,7 @@ public class UserServiceImpl implements UserService {
     User user = this.getUserFromCacheOrDB(userId);
     Set<String> consolidatedReportedMarketoCampaigns = Sets.newHashSet();
     Set<String> reportedMarketoCampaigns = user.getReportedMarketoCampaigns();
-    if (isNotEmpty(reportedMarketoCampaigns)) {
+    if (hasSome(reportedMarketoCampaigns)) {
       consolidatedReportedMarketoCampaigns.addAll(reportedMarketoCampaigns);
     }
 
@@ -2054,7 +2054,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.passwordHash, hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       updateOperations.set(UserKeys.passwordChangedAt, System.currentTimeMillis());
     }
-    if (isNotEmpty(user.getRoles())) {
+    if (hasSome(user.getRoles())) {
       updateOperations.set(UserKeys.roles, user.getRoles());
     }
 
@@ -2072,15 +2072,15 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.marketoLeadId, user.getMarketoLeadId());
     }
 
-    if (isNotEmpty(user.getReportedMarketoCampaigns())) {
+    if (hasSome(user.getReportedMarketoCampaigns())) {
       updateOperations.set(UserKeys.reportedMarketoCampaigns, user.getReportedMarketoCampaigns());
     }
 
-    if (isNotEmpty(user.getSegmentIdentity())) {
+    if (hasSome(user.getSegmentIdentity())) {
       updateOperations.set(UserKeys.segmentIdentity, user.getSegmentIdentity());
     }
 
-    if (isNotEmpty(user.getReportedSegmentTracks())) {
+    if (hasSome(user.getReportedSegmentTracks())) {
       updateOperations.set(UserKeys.reportedSegmentTracks, user.getReportedSegmentTracks());
     }
 
@@ -2177,7 +2177,7 @@ public class UserServiceImpl implements UserService {
     PageRequest<UserGroup> req = aPageRequest().addFilter(UserGroupKeys.accountId, EQ, accountId).build();
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<UserGroup> allUserGroupList = res.getResponse();
-    if (isEmpty(allUserGroupList)) {
+    if (hasNone(allUserGroupList)) {
       return;
     }
 
@@ -2185,7 +2185,7 @@ public class UserServiceImpl implements UserService {
 
     allUserGroupList.forEach(userGroup -> {
       List<String> memberIds = userGroup.getMemberIds();
-      if (isEmpty(memberIds)) {
+      if (hasNone(memberIds)) {
         return;
       }
       memberIds.forEach(userId -> userUserGroupMap.put(userId, userGroup));
@@ -2193,7 +2193,7 @@ public class UserServiceImpl implements UserService {
 
     users.forEach(user -> {
       Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
-      if (isEmpty(userGroups)) {
+      if (hasNone(userGroups)) {
         user.setUserGroups(new ArrayList<>());
       } else {
         user.setUserGroups(new ArrayList<>(userGroups));
@@ -2222,7 +2222,7 @@ public class UserServiceImpl implements UserService {
         new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
 
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
-      if (isNotEmpty(user.getAccounts())) {
+      if (hasSome(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
           if (account.getUuid().equals(accountId)) {
             user.getAccounts().remove(account);
@@ -2231,7 +2231,7 @@ public class UserServiceImpl implements UserService {
         }
       }
 
-      if (isNotEmpty(user.getPendingAccounts())) {
+      if (hasSome(user.getPendingAccounts())) {
         for (Account account : user.getPendingAccounts()) {
           if (account.getUuid().equals(accountId)) {
             user.getPendingAccounts().remove(account);
@@ -2298,7 +2298,7 @@ public class UserServiceImpl implements UserService {
     loadSupportAccounts(user);
 
     List<Account> accounts = user.getAccounts();
-    if (isNotEmpty(accounts)) {
+    if (hasSome(accounts)) {
       accounts.forEach(account -> software.wings.service.impl.LicenseUtils.decryptLicenseInfo(account, false));
     }
 
@@ -2533,7 +2533,7 @@ public class UserServiceImpl implements UserService {
 
   private void addAccountRoles(User existingUser, Account account, List<Role> roles) {
     UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
-    if (isNotEmpty(roles)) {
+    if (hasSome(roles)) {
       updateOperations.addToSet("roles", roles);
     }
     if (account != null) {
@@ -2632,12 +2632,12 @@ public class UserServiceImpl implements UserService {
   private boolean isUserAdminOfAnyAccount(User user) {
     return user.getAccounts().stream().anyMatch(account -> {
       List<UserGroup> userGroupList = userGroupService.listByAccountId(account.getUuid(), user, true);
-      if (isNotEmpty(userGroupList)) {
+      if (hasSome(userGroupList)) {
         return userGroupList.stream().anyMatch(userGroup -> {
           AccountPermissions accountPermissions = userGroup.getAccountPermissions();
           if (accountPermissions != null) {
             Set<PermissionType> permissions = accountPermissions.getPermissions();
-            if (isNotEmpty(permissions)) {
+            if (hasSome(permissions)) {
               return permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT);
             }
           }
@@ -2679,7 +2679,7 @@ public class UserServiceImpl implements UserService {
       return false;
     }
     Set<PermissionType> permissions = accountPermissionSummary.getPermissions();
-    if (isEmpty(permissions)) {
+    if (hasNone(permissions)) {
       return false;
     }
     return permissions.contains(PermissionType.ACCOUNT_MANAGEMENT);
@@ -2687,19 +2687,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean isUserAssignedToAccount(User user, String accountId) {
-    return user != null && isNotEmpty(user.getAccounts())
+    return user != null && hasSome(user.getAccounts())
         && user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
   }
 
   @Override
   public boolean isUserInvitedToAccount(User user, String accountId) {
-    return user != null && isNotEmpty(user.getPendingAccounts())
+    return user != null && hasSome(user.getPendingAccounts())
         && user.getPendingAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
   }
 
   @Override
   public boolean isUserVerified(User user) {
-    if (isNotEmpty(user.getAccounts())) {
+    if (hasSome(user.getAccounts())) {
       AuthenticationMechanism authenticationMechanism = getPrimaryAccount(user).getAuthenticationMechanism();
       return (authenticationMechanism != null && authenticationMechanism.getType().equals("SSO"))
           || user.isEmailVerified();
@@ -3012,7 +3012,7 @@ public class UserServiceImpl implements UserService {
   public List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset,
       Integer pageSize, boolean loadUserGroups) {
     Query<User> query;
-    if (isNotEmpty(searchTerm)) {
+    if (hasSome(searchTerm)) {
       query = getSearchUserQuery(accountId, searchTerm);
     } else {
       query = getListUserQuery(accountId, true);
@@ -3105,7 +3105,7 @@ public class UserServiceImpl implements UserService {
 
     AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
     boolean isPasswordRequired =
-        (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());
+        (authMechanism == null || authMechanism == USER_PASSWORD) && hasNone(user.getPasswordHash());
 
     if (isPasswordRequired) {
       log.info("Redirecting invite id: {} to password signup page", existingInvite.getUuid());
@@ -3132,7 +3132,7 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(userInvite.getAccountId());
     AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
     boolean isPasswordRequired =
-        (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());
+        (authMechanism == null || authMechanism == USER_PASSWORD) && hasNone(user.getPasswordHash());
     if (isPasswordRequired) {
       return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
     }

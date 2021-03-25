@@ -1,6 +1,6 @@
 package software.wings.service.impl.gcp;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
@@ -67,7 +67,7 @@ public class GcpHelperServiceManager {
   }
 
   private String getErrorMessage(List<ErrorDetail> errors) {
-    if (isNotEmpty(errors) && errors.size() == 1) {
+    if (hasSome(errors) && errors.size() == 1) {
       return errors.get(0).getMessage();
     }
     return "Invalid Credentials";
@@ -80,8 +80,8 @@ public class GcpHelperServiceManager {
   }
 
   private GcpResponse executeSyncTask(String accountId, GcpRequest request) {
-    List<String> tags = isNotEmpty(request.getDelegateSelectors()) ? new ArrayList<>(request.getDelegateSelectors())
-                                                                   : Collections.emptyList();
+    List<String> tags = hasSome(request.getDelegateSelectors()) ? new ArrayList<>(request.getDelegateSelectors())
+                                                                : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)

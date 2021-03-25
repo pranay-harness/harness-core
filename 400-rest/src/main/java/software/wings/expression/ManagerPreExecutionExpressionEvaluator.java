@@ -1,9 +1,9 @@
 package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.ImageSecretFunctor;
@@ -78,7 +78,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
                                                                       .secretManager(secretManager)
                                                                       .ngSecretService(ngSecretService);
 
-    if (EmptyPredicate.isNotEmpty(taskSetupAbstractions)) {
+    if (hasSome(taskSetupAbstractions)) {
       ngSecretManagerFunctorBuilder.orgId(taskSetupAbstractions.get("orgIdentifier"))
           .projectId(taskSetupAbstractions.get("projectIdentifier"));
     }

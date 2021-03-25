@@ -1,7 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
@@ -208,7 +208,7 @@ public class SpotInstStateHelper {
     Map<String, LoadBalancerDetailsForBGDeployment> lbMap = new HashMap<>();
     // Use a map with key as <lbName + prodPort + stagePort>, and value as actual LbConfig.
     // This will get rid of any duplicate config.
-    if (isNotEmpty(awsLoadBalancerConfigs)) {
+    if (hasSome(awsLoadBalancerConfigs)) {
       awsLoadBalancerConfigs.forEach(awsLoadBalancerConfig -> {
         lbMap.put(getLBKey(awsLoadBalancerConfig),
             LoadBalancerDetailsForBGDeployment.builder()
@@ -241,7 +241,7 @@ public class SpotInstStateHelper {
 
   String getBase64EncodedUserData(String appId, String serviceId, ExecutionContext context) {
     UserDataSpecification userDataSpecification = serviceResourceService.getUserDataSpecification(appId, serviceId);
-    if (userDataSpecification != null && isNotEmpty(userDataSpecification.getData())) {
+    if (userDataSpecification != null && hasSome(userDataSpecification.getData())) {
       String userData = userDataSpecification.getData();
       String userDataAfterEvaluation = context.renderExpression(userData);
       return BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes(Charsets.UTF_8));
@@ -420,7 +420,7 @@ public class SpotInstStateHelper {
 
   public int renderCount(String expr, ExecutionContext context, int defaultValue) {
     int retVal = defaultValue;
-    if (isNotEmpty(expr)) {
+    if (hasSome(expr)) {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
       } catch (NumberFormatException e) {
@@ -461,7 +461,7 @@ public class SpotInstStateHelper {
   }
 
   void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
-    if (isNotEmpty(instanceElements)) {
+    if (hasSome(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(instanceElements);
       boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);

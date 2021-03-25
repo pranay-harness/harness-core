@@ -1,12 +1,12 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.NoResultFoundException;
@@ -75,7 +75,7 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
   @VisibleForTesting
   String getApplicationId(String accountId, String yamlPath) {
     final String appName = yamlHelper.getAppName(yamlPath);
-    if (EmptyPredicate.isNotEmpty(appName)) {
+    if (hasSome(appName)) {
       final Application application = appService.getAppByName(accountId, appName);
       if (application == null) {
         throw NoResultFoundException.newBuilder()

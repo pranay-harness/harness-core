@@ -1,8 +1,8 @@
 package io.harness.encryptors.clients;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.GCP_SECRET_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -91,7 +91,7 @@ public class GcpSecretsManagerEncryptor implements VaultEncryptor {
     try (
         SecretManagerServiceClient client = getGcpSecretsManagerClient(getGoogleCredentials(gcpSecretsManagerConfig))) {
       // get secret name
-      if (isNotEmpty(projectId) && isNotEmpty(secretId)) {
+      if (hasSome(projectId) && hasSome(secretId)) {
         SecretName secretName = SecretName.of(projectId, secretId);
         client.deleteSecret(secretName);
         log.info("deletion of key {} in GCP Secret Manager {} was successful.", existingRecord.getEncryptionKey(),
@@ -108,12 +108,12 @@ public class GcpSecretsManagerEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateReference(String accountId, String path, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
+    return hasSome(fetchSecretValue(accountId, EncryptedRecordData.builder().path(path).build(), encryptionConfig));
   }
 
   @Override
   public boolean validateReference(String accountId, SecretText secretText, EncryptionConfig encryptionConfig) {
-    return isNotEmpty(fetchSecretValue(accountId,
+    return hasSome(fetchSecretValue(accountId,
         EncryptedRecordData.builder()
             .path(secretText.getPath())
             .encryptionKey(secretText.getName())
@@ -129,17 +129,17 @@ public class GcpSecretsManagerEncryptor implements VaultEncryptor {
     String projectId = getProjectId(googleCredentials);
     try (SecretManagerServiceClient gcpSecretsManagerClient = getGcpSecretsManagerClient(googleCredentials)) {
       SecretVersionName secretVersionName = null;
-      if (isNotEmpty(encryptedRecord.getPath())) {
+      if (hasSome(encryptedRecord.getPath())) {
         String secretName =
             encryptedRecord.getEncryptionKey() != null ? encryptedRecord.getEncryptionKey() : encryptedRecord.getName();
-        if (secretName == null || isEmpty(secretName)) {
+        if (secretName == null || hasNone(secretName)) {
           throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR,
               "Secret Referencing Failed - Cannot Reference Secret in Gcp Secret Manager Without Name",
               WingsException.USER);
         }
         // referenced secret
         secretVersionName = SecretVersionName.of(projectId, secretName, encryptedRecord.getPath());
-      } else if (isNotEmpty(encryptedRecord.getEncryptedValue())) {
+      } else if (hasSome(encryptedRecord.getEncryptedValue())) {
         SecretVersionName latestVersionName =
             SecretVersionName.parse(String.valueOf(encryptedRecord.getEncryptedValue()));
         secretVersionName =

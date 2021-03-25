@@ -1,7 +1,7 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_FARGATE;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
@@ -10,7 +10,7 @@ import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static java.lang.String.format;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -176,7 +176,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
 
   @VisibleForTesting
   public void applyProvisionerVariables(Map<String, Object> resolvedBlueprints) {
-    if (isNotEmpty(resolvedBlueprints)) {
+    if (hasSome(resolvedBlueprints)) {
       for (Map.Entry<String, Object> resolvedBlueprintEntry : resolvedBlueprints.entrySet()) {
         Object value = resolvedBlueprintEntry.getValue();
         switch (resolvedBlueprintEntry.getKey()) {
@@ -207,16 +207,16 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   }
 
   private void ensureSetString(String field, String errorMessage) {
-    if (isEmpty(field)) {
+    if (hasNone(field)) {
       throw new InvalidRequestException(errorMessage);
     }
   }
 
   private void ensureSetStringArray(List<String> fields, String errorMessage) {
-    if (EmptyPredicate.isEmpty(fields)) {
+    if (hasNone(fields)) {
       throw new InvalidRequestException(errorMessage);
     }
-    if (fields.stream().anyMatch(EmptyPredicate::isEmpty)) {
+    if (fields.stream().anyMatch(HasPredicate::hasNone)) {
       throw new InvalidRequestException(errorMessage);
     }
   }
@@ -224,7 +224,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Utils.normalize(format("%s (%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+    return Utils.normalize(format("%s (%s::%s) %s", hasNone(this.getProvisionerId()) ? this.getClusterName() : "",
         this.getComputeProviderType(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));

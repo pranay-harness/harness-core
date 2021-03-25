@@ -2,7 +2,7 @@ package software.wings.utils;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -42,7 +42,7 @@ public class GcsUtils {
 
   public String getSignedUrlForServiceAccount(
       String objectPath, String serviceAccountJsonFile, long durationInSeconds, String accountId) throws Exception {
-    if (isEmpty(serviceAccountJsonFile)) {
+    if (hasNone(serviceAccountJsonFile)) {
       log.warn(
           "ServiceAccount json file not found,cannot generate signedUrl for {}, returning empty string", objectPath);
       throw new WingsException(ErrorCode.INVALID_INFRA_CONFIGURATION);

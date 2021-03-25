@@ -1,8 +1,8 @@
 package io.harness.yaml.snippets;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
@@ -57,13 +57,13 @@ public class AbstractSnippetChecker {
     this.objectMapper = objectMapper;
   }
   public void snippetTests() throws IOException {
-    if (isEmpty(yamlSchemaRootClasses)) {
+    if (hasNone(yamlSchemaRootClasses)) {
       return;
     }
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
     List<Pair<String, Pair<EntityType, ClassLoader>>> snippetsIndex =
         getIndexResourceFileContent(yamlSchemaRootClasses);
-    if (isEmpty(snippetsIndex)) {
+    if (hasNone(snippetsIndex)) {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =
@@ -92,7 +92,7 @@ public class AbstractSnippetChecker {
 
   List<Pair<String, Pair<EntityType, ClassLoader>>> getIndexResourceFileContent(
       List<YamlSchemaRootClass> yamlSchemaRootClasses) {
-    if (isEmpty(yamlSchemaRootClasses)) {
+    if (hasNone(yamlSchemaRootClasses)) {
       return Collections.emptyList();
     }
     return yamlSchemaRootClasses.stream()
@@ -116,7 +116,7 @@ public class AbstractSnippetChecker {
 
   Class getTagsEnum(Reflections reflections) {
     final Set<Class<? extends YamlSnippetTags>> tagsEnum = reflections.getSubTypesOf(YamlSnippetTags.class);
-    if (isEmpty(tagsEnum)) {
+    if (hasNone(tagsEnum)) {
       log.info("Enum not registered in this class, should be registered in application module.");
       return null;
     }
@@ -132,7 +132,7 @@ public class AbstractSnippetChecker {
       final String resourcePath = yamlSnippetMetaData.getResourcePath();
       final InputStream resourceAsStream = classloader.getResourceAsStream(resourcePath);
       String snippetMetaData = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8.name());
-      if (isEmpty(snippetMetaData)) {
+      if (hasNone(snippetMetaData)) {
         throw new InvalidRequestException("Snippet resource path incorrect.");
       }
     }
@@ -179,13 +179,13 @@ public class AbstractSnippetChecker {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       final JsonNode snippetJsonNode = mapper.readTree(snippet);
       final Set<ValidationMessage> errors = jsonSchema.validate(snippetJsonNode);
-      if (isNotEmpty(errors)) {
+      if (hasSome(errors)) {
         errorSnippets.add(yamlSnippetMetaData.getResourcePath());
         log.error("Invalid snippet {}-{} with error {}", yamlSnippetMetaData.getName(),
             yamlSnippetMetaData.getVersion(), errors.toString());
       }
     }
-    if (isNotEmpty(errorSnippets)) {
+    if (hasSome(errorSnippets)) {
       throw new InvalidRequestException(String.format("Found invalid snippets %s", errorSnippets.toString()));
     }
   }

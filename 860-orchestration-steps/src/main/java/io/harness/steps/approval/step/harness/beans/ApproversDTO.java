@@ -1,9 +1,9 @@
 package io.harness.steps.approval.step.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class ApproversDTO {
     }
 
     List<String> userGroups = (List<String>) approvers.getUserGroups().fetchFinalValue();
-    if (EmptyPredicate.isEmpty(userGroups)) {
+    if (hasNone(userGroups)) {
       throw new InvalidRequestException("At least 1 user group is required");
     }
 

@@ -1,10 +1,11 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -47,7 +48,7 @@ public class DeploymentStage implements CDStage, Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     // the ordering [variables, service,infrastructure, execution] is necessary
-    if (EmptyPredicate.isNotEmpty(variables)) {
+    if (hasSome(variables)) {
       variables.forEach(ngVariable -> children.add("variables", ngVariable));
     }
     children.add("serviceConfig", serviceConfig);

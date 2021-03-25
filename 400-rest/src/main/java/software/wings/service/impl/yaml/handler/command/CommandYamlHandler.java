@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -77,7 +77,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
 
-    if (isNotEmpty(commandUnitYamlList)) {
+    if (hasSome(commandUnitYamlList)) {
       GraphNode previousGraphNode = null;
       for (Yaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler =
@@ -99,7 +99,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         nodeList.add(graphNode);
       }
 
-      if (isNotEmpty(linkList)) {
+      if (hasSome(linkList)) {
         graphBuilder.withLinks(linkList);
       }
       graphBuilder.withNodes(nodeList);
@@ -112,7 +112,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     List<String> envNameList = commandYaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = new HashMap<>();
-    if (isNotEmpty(envNameList)) {
+    if (hasSome(envNameList)) {
       envNameList.forEach(envName -> {
         Environment environment = environmentService.getEnvironmentByName(appId, envName);
         if (environment != null) {
@@ -130,7 +130,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       builder.withUuid(existingSvcCommand.getUuid());
       builder.withTemplateUuid(existingSvcCommand.getTemplateUuid());
       builder.withTemplateVersion(existingSvcCommand.getTemplateVersion());
-      if (isNotEmpty(templateUri)) {
+      if (hasSome(templateUri)) {
         String templateVersion =
             templateService.fetchTemplateVersionFromUri(existingSvcCommand.getTemplateUuid(), templateUri);
         builder.withTemplateVersion(
@@ -140,10 +140,10 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         builder.withTemplateMetadata(template.getTemplateMetadata());
       }
     } else {
-      if (isNotEmpty(templateUri)) {
+      if (hasSome(templateUri)) {
         String templateUuid;
         String templateVersion;
-        if (isNotEmpty(appId)) {
+        if (hasSome(appId)) {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
         } else {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
@@ -216,7 +216,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                                    .filter(entry -> entry.getValue() == null)
                                    .map(Map.Entry::getKey)
                                    .collect(toList());
-      if (isNotEmpty(envIdList)) {
+      if (hasSome(envIdList)) {
         envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);
           if (environment != null) {

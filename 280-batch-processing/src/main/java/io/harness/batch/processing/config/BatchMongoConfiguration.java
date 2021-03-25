@@ -1,6 +1,6 @@
 package io.harness.batch.processing.config;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
 import io.harness.mongo.AbstractMongoModule;
@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 public class BatchMongoConfiguration {
   private static void registerEventsStore(HPersistence hPersistence, BatchMainConfig config) {
     final String eventsMongoUri = config.getEventsMongo().getUri();
-    if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
+    if (hasSome(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
       hPersistence.register(EVENTS_STORE, eventsMongoUri);
     }
   }

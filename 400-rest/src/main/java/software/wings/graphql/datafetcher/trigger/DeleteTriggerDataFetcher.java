@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.trigger.Trigger;
@@ -38,7 +38,7 @@ public class DeleteTriggerDataFetcher extends BaseMutatorDataFetcher<QLDeleteTri
     String appId = parameter.getApplicationId();
     String triggerId = parameter.getTriggerId();
 
-    if (EmptyPredicate.isEmpty(appId)) {
+    if (hasNone(appId)) {
       throw new InvalidRequestException("ApplicationId must not be empty", USER);
     }
 

@@ -4,7 +4,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ public abstract class LogSanitizer {
     return secrets.stream()
         .flatMap(secret -> {
           String[] split = secret.split("\\r?\\n");
-          return Arrays.stream(split).map(ActivityBasedLogSanitizer::cleanup).filter(EmptyPredicate::isNotEmpty);
+          return Arrays.stream(split).map(ActivityBasedLogSanitizer::cleanup).filter(HasPredicate::hasSome);
         })
         .collect(Collectors.toSet());
   }

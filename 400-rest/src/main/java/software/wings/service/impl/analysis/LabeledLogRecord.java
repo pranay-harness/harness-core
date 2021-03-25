@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readList;
@@ -96,11 +96,11 @@ public class LabeledLogRecord implements GoogleDataStoreAware, AccountAccess {
                                             .build();
 
     List<String> feedbackIds = readList(entity, LabeledLogRecordKeys.feedbackIds, String.class);
-    if (isNotEmpty(feedbackIds)) {
+    if (hasSome(feedbackIds)) {
       dataRecord.setFeedbackIds(Sets.newHashSet(feedbackIds));
     }
     List<String> dataRecordIds = readList(entity, LabeledLogRecordKeys.logDataRecordIds, String.class);
-    if (isNotEmpty(dataRecordIds)) {
+    if (hasSome(dataRecordIds)) {
       dataRecord.setLogDataRecordIds(Sets.newHashSet(dataRecordIds));
     }
 

@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.Misc.normalizeExpression;
@@ -133,7 +133,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
             .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, awsAmiTrafficShiftAlbData.getApp().getUuid())
             .waitId(activity.getUuid())
-            .tags(isNotEmpty(amiTrafficShiftRequest.getAwsConfig().getTag())
+            .tags(hasSome(amiTrafficShiftRequest.getAwsConfig().getTag())
                     ? singletonList(amiTrafficShiftRequest.getAwsConfig().getTag())
                     : null)
             .data(TaskData.builder()
@@ -267,10 +267,10 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(autoScalingGroupName)) {
+    if (hasNone(autoScalingGroupName)) {
       invalidFields.put(WorkflowServiceHelper.AUTO_SCALING_GROUP_NAME, "Auto Scaling Group name must be specified");
     }
-    if (isEmpty(lbDetails)) {
+    if (hasNone(lbDetails)) {
       invalidFields.put(LOAD_BALANCER_DETAILS, "Load balancer details are required");
     }
     return invalidFields;
@@ -333,7 +333,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     String appName = awsAmiTrafficShiftAlbData.getApp().getName();
     String serviceName = awsAmiTrafficShiftAlbData.getService().getName();
     String envName = awsAmiTrafficShiftAlbData.getEnv().getName();
-    String asgNamePrefix = isEmpty(autoScalingGroupName) ? AsgConvention.getAsgNamePrefix(appName, serviceName, envName)
+    String asgNamePrefix = hasNone(autoScalingGroupName) ? AsgConvention.getAsgNamePrefix(appName, serviceName, envName)
                                                          : context.renderExpression(autoScalingGroupName);
     return normalizeExpression(asgNamePrefix);
   }

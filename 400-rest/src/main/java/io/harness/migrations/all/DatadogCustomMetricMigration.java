@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -33,10 +33,10 @@ public class DatadogCustomMetricMigration implements Migration {
     log.info("Found {} datadogCVConfigurations to potentially migrate.", datadogCVServiceConfigurations.size());
     try {
       List<DatadogCVServiceConfiguration> configsToSave = new ArrayList<>();
-      if (isNotEmpty(datadogCVServiceConfigurations)) {
+      if (hasSome(datadogCVServiceConfigurations)) {
         for (CVConfiguration cvConfiguration : datadogCVServiceConfigurations) {
           DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
-          if (isNotEmpty(datadogCVServiceConfiguration.getCustomMetrics())) {
+          if (hasSome(datadogCVServiceConfiguration.getCustomMetrics())) {
             datadogCVServiceConfiguration.getCustomMetrics().forEach(
                 (name, metricSet) -> { metricSet.forEach(metric -> metric.setTxnName(GENERIC_GROUP_NAME)); });
           }

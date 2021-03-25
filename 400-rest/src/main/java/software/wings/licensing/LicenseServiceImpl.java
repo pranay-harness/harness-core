@@ -1,7 +1,7 @@
 package software.wings.licensing;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.ccm.license.CeLicenseInfo;
@@ -109,7 +109,7 @@ public class LicenseServiceImpl implements LicenseService {
     if (defaultSalesContacts != null && defaultSalesContacts.isEnabled()) {
       List<AccountTypeDefault> accountTypeDefaults = defaultSalesContacts.getAccountTypeDefaults();
 
-      if (isNotEmpty(accountTypeDefaults)) {
+      if (hasSome(accountTypeDefaults)) {
         for (AccountTypeDefault accountTypeDefault : accountTypeDefaults) {
           switch (accountTypeDefault.getAccountType()) {
             case AccountType.ESSENTIALS:
@@ -139,7 +139,7 @@ public class LicenseServiceImpl implements LicenseService {
 
       String accountStatus = licenseInfo.getAccountStatus();
       String accountType = licenseInfo.getAccountType();
-      if (isEmpty(accountType)) {
+      if (hasNone(accountType)) {
         return;
       }
 
@@ -247,13 +247,13 @@ public class LicenseServiceImpl implements LicenseService {
   }
 
   private List<String> getEmailIds(String emailIdsStr) {
-    if (isEmpty(emailIdsStr)) {
+    if (hasNone(emailIdsStr)) {
       return null;
     }
 
     String[] emailIdArr = emailIdsStr.split(",");
 
-    if (isEmpty(emailIdArr)) {
+    if (hasNone(emailIdArr)) {
       return null;
     }
 
@@ -268,12 +268,12 @@ public class LicenseServiceImpl implements LicenseService {
 
   private void sendEmailToSales(
       Account account, long expiryTime, String accountType, String subject, String body, List<String> defaultContacts) {
-    if (isEmpty(account.getSalesContacts()) && isEmpty(defaultContacts)) {
+    if (hasNone(account.getSalesContacts()) && hasNone(defaultContacts)) {
       log.info("Skipping the sending of email since no sales contacts were configured");
       return;
     }
 
-    List<String> mailingList = isEmpty(account.getSalesContacts()) ? defaultContacts : account.getSalesContacts();
+    List<String> mailingList = hasNone(account.getSalesContacts()) ? defaultContacts : account.getSalesContacts();
 
     Date expiryDate = new Date(expiryTime);
     Map<String, String> templateModel = new HashMap<>();
@@ -351,7 +351,7 @@ public class LicenseServiceImpl implements LicenseService {
 
   private List<User> getUsersToSendTrialExpirationReminderTo(String accountId) {
     UserGroup adminUserGroup = userGroupService.getAdminUserGroup(accountId);
-    return isEmpty(adminUserGroup.getMemberIds()) ? Collections.emptyList()
+    return hasNone(adminUserGroup.getMemberIds()) ? Collections.emptyList()
                                                   : adminUserGroup.getMemberIds()
                                                         .stream()
                                                         .filter(userService::isUserPresent)
@@ -425,7 +425,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    if (isNotEmpty(salesContacts)) {
+    if (hasSome(salesContacts)) {
       updateOperations.set("salesContacts", salesContacts);
     } else {
       updateOperations.unset("salesContacts");
@@ -442,7 +442,7 @@ public class LicenseServiceImpl implements LicenseService {
   @Override
   public void updateAccountLicenseForOnPrem(String encryptedLicenseInfoBase64String) {
     try {
-      if (isEmpty(encryptedLicenseInfoBase64String)) {
+      if (hasNone(encryptedLicenseInfoBase64String)) {
         String msg = "Couldn't find license info";
         throw new InvalidRequestException(msg);
       }
@@ -458,7 +458,7 @@ public class LicenseServiceImpl implements LicenseService {
           byte[] encryptedLicenseInfo = Base64.getDecoder().decode(encryptedLicenseInfoBase64String.getBytes());
           byte[] encryptedLicenseInfoFromDB = account.getEncryptedLicenseInfo();
 
-          boolean noLicenseInfoInDB = isEmpty(encryptedLicenseInfoFromDB);
+          boolean noLicenseInfoInDB = hasNone(encryptedLicenseInfoFromDB);
 
           if (noLicenseInfoInDB || !Arrays.equals(encryptedLicenseInfo, encryptedLicenseInfoFromDB)) {
             account.setEncryptedLicenseInfo(encryptedLicenseInfo);
@@ -499,11 +499,11 @@ public class LicenseServiceImpl implements LicenseService {
     String accountType = licenseInfo.getAccountType();
     String accountStatus = licenseInfo.getAccountStatus();
 
-    if (isEmpty(accountType)) {
+    if (hasNone(accountType)) {
       throw new InvalidRequestException("Account type is null for account :" + accountId);
     }
 
-    if (isEmpty(accountStatus)) {
+    if (hasNone(accountStatus)) {
       throw new InvalidRequestException("Account status is null for account :" + accountId);
     }
 

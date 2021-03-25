@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
 
 import static java.util.Collections.emptyList;
@@ -38,7 +38,7 @@ public interface TriggerFilter {
     webhookEventMappingResponseBuilder.parseWebhookResponse(
         filterRequestData.getWebhookPayloadData().getParseWebhookResponse());
 
-    if (isEmpty(detailsList)) {
+    if (hasNone(detailsList)) {
       webhookEventMappingResponseBuilder.failedToFindTrigger(true);
       webhookEventMappingResponseBuilder.triggers(emptyList());
     } else {

@@ -1,7 +1,7 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.String.format;
 
@@ -41,7 +41,7 @@ public class ExecutionHistoryMetadata implements ExecutionDetailsMetadata {
 
   public static List<ExecutionHistoryMetadata> fromStateExecutionDataList(
       List<StateExecutionData> stateExecutionDataList) {
-    if (isEmpty(stateExecutionDataList)) {
+    if (hasNone(stateExecutionDataList)) {
       return null;
     }
 

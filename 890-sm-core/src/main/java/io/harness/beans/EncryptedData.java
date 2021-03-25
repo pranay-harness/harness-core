@@ -1,8 +1,8 @@
 package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.secretmanagerclient.NGEncryptedDataMetadata.NGEncryptedDataMetadataKeys;
 import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
@@ -240,11 +240,11 @@ public class EncryptedData
   }
 
   public boolean isInlineSecret() {
-    return isEmpty(path) && encryptionType != CUSTOM;
+    return hasNone(path) && encryptionType != CUSTOM;
   }
 
   public boolean isReferencedSecret() {
-    return isNotEmpty(path) && encryptionType != CUSTOM;
+    return hasSome(path) && encryptionType != CUSTOM;
   }
 
   public boolean isParameterizedSecret() {
@@ -296,11 +296,11 @@ public class EncryptedData
   }
 
   public void removeServiceVariable(String serviceVariableId, String serviceVariableName) {
-    if (!isEmpty(serviceVariableIds)) {
+    if (!hasNone(serviceVariableIds)) {
       serviceVariableIds.remove(serviceVariableId);
     }
 
-    if (!isEmpty(searchTags)) {
+    if (!hasNone(searchTags)) {
       searchTags.remove(serviceVariableName);
     }
   }
@@ -325,12 +325,11 @@ public class EncryptedData
   }
 
   public void removeSearchTag(String key, String searchTag, List<String> collection) {
-    if (isNotEmpty(collection)) {
+    if (hasSome(collection)) {
       collection.remove(key);
     }
 
-    if (isNotEmpty(searchTags) && searchTags.containsKey(searchTag)
-        && searchTags.get(searchTag).decrementAndGet() == 0) {
+    if (hasSome(searchTags) && searchTags.containsKey(searchTag) && searchTags.get(searchTag).decrementAndGet() == 0) {
       searchTags.remove(searchTag);
       if (getKeywords() != null) {
         getKeywords().remove(searchTag);
@@ -339,23 +338,23 @@ public class EncryptedData
   }
 
   public void clearSearchTags() {
-    if (!isEmpty(appIds)) {
+    if (!hasNone(appIds)) {
       appIds.clear();
     }
 
-    if (!isEmpty(serviceIds)) {
+    if (!hasNone(serviceIds)) {
       serviceIds.clear();
     }
 
-    if (!isEmpty(envIds)) {
+    if (!hasNone(envIds)) {
       envIds.clear();
     }
 
-    if (!isEmpty(serviceVariableIds)) {
+    if (!hasNone(serviceVariableIds)) {
       serviceVariableIds.clear();
     }
 
-    if (!isEmpty(searchTags)) {
+    if (!hasNone(searchTags)) {
       searchTags.clear();
     }
   }

@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -191,7 +191,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
     Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
-    if (isEmpty(envToServicesMap)) {
+    if (hasNone(envToServicesMap)) {
       return Collections.emptyList();
     }
     Set<String> envIdentifiers = new HashSet<>();
@@ -288,11 +288,11 @@ public class CVConfigServiceImpl implements CVConfigService {
     conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
     conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
     conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
-    if (isNotEmpty(envIdentifier)) {
+    if (hasSome(envIdentifier)) {
       conditions.add(new BasicDBObject(CVConfigKeys.envIdentifier, envIdentifier));
     }
 
-    if (isNotEmpty(serviceIdentifier)) {
+    if (hasSome(serviceIdentifier)) {
       conditions.add(new BasicDBObject(CVConfigKeys.serviceIdentifier, serviceIdentifier));
     }
     cvConfigQuery.put("$and", conditions);
@@ -306,10 +306,10 @@ public class CVConfigServiceImpl implements CVConfigService {
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
                                 .filter(CVConfigKeys.projectIdentifier, projectIdentifier);
-    if (isNotEmpty(environmentIdentifier)) {
+    if (hasSome(environmentIdentifier)) {
       query = query.filter(CVConfigKeys.envIdentifier, environmentIdentifier);
     }
-    if (isNotEmpty(serviceIdentifier)) {
+    if (hasSome(serviceIdentifier)) {
       query = query.filter(CVConfigKeys.serviceIdentifier, serviceIdentifier);
     }
     if (monitoringCategory != null) {
@@ -324,7 +324,7 @@ public class CVConfigServiceImpl implements CVConfigService {
       CVMonitoringCategory monitoringCategory) {
     List<CVConfig> configsForFilter =
         list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
-    if (isEmpty(configsForFilter)) {
+    if (hasNone(configsForFilter)) {
       return Collections.emptyList();
     }
     List<CVConfig> configsToReturn = new ArrayList<>();
@@ -370,7 +370,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     List<String> allMonitoringSourceIds =
         hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.identifier, cvConfigQuery);
     Collections.reverse(allMonitoringSourceIds);
-    if (isEmpty(allMonitoringSourceIds) || isEmpty(filter)) {
+    if (hasNone(allMonitoringSourceIds) || hasNone(filter)) {
       return allMonitoringSourceIds;
     }
 
@@ -478,7 +478,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     List<CVConfig> cvConfigs = getConfigsOfProductionEnvironments(
         accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
 
-    if (isEmpty(cvConfigs)) {
+    if (hasNone(cvConfigs)) {
       return Collections.emptySet();
     }
 
@@ -493,7 +493,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds) {
-    if (isNotEmpty(cvConfigIds)) {
+    if (hasSome(cvConfigIds)) {
       List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
                                      .filter(CVConfigKeys.accountId, accountId)
                                      .field(CVConfigKeys.uuid)

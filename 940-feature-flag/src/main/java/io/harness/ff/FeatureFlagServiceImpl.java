@@ -1,8 +1,8 @@
 package io.harness.ff;
 
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -205,12 +205,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
         return true;
       }
 
-      if (isEmpty(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
+      if (hasNone(accountId) && featureName.getScope() == Scope.PER_ACCOUNT) {
         log.error("FeatureFlag isEnabled check without accountId", new Exception(""));
         return false;
       }
 
-      if (isNotEmpty(featureFlag.getAccountIds())) {
+      if (hasSome(featureFlag.getAccountIds())) {
         if (featureName.getScope() == Scope.GLOBAL) {
           log.error("A global FeatureFlag isEnabled per specific accounts", new Exception(""));
           return false;
@@ -243,7 +243,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Override
   public Set<String> getAccountIds(@NonNull FeatureName featureName) {
     FeatureFlag featureFlag = getFeatureFlag(featureName).orElse(null);
-    if (featureFlag == null || isEmpty(featureFlag.getAccountIds())) {
+    if (featureFlag == null || hasNone(featureFlag.getAccountIds())) {
       return new HashSet<>();
     }
     if (featureName.getScope() == Scope.GLOBAL) {

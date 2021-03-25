@@ -1,12 +1,13 @@
 package io.harness.ngpipeline.pipeline.resources;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
@@ -119,7 +120,7 @@ public class NGPipelineResource {
     criteria.andOperator(
         NgPipelineFilterHelper.createCriteriaForGetList(accountId, orgId, projectId, searchTerm, false));
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (hasNone(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineNGKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

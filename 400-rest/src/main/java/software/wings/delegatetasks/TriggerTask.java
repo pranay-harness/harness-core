@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -111,7 +111,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
   private boolean isDeploymentNeeded(List<String> filePaths, List<GitFile> changedFiles) {
     Set<String> changedFilesSet = new HashSet<>();
 
-    if (isNotEmpty(changedFiles)) {
+    if (hasSome(changedFiles)) {
       for (GitFile gitFile : changedFiles) {
         changedFilesSet.add(gitFile.getFilePath());
       }

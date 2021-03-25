@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.roles.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
@@ -16,7 +16,7 @@ public class RoleFilterValidator implements ConstraintValidator<ValidRoleFilter,
 
   @Override
   public boolean isValid(RoleFilter value, ConstraintValidatorContext context) {
-    if (isEmpty(value.getScopeIdentifier()) && value.isIncludeChildScopes()) {
+    if (hasNone(value.getScopeIdentifier()) && value.isIncludeChildScopes()) {
       context.disableDefaultConstraintViolation();
       context
           .buildConstraintViolationWithTemplate(
@@ -32,7 +32,7 @@ public class RoleFilterValidator implements ConstraintValidator<ValidRoleFilter,
           .addConstraintViolation();
       return false;
     }
-    if (isEmpty(value.getScopeIdentifier()) && !value.getManagedFilter().equals(ManagedFilter.ONLY_MANAGED)) {
+    if (hasNone(value.getScopeIdentifier()) && !value.getManagedFilter().equals(ManagedFilter.ONLY_MANAGED)) {
       context.disableDefaultConstraintViolation();
       context
           .buildConstraintViolationWithTemplate(

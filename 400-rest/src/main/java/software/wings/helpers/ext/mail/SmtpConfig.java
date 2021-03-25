@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.mail;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
@@ -74,7 +74,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   }
 
   public boolean valid() {
-    return isNotEmpty(host) && !HOST_PLACEHOLDER_STRING.equals(host);
+    return hasSome(host) && !HOST_PLACEHOLDER_STRING.equals(host);
   }
 
   @Override

@@ -1,6 +1,6 @@
 package io.harness.delegate.task.executioncapability;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.executeCommand;
@@ -28,7 +28,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     HelmInstallationCapability capability = (HelmInstallationCapability) delegateCapability;
     String helmPath = k8sGlobalConfigService.getHelmPath(capability.getVersion());
-    if (isEmpty(helmPath)) {
+    if (hasNone(helmPath)) {
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
     String helmVersionCommand =
@@ -49,7 +49,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
     }
     String helmPath = k8sGlobalConfigService.getHelmPath(
         convertHelmVersion(parameters.getHelmInstallationParameters().getHelmVersion()));
-    if (isEmpty(helmPath)) {
+    if (hasNone(helmPath)) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
     String helmVersionCommand =

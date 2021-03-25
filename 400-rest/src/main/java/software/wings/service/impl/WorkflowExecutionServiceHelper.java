@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
@@ -73,7 +73,7 @@ public class WorkflowExecutionServiceHelper {
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
     List<Variable> workflowVariables = fetchWorkflowVariables(appId, executionArgs);
-    if (isBlank(workflowExecutionId) || isEmpty(workflowVariables)) {
+    if (isBlank(workflowExecutionId) || hasNone(workflowVariables)) {
       return new WorkflowVariablesMetadata(workflowVariables);
     }
 
@@ -90,7 +90,7 @@ public class WorkflowExecutionServiceHelper {
     }
 
     Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
-    if (isEmpty(oldWorkflowVariablesValueMap)) {
+    if (hasNone(oldWorkflowVariablesValueMap)) {
       if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
         boolean changed = false;
         for (Variable variable : workflowVariables) {
@@ -148,7 +148,7 @@ public class WorkflowExecutionServiceHelper {
 
     Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
     List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
-    if (isNotEmpty(services)) {
+    if (hasSome(services)) {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
       if (services.size() == 1) {
         Service targetService = services.get(0);
@@ -185,7 +185,7 @@ public class WorkflowExecutionServiceHelper {
                                                canaryOrchestrationWorkflow, executionArgs))
                                            .build());
         }
-        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhaseIds())
+        if (hasSome(canaryOrchestrationWorkflow.getWorkflowPhaseIds())
             && canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(
                    canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(0))
                 != null) {
@@ -202,11 +202,11 @@ public class WorkflowExecutionServiceHelper {
 
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    if (isNotEmpty(executionArgs.getArtifacts())) {
+    if (hasSome(executionArgs.getArtifacts())) {
       stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
 
-    if (isNotEmpty(executionArgs.getHelmCharts())) {
+    if (hasSome(executionArgs.getHelmCharts())) {
       stdParams.setHelmChartIds(executionArgs.getHelmCharts().stream().map(HelmChart::getUuid).collect(toList()));
     }
 
@@ -231,7 +231,7 @@ public class WorkflowExecutionServiceHelper {
       }
 
       // no input from user
-      if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
+      if (executionArgs == null || hasNone(executionArgs.getWorkflowVariables())
           || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && isBlank(variable.getValue())) {
           throw new InvalidRequestException(
@@ -245,8 +245,8 @@ public class WorkflowExecutionServiceHelper {
         continue;
       }
       // Verify for allowed values
-      if (isNotEmpty(variable.getAllowedValues())) {
-        if (isNotEmpty(variable.getValue())) {
+      if (hasSome(variable.getAllowedValues())) {
+        if (hasSome(variable.getValue())) {
           if (!variable.getAllowedList().contains(variable.getValue())) {
             throw new InvalidRequestException("Workflow variable value [" + variable.getValue()
                 + " is not in Allowed Values [" + variable.getAllowedList() + "]");
@@ -265,7 +265,7 @@ public class WorkflowExecutionServiceHelper {
   }
 
   private boolean isNull(String string) {
-    return isEmpty(string) || string.equals("null");
+    return hasNone(string) || string.equals("null");
   }
 
   private List<Variable> fetchWorkflowVariables(String appId, ExecutionArgs executionArgs) {
@@ -323,7 +323,7 @@ public class WorkflowExecutionServiceHelper {
 
     // resetEntities is true if there are one or more new ENTITY workflow variables.
     // oldEntityVariableNames is not empty when one or more ENTITY variables have been removed.
-    if (resetEntities || isNotEmpty(oldWorkflowVariablesMap)) {
+    if (resetEntities || hasSome(oldWorkflowVariablesMap)) {
       resetEntityWorkflowVariables(workflowVariables);
       return true;
     }
@@ -342,14 +342,14 @@ public class WorkflowExecutionServiceHelper {
   public static boolean calculateCdPageCandidate(
       String pipelineExecutionId, String pipelineResumeId, boolean latestPipelineResume) {
     boolean cdPageCandidate;
-    if (isNotEmpty(pipelineResumeId)) {
+    if (hasSome(pipelineResumeId)) {
       cdPageCandidate = latestPipelineResume;
     } else {
       // For a pipeline which is not resumed at all LatestPipelineResume is false and pipelineResumeId is null.
       cdPageCandidate = true;
     }
 
-    if (!isEmpty(pipelineExecutionId)) {
+    if (!hasNone(pipelineExecutionId)) {
       cdPageCandidate = false;
     }
     return cdPageCandidate;
@@ -373,14 +373,14 @@ public class WorkflowExecutionServiceHelper {
     notNullCheck("No pipeline associated with given executionId:  " + pipelineExecutionId, pipeline);
 
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    if (isEmpty(pipelineStages)) {
+    if (hasNone(pipelineStages)) {
       throw new InvalidRequestException("Given Pipeline does not contain any Stages", USER);
     }
     for (PipelineStage pipelineStage : pipelineStages) {
       PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
       if (pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
         String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
-        if (isEmpty(workflowId)) {
+        if (hasNone(workflowId)) {
           throw new InvalidRequestException(
               String.format("No workflow found in pipelineStage: %s for given stageElementId: %s ",
                   pipelineStageElement.getName(), pipelineStageElementId));
@@ -394,12 +394,12 @@ public class WorkflowExecutionServiceHelper {
             "Not able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
             workflow.getOrchestrationWorkflow());
         List<Variable> variables = workflow.getOrchestrationWorkflow().getUserVariables();
-        if (isEmpty(variables)) {
+        if (hasNone(variables)) {
           return variables;
         }
 
         RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
-        if (runtimeInputsConfig == null || isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+        if (runtimeInputsConfig == null || hasNone(runtimeInputsConfig.getRuntimeInputVariables())) {
           return new ArrayList<>();
         }
 
@@ -442,7 +442,7 @@ public class WorkflowExecutionServiceHelper {
 
     for (Variable variable : pipelineVariables) {
       String defaultValuePresent = args.getWorkflowVariables().get(variable.getName());
-      if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
+      if (hasSome(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
         variable.setValue(defaultValuePresent);
       }
       if (variable.obtainEntityType() != null) {

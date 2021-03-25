@@ -2,8 +2,8 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -98,7 +98,7 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
    * improvments in storage and latency
    */
   public void bundleAsJosnAndCompress() {
-    if (isEmpty(transactions)) {
+    if (hasNone(transactions)) {
       return;
     }
 
@@ -123,11 +123,11 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
   }
 
   public void decompress(boolean onlyRiskScore) {
-    if (isEmpty(metricAnalysisValuesCompressed) && isEmpty(transactionsCompressedJson)) {
+    if (hasNone(metricAnalysisValuesCompressed) && hasNone(transactionsCompressedJson)) {
       return;
     }
 
-    if (isNotEmpty(transactionsCompressedJson)) {
+    if (hasSome(transactionsCompressedJson)) {
       try {
         String decompressedTransactionsJson = deCompressString(transactionsCompressedJson);
         setTransactions(JsonUtils.asObject(

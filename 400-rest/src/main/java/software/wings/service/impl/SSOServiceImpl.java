@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
@@ -13,7 +13,6 @@ import static software.wings.security.authentication.AuthenticationMechanism.USE
 import static java.util.Arrays.asList;
 
 import io.harness.beans.SecretText;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -100,7 +99,7 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     try {
-      if (isEmpty(allowedProviders)) {
+      if (hasNone(allowedProviders)) {
         throw new InvalidRequestException("At least one OAuth provider must be selected.");
       }
       buildAndUploadOauthSettings(accountId, filter, allowedProviders);
@@ -125,7 +124,7 @@ public class SSOServiceImpl implements SSOService {
         fileAsString = settings.getMetaDataFile();
       }
 
-      if (isEmpty(displayName)) {
+      if (hasNone(displayName)) {
         displayName = settings.getDisplayName();
       }
 
@@ -396,7 +395,7 @@ public class SSOServiceImpl implements SSOService {
   }
 
   private boolean isExistingSetting(@NotNull LdapSettings settings) {
-    if (isNotEmpty(settings.getUuid())) {
+    if (hasSome(settings.getUuid())) {
       if (!ssoSettingService.isLdapSettingsPresent(settings.getUuid())) {
         throw new InvalidRequestException("Invalid Ldap Settings ID.");
       }
@@ -407,7 +406,7 @@ public class SSOServiceImpl implements SSOService {
 
   private boolean populateEncryptedFields(@NotNull LdapSettings settings) {
     if (!isExistingSetting(settings)) {
-      if (EmptyPredicate.isEmpty(settings.getConnectionSettings().getBindDN())) {
+      if (hasNone(settings.getConnectionSettings().getBindDN())) {
         return false;
       }
       if (settings.getConnectionSettings().getBindPassword().equals(LdapConstants.MASKED_STRING)) {

@@ -1,6 +1,6 @@
 package io.harness.ng.core.invites.remote;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ng.core.invites.remote.RoleMapper.toRole;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -44,7 +44,7 @@ public class InviteMapper {
   }
 
   static List<Invite> toInviteList(CreateInviteListDTO createInviteListDTO, List<String> usernames, NGAccess ngAccess) {
-    if (isEmpty(createInviteListDTO.getUsers())) {
+    if (hasNone(createInviteListDTO.getUsers())) {
       return new ArrayList<>();
     }
 

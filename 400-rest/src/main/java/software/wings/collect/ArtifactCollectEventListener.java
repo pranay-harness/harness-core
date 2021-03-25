@@ -1,7 +1,7 @@
 package software.wings.collect;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -200,7 +200,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
+            .tags(hasSome(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()

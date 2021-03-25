@@ -11,8 +11,8 @@ import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
 import static io.harness.k8s.model.HelmVersion.V2;
@@ -66,7 +66,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -371,7 +370,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       setArtifactStreamBindings(services);
     }
 
-    if (isNotEmpty(pageResponse.getResponse())) {
+    if (hasSome(pageResponse.getResponse())) {
       customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(
           pageResponse.getResponse(), pageResponse.getResponse().get(0).getAccountId());
     }
@@ -391,7 +390,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     String appId = (String) appIdValues.get(0);
     List<String> infraIds = request.getUriInfo().getQueryParameters().get(INFRA_ID_FILTER);
-    if (isEmpty(infraIds)) {
+    if (hasNone(infraIds)) {
       return;
     }
 
@@ -401,7 +400,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> infraNames = new ArrayList<>();
     for (String infraId : infraIds) {
       // if infra value for related field is variable or there is no value,
-      if (isEmpty(infraId) || ExpressionEvaluator.containsVariablePattern(infraId)) {
+      if (hasNone(infraId) || ExpressionEvaluator.containsVariablePattern(infraId)) {
         continue;
       }
       InfrastructureDefinition infra = infrastructureDefinitionService.get(appId, infraId);
@@ -412,7 +411,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       if (isNotBlank(infra.getDeploymentTypeTemplateId())) {
         customDeploymentTypeTemplateIds.add(infra.getDeploymentTypeTemplateId());
       }
-      if (isNotEmpty(infra.getScopedToServices())) {
+      if (hasSome(infra.getScopedToServices())) {
         scopedServicesList.add(Sets.newHashSet(infra.getScopedToServices()));
         infraNames.add(infra.getName());
       }
@@ -432,7 +431,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     // else filtering by deployment type. Artifact type filter is already be present in the API call.
-    if (isNotEmpty(deploymentType)
+    if (hasSome(deploymentType)
         && !request.getUriInfo().getQueryParameters().containsKey("deploymentTypeFromMetadata")) {
       addDeploymentTypeFilter(request, deploymentType);
     }
@@ -602,7 +601,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service clone(String appId, String originalServiceId, Service service) {
     String accountId = appService.getAccountIdByAppId(service.getAppId());
 
-    if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
+    if (hasNone(service.getName()) || hasNone(service.getName().trim())) {
       throw new InvalidRequestException("Service Name can not be empty", USER);
     }
 
@@ -688,7 +687,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private void cloneContainerTasks(String appId, String clonedServiceId, String originalServiceId) {
     List<ContainerTask> containerTasks = findContainerTaskForService(appId, originalServiceId);
-    if (EmptyPredicate.isNotEmpty(containerTasks)) {
+    if (hasSome(containerTasks)) {
       containerTasks.forEach(containerTask -> {
         ContainerTask newContainerTask = containerTask.cloneInternal();
         newContainerTask.setServiceId(clonedServiceId);
@@ -753,7 +752,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .map(ServiceCommand::getName)
                                        .filter(name -> !serviceCommandNames.add(name))
                                        .collect(Collectors.toSet());
-      if (isNotEmpty(duplicateNames)) {
+      if (hasSome(duplicateNames)) {
         throw new InvalidRequestException(
             format("Duplicate service command name %s for service %s", duplicateNames.toString(), service.getName()),
             USER);
@@ -1037,7 +1036,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   @NonNull
   public List<String> getNames(String accountId, List<String> serviceIds) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return Collections.emptyList();
     }
     return wingsPersistence.createQuery(Service.class)
@@ -1054,7 +1053,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Map<String, String> getServiceNames(String appId, @Nonnull Set<String> serviceIds) {
-    if (isEmpty(serviceIds)) {
+    if (hasNone(serviceIds)) {
       return Collections.emptyMap();
     }
     List<Service> serviceList = wingsPersistence.createQuery(Service.class)
@@ -1123,7 +1122,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void setArtifactStreamBindings(List<Service> services) {
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return;
     }
 
@@ -1231,7 +1230,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<String> referencingInfraDefinitionNames =
         infrastructureDefinitionService.listNamesByScopedService(service.getAppId(), service.getUuid());
-    if (isNotEmpty(referencingInfraDefinitionNames)) {
+    if (hasSome(referencingInfraDefinitionNames)) {
       throw new InvalidRequestException(
           format("Service %s is referenced by %s %s [%s].", service.getName(), referencingInfraDefinitionNames.size(),
               plural("Infrastructure Definition", referencingInfraDefinitionNames.size()),
@@ -1242,7 +1241,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<String> referencingWorkflowNames =
         workflowService.obtainWorkflowNamesReferencedByService(service.getAppId(), service.getUuid());
 
-    if (isNotEmpty(referencingWorkflowNames)) {
+    if (hasSome(referencingWorkflowNames)) {
       throw new InvalidRequestException(
           format("Service %s is referenced by %s %s [%s].", service.getName(), referencingWorkflowNames.size(),
               plural("workflow", referencingWorkflowNames.size()), join(", ", referencingWorkflowNames)),
@@ -1251,7 +1250,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<String> refPipelines =
         pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(service.getAppId(), service.getUuid());
-    if (isNotEmpty(refPipelines)) {
+    if (hasSome(refPipelines)) {
       throw new InvalidRequestException(
           format("Service is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
               plural("pipeline", refPipelines.size()), join(", ", refPipelines)),
@@ -1260,7 +1259,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<String> refTriggers =
         triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(service.getAppId(), service.getUuid());
-    if (isNotEmpty(refTriggers)) {
+    if (hasSome(refTriggers)) {
       throw new InvalidRequestException(
           format("Service is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
               plural("trigger", refTriggers.size()), join(", ", refTriggers)),
@@ -1269,7 +1268,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<CVConfiguration> cvConfigurations =
         cvConfigurationService.obtainCVConfigurationsReferencedByService(service.getAppId(), service.getUuid());
-    if (isNotEmpty(cvConfigurations)) {
+    if (hasSome(cvConfigurations)) {
       String cvConfigurationsNames = cvConfigurations.stream().map(CVConfiguration::getName).collect(joining(","));
       throw new InvalidRequestException(
           format("Service [%s] couldn't be deleted. Remove Service reference from the following "
@@ -1280,7 +1279,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<String> runningExecutions =
         workflowExecutionService.runningExecutionsForService(service.getAppId(), service.getUuid());
-    if (isNotEmpty(runningExecutions)) {
+    if (hasSome(runningExecutions)) {
       throw new InvalidRequestException(
           format("Service:[%s] couldn't be deleted. [%d] Running executions present: [%s]", service.getName(),
               runningExecutions.size(), String.join(", ", runningExecutions)),
@@ -1312,7 +1311,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<String> fetchServiceNamesByUuids(String appId, List<String> serviceUuids) {
-    if (isNotEmpty(serviceUuids)) {
+    if (hasSome(serviceUuids)) {
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project(ServiceKeys.name, true)
                                    .project(ServiceKeys.accountId, true)
@@ -1370,7 +1369,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
 
         // May happen if no phase created for Canary workflow
-        if (isEmpty(workflowPhases)) {
+        if (hasNone(workflowPhases)) {
           continue;
         }
 
@@ -1758,7 +1757,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service updateCommandsOrder(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
     Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
-    if (isEmpty(serviceCommands)) {
+    if (hasNone(serviceCommands)) {
       return service;
     }
     // Get the old service commands
@@ -1790,10 +1789,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command = (Command) templateService.constructEntityFromTemplate(
           serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion(), EntityType.COMMAND);
       command.setAppId(appId);
-      if (isNotEmpty(serviceCommand.getName())) {
+      if (hasSome(serviceCommand.getName())) {
         command.setName(serviceCommand.getName());
       }
-      if (isNotEmpty(existingTemplateVariables)) {
+      if (hasSome(existingTemplateVariables)) {
         command.setTemplateVariables(existingTemplateVariables);
       }
     } else if (Objects.isNull(command)) {
@@ -1810,7 +1809,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceCommand.setName(serviceCommand.getCommand().getGraph().getGraphName());
       command.transformGraph();
     } else {
-      if (isEmpty(serviceCommand.getName())) {
+      if (hasNone(serviceCommand.getName())) {
         serviceCommand.setName(serviceCommand.getCommand().getName());
       }
     }
@@ -1831,7 +1830,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setAppId(appId);
     command.setAccountId(accountId);
     command.setName(serviceCommand.getName());
-    if (isNotEmpty(command.getCommandUnits())) {
+    if (hasSome(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
     // TODO: Set the graph to null after backward compatible change
@@ -1955,7 +1954,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     newcommand.setCommandUnits(command.getCommandUnits());
     newcommand.setCommandType(command.getCommandType());
-    if (isEmpty(serviceCommand.getName())) {
+    if (hasNone(serviceCommand.getName())) {
       serviceCommand.setName(command.getName());
       newcommand.setName(command.getName());
     } else {
@@ -2150,11 +2149,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private Map<String, String> getEntityMap(@NotEmpty String serviceId, String commandName) {
     Map<String, String> map = new HashMap<>();
 
-    if (isNotEmpty(serviceId)) {
+    if (hasSome(serviceId)) {
       map.put(EntityType.SERVICE.name(), serviceId);
     }
 
-    if (isNotEmpty(commandName)) {
+    if (hasSome(commandName)) {
       map.put(EntityType.COMMAND.name(), commandName);
     }
     return map;
@@ -2254,7 +2253,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     List<ServiceCommand> serviceCommands = getServiceCommands(service.getAppId(), service.getUuid(), false);
-    if (isEmpty(serviceCommands)) {
+    if (hasNone(serviceCommands)) {
       return emptyMap();
     }
 
@@ -2274,7 +2273,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     List<String> duplicateFunctionName =
         getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getFunctionName);
-    if (isNotEmpty(duplicateFunctionName)) {
+    if (hasSome(duplicateFunctionName)) {
       throw new InvalidRequestException(
           "Function name should be unique. Duplicate function names: [" + join(",", duplicateFunctionName) + "]");
     }
@@ -2287,7 +2286,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void validateFunctionsInLambdaSpec(List<FunctionSpecification> functions) {
-    if (isEmpty(functions)) {
+    if (hasNone(functions)) {
       throw new InvalidRequestException("Lambda Specification must contain atleast 1 function", USER);
     }
 
@@ -2473,7 +2472,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> fetchServicesByUuids(String appId, List<String> serviceUuids) {
-    if (isNotEmpty(serviceUuids)) {
+    if (hasSome(serviceUuids)) {
       serviceUuids = serviceUuids.stream().distinct().collect(toList());
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project("appContainer", false)
@@ -2497,7 +2496,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> fetchServicesByUuidsByAccountId(String accountId, List<String> serviceUuids) {
-    if (isNotEmpty(serviceUuids)) {
+    if (hasSome(serviceUuids)) {
       serviceUuids = serviceUuids.stream().distinct().collect(toList());
       List<Service> services = wingsPersistence.createQuery(Service.class)
                                    .project(ServiceKeys.appContainer, false)
@@ -2526,7 +2525,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       WorkflowExecution workflowExecution =
           workflowExecutionService.fetchWorkflowExecution(appId, workflowExecutionId, WorkflowExecutionKeys.artifacts);
       List<Artifact> artifacts = workflowExecution.getArtifacts();
-      return isNotEmpty(artifacts) ? artifacts.get(0) : null;
+      return hasSome(artifacts) ? artifacts.get(0) : null;
     } else {
       Activity activity = wingsPersistence.createQuery(Activity.class)
                               .filter(ActivityKeys.appId, appId)
@@ -2645,7 +2644,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId) {
     List<String> valueOverridesYamlFiles = applicationManifestUtils.getHelmValuesYamlFiles(appId, serviceTemplateId);
-    if (isEmpty(valueOverridesYamlFiles)) {
+    if (hasNone(valueOverridesYamlFiles)) {
       return false;
     }
 
@@ -2662,7 +2661,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void updateArtifactVariableNamesForHelm(
       String appId, String serviceTemplateId, Set<String> serviceArtifactVariableNames) {
     List<String> valueOverridesYamlFiles = applicationManifestUtils.getHelmValuesYamlFiles(appId, serviceTemplateId);
-    if (isEmpty(valueOverridesYamlFiles)) {
+    if (hasNone(valueOverridesYamlFiles)) {
       return;
     }
 
@@ -2846,7 +2845,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
     List<ApplicationManifest> applicationManifests =
         applicationManifestService.listAppManifests(appId, originalServiceId);
-    if (isEmpty(applicationManifests)) {
+    if (hasNone(applicationManifests)) {
       return;
     }
     for (ApplicationManifest applicationManifest : applicationManifests) {
@@ -2983,7 +2982,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ApplicationManifest createValuesAppManifest(String appId, String serviceId, ApplicationManifest appManifest) {
-    if (isNotEmpty(appManifest.getUuid())) {
+    if (hasSome(appManifest.getUuid())) {
       throw new InvalidRequestException("Application Manifest already has an id", USER);
     }
     appManifest.setServiceId(serviceId);

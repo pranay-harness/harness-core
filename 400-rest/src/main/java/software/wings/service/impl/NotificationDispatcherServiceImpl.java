@@ -1,8 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -27,6 +26,7 @@ import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -104,7 +104,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       List<Notification> notifications, final List<T> notificationReceivers) {
     List<T> receivers = notificationReceivers.stream().filter(Objects::nonNull).collect(toList());
 
-    if (isEmpty(receivers) || isEmpty(notifications)) {
+    if (hasNone(receivers) || hasNone(notifications)) {
       return;
     }
 
@@ -139,7 +139,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   @Override
   public void dispatchNotificationToTriggeredByUserOnly(List<Notification> notifications, EmbeddedUser user) {
     try {
-      emailDispatcher.dispatch(notifications, asList(user.getEmail()));
+      emailDispatcher.dispatch(notifications, Arrays.asList(user.getEmail()));
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e));
     }

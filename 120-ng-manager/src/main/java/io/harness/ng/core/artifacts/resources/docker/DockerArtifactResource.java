@@ -1,5 +1,7 @@
 package io.harness.ng.core.artifacts.resources.docker;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
@@ -7,7 +9,6 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.artifacts.resources.util.ArtifactResourceUtils;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -145,8 +146,7 @@ public class DockerArtifactResource {
       try {
         ResponseDTO<DockerBuildDetailsDTO> lastSuccessfulBuild = getLastSuccessfulBuild(
             imagePath, dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier, requestDTO);
-        if (lastSuccessfulBuild.getData() != null
-            && EmptyPredicate.isNotEmpty(lastSuccessfulBuild.getData().getTag())) {
+        if (lastSuccessfulBuild.getData() != null && hasSome(lastSuccessfulBuild.getData().getTag())) {
           isValidArtifact = true;
         }
       } catch (Exception e) {

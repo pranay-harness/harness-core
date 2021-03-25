@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -13,7 +15,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -101,12 +102,12 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
 
     Map<String, String> body = new HashMap<>();
     parameters.getFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key.getJsonBodyName(), value);
       }
     });
     parameters.getAdditionalFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key, value);
       }
     });
@@ -194,12 +195,12 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     Map<String, String> body = new HashMap<>();
 
     parameters.getFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key.getJsonBodyName(), value);
       }
     });
     parameters.getAdditionalFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key, value);
       }
     });
@@ -243,14 +244,14 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
 
   private DelegateResponseData updateAllChangeTaskTickets(ServiceNowTaskParameters parameters) {
     if (!parameters.getFields().containsKey(ServiceNowFields.CHANGE_REQUEST_NUMBER)
-        || EmptyPredicate.isEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))) {
+        || hasNone(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))) {
       throw new InvalidRequestException(
           "Change Request Number is required to update change tasks", SERVICENOW_ERROR, USER);
     }
 
     List<String> changeTaskIdsToUpdate = fetchChangeTasksFromCR(parameters);
     String changeRequestNumber = parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER);
-    if (EmptyPredicate.isEmpty(changeTaskIdsToUpdate)) {
+    if (hasNone(changeTaskIdsToUpdate)) {
       return ServiceNowExecutionData.builder()
           .issueNumber(changeRequestNumber)
           .ticketType(parameters.getTicketType())
@@ -260,12 +261,12 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
     Map<String, String> body = new HashMap<>();
     parameters.getFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key.getJsonBodyName(), value);
       }
     });
     parameters.getAdditionalFields().forEach((key, value) -> {
-      if (EmptyPredicate.isNotEmpty(value)) {
+      if (hasSome(value)) {
         body.put(key, value);
       }
     });
@@ -334,7 +335,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       if (responseObj.isArray()) {
         for (JsonNode changeTaskObj : responseObj) {
           if (parameters.getFields().containsKey(ServiceNowFields.CHANGE_TASK_TYPE)
-              && EmptyPredicate.isNotEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_TASK_TYPE))) {
+              && hasSome(parameters.getFields().get(ServiceNowFields.CHANGE_TASK_TYPE))) {
             if (parameters.getFields()
                     .get(ServiceNowFields.CHANGE_TASK_TYPE)
                     .equalsIgnoreCase(changeTaskObj.get("change_task_type").textValue())) {

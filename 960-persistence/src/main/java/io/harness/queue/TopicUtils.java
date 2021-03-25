@@ -1,6 +1,6 @@
 package io.harness.queue;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class TopicUtils {
   public static final String DELIMITER = ";";
 
   public static String combineElements(List<String> topicElements) {
-    if (isEmpty(topicElements)) {
+    if (hasNone(topicElements)) {
       return null;
     }
     return String.join(DELIMITER, topicElements);
@@ -19,10 +19,10 @@ public class TopicUtils {
 
   public static String appendElements(String prefix, List<String> topicElements) {
     final String combineElements = combineElements(topicElements);
-    if (isEmpty(prefix)) {
+    if (hasNone(prefix)) {
       return combineElements;
     }
-    if (isEmpty(combineElements)) {
+    if (hasNone(combineElements)) {
       return prefix;
     }
 
@@ -30,10 +30,10 @@ public class TopicUtils {
   }
 
   public static String appendElements(String prefix, String suffix) {
-    if (isEmpty(prefix)) {
+    if (hasNone(prefix)) {
       return suffix;
     }
-    if (isEmpty(suffix)) {
+    if (hasNone(suffix)) {
       return prefix;
     }
 
@@ -41,7 +41,7 @@ public class TopicUtils {
   }
 
   public static List<String> resolveExpressionIntoListOfTopics(List<List<String>> topicExpression) {
-    if (isEmpty(topicExpression)) {
+    if (hasNone(topicExpression)) {
       return null;
     }
 

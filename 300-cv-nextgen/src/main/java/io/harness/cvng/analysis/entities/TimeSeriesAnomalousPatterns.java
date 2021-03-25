@@ -2,8 +2,8 @@ package io.harness.cvng.analysis.entities;
 
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -48,7 +48,7 @@ public final class TimeSeriesAnomalousPatterns implements PersistentEntity, Uuid
   private byte[] compressedAnomalies;
 
   public byte[] getCompressedAnomalies() {
-    if (isEmpty(compressedAnomalies)) {
+    if (hasNone(compressedAnomalies)) {
       return new byte[0];
     }
 
@@ -56,7 +56,7 @@ public final class TimeSeriesAnomalousPatterns implements PersistentEntity, Uuid
   }
 
   public void compressAnomalies() {
-    if (isNotEmpty(anomalies)) {
+    if (hasSome(anomalies)) {
       try {
         setCompressedAnomalies(compressString(JsonUtils.asJson(anomalies)));
         setAnomalies(null);
@@ -67,7 +67,7 @@ public final class TimeSeriesAnomalousPatterns implements PersistentEntity, Uuid
   }
 
   public void deCompressAnomalies() {
-    if (isNotEmpty(compressedAnomalies)) {
+    if (hasSome(compressedAnomalies)) {
       try {
         String decompressedAnomalies = deCompressString(compressedAnomalies);
         setAnomalies(JsonUtils.asObject(decompressedAnomalies, new TypeReference<List<TimeSeriesAnomalies>>() {}));
@@ -80,12 +80,12 @@ public final class TimeSeriesAnomalousPatterns implements PersistentEntity, Uuid
 
   public static List<TimeSeriesAnomalies> convertFromMap(
       Map<String, Map<String, List<TimeSeriesAnomalies>>> txnMetricAnomMap) {
-    if (isNotEmpty(txnMetricAnomMap)) {
+    if (hasSome(txnMetricAnomMap)) {
       List<TimeSeriesAnomalies> anomalyList = new ArrayList<>();
       txnMetricAnomMap.forEach((txn, metricAnomMap) -> {
-        if (isNotEmpty(metricAnomMap)) {
+        if (hasSome(metricAnomMap)) {
           metricAnomMap.forEach((metric, anomalies) -> {
-            if (isNotEmpty(anomalies)) {
+            if (hasSome(anomalies)) {
               anomalies.forEach(anomaly -> {
                 anomaly.setTransactionName(txn);
                 anomaly.setMetricName(metric);

@@ -1,7 +1,7 @@
 package io.harness.yaml.core.timeout;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.timeout.TimeoutParameters;
@@ -47,7 +47,7 @@ public class Timeout {
   @JsonCreator
   public static Timeout fromString(String timeout) {
     try {
-      if (isEmpty(timeout)) {
+      if (hasNone(timeout)) {
         return null;
       }
       long currentValue = 0;
@@ -70,7 +70,7 @@ public class Timeout {
   }
 
   private static boolean isDigit(String symbol) {
-    return isNotEmpty(symbol) && Character.isDigit(symbol.charAt(0));
+    return hasSome(symbol) && Character.isDigit(symbol.charAt(0));
   }
 
   private static boolean isUnitCharacter(String symbol) {

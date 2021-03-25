@@ -5,8 +5,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
@@ -48,7 +48,7 @@ public class VerificationServiceImpl implements VerificationService {
 
   @Override
   public Optional<LearningEngineAnalysisTask> getLatestTaskForCvConfigIds(List<String> cvConfigIds) {
-    if (isEmpty(cvConfigIds)) {
+    if (hasNone(cvConfigIds)) {
       return Optional.empty();
     }
     LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
@@ -77,7 +77,7 @@ public class VerificationServiceImpl implements VerificationService {
                                                     .withLimit("1")
                                                     .build();
         PageResponse<LogDataRecord> logDataRecord = dataStoreService.list(LogDataRecord.class, logRequest);
-        return isNotEmpty(logDataRecord.getResponse());
+        return hasSome(logDataRecord.getResponse());
       case TIME_SERIES:
         PageRequest<TimeSeriesDataRecord> pageRequest =
             PageRequestBuilder.aPageRequest()
@@ -89,7 +89,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .build();
         PageResponse<TimeSeriesDataRecord> metricRecord =
             dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
-        return isNotEmpty(metricRecord.getResponse());
+        return hasSome(metricRecord.getResponse());
       default:
         throw new InvalidArgumentsException(Pair.of(mlAnalysisType.name(), "Invalid data check for analysis type"));
     }

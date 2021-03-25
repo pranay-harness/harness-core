@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
@@ -61,7 +61,7 @@ public class StackdriverServiceImpl implements StackdriverService {
     Type type = new TypeToken<List<StackdriverDashboardDTO>>() {}.getType();
     List<StackdriverDashboardDTO> dashboardDTOS = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     List<StackdriverDashboardDTO> returnList = new ArrayList<>();
-    if (isNotEmpty(filter)) {
+    if (hasSome(filter)) {
       returnList = dashboardDTOS.stream()
                        .filter(dashboardDto -> dashboardDto.getName().toLowerCase().contains(filter.toLowerCase()))
                        .collect(Collectors.toList());

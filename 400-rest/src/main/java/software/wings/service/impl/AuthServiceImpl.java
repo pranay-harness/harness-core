@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
@@ -473,7 +473,7 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
       PermissionAttribute permissionAttribute, List<Role> roles, UserRequestInfo userRequestInfo) {
-    if (isEmpty(roles)) {
+    if (hasNone(roles)) {
       return false;
     }
     return roles.stream()
@@ -626,7 +626,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private <T> void removeFromCache(Cache<String, T> cache, List<String> memberIds) {
-    if (cache != null && isNotEmpty(memberIds)) {
+    if (cache != null && hasSome(memberIds)) {
       Set<String> keys = new HashSet<>(memberIds);
       cache.removeAll(keys);
     }
@@ -634,7 +634,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccounts(Set<String> accountIds, List<String> memberIds) {
-    if (isEmpty(accountIds)) {
+    if (hasNone(accountIds)) {
       return;
     }
     accountIds.forEach(accountId -> evictUserPermissionAndRestrictionCacheForAccount(accountId, memberIds));
@@ -660,7 +660,7 @@ public class AuthServiceImpl implements AuthService {
   private List<UserGroup> getUserGroups(String accountId, User user) {
     List<UserGroup> userGroups = userGroupService.listByAccountId(accountId, user, false);
 
-    if (isEmpty(userGroups) && !userService.isUserAssignedToAccount(user, accountId)) {
+    if (hasNone(userGroups) && !userService.isUserAssignedToAccount(user, accountId)) {
       // Check if its a harness user
       Optional<UserGroup> harnessUserGroup = getHarnessUserGroupsByAccountId(accountId, user);
       if (harnessUserGroup.isPresent()) {
@@ -759,12 +759,12 @@ public class AuthServiceImpl implements AuthService {
       actionEntityIdMap = appPermissionSummary.getProvisionerPermissions();
     } else if (requiredPermissionType == PermissionType.ENV) {
       Map<Action, Set<EnvInfo>> actionEnvPermissionsMap = appPermissionSummary.getEnvPermissions();
-      if (isEmpty(actionEnvPermissionsMap)) {
+      if (hasNone(actionEnvPermissionsMap)) {
         return false;
       }
 
       Set<EnvInfo> envInfoSet = actionEnvPermissionsMap.get(requiredAction);
-      if (isEmpty(envInfoSet)) {
+      if (hasNone(envInfoSet)) {
         return false;
       }
 
@@ -783,12 +783,12 @@ public class AuthServiceImpl implements AuthService {
       throw new WingsException(msg);
     }
 
-    if (isEmpty(actionEntityIdMap)) {
+    if (hasNone(actionEntityIdMap)) {
       return false;
     }
 
     Collection<String> entityIds = actionEntityIdMap.get(requiredAction);
-    if (isEmpty(entityIds)) {
+    if (hasNone(entityIds)) {
       return false;
     }
 
@@ -869,7 +869,7 @@ public class AuthServiceImpl implements AuthService {
       if (!user.getEmail().endsWith(Keys.HARNESS_EMAIL)) {
         executorService.submit(() -> {
           String accountId = user.getLastAccountId();
-          if (isEmpty(accountId)) {
+          if (hasNone(accountId)) {
             log.warn("last accountId is null for User {}", user.getUuid());
             return;
           }
@@ -929,7 +929,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void checkIfUserAllowedToDeployToEnv(String appId, String envId) {
-    if (isEmpty(envId)) {
+    if (hasNone(envId)) {
       return;
     }
 
@@ -944,7 +944,7 @@ public class AuthServiceImpl implements AuthService {
                                                       .get(appId)
                                                       .getDeploymentExecutePermissionsForEnvs();
 
-    if (isEmpty(deploymentEnvExecutePermissions)) {
+    if (hasNone(deploymentEnvExecutePermissions)) {
       throw new AccessDeniedException("Not authorized", USER);
     }
 
@@ -955,7 +955,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void checkIfUserAllowedToDeployWorkflowToEnv(String appId, String envId) {
-    if (isEmpty(envId)) {
+    if (hasNone(envId)) {
       return;
     }
 
@@ -970,7 +970,7 @@ public class AuthServiceImpl implements AuthService {
                                                         .get(appId)
                                                         .getWorkflowExecutePermissionsForEnvs();
 
-    if (isEmpty(workflowExecutePermissionsForEnvs) || !workflowExecutePermissionsForEnvs.contains(envId)) {
+    if (hasNone(workflowExecutePermissionsForEnvs) || !workflowExecutePermissionsForEnvs.contains(envId)) {
       throw new InvalidRequestException(
           "User doesn't have rights to execute Workflow in this Environment", ErrorCode.ACCESS_DENIED, USER);
     }
@@ -978,7 +978,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void checkIfUserAllowedToDeployPipelineToEnv(String appId, String envId) {
-    if (isEmpty(envId)) {
+    if (hasNone(envId)) {
       return;
     }
 
@@ -993,7 +993,7 @@ public class AuthServiceImpl implements AuthService {
                                                         .get(appId)
                                                         .getPipelineExecutePermissionsForEnvs();
 
-    if (isEmpty(pipelineExecutePermissionsForEnvs) || !pipelineExecutePermissionsForEnvs.contains(envId)) {
+    if (hasNone(pipelineExecutePermissionsForEnvs) || !pipelineExecutePermissionsForEnvs.contains(envId)) {
       throw new InvalidRequestException(
           "User doesn't have rights to execute Pipeline in this Environment", ErrorCode.ACCESS_DENIED, USER);
     }
@@ -1016,7 +1016,7 @@ public class AuthServiceImpl implements AuthService {
                                                     .get(appId)
                                                     .getEnvCreatePermissionsForEnvTypes();
 
-    if (isEmpty(envCreatePermissions)) {
+    if (hasNone(envCreatePermissions)) {
       throw new AccessDeniedException("Access Denied", USER);
     }
 
@@ -1037,7 +1037,7 @@ public class AuthServiceImpl implements AuthService {
     boolean envTemplatized = authHandler.isEnvTemplatized(workflow);
     String envId = workflow.getEnvId();
 
-    if (!envTemplatized && isEmpty(envId)) {
+    if (!envTemplatized && hasNone(envId)) {
       return;
     }
 
@@ -1068,7 +1068,7 @@ public class AuthServiceImpl implements AuthService {
         return;
     }
 
-    if (isEmpty(allowedEnvIds) || !allowedEnvIds.contains(envId)) {
+    if (hasNone(allowedEnvIds) || !allowedEnvIds.contains(envId)) {
       throw new AccessDeniedException("Access Denied", USER);
     }
   }
@@ -1154,7 +1154,7 @@ public class AuthServiceImpl implements AuthService {
     if (Action.UPDATE == action) {
       AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
 
-      if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())
+      if (accountPermissionSummary == null || hasNone(accountPermissionSummary.getPermissions())
           || !accountPermissionSummary.getPermissions().contains(MANAGE_APPLICATIONS)) {
         log.error("Auth Failure: User does not have access to update {}", appId);
         throw new AccessDeniedException("Not authorized to update the app", USER);

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff.gitaudit;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -12,7 +13,6 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 
@@ -124,8 +124,8 @@ public class AuditYamlHelperForFailedChanges {
   public EntityAuditRecord generateEntityAuditRecordForFailedChanges(GitFileChange gitFileChange, String accountId) {
     EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
 
-    String yamlFilePath = EmptyPredicate.isEmpty(gitFileChange.getFilePath()) ? gitFileChange.getOldFilePath()
-                                                                              : gitFileChange.getFilePath();
+    String yamlFilePath =
+        hasNone(gitFileChange.getFilePath()) ? gitFileChange.getOldFilePath() : gitFileChange.getFilePath();
 
     // 1. Get application details from YamlPath. If its account level entity, use _GLOBAL_APP_ID
     Application application = getApplicationDetails(accountId, yamlFilePath);
@@ -442,7 +442,7 @@ public class AuditYamlHelperForFailedChanges {
     String serviceId = getServiceId(auditRequestData);
     String subType = getYamlSubType(auditRequestData.getFileContent(), auditRequestData.getYamlFilePath());
 
-    if (isNotEmpty(subType) && isNotEmpty(serviceId)) {
+    if (hasSome(subType) && hasSome(serviceId)) {
       DeploymentSpecification deploymentSpecification;
       try {
         deploymentSpecification =

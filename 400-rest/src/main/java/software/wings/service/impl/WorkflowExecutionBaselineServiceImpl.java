@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
@@ -41,7 +41,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
   @Override
   public void markBaseline(
       List<WorkflowExecutionBaseline> workflowExecutionBaselines, String executionId, boolean isBaseline) {
-    Preconditions.checkState(!isEmpty(workflowExecutionBaselines));
+    Preconditions.checkState(!hasNone(workflowExecutionBaselines));
 
     for (WorkflowExecutionBaseline workflowExecutionBaseline : workflowExecutionBaselines) {
       List<WorkflowExecutionBaseline> existingBaselines =
@@ -52,7 +52,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
               .filter(WorkflowExecutionBaselineKeys.serviceId, workflowExecutionBaseline.getServiceId())
               .asList();
       log.info("existing baselines {}", existingBaselines);
-      if (!isEmpty(existingBaselines)) {
+      if (!hasNone(existingBaselines)) {
         Preconditions.checkState(
             existingBaselines.size() == 1, "found more than 1 baselines for " + workflowExecutionBaseline);
         WorkflowExecutionBaseline executionBaseline = existingBaselines.get(0);
@@ -66,8 +66,8 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
         if (isBaseline) {
           Map<String, Object> updates = new HashMap<>();
           updates.put("workflowExecutionId", workflowExecutionBaseline.getWorkflowExecutionId());
-          if (!isEmpty(executionBaseline.getPipelineExecutionId())) {
-            if (!isEmpty(workflowExecutionBaseline.getPipelineExecutionId())) {
+          if (!hasNone(executionBaseline.getPipelineExecutionId())) {
+            if (!hasNone(workflowExecutionBaseline.getPipelineExecutionId())) {
               updates.put("pipelineExecutionId", workflowExecutionBaseline.getPipelineExecutionId());
             }
             updatePipleLineIfNecessary(executionBaseline.getPipelineExecutionId());
@@ -101,11 +101,11 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     WorkflowExecution execution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, baseline.getAppId(), baseline.getWorkflowExecutionId());
     // the workflow execution might have been deleted due to expiry.
-    if (execution == null || isEmpty(execution.getPipelineExecutionId())) {
+    if (execution == null || hasNone(execution.getPipelineExecutionId())) {
       return;
     }
 
-    WorkflowExecution workflowExecution = isEmpty(baseline.getPipelineExecutionId())
+    WorkflowExecution workflowExecution = hasNone(baseline.getPipelineExecutionId())
         ? wingsPersistence.getWithAppId(
             WorkflowExecution.class, baseline.getAppId(), execution.getPipelineExecutionId())
         : wingsPersistence.getWithAppId(
@@ -120,7 +120,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     }
 
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
+    if (hasNone(pipelineStageExecutions)) {
       return;
     }
 
@@ -145,7 +145,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     }
 
     List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
+    if (hasNone(pipelineStageExecutions)) {
       return;
     }
 

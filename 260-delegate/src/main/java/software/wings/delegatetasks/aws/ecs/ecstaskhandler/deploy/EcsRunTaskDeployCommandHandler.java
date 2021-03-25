@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -9,7 +11,6 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -175,7 +176,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
           LogLevel.INFO);
       RunTaskResult runTaskResult = ecsDeployCommandTaskHelper.triggerRunTask(
           ecsRunTaskDeployRequest.getRegion(), cloudProviderSetting, encryptedDataDetails, runTaskRequest);
-      if (!EmptyPredicate.isEmpty(runTaskResult.getFailures())) {
+      if (!hasNone(runTaskResult.getFailures())) {
         ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       }
 
@@ -238,7 +239,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
           LogLevel.INFO);
       RunTaskResult runTaskResult = ecsDeployCommandTaskHelper.triggerRunTask(
           ecsRunTaskDeployRequest.getRegion(), cloudProviderSetting, encryptedDataDetails, runTaskRequest);
-      if (!EmptyPredicate.isEmpty(runTaskResult.getFailures())) {
+      if (!hasNone(runTaskResult.getFailures())) {
         ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       }
 
@@ -280,7 +281,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
                       -> task.getContainers().stream().anyMatch(
                           container -> container.getExitCode() != null && container.getExitCode() != 0))
                   .collect(Collectors.toList());
-          if (EmptyPredicate.isNotEmpty(tasksWithFailedContainers)) {
+          if (hasSome(tasksWithFailedContainers)) {
             String errorMsg = tasksWithFailedContainers.stream()
                                   .flatMap(task
                                       -> task.getContainers().stream().filter(
@@ -296,7 +297,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
                 "Containers in some tasks failed and are showing non zero exit code\n " + errorMsg);
           }
 
-          if (EmptyPredicate.isEmpty(notInStoppedStateTasks)) {
+          if (hasNone(notInStoppedStateTasks)) {
             return true;
           }
 

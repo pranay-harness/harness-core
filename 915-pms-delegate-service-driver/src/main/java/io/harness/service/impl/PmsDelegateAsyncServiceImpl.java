@@ -1,6 +1,6 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.lang.System.currentTimeMillis;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -71,7 +71,7 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
   }
 
   private boolean deleteProcessedResponses(Set<String> responsesToBeDeleted) {
-    if (isEmpty(responsesToBeDeleted)) {
+    if (hasNone(responsesToBeDeleted)) {
       return true;
     }
     boolean deleteSuccessful = false;

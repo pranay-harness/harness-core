@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.connector.ConnectorInfoDTO;
@@ -62,7 +62,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
 
-    if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
+    if (hasNone(latestDeploymentTimeSeriesAnalysis)) {
       return TransactionMetricInfoSummaryPageDTO.builder()
           .pageResponse(formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE))
           .build();
@@ -80,7 +80,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       timeSeriesAnalysis.getTransactionMetricSummaries()
           .stream()
           .filter(transactionMetricHostData
-              -> filterAnomalousMetrics(transactionMetricHostData, isNotEmpty(hostName), anomalousMetricsOnly))
+              -> filterAnomalousMetrics(transactionMetricHostData, hasSome(hostName), anomalousMetricsOnly))
           .forEach(transactionMetricHostData -> {
             TransactionMetricInfo transactionMetricInfo =
                 TransactionMetricInfo.builder()
@@ -93,7 +93,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                 .filter(hostData -> filterHostData(hostData, hostName, anomalousMetricsOnly))
                 .forEach(hostData -> nodeDataSet.add(hostData));
             transactionMetricInfo.setNodes(nodeDataSet);
-            if (isNotEmpty(nodeDataSet)) {
+            if (hasSome(nodeDataSet)) {
               transactionMetricInfoSet.add(transactionMetricInfo);
             }
           });

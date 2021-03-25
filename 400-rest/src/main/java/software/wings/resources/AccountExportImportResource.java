@@ -1,7 +1,7 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
@@ -194,7 +194,7 @@ public class AccountExportImportResource {
       }
     }
 
-    if (exportMode == ExportMode.SPECIFIC && isEmpty(entityTypes)) {
+    if (exportMode == ExportMode.SPECIFIC && hasNone(entityTypes)) {
       throw new IllegalArgumentException("Export type is ALL but no entity type is specified.");
     }
 
@@ -359,7 +359,7 @@ public class AccountExportImportResource {
 
     // 2. Find out all file IDs referred by KMS/CONFIG_FILE encrypted records.
     List<ObjectId> configFileIds = new ArrayList<>();
-    if (isNotEmpty(encryptedDataRecords)) {
+    if (hasSome(encryptedDataRecords)) {
       for (String encryptedDataRecord : encryptedDataRecords) {
         JsonElement encryptedDataElement = jsonParser.parse(encryptedDataRecord);
         // Only KMS type of encrypted records have file content saved in File serivce/GridFS, which need to be exported.
@@ -526,7 +526,7 @@ public class AccountExportImportResource {
 
     // PL-3126: When the 'accountName' query parameter is provided, it means the account name need to be renamed at
     // account migration/import time.
-    if (isNotEmpty(newAccountName)) {
+    if (hasSome(newAccountName)) {
       accountService.updateAccountName(accountId, newAccountName, newCompanyName);
     }
 
@@ -641,7 +641,7 @@ public class AccountExportImportResource {
         JsonObject userObject = user.getAsJsonObject();
         String userId = userObject.get("_id").getAsString();
         final String email = userObject.get("email").getAsString();
-        if (isEmpty(email)) {
+        if (hasNone(email)) {
           String userName = userObject.get("name").getAsString();
           // Ignore as this user doesn't have an email attribute
           log.info("User '{}' with id {} doesn't have an email attribute, it will be skipped from being imported.",
@@ -671,7 +671,7 @@ public class AccountExportImportResource {
     // 3. All references to the old user id in all records to be imported need to be replaced with the new user id
     // Typical reference to user ids are in 'createdBy/uuid', 'lastUpdatedBy/uuid' and user group membership.
     String result = collectionJson;
-    if (isNotEmpty(clashedUserIdMapping)) {
+    if (hasSome(clashedUserIdMapping)) {
       for (Entry<String, String> idMappingEntry : clashedUserIdMapping.entrySet()) {
         result = result.replaceAll("\"" + idMappingEntry.getKey() + "\"", "\"" + idMappingEntry.getValue() + "\"");
       }
@@ -732,7 +732,7 @@ public class AccountExportImportResource {
       Map<String, String> zipDataMap, String collectionName, Map<String, String> clashedUserIdMapping) {
     String zipEntryName = collectionName + JSON_FILE_SUFFIX;
     String json = zipDataMap.get(zipEntryName);
-    if (isNotEmpty(json)) {
+    if (hasSome(json)) {
       // Replace clashed user id with the new user id in the current system.
       json = replaceClashedUserIds(json, clashedUserIdMapping);
       return (JsonArray) jsonParser.parse(json);

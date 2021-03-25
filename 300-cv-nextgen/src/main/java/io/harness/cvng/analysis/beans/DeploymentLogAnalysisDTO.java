@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -102,7 +102,7 @@ public class DeploymentLogAnalysisDTO {
     }
 
     public List<Double> getControlData(int label) {
-      if (isEmpty(labelToControlDataMap) || !labelToControlDataMap.containsKey(label)) {
+      if (hasNone(labelToControlDataMap) || !labelToControlDataMap.containsKey(label)) {
         return new ArrayList<>();
       }
       return labelToControlDataMap.get(label);

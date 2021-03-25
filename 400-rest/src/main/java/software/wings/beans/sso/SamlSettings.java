@@ -1,7 +1,7 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -40,6 +40,6 @@ public class SamlSettings extends SSOSettings {
 
   @JsonProperty
   public boolean isAuthorizationEnabled() {
-    return isNotEmpty(groupMembershipAttr);
+    return hasSome(groupMembershipAttr);
   }
 }

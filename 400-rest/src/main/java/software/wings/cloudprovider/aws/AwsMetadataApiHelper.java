@@ -1,8 +1,8 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
@@ -35,7 +35,7 @@ public class AwsMetadataApiHelper {
   public String getDockerIdUsingEc2MetadataEndpointApi(Instance ec2Instance, Task taskRunningContainer,
       String containerName, ExecutionLogCallback executionLogCallback) throws IOException {
     String uri = generateTaskMetadataEndpointUrl(ec2Instance, executionLogCallback);
-    if (isNotEmpty(uri)) {
+    if (hasSome(uri)) {
       if (executionLogCallback != null) {
         printToExecutionLog(executionLogCallback, "Fetching container meta data from " + uri, INFO);
       }
@@ -50,7 +50,7 @@ public class AwsMetadataApiHelper {
       if (optionalTask.isPresent()) {
         TaskMetadata.Task task = optionalTask.get();
         List<TaskMetadata.Container> containers = task.getContainers();
-        if (isNotEmpty(containers)) {
+        if (hasSome(containers)) {
           TaskMetadata.Container mainContainer = containers.stream()
                                                      .filter(container -> containerName.equals(container.getName()))
                                                      .findFirst()
@@ -115,7 +115,7 @@ public class AwsMetadataApiHelper {
       dockerId = EMPTY;
     }
 
-    if (isEmpty(dockerId)) {
+    if (hasNone(dockerId)) {
       printToExecutionLog(executionLogCallback,
           "Failed to get dockerId using Metadata Endpoint as well. Recommended action is to update ECS Agent version",
           ERROR);

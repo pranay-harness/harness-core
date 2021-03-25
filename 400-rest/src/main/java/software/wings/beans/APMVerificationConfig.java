@@ -1,7 +1,7 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -82,7 +82,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   }
 
   public String getValidationUrl() {
-    if (isEmpty(validationUrl)) {
+    if (hasNone(validationUrl)) {
       return validationUrl;
     }
     try {
@@ -94,7 +94,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
 
   public Map<String, String> collectionHeaders() {
     Map<String, String> headers = new HashMap<>();
-    if (!isEmpty(headersList)) {
+    if (!hasNone(headersList)) {
       for (KeyValues keyValue : headersList) {
         if (keyValue.encrypted) {
           headers.put(keyValue.getKey(), "${" + keyValue.getKey() + "}");
@@ -108,7 +108,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
 
   public Map<String, String> collectionParams() {
     Map<String, String> params = new HashMap<>();
-    if (!isEmpty(optionsList)) {
+    if (!hasNone(optionsList)) {
       for (KeyValues keyValue : optionsList) {
         if (keyValue.encrypted) {
           params.put(keyValue.getKey(), "${" + keyValue.getKey() + "}");
@@ -124,7 +124,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       SecretManager secretManager, EncryptionService encryptionService) {
     try {
       Map<String, String> headers = new HashMap<>();
-      if (!isEmpty(headersList)) {
+      if (!hasNone(headersList)) {
         for (KeyValues keyValue : headersList) {
           if (keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
@@ -141,7 +141,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       }
 
       Map<String, String> options = new HashMap<>();
-      if (!isEmpty(optionsList)) {
+      if (!hasNone(optionsList)) {
         for (KeyValues keyValue : optionsList) {
           if (keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
@@ -188,11 +188,11 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   @Override
   public List<String> fetchRelevantEncryptedSecrets() {
     List<String> rv = new ArrayList<>();
-    if (isNotEmpty(headersList)) {
+    if (hasSome(headersList)) {
       headersList.forEach(keyValues -> rv.add(keyValues.value));
     }
 
-    if (isNotEmpty(optionsList)) {
+    if (hasSome(optionsList)) {
       optionsList.forEach(keyValues -> rv.add(keyValues.value));
     }
 
@@ -215,9 +215,9 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   public List<EncryptedDataDetail> encryptedDataDetails(
       SecretManager secretManager, List<List<KeyValues>> keyValueList) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    if (isNotEmpty(keyValueList)) {
+    if (hasSome(keyValueList)) {
       keyValueList.forEach(keyValue -> {
-        if (isNotEmpty(keyValue)) {
+        if (hasSome(keyValue)) {
           encryptedDataDetails.addAll(
               keyValue.stream()
                   .filter(entry -> entry.encrypted)
@@ -292,7 +292,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   }
 
   public String resolveSecretNameInUrlOrBody(String url) {
-    if (isEmpty(url)) {
+    if (hasNone(url)) {
       return url;
     }
     Pattern batchPattern = Pattern.compile(SECRET_REGEX);
@@ -307,7 +307,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
 
   public static List<KeyValues> getSecretNameIdKeyValueList(String url) {
     List<KeyValues> keyValuesList = new ArrayList<>();
-    if (!isEmpty(url)) {
+    if (!hasNone(url)) {
       Pattern secretPattern = Pattern.compile(SECRET_REGEX);
       Matcher matcher = secretPattern.matcher(url);
       while (matcher.find()) {

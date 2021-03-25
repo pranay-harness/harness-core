@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.interrupts.ExecutionInterruptType.planLevelInterrupts;
 import static io.harness.interrupts.Interrupt.State;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
@@ -53,7 +53,7 @@ public class InterruptServiceImpl implements InterruptService {
   @Override
   public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId) {
     List<Interrupt> interrupts = fetchActivePlanLevelInterrupts(planExecutionId);
-    if (isEmpty(interrupts)) {
+    if (hasNone(interrupts)) {
       return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
     }
     if (interrupts.size() > 1) {

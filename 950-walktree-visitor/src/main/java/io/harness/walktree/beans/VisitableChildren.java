@@ -1,6 +1,6 @@
 package io.harness.walktree.beans;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +17,6 @@ public class VisitableChildren {
   }
 
   public boolean isEmpty() {
-    return EmptyPredicate.isEmpty(visitableChildList);
+    return hasNone(visitableChildList);
   }
 }

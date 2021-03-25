@@ -1,11 +1,11 @@
 package software.wings.yaml.trigger;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Service;
@@ -38,7 +38,7 @@ public class ManifestTriggerConditionHandler extends TriggerConditionYamlHandler
     String versionRegex = yaml.getVersionRegex();
     String serviceId;
     String manifestId;
-    if (EmptyPredicate.isNotEmpty(serviceName)) {
+    if (hasSome(serviceName)) {
       Service service = yamlHelper.getServiceByName(appId, serviceName);
       notNullCheck("Service with name " + serviceName + " might be deleted", service, USER);
       serviceId = service.getUuid();

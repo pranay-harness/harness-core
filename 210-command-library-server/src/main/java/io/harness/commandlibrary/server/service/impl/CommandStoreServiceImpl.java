@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.commandlibrary.server.utils.CommandUtils.populateCommandDTO;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -16,7 +17,6 @@ import io.harness.commandlibrary.api.dto.CommandStoreDTO;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandEntity.CommandEntityKeys;
@@ -48,7 +48,7 @@ public class CommandStoreServiceImpl implements CommandStoreService {
       String commandStoreName, PageRequest<CommandEntity> pageRequest, String tag) {
     pageRequest.addFilter(CommandEntityKeys.commandStoreName, EQ, commandStoreName);
 
-    if (EmptyPredicate.isNotEmpty(tag)) {
+    if (hasSome(tag)) {
       pageRequest.addFilter(CommandEntityKeys.tags, CONTAINS, tag);
     }
 

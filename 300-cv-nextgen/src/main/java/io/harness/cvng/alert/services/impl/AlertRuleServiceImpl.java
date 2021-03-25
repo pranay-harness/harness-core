@@ -1,7 +1,7 @@
 package io.harness.cvng.alert.services.impl;
 
 import static io.harness.cvng.alert.entities.AlertRule.convertFromDTO;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.Team;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
@@ -89,7 +89,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
       String accountId, String orgIdentifier, String projectIdentifier, AlertRuleDTO alertRuleDTO) {
     AlertRule alertRule = convertFromDTO(alertRuleDTO);
 
-    Preconditions.checkState(isNotEmpty(alertRuleDTO.getUuid()), "uuid must be present ");
+    Preconditions.checkState(hasSome(alertRuleDTO.getUuid()), "uuid must be present ");
 
     hPersistence.save(alertRule);
   }
@@ -130,7 +130,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .lessThan(riskValue)
                                      .asList();
 
-    if (isNotEmpty(alertRules)) {
+    if (hasSome(alertRules)) {
       String uiUrl = getRiskUrl(accountId, orgIdentifier, projectIdentifier, timeStamp);
       alertRules.stream()
           .filter(alertRule
@@ -223,7 +223,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .asList();
 
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d/MM/hh:mm aaa z");
-    if (isNotEmpty(alertRules)) {
+    if (hasSome(alertRules)) {
       String uiUrl = getUrlFromActivityType(
           accountId, orgIdentifier, projectIdentifier, serviceIdentifier, activityType, deploymentTag);
       alertRules.stream()

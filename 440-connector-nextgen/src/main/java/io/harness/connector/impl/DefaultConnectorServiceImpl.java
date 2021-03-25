@@ -3,8 +3,8 @@ package io.harness.connector.impl;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
@@ -148,7 +148,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   private void assureThatTheSecretIsValidAndItExists(String accountIdentifier, ConnectorInfoDTO connectorDTO) {
     List<DecryptableEntity> decryptableEntities = connectorDTO.getConnectorConfig().getDecryptableEntities();
-    if (isEmpty(decryptableEntities)) {
+    if (hasNone(decryptableEntities)) {
       return;
     }
     Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
@@ -157,7 +157,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                                 .orgIdentifier(connectorDTO.getOrgIdentifier())
                                 .projectIdentifier(connectorDTO.getProjectIdentifier())
                                 .build();
-    if (isNotEmpty(secrets)) {
+    if (hasSome(secrets)) {
       secrets.forEach(secret -> secretRefInputValidationHelper.validateTheSecretInput(secret, baseNGAccess));
     }
   }
@@ -166,21 +166,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String orgIdentifier = connectorDTO.getConnectorInfo().getOrgIdentifier();
     String projectIdentifier = connectorDTO.getConnectorInfo().getProjectIdentifier();
 
-    if (isNotEmpty(projectIdentifier)) {
+    if (hasSome(projectIdentifier)) {
       // its a project level connector
-      if (isEmpty(orgIdentifier)) {
+      if (hasNone(orgIdentifier)) {
         throw new InvalidRequestException(
             String.format("Project %s specified without the org Identifier", projectIdentifier));
       }
       checkThatTheProjectExists(orgIdentifier, projectIdentifier, accountIdentifier);
-    } else if (isNotEmpty(orgIdentifier)) {
+    } else if (hasSome(orgIdentifier)) {
       // its a org level connector
       checkThatTheOrganizationExists(orgIdentifier, accountIdentifier);
     }
   }
 
   private void checkThatTheOrganizationExists(String orgIdentifier, String accountIdentifier) {
-    if (isNotEmpty(orgIdentifier)) {
+    if (hasSome(orgIdentifier)) {
       final Optional<Organization> organization = organizationService.get(accountIdentifier, orgIdentifier);
       if (!organization.isPresent()) {
         throw new NotFoundException(String.format("org [%s] not found.", orgIdentifier));
@@ -189,7 +189,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   private void checkThatTheProjectExists(String orgIdentifier, String projectIdentifier, String accountIdentifier) {
-    if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
+    if (hasSome(orgIdentifier) && hasSome(projectIdentifier)) {
       final Optional<Project> project = projectService.get(accountIdentifier, orgIdentifier, projectIdentifier);
       if (!project.isPresent()) {
         throw new NotFoundException(String.format("project [%s] not found.", projectIdentifier));
@@ -457,7 +457,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = ex.getMessage();
-      if (isNotEmpty(errorMessage)) {
+      if (hasSome(errorMessage)) {
         String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
         List<ErrorDetail> errorDetail = Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage));
         validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
@@ -517,7 +517,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
-    if (isEmpty(connectorFQN)) {
+    if (hasNone(connectorFQN)) {
       return emptyList();
     }
 

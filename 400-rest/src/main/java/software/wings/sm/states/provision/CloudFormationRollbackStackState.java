@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -137,7 +137,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
   private Optional<CloudFormationRollbackInfoElement> getRollbackElement(ExecutionContext context) {
     List<CloudFormationRollbackInfoElement> allRollbackElements =
         context.getContextElementList(CLOUD_FORMATION_ROLLBACK);
-    if (isNotEmpty(allRollbackElements)) {
+    if (hasSome(allRollbackElements)) {
       return allRollbackElements.stream()
           .filter(element -> element.getProvisionerId().equals(provisionerId))
           .findFirst();
@@ -197,7 +197,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       List<NameValuePair> allVariables = configParameter.getVariables();
       Map<String, String> textVariables = null;
       Map<String, EncryptedDataDetail> encryptedTextVariables = null;
-      if (isNotEmpty(allVariables)) {
+      if (hasSome(allVariables)) {
         textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
         encryptedTextVariables =
             infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
@@ -236,7 +236,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           DelegateTask.builder()
               .accountId(executionContext.getAccountId())
               .waitId(activityId)
-              .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getAppId())
               .data(TaskData.builder()
                         .async(true)
@@ -306,7 +306,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
-              .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
               .data(TaskData.builder()
                         .async(true)
@@ -341,7 +341,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
-              .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .tags(hasSome(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
               .data(TaskData.builder()
                         .async(true)

@@ -1,7 +1,7 @@
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.manage.GlobalContextManager;
@@ -108,16 +108,16 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       String appId = queryParameters.getFirst("appId");
 
       // Special handling for AppResource
-      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && isEmpty(accountId) && isEmpty(appId)) {
+      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && hasNone(accountId) && hasNone(appId)) {
         appId = requestContext.getUriInfo().getPathParameters().getFirst("appId");
       }
 
-      if (isEmpty(accountId) && isEmpty(appId)) {
+      if (hasNone(accountId) && hasNone(appId)) {
         log.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
         return;
       }
 
-      accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
+      accountId = hasNone(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
 
       authService.evictUserPermissionCacheForAccount(accountId, rebuildUserPermissionInfo);
     } catch (Exception ex) {
@@ -133,16 +133,16 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       String appId = queryParameters.getFirst("appId");
 
       // Special handling for AppResource
-      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && isEmpty(accountId) && isEmpty(appId)) {
+      if (resourcePath.startsWith(RESOURCE_URI_CREATE_APP) && hasNone(accountId) && hasNone(appId)) {
         appId = requestContext.getUriInfo().getPathParameters().getFirst("appId");
       }
 
-      if (isEmpty(accountId) && isEmpty(appId)) {
+      if (hasNone(accountId) && hasNone(appId)) {
         log.error("Cache eviction failed for resource 2 [{}]", ((ContainerRequest) requestContext).getRequestUri());
         return;
       }
 
-      accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
+      accountId = hasNone(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
 
       authService.evictUserPermissionAndRestrictionCacheForAccount(
           accountId, rebuildUserPermissionInfo, rebuildUserRestrictionInfo);

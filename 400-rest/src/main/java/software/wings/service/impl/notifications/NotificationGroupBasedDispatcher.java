@@ -1,7 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static java.util.stream.Collectors.toList;
 
@@ -32,7 +32,7 @@ public class NotificationGroupBasedDispatcher implements NotificationDispatcher<
 
   @Override
   public void dispatch(List<Notification> notifications, NotificationGroup notificationGroup) {
-    if (isEmpty(notifications) || null == notificationGroup) {
+    if (hasNone(notifications) || null == notificationGroup) {
       return;
     }
 

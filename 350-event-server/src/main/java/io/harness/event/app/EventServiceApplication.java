@@ -1,6 +1,6 @@
 package io.harness.event.app;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -142,7 +142,7 @@ public class EventServiceApplication {
 
   private static void registerStores(EventServiceConfig config, Injector injector) {
     final String eventsMongoUri = config.getEventsMongo().getUri();
-    if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
+    if (hasSome(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
       final HPersistence hPersistence = injector.getInstance(HPersistence.class);
       hPersistence.register(EVENTS_STORE, config.getEventsMongo().getUri());
     }

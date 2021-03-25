@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.sync;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.Base.ID_KEY2;
 
@@ -62,7 +62,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private List<YamlGitConfig> filterYamlGitConfigWithAccessibleEntityAndAddEntityName(
       List<YamlGitConfig> yamlGitConfigs, String accountId) {
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       return yamlGitConfigs;
     }
     Map<String, String> namesOfAppsAccessibleToUser = getAppIdNameMapForAppAccessibleToUser(yamlGitConfigs, accountId);
@@ -100,7 +100,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     }
     List<String> filteredAppIds =
         applicationIds.stream().filter(appId -> allAppsAllowedToTheUser.contains(appId)).collect(Collectors.toList());
-    if (isEmpty(filteredAppIds)) {
+    if (hasNone(filteredAppIds)) {
       return Collections.emptyList();
     }
     PageRequest<Application> req = aPageRequest()
@@ -120,7 +120,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
             .map(yamlGitConfig -> yamlGitConfig.getEntityId())
             .collect(Collectors.toSet());
     List<Application> applications = getApplicationsAllowedToUser(applicationIds, accountId);
-    if (isEmpty(applications)) {
+    if (hasNone(applications)) {
       return Collections.emptyMap();
     }
     return applications.stream().collect(Collectors.toMap(Application::getUuid, Application::getName));
@@ -141,7 +141,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
                                              .in(yamlGitConfigIds)
                                              .project(ApplicationKeys.appId, true)
                                              .asList();
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       return Collections.emptySet();
     }
     return yamlGitConfigs.stream().map(config -> config.getAppId()).collect(Collectors.toSet());

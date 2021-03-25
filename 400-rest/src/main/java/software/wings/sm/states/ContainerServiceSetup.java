@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -211,7 +211,7 @@ public abstract class ContainerServiceSetup extends State {
       List<String> allDelegateSelectors = new ArrayList<>();
       List<String> delegateSelectorsFromK8sCloudProvider =
           K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(settingAttribute.getValue());
-      if (isNotEmpty(delegateSelectorsFromK8sCloudProvider)) {
+      if (hasSome(delegateSelectorsFromK8sCloudProvider)) {
         allDelegateSelectors.addAll(delegateSelectorsFromK8sCloudProvider);
       }
 
@@ -227,11 +227,11 @@ public abstract class ContainerServiceSetup extends State {
               .cloudProviderCredentials(encryptedDataDetails)
               .serviceVariables(serviceVariables)
               .safeDisplayServiceVariables(safeDisplayServiceVariables)
-              .delegateSelectors(isNotEmpty(allDelegateSelectors) ? allDelegateSelectors : null)
+              .delegateSelectors(hasSome(allDelegateSelectors) ? allDelegateSelectors : null)
               .build();
 
       List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
-      if (isNotEmpty(awsConfigTags)) {
+      if (hasSome(awsConfigTags)) {
         allTaskTags.addAll(awsConfigTags);
       }
 
@@ -248,7 +248,7 @@ public abstract class ContainerServiceSetup extends State {
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
-              .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
+              .tags(hasSome(allTaskTags) ? allTaskTags : null)
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
               .build());

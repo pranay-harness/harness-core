@@ -1,6 +1,6 @@
 package io.harness.pms.exception;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
@@ -50,7 +50,7 @@ public class WingsExceptionMapper<T> implements ExceptionMapper<WingsException> 
 
   private Response.Status resolveHttpStatus(List<ResponseMessage> responseMessageList) {
     ErrorCode errorCode = null;
-    if (isNotEmpty(responseMessageList)) {
+    if (hasSome(responseMessageList)) {
       errorCode = responseMessageList.get(responseMessageList.size() - 1).getCode();
     }
     if (errorCode != null) {

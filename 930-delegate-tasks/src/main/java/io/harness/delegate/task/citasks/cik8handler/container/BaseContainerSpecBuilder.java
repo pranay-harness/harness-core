@@ -6,7 +6,7 @@ package io.harness.delegate.task.citasks.cik8handler.container;
  * container specification builder.
  */
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DIND_TAG_REGEX;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DOCKER_IMAGE_NAME;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_ACR_IMAGE_NAME;
@@ -102,7 +102,7 @@ public abstract class BaseContainerSpecBuilder {
     ResourceRequirements resourceRequirements = getResourceRequirements(containerParams.getContainerResourceParams());
 
     String imageName = imageDetails.getName();
-    if (isNotEmpty(imageDetails.getTag())) {
+    if (hasSome(imageDetails.getTag())) {
       imageName = imageName + ":" + imageDetails.getTag();
     }
 
@@ -120,7 +120,7 @@ public abstract class BaseContainerSpecBuilder {
       containerBuilder.withSecurityContext(new SecurityContextBuilder().withPrivileged(true).build());
     }
 
-    if (isNotEmpty(containerParams.getWorkingDir())) {
+    if (hasSome(containerParams.getWorkingDir())) {
       containerBuilder.withWorkingDir(containerParams.getWorkingDir());
     }
 
@@ -140,7 +140,7 @@ public abstract class BaseContainerSpecBuilder {
       return true;
     }
 
-    if (imageName.equals(DOCKER_IMAGE_NAME) && isNotEmpty(tag) && tag.matches(DIND_TAG_REGEX)) {
+    if (imageName.equals(DOCKER_IMAGE_NAME) && hasSome(tag) && tag.matches(DIND_TAG_REGEX)) {
       return true;
     }
     return false;

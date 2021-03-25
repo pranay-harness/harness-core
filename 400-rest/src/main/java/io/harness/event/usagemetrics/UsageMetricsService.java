@@ -2,8 +2,8 @@ package io.harness.event.usagemetrics;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.event.model.EventConstants.ACCOUNT_ID;
 import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
 import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
@@ -96,7 +96,7 @@ public class UsageMetricsService {
   public void createVerificationUsageEvents(Account account) {
     List<StateType> stateTypes = VerificationConstants.getAnalysisStates();
     List<CVConfiguration> cvConfigurationList = cvConfigurationService.listConfigurations(account.getUuid());
-    if (isNotEmpty(cvConfigurationList)) {
+    if (hasSome(cvConfigurationList)) {
       for (StateType stateType : stateTypes) {
         Map properties = new HashMap();
         properties.put(ACCOUNT_ID, account.getUuid());
@@ -140,7 +140,7 @@ public class UsageMetricsService {
       PageRequest<Workflow> pageRequest =
           aPageRequest().addFilter("appId", Operator.IN, appIds.toArray()).addFieldsIncluded("_id").build();
       final PageResponse<Workflow> workflowsList = workflowService.listWorkflows(pageRequest);
-      return isEmpty(workflowsList) ? 0 : workflowsList.getTotal();
+      return hasNone(workflowsList) ? 0 : workflowsList.getTotal();
     }
     return 0;
   }

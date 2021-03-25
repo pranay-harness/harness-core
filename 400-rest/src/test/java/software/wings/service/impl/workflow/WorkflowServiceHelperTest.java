@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow;
 
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -95,7 +96,6 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -1722,7 +1722,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThat(phaseStepList).hasSize(stepCount);
 
     for (int index = 0; index < expectedNames.size(); index++) {
-      if (EmptyPredicate.isNotEmpty(expectedNames.get(index))) {
+      if (hasSome(expectedNames.get(index))) {
         PhaseStep phaseStep = phaseStepList.get(index);
         assertThat(phaseStep.getSteps()).isNotNull();
         assertThat(phaseStep.getSteps()).hasSize(1);

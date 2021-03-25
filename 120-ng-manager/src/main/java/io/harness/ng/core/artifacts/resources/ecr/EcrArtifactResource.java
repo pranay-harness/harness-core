@@ -1,5 +1,7 @@
 package io.harness.ng.core.artifacts.resources.ecr;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrBuildDetailsDTO;
@@ -7,7 +9,6 @@ import io.harness.cdng.artifact.resources.ecr.dtos.EcrRequestDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrResponseDTO;
 import io.harness.cdng.artifact.resources.ecr.service.EcrResourceService;
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.artifacts.resources.util.ArtifactResourceUtils;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -135,8 +136,7 @@ public class EcrArtifactResource {
       try {
         ResponseDTO<EcrBuildDetailsDTO> lastSuccessfulBuild = getLastSuccessfulBuild(
             imagePath, ecrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier, requestDTO);
-        if (lastSuccessfulBuild.getData() != null
-            && EmptyPredicate.isNotEmpty(lastSuccessfulBuild.getData().getTag())) {
+        if (lastSuccessfulBuild.getData() != null && hasSome(lastSuccessfulBuild.getData().getTag())) {
           isValidArtifact = true;
         }
       } catch (Exception e) {

@@ -1,6 +1,6 @@
 package io.harness.cvng.migration.list;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
@@ -28,7 +28,7 @@ public class RecoverMonitoringSourceWorkerId implements CVNGMigration {
 
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask -> {
       log.info("Starting migration for {}", monitoringSourcePerpetualTask);
-      if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
+      if (hasSome(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
         dataCollectionTaskService.deletePerpetualTasks(
             monitoringSourcePerpetualTask.getAccountId(), monitoringSourcePerpetualTask.getPerpetualTaskId());
       }

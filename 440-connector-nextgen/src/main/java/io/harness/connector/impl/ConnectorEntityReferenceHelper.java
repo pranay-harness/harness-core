@@ -1,7 +1,7 @@
 package io.harness.connector.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
@@ -67,7 +67,7 @@ public class ConnectorEntityReferenceHelper {
     String connectorFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
         connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
     List<DecryptableEntity> decryptableEntities = connectorInfoDTO.getConnectorConfig().getDecryptableEntities();
-    if (isEmpty(decryptableEntities)) {
+    if (hasNone(decryptableEntities)) {
       return produceEventForSetupUsage(
           connectorInfoDTO, new ArrayList<>(), accountIdentifier, connectorFQN, new ArrayList<>(), logMessage);
     }
@@ -91,7 +91,7 @@ public class ConnectorEntityReferenceHelper {
         connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
 
     List<DecryptableEntity> decryptableEntities = connectorInfoDTO.getConnectorConfig().getDecryptableEntities();
-    if (isEmpty(decryptableEntities)) {
+    if (hasNone(decryptableEntities)) {
       return true;
     }
     Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);

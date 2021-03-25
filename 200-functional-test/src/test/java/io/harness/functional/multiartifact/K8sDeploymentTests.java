@@ -1,6 +1,6 @@
 package io.harness.functional.multiartifact;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_BLUE_GREEN_TEST;
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_CANARY_TEST;
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_ROLLING_TEST;
@@ -175,7 +175,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     // get artifact variables from deployment metadata for given workflow
     List<ArtifactVariable> artifactVariables = workflowGenerator.getArtifactVariablesFromDeploymentMetadataForWorkflow(
         application.getUuid(), workflow.getUuid());
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         Artifact artifact = MultiArtifactTestUtils.collectArtifact(
             bearerToken, account.getUuid(), artifactVariable.getArtifactStreamSummaries().get(0).getArtifactStreamId());

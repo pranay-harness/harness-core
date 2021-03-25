@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
@@ -142,7 +142,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     SweepingOutput sweepingOutput = findSweepingOutput(inquiry);
     if (sweepingOutput instanceof InstanceInfoVariables) {
       InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
-      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+      if (hasSome(instanceInfoVariables.getInstanceElements())) {
         instanceDetails.addAll(instanceInfoVariables.getInstanceDetails());
         if (newInstancesOnly) {
           instanceDetails = instanceDetails.stream()
@@ -188,7 +188,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     SweepingOutput sweepingOutput = findSweepingOutput(inquiry);
     if (sweepingOutput instanceof InstanceInfoVariables) {
       InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
-      if (isNotEmpty(instanceInfoVariables.getInstanceElements())) {
+      if (hasSome(instanceInfoVariables.getInstanceElements())) {
         elements.addAll(instanceInfoVariables.getInstanceElements());
         if (newInstancesOnly) {
           elements =

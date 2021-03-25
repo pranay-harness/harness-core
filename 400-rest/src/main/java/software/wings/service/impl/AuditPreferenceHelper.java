@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -79,7 +79,7 @@ public class AuditPreferenceHelper {
                          .build();
     } else {
       log.info("No Account level or App level criteria were mentioned.");
-      if (isNotEmpty(auditPreference.getOperationTypes())) {
+      if (hasSome(auditPreference.getOperationTypes())) {
         List<String> opTypes = auditPreference.getOperationTypes();
         String[] opTypeArr = opTypes.toArray(new String[opTypes.size()]);
         searchFilter = buildSearchFilter(AuditHeaderKeys.affectedResourceOp, IN, opTypeArr);
@@ -105,7 +105,7 @@ public class AuditPreferenceHelper {
 
   private SearchFilter generatePageRequestWithOnlyAppLevelResourceCriteria(AuditPreference auditPreference) {
     ApplicationAuditFilter applicationAuditFilter = auditPreference.getApplicationAuditFilter();
-    boolean filterHasOperationTypes = isNotEmpty(auditPreference.getOperationTypes());
+    boolean filterHasOperationTypes = hasSome(auditPreference.getOperationTypes());
     SearchFilter searchFilter = null;
 
     if (appFilterContainsResourceIds(applicationAuditFilter)) {
@@ -128,7 +128,7 @@ public class AuditPreferenceHelper {
           : applicationAuditFilter.getAppIds();
       String[] appIdsArr = appIds.toArray(new String[appIds.size()]);
 
-      if (isNotEmpty(appIds)) {
+      if (hasSome(appIds)) {
         if (!filterHasOperationTypes) {
           searchFilter = buildSearchFilter(AuditHeaderKeys.appIdEntityRecord, IN, appIdsArr);
         } else {
@@ -180,7 +180,7 @@ public class AuditPreferenceHelper {
    */
   private SearchFilter generatePageRequestWithOnlyAccLevelResourceCriteria(AuditPreference auditPreference) {
     AccountAuditFilter accountAuditFilter = auditPreference.getAccountAuditFilter();
-    boolean filterHasOperationTypes = isNotEmpty(auditPreference.getOperationTypes());
+    boolean filterHasOperationTypes = hasSome(auditPreference.getOperationTypes());
     SearchFilter searchFilter = null;
 
     if (accountFilterContainsResourceIds(accountAuditFilter)) {
@@ -226,7 +226,7 @@ public class AuditPreferenceHelper {
     PageRequest pageRequest = aPageRequest().build();
     searchFilterList.forEach(pageRequest::addFilter);
 
-    if (isNotEmpty(auditPreference.getOperationTypes())) {
+    if (hasSome(auditPreference.getOperationTypes())) {
       pageRequest.addFilter(
           generateSearchFilterForOpTypeEleMatch(auditPreference.getOperationTypes(), "affectedResourceOperation"));
     }
@@ -254,7 +254,7 @@ public class AuditPreferenceHelper {
 
     setCreatedAtFilter(auditHeaderPageRequest, auditPreference);
 
-    if (isNotEmpty(auditPreference.getCreatedByUserIds())) {
+    if (hasSome(auditPreference.getCreatedByUserIds())) {
       List<String> userIds = auditPreference.getCreatedByUserIds();
       auditHeaderPageRequest.addFilter(AuditHeaderKeys.createdById, IN, userIds.toArray(new String[userIds.size()]));
     }
@@ -343,26 +343,26 @@ public class AuditPreferenceHelper {
   }
 
   private boolean appFilterContainsOnlyResourceTypes(ApplicationAuditFilter applicationAuditFilter) {
-    return isEmpty(applicationAuditFilter.getAppIds()) && isNotEmpty(applicationAuditFilter.getResourceTypes());
+    return hasNone(applicationAuditFilter.getAppIds()) && hasSome(applicationAuditFilter.getResourceTypes());
   }
 
   private boolean appFilterHasNoData(ApplicationAuditFilter applicationAuditFilter) {
-    return isEmpty(applicationAuditFilter.getAppIds()) && isEmpty(applicationAuditFilter.getResourceTypes());
+    return hasNone(applicationAuditFilter.getAppIds()) && hasNone(applicationAuditFilter.getResourceTypes());
   }
 
   private boolean appFilterContainsOnlyAppIds(ApplicationAuditFilter applicationAuditFilter) {
-    return isNotEmpty(applicationAuditFilter.getAppIds()) && isEmpty(applicationAuditFilter.getResourceTypes());
+    return hasSome(applicationAuditFilter.getAppIds()) && hasNone(applicationAuditFilter.getResourceTypes());
   }
 
   private boolean appFilterContainsResourceIds(ApplicationAuditFilter applicationAuditFilter) {
-    return isNotEmpty(applicationAuditFilter.getResourceIds());
+    return hasSome(applicationAuditFilter.getResourceIds());
   }
 
   private boolean accountFilterContainsResourceIds(AccountAuditFilter accountAuditFilter) {
-    return isNotEmpty(accountAuditFilter.getResourceIds());
+    return hasSome(accountAuditFilter.getResourceIds());
   }
 
   private boolean accountFilterHasNoData(AccountAuditFilter accountAuditFilter) {
-    return isEmpty(accountAuditFilter.getResourceTypes()) && isEmpty(accountAuditFilter.getResourceIds());
+    return hasNone(accountAuditFilter.getResourceTypes()) && hasNone(accountAuditFilter.getResourceIds());
   }
 }

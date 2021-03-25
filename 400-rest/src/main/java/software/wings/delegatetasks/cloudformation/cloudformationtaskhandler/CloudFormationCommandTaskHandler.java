@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
@@ -47,11 +47,11 @@ public abstract class CloudFormationCommandTaskHandler {
 
   public Optional<Stack> getIfStackExists(String customStackName, String suffix, AwsConfig awsConfig, String region) {
     List<Stack> stacks = awsHelperService.getAllStacks(region, new DescribeStacksRequest(), awsConfig);
-    if (isEmpty(stacks)) {
+    if (hasNone(stacks)) {
       return Optional.empty();
     }
 
-    if (isNotEmpty(customStackName)) {
+    if (hasSome(customStackName)) {
       return stacks.stream().filter(stack -> stack.getStackName().equals(customStackName)).findFirst();
     } else {
       return stacks.stream().filter(stack -> stack.getStackName().endsWith(suffix)).findFirst();
@@ -111,7 +111,7 @@ public abstract class CloudFormationCommandTaskHandler {
   }
 
   private String getStatusReason(String reason) {
-    return isNotEmpty(reason) ? reason : StringUtils.EMPTY;
+    return hasSome(reason) ? reason : StringUtils.EMPTY;
   }
 
   protected abstract CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,

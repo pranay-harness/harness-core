@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.CollectionUtils.isEqualCollection;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
@@ -252,7 +252,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     checkValidEncryptedReference(serviceVariable);
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
     // variables with type ARTIFACT have null value
-    if (isNotEmpty(serviceVariable.getValue())) {
+    if (hasSome(serviceVariable.getValue())) {
       executorService.submit(
           () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
     }
@@ -268,7 +268,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     Map<String, Object> updateMap = new HashMap<>();
-    if (isNotEmpty(serviceVariable.getValue())) {
+    if (hasSome(serviceVariable.getValue())) {
       updateMap.put(ServiceVariableKeys.value, serviceVariable.getValue());
     }
     if (serviceVariable.getType() != null) {
@@ -288,7 +288,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       updateMap.put(ServiceVariableKeys.accountId, accountId);
     }
 
-    if (isNotEmpty(updateMap)) {
+    if (hasSome(updateMap)) {
       updateFields(serviceVariable, savedServiceVariable, updateMap, syncFromGit);
     }
     return serviceVariable;
@@ -330,7 +330,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
-    if (isNotEmpty(modified)) {
+    if (hasSome(modified)) {
       for (ServiceVariable serviceVariable1 : modified) {
         accountId = appService.getAccountIdByAppId(serviceVariable1.getAppId());
         yamlPushService.pushYamlChangeSet(
@@ -492,14 +492,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         return;
     }
 
-    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+    if (!hasNone(envId) && !envId.equals(GLOBAL_ENV_ID)) {
       Environment environment = environmentService.get(appId, envId);
       if (environment != null) {
         encryptedData.addEnvironment(envId, environment.getName());
       }
     }
 
-    if (!isEmpty(serviceId)) {
+    if (!hasNone(serviceId)) {
       Service service = serviceResourceService.getWithDetails(appId, serviceId);
       if (service != null) {
         encryptedData.addService(serviceId, service.getName());
@@ -549,11 +549,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         throw new IllegalArgumentException("Invalid entity type " + savedServiceVariable.getEntityType());
     }
 
-    if (!isEmpty(serviceId)) {
+    if (!hasNone(serviceId)) {
       encryptedData.removeService(serviceId, serviceResourceService.getWithDetails(appId, serviceId).getName());
     }
 
-    if (!isEmpty(envId) && !envId.equals(GLOBAL_ENV_ID)) {
+    if (!hasNone(envId) && !envId.equals(GLOBAL_ENV_ID)) {
       Environment environment = environmentService.get(appId, envId);
       encryptedData.removeEnvironment(envId, environment.getName());
     }
@@ -642,7 +642,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     yamlPushService.pushYamlChangeSet(updatedServiceVariable.getAccountId(), serviceVariable, updatedServiceVariable,
         Event.Type.UPDATE, syncFromGit, false);
     // variables with type ARTIFACT have null value
-    if (isNotEmpty(serviceVariable.getValue())) {
+    if (hasSome(serviceVariable.getValue())) {
       serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
     }
     executorService.submit(() -> addAndSaveSearchTags(serviceVariable));

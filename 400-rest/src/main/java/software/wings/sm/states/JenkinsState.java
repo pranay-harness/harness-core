@@ -6,8 +6,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -236,7 +236,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String resolvedJenkinsConfigTemplate = null;
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression templateExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), JENKINS_CONFIG_ID_KEY);
       if (templateExpression != null) {
@@ -279,7 +279,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     }
     String evaluatedJobName = context.renderExpression(jobName);
 
-    Map<String, String> jobParameterMap = isEmpty(jobParameters)
+    Map<String, String> jobParameterMap = hasNone(jobParameters)
         ? Collections.emptyMap()
         : jobParameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
 
@@ -290,7 +290,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     displayedParams.forEach(
         (String key, String value) -> displayedParams.put(key, context.renderExpressionSecured(value)));
     Map<String, String> evaluatedFilePathsForAssertion = new HashMap<>();
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (hasSome(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry
           -> evaluatedFilePathsForAssertion.put(
               context.renderExpression(filePathAssertionEntry.getFilePath()), filePathAssertionEntry.getAssertion()));
@@ -370,10 +370,10 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, ResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
     String resolvedJenkinsConfigTemplate = null;
-    if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
+    if (hasNone(jenkinsExecutionResponse.queuedBuildUrl)) {
       return ExecutionResponse.builder().async(true).executionStatus(FAILED).build();
     }
-    if (!isEmpty(getTemplateExpressions())) {
+    if (!hasNone(getTemplateExpressions())) {
       TemplateExpression templateExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), JENKINS_CONFIG_ID_KEY);
       if (templateExpression != null) {
@@ -471,7 +471,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     jenkinsExecutionData.setEnvVars(jenkinsExecutionResponse.getEnvVars());
 
     // Async response for START_TASK received, start POLL_TASK
-    if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
+    if (hasSome(jenkinsExecutionResponse.getSubTaskType().name())
         && jenkinsExecutionResponse.getSubTaskType().name().equals(JenkinsSubTaskType.START_TASK.name())) {
       if (SUCCESS != jenkinsExecutionResponse.getExecutionStatus()) {
         updateActivityStatus(jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getAppId(),
@@ -482,7 +482,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
             .errorMessage(jenkinsExecutionResponse.getErrorMessage())
             .build();
       }
-      if (isNotEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
+      if (hasSome(jenkinsExecutionResponse.getQueuedBuildUrl())) {
         // Set time taken for Start Task
         updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
             ((ExecutionContextImpl) context).fetchRequiredApp().getUuid(), RUNNING);
@@ -536,11 +536,11 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   public List<String> getPatternsForRequiredContextElementType() {
     List<String> patterns = new ArrayList<>();
     patterns.add(jobName);
-    if (isNotEmpty(jobParameters)) {
+    if (hasSome(jobParameters)) {
       jobParameters.forEach(parameterEntry -> patterns.add(parameterEntry.getValue()));
     }
 
-    if (isNotEmpty(filePathsForAssertion)) {
+    if (hasSome(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> patterns.add(filePathAssertionEntry.getFilePath()));
     }
     return patterns;

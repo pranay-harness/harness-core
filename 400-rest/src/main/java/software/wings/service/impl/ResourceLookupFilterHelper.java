@@ -6,8 +6,8 @@ import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.OR;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -47,17 +47,17 @@ public class ResourceLookupFilterHelper {
     }
 
     List<String> appIds = resourceLookupFilter.getAppIds();
-    if (isNotEmpty(appIds)) {
+    if (hasSome(appIds)) {
       pageRequest.addFilter(ResourceLookupKeys.appId, IN, appIds.toArray());
     }
 
     List<String> resourceTypes = resourceLookupFilter.getResourceTypes();
-    if (isNotEmpty(resourceTypes)) {
+    if (hasSome(resourceTypes)) {
       pageRequest.addFilter(ResourceLookupKeys.resourceType, IN, resourceTypes.toArray());
     }
 
     HarnessTagFilter harnessTagFilter = resourceLookupFilter.getHarnessTagFilter();
-    if (harnessTagFilter == null || isEmpty(harnessTagFilter.getConditions())) {
+    if (harnessTagFilter == null || hasNone(harnessTagFilter.getConditions())) {
       return;
     }
 

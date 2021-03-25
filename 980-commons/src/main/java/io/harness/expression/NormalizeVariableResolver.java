@@ -1,6 +1,6 @@
 package io.harness.expression;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import java.util.List;
 import lombok.Builder;
@@ -45,9 +45,9 @@ public class NormalizeVariableResolver extends StrLookup {
   }
 
   public static String expand(String variable, JexlContext context, List<String> objectPrefixes) {
-    if (isNotEmpty(objectPrefixes)) {
+    if (hasSome(objectPrefixes)) {
       for (String objectPrefix : objectPrefixes) {
-        if (isNotEmpty(objectPrefix)) {
+        if (hasSome(objectPrefix)) {
           variable = expand(variable, context, objectPrefix);
         }
       }

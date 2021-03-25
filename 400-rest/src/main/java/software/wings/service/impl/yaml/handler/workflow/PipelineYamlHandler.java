@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -88,13 +88,13 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
     }
 
     List<PipelineStage> pipelineStages = previous.getPipelineStages();
-    if (isEmpty(pipelineStages)) {
+    if (hasNone(pipelineStages)) {
       return entityIdMap;
     }
 
     pipelineStages.forEach(pipelineStage -> {
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
-      if (isEmpty(pipelineStageElements)) {
+      if (hasNone(pipelineStageElements)) {
         return;
       }
 

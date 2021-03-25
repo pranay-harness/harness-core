@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.inputset.beans.yaml.serializer;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasSome;
+
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.pms.yaml.ParameterField;
@@ -30,13 +31,13 @@ public class InputSetConfigSerializer extends JsonSerializer<InputSetConfig> {
     jsonGenerator.writeStartObject();
 
     jsonGenerator.writeObjectField("identifier", inputSetConfig.getIdentifier());
-    if (EmptyPredicate.isNotEmpty(inputSetConfig.getName())) {
+    if (hasSome(inputSetConfig.getName())) {
       jsonGenerator.writeObjectField("name", inputSetConfig.getName());
     }
-    if (EmptyPredicate.isNotEmpty(inputSetConfig.getDescription())) {
+    if (hasSome(inputSetConfig.getDescription())) {
       jsonGenerator.writeObjectField("description", inputSetConfig.getDescription());
     }
-    if (EmptyPredicate.isNotEmpty(inputSetConfig.getTags())) {
+    if (hasSome(inputSetConfig.getTags())) {
       jsonGenerator.writeFieldName("tags");
       jsonGenerator.writeObject(inputSetConfig.getTags());
     }

@@ -3,8 +3,8 @@ package software.wings.sm.states.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
@@ -40,7 +40,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.deployment.InstanceDetails;
@@ -390,13 +390,13 @@ public class PcfStateHelper {
         addToPcfManifestFilesMap(manifestFile.getFileContent(), pcfManifestsPackage);
       }
     } else if (StoreType.Remote == applicationManifest.getStoreType()) {
-      if (fetchFilesResult == null || isEmpty(fetchFilesResult.getFilesFromMultipleRepo())) {
+      if (fetchFilesResult == null || hasNone(fetchFilesResult.getFilesFromMultipleRepo())) {
         return;
       }
 
       GitFetchFilesResult gitFetchFilesResult =
           fetchFilesResult.getFilesFromMultipleRepo().get(k8sValuesLocation.name());
-      if (gitFetchFilesResult == null || isEmpty(gitFetchFilesResult.getFiles())) {
+      if (gitFetchFilesResult == null || hasNone(gitFetchFilesResult.getFiles())) {
         return;
       }
 
@@ -417,7 +417,7 @@ public class PcfStateHelper {
     if (APPLICATION_MANIFEST == manifestType) {
       pcfManifestsPackage.setManifestYml(fileContent);
     } else if (VARIABLE_MANIFEST == manifestType) {
-      if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+      if (hasNone(pcfManifestsPackage.getVariableYmls())) {
         pcfManifestsPackage.setVariableYmls(new ArrayList<>());
       }
       pcfManifestsPackage.getVariableYmls().add(fileContent);
@@ -442,10 +442,10 @@ public class PcfStateHelper {
     }
 
     // routes is not mentioned in Manifest
-    if (isEmpty(routeMapsInYaml)) {
+    if (hasNone(routeMapsInYaml)) {
       List<String> infraMapRoutes = pcfInfrastructureMapping.getRouteMaps();
       // Manifest mentions no-route or route is not provided in infraMapping as well.
-      if (useNoRoute(applicationConfigMap) || isEmpty(infraMapRoutes)) {
+      if (useNoRoute(applicationConfigMap) || hasNone(infraMapRoutes)) {
         return emptyList();
       }
 
@@ -456,7 +456,7 @@ public class PcfStateHelper {
       List<String> routes = new ArrayList<>();
       // if manifest contains "${ROUTE_MAP}", means read from InfraMapping
       if (ROUTE_PLACEHOLDER_TOKEN_DEPRECATED.equals(routeValue)) {
-        return isEmpty(pcfInfrastructureMapping.getRouteMaps()) ? emptyList() : pcfInfrastructureMapping.getRouteMaps();
+        return hasNone(pcfInfrastructureMapping.getRouteMaps()) ? emptyList() : pcfInfrastructureMapping.getRouteMaps();
       }
 
       // actual route value is mentioned
@@ -504,7 +504,7 @@ public class PcfStateHelper {
   void evaluateExpressionsInManifestTypes(ExecutionContext context, PcfManifestsPackage pcfManifestsPackage) {
     // evaluate expression in variables.yml
     List<String> varYmls = pcfManifestsPackage.getVariableYmls();
-    if (isNotEmpty(varYmls)) {
+    if (hasSome(varYmls)) {
       varYmls = varYmls.stream().map(context::renderExpression).collect(toList());
       pcfManifestsPackage.setVariableYmls(varYmls);
     }
@@ -519,7 +519,7 @@ public class PcfStateHelper {
       return defaultPrefix;
     }
 
-    boolean hasVarFiles = isNotEmpty(pcfManifestsPackage.getVariableYmls());
+    boolean hasVarFiles = hasSome(pcfManifestsPackage.getVariableYmls());
 
     if (!hasVarFiles) {
       appName = name;
@@ -563,7 +563,7 @@ public class PcfStateHelper {
     }
 
     List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
-    if (isEmpty(applicationsMaps)) {
+    if (hasNone(applicationsMaps)) {
       throw new InvalidArgumentsException(Pair.of("Manifest", "contains no application config"));
     }
 
@@ -587,12 +587,12 @@ public class PcfStateHelper {
 
   public List<String> applyVarsYmlSubstitutionIfApplicable(
       List<String> routeMaps, PcfManifestsPackage pcfManifestsPackage) {
-    if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+    if (hasNone(pcfManifestsPackage.getVariableYmls())) {
       return routeMaps;
     }
 
     return routeMaps.stream()
-        .filter(EmptyPredicate::isNotEmpty)
+        .filter(HasPredicate::hasSome)
         .map(route -> applyVarsYamlVariables(route, pcfManifestsPackage))
         .collect(toList());
   }
@@ -622,7 +622,7 @@ public class PcfStateHelper {
     }
 
     if (maxVal.contains("((") && maxVal.contains("))")) {
-      if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+      if (hasNone(pcfManifestsPackage.getVariableYmls())) {
         throw new InvalidRequestException(
             "No Valid Variable file Found, please verify var file is present and has valid structure");
       }
@@ -831,7 +831,7 @@ public class PcfStateHelper {
   }
 
   public List<InstanceElement> generateInstanceElement(List<PcfInstanceElement> pcfInstanceElements) {
-    if (isEmpty(pcfInstanceElements)) {
+    if (hasNone(pcfInstanceElements)) {
       return Collections.EMPTY_LIST;
     }
 
@@ -852,7 +852,7 @@ public class PcfStateHelper {
   }
 
   public List<InstanceDetails> generateInstanceDetails(List<PcfInstanceElement> pcfInstanceElements) {
-    if (isEmpty(pcfInstanceElements)) {
+    if (hasNone(pcfInstanceElements)) {
       return Collections.EMPTY_LIST;
     }
 

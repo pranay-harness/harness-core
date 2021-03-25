@@ -1,7 +1,7 @@
 package software.wings.service.impl.datadog;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
 
 import io.harness.serializer.JsonUtils;
@@ -27,13 +27,13 @@ public class DatadogServiceImpl implements DatadogService {
   public String getConcatenatedListOfMetricsForValidation(String defaultMetrics, Map<String, String> dockerMetrics,
       Map<String, String> kubernetesMetrics, Map<String, String> ecsMetrics) {
     String metricsString = defaultMetrics != null ? defaultMetrics : "";
-    if (isNotEmpty(dockerMetrics)) {
+    if (hasSome(dockerMetrics)) {
       metricsString += String.join(COMMA_STR, dockerMetrics.values());
     }
-    if (isNotEmpty(ecsMetrics)) {
+    if (hasSome(ecsMetrics)) {
       metricsString += String.join(COMMA_STR, ecsMetrics.values());
     }
-    if (isNotEmpty(kubernetesMetrics)) {
+    if (hasSome(kubernetesMetrics)) {
       metricsString += String.join(COMMA_STR, kubernetesMetrics.values());
     }
     return metricsString;
@@ -48,7 +48,7 @@ public class DatadogServiceImpl implements DatadogService {
   public static Map<String, String> validateNameClashInCustomMetrics(
       Map<String, Set<DatadogState.Metric>> customMetrics, String metrics) {
     Map<String, String> validateFields = new HashMap<>();
-    if (isEmpty(customMetrics) || isEmpty(metrics)) {
+    if (hasNone(customMetrics) || hasNone(metrics)) {
       return new HashMap<>();
     }
     List<String> metricList = Arrays.asList(metrics.split(","));

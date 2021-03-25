@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.ccm.config.CCMConfig;
@@ -38,10 +38,9 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
     yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
 
-    if (isNotEmpty(kubernetesClusterConfig.getDelegateName())
-        && isEmpty(kubernetesClusterConfig.getDelegateSelectors())) {
+    if (hasSome(kubernetesClusterConfig.getDelegateName()) && hasNone(kubernetesClusterConfig.getDelegateSelectors())) {
       yaml.setDelegateSelectors(Collections.singletonList(kubernetesClusterConfig.getDelegateName()));
-    } else if (isNotEmpty(kubernetesClusterConfig.getDelegateSelectors())) {
+    } else if (hasSome(kubernetesClusterConfig.getDelegateSelectors())) {
       yaml.setDelegateSelectors(new ArrayList<>(kubernetesClusterConfig.getDelegateSelectors()));
     }
 
@@ -141,7 +140,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    if (isNotEmpty(yaml.getUsername()) && isNotEmpty(yaml.getUsernameSecretId())) {
+    if (hasSome(yaml.getUsername()) && hasSome(yaml.getUsernameSecretId())) {
       throw new InvalidRequestException("Cannot set both value and secret reference for username field", USER);
     }
 
@@ -150,9 +149,9 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     kubernetesClusterConfig.setUseKubernetesDelegate(yaml.isUseKubernetesDelegate());
     kubernetesClusterConfig.setDelegateName(yaml.getDelegateName());
 
-    if (isNotEmpty(yaml.getDelegateName()) && isEmpty(yaml.getDelegateSelectors())) {
+    if (hasSome(yaml.getDelegateName()) && hasNone(yaml.getDelegateSelectors())) {
       kubernetesClusterConfig.setDelegateSelectors(Collections.singleton(yaml.getDelegateName()));
-    } else if (isNotEmpty(yaml.getDelegateSelectors())) {
+    } else if (hasSome(yaml.getDelegateSelectors())) {
       kubernetesClusterConfig.setDelegateSelectors(new HashSet<>(yaml.getDelegateSelectors()));
     }
 

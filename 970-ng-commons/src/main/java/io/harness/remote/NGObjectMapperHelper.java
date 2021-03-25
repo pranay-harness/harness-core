@@ -1,7 +1,7 @@
 package io.harness.remote;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
@@ -30,7 +30,7 @@ public class NGObjectMapperHelper {
       @Override
       public List<NamedType> findSubtypes(Annotated a) {
         final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
-        if (isNotEmpty(subtypesFromSuper)) {
+        if (hasSome(subtypesFromSuper)) {
           return subtypesFromSuper;
         }
         return emptyIfNull(subtypeResolver.findSubtypes(a));

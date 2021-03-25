@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -11,7 +12,6 @@ import static software.wings.common.TemplateConstants.SSH;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
@@ -129,7 +129,7 @@ public class CommandTemplateRefYamlHandler extends CommandUnitYamlHandler<Comman
     String appId = GLOBAL_APP_ID;
     String filePath = changeContext.getChange().getFilePath();
     final String appName = yamlHelper.getAppName(filePath);
-    if (EmptyPredicate.isNotEmpty(appName)) {
+    if (hasSome(appName)) {
       final Application application = appService.getAppByName(changeContext.getChange().getAccountId(), appName);
       if (application == null) {
         throw NoResultFoundException.newBuilder()

@@ -1,6 +1,6 @@
 package software.wings.scim;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -162,7 +162,7 @@ public class ScimUserServiceImpl implements ScimUserService {
 
     ScimListResponse<ScimUser> userResponse = new ScimListResponse<>();
     String searchQuery = null;
-    if (isNotEmpty(filter)) {
+    if (hasSome(filter)) {
       try {
         filter = URLDecoder.decode(filter, "UTF-8");
         String[] split = filter.split(" eq ");
@@ -266,7 +266,7 @@ public class ScimUserServiceImpl implements ScimUserService {
                                            .filter(UserGroupKeys.importedByScim, true)
                                            .asList();
 
-      if (isNotEmpty(scimUserGroups)) {
+      if (hasSome(scimUserGroups)) {
         scimUserGroups.forEach(userGroup -> {
           userGroup.getMemberIds().remove(userId);
           wingsPersistence.save(userGroup);

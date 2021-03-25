@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -49,7 +50,6 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -292,7 +292,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         tags.stream()
             .filter(tag -> tag.getKey().equalsIgnoreCase(key) && tag.getValue().equalsIgnoreCase(value))
             .collect(Collectors.toList());
-    return EmptyPredicate.isNotEmpty(filteredTags);
+    return hasSome(filteredTags);
   }
 
   private void validateCreateAutoScalingGroupRequest(CreateAutoScalingGroupRequest request, int numTagsExpected) {

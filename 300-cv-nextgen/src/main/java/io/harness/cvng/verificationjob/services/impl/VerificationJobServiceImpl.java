@@ -3,7 +3,7 @@ package io.harness.cvng.verificationjob.services.impl;
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
 import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
@@ -175,7 +175,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
             .filter(VerificationJobKeys.serviceIdentifier + "." + RuntimeParameterKeys.value, serviceIdentifier)
             .filter(VerificationJobKeys.type, HEALTH)
             .asList();
-    if (isEmpty(specificHealthJobs)) {
+    if (hasNone(specificHealthJobs)) {
       VerificationJob defaultJob =
           getOrCreateDefaultHealthVerificationJob(accountIdentifier, orgIdentifier, projectIdentifier);
       defaultJob.setServiceIdentifier(serviceIdentifier, false);
@@ -267,7 +267,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     List<VerificationJobDTO> verificationJobList = new ArrayList<>();
 
     for (VerificationJob verificationJob : verificationJobs) {
-      if (isEmpty(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase())) {
+      if (hasNone(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase())) {
         verificationJobList.add(verificationJob.getVerificationJobDTO());
         continue;
       }

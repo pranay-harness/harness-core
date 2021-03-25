@@ -2,7 +2,7 @@ package io.harness.secrets.setupusage.builders;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -99,9 +99,9 @@ public class ConfigFileSetupUsageBuilder implements SecretSetupUsageBuilder {
     for (ConfigFile configFile : configFileList) {
       String appId = configFile.getAppId();
       String envId = getEnvId(configFile);
-      if (isNotEmpty(appId) && !GLOBAL_APP_ID.equals(appId)) {
+      if (hasSome(appId) && !GLOBAL_APP_ID.equals(appId)) {
         Set<String> envIds = appEnvMap.computeIfAbsent(appId, k -> new HashSet<>());
-        if (isNotEmpty(envId) && !GLOBAL_ENV_ID.equals(envId)) {
+        if (hasSome(envId) && !GLOBAL_ENV_ID.equals(envId)) {
           envIds.add(envId);
         }
       }

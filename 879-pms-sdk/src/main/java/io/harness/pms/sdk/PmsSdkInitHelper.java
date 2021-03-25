@@ -1,6 +1,7 @@
 package io.harness.pms.sdk;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Types;
@@ -28,19 +29,19 @@ import lombok.extern.slf4j.Slf4j;
 public class PmsSdkInitHelper {
   public static Map<String, Types> calculateSupportedTypes(PipelineServiceInfoProvider pipelineServiceInfoProvider) {
     List<PartialPlanCreator<?>> planCreators = pipelineServiceInfoProvider.getPlanCreators();
-    if (EmptyPredicate.isEmpty(planCreators)) {
+    if (hasNone(planCreators)) {
       return Collections.emptyMap();
     }
 
     Map<String, Set<String>> supportedTypes = new HashMap<>();
     for (PartialPlanCreator<?> planCreator : planCreators) {
       Map<String, Set<String>> currTypes = planCreator.getSupportedTypes();
-      if (EmptyPredicate.isEmpty(currTypes)) {
+      if (hasNone(currTypes)) {
         continue;
       }
 
       currTypes.forEach((k, v) -> {
-        if (EmptyPredicate.isEmpty(v)) {
+        if (hasNone(v)) {
           return;
         }
 

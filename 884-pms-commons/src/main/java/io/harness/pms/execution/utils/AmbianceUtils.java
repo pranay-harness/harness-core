@@ -1,6 +1,6 @@
 package io.harness.pms.execution.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.logging.AutoLogContext;
@@ -54,16 +54,16 @@ public class AmbianceUtils {
 
   public static String obtainCurrentRuntimeId(Ambiance ambiance) {
     Level level = obtainCurrentLevel(ambiance);
-    return level == null || isEmpty(level.getRuntimeId()) ? null : level.getRuntimeId();
+    return level == null || hasNone(level.getRuntimeId()) ? null : level.getRuntimeId();
   }
 
   public static String obtainCurrentSetupId(Ambiance ambiance) {
     Level level = obtainCurrentLevel(ambiance);
-    return level == null || isEmpty(level.getRuntimeId()) ? null : level.getSetupId();
+    return level == null || hasNone(level.getRuntimeId()) ? null : level.getSetupId();
   }
 
   public static Level obtainCurrentLevel(Ambiance ambiance) {
-    if (isEmpty(ambiance.getLevelsList())) {
+    if (hasNone(ambiance.getLevelsList())) {
       return null;
     }
     return ambiance.getLevelsList().get(ambiance.getLevelsList().size() - 1);
@@ -71,7 +71,7 @@ public class AmbianceUtils {
 
   public static String obtainStepIdentifier(Ambiance ambiance) {
     Level level = obtainCurrentLevel(ambiance);
-    return level == null || isEmpty(level.getIdentifier()) ? null : level.getIdentifier();
+    return level == null || hasNone(level.getIdentifier()) ? null : level.getIdentifier();
   }
 
   public static AutoLogContext autoLogContext(Ambiance ambiance) {

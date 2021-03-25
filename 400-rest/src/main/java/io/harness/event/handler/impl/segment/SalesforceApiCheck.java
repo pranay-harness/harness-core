@@ -1,8 +1,8 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.segment.SalesforceConfig;
@@ -118,7 +118,7 @@ public class SalesforceApiCheck {
     while (true) {
       loginResponseString = login();
       count++;
-      if (isNotEmpty(loginResponseString)) {
+      if (hasSome(loginResponseString)) {
         break;
       }
       if (count >= MAX_RETRIES) {
@@ -175,7 +175,7 @@ public class SalesforceApiCheck {
     while (true) {
       responseString = querySalesforce(queryString);
       count++;
-      if (isNotEmpty(responseString)) {
+      if (hasSome(responseString)) {
         return responseString;
       }
       if (count >= MAX_RETRIES) {
@@ -188,7 +188,7 @@ public class SalesforceApiCheck {
   private boolean isFoundInSalesforce(String accountId, String queryString) {
     String responseString = retryQueryResponse(queryString);
 
-    if (isEmpty(responseString)) {
+    if (hasNone(responseString)) {
       return false;
     }
 

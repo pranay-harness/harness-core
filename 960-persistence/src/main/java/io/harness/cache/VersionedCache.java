@@ -1,6 +1,6 @@
 package io.harness.cache;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
@@ -31,7 +31,7 @@ public class VersionedCache<K, V> implements Cache<K, V> {
     if (jCache == null) {
       throw new InvalidArgumentsException("JCache cannot be null");
     }
-    if (isEmpty(version)) {
+    if (hasNone(version)) {
       throw new InvalidArgumentsException("Cannot create cache with blank or null version");
     }
     this.jCache = jCache;

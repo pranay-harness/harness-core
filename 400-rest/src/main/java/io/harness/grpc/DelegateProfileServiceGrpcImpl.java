@@ -1,7 +1,7 @@
 package io.harness.grpc;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -157,7 +157,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       UpdateProfileSelectorsRequest request, StreamObserver<UpdateProfileSelectorsResponse> responseObserver) {
     try {
       List<String> selectors = null;
-      if (isNotEmpty(request.getSelectorsList())) {
+      if (hasSome(request.getSelectorsList())) {
         selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());
       }
 
@@ -183,7 +183,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       UpdateProfileScopingRulesRequest request, StreamObserver<UpdateProfileScopingRulesResponse> responseObserver) {
     try {
       List<DelegateProfileScopingRule> scopingRules = null;
-      if (isNotEmpty(request.getScopingRulesList())) {
+      if (hasSome(request.getScopingRulesList())) {
         scopingRules = request.getScopingRulesList()
                            .stream()
                            .map(scopingRule
@@ -252,7 +252,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileGrpcBuilder.setStartupScript(delegateProfile.getStartupScript());
     }
 
-    if (isNotEmpty(delegateProfile.getSelectors())) {
+    if (hasSome(delegateProfile.getSelectors())) {
       delegateProfileGrpcBuilder.addAllSelectors(
           delegateProfile.getSelectors()
               .stream()
@@ -260,7 +260,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
               .collect(Collectors.toList()));
     }
 
-    if (isNotEmpty(delegateProfile.getScopingRules())) {
+    if (hasSome(delegateProfile.getScopingRules())) {
       delegateProfileGrpcBuilder.addAllScopingRules(
           delegateProfile.getScopingRules()
               .stream()
@@ -279,7 +279,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     List<String> delegatesForProfile =
         delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
-    if (isNotEmpty(delegatesForProfile)) {
+    if (hasSome(delegatesForProfile)) {
       delegateProfileGrpcBuilder.setNumberOfDelegates(delegatesForProfile.size());
     }
 
@@ -295,7 +295,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
+    if (delegateProfileGrpc.hasCreatedBy() && hasSome(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
                                            .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                            .name(delegateProfileGrpc.getCreatedBy().getName())
@@ -303,7 +303,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                            .build());
     }
 
-    if (delegateProfileGrpc.hasLastUpdatedBy() && isNotEmpty(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
+    if (delegateProfileGrpc.hasLastUpdatedBy() && hasSome(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
       User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
       UserThreadLocal.set(user);
     }
@@ -312,14 +312,14 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileBuilder.uuid(delegateProfileGrpc.getProfileId().getId());
     }
 
-    if (isNotEmpty(delegateProfileGrpc.getSelectorsList())) {
+    if (hasSome(delegateProfileGrpc.getSelectorsList())) {
       delegateProfileBuilder.selectors(delegateProfileGrpc.getSelectorsList()
                                            .stream()
                                            .map(ProfileSelector::getSelector)
                                            .collect(Collectors.toList()));
     }
 
-    if (isNotEmpty(delegateProfileGrpc.getScopingRulesList())) {
+    if (hasSome(delegateProfileGrpc.getScopingRulesList())) {
       delegateProfileBuilder.scopingRules(
           delegateProfileGrpc.getScopingRulesList()
               .stream()
@@ -331,7 +331,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
               .collect(Collectors.toList()));
     }
 
-    if (isNotEmpty(delegateProfileGrpc.getIdentifier())) {
+    if (hasSome(delegateProfileGrpc.getIdentifier())) {
       delegateProfileBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
 

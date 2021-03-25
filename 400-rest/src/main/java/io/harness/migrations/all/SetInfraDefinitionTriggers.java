@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -48,7 +48,7 @@ public class SetInfraDefinitionTriggers {
         DEBUG_LINE, "Starting Infra Definition migration for triggers, accountId ", account.getUuid()));
     List<String> apps = appService.getAppIdsByAccountId(account.getUuid());
 
-    if (isEmpty(apps)) {
+    if (hasNone(apps)) {
       log.info(StringUtils.join(DEBUG_LINE, "No applications found for accountId: ", account.getUuid()));
       return;
     }
@@ -76,7 +76,7 @@ public class SetInfraDefinitionTriggers {
   public void migrate(Trigger trigger) {
     boolean modified = false;
 
-    if (isEmpty(trigger.getWorkflowVariables())) {
+    if (hasNone(trigger.getWorkflowVariables())) {
       log.info("No migration required for as no workflow variables present. TriggerId: " + trigger.getUuid());
       return;
     }
@@ -107,7 +107,7 @@ public class SetInfraDefinitionTriggers {
     notNullCheck("workflow is null, workflowId: " + workflowId, workflow);
     notNullCheck("orchestrationWorkflow is null in workflow: " + workflowId, workflow.getOrchestrationWorkflow());
 
-    if (isEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
+    if (hasNone(workflow.getOrchestrationWorkflow().getUserVariables())) {
       log.info(
           "[INFRA_MIGRATION_INFO] Trigger has workflow variables but workflow does not have userVariables. TriggerId: "
           + trigger.getUuid());
@@ -163,7 +163,7 @@ public class SetInfraDefinitionTriggers {
         }
 
         String infraDefId = infrastructureMapping.getInfrastructureDefinitionId();
-        if (isEmpty(infraDefId)) {
+        if (hasNone(infraDefId)) {
           // infra definition migration might have failed.Needs manual intervention
           log.error("[INFRA_MIGRATION_ERROR]Couldn't find infraDefinition id  for trigger. Trigger:  "
               + trigger.getUuid() + "infraMappingId: " + infraMappingId);

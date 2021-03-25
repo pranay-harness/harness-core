@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -26,7 +26,6 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
@@ -186,8 +185,8 @@ public class EcsSetupCommandTaskHelper {
     taskDefinition.setFamily(ecsSetupParams.getTaskFamily());
 
     // Set service variables as environment variables
-    if (isNotEmpty(serviceVariables)) {
-      if (isNotEmpty(safeDisplayServiceVariables)) {
+    if (hasSome(serviceVariables)) {
+      if (hasSome(safeDisplayServiceVariables)) {
         executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
         for (Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
           executionLogCallback.saveExecutionLog(entry.getKey() + "=" + entry.getValue(), LogLevel.INFO);
@@ -219,7 +218,7 @@ public class EcsSetupCommandTaskHelper {
       registerTaskDefinitionRequest.withTags(new Tag().withKey(MAIN_ECS_CONTAINER_NAME_TAG).withValue(containerName));
     }
 
-    if (isNotEmpty(taskDefinition.getExecutionRoleArn())) {
+    if (hasSome(taskDefinition.getExecutionRoleArn())) {
       registerTaskDefinitionRequest.withExecutionRoleArn(taskDefinition.getExecutionRoleArn());
     }
 
@@ -256,8 +255,8 @@ public class EcsSetupCommandTaskHelper {
     registerTaskDefinitionRequest.setFamily(ecsSetupParams.getTaskFamily());
 
     // Set service variables as environment variables
-    if (isNotEmpty(serviceVariables)) {
-      if (isNotEmpty(safeDisplayServiceVariables)) {
+    if (hasSome(serviceVariables)) {
+      if (hasSome(safeDisplayServiceVariables)) {
         executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
         for (Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
           executionLogCallback.saveExecutionLog(entry.getKey() + "=" + entry.getValue(), LogLevel.INFO);
@@ -285,11 +284,11 @@ public class EcsSetupCommandTaskHelper {
       }
     }
 
-    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+    if (hasNone(registerTaskDefinitionRequest.getExecutionRoleArn())) {
       registerTaskDefinitionRequest.withExecutionRoleArn(null);
     }
 
-    if (isEmpty(registerTaskDefinitionRequest.getTags())) {
+    if (hasNone(registerTaskDefinitionRequest.getTags())) {
       ArrayList<Tag> tags = null;
       registerTaskDefinitionRequest.withTags(tags);
     }
@@ -431,7 +430,7 @@ public class EcsSetupCommandTaskHelper {
     List<Service> sortedServiceList =
         getServicesForClusterByMatchingPrefix(awsConfig, setupParams, encryptedDataDetails, serviceName);
 
-    if (isEmpty(sortedServiceList)) {
+    if (hasNone(sortedServiceList)) {
       return empty();
     }
 
@@ -524,7 +523,7 @@ public class EcsSetupCommandTaskHelper {
     Map<String, Integer> activeServiceCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
         cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
 
-    if (isEmpty(activeServiceCounts)) {
+    if (hasNone(activeServiceCounts)) {
       return;
     }
 
@@ -543,7 +542,7 @@ public class EcsSetupCommandTaskHelper {
         (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails,
         new DescribeScalableTargetsRequest().withServiceNamespace(ServiceNamespace.Ecs).withResourceIds(resourceIds));
 
-    if (isEmpty(targetsResult.getScalableTargets())) {
+    if (hasNone(targetsResult.getScalableTargets())) {
       executionLogCallback.saveExecutionLog("No Auto-scalar config found for existing services");
       return;
     }
@@ -566,11 +565,11 @@ public class EcsSetupCommandTaskHelper {
 
       List<String> policyJsons = new ArrayList<>();
       AwsAutoScalarConfig config = scalarConfigMap.get(getAutoScalarMapKey(scalableTarget));
-      if (isNotEmpty(policiesResult.getScalingPolicies())) {
+      if (hasSome(policiesResult.getScalingPolicies())) {
         policiesResult.getScalingPolicies().forEach(
             scalingPolicy -> { policyJsons.add(awsAppAutoScalingService.getJsonForAwsScalablePolicy(scalingPolicy)); });
       }
-      if (isNotEmpty(policyJsons)) {
+      if (hasSome(policyJsons)) {
         config.setScalingPolicyJson(policyJsons.toArray(new String[policyJsons.size()]));
       }
     });
@@ -671,13 +670,13 @@ public class EcsSetupCommandTaskHelper {
       createServiceRequest.setPlacementStrategy(advancedServiceConfig.getPlacementStrategy());
       createServiceRequest.setPlacementConstraints(advancedServiceConfig.getPlacementConstraints());
       createServiceRequest.setHealthCheckGracePeriodSeconds(advancedServiceConfig.getHealthCheckGracePeriodSeconds());
-      if (isNotEmpty(advancedServiceConfig.getServiceRegistries())) {
+      if (hasSome(advancedServiceConfig.getServiceRegistries())) {
         serviceRegistries.addAll(advancedServiceConfig.getServiceRegistries());
       }
       setDeploymentConfiguration(createServiceRequest, advancedServiceConfig);
       createServiceRequest.setTags(advancedServiceConfig.getTags());
 
-      if (isFargateTaskType && isNotEmpty(advancedServiceConfig.getPlatformVersion())) {
+      if (isFargateTaskType && hasSome(advancedServiceConfig.getPlatformVersion())) {
         createServiceRequest.setPlatformVersion(advancedServiceConfig.getPlatformVersion());
       }
 
@@ -715,7 +714,7 @@ public class EcsSetupCommandTaskHelper {
 
     Optional<Service> currentRunningService =
         getLastRunningService(awsConfig, encryptedDataDetails, setupParams, serviceName);
-    if (!currentRunningService.isPresent() || isEmpty(currentRunningService.get().getServiceRegistries())) {
+    if (!currentRunningService.isPresent() || hasNone(currentRunningService.get().getServiceRegistries())) {
       logCallback.saveExecutionLog("No currently running service found. OR no service registries found with it");
       logCallback.saveExecutionLog(format("Using: [%s] for new service.", registry1.getRegistryArn()));
       serviceRegistries.add(registry1);
@@ -819,7 +818,7 @@ public class EcsSetupCommandTaskHelper {
       });
 
       Set<ContainerDefinition> containerDefinitionSet = portMappingListWithTargetPort.keySet();
-      if (isEmpty(containerDefinitionSet)) {
+      if (hasNone(containerDefinitionSet)) {
         StringBuilder builder = new StringBuilder()
                                     .append("No container definition has port mapping that matches the target port: ")
                                     .append(targetGroupPort)
@@ -845,7 +844,7 @@ public class EcsSetupCommandTaskHelper {
 
       Collection<PortMapping> portMappings = portMappingListWithTargetPort.get(containerDefinition);
 
-      if (isEmpty(portMappings)) {
+      if (hasNone(portMappings)) {
         StringBuilder builder = new StringBuilder()
                                     .append("No container definition has port mapping that match the target port: ")
                                     .append(targetGroupPort)
@@ -886,7 +885,7 @@ public class EcsSetupCommandTaskHelper {
       executionLogCallback.saveExecutionLog(ERROR + builder.toString());
       throw new WingsException(builder.toString());
     }
-    if (isMultipleLoadBalancersFeatureFlagActive && EmptyPredicate.isNotEmpty(setupParams.getAwsElbConfigs())) {
+    if (isMultipleLoadBalancersFeatureFlagActive && hasSome(setupParams.getAwsElbConfigs())) {
       setAdditionalLoadBalancersToService(setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition,
           createServiceRequest, awsClusterService, executionLogCallback);
     }
@@ -899,7 +898,7 @@ public class EcsSetupCommandTaskHelper {
     String generatedContainerName = setupParams.getGeneratedContainerName();
     List<LoadBalancer> loadBalancers = createServiceRequest.getLoadBalancers();
 
-    if (EmptyPredicate.isNotEmpty(setupParams.getAwsElbConfigs())) {
+    if (hasSome(setupParams.getAwsElbConfigs())) {
       for (AwsElbConfig awsElbConfig : setupParams.getAwsElbConfigs()) {
         Integer finalTargetContainerPort = null;
         String finalTargetContainerName = null;
@@ -966,7 +965,7 @@ public class EcsSetupCommandTaskHelper {
           });
 
           Set<ContainerDefinition> containerDefinitionSet = portMappingListWithTargetPort.keySet();
-          if (isEmpty(containerDefinitionSet)) {
+          if (hasNone(containerDefinitionSet)) {
             StringBuilder builder =
                 new StringBuilder()
                     .append("No container definition has port mapping that matches the target port: ")
@@ -993,7 +992,7 @@ public class EcsSetupCommandTaskHelper {
 
           Collection<PortMapping> portMappings = portMappingListWithTargetPort.get(containerDefinition);
 
-          if (isEmpty(portMappings)) {
+          if (hasNone(portMappings)) {
             StringBuilder builder = new StringBuilder()
                                         .append("No container definition has port mapping that match the target port: ")
                                         .append(targetGroupPort)
@@ -1149,7 +1148,7 @@ public class EcsSetupCommandTaskHelper {
         cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
 
     Integer instanceCountForLatestVersion = Integer.valueOf(0);
-    if (isNotEmpty(activeServiceCounts)) {
+    if (hasSome(activeServiceCounts)) {
       List<String> existingServiceNames = new ArrayList<>(activeServiceCounts.keySet());
       Collections.sort(existingServiceNames);
 
@@ -1183,7 +1182,7 @@ public class EcsSetupCommandTaskHelper {
       try {
         // For Daemon service, we cache service spec json for existing service before we did actual deployment,
         // as deployment is being rolled back, update service with same service spec to restore it to original state
-        if (isNotEmpty(setupParams.getPreviousEcsServiceSnapshotJson())) {
+        if (hasSome(setupParams.getPreviousEcsServiceSnapshotJson())) {
           Service previousServiceSnapshot = getAwsServiceFromJson(setupParams.getPreviousEcsServiceSnapshotJson(), log);
           UpdateServiceRequest updateServiceRequest =
               new UpdateServiceRequest()
@@ -1259,7 +1258,7 @@ public class EcsSetupCommandTaskHelper {
 
   private List<ServiceEvent> getEventsFromService(Service service) {
     List<ServiceEvent> serviceEvents = new ArrayList<>();
-    if (service != null && isNotEmpty(service.getEvents())) {
+    if (service != null && hasSome(service.getEvents())) {
       serviceEvents.addAll(service.getEvents());
     }
 
@@ -1345,7 +1344,7 @@ public class EcsSetupCommandTaskHelper {
                 new DescribeServicesRequest().withCluster(setupParams.getClusterName()).withServices(ecsServiceName))
             .getServices();
 
-    if (isEmpty(services)) {
+    if (hasNone(services)) {
       return empty();
     }
 
@@ -1364,12 +1363,12 @@ public class EcsSetupCommandTaskHelper {
   }
 
   public String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback) {
-    Optional<Action> action = listener.getDefaultActions()
-                                  .stream()
-                                  .filter(listenerAction
-                                      -> "forward".equalsIgnoreCase(listenerAction.getType())
-                                          && isNotEmpty(listenerAction.getTargetGroupArn()))
-                                  .findFirst();
+    Optional<Action> action =
+        listener.getDefaultActions()
+            .stream()
+            .filter(listenerAction
+                -> "forward".equalsIgnoreCase(listenerAction.getType()) && hasSome(listenerAction.getTargetGroupArn()))
+            .findFirst();
 
     if (!action.isPresent()) {
       String errorMsg = new StringBuilder(128)
@@ -1397,7 +1396,7 @@ public class EcsSetupCommandTaskHelper {
 
     services = services.stream().filter(service -> isGreenVersion(service.getTags())).collect(toList());
 
-    if (isNotEmpty(services)) {
+    if (hasSome(services)) {
       services.forEach(service -> {
         executionLogCallback.saveExecutionLog("Deleting Old Service  {Green Version}: " + service.getServiceName());
         awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
@@ -1412,7 +1411,7 @@ public class EcsSetupCommandTaskHelper {
   }
 
   private boolean isGreenVersion(List<Tag> tags) {
-    if (isEmpty(tags)) {
+    if (hasNone(tags)) {
       return false;
     }
     Optional<Tag> tag =

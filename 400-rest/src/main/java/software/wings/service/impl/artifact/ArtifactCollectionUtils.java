@@ -3,8 +3,8 @@ package software.wings.service.impl.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -41,7 +41,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HasPredicate;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
@@ -185,14 +185,14 @@ public class ArtifactCollectionUtils {
     if (accountId != null) {
       builder.withAccountId(accountId);
     }
-    if (isNotEmpty(buildDetails.getLabels())) {
+    if (hasSome(buildDetails.getLabels())) {
       builder.withLabels(buildDetails.getLabels());
     }
     return builder.build();
   }
 
   private String getDisplayName(ArtifactStream artifactStream, BuildDetails buildDetails) {
-    if (isNotEmpty(buildDetails.getBuildDisplayName())) {
+    if (hasSome(buildDetails.getBuildDisplayName())) {
       return buildDetails.getBuildDisplayName();
     }
     if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
@@ -219,7 +219,7 @@ public class ArtifactCollectionUtils {
           metadata.put(ArtifactMetadataKeys.artifactFileSize, buildDetails.getArtifactFileSize());
         }
       }
-      if (isNotEmpty(buildDetails.getBuildUrl())) {
+      if (hasSome(buildDetails.getBuildUrl())) {
         metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       }
       metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
@@ -250,10 +250,10 @@ public class ArtifactCollectionUtils {
       return metadata;
     } else if (artifactStreamType.equals(NEXUS.name())) {
       metadata.put(ArtifactMetadataKeys.buildNo, buildDetails.getNumber());
-      if (isNotEmpty(buildDetails.getBuildUrl())) {
+      if (hasSome(buildDetails.getBuildUrl())) {
         metadata.put(ArtifactMetadataKeys.url, buildDetails.getBuildUrl());
       }
-      if (isNotEmpty(buildDetails.getArtifactFileMetadataList())) {
+      if (hasSome(buildDetails.getArtifactFileMetadataList())) {
         metadata.put(
             ArtifactMetadataKeys.artifactFileName, buildDetails.getArtifactFileMetadataList().get(0).getFileName());
       }
@@ -326,13 +326,13 @@ public class ArtifactCollectionUtils {
       buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
     }
     List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
-    if (isNotEmpty(tags)) {
+    if (hasSome(tags)) {
       // To remove if any empty tags in case saved for custom artifact stream
-      tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+      tags = tags.stream().filter(HasPredicate::hasSome).distinct().collect(toList());
     }
 
     // Set timeout. Labels are not fetched for CUSTOM artifact streams.
-    long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
+    long timeout = hasNone(artifactStreamAttributes.getCustomScriptTimeout())
         ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
         : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
     dataBuilder.parameters(new Object[] {buildSourceParametersBuilder.build()})
@@ -415,7 +415,7 @@ public class ArtifactCollectionUtils {
         AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
         managerDecryptionService.decrypt(
             azureConfig, secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId));
-        String loginServer = isNotEmpty(acrArtifactStream.getRegistryHostName())
+        String loginServer = hasSome(acrArtifactStream.getRegistryHostName())
             ? acrArtifactStream.getRegistryHostName()
             : azureHelperService.getLoginServerForRegistry(azureConfig,
                 secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
@@ -527,10 +527,10 @@ public class ArtifactCollectionUtils {
             .filter(script -> script.getAction() == null || script.getAction() == Action.FETCH_VERSIONS)
             .findFirst()
             .orElse(null);
-    if (isNotEmpty(customArtifactStream.getTemplateVariables())) {
+    if (hasSome(customArtifactStream.getTemplateVariables())) {
       Map<String, Object> templateVariableMap =
           TemplateHelper.convertToVariableMap(customArtifactStream.getTemplateVariables());
-      if (isNotEmpty(templateVariableMap)) {
+      if (hasSome(templateVariableMap)) {
         context.putAll(templateVariableMap);
       }
     }
@@ -553,14 +553,14 @@ public class ArtifactCollectionUtils {
       artifactStreamAttributes.setBuildNoPath(
           evaluator.substitute(versionScript.getCustomRepositoryMapping().getBuildNoPath(), context));
       Map<String, String> map = new HashMap<>();
-      if (EmptyPredicate.isNotEmpty(versionScript.getCustomRepositoryMapping().getArtifactAttributes())) {
+      if (hasSome(versionScript.getCustomRepositoryMapping().getArtifactAttributes())) {
         for (AttributeMapping attributeMapping : versionScript.getCustomRepositoryMapping().getArtifactAttributes()) {
           String relativePath = null;
-          if (isNotEmpty(attributeMapping.getRelativePath())) {
+          if (hasSome(attributeMapping.getRelativePath())) {
             relativePath = evaluator.substitute(attributeMapping.getRelativePath(), context);
           }
           String mappedAttribute = null;
-          if (isNotEmpty(attributeMapping.getMappedAttribute())) {
+          if (hasSome(attributeMapping.getMappedAttribute())) {
             mappedAttribute = evaluator.substitute(attributeMapping.getMappedAttribute(), context);
           }
           map.put(relativePath, mappedAttribute);
@@ -573,11 +573,11 @@ public class ArtifactCollectionUtils {
   }
 
   private void validateAttributeMapping(String artifactRoot, String buildNoPath) {
-    if (isEmpty(artifactRoot)) {
+    if (hasNone(artifactRoot)) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
           .addParam("message", "Artifacts Array Path cannot be empty. Please refer the documentation.");
     }
-    if (isEmpty(buildNoPath)) {
+    if (hasNone(buildNoPath)) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, WingsException.USER)
           .addParam("message", "BuildNo. Path cannot be empty. Please refer the documentation.");
     }
@@ -728,9 +728,9 @@ public class ArtifactCollectionUtils {
           .buildSourceRequestType(BuildSourceRequestType.GET_BUILDS)
           .artifactStreamAttributes(artifactStream.fetchArtifactStreamAttributes(featureFlagService));
       tags = ((CustomArtifactStream) artifactStream).getTags();
-      if (isNotEmpty(tags)) {
+      if (hasSome(tags)) {
         // To remove if any empty tags in case saved for custom artifact stream
-        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+        tags = tags.stream().filter(HasPredicate::hasSome).distinct().collect(toList());
       }
 
     } else {
@@ -742,10 +742,10 @@ public class ArtifactCollectionUtils {
       List<EncryptedDataDetail> encryptedDataDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
       List<String> delegateSelectors = settingsService.getDelegateSelectors(settingAttribute);
-      if (isNotEmpty(delegateSelectors)) {
-        tags = isNotEmpty(tags) ? tags : new ArrayList<>();
+      if (hasSome(delegateSelectors)) {
+        tags = hasSome(tags) ? tags : new ArrayList<>();
         tags.addAll(delegateSelectors);
-        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+        tags = tags.stream().filter(HasPredicate::hasSome).distinct().collect(toList());
       }
       accountId = settingAttribute.getAccountId();
       boolean multiArtifactEnabled = multiArtifactEnabled(accountId);
@@ -840,10 +840,10 @@ public class ArtifactCollectionUtils {
    */
   public static List<BuildDetails> getNewBuildDetails(Set<String> savedBuildDetailsKeys,
       List<BuildDetails> buildDetails, String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
-    if (isEmpty(buildDetails)) {
+    if (hasNone(buildDetails)) {
       return Collections.emptyList();
     }
-    if (isEmpty(savedBuildDetailsKeys)) {
+    if (hasNone(savedBuildDetailsKeys)) {
       return buildDetails;
     }
 
@@ -899,12 +899,12 @@ public class ArtifactCollectionUtils {
     String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
     String action = isCollection ? "collection" : "cleanup";
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
-      if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
+      if (hasSome(artifactStream.getPerpetualTaskId())) {
         log.info("Perpetual task enabled for the artifact stream {}, skipping the artifact {} through iterator",
             artifactStream.getUuid(), action);
         return true;
       }
-    } else if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
+    } else if (hasSome(artifactStream.getPerpetualTaskId())) {
       // If perpetual task is not enabled but the artifact stream still has a perpetual task id, delete the perpetual
       // task.
       artifactStreamPTaskHelper.deletePerpetualTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId());
@@ -918,7 +918,7 @@ public class ArtifactCollectionUtils {
       return true;
     }
 
-    if (EmptyPredicate.isEmpty(artifactStream.getAccountId())) {
+    if (hasNone(artifactStream.getAccountId())) {
       // Ideally, we should clean up these artifact streams.
       log.warn("{}: Artifact {} disabled for artifactStream due to empty accountId, type: {}, id: {}, failed count: {}",
           prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
@@ -993,7 +993,7 @@ public class ArtifactCollectionUtils {
   }
 
   public List<Artifact> processBuilds(ArtifactStream artifactStream, List<BuildDetails> builds) {
-    if (isEmpty(builds)) {
+    if (hasNone(builds)) {
       return new ArrayList<>();
     }
     if (artifactStream == null) {

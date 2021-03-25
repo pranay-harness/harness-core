@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -139,7 +139,7 @@ public class DockerConnector extends Connector {
     if (delegateSelectors.isPresent()) {
       selectors = delegateSelectors.getValue().orElse(null);
     }
-    if (isNotEmpty(selectors)) {
+    if (hasSome(selectors)) {
       selectors = selectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
       dockerConfig.setDelegateSelectors(selectors);
     }

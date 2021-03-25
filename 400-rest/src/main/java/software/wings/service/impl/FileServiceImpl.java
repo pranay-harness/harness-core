@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 
@@ -116,10 +116,10 @@ public class FileServiceImpl implements FileService {
       gcsFileId = fileId;
       mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
     }
-    if (isNotEmpty(gcsFileId)) {
+    if (hasSome(gcsFileId)) {
       googleCloudFileService.deleteFile(gcsFileId, fileBucket);
     }
-    if (isNotEmpty(mongoFileId)) {
+    if (hasSome(mongoFileId)) {
       mongoFileService.deleteFile(mongoFileId, fileBucket);
       deleteGcsFileMetadataByMongoFileId(mongoFileId);
     }
@@ -192,7 +192,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
     List<String> allFileIds = mongoFileService.getAllFileIds(entityId, fileBucket);
-    if (!gcsStorageEnabled || isNotEmpty(allFileIds)) {
+    if (!gcsStorageEnabled || hasSome(allFileIds)) {
       return allFileIds;
     } else {
       return googleCloudFileService.getAllFileIds(entityId, fileBucket);
@@ -202,7 +202,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String getLatestFileId(String entityId, FileBucket fileBucket) {
     String latestFileId = mongoFileService.getLatestFileId(entityId, fileBucket);
-    if (!gcsStorageEnabled || isNotEmpty(latestFileId)) {
+    if (!gcsStorageEnabled || hasSome(latestFileId)) {
       return latestFileId;
     } else {
       return googleCloudFileService.getLatestFileId(entityId, fileBucket);
@@ -212,7 +212,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier) {
     String latestFileId = mongoFileService.getLatestFileIdByQualifier(entityId, fileBucket, qualifier);
-    if (!gcsStorageEnabled || isNotEmpty(latestFileId)) {
+    if (!gcsStorageEnabled || hasSome(latestFileId)) {
       return latestFileId;
     } else {
       return googleCloudFileService.getLatestFileIdByQualifier(entityId, fileBucket, qualifier);
@@ -222,7 +222,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     String fileId = mongoFileService.getFileIdByVersion(entityId, version, fileBucket);
-    if (!gcsStorageEnabled || isNotEmpty(fileId)) {
+    if (!gcsStorageEnabled || hasSome(fileId)) {
       return fileId;
     } else {
       return googleCloudFileService.getFileIdByVersion(entityId, version, fileBucket);

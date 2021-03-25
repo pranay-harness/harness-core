@@ -1,6 +1,6 @@
 package io.harness.mongo;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.lang.String.format;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
@@ -122,7 +122,7 @@ public class MongoModule extends AbstractModule {
   @Singleton
   public MongoClient getLocksMongoClient(MongoConfig mongoConfig) {
     MongoClientURI uri;
-    if (isNotEmpty(mongoConfig.getLocksUri())) {
+    if (hasSome(mongoConfig.getLocksUri())) {
       uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     } else {
       uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
@@ -135,7 +135,7 @@ public class MongoModule extends AbstractModule {
   @Singleton
   public String getLocksDatabase(MongoConfig mongoConfig) {
     MongoClientURI uri;
-    if (isNotEmpty(mongoConfig.getLocksUri())) {
+    if (hasSome(mongoConfig.getLocksUri())) {
       uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
     } else {
       uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));

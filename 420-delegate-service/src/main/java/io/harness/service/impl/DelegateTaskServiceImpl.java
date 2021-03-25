@@ -1,5 +1,6 @@
 package io.harness.service.impl;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -7,7 +8,6 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskLogContext;
@@ -57,7 +57,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
     // Touch currently executing tasks.
-    if (EmptyPredicate.isEmpty(delegateTaskIds)) {
+    if (hasNone(delegateTaskIds)) {
       return;
     }
 

@@ -1,9 +1,9 @@
 package io.harness.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
@@ -58,7 +58,7 @@ public final class Plan implements PersistentEntity {
   }
 
   public boolean isEmpty() {
-    return EmptyPredicate.isEmpty(nodes);
+    return hasNone(nodes);
   }
 
   public PlanNodeProto fetchStartingNode() {
@@ -137,7 +137,7 @@ public final class Plan implements PersistentEntity {
     }
 
     public Plan build() {
-      if (EmptyPredicate.isEmpty(this.nodes)) {
+      if (hasNone(this.nodes)) {
         return internalBuild();
       }
       this.nodes.sort(Comparator.comparing(PlanNodeProto::getUuid));

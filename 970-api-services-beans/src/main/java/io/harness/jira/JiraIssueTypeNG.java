@@ -1,9 +1,9 @@
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.jira.deserializer.JiraIssueTypeDeserializer;
 
@@ -63,7 +63,7 @@ public class JiraIssueTypeNG {
   }
 
   public void updateStatuses(List<JiraStatusNG> statuses) {
-    if (EmptyPredicate.isEmpty(statuses)) {
+    if (hasNone(statuses)) {
       return;
     }
 

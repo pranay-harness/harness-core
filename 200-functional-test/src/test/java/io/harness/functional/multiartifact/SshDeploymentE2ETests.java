@@ -1,6 +1,6 @@
 package io.harness.functional.multiartifact;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.rule.OwnerRule.AADITI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,7 +108,7 @@ public class SshDeploymentE2ETests extends AbstractFunctionalTest {
     // get artifact variables from deployment metadata for given workflow
     List<ArtifactVariable> artifactVariables = workflowGenerator.getArtifactVariablesFromDeploymentMetadataForWorkflow(
         application.getUuid(), basicWorkflow.getUuid());
-    if (isNotEmpty(artifactVariables)) {
+    if (hasSome(artifactVariables)) {
       for (ArtifactVariable artifactVariable : artifactVariables) {
         Artifact artifact = MultiArtifactTestUtils.collectArtifact(
             bearerToken, account.getUuid(), artifactVariable.getArtifactStreamSummaries().get(0).getArtifactStreamId());

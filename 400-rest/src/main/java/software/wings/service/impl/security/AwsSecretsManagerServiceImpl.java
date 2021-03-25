@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -13,7 +14,6 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
@@ -227,7 +227,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
     if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate() || awsSecretsManagerConfig.isAssumeIamRoleOnDelegate()) {
-      if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getDelegateSelectors())) {
+      if (hasNone(awsSecretsManagerConfig.getDelegateSelectors())) {
         String message = "Delegate Selectors cannot be empty if you're Assuming AWS Role";
         throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
       }

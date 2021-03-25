@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.statusupdate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -43,7 +43,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     }
     List<NodeExecution> flowingChildren =
         nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), StatusUtils.flowingStatuses());
-    if (isEmpty(flowingChildren)) {
+    if (hasNone(flowingChildren)) {
       Interrupt interrupt = interruptService.get(interruptId);
       // Update Status
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,

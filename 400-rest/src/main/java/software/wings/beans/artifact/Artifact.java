@@ -1,11 +1,11 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -229,7 +229,7 @@ public class Artifact extends Base {
   }
 
   public String getUiDisplayName() {
-    if (EmptyPredicate.isNotEmpty(uiDisplayName)) {
+    if (hasSome(uiDisplayName)) {
       return uiDisplayName;
     }
     return "Build# " + getBuildNo();

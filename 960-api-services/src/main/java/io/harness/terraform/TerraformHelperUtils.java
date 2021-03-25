@@ -1,6 +1,6 @@
 package io.harness.terraform;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 public class TerraformHelperUtils {
   public String generateCommandFlagsString(List<String> arguments, String command) {
     StringBuilder stringargs = new StringBuilder();
-    if (isNotEmpty(arguments)) {
+    if (hasSome(arguments)) {
       for (String arg : arguments) {
         stringargs.append(command).append(arg).append(' ');
       }

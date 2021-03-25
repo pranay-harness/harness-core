@@ -1,9 +1,9 @@
 package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -62,7 +62,7 @@ public class NodeExecutionsCache {
     String childrenMapKey = parentId == null ? NULL_PARENT_ID : parentId;
     if (childrenMap.containsKey(childrenMapKey)) {
       List<String> ids = childrenMap.get(childrenMapKey);
-      if (EmptyPredicate.isEmpty(ids)) {
+      if (hasNone(ids)) {
         return Collections.emptyList();
       }
 
@@ -71,7 +71,7 @@ public class NodeExecutionsCache {
 
     List<NodeExecution> childExecutions =
         nodeExecutionService.fetchChildrenNodeExecutions(ambiance.getPlanExecutionId(), parentId);
-    if (EmptyPredicate.isEmpty(childExecutions)) {
+    if (hasNone(childExecutions)) {
       childrenMap.put(parentId, Collections.emptyList());
       return Collections.emptyList();
     }

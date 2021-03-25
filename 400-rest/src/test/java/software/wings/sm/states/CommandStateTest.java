@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -1401,7 +1401,7 @@ public class CommandStateTest extends WingsBaseTest {
     CommandState commandState = new CommandState("test");
     on(commandState).set("templateUtils", templateUtils);
     Map<String, Object> stateVariables = new HashMap<>();
-    if (isNotEmpty(command.getTemplateVariables())) {
+    if (hasSome(command.getTemplateVariables())) {
       stateVariables.putAll(
           command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
     }
@@ -1433,7 +1433,7 @@ public class CommandStateTest extends WingsBaseTest {
     CommandState commandState = new CommandState("test");
     on(commandState).set("templateUtils", templateUtils);
     Map<String, Object> stateVariables = new HashMap<>();
-    if (isNotEmpty(command.getTemplateVariables())) {
+    if (hasSome(command.getTemplateVariables())) {
       stateVariables.putAll(
           command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
     }

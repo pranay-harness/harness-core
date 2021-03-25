@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_ID_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_TYPE_KEY;
@@ -41,7 +41,7 @@ public class YamlGitConfigMigration implements Migration {
   }
 
   private void updateYamlGitConfig(YamlGitConfig yamlGitConfig) {
-    if (isEmpty(yamlGitConfig.getEntityId()) && yamlGitConfig.getEntityType() == null) {
+    if (hasNone(yamlGitConfig.getEntityId()) && yamlGitConfig.getEntityType() == null) {
       Map<String, Object> keyValuePairs = new HashMap<>();
       keyValuePairs.put(SYNC_MODE_KEY, SyncMode.BOTH);
       keyValuePairs.put(ENTITY_ID_KEY, yamlGitConfig.getAccountId());

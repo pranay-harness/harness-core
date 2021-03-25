@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -59,6 +59,6 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   }
 
   public boolean isCanaryUrlPresent() {
-    return isNotEmpty(canaryMetricInfos);
+    return hasSome(canaryMetricInfos);
   }
 }

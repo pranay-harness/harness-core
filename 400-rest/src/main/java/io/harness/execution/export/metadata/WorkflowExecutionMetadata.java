@@ -1,11 +1,11 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;
@@ -69,7 +69,7 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
         .serviceInfrastructures(
             ServiceInfraSummaryMetadata.fromElementExecutionSummaries(workflowExecution.getServiceExecutionSummaries()))
         .inputArtifacts(ArtifactMetadata.fromArtifacts(
-            EmptyPredicate.isEmpty(workflowExecution.getArtifacts()) && workflowExecution.getExecutionArgs() != null
+            hasNone(workflowExecution.getArtifacts()) && workflowExecution.getExecutionArgs() != null
                 ? workflowExecution.getExecutionArgs().getArtifacts()
                 : workflowExecution.getArtifacts()))
         .collectedArtifacts(

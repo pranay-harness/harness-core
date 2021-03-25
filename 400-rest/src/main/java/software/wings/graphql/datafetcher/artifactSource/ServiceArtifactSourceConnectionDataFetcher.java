@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
@@ -37,7 +37,7 @@ public class ServiceArtifactSourceConnectionDataFetcher
       String appId = parameters.getApplicationId();
       List<ArtifactStream> artifactStreams = artifactStreamService.getArtifactStreamsForService(appId, serviceId);
       List<QLArtifactSource> result = new ArrayList<>();
-      if (isNotEmpty(artifactStreams)) {
+      if (hasSome(artifactStreams)) {
         for (ArtifactStream artifactStream : artifactStreams) {
           if (!artifactStream.isArtifactStreamParameterized()) {
             result.add(populateArtifactSource(artifactStream));

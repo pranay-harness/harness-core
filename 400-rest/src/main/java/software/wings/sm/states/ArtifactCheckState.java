@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
@@ -50,7 +50,7 @@ public class ArtifactCheckState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<Artifact> artifacts = workflowStandardParams.getArtifacts();
-    if (isEmpty(artifacts)) {
+    if (hasNone(artifacts)) {
       return ExecutionResponse.builder().errorMessage("Artifacts are not required.").build();
     }
     List<Artifact> failedArtifacts =
@@ -58,7 +58,7 @@ public class ArtifactCheckState extends State {
             .filter(artifact -> artifact.getStatus() == Status.FAILED || artifact.getStatus() == Status.ERROR)
             .collect(toList());
 
-    if (!isEmpty(failedArtifacts)) {
+    if (!hasNone(failedArtifacts)) {
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("One or more artifacts: " + failedArtifacts + " are in failed status")
@@ -137,7 +137,7 @@ public class ArtifactCheckState extends State {
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
 
-    if (!isEmpty(failedArtifacts)) {
+    if (!hasNone(failedArtifacts)) {
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage("One or more artifacts: "

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -51,7 +51,7 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
                                              .stream()
                                              .map(ArtifactStream::getUuid)
                                              .collect(Collectors.toList());
-        if (!isEmpty(artifactStreamIds)) {
+        if (!hasNone(artifactStreamIds)) {
           bulkWriteOperation
               .find(wingsPersistence.createQuery(Service.class).filter(Service.ID, service.getUuid()).getQueryObject())
               .updateOne(

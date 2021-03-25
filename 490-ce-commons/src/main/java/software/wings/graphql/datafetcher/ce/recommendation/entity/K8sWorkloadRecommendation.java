@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
@@ -154,13 +154,13 @@ public final class K8sWorkloadRecommendation
     if (containerRecommendations != null) {
       validRecommendation = true;
       for (ContainerRecommendation cr : containerRecommendations.values()) {
-        if (!isEmpty(cr.getCurrent())) {
+        if (!hasNone(cr.getCurrent())) {
           cr.setCurrent(ResourceRequirement.builder()
                             .requests(SANITIZER.encodeDotsInKey(cr.getCurrent().getRequests()))
                             .limits(SANITIZER.encodeDotsInKey(cr.getCurrent().getLimits()))
                             .build());
         }
-        if (isEmpty(cr.getBurstable())) {
+        if (hasNone(cr.getBurstable())) {
           validRecommendation = false;
         } else {
           cr.setBurstable(ResourceRequirement.builder()
@@ -171,7 +171,7 @@ public final class K8sWorkloadRecommendation
             noDiffInAllContainers = false;
           }
         }
-        if (isEmpty(cr.getGuaranteed())) {
+        if (hasNone(cr.getGuaranteed())) {
           validRecommendation = false;
         } else {
           cr.setGuaranteed(ResourceRequirement.builder()
@@ -182,7 +182,7 @@ public final class K8sWorkloadRecommendation
             noDiffInAllContainers = false;
           }
         }
-        if (isEmpty(cr.getRecommended())) {
+        if (hasNone(cr.getRecommended())) {
           validRecommendation = false;
         } else {
           cr.setRecommended(ResourceRequirement.builder()
@@ -197,7 +197,7 @@ public final class K8sWorkloadRecommendation
         // for p80, p90, p95, etc.
         if (cr.getPercentileBased() != null) {
           for (Map.Entry<String, ResourceRequirement> pair : cr.getPercentileBased().entrySet()) {
-            if (isEmpty(pair.getValue())) {
+            if (hasNone(pair.getValue())) {
               validRecommendation = false;
             } else {
               ResourceRequirement requirement = ResourceRequirement.builder()

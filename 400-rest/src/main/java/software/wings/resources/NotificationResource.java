@@ -4,7 +4,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -56,7 +56,7 @@ public class NotificationResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    if (isNotEmpty(appId)) {
+    if (hasSome(appId)) {
       pageRequest.addFilter("appId", EQ, appId);
     }
     pageRequest.setOrders(asList(aSortOrder().withField("complete", ASC).build(),

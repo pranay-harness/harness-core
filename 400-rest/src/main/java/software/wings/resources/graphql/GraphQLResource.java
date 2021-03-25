@@ -1,6 +1,6 @@
 package software.wings.resources.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING;
@@ -164,7 +164,7 @@ public class GraphQLResource {
         }
       }
       hasUserContext = true;
-    } else if (isNotEmpty(apiKey)) {
+    } else if (hasSome(apiKey)) {
       accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
       if (accountId == null) {
         accountId = accountIdFromQueryParam;

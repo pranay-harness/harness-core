@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -51,7 +51,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
 
   @Override
   public void decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isEmpty(encryptedDataDetails)) {
+    if (hasNone(encryptedDataDetails)) {
       return;
     }
     // decrypt locally encrypted variables in manager
@@ -84,7 +84,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             .collect(Collectors.toList());
 
     // if nothing left to decrypt return
-    if (isEmpty(nonLocalEncryptedDetails)) {
+    if (hasNone(nonLocalEncryptedDetails)) {
       object.setDecrypted(true);
       return;
     }
@@ -107,7 +107,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
   @Override
   public void decrypt(
       String accountId, List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList) {
-    if (isEmpty(encryptableSettingWithEncryptionDetailsList)) {
+    if (hasNone(encryptableSettingWithEncryptionDetailsList)) {
       return;
     }
 

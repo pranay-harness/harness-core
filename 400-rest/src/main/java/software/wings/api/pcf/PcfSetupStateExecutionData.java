@@ -1,7 +1,7 @@
 package software.wings.api.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -86,7 +86,7 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
     }
 
     List<String> urls = isStandardBlueGreen ? tempRouteMaps : routeMaps;
-    if (isNotEmpty(urls)) {
+    if (hasSome(urls)) {
       putNotNull(executionDetails, "routeMaps",
           ExecutionDataValue.builder().value(String.valueOf(urls)).displayName("Routes").build());
     }

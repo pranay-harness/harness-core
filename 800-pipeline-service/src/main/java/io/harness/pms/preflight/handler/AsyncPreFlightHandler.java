@@ -1,5 +1,6 @@
 package io.harness.pms.preflight.handler;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import io.harness.EntityType;
@@ -10,7 +11,6 @@ import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
@@ -128,19 +128,19 @@ public class AsyncPreFlightHandler implements Runnable {
   private List<ConnectorResponseDTO> getConnectorResponses(
       List<String> accountLevelConnectors, List<String> orgLevelConnectors, List<String> projectLevelConnectors) {
     List<ConnectorResponseDTO> connectorResponses = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(accountLevelConnectors)) {
+    if (hasSome(accountLevelConnectors)) {
       PageResponse<ConnectorResponseDTO> response =
           execute(connectorResourceClient.listConnectors(entity.getAccountIdentifier(), null, null, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(accountLevelConnectors).build()));
       connectorResponses.addAll(response.getContent());
     }
-    if (EmptyPredicate.isNotEmpty(orgLevelConnectors)) {
+    if (hasSome(orgLevelConnectors)) {
       PageResponse<ConnectorResponseDTO> response =
           execute(connectorResourceClient.listConnectors(entity.getAccountIdentifier(), entity.getOrgIdentifier(), null,
               PAGE, SIZE, ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(orgLevelConnectors).build()));
       connectorResponses.addAll(response.getContent());
     }
-    if (EmptyPredicate.isNotEmpty(projectLevelConnectors)) {
+    if (hasSome(projectLevelConnectors)) {
       PageResponse<ConnectorResponseDTO> response = execute(connectorResourceClient.listConnectors(
           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier(), PAGE, SIZE,
           ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(projectLevelConnectors).build()));
@@ -164,7 +164,7 @@ public class AsyncPreFlightHandler implements Runnable {
       ConnectorConnectivityDetails connectorConnectivityDetails = connectorResponse.getStatus();
       checkResponse.status(getPreFlightStatus(connectorConnectivityDetails.getStatus()));
 
-      if (EmptyPredicate.isNotEmpty(connectorConnectivityDetails.getErrorSummary())) {
+      if (hasSome(connectorConnectivityDetails.getErrorSummary())) {
         List<PreFlightCause> causes = new ArrayList<>();
         List<PreFlightResolution> resolution = new ArrayList<>();
         connectorConnectivityDetails.getErrors().forEach(error -> {

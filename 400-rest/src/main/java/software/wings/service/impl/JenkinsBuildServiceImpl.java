@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.network.Http.connectableJenkinsHttpUrl;
@@ -181,11 +181,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     encryptionService.decrypt(jenkinsConfig, encryptedDataDetails, false);
 
     if (JenkinsUtils.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
-      if (isEmpty(new String(jenkinsConfig.getToken()))) {
+      if (hasNone(new String(jenkinsConfig.getToken()))) {
         throw new ArtifactServerException("Token should be not empty", USER);
       }
     } else {
-      if (isEmpty(jenkinsConfig.getUsername()) || isEmpty(new String(jenkinsConfig.getPassword()))) {
+      if (hasNone(jenkinsConfig.getUsername()) || hasNone(new String(jenkinsConfig.getPassword()))) {
         throw new ArtifactServerException("UserName/Password should be not empty", USER);
       }
     }

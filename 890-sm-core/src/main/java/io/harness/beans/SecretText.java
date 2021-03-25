@@ -1,8 +1,8 @@
 package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -27,10 +27,10 @@ public class SecretText extends HarnessSecret {
   private String path;
   private Set<EncryptedDataParams> parameters;
   public boolean isInlineSecret() {
-    return isEmpty(path) && !isParameterizedSecret();
+    return hasNone(path) && !isParameterizedSecret();
   }
   public boolean isReferencedSecret() {
-    return isNotEmpty(path);
+    return hasSome(path);
   }
   public boolean isParameterizedSecret() {
     return parameters != null;

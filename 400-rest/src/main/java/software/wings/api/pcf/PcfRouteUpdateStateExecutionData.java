@@ -1,7 +1,7 @@
 package software.wings.api.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -70,7 +70,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
           .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
           .append('}');
 
-      if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
+      if (hasSome(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
         pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
             -> stringBuilder.append(", {")
                    .append(appName)
@@ -79,7 +79,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
                    .append('}'));
       }
     } else {
-      if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
+      if (hasSome(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
         pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
             -> stringBuilder.append(appName)
                    .append("[")

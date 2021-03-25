@@ -3,7 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_PCF_DEPLOYMENTS;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -14,7 +15,6 @@ import static java.util.function.Function.identity;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
 import io.harness.exception.WingsException;
@@ -161,7 +161,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
           Map<String, Instance> instancesInDBMap = new HashMap<>();
 
           // If there are prior instances in db already
-          if (isNotEmpty(instancesInDB)) {
+          if (hasSome(instancesInDB)) {
             instancesInDB.forEach(instance -> {
               if (instance != null) {
                 instancesInDBMap.put(instance.getPcfInstanceKey().getId(), instance);
@@ -200,15 +200,15 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
 
           log.info("Updating Instances in DB via Flow : [{}]", instanceSyncFlow);
 
-          if (isNotEmpty(instanceIdsToBeDeleted)) {
+          if (hasSome(instanceIdsToBeDeleted)) {
             instanceService.delete(instanceIdsToBeDeleted);
           }
 
           DeploymentSummary deploymentSummary;
-          if (isNotEmpty(instancesToBeAdded)) {
+          if (hasSome(instancesToBeAdded)) {
             // newDeploymentInfo would be null in case of sync job.
             if ((newDeploymentSummaries == null || !pcfAppNamesNewDeploymentSummaryMap.containsKey(pcfApplicationName))
-                && isNotEmpty(instancesInDB)) {
+                && hasSome(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
                 log.warn("Couldn't find an instance from a previous deployment for infra mapping");
@@ -253,7 +253,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
   }
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
-    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+    if (hasNone(newDeploymentSummaries)) {
       return Collections.emptyMap();
     }
 
@@ -283,7 +283,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
         PcfInstanceInfo pcfInstanceInfo = (PcfInstanceInfo) instanceInfo;
         String pcfAppName = pcfInstanceInfo.getPcfApplicationName();
         // todo(aman) this logic needs to be reviewed.
-        if (isNotEmpty(applicationNameIfSupplied) && !pcfAppName.equals(applicationNameIfSupplied)) {
+        if (hasSome(applicationNameIfSupplied) && !pcfAppName.equals(applicationNameIfSupplied)) {
           continue;
         }
         pcfApplicationNameInstanceMap.put(pcfAppName, instance);

@@ -1,10 +1,10 @@
 package io.harness.helpers.ext.cyberark;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -64,7 +64,7 @@ public class CyberArkRestClientFactory {
 
   public static CyberArkRestClient create(CyberArkConfig cyberArkConfig) {
     OkHttpClient httpClient;
-    if (EmptyPredicate.isEmpty(cyberArkConfig.getClientCertificate())) {
+    if (hasNone(cyberArkConfig.getClientCertificate())) {
       if (cyberArkConfig.isCertValidationRequired()) {
         httpClient = Http.getSafeOkHttpClientBuilder(cyberArkConfig.getCyberArkUrl(), 10, 10)
                          .addInterceptor(loggingInterceptor)

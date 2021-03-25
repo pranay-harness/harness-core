@@ -1,7 +1,7 @@
 package software.wings.ratelimit;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
@@ -59,7 +59,7 @@ public class DelegateRequestRateLimiter {
       if (globalRateLimitReached) {
         log.info("Global Delegate Acquire Task limit reached");
         return true;
-      } else if (isNotEmpty(accountId)) {
+      } else if (hasSome(accountId)) {
         boolean rateLimitReached = getAccountRateLimiter(accountId).overLimitWhenIncremented(delegateId);
         if (rateLimitReached) {
           log.info("Delegate Acquire Task limit reached");

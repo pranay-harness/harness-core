@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
@@ -83,7 +83,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
             aSSHExecutionCredential().withExecutionType(SSH).withSshUser("").withSshPassword(new char[0]).build();
         List<HostValidationResponse> response = hostValidationService.validateHost(
             hostNames, settingAttribute, encryptedDataDetails, credential, sshVaultConfig);
-        if (isEmpty(response)) {
+        if (hasNone(response)) {
           throw new InvalidRequestException("Did not get hosts validated for SSH", USER);
         }
         return ConnectivityValidationDelegateResponse.builder()
@@ -99,7 +99,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
             singletonList(((WinRmConnectivityValidationAttributes) connectivityValidationAttributes).getHostName());
         List<HostValidationResponse> response =
             hostValidationService.validateHost(hostNames, settingAttribute, encryptedDataDetails, null, null);
-        if (isEmpty(response)) {
+        if (hasNone(response)) {
           throw new InvalidRequestException("Did not get hosts validated for SSH", USER);
         }
         return ConnectivityValidationDelegateResponse.builder()
@@ -117,9 +117,8 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
         EmailData emailData =
             EmailData.builder()
                 .to(singletonList(validationAttributes.getTo()))
-                .subject(
-                    isNotEmpty(validationAttributes.getSubject()) ? validationAttributes.getSubject() : DEFAULT_TEXT)
-                .body(isNotEmpty(validationAttributes.getBody()) ? validationAttributes.getBody() : DEFAULT_TEXT)
+                .subject(hasSome(validationAttributes.getSubject()) ? validationAttributes.getSubject() : DEFAULT_TEXT)
+                .body(hasSome(validationAttributes.getBody()) ? validationAttributes.getBody() : DEFAULT_TEXT)
                 .build();
         boolean valid = false;
         String errorMessage = "";

@@ -2,7 +2,7 @@ package software.wings.delegatetasks.azure.arm.deployment;
 
 import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
@@ -267,7 +267,7 @@ public class AzureARMDeploymentService {
         errorResponse.message(), errorResponse.target());
     parentErrorBuilder.append(errorMessage).append("\n");
 
-    if (isNotEmpty(errorResponse.details())) {
+    if (hasSome(errorResponse.details())) {
       for (ErrorResponse error : errorResponse.details()) {
         buildErrorMessage(error, parentErrorBuilder);
       }

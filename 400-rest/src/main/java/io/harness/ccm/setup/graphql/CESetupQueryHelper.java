@@ -1,6 +1,6 @@
 package io.harness.ccm.setup.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
@@ -19,7 +19,7 @@ public class CESetupQueryHelper {
   @Inject protected DataFetcherUtils utils;
 
   public void setQuery(List<QLCESetupFilter> filters, Query query) {
-    if (isEmpty(filters)) {
+    if (hasNone(filters)) {
       return;
     }
 

@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.resolver;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
@@ -13,7 +13,7 @@ public class RefObjectUtils {
   private final String PRODUCER_ID = "__PRODUCER_ID__";
 
   public RefObject getOutcomeRefObject(String name, String producerId, String key) {
-    if (isEmpty(key)) {
+    if (hasNone(key)) {
       key = name;
     }
     return RefObject.newBuilder()

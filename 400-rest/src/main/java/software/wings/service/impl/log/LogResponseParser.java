@@ -1,7 +1,7 @@
 package software.wings.service.impl.log;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
@@ -51,14 +51,14 @@ public class LogResponseParser {
     Map<String, LogElement> resultMap = new HashMap<>();
     VerificationResponseParser logsResponseParser = new VerificationResponseParser();
     for (ResponseMapper responseMapper : data.getResponseMappers().values()) {
-      if (!isEmpty(responseMapper.getJsonPath()) && !isEmpty(responseMapper.getJsonPath().get(0))) {
+      if (!hasNone(responseMapper.getJsonPath()) && !hasNone(responseMapper.getJsonPath().get(0))) {
         logsResponseParser.put(responseMapper.getJsonPath().get(0).split("\\."), responseMapper.getFieldName(),
             responseMapper.getRegexs());
       }
       if (responseMapper.getJsonPath() != null && responseMapper.getJsonPath().size() > 1) {
         for (int index = 1; index < responseMapper.getJsonPath().size(); index++) {
           String path = responseMapper.getJsonPath().get(index);
-          if (!isEmpty(path)) {
+          if (!hasNone(path)) {
             logsResponseParser.put(
                 path.split("\\."), responseMapper.getFieldName() + index, responseMapper.getRegexs());
           }
@@ -66,7 +66,7 @@ public class LogResponseParser {
       }
 
       if (responseMapper.getFieldName().equals(TIMESTAMP_FIELD)) {
-        if (isNotEmpty(responseMapper.getTimestampFormat())) {
+        if (hasSome(responseMapper.getTimestampFormat())) {
           timestampFormat = responseMapper.getTimestampFormat();
         }
       }

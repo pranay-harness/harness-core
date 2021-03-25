@@ -1,10 +1,11 @@
 package io.harness.pms.merger.helpers;
 
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -136,7 +137,7 @@ public class MergeHelper {
     }
 
     String filteredInputSetYaml = MergeHelper.removeRuntimeInputFromYaml(runtimeInput);
-    if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
+    if (hasNone(filteredInputSetYaml)) {
       return "";
     }
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);

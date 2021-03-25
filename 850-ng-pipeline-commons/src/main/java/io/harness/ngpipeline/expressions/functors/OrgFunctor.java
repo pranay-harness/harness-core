@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.expressions.functors;
 
-import io.harness.data.structure.EmptyPredicate;
+import static io.harness.data.structure.HasPredicate.hasNone;
+
 import io.harness.expression.LateBindingValue;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -19,8 +20,6 @@ public class OrgFunctor implements LateBindingValue {
   public Object bind() {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
-    return EmptyPredicate.isEmpty(accountId) || EmptyPredicate.isEmpty(orgIdentifier)
-        ? null
-        : organizationService.get(accountId, orgIdentifier);
+    return hasNone(accountId) || hasNone(orgIdentifier) ? null : organizationService.get(accountId, orgIdentifier);
   }
 }

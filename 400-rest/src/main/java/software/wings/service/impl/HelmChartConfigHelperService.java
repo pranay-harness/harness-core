@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -184,7 +184,7 @@ public class HelmChartConfigHelperService {
   }
 
   private boolean chartSourceIsUnknown(HelmChartConfig helmChartConfig) {
-    return isEmpty(helmChartConfig.getConnectorId()) && isEmpty(helmChartConfig.getChartUrl());
+    return hasNone(helmChartConfig.getConnectorId()) && hasNone(helmChartConfig.getChartUrl());
   }
 
   private HelmVersion getHelmVersionFromService(ExecutionContext context) {

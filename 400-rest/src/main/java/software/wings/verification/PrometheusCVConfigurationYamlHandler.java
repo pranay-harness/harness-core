@@ -1,10 +1,10 @@
 package software.wings.verification;
 
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.resources.PrometheusResource.validateTransactions;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -84,7 +84,7 @@ public class PrometheusCVConfigurationYamlHandler
 
   private void validateTimeSeriesMetrics(List<TimeSeries> timeSeriesList) {
     Map<String, String> invalidFields = validateTransactions(timeSeriesList, true);
-    if (EmptyPredicate.isNotEmpty(invalidFields)) {
+    if (hasSome(invalidFields)) {
       StringBuilder errorMsgBuilder = new StringBuilder();
       invalidFields.values().forEach(value -> {
         errorMsgBuilder.append(value);

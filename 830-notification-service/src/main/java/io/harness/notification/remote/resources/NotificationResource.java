@@ -1,7 +1,7 @@
 package io.harness.notification.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.notification.remote.mappers.NotificationMapper.toDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -59,7 +59,7 @@ public class NotificationResource {
   @ApiOperation(value = "List notifications", nickname = "listNotifications")
   public ResponseDTO<PageResponse<NotificationDTO>> list(
       @QueryParam("team") Team team, @BeanParam PageRequest pageRequest) {
-    if (isEmpty(pageRequest.getSortOrders())) {
+    if (hasNone(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }

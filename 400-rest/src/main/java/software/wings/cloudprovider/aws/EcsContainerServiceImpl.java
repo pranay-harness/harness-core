@@ -1,7 +1,7 @@
 package software.wings.cloudprovider.aws;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.logging.LogLevel.WARN;
 import static io.harness.threading.Morpheus.sleep;
@@ -1059,7 +1059,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (service.getDesiredCount() != desiredCount
           || (timeoutErrorSupported && !isServiceStable(desiredCount, service))) {
         List<ServiceEvent> serviceEvents = new ArrayList<>();
-        if (isNotEmpty(service.getEvents())) {
+        if (hasSome(service.getEvents())) {
           serviceEvents.addAll(service.getEvents());
         }
 
@@ -1103,7 +1103,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * @return
    */
   private boolean isServiceStable(int desiredCount, Service service) {
-    return service.getRunningCount() == desiredCount && !isEmpty(service.getDeployments());
+    return service.getRunningCount() == desiredCount && !hasNone(service.getDeployments());
   }
 
   @Override
@@ -1128,7 +1128,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       List<String> originalTaskArns, ExecutionLogCallback executionLogCallback) {
     List<String> taskArns =
         getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
-    if (isEmpty(taskArns)) {
+    if (hasNone(taskArns)) {
       log.info("Downsize complete for ECS deployment, Service: " + serviceName);
       return emptyList();
     }
@@ -1143,7 +1143,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     if (CollectionUtils.isNotEmpty(tasks)) {
       containerInfos = generateContainerInfos(tasks, clusterName, region, encryptedDataDetails, executionLogCallback,
           awsConfig, taskArns, originalTaskArns);
-      if (isNotEmpty(containerInfos)) {
+      if (hasSome(containerInfos)) {
         containerInfos.stream()
             .filter(containerInfo -> containerInfo.getEcsContainerDetails() != null)
             .forEach(containerInfo -> containerInfo.getEcsContainerDetails().setEcsServiceName(serviceName));
@@ -1158,7 +1158,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   String getIdFromArn(String arn) {
-    if (isNotEmpty(arn)) {
+    if (hasSome(arn)) {
       String[] tokens = arn.split("/");
       return tokens[tokens.length - 1];
     }
@@ -1169,7 +1169,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   Container getMainHarnessDeployedContainer(
       Task task, String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     Container mainContainer = null;
-    if (isEmpty(task.getContainers())) {
+    if (hasNone(task.getContainers())) {
       return mainContainer;
     }
 
@@ -1183,7 +1183,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           region, awsConfig, encryptedDataDetails, describeTaskDefinitionRequest);
       List<Tag> taskDefinitionTags = taskDefinitionResult.getTags();
 
-      if (isNotEmpty(taskDefinitionTags)) {
+      if (hasSome(taskDefinitionTags)) {
         Optional<Tag> tag = taskDefinitionTags.stream()
                                 .filter(currentTag -> MAIN_ECS_CONTAINER_NAME_TAG.equals(currentTag.getKey()))
                                 .findFirst();
@@ -1227,7 +1227,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           fetchContainerInstancesForTasks(tasks, clusterName, region, encryptedDataDetails, awsConfig);
 
       Map<String, com.amazonaws.services.ec2.model.Instance> containerInstanceToEc2Map = new HashMap<>();
-      if (isNotEmpty(containerInstanceList)) {
+      if (hasSome(containerInstanceList)) {
         for (ContainerInstance containerInstance : containerInstanceList) {
           prepareContainerInstanceToEc2InstanceMap(region, encryptedDataDetails, executionLogCallback, awsConfig,
               containerInstanceToEc2Map, containerInstance);
@@ -1261,7 +1261,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           ipAddress = StringUtils.EMPTY;
         }
 
-        if (mainContainer != null && isNotEmpty(mainContainer.getNetworkInterfaces())) {
+        if (mainContainer != null && hasSome(mainContainer.getNetworkInterfaces())) {
           String privateIpv4AddressForENI = mainContainer.getNetworkInterfaces()
                                                 .stream()
                                                 .findFirst()
@@ -1294,7 +1294,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       // Try metadata api to get dockerId
       dockerId = awsMetadataApiHelper.tryMetadataApiForDockerIdIfAccessble(
           ec2Instance, task, mainContainer.getName(), executionLogCallback);
-      if (isNotEmpty(dockerId)) {
+      if (hasSome(dockerId)) {
         ecsContainerDetailsBuilder.completeDockerId(dockerId);
         dockerId = StringUtils.substring(dockerId, 0, 12);
         ecsContainerDetailsBuilder.dockerId(dockerId);
@@ -1442,7 +1442,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
           printAwsEvent(services.get(0), requestData.getServiceEvents(), requestData.getExecutionLogCallback());
 
-          if (isNotEmpty(services)) {
+          if (hasSome(services)) {
             if (hasServiceReachedSteadyState(services.get(0))) {
               executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
               return true;
@@ -1584,13 +1584,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     do {
       listServicesResult = awsHelperService.listServices(region, awsConfig, encryptedDataDetails, listServicesRequest);
-      if (isEmpty(listServicesResult.getServiceArns())) {
+      if (hasNone(listServicesResult.getServiceArns())) {
         break;
       }
 
       serviceArns.addAll(listServicesResult.getServiceArns()
                              .stream()
-                             .filter(arn -> isEmpty(serviceNamePrefix) || arn.contains(serviceNamePrefix))
+                             .filter(arn -> hasNone(serviceNamePrefix) || arn.contains(serviceNamePrefix))
                              .collect(toList()));
       listServicesRequest.setNextToken(listServicesResult.getNextToken());
     } while (listServicesResult.getNextToken() != null
@@ -1598,12 +1598,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     List<Service> filteredServices = new ArrayList<>();
 
-    if (!isEmpty(serviceArns)) {
+    if (!hasNone(serviceArns)) {
       List<Service> services =
           getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, serviceArns);
       filteredServices =
           services.stream()
-              .filter(s -> isEmpty(serviceNamePrefix) || s.getServiceName().startsWith(serviceNamePrefix))
+              .filter(s -> hasNone(serviceNamePrefix) || s.getServiceName().startsWith(serviceNamePrefix))
               .collect(toList());
     }
 
@@ -1616,7 +1616,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     List<Service> services =
         getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName));
 
-    if (isNotEmpty(services) && isNotEmpty(services.get(0).getEvents())) {
+    if (hasSome(services) && hasSome(services.get(0).getEvents())) {
       return new ArrayList<>(services.get(0).getEvents());
     }
 
@@ -1626,7 +1626,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ServiceEvent> getEventsFromService(Service service) {
     List<ServiceEvent> serviceEvents = new ArrayList<>();
-    if (service != null && isNotEmpty(service.getEvents())) {
+    if (service != null && hasSome(service.getEvents())) {
       serviceEvents.addAll(service.getEvents());
     }
 
@@ -1639,7 +1639,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails, false);
     List<Service> services = getEcsServicesForCluster(
         region, awsConfig, encryptedDataDetails, clusterName, Collections.singletonList(serviceName));
-    return isEmpty(services) ? Optional.empty() : Optional.of(services.get(0));
+    return hasNone(services) ? Optional.empty() : Optional.of(services.get(0));
   }
 
   @Override

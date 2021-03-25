@@ -1,7 +1,7 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.eraro.ErrorCode;
@@ -79,23 +79,23 @@ public class DatadogCvConfigurationYamlHandler
     List<String> metricList = new ArrayList<>();
     // validate if the metrics in yaml are actually supported by Harness.
 
-    if (isNotEmpty(yaml.getDockerMetrics())) {
+    if (hasSome(yaml.getDockerMetrics())) {
       yaml.getDockerMetrics().values().forEach(metric -> metricList.addAll(Arrays.asList(metric.split(","))));
       bean.setDockerMetrics(yaml.getDockerMetrics());
     }
-    if (isNotEmpty(yaml.getEcsMetrics())) {
+    if (hasSome(yaml.getEcsMetrics())) {
       yaml.getEcsMetrics().values().forEach(metric -> metricList.addAll(Arrays.asList(metric.split(","))));
       bean.setEcsMetrics(yaml.getEcsMetrics());
     }
-    if (isNotEmpty(yaml.getCustomMetrics())) {
+    if (hasSome(yaml.getCustomMetrics())) {
       yaml.getCustomMetrics().values().forEach(yamlMetricList -> yamlMetricList.forEach(yamlMetric -> {
         metricList.addAll(Arrays.asList(yamlMetric.getMetricName()));
       }));
       bean.setCustomMetrics(convertToBeanCustomMetrics(yaml.getCustomMetrics()));
     }
 
-    if (isEmpty(yaml.getDatadogServiceName()) && isEmpty(yaml.getDockerMetrics()) && isEmpty(yaml.getEcsMetrics())
-        && isEmpty(yaml.getCustomMetrics())) {
+    if (hasNone(yaml.getDatadogServiceName()) && hasNone(yaml.getDockerMetrics()) && hasNone(yaml.getEcsMetrics())
+        && hasNone(yaml.getCustomMetrics())) {
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, "No metrics found in the yaml");
     }
 
@@ -109,13 +109,13 @@ public class DatadogCvConfigurationYamlHandler
     bean.setDatadogServiceName(yaml.getDatadogServiceName() == null ? "" : yaml.getDatadogServiceName());
     bean.setStateType(StateType.DATA_DOG);
 
-    if (isNotEmpty(bean.getCustomMetrics())) {
+    if (hasSome(bean.getCustomMetrics())) {
       final Map<String, String> ddInvalidFields = DatadogState.validateDatadogCustomMetrics(bean.getCustomMetrics());
       String metricsString = datadogService.getConcatenatedListOfMetricsForValidation(
           null, bean.getDockerMetrics(), null, bean.getEcsMetrics());
       ddInvalidFields.putAll(
           DatadogServiceImpl.validateNameClashInCustomMetrics(bean.getCustomMetrics(), metricsString));
-      if (isNotEmpty(ddInvalidFields)) {
+      if (hasSome(ddInvalidFields)) {
         throw new VerificationOperationException(
             ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
       }
@@ -124,10 +124,10 @@ public class DatadogCvConfigurationYamlHandler
 
   private Map<String, Set<Metric>> convertToBeanCustomMetrics(Map<String, List<YamlMetric>> yamlCustomMetrics) {
     Map<String, Set<Metric>> beanCustomMetrics = new HashMap<>();
-    if (isNotEmpty(yamlCustomMetrics)) {
+    if (hasSome(yamlCustomMetrics)) {
       yamlCustomMetrics.forEach((k, v) -> {
         Set<Metric> beanMetricList = new HashSet<>();
-        if (isNotEmpty(v)) {
+        if (hasSome(v)) {
           v.forEach(yamlMetric -> beanMetricList.add(yamlMetric.convertToDatadogMetric()));
         }
         beanCustomMetrics.put(k, beanMetricList);
@@ -138,10 +138,10 @@ public class DatadogCvConfigurationYamlHandler
 
   private Map<String, List<YamlMetric>> convertToYamlCustomMetrics(Map<String, Set<Metric>> beanCustomMetrics) {
     Map<String, List<YamlMetric>> yamlCustomMetrics = new HashMap<>();
-    if (isNotEmpty(beanCustomMetrics)) {
+    if (hasSome(beanCustomMetrics)) {
       beanCustomMetrics.forEach((k, v) -> {
         List<YamlMetric> yamlMetricList = new ArrayList<>();
-        if (isNotEmpty(v)) {
+        if (hasSome(v)) {
           v.forEach(metric -> yamlMetricList.add(YamlMetric.convertToYamlMetric(metric)));
         }
         yamlCustomMetrics.put(k, yamlMetricList);

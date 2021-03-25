@@ -1,7 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import static java.util.Arrays.asList;
 
@@ -26,7 +26,7 @@ public class PcfCommandTemplateProcessor extends StateTemplateProcessor {
   public void transform(Template template, Map<String, Object> properties) {
     PcfCommandTemplate pcfCommandTemplate = (PcfCommandTemplate) template.getTemplateObject();
 
-    if (isNotEmpty(pcfCommandTemplate.getScriptString())) {
+    if (hasSome(pcfCommandTemplate.getScriptString())) {
       properties.put(SCRIPT_STRING, pcfCommandTemplate.getScriptString());
     }
 

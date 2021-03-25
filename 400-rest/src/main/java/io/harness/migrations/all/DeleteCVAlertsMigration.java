@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -27,7 +27,7 @@ public class DeleteCVAlertsMigration implements Migration {
   public void migrate() {
     List<Account> harnessAccounts =
         wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, "Harness.io").asList();
-    if (isEmpty(harnessAccounts)) {
+    if (hasNone(harnessAccounts)) {
       log.info("There are no harness accounts in DeleteCVAlertsMigration. Returning");
       return;
     }

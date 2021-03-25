@@ -3,7 +3,7 @@ package software.wings.app;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -161,7 +161,7 @@ public class DelegateQueueTask implements Runnable {
 
       delegateTasks.putAll(tasksToExpire.stream().collect(toMap(DelegateTask::getUuid, identity())));
       taskWaitIds.putAll(tasksToExpire.stream()
-                             .filter(task -> isNotEmpty(task.getWaitId()))
+                             .filter(task -> hasSome(task.getWaitId()))
                              .collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
     } catch (Exception e1) {
       log.error("Failed to deserialize {} tasks. Trying individually...", taskIds.size(), e1);
@@ -172,7 +172,7 @@ public class DelegateQueueTask implements Runnable {
           if (shouldExpireTask(task)) {
             taskIdsToExpire.add(taskId);
             delegateTasks.put(taskId, task);
-            if (isNotEmpty(task.getWaitId())) {
+            if (hasSome(task.getWaitId())) {
               taskWaitIds.put(taskId, task.getWaitId());
             }
           }
@@ -185,7 +185,7 @@ public class DelegateQueueTask implements Runnable {
                                 .project(DelegateTaskKeys.waitId, true)
                                 .get()
                                 .getWaitId();
-            if (isNotEmpty(waitId)) {
+            if (hasSome(waitId)) {
               taskWaitIds.put(taskId, waitId);
             }
           } catch (Exception e3) {

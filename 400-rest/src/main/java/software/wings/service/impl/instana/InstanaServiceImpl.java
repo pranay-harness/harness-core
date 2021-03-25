@@ -1,6 +1,6 @@
 package software.wings.service.impl.instana;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -97,9 +97,9 @@ public class InstanaServiceImpl implements InstanaService {
         verificationNodeDataSetupResponse.setProviderReachable(false);
       }
     }
-    if (setupTestNodeData.getApplicationParams() != null || isNotEmpty(setupTestNodeData.getTagFilters())) {
+    if (setupTestNodeData.getApplicationParams() != null || hasSome(setupTestNodeData.getTagFilters())) {
       List<InstanaTagFilter> tagFilters;
-      if (isNotEmpty(setupTestNodeData.getTagFilters())) {
+      if (hasSome(setupTestNodeData.getTagFilters())) {
         tagFilters = new ArrayList<>(setupTestNodeData.getTagFilters());
       } else {
         tagFilters = new ArrayList<>(setupTestNodeData.getApplicationParams().getTagFilters());
@@ -142,7 +142,7 @@ public class InstanaServiceImpl implements InstanaService {
         verificationNodeDataSetupResponse.setProviderReachable(false);
       }
     }
-    if (isNotEmpty(load) && isLoadPresent) {
+    if (hasSome(load) && isLoadPresent) {
       verificationNodeDataSetupResponse.setDataForNode(load);
       verificationLoadResponse.setLoadPresent(true);
       verificationLoadResponse.setLoadResponse(load);

@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.configuration.DeployMode;
@@ -117,7 +117,7 @@ public class LicenseUtils {
       return getEncryptedLicenseInfo(newLicenseInfo);
     }
 
-    if (isNotEmpty(newLicenseInfo.getAccountStatus())) {
+    if (hasSome(newLicenseInfo.getAccountStatus())) {
       if (!AccountStatus.isValid(newLicenseInfo.getAccountStatus())) {
         throw new InvalidRequestException("Invalid / Null license info account status", USER);
       }
@@ -126,12 +126,12 @@ public class LicenseUtils {
 
     int resetLicenseUnitsCount = 0;
     long resetExpiryTime = 0;
-    if (isNotEmpty(newLicenseInfo.getAccountType())) {
+    if (hasSome(newLicenseInfo.getAccountType())) {
       if (!AccountType.isValid(newLicenseInfo.getAccountType())) {
         throw new InvalidRequestException("Invalid / Null license info account type", USER);
       }
 
-      if (isNotEmpty(newLicenseInfo.getAccountType())
+      if (hasSome(newLicenseInfo.getAccountType())
           && !currentLicenseInfo.getAccountType().equals(newLicenseInfo.getAccountType())) {
         if (AccountType.TRIAL.equals(newLicenseInfo.getAccountType())) {
           resetLicenseUnitsCount = InstanceLimitProvider.defaults(AccountType.TRIAL);
@@ -148,11 +148,11 @@ public class LicenseUtils {
       currentLicenseInfo.setAccountType(newLicenseInfo.getAccountType());
     }
 
-    if (isEmpty(currentLicenseInfo.getAccountStatus())) {
+    if (hasNone(currentLicenseInfo.getAccountStatus())) {
       throw new InvalidRequestException("Null license info account status. Cannot proceed with update", USER);
     }
 
-    if (isEmpty(currentLicenseInfo.getAccountType())) {
+    if (hasNone(currentLicenseInfo.getAccountType())) {
       throw new InvalidRequestException("Null license info account type. Cannot proceed with update", USER);
     }
 
@@ -207,9 +207,9 @@ public class LicenseUtils {
     }
 
     byte[] encryptedLicenseInfo = account.getEncryptedLicenseInfo();
-    if (isNotEmpty(encryptedLicenseInfo)) {
+    if (hasSome(encryptedLicenseInfo)) {
       byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
-      if (isNotEmpty(decryptedBytes)) {
+      if (hasSome(decryptedBytes)) {
         LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
         account.setLicenseInfo(licenseInfo);
       } else {
@@ -228,7 +228,7 @@ public class LicenseUtils {
     }
 
     String accountType = licenseInfo.getAccountType();
-    if (isEmpty(accountType)) {
+    if (hasNone(accountType)) {
       builder.append("NONE");
     } else {
       builder.append(accountType);
@@ -236,7 +236,7 @@ public class LicenseUtils {
     builder.append('_');
 
     String accountStatus = licenseInfo.getAccountStatus();
-    if (isEmpty(accountStatus)) {
+    if (hasNone(accountStatus)) {
       builder.append("NONE");
     } else {
       builder.append(accountStatus);
@@ -253,14 +253,14 @@ public class LicenseUtils {
   }
 
   public LicenseInfo convertToObject(byte[] decryptedBytes, boolean checkAndSetDefaultExpiry) {
-    if (isEmpty(decryptedBytes)) {
+    if (hasNone(decryptedBytes)) {
       return null;
     }
 
     String licenseInfoStr = new String(decryptedBytes, StandardCharsets.UTF_8);
 
     String[] segments = licenseInfoStr.split("_");
-    if (isEmpty(segments)) {
+    if (hasNone(segments)) {
       return null;
     }
 

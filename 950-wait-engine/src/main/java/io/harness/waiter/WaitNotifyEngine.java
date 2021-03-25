@@ -1,7 +1,7 @@
 package io.harness.waiter;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
@@ -52,7 +52,7 @@ public class WaitNotifyEngine {
 
   public String waitForAllOn(
       String publisherName, NotifyCallback callback, ProgressCallback progressCallback, String... correlationIds) {
-    Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
+    Preconditions.checkArgument(hasSome(correlationIds), "correlationIds are null or empty");
 
     if (log.isDebugEnabled()) {
       log.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
@@ -97,7 +97,7 @@ public class WaitNotifyEngine {
                                   .map(key -> (String) key.getId())
                                   .collect(toList());
 
-    if (isNotEmpty(keys)) {
+    if (hasSome(keys)) {
       final Query<WaitInstance> query =
           persistence.createQuery(WaitInstance.class, excludeAuthority).filter(WaitInstanceKeys.uuid, waitInstanceId);
 
@@ -106,7 +106,7 @@ public class WaitNotifyEngine {
 
       WaitInstance waitInstance;
       if ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
-        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
+        if (hasNone(waitInstance.getWaitingOnCorrelationIds())
             && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
           sendNotification(waitInstance);
         }
@@ -189,7 +189,7 @@ public class WaitNotifyEngine {
 
     WaitInstance waitInstance;
     while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
-      if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+      if (hasNone(waitInstance.getWaitingOnCorrelationIds())) {
         sendNotification(waitInstance);
       }
     }

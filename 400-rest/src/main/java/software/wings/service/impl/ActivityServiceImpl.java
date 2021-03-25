@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -84,7 +84,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity save(Activity activity) {
-    if (isEmpty(activity.getAccountId())) {
+    if (hasNone(activity.getAccountId())) {
       activity.setAccountId(appService.getAccountIdByAppId(activity.getAppId()));
     }
     wingsPersistence.save(activity);
@@ -108,7 +108,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Map<String, List<CommandUnitDetails>> getCommandUnitsMapUsingSecondary(Collection<String> activityIds) {
-    if (isEmpty(activityIds)) {
+    if (hasNone(activityIds)) {
       return new HashMap<>();
     }
 

@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 
 import io.harness.beans.IdentifierRef;
@@ -179,7 +179,7 @@ public class CVEventServiceImpl implements CVEventService {
     Set<KubernetesActivitySourceConfig> activitySourceConfigs = kubernetesActivitySource.getActivitySourceConfigs();
 
     String serviceIdentifier = null;
-    if (isNotEmpty(activitySourceConfigs)) {
+    if (hasSome(activitySourceConfigs)) {
       for (KubernetesActivitySourceConfig config : activitySourceConfigs) {
         serviceIdentifier = config.getServiceIdentifier();
       }
@@ -200,7 +200,7 @@ public class CVEventServiceImpl implements CVEventService {
     Set<KubernetesActivitySourceConfig> activitySourceConfigs = kubernetesActivitySource.getActivitySourceConfigs();
 
     String serviceIdentifier = null;
-    if (isNotEmpty(activitySourceConfigs)) {
+    if (hasSome(activitySourceConfigs)) {
       for (KubernetesActivitySourceConfig config : activitySourceConfigs) {
         serviceIdentifier = config.getServiceIdentifier();
       }
@@ -220,7 +220,7 @@ public class CVEventServiceImpl implements CVEventService {
     Set<KubernetesActivitySourceConfig> activitySourceConfigs = kubernetesActivitySource.getActivitySourceConfigs();
 
     String environmentIdentifier = null;
-    if (isNotEmpty(activitySourceConfigs)) {
+    if (hasSome(activitySourceConfigs)) {
       for (KubernetesActivitySourceConfig config : activitySourceConfigs) {
         environmentIdentifier = config.getEnvIdentifier();
       }
@@ -242,7 +242,7 @@ public class CVEventServiceImpl implements CVEventService {
     Set<KubernetesActivitySourceConfig> activitySourceConfigs = kubernetesActivitySource.getActivitySourceConfigs();
 
     String environmentIdentifier = null;
-    if (isNotEmpty(activitySourceConfigs)) {
+    if (hasSome(activitySourceConfigs)) {
       for (KubernetesActivitySourceConfig config : activitySourceConfigs) {
         environmentIdentifier = config.getEnvIdentifier();
       }

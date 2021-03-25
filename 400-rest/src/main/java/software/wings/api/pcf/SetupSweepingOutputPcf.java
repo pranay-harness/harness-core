@@ -1,6 +1,6 @@
 package software.wings.api.pcf;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.pms.sdk.core.data.SweepingOutput;
@@ -76,7 +76,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   }
 
   private PcfAppSetupTimeDetails getOldAppDetail(List<PcfAppSetupTimeDetails> appDetailsToBeDownsized) {
-    if (isNotEmpty(appDetailsToBeDownsized)) {
+    if (hasSome(appDetailsToBeDownsized)) {
       return appDetailsToBeDownsized.get(0);
     }
 

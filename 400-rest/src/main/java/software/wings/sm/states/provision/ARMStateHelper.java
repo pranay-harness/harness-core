@@ -1,7 +1,7 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -210,11 +210,11 @@ public class ARMStateHelper {
     GitFetchFilesFromMultipleRepoResult fetchFilesResult = stateExecutionData.getFetchFilesResult();
     notNullCheck("Git Fetch from multiple REPOS is null when extracting Git Response", fetchFilesResult);
     Map<String, GitFetchFilesResult> filesFromMultipleRepo = fetchFilesResult.getFilesFromMultipleRepo();
-    if (isEmpty(filesFromMultipleRepo) || (!filesFromMultipleRepo.containsKey(key))) {
+    if (hasNone(filesFromMultipleRepo) || (!filesFromMultipleRepo.containsKey(key))) {
       throw new InvalidRequestException(String.format("Files for [%s] not found", key));
     }
     List<GitFile> files = filesFromMultipleRepo.get(key).getFiles();
-    if (isEmpty(files)) {
+    if (hasNone(files)) {
       throw new InvalidRequestException(String.format("Files for [%s] not found", key));
     }
     return files;
@@ -222,7 +222,7 @@ public class ARMStateHelper {
 
   int renderTimeout(String expr, ExecutionContext context) {
     int retVal = DEFAULT_TIMEOUT_MIN;
-    if (isNotEmpty(expr)) {
+    if (hasSome(expr)) {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
       } catch (NumberFormatException e) {
@@ -233,7 +233,7 @@ public class ARMStateHelper {
   }
 
   void saveARMOutputs(String outputs, ExecutionContext context) {
-    if (isEmpty(outputs)) {
+    if (hasNone(outputs)) {
       return;
     }
     Map<String, Object> outputMap = new LinkedHashMap<>();

@@ -6,8 +6,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SortOrder.OrderType.DESC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 
@@ -188,7 +188,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private <T> Boolean addAppsAllowedToUserAndReturnTrueIfUserHasAnyAppAccess(Query<T> query, String accountId) {
     List<YamlGitConfig> yamlGitConfigs = yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId);
-    if (isEmpty(yamlGitConfigs)) {
+    if (hasNone(yamlGitConfigs)) {
       // User doesn't has access to any yamlGitConfig
       return false;
     } else {
@@ -279,25 +279,25 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .forEachRemaining(commit -> commitsDetails.add(commit));
     List<GitToHarnessErrorCommitStats> actualCommitsForThatApp =
         removeNewAppCommitsInCaseOfSetupFilter(commitsDetails, appId);
-    return isEmpty(actualCommitsForThatApp) ? 0 : actualCommitsForThatApp.size();
+    return hasNone(actualCommitsForThatApp) ? 0 : actualCommitsForThatApp.size();
   }
 
   private List<GitToHarnessErrorCommitStats> removeNewAppCommitsInCaseOfSetupFilter(
       List<GitToHarnessErrorCommitStats> gitCommitsDetails, String appId) {
-    if (isEmpty(gitCommitsDetails) || !GLOBAL_APP_ID.equals(appId)) {
+    if (hasNone(gitCommitsDetails) || !GLOBAL_APP_ID.equals(appId)) {
       return new ArrayList<>(gitCommitsDetails);
     }
 
     return gitCommitsDetails.stream()
         .map(commitDetail -> removeNewAppError(commitDetail))
-        .filter(commitDetail -> isNotEmpty(commitDetail.getErrorsForSummaryView()))
+        .filter(commitDetail -> hasSome(commitDetail.getErrorsForSummaryView()))
         .collect(toList());
   }
 
   private GitToHarnessErrorCommitStats removeNewAppError(GitToHarnessErrorCommitStats commitDetail) {
     List<GitSyncError> gitSyncErrors = commitDetail.getErrorsForSummaryView();
     // We will remove the new app Error from here
-    if (isEmpty(gitSyncErrors)) {
+    if (hasNone(gitSyncErrors)) {
       return commitDetail;
     }
     List<GitSyncError> gitSyncErrorsForAccountLevel =
@@ -315,7 +315,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
     for (GitToHarnessErrorCommitStats commitDetail : commitDetails) {
       List<GitSyncError> allErrors = commitDetail.getErrorsForSummaryView();
-      if (isNotEmpty(allErrors) && allErrors.size() > numberOfErrorsInSummary) {
+      if (hasSome(allErrors) && allErrors.size() > numberOfErrorsInSummary) {
         sortErrorsByFileProcessingOrder(allErrors);
         commitDetail.setErrorsForSummaryView(allErrors.subList(0, numberOfErrorsInSummary));
       }
@@ -324,7 +324,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private List<GitToHarnessErrorCommitStats> filterCommitsWithValidConnectorAndPopulateConnectorName(
       List<GitToHarnessErrorCommitStats> commitWiseErrorDetails, String accountId) {
-    if (isEmpty(commitWiseErrorDetails)) {
+    if (hasNone(commitWiseErrorDetails)) {
       return Collections.emptyList();
     }
     List<String> connectorIdList =
@@ -361,7 +361,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     addAppIdFilterToQuery(query, appId);
     addGitToHarnessErrorFilter(query);
     boolean returnPreviousErrors = false;
-    if (isNotEmpty(includeDataList)) {
+    if (hasSome(includeDataList)) {
       returnPreviousErrors = includeDataList.contains("obsoleteErrorFiles");
     }
 
@@ -383,7 +383,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       errorFilesAccessibleToUser = gitSyncRBACHelper.populateUserHasPermissionForFileFieldInErrors(
           filteredErrorsAfterRemovingNewAppsIfNotRequired, accountId);
     }
-    if (isEmpty(errorFilesAccessibleToUser)) {
+    if (hasNone(errorFilesAccessibleToUser)) {
       // Ideally this case won't happen, but if somehow the number of errors
       // in a commit becomes 0, we will return a empty response
       log.info("The gitcommitId {} of account {} has zero git sync errors", gitCommitId, accountId);
@@ -409,7 +409,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   private boolean whetherWeCanHaveAccountLevelFile(String appId) {
-    return isEmpty(appId) || GLOBAL_APP_ID.equals(appId);
+    return hasNone(appId) || GLOBAL_APP_ID.equals(appId);
   }
 
   @Override
@@ -436,7 +436,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     List<GitSyncError> errorsReturnedInRequest = query.asList(new FindOptions().skip(offset).limit(limit));
     List<GitSyncError> filteredErrorsAfterRemovingNewAppsIfNotRequired =
         removeNewAppErrorsInCaseOfSetupFilter(errorsReturnedInRequest, appId);
-    if (isEmpty(errorsReturnedInRequest)) {
+    if (hasNone(errorsReturnedInRequest)) {
       allErrorsResponse.setResponse(Collections.emptyList());
       return allErrorsResponse;
     }
@@ -455,7 +455,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   private List<GitSyncError> removeNewAppErrorsInCaseOfSetupFilter(List<GitSyncError> gitSyncErrors, String appId) {
-    if (isEmpty(gitSyncErrors) || !GLOBAL_APP_ID.equals(appId)) {
+    if (hasNone(gitSyncErrors) || !GLOBAL_APP_ID.equals(appId)) {
       return gitSyncErrors;
     }
     return gitSyncErrors.stream().filter(error -> !isNewAppError(error)).collect(Collectors.toList());
@@ -473,7 +473,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   private void sortErrorsByFileProcessingOrder(List<GitSyncError> gitSyncErrors) {
-    if (isEmpty(gitSyncErrors)) {
+    if (hasNone(gitSyncErrors)) {
       log.info("The errors list given for the sorting is empty");
       return;
     }
@@ -496,7 +496,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   private List<String> getFilePathsSortedInProcessingOrder(List<GitSyncError> gitSyncErrors) {
-    if (isEmpty(gitSyncErrors)) {
+    if (hasNone(gitSyncErrors)) {
       return Collections.emptyList();
     }
     final List<Change> changesConstructedFromErrors =
@@ -529,7 +529,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     GitToHarnessErrorDetails gitToHarnessErrorDetails =
         (GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails();
     List<GitSyncError> previousGitSyncErrors = gitToHarnessErrorDetails.getPreviousErrors();
-    if (isEmpty(previousGitSyncErrors)) {
+    if (hasNone(previousGitSyncErrors)) {
       throw new UnexpectedException("The given git sync error doesn't contain the previous commits information");
     }
 
@@ -710,7 +710,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private List<GitSyncError> filterErrorsWithValidConnectorAndPopulateConnectorName(
       List<GitSyncError> gitSyncErrors, String accountId) {
-    if (isEmpty(gitSyncErrors)) {
+    if (hasNone(gitSyncErrors)) {
       return Collections.emptyList();
     }
     List<String> connectorIdList = gitSyncErrors.stream().map(error -> error.getGitConnectorId()).collect(toList());
@@ -733,7 +733,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountId, String gitConnectorId, String branchName, String repositoryName, long fromTimestamp) {
     //  get all app ids sharing same repo and branch name
     final Set<String> allowedAppIdSet = appIdsSharingRepoBranch(accountId, gitConnectorId, branchName, repositoryName);
-    if (isEmpty(allowedAppIdSet)) {
+    if (hasNone(allowedAppIdSet)) {
       return Collections.emptyList();
     }
     final Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
@@ -794,7 +794,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public void deleteGitSyncErrorAndLogFileActivity(
       List<String> gitSyncErrorsIds, GitFileActivity.Status status, String accountId) {
-    if (isEmpty(gitSyncErrorsIds)) {
+    if (hasNone(gitSyncErrorsIds)) {
       throw new InvalidRequestException("No git sync error Id provided in the discard api");
     }
     PageRequest<GitSyncError> req = aPageRequest()
@@ -804,7 +804,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                         .build();
 
     List<GitSyncError> gitSyncErrors = wingsPersistence.query(GitSyncError.class, req).getResponse();
-    if (isEmpty(gitSyncErrors)) {
+    if (hasNone(gitSyncErrors)) {
       log.info(" None of the errors provided for the discard are latest git sync error");
       return;
     }
@@ -863,7 +863,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private void populateTheConnectorName(
       List<GitProcessingError> gitProcessingErrors, Map<String, SettingAttribute> connectorMap) {
-    if (isEmpty(gitProcessingErrors)) {
+    if (hasNone(gitProcessingErrors)) {
       return;
     }
     // We need to filter because maybe someone deleted the connector and
@@ -885,7 +885,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   public PageResponse<GitProcessingError> fetchGitConnectivityIssues(
       PageRequest<GitProcessingError> req, String accountId) {
     List<Alert> gitProcessingAlerts = getGitConnectionAlert(accountId);
-    if (isEmpty(gitProcessingAlerts)) {
+    if (hasNone(gitProcessingAlerts)) {
       return aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build();
     }
     List<GitProcessingError> gitProcessingErrors =

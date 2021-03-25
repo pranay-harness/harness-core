@@ -22,8 +22,8 @@ import static io.harness.beans.ExecutionStatus.isFinalStatus;
 import static io.harness.beans.ExecutionStatus.isPositiveStatus;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -624,7 +624,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
-    if (isNotEmpty(usage)) {
+    if (hasSome(usage)) {
       List<ExpressionVariableUsage.Item> items = new ArrayList<>();
       usage.forEach(
           (expression, values)
@@ -681,7 +681,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   @VisibleForTesting
   public static ExecutionResponse skipStateExecutionResponse(ExecutionEventAdvice executionEventAdvice) {
-    if (isNotEmpty(executionEventAdvice.getSkipError())) {
+    if (hasSome(executionEventAdvice.getSkipError())) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(executionEventAdvice.getSkipError())
@@ -700,7 +700,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private ExecutionEventAdvice invokeAdvisors(ExecutionEvent executionEvent) {
     List<ExecutionEventAdvisor> advisors =
         executionEvent.getContext().getStateExecutionInstance().getExecutionEventAdvisors();
-    if (isEmpty(advisors)) {
+    if (hasNone(advisors)) {
       return null;
     }
 
@@ -731,7 +731,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       ExecutionStatus status = executionResponse.getExecutionStatus();
       if (executionResponse.isAsync()) {
         log.info("Got an async response");
-        if (isEmpty(executionResponse.getCorrelationIds())) {
+        if (hasNone(executionResponse.getCorrelationIds())) {
           log.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
               + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
           status = ERROR;
@@ -1486,7 +1486,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         delegateTaskIds.add(stateExecutionInstance.getDelegateTaskId());
       }
 
-      if (isNotEmpty(stateExecutionInstance.getDelegateTasksDetails())) {
+      if (hasSome(stateExecutionInstance.getDelegateTasksDetails())) {
         delegateTaskIds.addAll(stateExecutionInstance.getDelegateTasksDetails()
                                    .stream()
                                    .map(DelegateTaskDetails::getDelegateTaskId)
@@ -1566,7 +1566,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private void notify(StateExecutionInstance stateExecutionInstance, ExecutionStatus status) {
     ElementNotifyResponseDataBuilder elementNotifyResponseDataBuilder =
         ElementNotifyResponseData.builder().executionStatus(status);
-    if (isNotEmpty(stateExecutionInstance.getNotifyElements())) {
+    if (hasSome(stateExecutionInstance.getNotifyElements())) {
       elementNotifyResponseDataBuilder.contextElements(stateExecutionInstance.getNotifyElements());
     }
     waitNotifyEngine.doneWith(stateExecutionInstance.getNotifyId(), elementNotifyResponseDataBuilder.build());
@@ -1574,7 +1574,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   private void handleSpawningStateExecutionInstances(
       StateMachine sm, StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
-    if (isEmpty(executionResponse.getStateExecutionInstances())) {
+    if (hasNone(executionResponse.getStateExecutionInstances())) {
       return;
     }
 
@@ -1803,12 +1803,12 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     statusUpdateOperation(stateExecutionInstance, status, ops);
 
-    if (isNotEmpty(contextElements)) {
+    if (hasSome(contextElements)) {
       contextElements.forEach(contextElement -> stateExecutionInstance.getContextElements().push(contextElement));
       ops.set("contextElements", stateExecutionInstance.getContextElements());
     }
 
-    if (isNotEmpty(notifyElements)) {
+    if (hasSome(notifyElements)) {
       if (stateExecutionInstance.getNotifyElements() == null) {
         stateExecutionInstance.setNotifyElements(new ArrayList<>());
       }
@@ -1827,7 +1827,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     stateExecutionData.setStateParams(stateExecutionInstance.getStateParams());
 
-    if (isEmpty(runningStatusLists)) {
+    if (hasNone(runningStatusLists)) {
       runningStatusLists = activeStatuses();
     }
 
@@ -2050,7 +2050,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .filter(StateExecutionInstanceKeys.status, DISCONTINUING)
             .asList();
 
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       log.warn(
           "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
           workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
@@ -2158,7 +2158,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .project(StateExecutionInstanceKeys.stateType, true)
             .asList();
 
-    if (isEmpty(allStateExecutionInstances)) {
+    if (hasNone(allStateExecutionInstances)) {
       log.warn("No stateExecutionInstance could be marked as DISCONTINUING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
@@ -2210,7 +2210,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             .map(StateExecutionInstance::getUuid)
             .collect(toList());
 
-    if (isEmpty(parentInstanceIds)) {
+    if (hasNone(parentInstanceIds)) {
       return allInstanceIds;
     }
 

@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HasPredicate.hasSome;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -48,7 +48,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler = yamlHandlerFactory.getYamlHandler(
         YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, bean.getInfrastructure().getInfrastructureType());
     String provisionerName = StringUtils.EMPTY;
-    if (isNotEmpty(bean.getProvisionerId())) {
+    if (hasSome(bean.getProvisionerId())) {
       provisionerName = infrastructureProvisionerService.get(appId, bean.getProvisionerId()).getName();
     }
     List<String> scopedToServiceNames = new ArrayList<>();
@@ -57,7 +57,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     }
 
     String deploymentTypeTemplateUri = null;
-    if (isNotEmpty(bean.getDeploymentTypeTemplateId())) {
+    if (hasSome(bean.getDeploymentTypeTemplateId())) {
       deploymentTypeTemplateUri =
           customDeploymentTypeService.fetchDeploymentTemplateUri(bean.getDeploymentTypeTemplateId());
     }
@@ -116,11 +116,11 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     bean.setDeploymentType(yaml.getDeploymentType());
     bean.setScopedToServices(scopedToServicesId);
     bean.setInfrastructure(cloudProviderInfrastructure);
-    if (isNotEmpty(yaml.getDeploymentTypeTemplateUri())) {
+    if (hasSome(yaml.getDeploymentTypeTemplateUri())) {
       bean.setDeploymentTypeTemplateId(customDeploymentTypeService.fetchDeploymentTemplateIdFromUri(
           changeContext.getChange().getAccountId(), yaml.getDeploymentTypeTemplateUri()));
     }
-    if (isNotEmpty(yaml.getProvisioner())) {
+    if (hasSome(yaml.getProvisioner())) {
       InfrastructureProvisioner infrastructureProvisioner =
           infrastructureProvisionerService.getByName(appId, yaml.getProvisioner());
       notNullCheck(

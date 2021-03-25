@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HasPredicate.hasNone;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -50,7 +50,7 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
       }
     }
 
-    if (isEmpty(matchedTriggers)) {
+    if (hasNone(matchedTriggers)) {
       log.info("No trigger matched payload after condition evaluation:");
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
