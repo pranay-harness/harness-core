@@ -2,6 +2,8 @@ package io.harness.delegate.exceptionhandler;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class DelegateExceptionManager {
   @Inject private Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
@@ -34,8 +37,10 @@ public class DelegateExceptionManager {
 
     Exception exception = (Exception) throwable;
     WingsException processedException = handleException(exception);
-    DelegateResponseData responseData =
-        prepareErrorResponse(processedException, errorNotifyResponseDataBuilder).exception(processedException).build();
+    WingsException kryoSerializableException = ensureExceptionIsKryoSerializable(processedException);
+    DelegateResponseData responseData = prepareErrorResponse(processedException, errorNotifyResponseDataBuilder)
+                                            .exception(kryoSerializableException)
+                                            .build();
 
     ExceptionLogger.logProcessedMessages(processedException, DELEGATE, log);
     return responseData;
@@ -85,14 +90,8 @@ public class DelegateExceptionManager {
   }
 
   private WingsException prepareUnhandledExceptionResponse(Exception exception) {
-    Exception unhandledException = exception;
-    if (unhandledException instanceof WingsException && !kryoSerializer.isRegistered(unhandledException.getClass())) {
-      log.error("Kryo handler not found for exception ", unhandledException);
-      unhandledException = new KryoHandlerNotFoundException(unhandledException.getMessage());
-      return new DelegateErrorHandlerException(unhandledException.getMessage(), unhandledException);
-    }
     // default is to wrap unknown exception into wings exception using its message
-    return new DelegateErrorHandlerException(unhandledException.getMessage());
+    return new DelegateErrorHandlerException(exception.getMessage());
   }
 
   private ErrorNotifyResponseDataBuilder prepareErrorResponse(
@@ -107,5 +106,32 @@ public class DelegateExceptionManager {
 
   private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {
     ReflectionUtils.setObjectField(ReflectionUtils.getFieldByName(exception.getClass(), "cause"), exception, cause);
+  }
+
+  private boolean isExceptionKryoRegistered(WingsException wingsException) {
+    return kryoSerializer.isRegistered(wingsException.getClass());
+  }
+
+  private WingsException handleExceptionIfNotKryoRegistered(WingsException wingsException) {
+    if (!isExceptionKryoRegistered(wingsException)) {
+      log.error("Kryo handler not found for exception {}", wingsException.getClass());
+      return new KryoHandlerNotFoundException(wingsException.getMessage());
+    }
+    return wingsException;
+  }
+
+  private WingsException ensureExceptionIsKryoSerializable(WingsException wingsException) {
+    if (wingsException == null) {
+      return null;
+    }
+
+    WingsException kryoSerializedException = handleExceptionIfNotKryoRegistered(wingsException);
+    try {
+      setExceptionCause(
+          kryoSerializedException, ensureExceptionIsKryoSerializable((WingsException) wingsException.getCause()));
+    } catch (IllegalAccessException ignored) {
+    }
+
+    return kryoSerializedException;
   }
 }
