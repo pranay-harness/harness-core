@@ -153,6 +153,9 @@ public class AzureSecretHelper {
   }
 
   public ArtifactStreamAttributes decryptArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+    if (artifactStreamAttributes == null) {
+      return null;
+    }
     SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
     List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
         artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
