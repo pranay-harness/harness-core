@@ -35,6 +35,7 @@ import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GithubStore;
@@ -179,5 +180,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(OpenshiftParamManifest.class, 12536);
     kryo.register(OpenshiftParamManifestOutcome.class, 12537);
     kryo.register(S3StoreConfig.class, 12538);
+    kryo.register(GcsStoreConfig.class, 12539);
   }
 }

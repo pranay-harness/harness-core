@@ -13,6 +13,11 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
@@ -79,5 +84,34 @@ public class NGChartMuseumServiceImplTest extends CategoryTest {
     ngChartMuseumService.startChartMuseumServer(s3StoreDelegateConfig, "resources");
     verify(clientHelper, times(1))
         .startS3ChartMuseumServer(bucketName, folderPath, region, inheritFromDelegate, accessKey, secretKey);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStartChartMuseumServerUsingGCS() throws Exception {
+    final char[] serviceAccountKey = "service account key content".toCharArray();
+    final String bucketName = "bucketName";
+    final String folderPath = "folderPath";
+    final String resourcesDir = "resources";
+
+    GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
+        GcsHelmStoreDelegateConfig.builder()
+            .bucketName(bucketName)
+            .folderPath(folderPath)
+            .gcpConnector(
+                GcpConnectorDTO.builder()
+                    .credential(
+                        GcpConnectorCredentialDTO.builder()
+                            .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                            .config(GcpManualDetailsDTO.builder()
+                                        .secretKeyRef(SecretRefData.builder().decryptedValue(serviceAccountKey).build())
+                                        .build())
+                            .build())
+                    .build())
+            .build();
+
+    ngChartMuseumService.startChartMuseumServer(gcsHelmStoreDelegateConfig, "resources");
+    verify(clientHelper, times(1)).startGCSChartMuseumServer(bucketName, folderPath, serviceAccountKey, resourcesDir);
   }
 }
