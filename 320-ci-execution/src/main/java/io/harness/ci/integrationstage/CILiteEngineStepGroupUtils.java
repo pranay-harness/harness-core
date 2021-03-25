@@ -67,7 +67,7 @@ public class CILiteEngineStepGroupUtils {
     boolean usePVC = containsManagerStep(executionSections);
 
     log.info(
-        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {} with pvc {}",
+        "Creating CI execution wrapper step info with lite engine step for integration stage {} and build number {} with pvc {}:",
         stageElementConfig.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), usePVC);
 
     List<ExecutionWrapperConfig> liteEngineExecutionSections = new ArrayList<>();
