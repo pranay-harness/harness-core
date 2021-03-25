@@ -213,16 +213,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   private boolean canAssignOwner(
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
-    boolean canAssign;
+    boolean canAssign = true;
     List<DelegateOwner> owners = delegate.getOwners();
 
     if (isNotEmpty(owners)) {
       if (isEmpty(taskSetupAbstractions)) {
-        log.warn("No setup abstractions have been passed in from delegate task, while there is delegate owner setup "
-            + "done. Considering this delegate owner NOT matched");
         canAssign = false;
       } else {
-        canAssign = true;
         for (DelegateOwner owner : owners) {
           canAssign = owner.getEntityId().equals(taskSetupAbstractions.get(owner.getEntityType()));
           if (!canAssign) {
@@ -232,8 +229,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
           }
         }
       }
-    } else {
-      canAssign = true;
     }
 
     return canAssign;
