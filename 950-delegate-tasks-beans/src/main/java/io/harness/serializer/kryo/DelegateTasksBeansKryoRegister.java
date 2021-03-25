@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -257,8 +260,7 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
+import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -336,6 +338,7 @@ import org.eclipse.jgit.api.GitCommand;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+@OwnedBy(DEL)
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -488,7 +491,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ImageType.class, 19366);
     kryo.register(JiraTaskNGParameters.class, 19367);
     kryo.register(JiraTaskNGResponse.class, 19368);
-    kryo.register(JiraIssueData.class, 19369);
     kryo.register(JiraConnectionTaskParams.class, 19370);
     kryo.register(JiraTestConnectionTaskNGResponse.class, 19371);
     kryo.register(JSONArray.class, 19373);
