@@ -26,16 +26,19 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ManagerGrpcClientModule extends ProviderModule {
-  private final Config config;
+  private static ManagerGrpcClientModule instance;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
-  public ManagerGrpcClientModule(Config config) {
-    this.config = config;
+  public static ManagerGrpcClientModule getInstance() {
+    if (instance == null) {
+      instance = new ManagerGrpcClientModule();
+    }
+    return instance;
   }
 
   @Provides
   @Singleton
-  CallCredentials callCredentials() {
+  CallCredentials callCredentials(Config config) {
     return new DelegateAuthCallCredentials(
         new TokenGenerator(config.accountId, config.accountSecret), config.accountId, true);
   }
@@ -43,9 +46,13 @@ public class ManagerGrpcClientModule extends ProviderModule {
   @Named("manager-channel")
   @Singleton
   @Provides
-  public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
-    String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-    if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
+  public Channel managerChannel(Config config, @Named("Application") String application,
+      VersionInfoManager versionInfoManager) throws SSLException {
+    String authorityToUse = computeAuthority(config, versionInfoManager.getVersionInfo());
+
+    boolean isSsl = isSsl(config, application);
+
+    if (!isSsl) {
       return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
     }
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
@@ -55,7 +62,20 @@ public class ManagerGrpcClientModule extends ProviderModule {
         .build();
   }
 
-  private String computeAuthority(VersionInfo versionInfo) {
+  private boolean isSsl(Config config, @Named("Application") String application) {
+    if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
+      if ("Delegate".equalsIgnoreCase(application)) {
+        if ("https".equalsIgnoreCase(config.scheme)) {
+          return true;
+        }
+        return false;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  private String computeAuthority(Config config, VersionInfo versionInfo) {
     String defaultAuthority = "default-authority.harness.io";
     String authorityToUse;
     if (!isValidAuthority(config.authority)) {
@@ -95,5 +115,6 @@ public class ManagerGrpcClientModule extends ProviderModule {
     String authority;
     String accountId;
     String accountSecret;
+    String scheme;
   }
 }
