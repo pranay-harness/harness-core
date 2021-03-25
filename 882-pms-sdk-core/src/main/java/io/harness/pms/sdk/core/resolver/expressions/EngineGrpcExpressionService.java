@@ -12,6 +12,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class EngineGrpcExpressionService implements EngineExpressionService {
@@ -26,8 +27,9 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
   @Override
   public String renderExpression(Ambiance ambiance, String expression) {
     ExpressionRenderBlobResponse expressionRenderBlobResponse =
-        engineExpressionProtoServiceBlockingStub.renderExpression(
-            ExpressionRenderBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
+        engineExpressionProtoServiceBlockingStub.withDeadlineAfter(10, TimeUnit.MINUTES)
+            .renderExpression(
+                ExpressionRenderBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
     return expressionRenderBlobResponse.getValue();
   }
 
