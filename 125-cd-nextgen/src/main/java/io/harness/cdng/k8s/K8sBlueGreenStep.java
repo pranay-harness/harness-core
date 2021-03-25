@@ -35,7 +35,7 @@ import java.util.Map;
 public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BLUE_GREEN.getYamlType()).build();
-  public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
+  public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deploy";
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;

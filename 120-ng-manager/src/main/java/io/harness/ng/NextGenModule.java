@@ -16,6 +16,7 @@ import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -31,7 +32,6 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
-import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
@@ -70,7 +70,6 @@ import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
 import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
-import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
@@ -264,6 +263,9 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
+    install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
+        this.appConfig.isEnableAudit()));
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -332,7 +334,6 @@ public class NextGenModule extends AbstractModule {
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);
     bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
-    bind(GitSyncManagerInterface.class).to(GitSyncManagerInterfaceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));

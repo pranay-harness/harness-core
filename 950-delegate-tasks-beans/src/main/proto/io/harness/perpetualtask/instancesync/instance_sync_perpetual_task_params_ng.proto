@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message K8sInstanceSyncPerpetualTaskParamsNG {
+  string account_id = 1;
+  string app_id = 2;
+  bytes k8s_cluster_config = 3;
+  string namespace = 4;
+  string release_name = 5;
+}
+
+message InstanceSyncPerpetualTaskParamsNG {
+  string container_type = 1;
+  K8sInstanceSyncPerpetualTaskParamsNG k8s_perpetual_task_params = 2;
+}

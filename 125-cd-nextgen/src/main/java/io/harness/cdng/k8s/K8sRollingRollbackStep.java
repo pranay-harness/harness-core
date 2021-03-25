@@ -25,14 +25,13 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.ResponseData;
 
-import software.wings.sm.states.k8s.K8sRollingDeployRollback;
-
 import com.google.inject.Inject;
 import java.util.Map;
 
 public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
+  public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
@@ -47,7 +46,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     if (!optionalSweepingOutput.isFound()) {
       return TaskRequest.newBuilder()
@@ -65,7 +64,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
         K8sRollingRollbackDeployRequest.builder()
             .releaseName(k8sRollingOutcome.getReleaseName())
             .releaseNumber(k8sRollingOutcome.getReleaseNumber())
-            .commandName(K8sRollingDeployRollback.K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
+            .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
             .timeoutIntervalInMin(
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))

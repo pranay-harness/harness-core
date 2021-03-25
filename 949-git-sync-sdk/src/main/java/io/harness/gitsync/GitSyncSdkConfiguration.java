@@ -1,6 +1,7 @@
 package io.harness.gitsync;
 
 import io.harness.EntityType;
+import io.harness.Microservice;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.redis.RedisConfig;
@@ -20,6 +21,7 @@ public class GitSyncSdkConfiguration {
   /**
    * client to communicate to gms server.
    */
+  Microservice microservice;
   GrpcClientConfig grpcClientConfig;
   Supplier<List<EntityType>> gitSyncSortOrder;
   RedisConfig eventsRedisConfig;

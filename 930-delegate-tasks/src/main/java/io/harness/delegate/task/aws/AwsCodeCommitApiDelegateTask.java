@@ -71,7 +71,7 @@ public class AwsCodeCommitApiDelegateTask extends AbstractDelegateRunnableTask {
   private DelegateResponseData handleAwsConfirmTriggerSubscription(AwsCodeCommitApiTaskParams awsCodeCommitTaskParams) {
     AwsCodeCommitApiConfirmSubParams apiParams =
         (AwsCodeCommitApiConfirmSubParams) awsCodeCommitTaskParams.getApiParams();
-    awsClient.confirmSnsSubscription(apiParams.getSubscriptionConfirmationMessage());
+    awsClient.confirmSnsSubscription(apiParams.getSubscriptionConfirmationMessage(), apiParams.getTopicArn());
     return AwsCodeCommitApiTaskResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
 

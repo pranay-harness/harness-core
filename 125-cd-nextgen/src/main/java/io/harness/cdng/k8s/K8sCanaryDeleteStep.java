@@ -39,7 +39,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters, StepInputPackage inputPackage) {
     K8sCanaryOutcome canaryOutcome = (K8sCanaryOutcome) executionSweepingOutputService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 

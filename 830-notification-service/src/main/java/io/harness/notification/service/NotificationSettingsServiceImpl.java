@@ -6,7 +6,7 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.notification.NotificationSettingConfigDTO;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
@@ -56,13 +56,13 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     if (isEmpty(userIds)) {
       return new ArrayList<>();
     }
-    List<User> users = new ArrayList<>();
+    List<UserInfo> users = new ArrayList<>();
     try {
       users = RestClientUtils.getResponse(userClient.getUsersByIds(userIds));
     } catch (Exception exception) {
       log.error("Failure while fetching emails of users from userIds", exception);
     }
-    return users.stream().map(User::getEmail).collect(Collectors.toList());
+    return users.stream().map(UserInfo::getEmail).collect(Collectors.toList());
   }
 
   public List<String> getNotificationSettingsForGroups(
@@ -116,7 +116,6 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
 
   @Override
   public NotificationSetting setSendNotificationViaDelegate(String accountId, boolean sendNotificationViaDelegate) {
-    //    TODO @Ankush check if accountId is even valid or not
     Optional<NotificationSetting> notificationSettingOptional =
         notificationSettingRepository.findByAccountId(accountId);
     NotificationSetting notificationSetting =

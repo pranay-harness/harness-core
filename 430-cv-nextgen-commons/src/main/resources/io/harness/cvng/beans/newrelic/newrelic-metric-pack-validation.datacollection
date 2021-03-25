@@ -1,0 +1,27 @@
+Var index = 0
+Var tempList = []
+Var one = 1
+Var lengthOfItems = Env:queries.length()
+Var requests = []
+Var emptySpace = ""
+Var queryConcat = concat(" WHERE appName = '", Env:appName, "'  SINCE 1 HOURS AGO TIMESERIES ")
+Var returnList = []
+while Var:index !=  Var:lengthOfItems {
+  Var query = Env:queries[Var:index]
+  Var jsonPath = Env:jsonPaths[Var:index]
+  Var metricName = Env:metricNames[Var:index]
+  Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat)
+  Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+  Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+  print Var:fullQuery
+  Var value = extract(Var:resp, Var:jsonPath)
+  print Var:value
+  Var validateMap = {}
+  Var:validateMap.put("query", Var:query)
+  Var:validateMap.put("metricName", Var:metricName)
+  Var:validateMap.put("value", Var:value)
+  Var:returnList.append(Var:validateMap)
+  index = Var:index + Var:one
+}
+
+return Var:returnList

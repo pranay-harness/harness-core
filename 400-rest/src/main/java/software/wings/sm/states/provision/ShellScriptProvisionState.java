@@ -83,6 +83,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
+  @Getter @Setter private List<String> delegateSelectors;
 
   @Transient @Inject KryoSerializer kryoSerializer;
 
@@ -111,6 +112,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                 provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .outputPathKey(PROVISIONER_OUTPUT_PATH_KEY)
+            .delegateSelectors(delegateSelectors)
             .build();
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();

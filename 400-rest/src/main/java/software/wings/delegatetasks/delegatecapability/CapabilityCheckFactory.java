@@ -11,6 +11,7 @@ import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChe
 import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
+import io.harness.delegate.task.executioncapability.LiteEngineConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
@@ -38,6 +39,7 @@ public class CapabilityCheckFactory {
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject LiteEngineConnectionCapabilityCheck liteEngineConnectionCapabilityCheck;
   @Inject SmtpCapabilityCheck smtpCapabilityCheck;
   @Inject AlwaysFalseValidationCapabilityCheck alwaysFalseValidationCapabilityCheck;
   @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
@@ -99,6 +101,8 @@ public class CapabilityCheckFactory {
         return smbConnectionCapabilityCheck;
       case GIT_CONNECTION_NG:
         return gitConnectionNGCapabilityCheck;
+      case LITE_ENGINE:
+        return liteEngineConnectionCapabilityCheck;
       default:
         return null;
     }

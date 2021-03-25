@@ -6,13 +6,13 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
 public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.JIRA_APPROVAL).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_APPROVAL).build();
 
   @Override
   public AsyncExecutableResponse executeAsync(

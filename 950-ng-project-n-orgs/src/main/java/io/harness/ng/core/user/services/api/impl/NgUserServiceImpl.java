@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.UserProjectMap;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.RestClientUtils;
@@ -33,11 +33,11 @@ public class NgUserServiceImpl implements NgUserService {
   @Inject private UserProjectMapRepository userProjectMapRepository;
 
   @Override
-  public Page<User> list(String accountIdentifier, String searchString, Pageable pageable) {
+  public Page<UserInfo> list(String accountIdentifier, String searchString, Pageable pageable) {
     //  @Ankush remove the offset and limit from the following statement because it is redundant pagination
-    PageResponse<User> userPageResponse = RestClientUtils.getResponse(userClient.list(
+    PageResponse<UserInfo> userPageResponse = RestClientUtils.getResponse(userClient.list(
         accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
-    List<User> users = userPageResponse.getResponse();
+    List<UserInfo> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
   }
 
@@ -46,8 +46,9 @@ public class NgUserServiceImpl implements NgUserService {
     return userProjectMapRepository.findAll(criteria);
   }
 
-  public Optional<User> getUserFromEmail(String accountId, String email) {
-    return RestClientUtils.getResponse(userClient.getUserFromEmail(accountId, email));
+  // isSignedUp flag: Users in current gen exists even if they are in invited state and not signed up yet.
+  public Optional<UserInfo> getUserFromEmail(String email) {
+    return RestClientUtils.getResponse(userClient.getUserFromEmail(email));
   }
 
   public List<String> getUsernameFromEmail(String accountIdentifier, List<String> emailList) {
@@ -62,7 +63,7 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void createUserProjectMap(Invite invite, User user) {
+  public boolean createUserProjectMap(Invite invite, UserInfo user) {
     Optional<UserProjectMap> userProjectMapOptional =
         userProjectMapRepository.findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             user.getUuid(), invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
@@ -81,10 +82,17 @@ public class NgUserServiceImpl implements NgUserService {
                                                               .roles(ImmutableList.of(invite.getRole()))
                                                               .build());
     userProjectMapRepository.save(userProjectMap);
+    return postCreation(invite, user);
+  }
+
+  private boolean postCreation(Invite invite, UserInfo user) {
+    String accountId = invite.getAccountIdentifier();
+    String userId = user.getUuid();
+    return RestClientUtils.getResponse(userClient.addUserToAccount(userId, accountId));
   }
 
   @Override
-  public List<User> getUsersByIds(List<String> userIds) {
+  public List<UserInfo> getUsersByIds(List<String> userIds) {
     return RestClientUtils.getResponse(userClient.getUsersByIds(userIds));
   }
 
@@ -96,5 +104,22 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public boolean isUserInAccount(String accountId, String userId) {
     return Boolean.TRUE.equals(RestClientUtils.getResponse(userClient.isUserInAccount(accountId, userId)));
+  }
+
+  @Override
+  public void removeUserFromScope(
+      String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<UserProjectMap> userProjectMapOptional =
+        userProjectMapRepository.findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+            userId, accountIdentifier, orgIdentifier, projectIdentifier);
+    if (!userProjectMapOptional.isPresent()) {
+      return;
+    }
+    userProjectMapRepository.delete(userProjectMapOptional.get());
+    userProjectMapOptional = userProjectMapRepository.findFirstByUserIdAndAccountIdentifier(userId, accountIdentifier);
+    if (!userProjectMapOptional.isPresent()) {
+      //      User has been totally removed from the account -> notify cg
+      RestClientUtils.getResponse(userClient.safeDeleteUser(userId, accountIdentifier));
+    }
   }
 }

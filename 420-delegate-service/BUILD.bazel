@@ -8,7 +8,7 @@ shared_dependencies = [
 ] + [
     "//460-capability:module",
     "//470-alert:module",
-    "//870-orchestration:module",
+    "//870-cg-orchestration:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
     "//940-feature-flag:module",
@@ -21,6 +21,7 @@ shared_dependencies = [
     "//955-alert-beans:module",
     "//980-commons:module",
     "//955-delegate-beans:module",
+    "//930-delegate-tasks:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_github_reinert_jjschema",

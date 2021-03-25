@@ -29,7 +29,7 @@ import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 
 import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
@@ -43,7 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Listeners({OrchestrationNotifyEventListener.class, NodeExecutionEventListener.class})
+@Listeners({NgOrchestrationNotifyEventListener.class, NodeExecutionEventListener.class})
 public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private Injector injector;
   @Inject private OrchestrationService orchestrationService;

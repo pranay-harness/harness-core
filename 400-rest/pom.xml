@@ -327,7 +327,10 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
-            <version>1.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
@@ -602,6 +605,10 @@
             <artifactId>bcprov-jdk15on</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk15on</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.cloudfoundry</groupId>
             <artifactId>cloudfoundry-client-reactor</artifactId>
         </dependency>
@@ -779,6 +786,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>870-cg-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>870-cg-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -8,7 +8,7 @@ import org.springframework.util.Assert;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-public class GitAwareRepositoryImpl<T, Y, ID> implements GitAwareRepository<T, Y, ID> {
+public class GitAwareRepositoryImpl<T extends GitSyncableEntity, Y, ID> implements GitAwareRepository<T, Y, ID> {
   private final GitAwarePersistence gitAwarePersistence;
 
   @Override

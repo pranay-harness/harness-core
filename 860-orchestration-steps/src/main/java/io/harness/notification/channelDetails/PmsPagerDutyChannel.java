@@ -27,6 +27,7 @@ public class PmsPagerDutyChannel extends PmsNotificationChannel {
       String accountId, String templateId, Map<String, String> templateData) {
     return PagerDutyChannel.builder()
         .accountId(accountId)
+        .userGroupIds(userGroups)
         .team(Team.PIPELINE)
         .templateId(templateId)
         .integrationKeys(Lists.newArrayList(integrationKey))

@@ -108,6 +108,8 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     } catch (InterruptedException e) {
       log.error("Failed to get AWS EC2 Billing Data. {}", e);
       Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Exception Failed to get AWS EC2 Billing Data", ex);
     }
     return Collections.emptyMap();
   }

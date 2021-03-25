@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -7,6 +8,12 @@ import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -16,15 +23,17 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.notification.NotificationChannelType;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.utils.RetryUtils;
@@ -39,6 +48,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.StringValue;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -52,12 +62,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class UserGroupServiceImpl implements UserGroupService {
   private final UserGroupRepository userGroupRepository;
   private final UserClient userClient;
   private final Producer eventProducer;
+  private final AccessControlAdminClient accessControlAdminClient;
 
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
@@ -66,10 +78,12 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Inject
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      AccessControlAdminClient accessControlAdminClient) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.eventProducer = eventProducer;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
@@ -130,6 +144,19 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Criteria criteria = createUserGroupFetchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+        RoleAssignmentFilterDTO.builder()
+            .principalFilter(Collections.singleton(
+                PrincipalDTO.builder().type(PrincipalType.USER_GROUP).identifier(identifier).build()))
+            .build();
+    PageResponse<RoleAssignmentResponseDTO> pageResponse =
+        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
+            accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
+    if (pageResponse.getTotalItems() > 0) {
+      throw new InvalidRequestException(String.format(
+          "There exists %s role assignments with this user group. Please delete them first and then try again",
+          pageResponse.getTotalItems()));
+    }
     UserGroup userGroup = userGroupRepository.delete(criteria);
     publishEvent(userGroup, EventsFrameworkMetadataConstants.DELETE_ACTION);
     return userGroup;
@@ -229,7 +256,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Failsafe.with(retryPolicy).run(() -> {
       Set<String> returnedUsersIds = RestClientUtils.getResponse(userClient.getUsersByIds(new ArrayList<>(usersIds)))
                                          .stream()
-                                         .map(User::getUuid)
+                                         .map(UserInfo::getUuid)
                                          .collect(Collectors.toSet());
       Set<String> invalidUserIds = Sets.difference(usersIds, returnedUsersIds);
       if (!invalidUserIds.isEmpty()) {

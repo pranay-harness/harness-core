@@ -15,6 +15,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -55,6 +57,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -728,6 +731,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(generateUuid())
+                            .delegateType("dummyType")
                             .delegateName("name")
                             .hostName("hostname")
                             .delegateProfileId(delegateProfile.getUuid())
@@ -766,6 +770,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     assertThat(delegateSelectionLogParams.size()).isEqualTo(1);
     assertThat(delegateSelectionLogParams.get(0).getDelegateId()).isEqualTo(delegate.getUuid());
+    assertThat(delegateSelectionLogParams.get(0).getDelegateType()).isEqualTo(delegate.getDelegateType());
     assertThat(delegateSelectionLogParams.get(0).getDelegateName()).isEqualTo(delegate.getDelegateName());
     assertThat(delegateSelectionLogParams.get(0).getDelegateHostName()).isEqualTo(delegate.getHostName());
     assertThat(delegateSelectionLogParams.get(0).getDelegateProfileName()).isEqualTo(delegateProfile.getName());

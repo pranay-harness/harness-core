@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
@@ -16,6 +17,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -36,6 +38,7 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
   private String appId;
   private String activityId;
   private String commandUnit;
+  private List<String> delegateSelectors;
 
   /*
   Name of the variable which contains the file path
@@ -52,6 +55,9 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
             EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
                 Arrays.asList(encryptedDataDetail), maskingEvaluator));
       }
+    }
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(new HashSet<>(delegateSelectors)).build());
     }
 
     return executionCapabilities;

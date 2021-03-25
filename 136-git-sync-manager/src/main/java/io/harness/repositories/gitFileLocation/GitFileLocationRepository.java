@@ -22,4 +22,10 @@ public interface GitFileLocationRepository
 
   long countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
       String projectId, String orgId, String accountId, Scope scope, String entityType);
+
+  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountId(
+      String fqn, String entityType, String accountId);
+
+  Optional<GitFileLocation> findByEntityGitPathAndYamlGitConfigIdAndAccountId(
+      String entityGitPath, String yamlGitConfigId, String accountId);
 }

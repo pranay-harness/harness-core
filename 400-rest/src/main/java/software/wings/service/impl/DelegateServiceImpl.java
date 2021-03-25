@@ -3770,12 +3770,8 @@ public class DelegateServiceImpl implements DelegateService {
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
 
-      Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
-
-      if (delegate != null) {
-        delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
-            delegateTask.getAccountId(), taskId, delegate.getUuid(), delegate.getDelegateGroupId());
-      }
+      delegateTaskStatusObserverSubject.fireInform(
+          DelegateTaskStatusObxxxxxxxx:onTaskAssigned, delegateTask.getAccountId(), taskId, delegateId);
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }

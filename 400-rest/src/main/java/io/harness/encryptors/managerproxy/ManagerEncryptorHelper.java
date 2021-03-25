@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.TaskType.FETCH_SECRET;
+import static software.wings.beans.TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
 
 import io.harness.beans.DelegateTask;
@@ -11,6 +12,8 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegatetasks.FetchSecretTaskParameters;
 import io.harness.delegatetasks.FetchSecretTaskResponse;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskResponse;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskResponse;
 import io.harness.encryptors.DelegateTaskUtils;
@@ -79,6 +82,33 @@ public class ManagerEncryptorHelper {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       String message = String.format("Interrupted while validating reference with encryption config %s",
+          parameters.getEncryptionConfig().getName());
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
+    }
+  }
+
+  public boolean validateConfiguration(String accountId, ValidateSecretManagerConfigurationTaskParameters parameters) {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .data(TaskData.builder()
+                                              .async(false)
+                                              .taskType(VALIDATE_SECRET_MANAGER_CONFIGURATION.name())
+                                              .parameters(new Object[] {parameters})
+                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .accountId(accountId)
+                                    .build();
+    try {
+      DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
+      DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
+      if (!(delegateResponseData instanceof ValidateSecretManagerConfigurationTaskResponse)) {
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unknown Response from delegate", USER);
+      }
+      ValidateSecretManagerConfigurationTaskResponse responseData =
+          (ValidateSecretManagerConfigurationTaskResponse) delegateResponseData;
+      return responseData.isConfigurationValid();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      String message = String.format("Interrupted while validating configuration with encryption config %s",
           parameters.getEncryptionConfig().getName());
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }

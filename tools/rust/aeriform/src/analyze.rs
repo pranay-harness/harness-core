@@ -15,13 +15,14 @@ use crate::java_module::{modules, JavaModule};
 enum Kind {
     Critical,
     Error,
+    Warning,
     AutoAction,
     DevAction,
     Blocked,
     ToDo,
 }
 
-static WEIGHTS: [i32; 6] = [5, 3, 1, 2, 1, 1];
+static WEIGHTS: [i32; 7] = [5, 3, 2, 1, 2, 1, 1];
 
 #[derive(Debug, EnumSetType)]
 enum Explanation {
@@ -112,7 +113,7 @@ pub fn analyze(opts: Analyze) {
     println!("loading...");
 
     let modules = modules();
-    //println!("{:?}", modules);
+    // println!("{:?}", modules);
 
     if opts.module_filter.is_some()
         && !modules
@@ -213,7 +214,7 @@ pub fn analyze(opts: Analyze) {
         ));
     });
 
-    let mut total = vec![0, 0, 0, 0, 0, 0];
+    let mut total = vec![0, 0, 0, 0, 0, 0, 0];
 
     results.sort_by(|a, b| {
         let ordering = (a.kind as usize).cmp(&(b.kind as usize));
@@ -889,7 +890,7 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
 
     if class.target_module.is_none() && module.deprecated {
         results.push(Report {
-            kind: Kind::ToDo,
+            kind: Kind::Warning,
             explanation: Explanation::DeprecatedModule,
             message: format!(
                 "{} is in deprecated module {} and has no target module",

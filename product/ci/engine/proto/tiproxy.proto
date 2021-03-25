@@ -5,6 +5,17 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
+// Callgraph upload request object
+message UploadCgRequest {
+  string step_id = 1;
+  string repo = 2;
+  string sha = 3;
+  string branch = 4;
+  string cg_dir = 5;
+}
+
+message UploadCgResponse {}
+
 // Definitions to interact with TI service
 message WriteTestsRequest {
   string step_id = 1;
@@ -18,11 +29,13 @@ message SelectTestsRequest {
   string repo = 2;
   string sha = 3;
   string branch = 4;
-  // List of files which have been modified in the PR. This is marshalled form of types.File{}
+  // This is marshalled form of types.SelectTestsReq{} which contains changed
+  // files and the configuration object. This is sent as the body of the
+  // HTTP request to TI service by the lite engine.
   // This is done to avoid redefining the structs in code as well as proto.
   // Calls via lite engine use json encoded structs and can be decoded
   // on the TI service.
-  string diff_files = 5;
+  string body = 5;
 }
 
 // (TODO): `tests` should ideally be a protobuf defined in a single place.
@@ -41,4 +54,7 @@ service TiProxy {
   // However the list of tests received may be quite large and might need streaming.
   // TODO: Convert the response to a streaming response.
   rpc SelectTests(SelectTestsRequest) returns (SelectTestsResponse);
+
+  // Upload callgraph to lite engine which forwards the call to ti service.
+  rpc UploadCg(UploadCgRequest) returns (UploadCgResponse);
 }

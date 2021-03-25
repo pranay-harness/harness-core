@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -25,7 +26,8 @@ const (
 	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
-	javaAgentArg = "-DargLine=-javaagent:=/step-exec/.harness/bin/java-agent.jar:%s"
+	javaAgentArg = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
+	tiConfigPath = ".ticonfig.yaml"
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -101,11 +103,23 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 
 // Execute commands with timeout and retry handling
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
-	var err error
+	var err, errCg error
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
 			st := time.Now()
+			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
+			// work even if the other one fails.
+			errCg = collectCg(ctx, r.id, outDir, r.log)
 			err = collectTestReports(ctx, r.reports, r.id, r.log)
+			if errCg != nil {
+				// If there's an error in collecting callgraph, we won't retry but
+				// the step will be marked as an error
+				r.log.Errorw("unable to collect callgraph", zap.Error(errCg))
+				if err != nil {
+					r.log.Errorw("unable to collect tests reports", zap.Error(err))
+				}
+				return r.numRetries, errCg
+			}
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
@@ -120,10 +134,14 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	}
 	if err != nil {
 		// Run step did not execute successfully
-		// Try and collect reports, ignore any errors during report collection itself
+		// Try and collect callgraph and reports, ignore any errors during collection steps itself
+		errCg = collectCg(ctx, r.id, outDir, r.log)
 		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
+		}
+		if errCg != nil {
+			r.log.Errorw("error while collecting callgraph", zap.Error(errCg))
 		}
 		return r.numRetries, err
 	}
@@ -141,8 +159,7 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
 	}
-	data := fmt.Sprintf(`
-outDir: %s
+	data := fmt.Sprintf(`outDir: %s
 logLevel: 0
 logConsole: false
 writeTo: COVERAGE_JSON
@@ -248,7 +265,12 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	var err error
 	var selection types.SelectTestsResp
 	if r.runOnlySelectedTests {
-		selection, err = selectTests(ctx, r.diffFiles, r.id, r.log)
+		var files []types.File
+		err := json.Unmarshal([]byte(r.diffFiles), &files)
+		if err != nil {
+			return "", err
+		}
+		selection, err = selectTests(ctx, files, r.id, r.log, r.fs)
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response

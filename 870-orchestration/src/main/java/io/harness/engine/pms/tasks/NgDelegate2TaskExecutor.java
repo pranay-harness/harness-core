@@ -97,6 +97,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
         .setAccountId(AccountId.newBuilder().setId(delegateTaskRequest.getAccountId()).build())
         .setDetails(delegateTaskRequest.getDetails())
         .setLogAbstractions(delegateTaskRequest.getLogAbstractions())
+        .addAllSelectors(delegateTaskRequest.getSelectorsList())
         .setSetupAbstractions(delegateTaskRequest.getSetupAbstractions())
         .addAllSelectors(delegateTaskRequest.getSelectorsList())
         .addAllCapabilities(delegateTaskRequest.getCapabilitiesList())
