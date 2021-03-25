@@ -206,6 +206,13 @@ if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
@@ -236,9 +243,10 @@ replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
-if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
-else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
-fi
+replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
+
+replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"

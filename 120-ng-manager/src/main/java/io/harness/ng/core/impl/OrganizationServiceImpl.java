@@ -1,17 +1,20 @@
 package io.harness.ng.core.impl;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.auditevent.OrganizationCreateEvent;
 import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
 import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
@@ -21,8 +24,7 @@ import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
@@ -55,21 +57,24 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Singleton
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
+  private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final NgUserService ngUserService;
   private final TransactionTemplate transactionTemplate;
-  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
+  private final AccessControlAdminClient accessControlAdminClient;
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
-      NgUserService ngUserService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      NgUserService ngUserService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      AccessControlAdminClient accessControlAdminClient) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.ngUserService = ngUserService;
     this.transactionTemplate = transactionTemplate;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
@@ -80,7 +85,9 @@ public class OrganizationServiceImpl implements OrganizationService {
       validate(organization);
       Organization savedOrganization = saveOrganization(organization);
       log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
-      createUserProjectMap(organization);
+
+      updateUserMembership(organization);
+      addUsertoAdmins(organization);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -99,23 +106,39 @@ public class OrganizationServiceImpl implements OrganizationService {
     }));
   }
 
-  private void createUserProjectMap(Organization organization) {
+  private void updateUserMembership(Organization organization) {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(organization.getAccountIdentifier())
-                      .orgIdentifier(organization.getIdentifier())
-                      .name(ORGANIZATION_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(organization.getAccountIdentifier())
-                                          .orgIdentifier(organization.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
+      ngUserService.addUserToScope(userId,
+          UserMembership.Scope.builder()
+              .accountIdentifier(organization.getAccountIdentifier())
+              .orgIdentifier(organization.getIdentifier())
+              .build());
     }
+  }
+
+  private void addUsertoAdmins(Organization organization) {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      RoleAssignmentDTO roleAssignmentDTO =
+          RoleAssignmentDTO.builder()
+              .roleIdentifier(ORG_ADMIN_ROLE)
+              .disabled(false)
+              .principal(PrincipalDTO.builder()
+                             .type(io.harness.accesscontrol.principals.PrincipalType.USER)
+                             .identifier(userId)
+                             .build())
+              .resourceGroupIdentifier(getFullScopeDefaultResourceGroup(organization))
+              .build();
+      getResponse(accessControlAdminClient.createRoleAssignment(
+          organization.getAccountIdentifier(), organization.getIdentifier(), null, roleAssignmentDTO));
+    }
+  }
+
+  private String getFullScopeDefaultResourceGroup(Organization organization) {
+    return String.format("_%s", organization.getIdentifier());
   }
 
   @Override
@@ -134,7 +157,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (Boolean.TRUE.equals(existingOrganization.getHarnessManaged())) {
         throw new InvalidRequestException(
             String.format("Update operation not supported for Default Organization (identifier: [%s])", identifier),
-            USER);
+            WingsException.USER);
       }
       Organization organization = toOrganization(organizationDTO);
       organization.setAccountIdentifier(accountIdentifier);
@@ -151,7 +174,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         return updatedOrganization;
       }));
     }
-    throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
+    throw new InvalidRequestException(
+        String.format("Organisation with identifier [%s] not found", identifier), WingsException.USER);
   }
 
   @Override
@@ -188,7 +212,7 @@ public class OrganizationServiceImpl implements OrganizationService {
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
     if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
-      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
+      criteria.and(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
     }
     return criteria;
   }

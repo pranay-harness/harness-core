@@ -15,7 +15,6 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -72,25 +71,9 @@ public class UserResourceNG {
   }
 
   @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
-    }
-    return new RestResponse<>(usernames);
-  }
-
-  @GET
-  public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
-    User user = userService.getUserByEmail(emailId);
-    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  public RestResponse<List<UserInfo>> getUsersFromEmails(@QueryParam("emailIds") List<String> emailIds) {
+    List<User> users = userService.getUsersByEmail(emailIds);
+    return new RestResponse<>(users.stream().map(this::convertUserToNgUser).collect(Collectors.toList()));
   }
 
   @GET
@@ -133,13 +116,7 @@ public class UserResourceNG {
 
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
-        .map(user
-            -> UserInfo.builder()
-                   .email(user.getEmail())
-                   .name(user.getName())
-                   .uuid(user.getUuid())
-                   .accountIds(user.getAccountIds())
-                   .build())
+        .map(user -> UserInfo.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build())
         .collect(Collectors.toList());
   }
 

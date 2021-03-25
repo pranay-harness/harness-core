@@ -118,7 +118,7 @@ public class MSTeamsServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse response = send(Collections.singletonList(webhookUrl), TEST_MSTEAMS_TEMPLATE,
         Collections.emptyMap(), msTeamSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (NotificationProcessingResponse.isNotificationResquestFailed(response)) {
+    if (NotificationProcessingResponse.isNotificationRequestFailed(response)) {
       throw new NotificationException("Invalid webhook Url encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);
@@ -162,7 +162,7 @@ public class MSTeamsServiceImpl implements ChannelService {
     } else {
       processingResponse = microsoftTeamsSender.send(microsoftTeamsWebhookUrls, message, notificationId);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);

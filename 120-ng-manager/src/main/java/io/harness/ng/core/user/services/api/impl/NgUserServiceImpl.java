@@ -1,38 +1,37 @@
 package io.harness.ng.core.user.services.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.remote.client.NGRestUtils.getResponse;
+
+
+import static java.util.stream.Collectors.toList;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
-import io.harness.exception.DuplicateFieldException;
-import io.harness.ng.core.invites.entities.Invite;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.entities.UserMembership;
+import io.harness.ng.core.invites.entities.UserMembership.Scope;
+import io.harness.ng.core.invites.remote.UserSearchMapper;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.repositories.invites.spring.UserProjectMapRepository;
-import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.repositories.invites.spring.UserMembershipRepository;
+import io.harness.utils.PageUtils;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -43,29 +42,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PL)
 public class NgUserServiceImpl implements NgUserService {
   private final UserClient userClient;
-  private final UserProjectMapRepository userProjectMapRepository;
-  public static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
+  private final UserMembershipRepository userMembershipRepository;
   private final AccessControlAdminClient accessControlAdminClient;
-  private final Map<String, String> inviteRoleToRoleIdentifierMapping;
-  private final ResourceGroupService resourceGroupService;
 
   @Inject
-  public NgUserServiceImpl(UserClient userClient, UserProjectMapRepository userProjectMapRepository,
-      AccessControlAdminClient accessControlAdminClient, ResourceGroupService resourceGroupService) {
+  public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
+      AccessControlAdminClient accessControlAdminClient) {
     this.userClient = userClient;
-    this.userProjectMapRepository = userProjectMapRepository;
+    this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
-    this.resourceGroupService = resourceGroupService;
-    this.inviteRoleToRoleIdentifierMapping = new HashMap<>();
-    inviteRoleToRoleIdentifierMapping.put("Project Viewer", "_project_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Project Member", "_project_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Project Admin", "_project_admin");
-    inviteRoleToRoleIdentifierMapping.put("Organization Viewer", "_organization_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Organization Member", "_organization_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Organization Admin", "_organization_admin");
-    inviteRoleToRoleIdentifierMapping.put("Account Viewer", "_account_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Account Member", "_account_viewer");
-    inviteRoleToRoleIdentifierMapping.put("Account Admin", "_account_admin");
   }
 
   @Override
@@ -78,102 +63,91 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public List<UserProjectMap> listUserProjectMap(Criteria criteria) {
-    return userProjectMapRepository.findAll(criteria);
+  public io.harness.ng.beans.PageResponse<UserSearchDTO> listUsersAtScope(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, PageRequest pageRequest) {
+    Pageable pageable = PageUtils.getPageRequest(pageRequest);
+    Criteria criteria =
+        Criteria.where(UserMembership.UserMembershipKeys.scopes + "." + Scope.ScopeKeys.accountIdentifier)
+            .is(accountIdentifier)
+            .and(UserMembership.UserMembershipKeys.scopes + "." + Scope.ScopeKeys.orgIdentifier)
+            .is(orgIdentifier)
+            .and(UserMembership.UserMembershipKeys.scopes + "." + Scope.ScopeKeys.projectIdentifier)
+            .is(projectIdentifier);
+    Page<UserMembership> userMembershipPage = userMembershipRepository.findAll(criteria, pageable);
+    List<String> userIds = userMembershipPage.getContent().stream().map(UserMembership::getUserId).collect(toList());
+    List<UserInfo> users = this.getUsersByIds(userIds);
+    List<UserSearchDTO> userSearchDTOs = users.stream().map(UserSearchMapper::writeDTO).collect(toList());
+    return PageUtils.getNGPageResponse(userMembershipPage, userSearchDTOs);
+  }
+
+  @Override
+  public List<UserMembership> listUserMemberships(Criteria criteria) {
+    return userMembershipRepository.findAll(criteria);
   }
 
   // isSignedUp flag: Users in current gen exists even if they are in invited state and not signed up yet.
   public Optional<UserInfo> getUserFromEmail(String email) {
-    return RestClientUtils.getResponse(userClient.getUserFromEmail(email));
-  }
-
-  public List<String> getUsernameFromEmail(String accountIdentifier, List<String> emailList) {
-    return RestClientUtils.getResponse(userClient.getUsernameFromEmail(accountIdentifier, emailList));
+    List<UserInfo> users = getUsersFromEmail(Collections.singletonList(email));
+    if (isEmpty(users)) {
+      return Optional.empty();
+    }
+    return Optional.of(users.get(0));
   }
 
   @Override
-  public Optional<UserProjectMap> getUserProjectMap(
-      String uuid, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return userProjectMapRepository.findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-        uuid, accountIdentifier, orgIdentifier, projectIdentifier);
-  }
-
-  private void upsertResourceGroup(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String resourceGroupIdentifier) {
-    ResourceGroupDTO resourceGroupDTO = ResourceGroupDTO.builder()
-                                            .accountIdentifier(accountIdentifier)
-                                            .orgIdentifier(orgIdentifier)
-                                            .projectIdentifier(projectIdentifier)
-                                            .identifier(resourceGroupIdentifier)
-                                            .fullScopeSelected(true)
-                                            .resourceSelectors(new ArrayList<>())
-                                            .name("All Resources")
-                                            .description("Resource Group containing all resources")
-                                            .color("#0061fc")
-                                            .tags(ImmutableMap.of("predefined", "true"))
-                                            .build();
-    try {
-      resourceGroupService.create(resourceGroupDTO);
-    } catch (DuplicateFieldException | DuplicateKeyException duplicateException) {
-      // ignore if already exists
-    }
+  public List<UserInfo> getUsersFromEmail(List<String> emailIds) {
+    return RestClientUtils.getResponse(userClient.getUsersFromEmail(emailIds));
   }
 
   @Override
-  public boolean createUserProjectMap(Invite invite, UserInfo user) {
-    Optional<UserProjectMap> userProjectMapOptional =
-        userProjectMapRepository.findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-            user.getUuid(), invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
-
-    UserProjectMap userProjectMap = userProjectMapOptional
-                                        .map(e -> {
-                                          e.getRoles().add(invite.getRole());
-                                          return e;
-                                        })
-                                        .orElseGet(()
-                                                       -> UserProjectMap.builder()
-                                                              .userId(user.getUuid())
-                                                              .accountIdentifier(invite.getAccountIdentifier())
-                                                              .orgIdentifier(invite.getOrgIdentifier())
-                                                              .projectIdentifier(invite.getProjectIdentifier())
-                                                              .roles(ImmutableList.of(invite.getRole()))
-                                                              .build());
-    userProjectMapRepository.save(userProjectMap);
-    Role role = invite.getRole();
-    Optional.ofNullable(role.getName()).ifPresent(name -> role.setName(name.trim()));
-
-    if (inviteRoleToRoleIdentifierMapping.containsKey(role.getName())) {
-      // create _all_resources resource group if it doesn't exist already
-      upsertResourceGroup(userProjectMap.getAccountIdentifier(), userProjectMap.getOrgIdentifier(),
-          userProjectMap.getProjectIdentifier(), ALL_RESOURCES_RESOURCE_GROUP);
-
-      RoleAssignmentDTO roleAssignmentDTO =
-          RoleAssignmentDTO.builder()
-              .disabled(false)
-              .roleIdentifier(inviteRoleToRoleIdentifierMapping.get(role.getName()))
-              .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userProjectMap.getUserId()).build())
-              .resourceGroupIdentifier(ALL_RESOURCES_RESOURCE_GROUP)
-              .build();
-
-      try {
-        RoleAssignmentResponseDTO roleAssignmentResponseDTO =
-            NGRestUtils.getResponse(accessControlAdminClient.createRoleAssignment(userProjectMap.getAccountIdentifier(),
-                userProjectMap.getOrgIdentifier(), userProjectMap.getProjectIdentifier(), roleAssignmentDTO));
-        log.info("Created role assignment for invite: {}", roleAssignmentResponseDTO);
-      } catch (Exception exception) {
-        // this might fail if a user has already been assigned this role before, e.g. by migration, ignore error
-        log.error("Error while creating role assignment for invite, user might already have this role, please verify.",
-            exception);
-      }
-    }
-
-    return postCreation(invite, user);
+  public List<String> getUsersHavingRole(Scope scope, String roleIdentifier) {
+    List<RoleAssignmentResponseDTO> roleAssignmentResponses =
+        getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
+                        scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 1000,
+                        RoleAssignmentFilterDTO.builder().roleFilter(Collections.singleton(roleIdentifier)).build()))
+            .getContent();
+    return roleAssignmentResponses.stream()
+        .filter(roleAssignmentResponse
+            -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getType().equals(PrincipalType.USER))
+        .map(roleAssignmentResponse -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getIdentifier())
+        .collect(toList());
   }
 
-  private boolean postCreation(Invite invite, UserInfo user) {
-    String accountId = invite.getAccountIdentifier();
-    String userId = user.getUuid();
-    return RestClientUtils.getResponse(userClient.addUserToAccount(userId, accountId));
+  @Override
+  public Optional<UserMembership> getUserMembership(String userId) {
+    return userMembershipRepository.findDistinctByUserId(userId);
+  }
+
+  @Override
+  public void addUserToScope(UserInfo user, Scope scope) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope);
+  }
+
+  @Override
+  public void addUserToScope(String userId, String emailId, Scope scope) {
+    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
+
+    UserMembership userMembership = userMembershipOptional.orElseGet(
+        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
+    if (!userMembership.getScopes().contains(scope)) {
+      userMembership.getScopes().add(scope);
+    }
+    userMembershipRepository.save(userMembership);
+    postCreation(userId, scope.getAccountIdentifier());
+  }
+
+  @Override
+  public void addUserToScope(String userId, Scope scope) {
+    Optional<UserInfo> userOptional = getUserById(userId);
+    if (!userOptional.isPresent()) {
+      return;
+    }
+    UserInfo user = userOptional.get();
+    addUserToScope(user.getUuid(), user.getEmail(), scope);
+  }
+
+  private void postCreation(String userId, String accountIdentifier) {
+    RestClientUtils.getResponse(userClient.addUserToAccount(userId, accountIdentifier));
   }
 
   @Override
@@ -182,8 +156,9 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public UserProjectMap createUserProjectMap(UserProjectMap userProjectMap) {
-    return userProjectMapRepository.save(userProjectMap);
+  public Optional<UserInfo> getUserById(String userId) {
+    List<UserInfo> users = getUsersByIds(Collections.singletonList(userId));
+    return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
   }
 
   @Override
@@ -194,17 +169,30 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public void removeUserFromScope(
       String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<UserProjectMap> userProjectMapOptional =
-        userProjectMapRepository.findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-            userId, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (!userProjectMapOptional.isPresent()) {
+    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
+    if (!userMembershipOptional.isPresent()) {
       return;
     }
-    userProjectMapRepository.delete(userProjectMapOptional.get());
-    userProjectMapOptional = userProjectMapRepository.findFirstByUserIdAndAccountIdentifier(userId, accountIdentifier);
-    if (!userProjectMapOptional.isPresent()) {
-      //      User has been totally removed from the account -> notify cg
+    UserMembership userMembership = userMembershipOptional.get();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    List<Scope> scopes = userMembership.getScopes();
+    if (!scopes.contains(scope)) {
+      return;
+    }
+    scopes.remove(scope);
+    boolean isUserRemovedFromAccount =
+        scopes.stream().noneMatch(scope1 -> scope1.getAccountIdentifier().equals(accountIdentifier));
+    if (isUserRemovedFromAccount) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, accountIdentifier));
     }
+  }
+
+  @Override
+  public boolean removeUserMembership(String userId) {
+    return userMembershipRepository.deleteUserMembershipByUserId(userId) > 0;
   }
 }

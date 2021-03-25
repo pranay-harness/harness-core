@@ -1,6 +1,6 @@
 package io.harness.repositories.invites.custom;
 
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -14,20 +14,20 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
-public class UserProjectMapRepositoryCustomImpl implements UserProjectMapRepositoryCustom {
+public class UserMembershipRepositoryCustomImpl implements UserMembershipRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public List<UserProjectMap> findAll(Criteria criteria) {
+  public List<UserMembership> findAll(Criteria criteria) {
     Query query = new Query(criteria);
-    return mongoTemplate.find(query, UserProjectMap.class);
+    return mongoTemplate.find(query, UserMembership.class);
   }
 
   @Override
-  public Page<UserProjectMap> findAll(Criteria criteria, Pageable pageable) {
+  public Page<UserMembership> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
-    List<UserProjectMap> userProjectMaps = mongoTemplate.find(query, UserProjectMap.class);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
     return PageableExecutionUtils.getPage(
-        userProjectMaps, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserProjectMap.class));
+        userMemberships, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
   }
 }

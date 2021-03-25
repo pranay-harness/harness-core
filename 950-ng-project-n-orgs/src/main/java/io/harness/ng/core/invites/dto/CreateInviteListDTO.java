@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
-import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,6 +22,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 public class CreateInviteListDTO {
   @ApiModelProperty(required = true) @NotEmpty @Size(max = 100) List<String> users;
-  @ApiModelProperty(required = true) @Valid RoleDTO role;
+  @ApiModelProperty(required = true) @NotEmpty List<RoleAssignment> roleAssignments;
   @ApiModelProperty(required = true) InviteType inviteType;
+
+  @Data
+  @Builder
+  public static class RoleAssignment {
+    String resourceGroupIdentifier;
+    @ApiModelProperty(required = true) String roleIdentifier;
+  }
 }

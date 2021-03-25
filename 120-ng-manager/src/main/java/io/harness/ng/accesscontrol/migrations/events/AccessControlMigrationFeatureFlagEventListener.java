@@ -26,7 +26,7 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership.Scope;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
@@ -137,7 +137,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     }
 
     List<RoleAssignmentResponseDTO> createdRoleAssignments =
-        NGRestUtils.getResponse(accessControlAdminClient.createMulti(account, org, project,
+        NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project,
             RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentsToCreate).build()));
 
     Set<RoleAssignmentDTO> createdRoleAssignmentsSet =
@@ -208,8 +208,8 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
             createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
 
         // adding user project map
-        users.forEach(user
-            -> upsertUserProjectMap(accountId, organization.getIdentifier(), project.getIdentifier(), user.getUuid()));
+        users.forEach(
+            user -> upsertUserProjectMap(accountId, organization.getIdentifier(), project.getIdentifier(), user));
       }
     }
     accessControlMigrationService.save(
@@ -217,19 +217,17 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     return true;
   }
 
-  private void upsertUserProjectMap(
-      String accountId, String orgIdentifier, String projectIdentifier, String principalIdentifier) {
+  private void upsertUserProjectMap(String accountId, String orgIdentifier, String projectIdentifier, UserInfo user) {
     try {
-      ngUserService.createUserProjectMap(UserProjectMap.builder()
-                                             .accountIdentifier(accountId)
-                                             .projectIdentifier(projectIdentifier)
-                                             .orgIdentifier(orgIdentifier)
-                                             .userId(principalIdentifier)
-                                             .roles(new ArrayList<>())
-                                             .build());
+      Scope scope = Scope.builder()
+                        .accountIdentifier(accountId)
+                        .projectIdentifier(projectIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .build();
+      ngUserService.addUserToScope(user, scope);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("User project map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
-          orgIdentifier, projectIdentifier, principalIdentifier);
+          orgIdentifier, projectIdentifier, user.getUuid());
     }
   }
 

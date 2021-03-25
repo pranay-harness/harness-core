@@ -39,8 +39,8 @@ import lombok.AllArgsConstructor;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
-@Produces({"application/json"})
-@Consumes({"application/json"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {

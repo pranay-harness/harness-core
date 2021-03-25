@@ -1,8 +1,8 @@
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.invites.remote.RoleMapper.toRole;
 
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.NGAccess;
@@ -12,6 +12,7 @@ import io.harness.ng.core.invites.entities.Invite;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.validator.routines.EmailValidator;
 
@@ -23,7 +24,7 @@ public class InviteMapper {
         .id(invite.getId())
         .name(invite.getName())
         .email(invite.getEmail())
-        .role(RoleMapper.writeDTO(invite.getRole()))
+        .roleAssignments(invite.getRoleAssignments())
         .inviteType(invite.getInviteType())
         .approved(invite.getApproved())
         .build();
@@ -34,7 +35,7 @@ public class InviteMapper {
         .id(inviteDTO.getId())
         .name(inviteDTO.getName())
         .email(inviteDTO.getEmail())
-        .role(toRole(inviteDTO.getRole()))
+        .roleAssignments(inviteDTO.getRoleAssignments())
         .inviteType(inviteDTO.getInviteType())
         .approved(inviteDTO.getApproved())
         .accountIdentifier(ngAccess.getAccountIdentifier())
@@ -43,35 +44,60 @@ public class InviteMapper {
         .build();
   }
 
-  static List<Invite> toInviteList(CreateInviteListDTO createInviteListDTO, List<String> usernames, NGAccess ngAccess) {
+  static List<Invite> toInviteList(CreateInviteListDTO createInviteListDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier) {
     if (isEmpty(createInviteListDTO.getUsers())) {
       return new ArrayList<>();
     }
 
     EmailValidator emailValidator = EmailValidator.getInstance();
     List<String> emailIdList = createInviteListDTO.getUsers();
-
     List<Invite> invites = new ArrayList<>();
-    Invite invite = null;
-
-    for (int i = 0; i < emailIdList.size(); i++) {
-      String emailId = emailIdList.get(i);
+    for (String emailId : emailIdList) {
       if (emailValidator.isValid(emailId)) {
-        invite = Invite.builder()
-                     .email(emailId)
-                     .name(usernames.get(i))
-                     .role(toRole(createInviteListDTO.getRole()))
-                     .inviteType(createInviteListDTO.getInviteType())
-                     .approved(Boolean.FALSE)
-                     .accountIdentifier(ngAccess.getAccountIdentifier())
-                     .orgIdentifier(ngAccess.getOrgIdentifier())
-                     .projectIdentifier(ngAccess.getProjectIdentifier())
-                     .build();
-        invites.add(invite);
+        invites.add(Invite.builder()
+                        .email(emailId)
+                        .roleAssignments(createRoleAssignment(createInviteListDTO.getRoleAssignments(),
+                            accountIdentifier, orgIdentifier, projectIdentifier))
+                        .inviteType(createInviteListDTO.getInviteType())
+                        .approved(Boolean.FALSE)
+                        .accountIdentifier(accountIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .projectIdentifier(projectIdentifier)
+                        .build());
       } else {
         invites.add(null);
       }
     }
     return invites;
+  }
+
+  private static List<RoleAssignmentDTO> createRoleAssignment(List<CreateInviteListDTO.RoleAssignment> roleAssignments,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return roleAssignments.stream()
+        .map(r
+            -> RoleAssignmentDTO.builder()
+                   .roleIdentifier(r.getRoleIdentifier())
+                   .resourceGroupIdentifier(getResourceGroupIdentifier(
+                       r.getResourceGroupIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier))
+                   .disabled(true)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private static String getResourceGroupIdentifier(
+      String resourceGroupIdentifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (resourceGroupIdentifier != null) {
+      return resourceGroupIdentifier;
+    }
+    String resourceGroup;
+    if (projectIdentifier != null) {
+      resourceGroup = projectIdentifier;
+    } else if (orgIdentifier != null) {
+      resourceGroup = orgIdentifier;
+    } else {
+      resourceGroup = accountIdentifier;
+    }
+    return String.format("_%s", resourceGroup);
   }
 }

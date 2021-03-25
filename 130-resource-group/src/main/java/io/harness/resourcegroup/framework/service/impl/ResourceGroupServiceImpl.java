@@ -103,7 +103,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
     preprocessResourceGroup(resourceGroup);
-    if (validate(resourceGroup)) {
+    if (validateBeforeCreation(resourceGroup)) {
       try {
         ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
         publishEvent(resourceGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
@@ -172,6 +172,15 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
           Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
     }
     return resourceGroupRepository.findAll(criteria, page).map(ResourceGroupMapper::toResponseWrapper);
+  }
+
+  private boolean validateBeforeCreation(ResourceGroup resourceGroup) {
+    if ((isBlank(resourceGroup.getIdentifier()) || resourceGroup.getIdentifier().charAt(0) == '_')
+        && !TRUE.equals(resourceGroup.getHarnessManaged())) {
+      throw new InvalidRequestException(
+          "Identifiers starting with _ are only allowed for Harness managed resource group");
+    }
+    return validate(resourceGroup);
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
@@ -266,6 +275,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
 
   @Override
   public boolean deleteStaleResources(ResourceGroup resourceGroup) {
+    log.info(resourceGroup.toString());
     Map<String, List<String>> staticResourceSelectors =
         resourceGroup.getResourceSelectors()
             .stream()
@@ -312,15 +322,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     String resourceType = resourcePrimaryKey.getResourceType();
     Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
                             .is(resourcePrimaryKey.getAccountIdentifier())
+                            .and(ResourceGroupKeys.orgIdentifier)
+                            .is(resourcePrimaryKey.getOrgIdentifier())
                             .and(ResourceGroupKeys.deleted)
+                            .and(ResourceGroupKeys.projectIdentifier)
+                            .is(resourcePrimaryKey.getProjectIdentifer())
                             .is(false);
-
-    if (isNotBlank(resourcePrimaryKey.getOrgIdentifier())) {
-      criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
-    }
-    if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-      criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
-    }
 
     if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {
       return criteria;
@@ -347,22 +354,14 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                                                       .harnessManaged(true)
                                                       .fullScopeSelected(true);
       String resourceGroupIdentifier = String.format("_%s", resourcePrimaryKey.getResourceIdetifier());
-      boolean created = false;
-      int counter = 1;
-      do {
-        ResourceGroup resourceGroup = resourceGroupBuilder.identifier(resourceGroupIdentifier).build();
-        try {
-          create(resourceGroup);
-          created = true;
-        } catch (DuplicateFieldException e) {
-          log.info("Identifier {} for default resource group already taken", resourceGroupIdentifier);
-        } catch (Exception e) {
-          log.info("Failed to create default resource groups", e);
-          break;
-        }
-        resourceGroupIdentifier = String.format("_%s_%d", resourcePrimaryKey.getResourceIdetifier(), counter++);
-      } while (!created);
-      return created;
+      ResourceGroup resourceGroup = resourceGroupBuilder.identifier(resourceGroupIdentifier).build();
+      try {
+        create(resourceGroup);
+      } catch (DuplicateFieldException e) {
+        log.error("Identifier {} for default resource group already taken", resourceGroupIdentifier);
+      } catch (Exception e) {
+        log.error("Failed to create default resource groups", e);
+      }
     }
     return true;
   }
@@ -399,15 +398,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (resourceHierarchyChanged) {
       Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
                               .is(resourcePrimaryKey.getAccountIdentifier())
+                              .and(ResourceGroupKeys.orgIdentifier)
+                              .is(resourcePrimaryKey.getOrgIdentifier())
+                              .and(ResourceGroupKeys.projectIdentifier)
+                              .is(resourcePrimaryKey.getProjectIdentifer())
                               .and(ResourceGroupKeys.deleted)
                               .is(true);
-
-      if (isNotBlank(resourcePrimaryKey.getOrgIdentifier())) {
-        criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
-      }
-      if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-        criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
-      }
       Update update = new Update().set(ResourceGroupKeys.deleted, false);
       return resourceGroupRepository.update(criteria, update);
     }

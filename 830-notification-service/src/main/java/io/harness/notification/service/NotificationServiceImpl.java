@@ -35,8 +35,8 @@ public class NotificationServiceImpl implements NotificationService {
     log.info("Received Message in group 'notification_microservice_v1': {}", notificationRequest.getId());
     Optional<Notification> previousNotification = notificationRepository.findDistinctById(notificationRequest.getId());
     if (previousNotification.isPresent()) {
-      log.info("Duplicate notification request recieved {}", notificationRequest.getId());
-      return !NotificationProcessingResponse.isNotificationResquestFailed(
+      log.info("Duplicate notification request received {}", notificationRequest.getId());
+      return !NotificationProcessingResponse.isNotificationRequestFailed(
           previousNotification.get().getProcessingResponses());
     }
 
@@ -56,12 +56,14 @@ public class NotificationServiceImpl implements NotificationService {
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setProcessingResponses(processingResponse.getResult());
-    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    if (Objects.nonNull(processingResponse)) {
+      notification.setProcessingResponses(processingResponse.getResult());
+      notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
+          || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    }
     notification.setRetries(1);
     notificationRepository.save(notification);
-    return !NotificationProcessingResponse.isNotificationResquestFailed(processingResponse);
+    return !NotificationProcessingResponse.isNotificationRequestFailed(processingResponse);
   }
 
   @Override
@@ -80,9 +82,11 @@ public class NotificationServiceImpl implements NotificationService {
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setProcessingResponses(processingResponse.getResult());
-    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    if (Objects.nonNull(processingResponse)) {
+      notification.setProcessingResponses(processingResponse.getResult());
+      notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
+          || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    }
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);
   }
