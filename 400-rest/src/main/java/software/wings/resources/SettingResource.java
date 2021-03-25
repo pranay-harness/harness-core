@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -213,10 +214,20 @@ public class SettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ValidationResult> validateConnectivity2(
-          @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
-          SettingAttribute variable, Map<String, String> setupAbstractions) {
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      SettingAttribute variable, @QueryParam("key1") String key1, @QueryParam("key2") String key2,
+      @QueryParam("value1") String value1, @QueryParam("value2") String value2) {
     settingAuthHandler.authorize(variable);
-    return new RestResponse<ValidationResult>(settingsService.validateConnectivityWithPruning2(variable, appId, accountId, setupAbstractions));
+    Map<String, String> setupAbstractions = new HashMap<>();
+    if (!isEmpty(key1)) {
+      setupAbstractions.put(key1, value1);
+    }
+
+    if (!isEmpty(key2)) {
+      setupAbstractions.put(key2, value2);
+    }
+    return new RestResponse<ValidationResult>(
+        settingsService.validateConnectivityWithPruning2(variable, appId, accountId, setupAbstractions));
   }
 
   /**
