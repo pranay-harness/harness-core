@@ -14,6 +14,7 @@ import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBu
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -83,7 +84,8 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
             .taskType(NGTaskType.HTTP_TASK_NG.name())
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
   }
 
   @Override

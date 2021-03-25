@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -11,6 +12,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -36,12 +38,14 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;
   Map<String, String> headers;
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public HttpStepParameters(ParameterField<String> url, ParameterField<String> method,
       ParameterField<String> requestBody, ParameterField<String> assertion, String name, String identifier,
       ParameterField<String> description, ParameterField<String> skipCondition, ParameterField<String> timeout,
-      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, String> headers) {
+      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, String> headers,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(url, method, requestBody, assertion);
     this.name = name;
     this.identifier = identifier;
@@ -51,6 +55,7 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
     this.rollbackInfo = rollbackInfo;
     this.outputVariables = outputVariables;
     this.headers = headers;
+    this.delegateSelectors = delegateSelectors;
     type = StepSpecTypeConstants.HTTP;
   }
 

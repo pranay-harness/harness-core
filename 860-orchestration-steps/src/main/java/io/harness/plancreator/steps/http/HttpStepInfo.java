@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps.http;
 
 import io.harness.http.HttpHeaderConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -46,17 +47,20 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
 
   List<NGVariable> outputVariables;
   List<HttpHeaderConfig> headers;
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public HttpStepInfo(ParameterField<String> url, ParameterField<String> method, ParameterField<String> requestBody,
       ParameterField<String> assertion, String name, String identifier, String metadata,
-      List<NGVariable> outputVariables, List<HttpHeaderConfig> headers) {
+      List<NGVariable> outputVariables, List<HttpHeaderConfig> headers,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(url, method, requestBody, assertion);
     this.name = name;
     this.identifier = identifier;
     this.metadata = metadata;
     this.outputVariables = outputVariables;
     this.headers = headers;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -89,6 +93,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
         .method(getMethod())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .requestBody(getRequestBody())
+        .delegateSelectors(delegateSelectors)
         .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
         .url(getUrl())
