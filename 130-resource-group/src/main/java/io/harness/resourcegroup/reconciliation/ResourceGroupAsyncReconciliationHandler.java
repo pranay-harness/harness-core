@@ -3,7 +3,6 @@ package io.harness.resourcegroup.reconciliation;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
 
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -34,7 +33,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
   }
 
   public void registerIterators() {
-    Duration interval = ofMinutes(1);
+    Duration interval = ofMinutes(10);
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ResourceGroupAsyncReconciliation")
@@ -46,7 +45,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
             .clazz(ResourceGroup.class)
             .fieldName(ResourceGroupKeys.nextIteration)
             .targetInterval(interval)
-            .acceptableNoAlertDelay(ofSeconds(30))
+            .acceptableNoAlertDelay(ofMinutes(30))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider(mongoTemplate))

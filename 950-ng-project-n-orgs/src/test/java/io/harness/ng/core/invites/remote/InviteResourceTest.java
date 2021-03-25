@@ -1,8 +1,8 @@
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITE_RESENT;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.MongoConfig;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InvitesService;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,7 +42,7 @@ public class InviteResourceTest extends CategoryTest {
   @Mock private NgUserService ngUserService;
 
   private final String accountIdentifier = randomAlphabetic(7);
-  private final String orgIdentifiier = randomAlphabetic(7);
+  private final String orgIdentifier = randomAlphabetic(7);
   private final String projectIdentifier = randomAlphabetic(7);
   private final String emailId = String.format("%s@%s", randomAlphabetic(7), randomAlphabetic(7));
   private final String inviteId = randomAlphabetic(10);
@@ -54,14 +52,12 @@ public class InviteResourceTest extends CategoryTest {
   private InviteResource inviteResource;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     MockitoAnnotations.initMocks(this);
-    MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
-    inviteResource =
-        new InviteResource(invitesService, ngUserService, "http://qa.harness.io/", "http://qa.harness.io/ng/#/");
+    inviteResource = new InviteResource(invitesService, ngUserService);
     invite = Invite.builder()
                  .accountIdentifier(accountIdentifier)
-                 .orgIdentifier(orgIdentifiier)
+                 .orgIdentifier(orgIdentifier)
                  .projectIdentifier(projectIdentifier)
                  .approved(Boolean.FALSE)
                  .email(emailId)
@@ -87,7 +83,7 @@ public class InviteResourceTest extends CategoryTest {
         .thenReturn(new PageImpl<>(inviteList, PageUtils.getPageRequest(pageRequest), 10));
 
     List<InviteDTO> returnInvites =
-        inviteResource.getInvites(accountIdentifier, orgIdentifiier, projectIdentifier, pageRequest)
+        inviteResource.getInvites(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest)
             .getData()
             .getContent();
 
@@ -105,33 +101,13 @@ public class InviteResourceTest extends CategoryTest {
                                                   .role(RoleDTO.builder().name("PROJECT ADMIN").build())
                                                   .users(emailIds)
                                                   .build();
-    when(invitesService.create(any())).thenReturn(USER_INVITE_RESENT, USER_INVITED_SUCCESSFULLY, USER_ALREADY_ADDED);
+    when(invitesService.create(any())).thenReturn(USER_ALREADY_INVITED, USER_INVITED_SUCCESSFULLY, USER_ALREADY_ADDED);
     List<InviteOperationResponse> operationResponses =
-        inviteResource.createInvitations(accountIdentifier, orgIdentifiier, projectIdentifier, createInviteListDTO)
+        inviteResource.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteListDTO)
             .getData();
-    assertThat(operationResponses.get(0)).isEqualTo(USER_INVITE_RESENT);
+    assertThat(operationResponses.get(0)).isEqualTo(USER_ALREADY_INVITED);
     assertThat(operationResponses.get(1)).isEqualTo(USER_INVITED_SUCCESSFULLY);
     assertThat(operationResponses.get(2)).isEqualTo(USER_ALREADY_ADDED);
-  }
-
-  @Test
-  @Owner(developers = ANKUSH)
-  @Category(UnitTests.class)
-  public void testVerify_TokenValid() {
-    String jwtToken = randomAlphabetic(20);
-    when(invitesService.verify(jwtToken)).thenReturn(Optional.of(invite));
-    Response response = inviteResource.verify(jwtToken, accountIdentifier);
-    assertThat(response.getStatus()).isEqualTo(303);
-  }
-
-  @Test
-  @Owner(developers = ANKUSH)
-  @Category(UnitTests.class)
-  public void testVerify_TokenInvalid() {
-    String jwtToken = randomAlphabetic(20);
-    when(invitesService.verify(jwtToken)).thenReturn(Optional.empty());
-    Response response = inviteResource.verify(jwtToken, accountIdentifier);
-    assertThat(response.getStatus()).isEqualTo(303);
   }
 
   @Test
