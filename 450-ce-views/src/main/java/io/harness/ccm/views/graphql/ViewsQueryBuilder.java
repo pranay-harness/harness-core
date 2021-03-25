@@ -282,7 +282,7 @@ public class ViewsQueryBuilder {
 
     labelKeysList.addAll(collectLabelKeysList(rules, filters));
     if (isLabelsPresent || evaluateLabelsPresent(rules, filters)) {
-      decorateQueryWithLabelsMetadata(query, true, labelKeysList);
+      decorateQueryWithLabelsMetadata(query, true, labelKeysList, getIsLabelsKeyFilterQuery(filters));
     }
 
     if (!rules.isEmpty()) {
@@ -346,8 +346,19 @@ public class ViewsQueryBuilder {
     return ViewsQueryMetadata.builder().query(query).fields(fields).build();
   }
 
+  private boolean getIsLabelsKeyFilterQuery(List<QLCEViewFilter> filters) {
+
+    for (QLCEViewFilter filter : filters) {
+      QLCEViewFieldInput viewFieldInput = filter.getField();
+      if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void decorateQueryWithLabelsMetadata(
-      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList) {
+      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList, boolean isLabelsKeyFilterQuery) {
     if (isLabelsPresent) {
       if (labelKeyList.isEmpty() || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
         selectQuery.addCustomJoin(leftJoinLabels);
