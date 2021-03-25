@@ -347,7 +347,6 @@ public class ViewsQueryBuilder {
   }
 
   private boolean getIsLabelsKeyFilterQuery(List<QLCEViewFilter> filters) {
-
     for (QLCEViewFilter filter : filters) {
       QLCEViewFieldInput viewFieldInput = filter.getField();
       if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
@@ -360,7 +359,8 @@ public class ViewsQueryBuilder {
   private void decorateQueryWithLabelsMetadata(
       SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList, boolean isLabelsKeyFilterQuery) {
     if (isLabelsPresent) {
-      if (labelKeyList.isEmpty() || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
+      if (isLabelsKeyFilterQuery || labelKeyList.isEmpty()
+          || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
         selectQuery.addCustomJoin(leftJoinLabels);
       } else {
         selectQuery.addCustomJoin(String.format(leftJoinSelectiveLabels, processLabelKeyList(labelKeyList)));
