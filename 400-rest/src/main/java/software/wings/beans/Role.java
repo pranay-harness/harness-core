@@ -5,12 +5,13 @@ import static java.util.Arrays.asList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.security.PermissionAttribute.PermissionType;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.FieldNameConstants;
@@ -23,10 +24,18 @@ import org.mongodb.morphia.annotations.PostLoad;
  */
 @Entity(value = "roles", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdIndex(name = "roleType_accountId_1", fields = { @Field("roleType")
-                                                   , @Field("accountId") })
 @FieldNameConstants(innerTypeName = "RoleKeys")
 public class Role extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("roleType_accountId_1")
+                 .field(RoleKeys.roleType)
+                 .field(RoleKeys.accountId)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private String name;
   private String description;
   @NotEmpty private String accountId;
