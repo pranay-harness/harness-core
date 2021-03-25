@@ -28,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 @JsonTypeName(PIPELINE_SETUP_FILTER)
 public class PipelineFilterProperties extends FilterProperties {
   private List<NGTag> pipelineTags;
+  private List<String> pipelineIdentifiers;
   private String name;
   private String description;
 
