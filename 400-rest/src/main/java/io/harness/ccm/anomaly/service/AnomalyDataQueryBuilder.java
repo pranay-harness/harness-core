@@ -2,12 +2,14 @@ package io.harness.ccm.anomaly.service;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -47,8 +49,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class AnomalyDataQueryBuilder {
-  private static void addAccountFilter(SelectQuery selectQuery, String accountId) {
+  public static String formViewsQuery(String accountId, List<QLCEViewFilterWrapper> filters) {
+    SelectQuery query = new SelectQuery();
+    addAccountFilter(query, accountId);
+    isViews(query, true);
+    return query.validate().toString();
+  }
+
+  public static void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));
+  }
+
+  public static void isViews(SelectQuery query, boolean isView) {
+    if (isView) {
+      query.addCondition(UnaryCondition.isNotNull(AnomalyEntity.AnomaliesDataTableSchema.viewId));
+    } else {
+      query.addCondition(UnaryCondition.isNull(AnomalyEntity.AnomaliesDataTableSchema.viewId));
+    }
   }
 
   public static String formAnomalyFetchQuery(String accountId, QLAnomalyInput input) {
@@ -88,6 +105,7 @@ public class AnomalyDataQueryBuilder {
 
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
+    isViews(query, false);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
@@ -103,6 +121,7 @@ public class AnomalyDataQueryBuilder {
 
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
+    isViews(query, false);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
@@ -308,6 +327,7 @@ public class AnomalyDataQueryBuilder {
     filters = new ArrayList<CloudBillingFilter>(filters);
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
+    isViews(query, false);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),

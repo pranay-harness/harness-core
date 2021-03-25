@@ -6,6 +6,10 @@ import io.harness.ccm.anomaly.service.AnomalyDataQueryBuilder;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewAggregation;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
@@ -13,6 +17,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -30,7 +35,8 @@ public class AnomalyServiceImpl implements AnomalyService {
   public List<AnomalyEntity> list(String account, Instant date) {
     SelectQuery query = new SelectQuery();
     query.addAllTableColumns(AnomalyEntity.AnomaliesDataTableSchema.table);
-    addAccountIdFilter(account, query);
+    AnomalyDataQueryBuilder.addAccountFilter(query, account);
+    AnomalyDataQueryBuilder.isViews(query, false);
     query.addCondition(
         BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, date.truncatedTo(ChronoUnit.DAYS)));
     return anomalyEntityDao.list(query.validate().toString());
@@ -40,7 +46,8 @@ public class AnomalyServiceImpl implements AnomalyService {
   public List<AnomalyEntity> list(String account, Instant from, Instant to) {
     SelectQuery query = new SelectQuery();
     query.addAllTableColumns(AnomalyEntity.AnomaliesDataTableSchema.table);
-    addAccountIdFilter(account, query);
+    AnomalyDataQueryBuilder.addAccountFilter(query, account);
+    AnomalyDataQueryBuilder.isViews(query, false);
     query.addCondition(BinaryCondition.lessThanOrEq(
         AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, to.truncatedTo(ChronoUnit.DAYS)));
     query.addCondition(BinaryCondition.greaterThanOrEq(
@@ -79,6 +86,18 @@ public class AnomalyServiceImpl implements AnomalyService {
   }
 
   @Override
+  public List<AnomalyEntity> listViews(String accountId, List<QLCEViewAggregation> aggregateFunction,
+      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort) {
+    try {
+      String queryStatement = AnomalyDataQueryBuilder.formViewsQuery(accountId, filters);
+      return anomalyEntityDao.list(queryStatement);
+    } catch (Exception e) {
+      log.error("Exception occurred in listOverview: [{}]", e.toString());
+      return Collections.emptyList();
+    }
+  }
+
+  @Override
   public void delete(List<String> ids, Instant date) {
     anomalyEntityDao.delete(ids, date);
   }
@@ -86,10 +105,6 @@ public class AnomalyServiceImpl implements AnomalyService {
   @Override
   public void insert(List<? extends AnomalyEntity> anomalies) {
     anomalyEntityDao.insert(anomalies);
-  }
-
-  private void addAccountIdFilter(String accountId, SelectQuery query) {
-    query.addCondition(BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.accountId, accountId));
   }
 
   public AnomalyEntity update(AnomalyEntity anomaly) {
