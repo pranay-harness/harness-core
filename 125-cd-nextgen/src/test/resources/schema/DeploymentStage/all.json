@@ -248,6 +248,7 @@
     "CriteriaSpecWrapper": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {

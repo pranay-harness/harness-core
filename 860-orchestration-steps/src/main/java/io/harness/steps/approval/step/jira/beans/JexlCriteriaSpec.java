@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.jira.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
@@ -12,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @AllArgsConstructor
@@ -24,5 +28,10 @@ public class JexlCriteriaSpec implements CriteriaSpec {
   @Override
   public CriteriaSpecType getType() {
     return CriteriaSpecType.JEXL;
+  }
+
+  @Override
+  public CriteriaSpecDTO toCriteriaSpecDTO() {
+    return JexlCriteriaSpecDTO.fromJexlCriteriaSpec(this);
   }
 }
