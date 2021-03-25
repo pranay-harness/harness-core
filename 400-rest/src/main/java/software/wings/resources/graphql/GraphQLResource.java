@@ -12,7 +12,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
-import software.wings.audit.AuditSkip;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.User;
 import software.wings.features.RestApiFeature;
@@ -59,7 +58,6 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/graphql")
 @Produces("application/json")
 @Singleton
-@AuditSkip
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {

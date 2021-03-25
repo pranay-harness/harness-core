@@ -465,6 +465,7 @@ public class AuditServiceImpl implements AuditService {
         case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
+        case INVOKED:
         case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -498,6 +499,7 @@ public class AuditServiceImpl implements AuditService {
         case LOGIN:
         case LOGIN_2FA:
         case NON_WHITELISTED:
+        case INVOKED:
         case CREATE: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
             saveEntityYamlForAudit(newEntity, record, accountId);
