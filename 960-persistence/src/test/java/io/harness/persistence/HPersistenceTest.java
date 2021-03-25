@@ -5,18 +5,17 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import io.harness.PersistenceTestBase;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
 import io.harness.persistence.TestEntityCreatedAware.TestEntityCreatedAwareKeys;
 import io.harness.persistence.TestEntityCreatedLastUpdatedAware.TestEntityCreatedLastUpdatedAwareKeys;
 import io.harness.rule.Owner;
+import io.harness.rule.TestUserProvider;
 
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
@@ -53,7 +52,7 @@ public class HPersistenceTest extends PersistenceTestBase {
             .set(TestEntityCreatedAwareKeys.test, "foo");
 
     try {
-      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
+      TestUserProvider.userThreadLocal.set(TestUserProvider.activeUser1);
 
       TestEntityCreatedAware entity1 = persistence.upsert(query, updateOperations1, upsertReturnNewOptions);
       assertThat(entity1).isNotNull();
@@ -61,14 +60,14 @@ public class HPersistenceTest extends PersistenceTestBase {
       UpdateOperations<TestEntityCreatedAware> updateOperations2 =
           persistence.createUpdateOperations(TestEntityCreatedAware.class).set(TestEntityCreatedAwareKeys.test, "bar");
 
-      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user2").build());
+      TestUserProvider.userThreadLocal.set(TestUserProvider.activeUser2);
       TestEntityCreatedAware entity2 = persistence.upsert(query, updateOperations2, upsertReturnNewOptions);
       assertThat(entity2).isNotNull();
 
       assertThat(entity1.getCreatedAt()).isEqualTo(entity2.getCreatedAt());
       assertThat(entity1.getCreatedBy().getName()).isEqualTo(entity2.getCreatedBy().getName());
     } finally {
-      testUserProvider.setActiveUser(null);
+      TestUserProvider.userThreadLocal.remove();
     }
   }
 
@@ -214,7 +213,7 @@ public class HPersistenceTest extends PersistenceTestBase {
         TestEntityCreatedLastUpdatedAware.builder().uuid(generateUuid()).test("foo").build();
 
     try {
-      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
+      TestUserProvider.userThreadLocal.set(TestUserProvider.activeUser1);
       String id = persistence.save(entity);
       final TestEntityCreatedLastUpdatedAware testEntity = persistence.get(TestEntityCreatedLastUpdatedAware.class, id);
       assertThat(testEntity.getCreatedAt()).isNotZero();
@@ -225,7 +224,7 @@ public class HPersistenceTest extends PersistenceTestBase {
       final UpdateOperations<TestEntityCreatedLastUpdatedAware> entityUpdateOperations =
           persistence.createUpdateOperations(TestEntityCreatedLastUpdatedAware.class)
               .set(TestEntityCreatedLastUpdatedAwareKeys.test, "bar");
-      testUserProvider.setActiveUser(EmbeddedUser.builder().name("user2").build());
+      TestUserProvider.userThreadLocal.set(TestUserProvider.activeUser2);
       persistence.update(testEntity, entityUpdateOperations);
 
       final TestEntityCreatedLastUpdatedAware testEntityAfterUpdate =
@@ -236,7 +235,7 @@ public class HPersistenceTest extends PersistenceTestBase {
       assertThat(testEntity.getCreatedBy()).isEqualTo(testEntityAfterUpdate.getCreatedBy());
       assertThat(testEntityAfterUpdate.getLastUpdatedBy().getName()).isEqualTo("user2");
     } finally {
-      testUserProvider.setActiveUser(null);
+      TestUserProvider.userThreadLocal.remove();
     }
   }
 }
