@@ -111,6 +111,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
     savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
     savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
+    updateNameSpace(accountId, vaultConfig, savedVaultConfig);
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
@@ -120,6 +121,20 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, getRenewalAlert(oldConfigForAudit));
     }
     return configId;
+  }
+
+  private void updateNameSpace(String accountId, VaultConfig vaultConfig, VaultConfig savedVaultConfig) {
+    // get encrypted secrets associated with this VaultConfig
+    long count = getEncryptedSecretCount(accountId, savedVaultConfig.getUuid());
+    boolean nameSpaceUpdated = !Objects.equals(savedVaultConfig.getNamespace(), vaultConfig.getNamespace());
+    log.info("User wants to update namespace for Hashicorp vault:{0} From:{1} To:{2} ", savedVaultConfig.getUuid(),
+        savedVaultConfig.getNamespace(), vaultConfig.getNamespace());
+    if (count > 0 && nameSpaceUpdated) {
+      String message = "Cannot update vault config namespace since there are secrets encrypted with it. "
+          + "Please transition your secrets to another vault config with different namespace and try again.";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
+    }
+    savedVaultConfig.setNamespace(vaultConfig.getNamespace());
   }
 
   private String saveVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret) {
@@ -206,13 +221,17 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
-    long count = wingsPersistence.createQuery(EncryptedData.class)
-                     .filter(SecretManagerConfigKeys.accountId, accountId)
-                     .filter(EncryptedDataKeys.kmsId, vaultConfigId)
-                     .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
-                     .count(upToOne);
+    long count = getEncryptedSecretCount(accountId, vaultConfigId);
 
     return deleteVaultConfigInternal(accountId, vaultConfigId, count);
+  }
+
+  private long getEncryptedSecretCount(String accountId, String vaultConfigId) {
+    return wingsPersistence.createQuery(EncryptedData.class)
+        .filter(SecretManagerConfigKeys.accountId, accountId)
+        .filter(EncryptedDataKeys.kmsId, vaultConfigId)
+        .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
+        .count(upToOne);
   }
 
   @Override
