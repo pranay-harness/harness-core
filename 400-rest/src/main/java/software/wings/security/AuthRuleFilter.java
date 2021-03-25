@@ -79,6 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+
 /**
  * Created by anubhaw on 3/11/16.
  */
@@ -112,7 +113,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
   @Inject private ApiKeyService apiKeyService;
-  @Inject private FeatureFlagService featureFlagService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -122,6 +122,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
+  private FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -134,7 +135,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils) {
+      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils,
+      FeatureFlagService featureFlagService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -143,6 +145,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.graphQLUtils = graphQLUtils;
+    this.featureFlagService = featureFlagService;
   }
 
   private boolean isAuthFilteringExempted(String uri) {
@@ -354,11 +357,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (!isWhitelisted) {
       String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
       log.warn(msg);
-      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
-        if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
-          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
-        }
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)
+          && requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
       }
+
       throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
     }
   }
