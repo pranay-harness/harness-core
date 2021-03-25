@@ -271,6 +271,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
       criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());
     }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineIdentifiers())) {
+      criteria.and(PipelineEntityKeys.identifier).in(piplineFilter.getPipelineIdentifiers());
+    }
     if (piplineFilter.getModuleProperties() != null) {
       ModuleInfoFilterUtils.processNode(
           JsonUtils.readTree(piplineFilter.getModuleProperties().toJson()), "filters", criteria);
