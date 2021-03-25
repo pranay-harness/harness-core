@@ -1,19 +1,19 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
-import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -28,10 +28,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "apiKeys", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApiKeyEntryKeys")
-@NgUniqueIndex(
-    name = "uniqueName", fields = { @Field(value = ApiKeyEntryKeys.accountId)
-                                    , @Field(value = ApiKeyEntryKeys.name) })
 public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueName")
+                 .field(ApiKeyEntryKeys.accountId)
+                 .field(ApiKeyEntryKeys.name)
+                 .unique(true)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String name;
