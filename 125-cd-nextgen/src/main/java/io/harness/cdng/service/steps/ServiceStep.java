@@ -114,7 +114,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService(), ngManagerLogCallback);
 
     ngManagerLogCallback.saveExecutionLog("Manifests Processed");
-    ngManagerLogCallback.saveExecutionLog("Fetching Artifacts");
+    ngManagerLogCallback.saveExecutionLog("Processing Artifacts");
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         artifactStep.getArtifactsWithCorrespondingOverrides(stepParameters.getService(), ngManagerLogCallback);
     ServiceStepPassThroughData passThroughData =
