@@ -1,5 +1,8 @@
 package io.harness.repositories.core.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 
@@ -16,6 +19,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   private final MongoTemplate mongoTemplate;

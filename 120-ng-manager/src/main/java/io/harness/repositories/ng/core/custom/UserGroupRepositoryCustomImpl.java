@@ -1,7 +1,9 @@
 package io.harness.repositories.ng.core.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.utils.NGUtils.getPaginatedResult;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.UserGroup;
 
 import com.google.inject.Inject;
@@ -14,6 +16,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class UserGroupRepositoryCustomImpl implements UserGroupRepositoryCustom {
   private final MongoTemplate mongoTemplate;

@@ -1,7 +1,9 @@
 package io.harness.ng.core.auditevent;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.Resource;
@@ -11,6 +13,7 @@ import io.harness.ng.core.dto.ProjectDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 public class ProjectRestoreEvent implements Event {

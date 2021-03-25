@@ -1,6 +1,9 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -22,6 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
 @Api("secret-managers")
 @Path("secret-managers")
 @Produces({"application/json", "application/yaml"})

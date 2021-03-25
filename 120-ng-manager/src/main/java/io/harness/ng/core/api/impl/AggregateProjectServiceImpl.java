@@ -1,9 +1,11 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.remote.UserSearchMapper.writeDTO;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
@@ -37,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AggregateProjectServiceImpl implements AggregateProjectService {
