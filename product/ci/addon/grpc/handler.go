@@ -54,6 +54,8 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 	}
 	defer rl.Writer.Close()
 
+	h.log.Infow("Executing step", "arg", in)
+
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
 		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetPrevStepOutputs(), in.GetTmpFilePath(), rl.BaseLogger,
