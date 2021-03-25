@@ -1,7 +1,6 @@
 package io.harness.resourcegroup.resourceclient.pipeline;
 
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
-import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
