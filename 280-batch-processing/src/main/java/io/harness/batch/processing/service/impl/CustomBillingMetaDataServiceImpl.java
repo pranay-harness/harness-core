@@ -7,8 +7,11 @@ import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -32,6 +35,8 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
   private final BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   private final BigQueryHelperService bigQueryHelperService;
+  private final CEMetadataRecordDao ceMetadataRecordDao;
+  private final CloudBillingHelper cloudBillingHelper;
 
   private LoadingCache<String, String> awsBillingMetaDataCache =
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
@@ -50,10 +55,13 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
   @Autowired
   public CustomBillingMetaDataServiceImpl(CloudToHarnessMappingService cloudToHarnessMappingService,
-      BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService) {
+      BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService,
+      CEMetadataRecordDao ceMetadataRecordDao, CloudBillingHelper cloudBillingHelper) {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
     this.billingDataPipelineRecordDao = billingDataPipelineRecordDao;
     this.bigQueryHelperService = bigQueryHelperService;
+    this.ceMetadataRecordDao = ceMetadataRecordDao;
+    this.cloudBillingHelper = cloudBillingHelper;
   }
 
   @Override
@@ -69,7 +77,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
 
   private Boolean getPipelineJobStatus(String accountId, Instant startTime, Instant endTime) {
     String awsDataSetId = getAwsDataSetId(accountId);
-    if (awsDataSetId != null) {
+    // For 4 days before date always return true; If CUR data is not present it will use public api
+    Instant bufferTime = Instant.now().minus(4, ChronoUnit.DAYS);
+    if (awsDataSetId != null && startTime.isAfter(bufferTime)) {
       Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
       Map<String, VMInstanceBillingData> awsEC2BillingData =
           bigQueryHelperService.getAwsBillingData(startAt, endTime, awsDataSetId);
@@ -79,20 +89,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   private String getAwsBillingMetaData(String accountId) {
-    if (!ImmutableSet
-             .of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q")
-             .contains(accountId)) {
-      return null;
-    }
-    List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
-    log.info("Setting att size {}", settingAttributes.size());
-    if (!settingAttributes.isEmpty()) {
-      SettingAttribute settingAttribute = settingAttributes.get(0);
-      BillingDataPipelineRecord billingDataPipelineRecord =
-          billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
-      log.info("BDPR {}", billingDataPipelineRecord);
-      return billingDataPipelineRecord.getDataSetId();
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if (null != ceMetadataRecord && ceMetadataRecord.getAwsDataPresent()) {
+      return cloudBillingHelper.getDataSetId(accountId);
     }
     return null;
   }

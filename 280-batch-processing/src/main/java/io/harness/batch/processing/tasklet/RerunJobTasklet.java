@@ -8,6 +8,7 @@ import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +40,21 @@ public class RerunJobTasklet implements Tasklet {
       ImmutableList<String> batchJobs = ImmutableList.of(BatchJobType.ANOMALY_DETECTION_CLOUD.toString());
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
     }
+
+    if (null != ceMetadataRecord && ceMetadataRecord.getAwsDataPresent()) {
+      log.info("invalidate cluster jobs for {}", accountId);
+      ImmutableList<String> batchJobs =
+          ImmutableList.of(BatchJobType.INSTANCE_BILLING.toString(), BatchJobType.ACTUAL_IDLE_COST_BILLING.toString(),
+              BatchJobType.INSTANCE_BILLING_AGGREGATION.toString(), BatchJobType.CLUSTER_DATA_TO_BIG_QUERY.toString());
+      batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
+    }
     return null;
   }
 
   private boolean isCloudDataPresent(CEMetadataRecord ceMetadataRecord) {
-    if (ceMetadataRecord.getAwsDataPresent() || ceMetadataRecord.getGcpDataPresent()
-        || ceMetadataRecord.getAzureDataPresent()) {
+    if ((null != ceMetadataRecord.getAwsDataPresent() && ceMetadataRecord.getAwsDataPresent())
+        || (null != ceMetadataRecord.getGcpDataPresent() && ceMetadataRecord.getGcpDataPresent())
+        || (null != ceMetadataRecord.getAzureDataPresent() && ceMetadataRecord.getAzureDataPresent())) {
       return true;
     }
     return false;
