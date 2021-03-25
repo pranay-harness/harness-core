@@ -9,11 +9,6 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
-import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeParams;
-import io.harness.accesscontrol.scopes.core.ScopeService;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -21,6 +16,7 @@ import io.harness.beans.PageResponse;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration.AccessControlMigrationBuilder;
 import io.harness.ng.accesscontrol.migrations.models.RoleAssignmentMetadata;
@@ -40,10 +36,13 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.CryptoUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,9 +53,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javafx.util.Pair;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 
@@ -71,7 +70,10 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private static final String ORG_VIEWER_ROLE_IDENTIFIER = "_organization_viewer";
   private static final String PROJECT_VIEWER_ROLE_IDENTIFIER = "_project_viewer";
   private static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
-  Map<String, Pair<String, String>> levelToRolesMapping;
+  private static final String ACCOUNT_LEVEL = "ACCOUNT";
+  private static final String ORGANIZATION_LEVEL = "ORGANIZATION";
+  private static final String PROJECT_LEVEL = "PROJECT";
+  Map<String, List<String>> levelToRolesMapping;
   private final ProjectService projectService;
   private final OrganizationService orgService;
   private final AccessControlMigrationService accessControlMigrationService;
@@ -79,12 +81,12 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
-  private final ScopeService scopeService;
 
+  @Inject
   public AccessControlMigrationFeatureFlagEventListener(ProjectService projectService,
       OrganizationService organizationService, AccessControlMigrationService accessControlMigrationService,
       NgUserService ngUserService, ResourceGroupClient resourceGroupClient,
-      AccessControlAdminClient accessControlAdminClient, UserClient userClient, ScopeService scopeService) {
+      AccessControlAdminClient accessControlAdminClient, UserClient userClient) {
     this.projectService = projectService;
     this.orgService = organizationService;
     this.accessControlMigrationService = accessControlMigrationService;
@@ -92,34 +94,44 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     this.resourceGroupClient = resourceGroupClient;
     this.accessControlAdminClient = accessControlAdminClient;
     this.userClient = userClient;
-    this.scopeService = scopeService;
     levelToRolesMapping = new HashMap<>();
     levelToRolesMapping.put(
-        HarnessScopeLevel.ACCOUNT.getName(), new Pair<>(ACCOUNT_ADMIN_ROLE_IDENTIFIER, ACCOUNT_VIEWER_ROLE_IDENTIFIER));
+        ACCOUNT_LEVEL, ImmutableList.of(ACCOUNT_ADMIN_ROLE_IDENTIFIER, ACCOUNT_VIEWER_ROLE_IDENTIFIER));
     levelToRolesMapping.put(
-        HarnessScopeLevel.ORGANIZATION.getName(), new Pair<>(ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
+        ORGANIZATION_LEVEL, ImmutableList.of(ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
     levelToRolesMapping.put(
-        HarnessScopeLevel.PROJECT.getName(), new Pair<>(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
+        PROJECT_LEVEL, ImmutableList.of(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
   }
 
   private String getRoleIdentifierForUser(
       UserInfo user, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    ScopeParams scopeParams = HarnessScopeParams.builder()
-                                  .accountIdentifier(accountIdentifier)
-                                  .orgIdentifier(orgIdentifier)
-                                  .projectIdentifier(projectIdentifier)
-                                  .build();
-    Scope scope = scopeService.buildScopeFromParams(scopeParams);
     boolean admin =
         Optional.ofNullable(user.getUserGroups())
             .filter(userGroups
                 -> userGroups.stream().anyMatch(ug -> CG_ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(ug.getName())))
             .isPresent();
     if (admin) {
-      return levelToRolesMapping.get(scope.getLevel().getParamName()).getKey();
+      return levelToRolesMapping
+          .get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
+          .get(0);
     } else {
-      return levelToRolesMapping.get(scope.getLevel().getParamName()).getValue();
+      return levelToRolesMapping
+          .get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
+          .get(1);
     }
+  }
+
+  private Optional<String> getLevel(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (!StringUtils.isEmpty(projectIdentifier)) {
+      return Optional.of(PROJECT_LEVEL);
+    }
+    if (!StringUtils.isEmpty(orgIdentifier)) {
+      return Optional.of(ORGANIZATION_LEVEL);
+    }
+    if (!StringUtils.isEmpty(accountIdentifier)) {
+      return Optional.of(ACCOUNT_LEVEL);
+    }
+    return Optional.empty();
   }
 
   private RoleAssignmentMetadata createRoleAssignments(
@@ -154,7 +166,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     Set<UserInfo> users = new HashSet<>();
     while (maxIterations > 0) {
       PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
-          userClient.list(accountId, String.valueOf(limit), String.valueOf(offset), null, true));
+          userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
       if (isEmpty(usersPage.getResponse())) {
         break;
       }
@@ -221,7 +233,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
                                              .userId(principalIdentifier)
                                              .roles(new ArrayList<>())
                                              .build());
-    } catch (DuplicateKeyException duplicateKeyException) {
+    } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("User project map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
           orgIdentifier, projectIdentifier, principalIdentifier);
     }
@@ -277,9 +289,15 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
                                             .tags(ImmutableMap.of("predefined", "true"))
                                             .build();
     try {
-      resourceGroupClient.create(accountIdentifier, orgIdentifier, projectIdentifier,
-          ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build());
-    } catch (DuplicateFieldException duplicateFieldException) {
+      if (NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
+              resourceGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier))
+          == null) {
+        ResourceGroupResponse resourceGroupResponse =
+            NGRestUtils.getResponse(resourceGroupClient.create(accountIdentifier, orgIdentifier, projectIdentifier,
+                ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build()));
+        log.info("Created resource group: {}", resourceGroupResponse);
+      }
+    } catch (DuplicateFieldException | DuplicateKeyException | InvalidRequestException exception) {
       log.info("Resource group already exists, account: {}, org: {}, project:{}, identifier: {}", accountIdentifier,
           orgIdentifier, projectIdentifier, resourceGroupIdentifier);
     }
