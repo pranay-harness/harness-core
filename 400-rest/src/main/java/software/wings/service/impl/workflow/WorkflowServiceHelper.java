@@ -3213,4 +3213,48 @@ public class WorkflowServiceHelper {
     }
     return AbstractWorkflowFactory.Category.GENERAL;
   }
+
+  public void validateWaitInterval(Workflow workflow) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == null
+        || OrchestrationWorkflowType.CUSTOM.equals(
+            workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+      return;
+    }
+    CanaryOrchestrationWorkflow orchestrationWorkflow = null;
+    if (workflow.getOrchestrationWorkflow() != null) {
+      orchestrationWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow != null) {
+        validateWaitInterval(orchestrationWorkflow);
+      }
+    }
+  }
+
+  private void validateWaitInterval(CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    validateWaitInterval(orchestrationWorkflow.getPostDeploymentSteps());
+    validateWaitInterval(orchestrationWorkflow.getPreDeploymentSteps());
+    validateWaitInterval(orchestrationWorkflow.getRollbackProvisioners());
+    validateWaitInterval(orchestrationWorkflow.getWorkflowPhaseIdMap());
+    validateWaitInterval(orchestrationWorkflow.getRollbackWorkflowPhaseIdMap());
+  }
+
+  private void validateWaitInterval(WorkflowPhase workflowPhase) {
+    if (workflowPhase != null && workflowPhase.getPhaseSteps() != null
+        && workflowPhase.getPhaseSteps().stream().anyMatch(
+            phaseStep -> phaseStep.getWaitInterval() != null && phaseStep.getWaitInterval() < 0)) {
+      throw new InvalidRequestException("Negative values for waitInterval not allowed.");
+    }
+  }
+
+  public void validateWaitInterval(PhaseStep phaseStep) {
+    if (phaseStep != null && phaseStep.getWaitInterval() != null && phaseStep.getWaitInterval() < 0) {
+      throw new InvalidRequestException("Negative values for wait interval not allowed.");
+    }
+  }
+
+  private void validateWaitInterval(Map<String, WorkflowPhase> workflowPhaseMap) {
+    if (workflowPhaseMap != null) {
+      workflowPhaseMap.forEach((workflowPhaseId, workflowPhase) -> validateWaitInterval(workflowPhase));
+    }
+  }
 }

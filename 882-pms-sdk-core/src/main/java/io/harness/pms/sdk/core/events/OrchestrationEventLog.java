@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "OrchestrationEventLogKeys")
-@Entity(value = "orchestrationEventLog")
+@Entity(value = "orchestrationEventLog", noClassnameStored = true)
 @Document("orchestrationEventLog")
 @HarnessEntity(exportable = false)
 @TypeAlias("OrchestrationEventLog")

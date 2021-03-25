@@ -30,8 +30,7 @@ public class OrchestrationUtils {
       return NodeRunCheck.builder().isSuccessful(false).whenCondition(whenCondition).build();
     }
     try {
-      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, whenCondition);
-      boolean whenConditionValue = Boolean.parseBoolean(evaluatedExpression);
+      boolean whenConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, whenCondition);
       return NodeRunCheck.builder()
           .whenCondition(whenCondition)
           .isSuccessful(true)
@@ -54,8 +53,7 @@ public class OrchestrationUtils {
       return SkipCheck.builder().isSuccessful(false).skipCondition(skipCondition).build();
     }
     try {
-      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, skipCondition);
-      boolean skipConditionValue = Boolean.parseBoolean(evaluatedExpression);
+      boolean skipConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, skipCondition);
       return SkipCheck.builder()
           .skipCondition(skipCondition)
           .isSuccessful(true)

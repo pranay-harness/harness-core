@@ -17,8 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Setter;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -27,7 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "PmsSdkInstanceKeys")
@@ -36,14 +38,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("pmsSdkInstances")
 @HarnessEntity(exportable = false)
 public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
-  @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
   List<StepInfo> supportedSteps;
   List<StepType> supportedStepTypes;
 
-  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
-  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
+  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Version Long version;
 }

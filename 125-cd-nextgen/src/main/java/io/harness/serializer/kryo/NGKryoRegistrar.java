@@ -43,17 +43,20 @@ import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
-import io.harness.cdng.manifest.yaml.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
+import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
+import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -173,5 +176,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(EcrArtifactConfig.class, 12533);
     kryo.register(OpenshiftManifest.class, 12534);
     kryo.register(OpenshiftManifestOutcome.class, 12535);
+    kryo.register(OpenshiftParamManifest.class, 12536);
+    kryo.register(OpenshiftParamManifestOutcome.class, 12537);
+    kryo.register(S3StoreConfig.class, 12538);
   }
 }

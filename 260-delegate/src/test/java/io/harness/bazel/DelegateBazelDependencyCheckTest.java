@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.BRIJESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.Owner;
@@ -25,6 +27,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateBazelDependencyCheckTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
@@ -61,7 +64,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
         }
       }
     }
-    assertThat(mismatchedVersions.stream().sorted()).hasSize(17);
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(13);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {

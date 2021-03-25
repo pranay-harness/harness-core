@@ -1,5 +1,8 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -10,6 +13,7 @@ import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
+import io.harness.pms.pipeline.observer.PipelineActionObserver;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -19,9 +23,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
-public class PipelineSetupUsageHelper {
+@Slf4j
+@OwnedBy(PIPELINE)
+public class PipelineSetupUsageHelper implements PipelineActionObserver {
   @Inject @Named(EventsFrameworkConstants.SETUP_USAGE) private Producer eventProducer;
   @Inject private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
@@ -64,7 +71,7 @@ public class PipelineSetupUsageHelper {
     }
   }
 
-  public void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
+  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
     EntityDetailProtoDTO pipelineDetails =
         EntityDetailProtoDTO.newBuilder()
             .setIdentifierRef(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(pipelineEntity.getAccountId(),
@@ -89,6 +96,15 @@ public class PipelineSetupUsageHelper {
                   EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
               .setData(entityReferenceDTO.toByteString())
               .build());
+    }
+  }
+
+  @Override
+  public void onDelete(PipelineEntity pipelineEntity) {
+    try {
+      deleteSetupUsagesForGivenPipeline(pipelineEntity);
+    } catch (ProducerShutdownException ex) {
+      log.error("Redis Producer shutdown", ex);
     }
   }
 }

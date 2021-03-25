@@ -217,7 +217,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
     if (nextGenConfiguration.getShouldDeployWithGitSync()) {
       log.info("Initializing gRPC servers...");
-      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      ServiceManager serviceManager =
+          injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
     }

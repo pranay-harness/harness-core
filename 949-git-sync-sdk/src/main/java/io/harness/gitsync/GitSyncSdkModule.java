@@ -9,6 +9,7 @@ import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
 import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitAwareRepositoryImpl;
 import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
+import io.harness.gitsync.sdk.GitSyncSdkGrpcServerModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -26,6 +27,7 @@ public class GitSyncSdkModule extends AbstractModule {
   @Override
   protected void configure() {
     install(GitSyncGrpcClientModule.getInstance());
+    install(GitSyncSdkGrpcServerModule.getInstance());
     bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
     bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>() {});
     bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);

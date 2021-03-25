@@ -14,9 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class AwsCodeCommitValidationParams
     extends ConnectorCapabilityBaseHelper implements ConnectorValidationParams, ExecutionCapabilityDemander {
   private final String AWS_URL = "https://aws.amazon.com/";

@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
-@Entity(value = "planExecutions")
+@Entity(value = "planExecutions", noClassnameStored = true)
 @Document("planExecutions")
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
 @TypeAlias("planExecution")

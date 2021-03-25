@@ -80,8 +80,8 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
 
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1,
+        Collections.emptyList(), true, TaskType.HTTP.name());
   }
 
   @NotNull

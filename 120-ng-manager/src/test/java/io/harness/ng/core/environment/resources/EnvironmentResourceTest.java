@@ -1,5 +1,6 @@
 package io.harness.ng.core.environment.resources;
 
+import static io.harness.NGConstants.HARNESS_BLUE;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static java.util.Collections.singletonMap;
@@ -64,6 +65,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                                  .identifier("IDENTIFIER")
                                  .orgIdentifier("ORG_ID")
                                  .projectIdentifier("PROJECT_ID")
+                                 .color(HARNESS_BLUE)
                                  .name("ENV")
                                  .type(EnvironmentType.PreProduction)
                                  .tags(singletonMap("k1", "v1"))
@@ -75,6 +77,7 @@ public class EnvironmentResourceTest extends CategoryTest {
                             .identifier("IDENTIFIER")
                             .orgIdentifier("ORG_ID")
                             .projectIdentifier("PROJECT_ID")
+                            .color(HARNESS_BLUE)
                             .name("ENV")
                             .type(EnvironmentType.PreProduction)
                             .tags(tags)

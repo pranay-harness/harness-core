@@ -1,10 +1,12 @@
 package io.harness.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_ITERATOR_CONFIGURATION;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Slf4j
 public class OutboxEventIteratorHandler implements MongoPersistenceIterator.Handler<OutboxEvent> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -30,7 +33,13 @@ public class OutboxEventIteratorHandler implements MongoPersistenceIterator.Hand
   @Override
   public void handle(OutboxEvent outbox) {
     assert config != null;
-    boolean success = outboxEventHandler.handle(outbox);
+    boolean success = false;
+    try {
+      success = outboxEventHandler.handle(outbox);
+    } catch (Exception exception) {
+      log.error("Error occurred while handling outbox event with id {} with response [{}]", outbox.getId(),
+          exception.getStackTrace());
+    }
     long maximumAttempts = config.getMaximumOutboxEventHandlingAttempts();
     if (success) {
       outboxService.delete(outbox.getId());

@@ -11,15 +11,20 @@ import io.harness.DelegateServiceTestBase;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.DelegateInsightsBarDetails;
 import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsType;
+import software.wings.beans.DelegatePerpetualTaskUsageInsights;
+import software.wings.beans.DelegatePerpetualTaskUsageInsights.DelegatePerpetualTaskUsageInsightsKeys;
+import software.wings.beans.DelegatePerpetualTaskUsageInsightsEventType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
@@ -40,12 +45,15 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   private static final String TEST_DELEGATE_GROUP_ID = "testDelegateGroupId";
 
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateInsightsServiceImpl delegateInsightsService;
   @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
     initMocks(this);
+    when(delegateCache.get(TEST_ACCOUNT_ID, TEST_DELEGATE_ID, false))
+        .thenReturn(Delegate.builder().delegateGroupId(TEST_DELEGATE_GROUP_ID).build());
   }
 
   @Test
@@ -54,7 +62,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   public void testOnTaskAssignedFeatureFlagDisabled() {
     when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(false);
 
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, TEST_DELEGATE_GROUP_ID);
+    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
@@ -71,7 +79,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   public void testOnTaskAssignedValidValues() {
     when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
 
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, TEST_DELEGATE_GROUP_ID);
+    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
@@ -100,7 +108,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   public void testOnTaskCompletedValidValuesSucceeded() {
     when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
 
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, TEST_DELEGATE_GROUP_ID);
+    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
@@ -131,7 +139,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   public void testOnTaskCompletedValidValuesFailed() {
     when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
 
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, TEST_DELEGATE_GROUP_ID);
+    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
@@ -164,7 +172,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
         .thenReturn(true)
         .thenReturn(false);
 
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, TEST_DELEGATE_GROUP_ID);
+    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
@@ -207,6 +215,15 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
         delegateInsightsService.retrieveDelegateInsightsDetails(accountId, delegateGroupId, timestamp);
     assertThat(delegateInsightsDetails).isNotNull();
     assertThat(delegateInsightsDetails.getInsights()).isEmpty();
+  }
+
+  public void testOnPerpetualTaskAssignedWithFFDisabled() {
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(false);
+
+    delegateInsightsService.onPerpetualTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
+
+    assertThat(getDefaultDelegatePerpetualTaskUsageInsightsFromDB(DelegatePerpetualTaskUsageInsightsEventType.ASSIGNED))
+        .isNull();
   }
 
   @Test
@@ -286,6 +303,22 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
     }
   }
 
+  public void testOnPerpetualTaskAssignedWithFFEnabled() {
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
+
+    delegateInsightsService.onPerpetualTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID);
+
+    DelegatePerpetualTaskUsageInsights perpetualTaskUsageInsights =
+        getDefaultDelegatePerpetualTaskUsageInsightsFromDB(DelegatePerpetualTaskUsageInsightsEventType.ASSIGNED);
+    assertThat(perpetualTaskUsageInsights).isNotNull();
+    assertThat(perpetualTaskUsageInsights.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(perpetualTaskUsageInsights.getTaskId()).isEqualTo(TEST_TASK_ID);
+    assertThat(perpetualTaskUsageInsights.getDelegateId()).isEqualTo(TEST_DELEGATE_ID);
+    assertThat(perpetualTaskUsageInsights.getDelegateGroupId()).isEqualTo(TEST_DELEGATE_GROUP_ID);
+    assertThat(perpetualTaskUsageInsights.getEventType())
+        .isEqualTo(DelegatePerpetualTaskUsageInsightsEventType.ASSIGNED);
+  }
+
   private DelegateTaskUsageInsights getDefaultDelegateTaskUsageInsightsFromDB(
       DelegateTaskUsageInsightsEventType eventType) {
     return persistence.createQuery(DelegateTaskUsageInsights.class)
@@ -294,6 +327,17 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
         .filter(DelegateTaskUsageInsightsKeys.delegateId, TEST_DELEGATE_ID)
         .filter(DelegateTaskUsageInsightsKeys.delegateGroupId, TEST_DELEGATE_GROUP_ID)
         .filter(DelegateTaskUsageInsightsKeys.eventType, eventType)
+        .get();
+  }
+
+  private DelegatePerpetualTaskUsageInsights getDefaultDelegatePerpetualTaskUsageInsightsFromDB(
+      DelegatePerpetualTaskUsageInsightsEventType eventType) {
+    return persistence.createQuery(DelegatePerpetualTaskUsageInsights.class)
+        .filter(DelegatePerpetualTaskUsageInsightsKeys.accountId, TEST_ACCOUNT_ID)
+        .filter(DelegatePerpetualTaskUsageInsightsKeys.taskId, TEST_TASK_ID)
+        .filter(DelegatePerpetualTaskUsageInsightsKeys.delegateId, TEST_DELEGATE_ID)
+        .filter(DelegatePerpetualTaskUsageInsightsKeys.delegateGroupId, TEST_DELEGATE_GROUP_ID)
+        .filter(DelegatePerpetualTaskUsageInsightsKeys.eventType, eventType)
         .get();
   }
 }

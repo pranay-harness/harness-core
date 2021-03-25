@@ -39,6 +39,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>870-cg-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>

@@ -1052,6 +1052,14 @@ maven_install(
         ),
         maven.artifact(
             group = "com.amazonaws",
+            artifact = "aws-java-sdk-sns",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
             artifact = "aws-java-sdk-codedeploy",
             version = "1.11.834",
             exclusions = [
@@ -1220,11 +1228,12 @@ maven_install(
         ),
         "com.auth0:java-jwt:3.1.0",
         "com.azure:azure-identity:1.1.2",
+        "com.azure:azure-core:1.10.0",
         "com.azure:azure-storage-blob:12.9.0",
         "com.azure:azure-storage-common:12.9.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
         "com.bettercloud:vault-java-driver:4.0.0",
-        "com.bugsnag:bugsnag:3.6.1",
+        "com.bugsnag:bugsnag:3.6.2",
         "com.carrotsearch:hppc:0.8.1",
         "com.coveo:saml-client:3.0.2",
         "com.cronutils:cron-utils:9.0.1",
@@ -1882,9 +1891,11 @@ maven_install(
         "org.opensaml:opensaml-storage-api:3.4.3",
         "org.opensaml:opensaml-xmlsec-api:3.4.3",
         "org.opensaml:opensaml-xmlsec-impl:3.4.3",
-        "org.ow2.asm:asm-commons:5.0.3",
-        "org.ow2.asm:asm-tree:5.0.3",
-        "org.ow2.asm:asm:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.4",
+        "org.ow2.asm:asm-tree:5.0.4",
+        "org.ow2.asm:asm:5.0.4",
+        "org.ow2.asm:asm-analysis:5.0.4",
+        "org.ow2.asm:asm-util:5.0.4",
         "org.passay:passay:1.3.1",
         "org.postgresql:postgresql:42.2.14",
         "org.powermock:powermock-api-mockito-common:1.7.4",
@@ -5289,6 +5300,13 @@ go_repository(
     importpath = "go.mongodb.org/mongo-driver",
     sum = "h1:zs/dKNwX0gYUtzwrN9lLiR15hCO0nDwQj5xXx+vjCdE=",
     version = "v1.3.4",
+)
+
+go_repository(
+    name = "com_github_linkedin_goavro_v2",
+    importpath = "github.com/linkedin/goavro/v2",
+    sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",
+    version = "v2.10.0",
 )
 
 go_repository(

@@ -122,6 +122,7 @@ public class AuditServiceImplTest extends WingsBaseTest {
     when(mockFeatureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, ACCOUNT_ID)).thenReturn(true);
     auditServiceImpl.changeAuditPreferenceForHomePage(auditPreference, ACCOUNT_ID);
     assertThat(auditPreference.getOperationTypes().contains("LOGIN")).isEqualTo(true);
+    assertThat(auditPreference.getOperationTypes().contains("LOGIN_2FA")).isEqualTo(true);
   }
 
   @Test
@@ -136,5 +137,6 @@ public class AuditServiceImplTest extends WingsBaseTest {
     when(mockFeatureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, ACCOUNT_ID)).thenReturn(false);
     auditServiceImpl.changeAuditPreferenceForHomePage(auditPreference, ACCOUNT_ID);
     assertThat(auditPreference.getOperationTypes().contains("LOGIN")).isEqualTo(false);
+    assertThat(auditPreference.getOperationTypes().contains("LOGIN_2FA")).isEqualTo(false);
   }
 }

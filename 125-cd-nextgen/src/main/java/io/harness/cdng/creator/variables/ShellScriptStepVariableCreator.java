@@ -34,7 +34,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
-        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }
     });
 
@@ -50,14 +50,12 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
 
     YamlField environmentVariablesField = yamlNode.getField(YamlTypes.ENVIRONMENT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(environmentVariablesField)) {
-      VariableCreatorHelper.addVariablesForVariables(
-          environmentVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
+      addVariablesForVariables(environmentVariablesField, yamlPropertiesMap);
     }
 
     YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      VariableCreatorHelper.addVariablesForVariables(
-          outputVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
+      addVariablesForVariables(outputVariablesField, yamlPropertiesMap);
     }
   }
 
@@ -72,7 +70,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
             List<YamlField> fields = specField.getNode().fields();
             fields.forEach(field -> {
               if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-                addFieldToPropertiesMapUnderStep(field, specField.getNode(), yamlPropertiesMap);
+                addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
               }
             });
           }
@@ -88,7 +86,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = executionTargetField.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-        addFieldToPropertiesMapUnderStep(field, executionTargetField.getNode(), yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }
     });
   }

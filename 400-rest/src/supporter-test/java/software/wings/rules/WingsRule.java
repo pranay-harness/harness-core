@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -72,6 +73,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -436,6 +438,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
               injector.getInstance(NotifyQueuePublisherRegister.class);
           notifyQueuePublisherRegister.register(
               ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+        } else if (queueListenerClass.equals(NgOrchestrationNotifyEventListener.class)) {
+          final QueuePublisher<NotifyEvent> publisher =
+              injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+          final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+              injector.getInstance(NotifyQueuePublisherRegister.class);
+          notifyQueuePublisherRegister.register(
+              NG_ORCHESTRATION, payload -> publisher.send(asList(NG_ORCHESTRATION), payload));
         }
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }

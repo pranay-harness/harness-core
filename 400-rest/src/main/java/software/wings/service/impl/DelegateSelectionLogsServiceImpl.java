@@ -387,14 +387,17 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
 
       String delegateProfileName = "";
+      String delegateType = "";
       if (delegate != null) {
         DelegateProfile delegateProfile = persistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
         delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
+        delegateType = delegate.getDelegateType();
       }
 
       DelegateSelectionLogParamsBuilder delegateSelectionLogParamsBuilder =
           DelegateSelectionLogParams.builder()
               .delegateId(delegateId)
+              .delegateType(delegateType)
               .delegateName(delegateName)
               .delegateHostName(delegateHostName)
               .delegateProfileName(delegateProfileName)

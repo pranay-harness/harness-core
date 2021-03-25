@@ -2,6 +2,7 @@ package external
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
+	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"github.com/wings-software/portal/product/log-service/client"
 	"go.uber.org/zap"
 )
@@ -32,19 +34,43 @@ const (
 	dCommitSha       = "DRONE_COMMIT_SHA"
 	wrkspcPath       = "HARNESS_WORKSPACE"
 	gitBin           = "git"
-	diffFilesCmd     = "%s diff --name-only HEAD HEAD@{1} -1"
+	diffFilesCmd     = "%s diff --name-status HEAD@{1} HEAD -1"
 )
 
 // GetChangedFiles executes a shell command and retuns list of files changed in PR
-func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]string, error) {
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]types.File, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
 	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
 	out, err := cmd.Output()
-
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(out), "\n"), nil
+	res := []types.File{}
+
+	for _, l := range strings.Split(string(out), "\n") {
+		t := strings.Fields(l)
+		if len(t) == 0 {
+			break
+		}
+
+		cs, err := convertGitStatus(t[0])
+		if err != nil {
+			return res, err
+		}
+		res = append(res, types.File{Status: cs, Name: t[1]})
+	}
+	return res, nil
+}
+
+func convertGitStatus(s string) (types.FileStatus, error) {
+	if s == "M" {
+		return types.FileModified, nil
+	} else if s == "A" {
+		return types.FileAdded, nil
+	} else if s == "D" {
+		return types.FileDeleted, nil
+	}
+	return "", errors.New("unsupported file status")
 }
 
 func GetSecrets() []logs.Secret {

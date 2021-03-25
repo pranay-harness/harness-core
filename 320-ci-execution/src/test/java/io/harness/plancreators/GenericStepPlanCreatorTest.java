@@ -6,12 +6,13 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
+import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
 
@@ -27,17 +28,15 @@ public class GenericStepPlanCreatorTest extends CIExecutionTestBase {
   @Mock ExecutionPlanCreationContext executionPlanCreationContext;
   @Mock PlanCreatorSearchContext<StepElement> planCreatorSearchContext;
 
-  private GitCloneStepInfo stepInfo;
+  private RunStepInfo stepInfo;
 
   @Before
   public void setUp() {
-    stepInfo = GitCloneStepInfo.builder()
+    stepInfo = RunStepInfo.builder()
                    .identifier("testIdentifier")
                    .name("testName")
 
-                   .branch("testBranch")
-                   .gitConnector("testGitConnector")
-                   .path("/test/path")
+                   .command(ParameterField.createValueField("mvn clean install"))
 
                    .retry(3)
                    .build();

@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.service;
 
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 
@@ -35,4 +36,6 @@ public interface NGTriggerService {
   TriggerWebhookEvent updateTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
   void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
   List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountId, List<String> fqns);
+
+  void validateTriggerConfig(TriggerDetails triggerDetails);
 }

@@ -21,6 +21,7 @@ public class EnvironmentResponseDTO {
   String identifier;
   String name;
   String description;
+  String color;
   EnvironmentType type;
   boolean deleted;
   Map<String, String> tags;

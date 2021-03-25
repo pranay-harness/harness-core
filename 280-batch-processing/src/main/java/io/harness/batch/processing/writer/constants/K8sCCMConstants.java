@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer.constants;
 
 public class K8sCCMConstants {
   public static final String AWS_LIFECYCLE_KEY = "lifecycle";
+  public static final String AWS_CAPACITY_TYPE_KEY = "capacityType";
   public static final String AZURE_LIFECYCLE_KEY = "kubernetes.azure.com/scalesetpriority";
   public static final String RELEASE_NAME = "harness.io/release-name";
   public static final String HELM_RELEASE_NAME = "release";

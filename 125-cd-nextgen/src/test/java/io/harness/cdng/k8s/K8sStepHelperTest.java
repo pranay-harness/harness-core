@@ -1,8 +1,11 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
+import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,11 +32,17 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
+import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
@@ -41,6 +50,7 @@ import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
@@ -54,6 +64,9 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -78,6 +91,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @Mock private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Mock private EngineExpressionService engineExpressionService;
+  @Mock private OutcomeService outcomeService;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
@@ -194,6 +208,22 @@ public class K8sStepHelperTest extends CategoryTest {
         k8sStepHelper.getAggregatedValuesManifests(serviceManifestOutcomes);
     assertThat(aggregatedValuesManifests).hasSize(1);
     assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifestOutcome);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetOpenshiftParamManifests() {
+    OpenshiftManifestOutcome openshiftManifestOutcome = OpenshiftManifestOutcome.builder().build();
+    OpenshiftParamManifestOutcome openshiftParamManifestOutcome = OpenshiftParamManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(openshiftManifestOutcome);
+    serviceManifestOutcomes.add(openshiftParamManifestOutcome);
+
+    List<OpenshiftParamManifestOutcome> openshiftParamManifests =
+        k8sStepHelper.getOpenshiftParamManifests(serviceManifestOutcomes);
+    assertThat(openshiftParamManifests).hasSize(1);
+    assertThat(openshiftParamManifests.get(0)).isEqualTo(openshiftParamManifestOutcome);
   }
 
   @Test
@@ -473,7 +503,7 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ACASIAN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNamespaceValidation() {
     Ambiance ambiance = getAmbiance();
@@ -510,5 +540,72 @@ public class K8sStepHelperTest extends CategoryTest {
       assertThat(ex.getParams().get("args"))
           .isEqualTo("Namespace: [ namespace test ] contains leading or trailing whitespaces");
     }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetInfrastructureOutcome() {
+    K8sDirectInfrastructureOutcome outcome = K8sDirectInfrastructureOutcome.builder().build();
+    doReturn(OptionalOutcome.builder().outcome(outcome).found(true).build())
+        .when(outcomeService)
+        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    assertThat(k8sStepHelper.getInfrastructureOutcome(ambiance)).isEqualTo(outcome);
+
+    doReturn(OptionalOutcome.builder().found(false).build())
+        .when(outcomeService)
+        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    assertThatThrownBy(() -> k8sStepHelper.getInfrastructureOutcome(ambiance))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(MISSING_INFRASTRUCTURE_ERROR);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForHelmChartUsingAwsS3Repo() {
+    String connectorRef = "org.aws_s3_repo";
+    String bucketName = "bucketName";
+    String region = "region";
+    String folderPath = "basePath";
+    String chartName = "chartName";
+    String chartVersion = "chartVersion";
+    AwsConnectorDTO awsConnectorConfig =
+        AwsConnectorDTO.builder()
+            .credential(AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).build())
+            .build();
+
+    HelmChartManifestOutcome manifestOutcome =
+        HelmChartManifestOutcome.builder()
+            .store(S3StoreConfig.builder()
+                       .connectorRef(ParameterField.createValueField(connectorRef))
+                       .bucketName(ParameterField.createValueField(bucketName))
+                       .region(ParameterField.createValueField(region))
+                       .folderPath(ParameterField.createValueField(folderPath))
+                       .build())
+            .chartName(chartName)
+            .chartVersion(chartVersion)
+            .build();
+
+    doReturn(
+        Optional.of(
+            ConnectorResponseDTO.builder()
+                .connector(ConnectorInfoDTO.builder().connectorType(AWS).connectorConfig(awsConnectorConfig).build())
+                .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.HELM_CHART);
+    assertThat(delegateConfig).isInstanceOf(HelmChartManifestDelegateConfig.class);
+    HelmChartManifestDelegateConfig helmChartDelegateConfig = (HelmChartManifestDelegateConfig) delegateConfig;
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(S3HelmStoreDelegateConfig.class);
+    S3HelmStoreDelegateConfig s3StoreDelegateConfig =
+        (S3HelmStoreDelegateConfig) helmChartDelegateConfig.getStoreDelegateConfig();
+    assertThat(s3StoreDelegateConfig.getBucketName()).isEqualTo(bucketName);
+    assertThat(s3StoreDelegateConfig.getRegion()).isEqualTo(region);
+    assertThat(s3StoreDelegateConfig.getFolderPath()).isEqualTo(folderPath);
+    assertThat(s3StoreDelegateConfig.getAwsConnector()).isEqualTo(awsConnectorConfig);
   }
 }

@@ -17,6 +17,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
+          .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .add(DelegateTasksBeansKryoRegister.class)
           .build();

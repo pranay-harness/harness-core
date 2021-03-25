@@ -313,6 +313,29 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static Workflow constructBasicWorkflowWithPhaseSteps() {
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase()
+            .phaseSteps(asList(aPhaseStep(PhaseStepType.CONTAINER_SETUP, "Set up Container").build()))
+            .build();
+
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .uuid(WORKFLOW_ID)
+        .serviceId(SERVICE_ID)
+        .infraDefinitionId(INFRA_DEFINITION_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .withWorkflowPhaseIdMap(ImmutableMap.of("WORKFLOW_PHASE_ID", workflowPhase))
+                                   .withWorkflowPhaseIds(asList("WORKFLOW_PHASE_ID"))
+                                   .build())
+        .build();
+  }
+
   public static Workflow constructBuildWorkflow() {
     return aWorkflow()
         .name(WORKFLOW_NAME)
