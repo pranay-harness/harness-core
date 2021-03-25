@@ -39,7 +39,7 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
-  public boolean restore(String accountIdentifier, String identifier) {
+  public Organization restore(String accountIdentifier, String identifier) {
     Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(OrganizationKeys.identifier)
@@ -48,7 +48,7 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
                             .is(Boolean.TRUE);
     Query query = new Query(criteria);
     Update update = new Update().set(OrganizationKeys.deleted, Boolean.FALSE);
-    return mongoTemplate.findAndModify(query, update, Organization.class) != null;
+    return mongoTemplate.findAndModify(query, update, Organization.class);
   }
 
   @Override
@@ -57,7 +57,7 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
-  public Boolean delete(String accountIdentifier, String identifier, Long version) {
+  public Organization delete(String accountIdentifier, String identifier, Long version) {
     Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(OrganizationKeys.identifier)
@@ -69,6 +69,6 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
     }
     Query query = new Query(criteria);
     Update update = new Update().set(OrganizationKeys.deleted, Boolean.TRUE);
-    return mongoTemplate.findAndModify(query, update, Organization.class) != null;
+    return mongoTemplate.findAndModify(query, update, Organization.class);
   }
 }

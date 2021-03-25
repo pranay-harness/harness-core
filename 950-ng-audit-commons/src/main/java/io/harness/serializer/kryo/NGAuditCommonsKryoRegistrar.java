@@ -1,5 +1,6 @@
 package io.harness.serializer.kryo;
 
+import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
@@ -19,5 +20,6 @@ public class NGAuditCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(YamlRecord.class, 17363);
     kryo.register(YamlDiff.class, 17364);
     kryo.register(AuditEventDTO.class, 17365);
+    kryo.register(AuditEntry.class, 17366);
   }
 }

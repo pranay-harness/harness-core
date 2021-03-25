@@ -162,6 +162,10 @@ aeriform("//860-orchestration-visualization:module")
 
 aeriform("//860-orchestration-visualization:tests")
 
+aeriform("//870-cg-orchestration:module")
+
+aeriform("//870-cg-orchestration:tests")
+
 aeriform("//870-cg-yaml-beans:module")
 
 aeriform("//870-orchestration:module")
@@ -191,6 +195,8 @@ aeriform("//882-pms-sdk-core:tests")
 aeriform("//884-pms-commons:module")
 
 aeriform("//884-pms-commons:tests")
+
+aeriform("//888-pms-client:module")
 
 aeriform("//890-pms-contracts:module")
 
@@ -248,6 +254,8 @@ aeriform("//940-feature-flag:tests")
 
 aeriform("//940-ng-audit-service:module")
 
+aeriform("//940-ng-audit-service:tests")
+
 aeriform("//940-notification-client:module")
 
 aeriform("//940-resource-group-beans:module")
@@ -300,6 +308,8 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
+aeriform("//953-git-sync-commons:module")
+
 aeriform("//954-connector-beans:module")
 
 aeriform("//955-alert-beans:module")
@@ -311,6 +321,8 @@ aeriform("//955-filters-sdk:module")
 aeriform("//955-filters-sdk:tests")
 
 aeriform("//955-outbox-sdk:module")
+
+aeriform("//955-outbox-sdk:tests")
 
 aeriform("//955-scm-java-client:module")
 
@@ -347,8 +359,6 @@ aeriform("//960-recaster:tests")
 aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
-
-aeriform("//965-git-sync-commons:module")
 
 aeriform("//970-api-services-beans:module")
 

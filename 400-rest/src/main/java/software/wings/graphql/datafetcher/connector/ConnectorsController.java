@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -52,7 +52,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorsController {
   public static final String WEBHOOK_URL_PATH = "api/setup-as-code/yaml/webhook/";
   @Inject private SubdomainUrlHelper subdomainUrlHelper;

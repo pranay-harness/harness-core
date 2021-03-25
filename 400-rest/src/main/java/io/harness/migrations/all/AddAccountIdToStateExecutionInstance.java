@@ -5,7 +5,7 @@ import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddAccountIdToStateExecutionInstance implements Migration {
   @Inject protected WingsPersistence wingsPersistence;
   private String debugLine = "STATEEXECUTIONINSTANCE MIGRATION: ";

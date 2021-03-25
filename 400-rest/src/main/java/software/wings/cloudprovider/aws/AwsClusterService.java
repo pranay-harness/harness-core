@@ -1,6 +1,9 @@
 package software.wings.cloudprovider.aws;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.LogCallback;
@@ -25,7 +28,8 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 12/29/16.
  */
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(CDP)
 public interface AwsClusterService {
   /**
    * Create cluster.
@@ -39,7 +43,8 @@ public interface AwsClusterService {
    */
   List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredSize, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+      int desiredSize, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported);
 
   /**
    * Delete service.

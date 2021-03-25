@@ -28,6 +28,15 @@ message AsyncExecutableResponse {
   repeated string callbackIds = 1;
   repeated string logKeys = 2;
   repeated string units = 3;
+  AsyncExecutableMode mode = 4;
+}
+
+enum AsyncExecutableMode {
+  // Step is shown as running while waiting for async callback to complete
+  RUNNING_MODE = 0;
+
+  // Step is shown as waiting on approval while waiting for async callback to complete
+  APPROVAL_WAITING_MODE = 1;
 }
 
 message ChildExecutableResponse {
@@ -56,6 +65,7 @@ message TaskChainExecutableResponse {
   bytes passThroughData = 4;
   repeated string logKeys = 5;
   repeated string units = 6;
+  string taskName = 7;
 }
 
 message TaskExecutableResponse {
@@ -63,6 +73,7 @@ message TaskExecutableResponse {
   io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
   repeated string logKeys = 3;
   repeated string units = 4;
+  string taskName = 5;
 }
 
 message SkipTaskExecutableResponse {

@@ -105,3 +105,23 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core.pipeline.view
+    name: View Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.pipeline.edit
+    name: Edit Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.pipeline.delete
+    name: Delete Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.pipeline.execute
+    name: Run Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project

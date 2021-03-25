@@ -21,7 +21,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonIgnoreProperties(ignoreUnknown = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("NexusConnector")
 public class NexusConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {

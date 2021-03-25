@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Value
 @Builder
-@Entity(value = "interrupts")
+@Entity(value = "interrupts", noClassnameStored = true)
 @Document(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 @TypeAlias("interrupt")

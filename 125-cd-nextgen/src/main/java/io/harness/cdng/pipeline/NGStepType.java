@@ -1,5 +1,8 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.executions.steps.StepSpecTypeConstants;
 
@@ -12,6 +15,7 @@ import java.util.List;
 /*
    Todo: Change StepSpecTypeConstants.PLACEHOLDER to their respective type once the StepInfo for those is implemented.
  */
+@OwnedBy(CDP)
 public enum NGStepType {
   // k8s steps
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
@@ -45,10 +49,13 @@ public enum NGStepType {
   TERRAFORM_APPLY("Terraform Apply", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
-  TERRAFORM_PROVISION("Terraform Provision", Arrays.asList(ServiceDefinitionType.values()),
+  TERRAFORM_PLAN("Terraform Plan", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
-  TERRAFORM_DELETE("Terraform Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES),
+  TERRAFORM_DESTROY("Terraform Destroy", Arrays.asList(ServiceDefinitionType.values()),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  TERRAFORM_ROLLBACK("Terraform Rollback", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   CREATE_STACK("Create Stack", Arrays.asList(ServiceDefinitionType.values()),
@@ -77,8 +84,6 @@ public enum NGStepType {
   @JsonProperty(StepSpecTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT("Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted",
       StepSpecTypeConstants.SHELL_SCRIPT),
-  @JsonProperty(StepSpecTypeConstants.HTTP)
-  HTTP("Http", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted/", StepSpecTypeConstants.HTTP),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   NEW_RELIC_DEPLOYMENT_MAKER("New Relic Deployment Maker", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),

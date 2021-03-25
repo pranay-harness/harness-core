@@ -1,6 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.util.stream.Collectors.toMap;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
@@ -15,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@OwnedBy(CDP)
 public class WinRmConnectionAttributesDataProvider implements DataProvider {
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;

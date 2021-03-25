@@ -146,6 +146,7 @@ public class OwnerRule implements TestRule {
   public static final String VISTAAR = "vistaar.juneja";
   public static final String VOJIN = "vojin.djukic";
   public static final String VUK = "vuk.skobalj";
+  public static final String XIN = "xin.shao";
   public static final String YOGESH = "yogesh.chauhan";
   public static final String VARDAN_BANSAL = "vardan.bansal";
   public static final String NANDAN = "nandan.chandrashekar";
@@ -175,6 +176,7 @@ public class OwnerRule implements TestRule {
   public static final String MOHIT_GARG = "mohit.garg";
   public static final String AKASH_NAGARAJAN = "akash.nagarajan";
   public static final String KANHAIYA = "kanhaiya.rathi";
+  public static final String ABHINAV_MITTAL = "abhinav.mittal";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -270,6 +272,7 @@ public class OwnerRule implements TestRule {
           .put(VOJIN, defaultUserInfo(VOJIN).slack("U015TFFL83G").team(PL).build())
           .put(VISTAAR, defaultUserInfo(VISTAAR).slack("U0138Q1JEHM").team(CI).build())
           .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DEL).build())
+          .put(XIN, defaultUserInfo(XIN).slack("U01R3KSP3M1").team(DEL).build())
           .put(YOGESH, defaultUserInfo(YOGESH).slack("UJVLUUXAT").team(CDP).build())
           .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DX).build())
           .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CV).build())
@@ -296,6 +299,7 @@ public class OwnerRule implements TestRule {
           .put(MOHIT_GARG, defaultUserInfo(MOHIT_GARG).slack("U01F9DBKYA3").team(DX).build())
           .put(AKASH_NAGARAJAN, defaultUserInfo(AKASH_NAGARAJAN).slack("U01GDEF032R").team(DX).build())
           .put(PIYUSH, defaultUserInfo(PIYUSH).slack("U01G9QYDMAA").team(PL).build())
+          .put(ABHINAV_MITTAL, defaultUserInfo(ABHINAV_MITTAL).slack("U01Q893534N").team(CDC).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

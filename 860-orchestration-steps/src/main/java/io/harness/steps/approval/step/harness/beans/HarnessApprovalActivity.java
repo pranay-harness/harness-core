@@ -1,7 +1,9 @@
 package io.harness.steps.approval.step.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.steps.approval.step.beans.ApproverInput;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -11,9 +13,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
-/**
- * Captures data related to approving activity of a single user.
- */
+@OwnedBy(CDC)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -27,6 +27,10 @@ public class HarnessApprovalActivity {
 
   public static HarnessApprovalActivity fromHarnessApprovalActivityRequestDTO(
       EmbeddedUser user, HarnessApprovalActivityRequestDTO request) {
+    if (user == null || request == null) {
+      return null;
+    }
+
     return HarnessApprovalActivity.builder()
         .user(user)
         .action(request.getAction())

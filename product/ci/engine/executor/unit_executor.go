@@ -175,7 +175,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_RunTests:
 		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
-		stepOutput, numRetries, err = runTests(step, so, e.log).Run(ctx)
+		stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}

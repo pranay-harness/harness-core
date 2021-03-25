@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.SettingAttribute;
@@ -22,7 +22,7 @@ import org.mongodb.morphia.query.Query;
  * @author rktummala on 07/12/19
  */
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

@@ -2,6 +2,7 @@ package io.harness.delegate.task.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GIT;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
@@ -1868,7 +1869,7 @@ public class K8sTaskHelperBase {
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> valuesFiles,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> manifestHelperFiles,
       String releaseName, String namespace, LogCallback executionLogCallback, Integer timeoutInMin) throws Exception {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
@@ -1877,13 +1878,13 @@ public class K8sTaskHelperBase {
       case K8S_MANIFEST:
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+            k8sDelegateTaskParams, manifestFiles, manifestHelperFiles, executionLogCallback, timeoutInMillis);
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
-            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), valuesFiles, releaseName,
-            namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), manifestHelperFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
 
       case KUSTOMIZE:
@@ -1894,13 +1895,12 @@ public class K8sTaskHelperBase {
             kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
 
       case OPENSHIFT_TEMPLATE:
-        final List<String> paramFilesContent = valuesFiles;
         OpenshiftManifestDelegateConfig openshiftManifestConfig =
             (OpenshiftManifestDelegateConfig) manifestDelegateConfig;
         GitStoreDelegateConfig otGitStoreDelegateConfig =
             (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
         return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
-            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, paramFilesContent);
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, manifestHelperFiles);
 
       default:
         throw new UnsupportedOperationException(
@@ -1964,7 +1964,9 @@ public class K8sTaskHelperBase {
             storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
       case HTTP_HELM:
-        return downloadFilesFromHttpChartRepo(
+      case S3_HELM:
+      case GCS_HELM:
+        return downloadFilesFromChartRepo(
             manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 
       default:
@@ -2026,8 +2028,8 @@ public class K8sTaskHelperBase {
         Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
   }
 
-  private boolean downloadFilesFromHttpChartRepo(ManifestDelegateConfig manifestDelegateConfig,
-      String destinationDirectory, LogCallback logCallback, long timeoutInMillis) {
+  private boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
+      LogCallback logCallback, long timeoutInMillis) {
     if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
       throw new InvalidArgumentsException(
           Pair.of("manifestDelegateConfig", "Must be instance of HelmChartManifestDelegateConfig"));
@@ -2039,14 +2041,21 @@ public class K8sTaskHelperBase {
       logCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
       helmTaskHelperBase.printHelmChartInfoInExecutionLogs(helmChartManifestConfig, logCallback);
 
-      helmTaskHelperBase.downloadChartFilesFromHttpRepo(helmChartManifestConfig, destinationDirectory, timeoutInMillis);
+      if (HTTP_HELM == manifestDelegateConfig.getStoreDelegateConfig().getType()) {
+        helmTaskHelperBase.downloadChartFilesFromHttpRepo(
+            helmChartManifestConfig, destinationDirectory, timeoutInMillis);
+      } else {
+        helmTaskHelperBase.downloadChartFilesUsingChartMuseum(
+            helmChartManifestConfig, destinationDirectory, timeoutInMillis);
+      }
 
       logCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       logCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
       logCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
     } catch (Exception e) {
-      String errorMsg = "Failed to download manifest files from helm HTTP repo. ";
+      String errorMsg = format("Failed to download manifest files from %s repo. ",
+          manifestDelegateConfig.getStoreDelegateConfig().getType());
       logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       throw new HelmClientException(errorMsg, e);
     }
@@ -2265,7 +2274,7 @@ public class K8sTaskHelperBase {
 
   private String getManifestDirectoryForHelmChart(
       String baseManifestDirectory, HelmChartManifestDelegateConfig helmChartManifest) {
-    if (HTTP_HELM == helmChartManifest.getStoreDelegateConfig().getType()) {
+    if (GIT != helmChartManifest.getStoreDelegateConfig().getType()) {
       return HelmTaskHelperBase.getChartDirectory(baseManifestDirectory, helmChartManifest.getChartName());
     }
 

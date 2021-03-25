@@ -27,6 +27,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.TriggerGitConnectorWrapper;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.ngtriggers.utils.GitProviderDataObtainmentManager;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -41,6 +42,7 @@ import org.mockito.Mock;
 
 public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
   @Mock private NGTriggerService ngTriggerService;
+  @Mock private GitProviderDataObtainmentManager dataObtainmentManager;
   @Inject @InjectMocks private GitWebhookTriggerRepoFilter filter;
   private static List<TriggerDetails> triggerDetailsList;
   private static List<ConnectorResponseDTO> connectors;

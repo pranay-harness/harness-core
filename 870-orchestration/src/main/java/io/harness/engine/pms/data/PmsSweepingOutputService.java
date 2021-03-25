@@ -36,5 +36,7 @@ public interface PmsSweepingOutputService {
     throw new GroupNotFoundException(groupName);
   }
 
+  RawOptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject);
+
   String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, String value, int levelsToKeep);
 }

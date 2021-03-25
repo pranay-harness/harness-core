@@ -23,6 +23,7 @@ import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ng.core.NGAccess;
@@ -64,6 +65,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -146,7 +148,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance))
             .outputVars(outputVars)
-            .script(((ShellScriptInlineSource) stepParameters.getSource().getSpec()).getScript().getValue())
+            .script(getShellScript(stepParameters))
             .scriptType(scriptType)
             .workingDirectory(workingDirectory)
             .build();
@@ -158,8 +160,25 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .parameters(new Object[] {taskParameters})
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
             .build();
+    String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
     return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
+        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName);
+  }
+
+  private String getShellScript(ShellScriptStepParameters stepParameters) {
+    ShellScriptInlineSource shellScriptInlineSource = (ShellScriptInlineSource) stepParameters.getSource().getSpec();
+    if (shellScriptInlineSource.getScript().isExpression()) {
+      final long maxLimit = 10;
+      List<String> variables =
+          EngineExpressionEvaluator.findVariables(shellScriptInlineSource.getScript().getExpressionValue())
+              .stream()
+              .limit(maxLimit)
+              .collect(Collectors.toList());
+      throw new ShellScriptException(
+          "Script contains unresolved expressions " + variables, null, Level.ERROR, WingsException.USER);
+    }
+
+    return shellScriptInlineSource.getScript().getValue();
   }
 
   private Map<String, String> getEnvironmentVariables(Map<String, Object> inputVariables) {

@@ -100,11 +100,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
     when(organizationRepository.save(any())).thenReturn(organization);
     when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
 
-    Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
-
-    verify(outboxService, times(1)).save(any());
-
-    assertEquals(organization, updatedOrganization);
+    organizationService.update(accountIdentifier, identifier, organizationDTO);
+    verify(transactionTemplate, times(1)).execute(any());
   }
 
   @Test(expected = JerseyViolationException.class)

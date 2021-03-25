@@ -2,6 +2,7 @@ package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -15,6 +16,8 @@ import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.pipeline.PipelineRemoteClientModule;
+import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.redis.RedisConfig;
@@ -67,6 +70,7 @@ public class ResourceGroupModule extends AbstractModule {
         .annotatedWith(Names.named("DynamicResourceValidator"))
         .to(DynamicResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(NG_MANAGER.getServiceId());
+    requireBinding(AccessControlAdminClient.class);
     installResourceValidators();
     addResourceValidatorConstraints();
   }
@@ -109,6 +113,7 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(ProjectManagerClient.class);
     requireBinding(OrganizationManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
+    requireBinding(PipelineServiceClient.class);
     requireBinding(AccountClient.class);
   }
 
@@ -128,5 +133,8 @@ public class ResourceGroupModule extends AbstractModule {
     install(new AccountClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getManager().getBaseUrl()).build(),
         resourceGroupConfig.getManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new PipelineRemoteClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getPipelineService().getBaseUrl()).build(),
+        resourceGroupConfig.getPipelineService().getSecret(), RESOURCE_GROUP_CLIENT));
   }
 }

@@ -2,7 +2,7 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rest.RestResponse;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class MetricDataStoreServiceImpl implements MetricDataStoreService {
   @Inject private VerificationServiceClient verificationClient;
   @Inject private TimeLimiter timeLimiter;

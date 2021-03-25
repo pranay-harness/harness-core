@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
@@ -7,6 +8,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.ChangeType;
@@ -29,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class GitSyncManagerInterfaceImplTest extends GitSyncTestBase {
   public static final String ACCOUNT_ID = "accountId";
   public static final String FOLDER_NAME = "folderName";
@@ -54,7 +57,7 @@ public class GitSyncManagerInterfaceImplTest extends GitSyncTestBase {
     YamlGitConfigDTO.RootFolder rootFolder =
         YamlGitConfigDTO.RootFolder.builder().enabled(true).identifier("abcd").rootFolder(FOLDER_NAME).build();
     final YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder()
-                                                  .accountId(ACCOUNT_ID)
+                                                  .accountIdentifier(ACCOUNT_ID)
                                                   .rootFolders(Arrays.asList(rootFolder))
                                                   .defaultRootFolder(rootFolder)
                                                   .build();

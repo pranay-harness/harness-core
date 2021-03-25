@@ -762,6 +762,7 @@ java_library(
     tags = [
         "aeriform",
         "manual",
+        "no-ide",
     ],
     visibility = ["//visibility:public"],
     deps = test_dependencies,

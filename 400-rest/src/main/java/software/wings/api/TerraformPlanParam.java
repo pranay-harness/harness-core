@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedRecordData;
 
@@ -10,6 +13,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonTypeName("terraformPlanParam")
+@OwnedBy(CDP)
 public class TerraformPlanParam implements SweepingOutput {
   private EncryptedRecordData encryptedRecordData;
   private String tfplan;

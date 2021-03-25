@@ -40,6 +40,9 @@ public class GraphStatusUpdateHelper {
       return orchestrationGraph;
     }
     try {
+      log.info("[{}] event log handler started for [{}] for plan [{}]", event.getEventType(), nodeExecutionId,
+          planExecutionId);
+
       NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
       if (orchestrationGraph.getRootNodeIds().isEmpty()) {
@@ -61,6 +64,8 @@ public class GraphStatusUpdateHelper {
             nodeExecution.getStatus(), planExecutionId);
         orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
       }
+      log.info("[{}] event log handler completed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId,
+          planExecutionId);
     } catch (Exception e) {
       log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId, planExecutionId, e);
       throw e;
@@ -78,7 +83,7 @@ public class GraphStatusUpdateHelper {
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
         newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
             pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId, true)));
-        newValue.setDelegateSelectionLogParams(
+        newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
                 nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance())));
       }

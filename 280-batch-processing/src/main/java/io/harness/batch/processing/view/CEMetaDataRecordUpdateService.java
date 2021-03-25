@@ -2,12 +2,12 @@ package io.harness.batch.processing.view;
 
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.shard.AccountShardService;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
 import io.harness.ccm.views.service.CEViewService;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CEMetadataRecord;
-import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingVariableTypes;
 

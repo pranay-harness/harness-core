@@ -1,7 +1,7 @@
 
 package io.harness.migrations;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.accountpermission.AddManageTagsPermission;
 import io.harness.migrations.accountpermission.AlertNotificationAccountPermissionMigration;
@@ -182,7 +182,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrationList {
   /**
    * Add your migrations to the end of the list with the next sequence number. After it has been in production for a few

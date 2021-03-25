@@ -4,10 +4,9 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -19,6 +18,8 @@ import io.harness.validation.Update;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -35,15 +36,27 @@ import org.mongodb.morphia.annotations.Id;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
-
-@CdIndex(name = "account_app_command_idx",
-    fields = { @Field("accountId")
-               , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
-@NgUniqueIndex(name = "template_idx", fields = { @Field("templateId") })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                          UpdatedByAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("account_app_command_idx")
+                 .field(ImportedTemplateKeys.accountId)
+                 .field(ImportedTemplateKeys.appId)
+                 .field(ImportedTemplateKeys.commandStoreName)
+                 .field(ImportedTemplateKeys.commandName)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("template_idx")
+                 .unique(true)
+                 .field(ImportedTemplateKeys.templateId)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @FdIndex @NotNull protected String appId;

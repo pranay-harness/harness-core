@@ -1,10 +1,12 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
@@ -31,6 +33,7 @@ import org.reflections.Reflections;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class AbstractSchemaChecker {
   public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
       throws IOException, ClassNotFoundException {
@@ -61,7 +64,7 @@ public class AbstractSchemaChecker {
       try {
         final String schemaInUT =
             IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-        if (!schemaInUT.equals(s)) {
+        if (!schemaInUT.trim().equals(s.trim())) {
           log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
           throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
         }

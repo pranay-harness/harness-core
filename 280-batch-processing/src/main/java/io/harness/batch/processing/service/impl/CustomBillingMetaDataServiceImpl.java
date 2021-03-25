@@ -80,7 +80,8 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
 
   private String getAwsBillingMetaData(String accountId) {
     if (!ImmutableSet
-             .of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q")
+             .of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q",
+                 "DVExhMPMScy6RpRNKwyvZQ")
              .contains(accountId)) {
       return null;
     }

@@ -9,7 +9,6 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
-import io.harness.common.NGTaskType;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -25,6 +24,8 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
+
+import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,14 +94,14 @@ public class ArtifactStepHelper {
     return connectorDTO.get().getConnector();
   }
 
-  public String getArtifactStepTaskType(ArtifactConfig artifactConfig) {
+  public TaskType getArtifactStepTaskType(ArtifactConfig artifactConfig) {
     switch (artifactConfig.getSourceType()) {
       case DOCKER_HUB:
-        return NGTaskType.DOCKER_ARTIFACT_TASK_NG.name();
+        return TaskType.DOCKER_ARTIFACT_TASK_NG;
       case GCR:
-        return NGTaskType.GCR_ARTIFACT_TASK_NG.name();
+        return TaskType.GCR_ARTIFACT_TASK_NG;
       case ECR:
-        return NGTaskType.ECR_ARTIFACT_TASK_NG.name();
+        return TaskType.ECR_ARTIFACT_TASK_NG;
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));

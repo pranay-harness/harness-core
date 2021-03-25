@@ -1,5 +1,8 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -14,6 +17,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class PcfRouteUpdateQueueRequestData {
   private Application app;
   private PcfConfig pcfConfig;

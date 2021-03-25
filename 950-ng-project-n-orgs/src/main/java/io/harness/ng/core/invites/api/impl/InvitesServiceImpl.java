@@ -6,10 +6,15 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 
+import static java.lang.Boolean.TRUE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.account.remote.AccountClient;
+import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InvitesService;
@@ -19,8 +24,9 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.invites.ext.mail.EmailData;
 import io.harness.ng.core.invites.ext.mail.MailUtils;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InvitesRepository;
 import io.harness.utils.RetryUtils;
 
@@ -32,6 +38,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.result.UpdateResult;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -45,6 +52,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,14 +69,16 @@ public class InvitesServiceImpl implements InvitesService {
   private static final int LINK_VALIDITY_IN_DAYS = 7;
   private static final String MAIL_SUBJECT_FORMAT_FOR_PROJECT = "Invitation for project %s on Harness";
   private static final String MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION = "Invitation for organisation %s on Harness";
+  private static final String INVITE_URL =
+      "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final MailUtils mailUtils;
   private final NgUserService ngUserService;
   private final InvitesRepository invitesRepository;
-  private final String verificationBaseUrl;
   private final boolean useMongoTransactions;
   private final TransactionTemplate transactionTemplate;
+  private final AccountClient accountClient;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -76,17 +86,16 @@ public class InvitesServiceImpl implements InvitesService {
           ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public InvitesServiceImpl(@Named("ngManagerBaseUrl") String baseURL,
-      @Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
+  public InvitesServiceImpl(@Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
       JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
-      TransactionTemplate transactionTemplate, InvitesRepository invitesRepository) {
+      TransactionTemplate transactionTemplate, InvitesRepository invitesRepository, AccountClient accountClient) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.mailUtils = mailUtils;
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
     this.transactionTemplate = transactionTemplate;
-    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountIdentifier=%s";
+    this.accountClient = accountClient;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -98,12 +107,12 @@ public class InvitesServiceImpl implements InvitesService {
         return InviteOperationResponse.FAIL;
       }
 
-      Optional<User> userOptional = ngUserService.getUserFromEmail(invite.getAccountIdentifier(), invite.getEmail());
+      Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
       Optional<Invite> existingInviteOptional = getExistingInvite(invite);
 
       if (userOptional.isPresent()) {
         // Approved and deleted fields of Invite will be toggled together for this case
-        User user = userOptional.get();
+        UserInfo user = userOptional.get();
         // If invitee is already part of the project
         Optional<UserProjectMap> userProjectMapOptional = ngUserService.getUserProjectMap(
             user.getUuid(), invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
@@ -116,7 +125,7 @@ public class InvitesServiceImpl implements InvitesService {
           return wrapperForTransactions(this::newInviteHandler, invite);
         }
         resendInvitationMail(existingInviteOptional.get());
-        return InviteOperationResponse.USER_INVITE_RESENT;
+        return InviteOperationResponse.USER_ALREADY_INVITED;
       }
 
       // Case: user is not registered in the account
@@ -124,11 +133,11 @@ public class InvitesServiceImpl implements InvitesService {
         return wrapperForTransactions(this::newInviteHandler, invite);
       }
       Invite existingInvite = existingInviteOptional.get();
-      if (Boolean.TRUE.equals(existingInvite.getApproved())) {
+      if (TRUE.equals(existingInvite.getApproved())) {
         return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
       }
       resendInvitationMail(existingInvite);
-      return InviteOperationResponse.USER_INVITE_RESENT;
+      return InviteOperationResponse.USER_ALREADY_INVITED;
 
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(isEmpty(invite.getProjectIdentifier())
@@ -144,7 +153,11 @@ public class InvitesServiceImpl implements InvitesService {
   @Override
   public Invite resendInvitationMail(Invite invite) {
     updateCreationDate(invite);
-    sendInvitationMail(invite);
+    try {
+      sendInvitationMail(invite);
+    } catch (URISyntaxException e) {
+      log.error("Mail embed url incorrect. can't sent email", e);
+    }
     return invite;
   }
 
@@ -152,21 +165,21 @@ public class InvitesServiceImpl implements InvitesService {
     return invitesRepository
         .findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndRoleAndInviteTypeAndDeletedNot(
             invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(), invite.getEmail(),
-            invite.getRole(), invite.getInviteType(), Boolean.TRUE);
+            invite.getRole(), invite.getInviteType(), TRUE);
   }
 
   private void markPreviousInvitesDeleted(Invite newInvite) {
     List<Invite> existingInvitesList =
         invitesRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedNot(
             newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier(),
-            newInvite.getEmail(), Boolean.TRUE);
+            newInvite.getEmail(), TRUE);
 
     // Marking all old invites as deleted as only the current role in the invitation is net valid.
     for (Invite tempInvite : existingInvitesList) {
       if (tempInvite.getRole().equals(newInvite.getRole()) && tempInvite.getInviteType() == newInvite.getInviteType()) {
         continue;
       }
-      tempInvite.setDeleted(Boolean.TRUE);
+      tempInvite.setDeleted(TRUE);
     }
     invitesRepository.saveAll(existingInvitesList);
   }
@@ -192,13 +205,17 @@ public class InvitesServiceImpl implements InvitesService {
   private InviteOperationResponse newInviteHandler(Invite invite) {
     markPreviousInvitesDeleted(invite);
     Invite savedInvite = invitesRepository.save(invite);
-    sendInvitationMail(savedInvite);
+    try {
+      sendInvitationMail(savedInvite);
+    } catch (URISyntaxException e) {
+      log.error("Mail embed url incorrect. can't sent email", e);
+    }
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
   @Override
   public Optional<Invite> get(String inviteId) {
-    return invitesRepository.findFirstByIdAndDeletedNot(inviteId, Boolean.TRUE);
+    return invitesRepository.findFirstByIdAndDeletedNot(inviteId, TRUE);
   }
 
   @Override
@@ -210,7 +227,7 @@ public class InvitesServiceImpl implements InvitesService {
   public Optional<Invite> deleteInvite(String inviteId) {
     Optional<Invite> inviteOptional = get(inviteId);
     if (inviteOptional.isPresent()) {
-      Update update = new Update().set(InviteKeys.deleted, Boolean.TRUE);
+      Update update = new Update().set(InviteKeys.deleted, TRUE);
       UpdateResult updateResponse = invitesRepository.updateInvite(inviteId, update);
       return updateResponse.getModifiedCount() != 1 ? Optional.empty() : inviteOptional;
     }
@@ -225,9 +242,9 @@ public class InvitesServiceImpl implements InvitesService {
     invitesRepository.updateInvite(invite.getId(), update);
   }
 
-  private boolean sendInvitationMail(Invite invite) {
+  private boolean sendInvitationMail(Invite invite) throws URISyntaxException {
     updateJWTTokenInInvite(invite);
-    String url = String.format(verificationBaseUrl, invite.getInviteToken(), invite.getAccountIdentifier());
+    String url = getInvitationMailEmbedUrl(invite);
     String subject;
     if (isEmpty(invite.getProjectIdentifier())) {
       subject = String.format(MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION, invite.getOrgIdentifier());
@@ -244,44 +261,52 @@ public class InvitesServiceImpl implements InvitesService {
     emailData.setRetries(2);
     emailData.setAccountId(invite.getAccountIdentifier());
     mailUtils.sendMailAsync(emailData);
-    return Boolean.TRUE;
+    return TRUE;
   }
 
-  public Optional<Invite> verify(String jwtToken) {
+  private String getInvitationMailEmbedUrl(Invite invite) throws URISyntaxException {
+    String baseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(invite.getAccountIdentifier()));
+    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
+    String fragment = String.format(INVITE_URL, invite.getAccountIdentifier(), account.getName(),
+        account.getCompanyName(), invite.getEmail(), invite.getInviteToken());
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setFragment(fragment);
+    return uriBuilder.toString();
+  }
+
+  public InviteAcceptResponse acceptInvite(String jwtToken) {
+    Optional<Invite> inviteOptional = getInviteFromToken(jwtToken);
+    if (!inviteOptional.isPresent() || !inviteOptional.get().getInviteToken().equals(jwtToken)) {
+      log.warn("Invite token {} is invalid", jwtToken);
+      return InviteAcceptResponse.builder().response(InviteOperationResponse.FAIL).build();
+    }
+
+    Invite invite = inviteOptional.get();
+    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail());
+    markInviteApproved(invite);
+    return InviteAcceptResponse.builder()
+        .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
+        .userInfo(ngUserOpt.orElse(null))
+        .build();
+  }
+
+  private Optional<Invite> getInviteFromToken(String jwtToken) {
+    if (isBlank(jwtToken)) {
+      return Optional.empty();
+    }
     Optional<String> inviteIdOptional = getInviteIdFromToken(jwtToken);
     if (!inviteIdOptional.isPresent()) {
-      throw new InvalidArgumentsException("Invalid token. verification failed");
+      log.warn("Invalid token. verification failed");
+      return Optional.empty();
     }
-    Optional<Invite> inviteOptional = get(inviteIdOptional.get());
-
-    Optional<Invite> returnInviteOptional = Optional.empty();
-    if (!inviteOptional.isPresent()) {
-      log.warn("Invite token {} for usermail expired. Retry", jwtToken);
-    } else if (!inviteOptional.get().getInviteToken().equals(jwtToken)) {
-      log.warn("Invite token {} is invalid", jwtToken);
-    } else {
-      Invite invite = inviteOptional.get();
-      Optional<User> userOptional = ngUserService.getUserFromEmail(invite.getAccountIdentifier(), invite.getEmail());
-
-      if (userOptional.isPresent()) {
-        wrapperForTransactions((arg1, arg2) -> {
-          ngUserService.createUserProjectMap(arg1, arg2);
-          markInviteApprovedAndDeleted(arg1);
-          return arg1;
-        }, invite, userOptional.get());
-      } else {
-        markInviteApproved(invite);
-      }
-      returnInviteOptional = inviteOptional;
-    }
-    return returnInviteOptional;
+    return get(inviteIdOptional.get());
   }
 
   private Boolean approveUserRequest(Invite invite, Role role) {
     if (invite == null || role == null) {
       return Boolean.FALSE;
     }
-    Optional<User> userOptional = ngUserService.getUserFromEmail(invite.getAccountIdentifier(), invite.getEmail());
+    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
     wrapperForTransactions((arg1, arg2) -> {
       Update update = new Update().set(InviteKeys.role, role);
       invitesRepository.updateInvite(invite.getId(), update);
@@ -293,7 +318,7 @@ public class InvitesServiceImpl implements InvitesService {
       }
       return arg1;
     }, invite, userOptional);
-    return Boolean.TRUE;
+    return TRUE;
   }
 
   private void updateCreationDate(Invite invite) {
@@ -314,22 +339,40 @@ public class InvitesServiceImpl implements InvitesService {
     Invite invite = inviteOptional.get();
     if (invite.getInviteType() == ADMIN_INITIATED_INVITE) {
       resendInvitationMail(invite);
-    } else if (invite.getInviteType() == USER_INITIATED_INVITE && updatedInvite.getApproved().equals(Boolean.TRUE)) {
+    } else if (invite.getInviteType() == USER_INITIATED_INVITE && updatedInvite.getApproved().equals(TRUE)) {
       approveUserRequest(invite, updatedInvite.getRole());
     }
     return Optional.of(invite);
   }
 
+  @Override
+  public boolean completeInvite(String token) {
+    Optional<Invite> inviteOpt = getInviteFromToken(token);
+    if (!inviteOpt.isPresent()) {
+      return false;
+    }
+    Invite invite = inviteOpt.get();
+    String email = invite.getEmail();
+    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
+    if (!userOpt.isPresent()) {
+      return false;
+    }
+    UserInfo user = userOpt.get();
+    ngUserService.createUserProjectMap(invite, user);
+    markInviteApprovedAndDeleted(invite);
+    return true;
+  }
+
   private void markInviteApproved(Invite invite) {
-    invite.setApproved(Boolean.TRUE);
-    Update update = new Update().set(InviteKeys.approved, Boolean.TRUE);
+    invite.setApproved(TRUE);
+    Update update = new Update().set(InviteKeys.approved, TRUE);
     invitesRepository.updateInvite(invite.getId(), update);
   }
 
   private void markInviteApprovedAndDeleted(Invite invite) {
-    invite.setApproved(Boolean.TRUE);
-    invite.setDeleted(Boolean.TRUE);
-    Update update = new Update().set(InviteKeys.approved, Boolean.TRUE).set(InviteKeys.deleted, Boolean.TRUE);
+    invite.setApproved(TRUE);
+    invite.setDeleted(TRUE);
+    Update update = new Update().set(InviteKeys.approved, TRUE).set(InviteKeys.deleted, TRUE);
     invitesRepository.updateInvite(invite.getId(), update);
   }
 

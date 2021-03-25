@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.BRIJESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.Owner;
@@ -22,15 +24,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateBazelDependencyCheckTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
   @Category({UnitTests.class})
-  @Ignore("This tests is to report dependency discrepancies - not done yet")
   public void testDependencyVersionsMatchInBazelWithRestCapsule() throws IOException {
     List<String> depsInMavenInstallJson = getDepsInMavenInstallJson();
     List<String> depsInRestCapsule = getDepsInRestCapsule();
@@ -63,7 +64,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
         }
       }
     }
-    assertThat(mismatchedVersions).isEmpty();
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(13);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {

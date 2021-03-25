@@ -3,19 +3,20 @@ package io.harness.notification.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import io.harness.ng.core.dto.NotificationSettingConfigDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.dto.UserGroupFilterDTO;
+import io.harness.ng.core.notification.NotificationSettingConfigDTO;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.NotificationSetting;
 import io.harness.notification.remote.SmtpConfigClient;
 import io.harness.notification.remote.SmtpConfigResponse;
-import io.harness.notification.remote.UserGroupClient;
 import io.harness.notification.repositories.NotificationSettingRepository;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.usergroups.UserGroupClient;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,7 +43,9 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     }
     List<UserGroupDTO> userGroups = new ArrayList<>();
     try {
-      userGroups = getResponse(userGroupClient.getUserGroups(userGroupIds));
+      UserGroupFilterDTO userGroupFilterDTO =
+          UserGroupFilterDTO.builder().databaseIdFilter(new HashSet<>(userGroupIds)).build();
+      userGroups = getResponse(userGroupClient.getFilteredUserGroups(userGroupFilterDTO));
     } catch (Exception ex) {
       log.error("Error while fetching user groups.", ex);
     }
@@ -53,13 +56,13 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     if (isEmpty(userIds)) {
       return new ArrayList<>();
     }
-    List<User> users = new ArrayList<>();
+    List<UserInfo> users = new ArrayList<>();
     try {
       users = RestClientUtils.getResponse(userClient.getUsersByIds(userIds));
     } catch (Exception exception) {
       log.error("Failure while fetching emails of users from userIds", exception);
     }
-    return users.stream().map(User::getEmail).collect(Collectors.toList());
+    return users.stream().map(UserInfo::getEmail).collect(Collectors.toList());
   }
 
   public List<String> getNotificationSettingsForGroups(
@@ -113,7 +116,6 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
 
   @Override
   public NotificationSetting setSendNotificationViaDelegate(String accountId, boolean sendNotificationViaDelegate) {
-    //    TODO @Ankush check if accountId is even valid or not
     Optional<NotificationSetting> notificationSettingOptional =
         notificationSettingRepository.findByAccountId(accountId);
     NotificationSetting notificationSetting =

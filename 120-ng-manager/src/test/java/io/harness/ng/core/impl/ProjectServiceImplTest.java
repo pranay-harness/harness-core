@@ -21,10 +21,6 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
@@ -34,6 +30,7 @@ import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
 
@@ -47,21 +44,25 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;
   private OrganizationService organizationService;
   private ProjectServiceImpl projectService;
-  private Producer eventProducer;
+  private TransactionTemplate transactionTemplate;
+  private OutboxService outboxService;
   private NgUserService ngUserService;
 
   @Before
   public void setup() {
     projectRepository = mock(ProjectRepository.class);
     organizationService = mock(OrganizationService.class);
-    eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
-    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, eventProducer, ngUserService));
+    transactionTemplate = mock(TransactionTemplate.class);
+    outboxService = mock(OutboxService.class);
+    projectService = spy(new ProjectServiceImpl(
+        projectRepository, organizationService, transactionTemplate, ngUserService, outboxService));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -88,16 +89,12 @@ public class ProjectServiceImplTest extends CategoryTest {
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
-    Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
-
-    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    projectService.create(accountIdentifier, orgIdentifier, projectDTO);
     try {
-      verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
+      verify(transactionTemplate, times(1)).execute(any());
+    } catch (Exception e) {
       e.printStackTrace();
     }
-
-    assertEquals(project, createdProject);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -128,21 +125,16 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
     project.setIdentifier(identifier);
     project.setId(id);
-
     when(projectRepository.save(any())).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
+    projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
-    Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
-
-    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
-      verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
+      verify(transactionTemplate, times(1)).execute(any());
+    } catch (Exception e) {
       e.printStackTrace();
     }
-
-    assertEquals(project, updatedProject);
   }
 
   @Test(expected = JerseyViolationException.class)

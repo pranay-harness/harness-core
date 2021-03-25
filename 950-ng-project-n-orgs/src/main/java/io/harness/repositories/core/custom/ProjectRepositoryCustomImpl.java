@@ -35,7 +35,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
-  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+  public Project restore(String accountIdentifier, String orgIdentifier, String identifier) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.orgIdentifier)
@@ -46,7 +46,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
                             .is(Boolean.TRUE);
     Query query = new Query(criteria);
     Update update = new Update().set(ProjectKeys.deleted, Boolean.FALSE);
-    return mongoTemplate.findAndModify(query, update, Project.class) != null;
+    return mongoTemplate.findAndModify(query, update, Project.class);
   }
 
   @Override
@@ -55,7 +55,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
-  public Boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version) {
+  public Project delete(String accountIdentifier, String orgIdentifier, String identifier, Long version) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.orgIdentifier)
@@ -69,6 +69,6 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
     }
     Query query = new Query(criteria);
     Update update = new Update().set(ProjectKeys.deleted, Boolean.TRUE);
-    return mongoTemplate.findAndModify(query, update, Project.class) != null;
+    return mongoTemplate.findAndModify(query, update, Project.class);
   }
 }

@@ -1,17 +1,18 @@
 package io.harness.notification.remote.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.notification.remote.mappers.NotificationMapper.toDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.dtos.NotificationDTO;
 import io.harness.notification.entities.Notification;
 import io.harness.notification.service.api.NotificationService;
@@ -33,6 +34,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(PL)
 @Api("notifications")
 @Path("notifications")
 @Produces({"application/json", "application/yaml"})
@@ -43,7 +45,6 @@ import org.springframework.data.domain.Page;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@NotificationMicroserviceAuth
 public class NotificationResource {
   private final NotificationService notificationService;
   @GET

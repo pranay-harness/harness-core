@@ -1,6 +1,7 @@
 package types
 
 type Status string
+type FileStatus string
 type Selection string
 
 const (
@@ -31,6 +32,15 @@ const (
 
 	// SelectFlakyTest represents a selection of a test because it's flaky.
 	SelectFlakyTest = "flaky_test"
+
+	// FileModified represents a modified file. Keeping it consistent with git syntax.
+	FileModified = "modified"
+
+	// FileAdded represents a file which was added in the PR.
+	FileAdded = "added"
+
+	// FileDeleted represents a file which was deleted in the PR.
+	FileDeleted = "deleted"
 )
 
 type Result struct {
@@ -101,8 +111,18 @@ type RunnableTest struct {
 }
 
 type SelectTestsResp struct {
-	TotalTests int            `json:"total_tests"`
-	Tests      []RunnableTest `json:"tests"`
+	TotalTests    int            `json:"total_tests"`
+	SelectedTests int            `json:"selected_tests"`
+	NewTests      int            `json:"new_tests"`
+	UpdatedTests  int            `json:"updated_tests"`
+	SrcCodeTests  int            `json:"src_code_tests"`
+	SelectAll     bool           `json:"select_all"` // We might choose to run all the tests
+	Tests         []RunnableTest `json:"tests"`
+}
+
+type SelectTestsReq struct {
+	Files    []File   `json:"files"`
+	TiConfig TiConfig `json:"ti_config"`
 }
 
 type SelectionDetails struct {
@@ -116,4 +136,22 @@ type SelectionOverview struct {
 	Skipped     int              `json:"skipped_tests"`
 	TimeSavedMs int              `json:"time_saved_ms"`
 	Selected    SelectionDetails `json:"selected_tests"`
+}
+
+type File struct {
+	Name   string     `json:"name"`
+	Status FileStatus `json:"status"`
+}
+
+// This is a yaml file which may or may not exist in the root of the source code
+// as .ticonfig. The contents of the file get deserialized into this object.
+// Sample YAML:
+// config:
+//   ignore:
+//     - README.md
+//     - config.sh
+type TiConfig struct {
+	Config struct {
+		Ignore []string `json:"ignore"`
+	}
 }

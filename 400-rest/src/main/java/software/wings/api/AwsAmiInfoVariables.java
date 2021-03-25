@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -9,6 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 @JsonTypeName("awsAmiInfoVariables")
+@OwnedBy(CDP)
 public class AwsAmiInfoVariables implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "ami";
   private String newAsgName;

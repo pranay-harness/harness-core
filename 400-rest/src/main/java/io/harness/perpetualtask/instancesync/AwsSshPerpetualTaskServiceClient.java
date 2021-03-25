@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +44,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private SecretManager secretManager;

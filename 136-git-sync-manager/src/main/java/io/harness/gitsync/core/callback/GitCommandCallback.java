@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.callback;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -14,6 +15,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandType;
@@ -57,6 +59,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitCommandCallback implements NotifyCallback {
   private String accountId;
   private String changeSetId;
@@ -225,7 +228,7 @@ public class GitCommandCallback implements NotifyCallback {
                       .yamlChangeSetId(yamlChangeSet.getUuid())
                       .status(GitCommit.Status.COMPLETED)
                       .commitId(commitId)
-                      .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                      .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                       .branchName(yamlGitConfig.getBranch())
                       .yamlChangeSetId(yamlSetIdsProcessed)
                       .commitMessage(gitCommitAndPushResult.getGitCommitResult().getCommitMessage())
@@ -316,13 +319,13 @@ public class GitCommandCallback implements NotifyCallback {
                              .accountId(accountId)
                              .status(gitCommitStatus)
                              .commitId(commitId)
-                             .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                             .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                              .repo(yamlGitConfig.getRepo())
                              .branchName(yamlGitConfig.getBranch())
                              .fileProcessingSummary(null)
                              .yamlChangeSetId(changeSetId)
-                             .projectId(yamlGitConfig.getProjectId())
-                             .organizationId(yamlGitConfig.getOrganizationId())
+                             .projectId(yamlGitConfig.getProjectIdentifier())
+                             .organizationId(yamlGitConfig.getOrganizationIdentifier())
                              .yamlGitConfigIds(yamlGitConfig.getIdentifier())
                              .build());
   }

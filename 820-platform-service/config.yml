@@ -49,15 +49,6 @@ logging:
       target: STDOUT
       stackdriverLogEnabled: false
 
-mongo:
-  uri: mongodb://localhost:27017/notification
-  connectTimeout: 30000
-  serverSelectionTimeout: 90000
-  maxConnectionIdleTime: 600000
-  connectionsPerHost: 300
-  indexManagerMode: AUTO
-  aliasDBName: notification
-
 secrets:
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
@@ -75,18 +66,41 @@ rbacServiceConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-smtp:
-  type: SMTP
-  host: host_placeholder
-  port: 465
-  fromAddress: noreply@harness.io
-  useSSL: true
-  username: smtp_username_placeholder
-  password: "smtp_password_placeholder"
+notificationServiceConfig:
+  mongo:
+    uri: mongodb://localhost:27017/notification
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+    indexManagerMode: AUTO
+    aliasDBName: notification
 
-seedDataConfiguration:
-  shouldOverrideAllPredefinedTemplates: true
+  smtp:
+    type: SMTP
+    host: host_placeholder
+    port: 465
+    fromAddress: noreply@harness.io
+    useSSL: true
+    username: smtp_username_placeholder
+    password: "smtp_password_placeholder"
 
-grpcClient:
-  target: localhost:9880
-  authority: localhost
+  seedDataConfiguration:
+    shouldOverrideAllPredefinedTemplates: true
+
+  grpcClient:
+    target: localhost:9880
+    authority: localhost
+
+
+auditServiceConfig:
+  mongo:
+    uri: mongodb://localhost:27017/ng-audits
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+    indexManagerMode: AUTO
+    aliasDBName: ng-audits
+
+  enableAuditService: true

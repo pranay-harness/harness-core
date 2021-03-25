@@ -22,8 +22,8 @@ import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
+import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
 
-import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -108,6 +108,8 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     } catch (InterruptedException e) {
       log.error("Failed to get AWS EC2 Billing Data. {}", e);
       Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Exception Failed to get AWS EC2 Billing Data", ex);
     }
     return Collections.emptyMap();
   }
@@ -282,7 +284,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
               vmInstanceBillingData.toBuilder().computeCost(memoryCost + cost).cpuCost(cost).build();
         }
         if (vmInstanceServiceBillingData.getUsageType().contains(eksMemoryInstanceType)) {
-          double cpuCost = vmInstanceBillingData.getMemoryCost();
+          double cpuCost = vmInstanceBillingData.getCpuCost();
           vmInstanceBillingData =
               vmInstanceBillingData.toBuilder().computeCost(cpuCost + cost).memoryCost(cost).build();
         }

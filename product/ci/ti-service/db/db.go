@@ -30,4 +30,9 @@ type Db interface {
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
 	GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
 		buildId string) (types.SelectionOverview, error)
+
+	//  WriteDiffFiles writes modified files for the build. This information is required
+	//  while merging partial call graph.
+	WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+		buildId, stageId, stepId string, files []types.File) error
 }

@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static java.lang.String.format;
 import static org.reflections.Reflections.log;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DeleteOrphanPerpetualTaskMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;

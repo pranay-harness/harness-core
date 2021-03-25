@@ -1,5 +1,5 @@
 package software.wings.graphql.schema.type.aggregation.ssoProvider;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-@TargetModule(Module._380_CG_GRAPHQL) public enum QLSSOType { LDAP, SAML }
+@TargetModule(HarnessModule._380_CG_GRAPHQL) public enum QLSSOType { LDAP, SAML }

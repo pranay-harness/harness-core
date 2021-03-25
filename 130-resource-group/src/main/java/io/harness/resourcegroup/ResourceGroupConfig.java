@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class ResourceGroupConfig {
   @JsonProperty("ng-manager") ServiceConfig ngManager;
   @JsonProperty("manager") ServiceConfig manager;
+  @JsonProperty("pipeline-service") ServiceConfig pipelineService;
 
   @Value
   @Builder

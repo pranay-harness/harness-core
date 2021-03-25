@@ -1,5 +1,8 @@
 package io.harness.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.api.OutboxService;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Slf4j
 public class TransactionOutboxModule extends AbstractModule {
   public static final String OUTBOX_TRANSACTION_TEMPLATE = "OUTBOX_TRANSACTION_TEMPLATE";

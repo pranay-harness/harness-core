@@ -1,8 +1,13 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
+import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
@@ -24,6 +29,7 @@ import com.google.inject.name.Names;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
+@OwnedBy(DX)
 public class GitSyncModule extends AbstractModule {
   private static final AtomicReference<GitSyncModule> instanceRef = new AtomicReference<>();
 
@@ -44,6 +50,7 @@ public class GitSyncModule extends AbstractModule {
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(GitEntityService.class).to(GitEntityServiceImpl.class);
     bind(GitSyncTriggerService.class).to(GitSyncTriggerServiceImpl.class);
+    bind(HarnessToGitHelperService.class).to(HarnessToGitHelperServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))

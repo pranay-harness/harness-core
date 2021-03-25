@@ -235,6 +235,7 @@ timescaledb:
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
 
 grpcServerConfig:
   connectors:
@@ -554,6 +555,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
 
 mockServerConfig:

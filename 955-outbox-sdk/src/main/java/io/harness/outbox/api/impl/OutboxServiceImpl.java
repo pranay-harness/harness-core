@@ -1,9 +1,11 @@
 package io.harness.outbox.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
 
-import io.harness.Event;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.event.Event;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -14,6 +16,7 @@ import io.harness.outbox.api.OutboxService;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
+@OwnedBy(PL)
 public class OutboxServiceImpl implements OutboxService {
   private final OutboxDao outboxDao;
   private final Gson gson;
@@ -31,7 +34,7 @@ public class OutboxServiceImpl implements OutboxService {
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
                                   .resource(event.getResource())
-                                  .eventData(gson.toJson(event.getEventData()))
+                                  .eventData(gson.toJson(event))
                                   .eventType(event.getEventType())
                                   .globalContext(GlobalContextManager.obtainGlobalContext())
                                   .build();

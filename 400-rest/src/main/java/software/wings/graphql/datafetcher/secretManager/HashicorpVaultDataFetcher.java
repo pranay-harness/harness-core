@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.secretManager;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
@@ -20,7 +20,7 @@ import software.wings.service.intfc.security.VaultService;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class HashicorpVaultDataFetcher implements SecretManagerMutationDataFetcher {
   @Inject private VaultService vaultService;
   @Inject private SecretManagerController secretManagerController;

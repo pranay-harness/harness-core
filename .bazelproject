@@ -1,6 +1,7 @@
 import .bazelproject-config
 
 directories:
+  .aeriform
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -45,6 +46,7 @@ directories:
   860-orchestration-steps
   860-orchestration-visualization
   870-cg-yaml-beans
+  870-cg-orchestration
   870-orchestration
   870-yaml-beans
   874-orchestration-delay
@@ -53,6 +55,7 @@ directories:
   879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
+  888-pms-client
   890-pms-contracts
   890-sm-core
   900-access-control-service
@@ -91,6 +94,7 @@ directories:
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
+  953-git-sync-commons
   954-connector-beans
   955-filters-sdk
   955-outbox-sdk
@@ -104,7 +108,6 @@ directories:
   960-persistence
   960-recaster
   960-yaml-sdk
-  965-git-sync-commons
   970-api-services-beans
   970-grpc
   970-ng-commons
@@ -115,21 +118,22 @@ directories:
   200-functional-test
   tools
   scripts
+  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
-  run-configurations/DataGen_App.xml
+  run-configurations/DataGenApp.xml
   run-configurations/DelegateApp.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
-  run-configurations/NextGen_Manager.xml
-  run-configurations/Notification Client.xml
-  run-configurations/Platform Microservice.xml
+  run-configurations/NextGenManager.xml
+  run-configurations/NotificationClient.xml
+  run-configurations/PlatformMicroservice.xml
+  run-configurations/VerificationServiceApp.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
-  run-configurations/VerificationServiceApp.xml
-  run-configurations/BatchProcessinngApp.xml

@@ -1,18 +1,14 @@
 package io.harness.cvng.verificationjob.entities;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
-import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
@@ -91,8 +87,6 @@ public final class VerificationJobInstance
   @FdIndex private long lastUpdatedAt;
   private ExecutionStatus executionStatus;
 
-  private String verificationJobIdentifier;
-
   @Setter(AccessLevel.NONE) private Instant deploymentStartTime;
   @Setter(AccessLevel.PRIVATE) private Instant startTime;
   @FdIndex private Long dataCollectionTaskIteration;
@@ -108,14 +102,14 @@ public final class VerificationJobInstance
   private Integer newHostsTrafficSplitPercentage;
   private ActivityVerificationStatus verificationStatus;
 
-  // this stuff is only required for health verification
-  private Instant preActivityVerificationStartTime;
-  private Instant postActivityVerificationStartTime;
-
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;
   private Map<String, CVConfig> cvConfigMap;
+
+  // TODO: remove this in the next PR.
+  @Deprecated private Instant preActivityVerificationStartTime;
+  @Deprecated private Instant postActivityVerificationStartTime;
 
   @Builder.Default
   @FdTtlIndex
@@ -135,19 +129,12 @@ public final class VerificationJobInstance
     public VerificationJobInstance build() {
       VerificationJobInstance unsafeVerificationJobInstance = unsafeBuild();
       Instant deploymentStartTime = unsafeVerificationJobInstance.getDeploymentStartTime();
-      Instant startTime = unsafeVerificationJobInstance.getStartTime();
-      // TODO: add this condition once health verification startTime is consistent with everything else.
-      // Preconditions.checkState(startTime.compareTo(deploymentStartTime) >= 0,
-      //   "Deployment start time should be before verification start time.");
-      if (deploymentStartTime.equals(startTime)) {
-        unsafeVerificationJobInstance.setStartTime(startTime.plus(Duration.ofMinutes(1)));
-      }
-      if (unsafeVerificationJobInstance.getDataCollectionDelay() == null) {
-        unsafeVerificationJobInstance.dataCollectionDelay = DATA_COLLECTION_DELAY;
-      }
+      Preconditions.checkState(startTime.compareTo(deploymentStartTime) >= 0,
+          "Deployment start time should be before verification start time.");
+      unsafeVerificationJobInstance.setStartTime(
+          getResolvedJob().roundToClosestBoundary(unsafeVerificationJobInstance.getDeploymentStartTime(), startTime));
       return unsafeVerificationJobInstance;
     }
-
     public VerificationJob getResolvedJob() {
       return resolvedJob;
     }
@@ -178,20 +165,8 @@ public final class VerificationJobInstance
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
-  public VerificationJobInstanceDTO toDTO() {
-    return VerificationJobInstanceDTO.builder()
-        .verificationJobIdentifier(verificationJobIdentifier)
-        .deploymentStartTimeMs(deploymentStartTime.toEpochMilli())
-        .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)
-        .oldVersionHosts(oldVersionHosts)
-        .newVersionHosts(newVersionHosts)
-        .verificationTaskStartTimeMs(startTime.toEpochMilli())
-        .dataCollectionDelayMs(dataCollectionDelay.toMillis())
-        .build();
-  }
-
   public Instant getEndTime() {
-    return getStartTime().plus(getExecutionDuration());
+    return getStartTime().plus(getResolvedJob().getDuration());
   }
 
   public int getVerificationTasksCount() {
@@ -204,6 +179,7 @@ public final class VerificationJobInstance
     }
     return progressLogs;
   }
+
   @Data
   @SuperBuilder
   public abstract static class ProgressLog {
@@ -233,7 +209,7 @@ public final class VerificationJobInstance
   @Value
   @EqualsAndHashCode(callSuper = true)
   @SuperBuilder
-  public static class AnalysisProgressLog extends VerificationJobInstance.ProgressLog {
+  public static class AnalysisProgressLog extends ProgressLog {
     AnalysisStatus analysisStatus;
 
     @Override
@@ -249,7 +225,7 @@ public final class VerificationJobInstance
   @Value
   @EqualsAndHashCode(callSuper = true)
   @SuperBuilder
-  public static class DataCollectionProgressLog extends VerificationJobInstance.ProgressLog {
+  public static class DataCollectionProgressLog extends ProgressLog {
     DataCollectionExecutionStatus executionStatus;
 
     @Override
@@ -306,22 +282,9 @@ public final class VerificationJobInstance
     }
     ProgressLog lastProgressLog = Collections.max(group, Comparator.comparing(ProgressLog::getEndTime));
     Instant endTime = lastProgressLog.getEndTime();
-    Duration total = getExecutionDuration();
-    Duration completedTillNow = Duration.between(getStartTime(), endTime);
-
+    Duration total = getResolvedJob().getExecutionDuration();
+    Duration completedTillNow = Duration.between(getResolvedJob().getAnalysisStartTime(startTime), endTime);
     return (int) (completedTillNow.get(ChronoUnit.SECONDS) * 100.0 / total.get(ChronoUnit.SECONDS));
-  }
-
-  private Duration getExecutionDuration() {
-    Duration jobDuration = getResolvedJob().getDuration();
-    if (VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType())) {
-      return jobDuration;
-    }
-    return jobDuration.plus(jobDuration);
-  }
-
-  private boolean isHealthJob() {
-    return !VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType());
   }
 
   public Duration getRemainingTime(Instant currentTime) {
@@ -334,13 +297,9 @@ public final class VerificationJobInstance
       if (percentage == 0) {
         return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
       }
-      Instant startTimeForDuration = getStartTime();
-      if (!isHealthJob()) {
-        startTimeForDuration =
-            Collections.max(Arrays.asList(getStartTime().plus(dataCollectionDelay), Instant.ofEpochMilli(createdAt)));
-      }
+      Instant startTimeForDuration = getResolvedJob().eligibleToStartAnalysisTime(
+          getStartTime(), getDataCollectionDelay(), Instant.ofEpochMilli(createdAt));
       Duration durationTillNow = Duration.between(startTimeForDuration, currentTime);
-
       Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
       return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }

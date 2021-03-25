@@ -5,6 +5,7 @@ import static io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStat
 import static io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus.TIMEOUT;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
@@ -18,6 +19,7 @@ import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
+import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -26,6 +28,7 @@ import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ActivityVerificationState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
@@ -43,6 +46,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -117,6 +121,38 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
     AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
     assertThat(stateMachine).isNotNull();
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateStateMachine_forHealth() {
+    String verificationTaskId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    VerificationTask verificationTask =
+        VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId).cvConfigId(cvConfigId).build();
+    verificationTask.setUuid(verificationTaskId);
+    hPersistence.save(verificationTask);
+    Instant startTime = Instant.parse("2020-07-27T10:45:00.000Z");
+    Instant endTime = Instant.parse("2020-07-27T10:50:00.000Z");
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .deploymentStartTime(startTime.minus(Duration.ofMinutes(2)))
+            .startTime(startTime)
+            .resolvedJob(verificationJobService.fromDto(createHealthVerificationJobDTO()))
+            .build();
+    verificationJobInstance.setUuid(verificationJobInstanceId);
+    hPersistence.save(verificationJobInstance);
+    AnalysisInput inputs =
+        AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
+
+    AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
+    assertThat(stateMachine).isNotNull();
+    ActivityVerificationState healthVerificationState = (ActivityVerificationState) stateMachine.getCurrentState();
+    assertThat(healthVerificationState.getPreActivityVerificationStartTime())
+        .isEqualTo(startTime.minus(Duration.ofMinutes(5)));
+    assertThat(healthVerificationState.getPostActivityVerificationStartTime()).isEqualTo(startTime);
+  }
+
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
@@ -368,6 +404,19 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setDuration("15m");
     return canaryVerificationJobDTO;
+  }
+
+  private VerificationJobDTO createHealthVerificationJobDTO() {
+    HealthVerificationJobDTO healthVerificationJob = new HealthVerificationJobDTO();
+    healthVerificationJob.setIdentifier(generateUuid());
+    healthVerificationJob.setJobName("jobName");
+    healthVerificationJob.setDuration("5m");
+    healthVerificationJob.setServiceIdentifier(generateUuid());
+    healthVerificationJob.setProjectIdentifier(generateUuid());
+    healthVerificationJob.setOrgIdentifier(generateUuid());
+    healthVerificationJob.setEnvIdentifier(generateUuid());
+    healthVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
+    return healthVerificationJob;
   }
 
   @Test

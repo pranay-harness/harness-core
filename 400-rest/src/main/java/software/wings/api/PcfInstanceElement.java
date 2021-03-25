@@ -1,9 +1,8 @@
-/**
- *
- */
-
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -31,6 +30,7 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "PcfInstanceElementKeys")
+@OwnedBy(CDP)
 public class PcfInstanceElement implements ContextElement, VerificationElement {
   private String uuid;
   private String applicationId;

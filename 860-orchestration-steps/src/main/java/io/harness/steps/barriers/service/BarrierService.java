@@ -19,7 +19,7 @@ public interface BarrierService {
   BarrierExecutionInstance update(BarrierExecutionInstance barrierExecutionInstance);
   BarrierExecutionInstance updateState(String uuid, State state);
   List<BarrierExecutionInstance> findByIdentifierAndPlanExecutionId(String identifier, String planExecutionId);
-  BarrierExecutionInstance findByPlanNodeId(String planNodeId);
+  BarrierExecutionInstance findByPlanNodeIdAndPlanExecutionId(String planNodeId, String planExecutionId);
   List<BarrierExecutionInstance> findByStageIdentifierAndPlanExecutionIdAnsStateIn(
       String stageIdentifier, String planExecutionId, Set<State> stateSet);
   List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier);

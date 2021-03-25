@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
+import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
+
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
@@ -9,6 +11,7 @@ import io.harness.ngtriggers.eventmapper.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.TriggerFilterStore;
+import io.harness.ngtriggers.helpers.WebhookEventPublisher;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapper {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final TriggerFilterStore triggerFilterHelper;
+  private final WebhookEventPublisher webhookEventPublisher;
 
   public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
     String projectFqn = getProjectFqn(triggerWebhookEvent);
@@ -36,7 +40,10 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
           .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
           .build();
     }
+
     WebhookPayloadData webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
+
+    publishPushEvent(webhookPayloadData);
 
     // Generate list of all filters to be applied
     FilterRequestData filterRequestData =
@@ -64,6 +71,28 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
     }
 
     return webhookEventMappingResponse;
+  }
+
+  /**
+   * This is temporary, added specifically to support TI use-case.
+   * We only publish "PUSH" git event.
+   * This will become part of common service, where different subscribers can subscribe for
+   * eventType, triggerType to receive events.
+   * <p>
+   * Then this can be removed.
+   *
+   * @param webhookPayloadData
+   */
+  @VisibleForTesting
+  void publishPushEvent(WebhookPayloadData webhookPayloadData) {
+    try {
+      if (webhookPayloadData.getParseWebhookResponse().hasPush()) {
+        webhookEventPublisher.publishGitWebhookEvent(webhookPayloadData, PUSH);
+      }
+    } catch (Exception e) {
+      log.error("Failed to send webhook event {} to events framework: {}",
+          webhookPayloadData.getOriginalEvent().getUuid(), e);
+    }
   }
 
   private String getProjectFqn(TriggerWebhookEvent triggerWebhookEvent) {

@@ -1,14 +1,15 @@
 package io.harness.mongo.iterator.provider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 
-import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import java.time.Duration;
 import java.util.List;
@@ -22,7 +23,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@Singleton
+@OwnedBy(CDC)
 public class SpringPersistenceProvider<T extends PersistentIterable>
     implements PersistenceProvider<T, SpringFilterExpander> {
   private final MongoTemplate persistence;
@@ -31,18 +32,18 @@ public class SpringPersistenceProvider<T extends PersistentIterable>
     this.persistence = persistence;
   }
 
-  public Query createQuery(Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
+  private Query createQuery(String fieldName, SpringFilterExpander filterExpander) {
     Query query = new Query();
-    query.restrict(clazz).with(Sort.by(new Order(Sort.Direction.ASC, fieldName)));
+    query.with(Sort.by(new Order(Sort.Direction.ASC, fieldName)));
     if (filterExpander != null) {
       filterExpander.filter(query);
     }
     return query;
   }
 
-  public Query createQuery(long now, Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
+  private Query createQuery(long now, String fieldName, SpringFilterExpander filterExpander) {
     Criteria criteria = new Criteria();
-    Query query = createQuery(clazz, fieldName, filterExpander);
+    Query query = createQuery(fieldName, filterExpander);
     if (filterExpander == null) {
       query.addCriteria(
           criteria.orOperator(Criteria.where(fieldName).lt(now), Criteria.where(fieldName).exists(false)));
@@ -64,7 +65,7 @@ public class SpringPersistenceProvider<T extends PersistentIterable>
   public T obtainNextInstance(long base, long throttled, Class<T> clazz, String fieldName,
       SchedulingType schedulingType, Duration targetInterval, SpringFilterExpander filterExpander) {
     long now = currentTimeMillis();
-    Query query = createQuery(now, clazz, fieldName, filterExpander);
+    Query query = createQuery(now, fieldName, filterExpander);
     Update update = new Update();
     switch (schedulingType) {
       case REGULAR:
@@ -85,7 +86,7 @@ public class SpringPersistenceProvider<T extends PersistentIterable>
 
   @Override
   public T findInstance(Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
-    return persistence.findOne(createQuery(clazz, fieldName, filterExpander), clazz);
+    return persistence.findOne(createQuery(fieldName, filterExpander), clazz);
   }
 
   @Override

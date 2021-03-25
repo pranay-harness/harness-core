@@ -20,6 +20,7 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:io_debezium_debezium_api",
         "@maven//:io_debezium_debezium_connector_mongodb",
+        "@maven//:io_debezium_debezium_core",
         "@maven//:io_debezium_debezium_embedded",
         "@maven//:org_apache_kafka_connect_api",
         "@maven//:org_apache_kafka_connect_runtime",

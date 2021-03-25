@@ -56,6 +56,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
     Set<WebhookEvent> events = new HashSet<>(map.get(GITHUB));
     events.addAll(map.get(WebhookSourceRepo.GITLAB));
     events.addAll(map.get(WebhookSourceRepo.BITBUCKET));
+    events.addAll(map.get(WebhookSourceRepo.AWS_CODECOMMIT));
 
     Set<WebhookEvent> allEvents = EnumSet.allOf(WebhookEvent.class);
     Set<WebhookEvent> eventsNotPresent = new HashSet<>();

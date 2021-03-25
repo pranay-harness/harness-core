@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
@@ -63,7 +63,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DataFetcherUtils {
   public static final String GENERIC_EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
   public static final String NEGATIVE_LIMIT_ARG_MSG = "Limit argument accepts only non negative values";

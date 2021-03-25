@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by anubhaw on 2/14/17.
  */
 @Slf4j
+@Deprecated
 public class ExecutionLogCallback implements LogCallback {
   private transient DelegateLogService logService;
   private String accountId;

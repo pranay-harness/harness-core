@@ -4,7 +4,7 @@ import static software.wings.graphql.datafetcher.ce.recommendation.entity.Recomm
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.newCpuHistogram;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.newCpuHistogramV2;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.histogram.Histogram;
 
@@ -12,7 +12,7 @@ import java.time.Instant;
 import lombok.Data;
 
 @Data
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class ContainerState {
   private final String namespace;
   private final String podName;

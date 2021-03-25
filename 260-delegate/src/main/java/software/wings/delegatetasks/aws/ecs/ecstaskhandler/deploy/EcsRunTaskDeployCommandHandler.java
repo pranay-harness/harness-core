@@ -7,7 +7,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
@@ -106,19 +106,29 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
       }
 
       ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    } catch (TimeoutException ex) {
+      prepareFailureResponse(executionLogCallback, ecsRunTaskDeployResponse, ex);
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsRunTaskDeployResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
-      log.error("Completed operation with errors");
-      log.error(ExceptionUtils.getMessage(ex), ex);
-      Misc.logAllMessages(ex, executionLogCallback);
-
-      ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      ecsRunTaskDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
+      prepareFailureResponse(executionLogCallback, ecsRunTaskDeployResponse, ex);
     }
 
     return EcsCommandExecutionResponse.builder()
         .commandExecutionStatus(ecsRunTaskDeployResponse.getCommandExecutionStatus())
         .ecsCommandResponse(ecsRunTaskDeployResponse)
         .build();
+  }
+
+  private void prepareFailureResponse(
+      ExecutionLogCallback executionLogCallback, EcsRunTaskDeployResponse ecsRunTaskDeployResponse, Exception ex) {
+    log.error("Completed operation with errors");
+    log.error(ExceptionUtils.getMessage(ex), ex);
+    Misc.logAllMessages(ex, executionLogCallback);
+
+    ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    ecsRunTaskDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
   }
 
   private void executeTaskDefinitionsParseAsRegisterTaskDefinitionRequest(

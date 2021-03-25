@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
@@ -70,7 +71,8 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -330,11 +332,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
+@OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.
@@ -3330,6 +3333,10 @@ public class DelegateServiceImpl implements DelegateService {
           return null;
         }
 
+        if (delegateId != null && delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
+          return assignTask(delegateId, taskId, delegateTask);
+        }
+
         if (featureFlagService.isEnabled(FeatureName.PER_AGENT_CAPABILITIES, accountId)) {
           return assignTask(delegateId, taskId, delegateTask);
         }
@@ -3356,6 +3363,12 @@ public class DelegateServiceImpl implements DelegateService {
       log.info("Task not found or was already assigned");
       return;
     }
+
+    if (delegateTask.isForceExecute()) {
+      log.info("Task is set for force execution");
+      return;
+    }
+
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (!isValidationComplete(delegateTask)) {
@@ -3757,12 +3770,8 @@ public class DelegateServiceImpl implements DelegateService {
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
 
-      Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
-
-      if (delegate != null) {
-        delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
-            delegateTask.getAccountId(), taskId, delegate.getUuid(), delegate.getDelegateGroupId());
-      }
+      delegateTaskStatusObserverSubject.fireInform(
+          DelegateTaskStatusObxxxxxxxx:onTaskAssigned, delegateTask.getAccountId(), taskId, delegateId);
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }
