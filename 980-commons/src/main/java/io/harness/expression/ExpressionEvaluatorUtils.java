@@ -34,15 +34,15 @@ import org.apache.commons.text.StrSubstitutor;
 @UtilityClass
 @Slf4j
 public class ExpressionEvaluatorUtils {
-  public final int EXPANSION_LIMIT = 6 * 1024 * 1024; // 6 MB
-  public final int EXPANSION_MULTIPLIER_LIMIT = 10;
-  public final int DEPTH_LIMIT = 10;
-  private final int DEBUG_LENGTH_LIMIT = 1 * 1024 * 1024; // 1 MB
+  public static final int EXPANSION_LIMIT = 6 * 1024 * 1024; // 6 MB
+  public static final int EXPANSION_MULTIPLIER_LIMIT = 10;
+  public static final int DEPTH_LIMIT = 10;
+  private static final int DEBUG_LENGTH_LIMIT = 1 * 1024 * 1024; // 1 MB
 
-  private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
+  private static final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private static final String REGEX = "[0-9]+";
 
-  public String substitute(
+  public static String substitute(
       ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
     if (expression == null) {
       return null;
@@ -61,7 +61,7 @@ public class ExpressionEvaluatorUtils {
     return substitute(expression, ctx, variableResolver, pattern, false);
   }
 
-  public String substituteSecured(
+  public static String substituteSecured(
       ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
     if (expression == null) {
       return null;
@@ -80,7 +80,7 @@ public class ExpressionEvaluatorUtils {
     return substituteSecretsSecured(expression, ctx, variableResolver, pattern);
   }
 
-  public String substitute(@NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver,
+  public static String substitute(@NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver,
       Pattern pattern, boolean newDelimiters) {
     StrSubstitutor substitutor = getSubstitutor(variableResolver, newDelimiters);
 
@@ -144,7 +144,7 @@ public class ExpressionEvaluatorUtils {
    * @param field the field name
    * @return value wrapped in optional if field is found, else Optional.none()
    */
-  public Optional<Object> fetchField(Object obj, String field) {
+  public static Optional<Object> fetchField(Object obj, String field) {
     if (obj == null || field == null) {
       return Optional.empty();
     }
@@ -167,11 +167,11 @@ public class ExpressionEvaluatorUtils {
    * @param functor       the functor which provides the evaluated and rendered values
    * @return the new object with updated objects (this can be done in-place or a new object can be returned)
    */
-  public Object updateExpressions(Object obj, ExpressionResolveFunctor functor) {
+  public static Object updateExpressions(Object obj, ExpressionResolveFunctor functor) {
     return updateExpressionsInternal(obj, functor, 250, new HashSet<>());
   }
 
-  private Object updateExpressionsInternal(
+  private static Object updateExpressionsInternal(
       Object obj, ExpressionResolveFunctor functor, int depth, Set<Integer> cache) {
     if (depth <= 0) {
       throw new CriticalExpressionEvaluationException("Recursion or too deep hierarchy in property interpretation");
@@ -210,7 +210,8 @@ public class ExpressionEvaluatorUtils {
     return updateExpressionFields(obj, functor, depth, cache);
   }
 
-  private Object updateExpressionFields(Object o, ExpressionResolveFunctor functor, int depth, Set<Integer> cache) {
+  private static Object updateExpressionFields(
+      Object o, ExpressionResolveFunctor functor, int depth, Set<Integer> cache) {
     if (o == null) {
       return null;
     }
@@ -264,7 +265,7 @@ public class ExpressionEvaluatorUtils {
     return o;
   }
 
-  private void updateExpressionFieldsSingleField(Object o, Field f, ExpressionResolveFunctor functor, int depth,
+  private static void updateExpressionFieldsSingleField(Object o, Field f, ExpressionResolveFunctor functor, int depth,
       Set<Integer> cache) throws IllegalAccessException {
     if (f == null) {
       return;
@@ -275,7 +276,7 @@ public class ExpressionEvaluatorUtils {
     f.set(o, updatedObj);
   }
 
-  private StrSubstitutor getSubstitutor(StrLookup<Object> variableResolver, boolean newDelimiters) {
+  private static StrSubstitutor getSubstitutor(StrLookup<Object> variableResolver, boolean newDelimiters) {
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setEnableSubstitutionInVariables(true);
     substitutor.setVariableResolver(variableResolver);
@@ -286,7 +287,7 @@ public class ExpressionEvaluatorUtils {
     return substitutor;
   }
 
-  private String resolveSecured(Matcher matcher, JexlContext ctx) {
+  private static String resolveSecured(Matcher matcher, JexlContext ctx) {
     StringBuffer sb = new StringBuffer();
     do {
       String name = matcher.group(0);
@@ -297,7 +298,7 @@ public class ExpressionEvaluatorUtils {
     return sb.toString();
   }
 
-  private String substituteSecretsSecured(
+  private static String substituteSecretsSecured(
       @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
     StrSubstitutor substitutor = getSubstitutor(variableResolver, false);
 
