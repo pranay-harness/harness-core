@@ -18,8 +18,10 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -89,6 +91,16 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   @Override
   public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
     return roleAssignmentRepository.deleteMulti(createCriteriaFromFilter(roleAssignmentFilter));
+  }
+
+  @Override
+  public List<RoleAssignment> insertAllIgnoringDuplicates(List<RoleAssignment> roleAssignments) {
+    return roleAssignmentRepository
+        .insertAllIgnoringDuplicates(
+            roleAssignments.stream().map(RoleAssignmentDBOMapper::toDBO).collect(Collectors.toList()))
+        .stream()
+        .map(RoleAssignmentDBOMapper::fromDBO)
+        .collect(Collectors.toList());
   }
 
   private Criteria createCriteriaFromFilter(RoleAssignmentFilter roleAssignmentFilter) {

@@ -20,6 +20,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -81,7 +82,11 @@ public class ACLDAOImpl implements ACLDAO {
 
   @Override
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    return aclRepository.insertAllIgnoringDuplicates(acls);
+    try {
+      return aclRepository.insertAllIgnoringDuplicates(acls);
+    } catch (DuplicateKeyException duplicateKeyException) {
+      return 0;
+    }
   }
 
   @Override

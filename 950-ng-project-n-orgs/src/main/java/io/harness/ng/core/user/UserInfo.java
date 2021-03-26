@@ -9,16 +9,19 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PL)
 public class UserInfo {
-  String uuid;
+  @EqualsAndHashCode.Include String uuid;
   String name;
   String email;
+  boolean admin;
   List<String> accountIds;
 }
