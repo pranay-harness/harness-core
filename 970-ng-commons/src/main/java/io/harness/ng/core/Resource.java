@@ -2,22 +2,25 @@ package io.harness.ng.core;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.KeyValuePair;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 @Data
 @Builder
+@JsonInclude(NON_NULL)
 @FieldNameConstants(innerTypeName = "ResourceKeys")
 public class Resource {
   @NotEmpty String type;
   @NotEmpty String identifier;
-  @Singular List<KeyValuePair> labels;
+  List<KeyValuePair> labels;
 }
