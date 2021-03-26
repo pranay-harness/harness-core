@@ -58,9 +58,13 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
         log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
             BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build());
-        responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
-        if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
-          deleteProcessedResponses(responsesToBeDeleted);
+
+        if (lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+          responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
+          if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
+            deleteProcessedResponses(responsesToBeDeleted);
+            responsesToBeDeleted.clear();
+          }
         }
       } catch (Exception ex) {
         log.info(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()));
