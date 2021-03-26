@@ -173,7 +173,7 @@ public enum FeatureName {
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
   AWS_SM_ASSUME_IAM_ROLE,
   SERVICE_DASHBOARD_NG,
-  VAULT_SSH_NAMESPACE;
+  VAULT_NAMESPACE;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
