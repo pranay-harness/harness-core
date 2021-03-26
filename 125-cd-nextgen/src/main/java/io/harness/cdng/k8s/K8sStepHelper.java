@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
+import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +17,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
@@ -143,6 +145,11 @@ public class K8sStepHelper {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
         return k8SDirectInfrastructure.getReleaseName();
+
+      case KUBERNETES_GCP:
+        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
+        return k8sGcpInfrastructure.getReleaseName();
+
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }

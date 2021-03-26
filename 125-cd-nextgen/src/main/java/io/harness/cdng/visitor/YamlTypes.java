@@ -55,6 +55,7 @@ public interface YamlTypes {
   String COMMIT_ID = "commitId";
   String NAMESPACE = "namespace";
   String RELEASE_NAME = "releaseName";
+  String CLUSTER = "cluster";
   String STORE_CONFIG_WRAPPER = "store";
 
   String SKIP_DRY_RUN = "skipDryRun";
