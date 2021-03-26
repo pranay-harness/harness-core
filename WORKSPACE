@@ -1774,7 +1774,7 @@ maven_install(
         "org.codehaus.mojo:animal-sniffer-annotations:1.18",
         "org.codehaus.plexus:plexus-utils:3.0.20",
         "org.codehaus.woodstox:stax2-api:4.2",
-        "org.conscrypt:conscrypt-openjdk-uber:2.2.1",
+        "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
         "org.coursera:metrics-datadog:1.1.13",
         "org.cryptacular:cryptacular:1.1.3",
         "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
