@@ -32,6 +32,7 @@ import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -161,8 +162,9 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
             .build();
     String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName);
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName,
+        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {

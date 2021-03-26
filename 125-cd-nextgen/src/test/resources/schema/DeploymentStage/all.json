@@ -2226,6 +2226,9 @@
             "source"
           ],
           "properties": {
+            "delegateSelectors": {
+              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
+            },
             "environmentVariables": {
               "type": "array",
               "items": {
