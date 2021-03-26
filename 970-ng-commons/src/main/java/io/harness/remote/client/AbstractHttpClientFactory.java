@@ -1,5 +1,6 @@
 package io.harness.remote.client;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
 import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 import static io.harness.security.JWTAuthenticationFilter.X_SOURCE_PRINCIPAL;
@@ -7,6 +8,7 @@ import static io.harness.security.JWTAuthenticationFilter.X_SOURCE_PRINCIPAL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
@@ -38,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@OwnedBy(PL)
 public abstract class AbstractHttpClientFactory {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;

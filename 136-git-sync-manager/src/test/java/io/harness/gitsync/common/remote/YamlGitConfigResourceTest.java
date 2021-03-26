@@ -1,9 +1,11 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
@@ -20,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class YamlGitConfigResourceTest extends GitSyncTestBase {
   @Inject YamlGitConfigResource yamlGitConfigResource;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -53,19 +56,18 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
                                             .build();
     GitSyncConfigDTO gitSyncConfigDTO =
         buildGitSyncDTO(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
-    GitSyncConfigDTO ret = yamlGitConfigResource.create(PROJECT_ID, ORG_ID, ACCOUNT_ID, gitSyncConfigDTO);
+    GitSyncConfigDTO ret = yamlGitConfigResource.create(ACCOUNT_ID, gitSyncConfigDTO);
     assertThat(ret).isEqualTo(gitSyncConfigDTO);
   }
 
   private GitSyncConfigDTO buildGitSyncDTO(
       List<GitSyncFolderConfigDTO> rootFolder, String connectorId, String repo, String branch, String identifier) {
     return GitSyncConfigDTO.builder()
-        .accountId(ACCOUNT_ID)
-        .organizationId(ORG_ID)
-        .projectId(PROJECT_ID)
+        .orgIdentifier(ORG_ID)
+        .projectIdentifier(PROJECT_ID)
         .repo(repo)
         .branch(branch)
-        .gitConnectorId(connectorId)
+        .gitConnectorRef(connectorId)
         .identifier(identifier)
         .gitSyncFolderConfigDTOs(rootFolder)
         .build();
@@ -83,9 +85,9 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
                                             .build();
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
-    gitSyncConfigDTO.setGitConnectorId(CONNECTOR_ID_1);
-    GitSyncConfigDTO ret = yamlGitConfigResource.update(PROJECT_ID, ORG_ID, ACCOUNT_ID, IDENTIFIER, gitSyncConfigDTO);
-    assertThat(ret.getGitConnectorId()).isEqualTo(CONNECTOR_ID_1);
+    gitSyncConfigDTO.setGitConnectorRef(CONNECTOR_ID_1);
+    GitSyncConfigDTO ret = yamlGitConfigResource.update(ACCOUNT_ID, gitSyncConfigDTO);
+    assertThat(ret.getGitConnectorRef()).isEqualTo(CONNECTOR_ID_1);
   }
 
   @Test
@@ -107,7 +109,7 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
     gitSyncConfigDTO.setGitSyncFolderConfigDTOs(Arrays.asList(rootFolder, rootFolder_1));
-    GitSyncConfigDTO ret = yamlGitConfigResource.update(PROJECT_ID, ORG_ID, ACCOUNT_ID, IDENTIFIER, gitSyncConfigDTO);
+    GitSyncConfigDTO ret = yamlGitConfigResource.update(ACCOUNT_ID, gitSyncConfigDTO);
     assertThat(ret.getGitSyncFolderConfigDTOs().size()).isEqualTo(2);
   }
 
@@ -152,6 +154,6 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
   private GitSyncConfigDTO saveYamlGitConfig(
       List<GitSyncFolderConfigDTO> rootFolder, String connectorId, String repo, String branch, String identifier) {
     GitSyncConfigDTO gitSyncConfigDTO = buildGitSyncDTO(rootFolder, connectorId, repo, branch, identifier);
-    return yamlGitConfigResource.create(PROJECT_ID, ORG_ID, ACCOUNT_ID, gitSyncConfigDTO);
+    return yamlGitConfigResource.create(ACCOUNT_ID, gitSyncConfigDTO);
   }
 }

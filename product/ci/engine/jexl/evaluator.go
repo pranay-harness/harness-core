@@ -33,12 +33,11 @@ var (
 
 // EvaluateJEXL evaluates list of JEXL expressions based on outputs. It does nothing if expression is not JEXL.
 // It only sends the expressions which matches jexl expression regex to expression service
-// If force is set to true, it force evaulates all the expressions.
 // Returns a map with key as JEXL expression and value as evaluated value of JEXL expression
 func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-	force bool, log *zap.SugaredLogger) (map[string]string, error) {
+	isSkipCondition bool, log *zap.SugaredLogger) (map[string]string, error) {
 	start := time.Now()
-	arg, err := getRequestArg(stepID, expressions, o, force, log)
+	arg, err := getRequestArg(stepID, expressions, o, isSkipCondition, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to create arguments for JEXL evaluation",
@@ -87,7 +86,7 @@ func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o ou
 }
 
 // getRequestArg returns arguments for expression service request to evaluate JEXL expression
-func getRequestArg(stepID string, expressions []string, o output.StageOutput, force bool,
+func getRequestArg(stepID string, expressions []string, o output.StageOutput, isSkipCondition bool,
 	log *zap.SugaredLogger) (*pb.ExpressionRequest, error) {
 	data, err := json.Marshal(o)
 	if err != nil {
@@ -97,13 +96,14 @@ func getRequestArg(stepID string, expressions []string, o output.StageOutput, fo
 
 	var queries []*pb.ExpressionQuery
 	for _, expression := range expressions {
-		if !force && !jexlexpr.IsJEXL(expression) {
+		if !isSkipCondition && !jexlexpr.IsJEXL(expression) {
 			continue
 		}
 
 		queries = append(queries, &pb.ExpressionQuery{
-			Jexl:        expression,
-			JsonContext: jsonStr,
+			Jexl:            expression,
+			JsonContext:     jsonStr,
+			IsSkipCondition: isSkipCondition,
 		})
 	}
 	req := &pb.ExpressionRequest{

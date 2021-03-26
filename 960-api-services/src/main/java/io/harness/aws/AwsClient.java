@@ -22,7 +22,7 @@ public interface AwsClient {
 
   List<Commit> fetchCommitInformation(AwsConfig awsConfig, String region, String repo, List<String> commitIds);
 
-  void confirmSnsSubscription(String confirmationMessage);
+  void confirmSnsSubscription(String confirmationMessage, String topicArnString);
 
   String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region);
 

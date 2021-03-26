@@ -128,4 +128,6 @@ public interface AuthService {
   void authorizeAppAccess(String accountId, String appId, User user, Action action);
 
   void auditLogin(List<String> accountIds, User loggedInUser);
+
+  void auditLogin2FA(List<String> accountIds, User loggedInUser);
 }

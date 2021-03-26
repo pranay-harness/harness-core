@@ -21,7 +21,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonIgnoreProperties(ignoreUnknown = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ArtifactoryConnector")
 public class ArtifactoryConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {

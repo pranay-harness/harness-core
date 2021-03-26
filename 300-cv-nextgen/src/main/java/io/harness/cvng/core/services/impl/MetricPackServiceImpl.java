@@ -41,6 +41,9 @@ public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
 
+  static final List<String> NEWRELIC_METRICPACK_FILES =
+      Lists.newArrayList("/newrelic/metric-packs/performance-pack.yml");
+
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
           "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
@@ -118,7 +121,7 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   @Override
   public void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesThresholds();
+    List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesTypes();
 
     for (DataSourceType dataSourceType : dataSourceTypes) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
@@ -147,6 +150,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case STACKDRIVER:
         yamlFileNames.addAll(STACKDRIVER_METRICPACK_FILES);
+        break;
+      case NEW_RELIC:
+        yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
         break;
       default:
         unhandled(dataSourceType);

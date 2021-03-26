@@ -23,11 +23,13 @@ public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialD
     JsonNode parentJsonNode = jp.getCodec().readTree(jp);
     JsonNode typeNode = parentJsonNode.get("type");
     JsonNode authSpec = parentJsonNode.get("spec");
+    JsonNode crossAccNode = parentJsonNode.get("crossAccountAccess");
 
     AwsCredentialType type = getType(typeNode);
     AwsCredentialSpecDTO awsCredentialSpecDTO = null;
-
     ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    CrossAccountAccessDTO crossAccountAccessDTO =
+        mapper.readValue(crossAccNode.toString(), CrossAccountAccessDTO.class);
     if (type == AwsCredentialType.MANUAL_CREDENTIALS) {
       awsCredentialSpecDTO = mapper.readValue(authSpec.toString(), AwsManualConfigSpecDTO.class);
     } else if (type == AwsCredentialType.INHERIT_FROM_DELEGATE) {
@@ -36,7 +38,11 @@ public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialD
       }
     }
 
-    return AwsCredentialDTO.builder().awsCredentialType(type).config(awsCredentialSpecDTO).build();
+    return AwsCredentialDTO.builder()
+        .awsCredentialType(type)
+        .config(awsCredentialSpecDTO)
+        .crossAccountAccess(crossAccountAccessDTO)
+        .build();
   }
 
   AwsCredentialType getType(JsonNode typeNode) {

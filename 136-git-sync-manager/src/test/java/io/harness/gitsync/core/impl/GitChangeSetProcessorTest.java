@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.DiffResult;
@@ -37,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class GitChangeSetProcessorTest extends CategoryTest {
   @Mock private GitSyncService gitSyncService;
   @Mock private GitCommitService gitCommitService;
@@ -140,8 +143,8 @@ public class GitChangeSetProcessorTest extends CategoryTest {
             .rootFolders(
                 Collections.singletonList(YamlGitConfigDTO.RootFolder.builder().rootFolder("filePath").build()))
             .branch(branch)
-            .accountId(accountId)
-            .gitConnectorId("id")
+            .accountIdentifier(accountId)
+            .gitConnectorRef("id")
             .repo(repo)
             .build();
     doReturn(Collections.singletonList(yamlGitConfigDTO))

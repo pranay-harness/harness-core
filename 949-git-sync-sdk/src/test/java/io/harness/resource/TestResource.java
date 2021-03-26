@@ -9,7 +9,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 
 @Path("test")
 @Produces({"application/json", "text/yaml", "text/html"})
@@ -18,8 +17,8 @@ public class TestResource {
   @Inject Tester tester;
 
   @POST
-  public ResponseDTO<SampleBean> get(@QueryParam("data") String stringToSave) {
-    final SampleBean save = tester.save(stringToSave);
+  public ResponseDTO<SampleBean> get() {
+    final SampleBean save = tester.save();
     return ResponseDTO.newResponse(save);
   }
 }

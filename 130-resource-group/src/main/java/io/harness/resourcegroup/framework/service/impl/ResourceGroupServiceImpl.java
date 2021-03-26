@@ -175,8 +175,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
-    if ((resourceGroup.getFullScopeSelected() && isNotEmpty(resourceGroup.getResourceSelectors()))
-        || (!resourceGroup.getFullScopeSelected() && isEmpty(resourceGroup.getResourceSelectors()))) {
+    if (TRUE.equals(resourceGroup.getFullScopeSelected()) && isNotEmpty(resourceGroup.getResourceSelectors())) {
       return false;
     }
 

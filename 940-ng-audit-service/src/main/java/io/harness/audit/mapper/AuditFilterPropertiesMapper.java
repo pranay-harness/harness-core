@@ -1,5 +1,8 @@
 package io.harness.audit.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.entities.AuditFilterProperties;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -10,6 +13,7 @@ import io.harness.ng.core.mapper.TagMapper;
 import com.google.inject.Singleton;
 import org.modelmapper.ModelMapper;
 
+@OwnedBy(PL)
 @Singleton
 public class AuditFilterPropertiesMapper
     implements FilterPropertiesMapper<AuditFilterPropertiesDTO, AuditFilterProperties> {

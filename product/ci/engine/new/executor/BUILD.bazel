@@ -1,0 +1,51 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "addon_executor.go",
+        "async_executor.go",
+        "step_executor.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/ci/engine/new/executor",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//910-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
+        "//commons/go/lib/utils:go_default_library",
+        "//product/ci/addon/grpc/client:go_default_library",
+        "//product/ci/addon/proto:go_default_library",
+        "//product/ci/engine/new/state:go_default_library",
+        "//product/ci/engine/output:go_default_library",
+        "//product/ci/engine/proto:go_default_library",
+        "//product/ci/engine/status:go_default_library",
+        "@com_github_grpc_ecosystem_go_grpc_middleware//retry:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@org_golang_google_grpc//status:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "addon_executor_test.go",
+        "async_executor_test.go",
+        "step_executor_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//910-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
+        "//commons/go/lib/logs:go_default_library",
+        "//product/ci/addon/grpc/client:go_default_library",
+        "//product/ci/addon/grpc/client/mocks:go_default_library",
+        "//product/ci/addon/proto:go_default_library",
+        "//product/ci/engine/new/executor/mocks:go_default_library",
+        "//product/ci/engine/output:go_default_library",
+        "//product/ci/engine/proto:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

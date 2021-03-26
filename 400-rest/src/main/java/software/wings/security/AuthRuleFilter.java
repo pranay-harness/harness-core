@@ -20,6 +20,7 @@ import io.harness.beans.FeatureName;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -29,6 +30,7 @@ import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
@@ -47,6 +49,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -109,6 +112,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
+  @Inject private ApiKeyService apiKeyService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -118,6 +122,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
+  private FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -130,7 +135,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils) {
+      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils,
+      FeatureFlagService featureFlagService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -139,6 +145,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.graphQLUtils = graphQLUtils;
+    this.featureFlagService = featureFlagService;
   }
 
   private boolean isAuthFilteringExempted(String uri) {
@@ -189,6 +196,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+    if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+      if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
+        String apiKey = requestContext.getHeaderString("X-Api-Key");
+        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+      }
+    }
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
@@ -204,10 +222,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
-    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
-
-    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     boolean isExternalApi = externalAPI();
 
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
@@ -339,12 +353,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     } else {
       isWhitelisted = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(accountId, remoteHost, featureName);
     }
+
     if (!isWhitelisted) {
       String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
       log.warn(msg);
-      if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)
+          && requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
       }
+
       throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
     }
   }

@@ -1,8 +1,13 @@
 package io.harness.accesscontrol.acl.repository;
 
+import static io.harness.accesscontrol.acl.models.ACL.RESOURCE_GROUP_IDENTIFIER_KEY;
+import static io.harness.accesscontrol.acl.models.ACL.ROLE_IDENTIFIER_KEY;
+import static io.harness.accesscontrol.acl.models.ACL.USER_GROUP_IDENTIFIER_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.ACL.ACLKeys;
-import io.harness.accesscontrol.acl.models.SourceMetadata.SourceMetadataKeys;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,14 +21,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
 public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
   private final MongoTemplate mongoTemplate;
-  private static final String ROLE_IDENTIFIER_KEY = ACLKeys.sourceMetadata + "." + SourceMetadataKeys.roleIdentifier;
-  private static final String RESOURCE_GROUP_IDENTIFIER_KEY =
-      ACLKeys.sourceMetadata + "." + SourceMetadataKeys.resourceGroupIdentifier;
 
   private boolean isDuplicateKeyException(BulkOperationException ex) {
     int duplicateKeyErrorCode = 11000;
@@ -42,6 +45,13 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
       }
       return 0;
     }
+  }
+
+  @Override
+  public List<ACL> findByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
+    Criteria criteria = Criteria.where(USER_GROUP_IDENTIFIER_KEY).is(userGroupIdentifier);
+    criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
+    return mongoTemplate.find(new Query(criteria), ACL.class);
   }
 
   @Override

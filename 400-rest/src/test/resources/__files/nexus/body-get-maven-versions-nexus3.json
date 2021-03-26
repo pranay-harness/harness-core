@@ -7,7 +7,7 @@
     "name" : "myartifact",
     "version" : "1.0",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war",
       "path" : "mygroup/myartifact/1.0/myartifact-1.0.war",
       "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjFkYzQxOWYyMGZmNDY4ZjU",
       "repository" : "maven-releases",
@@ -17,7 +17,7 @@
         "md5" : "d41d8cd98f00b204e9800998ecf8427e"
       }
     }, {
-      "downloadUrl" : "https://nexus3.harness.io/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.md5",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.md5",
       "path" : "mygroup/myartifact/1.0/myartifact-1.0.war.md5",
       "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YmE3YTE1OTYwNzUxZTE4ZjQ",
       "repository" : "maven-releases",
@@ -27,7 +27,7 @@
         "md5" : "74be16979710d4c4e7c6647856088456"
       }
     }, {
-      "downloadUrl" : "https://nexus3.harness.io/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.sha1",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.sha1",
       "path" : "mygroup/myartifact/1.0/myartifact-1.0.war.sha1",
       "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YmUyYzliZWU1NGMwMTllNzI",
       "repository" : "maven-releases",

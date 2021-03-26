@@ -42,6 +42,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
@@ -89,6 +90,7 @@ import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
@@ -228,6 +230,9 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsCVConfigTransformer.class);
       bind(CVConfigTransformer.class)
+          .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+          .to(NewRelicCVConfigTransformer.class);
+      bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
           .to(SplunkCVConfigTransformer.class);
       bind(CVConfigTransformer.class)
@@ -310,6 +315,7 @@ public class CVServiceModule extends AbstractModule {
           MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
           .to(AppDynamicsCVConfigUpdatableEntity.class);
+      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER)
           .to(StackDriverCVConfigUpdatableEntity.class);
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
@@ -329,6 +335,9 @@ public class CVServiceModule extends AbstractModule {
     bind(MonitoringSourceImportStatusCreator.class)
         .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
         .to(SplunkService.class);
+    bind(MonitoringSourceImportStatusCreator.class)
+        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+        .to(NewRelicService.class);
   }
 
   @Provides

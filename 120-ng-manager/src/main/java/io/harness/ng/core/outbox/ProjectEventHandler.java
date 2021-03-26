@@ -1,6 +1,9 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.ActionConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
@@ -29,6 +32,7 @@ import com.google.inject.name.Named;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class ProjectEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;
@@ -76,7 +80,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .action(ActionConstants.CREATE_ACTION)
                                 .module(ModuleType.CORE)
                                 .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectCreateEvent.getProjectDTO()).build()))
+                                    ProjectRequest.builder().project(projectCreateEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(outboxEvent.getResource())
                                 .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
@@ -97,9 +101,9 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .action(ActionConstants.UPDATE_ACTION)
                                 .module(ModuleType.CORE)
                                 .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectUpdateEvent.getNewProjectDTO()).build()))
+                                    ProjectRequest.builder().project(projectUpdateEvent.getNewProject()).build()))
                                 .oldYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectUpdateEvent.getOldProjectDTO()).build()))
+                                    ProjectRequest.builder().project(projectUpdateEvent.getOldProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(outboxEvent.getResource())
                                 .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
@@ -120,7 +124,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .action(ActionConstants.DELETE_ACTION)
                                 .module(ModuleType.CORE)
                                 .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectDeleteEvent.getProjectDTO()).build()))
+                                    ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(outboxEvent.getResource())
                                 .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
@@ -141,7 +145,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .action(ActionConstants.RESTORE_ACTION)
                                 .module(ModuleType.CORE)
                                 .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectRestoreEvent.getProjectDTO()).build()))
+                                    ProjectRequest.builder().project(projectRestoreEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(outboxEvent.getResource())
                                 .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))

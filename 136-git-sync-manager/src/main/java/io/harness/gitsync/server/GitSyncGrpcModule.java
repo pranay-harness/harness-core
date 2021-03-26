@@ -43,6 +43,7 @@ public class GitSyncGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("git-sync")
   public ServiceManager serviceManager(Set<Service> services) {
     return new ServiceManager(services);
   }

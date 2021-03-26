@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.exception.FailureType.TIMEOUT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -200,6 +202,33 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(ecsRunTaskStateExecutionData);
+    assertThat(executionResponse.getFailureTypes()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseEcsRunTask_Timeout() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    EcsCommandExecutionResponse ecsCommandExecutionResponse =
+        EcsCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    EcsRunTaskDeployResponse ecsRunTaskDeployResponse = EcsRunTaskDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .timeoutFailure(true)
+                                                            .build();
+    EcsRunTaskStateExecutionData ecsRunTaskStateExecutionData = new EcsRunTaskStateExecutionData();
+    ecsRunTaskStateExecutionData.setTaskType(TaskType.ECS_COMMAND_TASK);
+    ecsRunTaskStateExecutionData.setActivityId(ACTIVITY_ID);
+    ecsRunTaskStateExecutionData.setAppId(APP_ID);
+    ecsCommandExecutionResponse.setEcsCommandResponse(ecsRunTaskDeployResponse);
+    doReturn(ecsRunTaskStateExecutionData).when(mockContext).getStateExecutionData();
+    doReturn(APP_ID).when(mockContext).getAppId();
+    ExecutionResponse executionResponse =
+        state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, ecsCommandExecutionResponse));
+    verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(ecsRunTaskStateExecutionData);
+    assertThat(executionResponse.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test
