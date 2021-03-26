@@ -9,4 +9,4 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.PL)
-public interface MigrationRepository extends PagingAndSortingRepository<AccessControlMigration, String> {}
+public interface AccessControlMigrationRepository extends PagingAndSortingRepository<AccessControlMigration, String> {}

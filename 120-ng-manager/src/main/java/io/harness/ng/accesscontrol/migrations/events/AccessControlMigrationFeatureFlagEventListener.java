@@ -62,7 +62,6 @@ import org.springframework.data.domain.Pageable;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlMigrationFeatureFlagEventListener implements MessageListener {
-  private static final String CG_ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
   private static final String ACCOUNT_ADMIN_ROLE_IDENTIFIER = "_account_admin";
   private static final String ORG_ADMIN_ROLE_IDENTIFIER = "_organization_admin";
   private static final String PROJECT_ADMIN_ROLE_IDENTIFIER = "_project_admin";
@@ -105,12 +104,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
 
   private String getRoleIdentifierForUser(
       UserInfo user, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    boolean admin =
-        Optional.ofNullable(user.getUserGroups())
-            .filter(userGroups
-                -> userGroups.stream().anyMatch(ug -> CG_ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(ug.getName())))
-            .isPresent();
-    if (admin) {
+    if (user.isAdmin()) {
       return levelToRolesMapping
           .get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
           .get(0);
@@ -165,8 +159,8 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     int maxIterations = 50;
     Set<UserInfo> users = new HashSet<>();
     while (maxIterations > 0) {
-      PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
-          userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
+      PageResponse<UserInfo> usersPage =
+          RestClientUtils.getResponse(userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null));
       if (isEmpty(usersPage.getResponse())) {
         break;
       }

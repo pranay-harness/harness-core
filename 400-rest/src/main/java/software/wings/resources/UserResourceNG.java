@@ -23,7 +23,6 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -44,16 +43,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(HarnessTeam.PL)
 public class UserResourceNG {
   private final UserService userService;
+  private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
-      @QueryParam("loadUserGroups") @DefaultValue("false") boolean loadUserGroups) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, loadUserGroups);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
 
     PageResponse<UserInfo> pageResponse =
         aPageResponse()
@@ -152,6 +151,11 @@ public class UserResourceNG {
         .email(user.getEmail())
         .name(user.getName())
         .uuid(user.getUuid())
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
         .accountIds(user.getAccountIds())
         .build();
   }

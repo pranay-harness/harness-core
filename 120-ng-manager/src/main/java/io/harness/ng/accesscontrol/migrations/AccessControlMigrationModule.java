@@ -7,6 +7,7 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAOImpl;
 import io.harness.ng.accesscontrol.migrations.events.AccessControlMigrationFeatureFlagEventListener;
+import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationServiceImpl;
 import io.harness.ng.core.event.MessageListener;
@@ -44,6 +45,7 @@ public class AccessControlMigrationModule extends AbstractModule {
   }
 
   public void registerRequiredBindings() {
+    requireBinding(AccessControlMigrationRepository.class);
     requireBinding(UserClient.class);
     requireBinding(NgUserService.class);
     requireBinding(ProjectService.class);

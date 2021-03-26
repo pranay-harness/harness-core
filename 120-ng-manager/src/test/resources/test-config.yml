@@ -178,9 +178,6 @@ accessControlAdminClient:
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-accessControlMigrationConfig:
-  enabled: ${ACCESS_CONTROL_MIGRATION_ENABLED:-true}
-
 resourceGroupClientConfig:
   baseUrl: ${RESOURCE_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
   connectTimeOutSeconds: 15

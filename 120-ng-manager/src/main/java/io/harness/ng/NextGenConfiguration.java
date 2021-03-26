@@ -12,7 +12,6 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.accesscontrol.migrations.AccessControlMigrationConfiguration;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
@@ -83,8 +82,6 @@ public class NextGenConfiguration extends Configuration {
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
   @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
-  @JsonProperty("accessControlMigrationConfig")
-  private AccessControlMigrationConfiguration accessControlMigrationConfig;
   @JsonProperty("resourceGroupClientConfig") private ServiceHttpClientConfig resourceGroupClientConfig;
   @JsonProperty("resourceGroupClientSecret") private String resourceGroupClientSecret;
 

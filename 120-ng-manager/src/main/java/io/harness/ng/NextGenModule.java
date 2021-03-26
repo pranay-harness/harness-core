@@ -248,9 +248,9 @@ public class NextGenModule extends AbstractModule {
         return new ThreadLocalUserProvider();
       }
     });
-    install(new NextGenPersistenceModule(
-        appConfig.getShouldConfigureWithPMS(), appConfig.getAccessControlMigrationConfig().isEnabled()));
+    install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
+    install(AccessControlMigrationModule.getInstance());
     install(new InviteModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
@@ -269,9 +269,6 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
-    if (appConfig.getAccessControlMigrationConfig().isEnabled()) {
-      install(AccessControlMigrationModule.getInstance());
-    }
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
