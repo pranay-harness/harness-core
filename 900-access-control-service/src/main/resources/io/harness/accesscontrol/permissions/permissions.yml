@@ -1,126 +1,126 @@
 permissions:
-  - identifier: core.account.edit
+  - identifier: core_account_edit
     name: Edit Account Settings
     status: ACTIVE
     allowedScopeLevels:
       - account
-  - identifier: core.account.delete
+  - identifier: core_account_delete
     name: Delete Account
     status: ACTIVE
     allowedScopeLevels:
       - account
-  - identifier: core.project.create
+  - identifier: core_project_create
     name: Create Project
     status: ACTIVE
     allowedScopeLevels:
       - organization
-  - identifier: core.project.view
+  - identifier: core_project_view
     name: View Project
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.project.edit
+  - identifier: core_project_edit
     name: Edit Project
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.project.delete
+  - identifier: core_project_delete
     name: Delete Project
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.organization.create
+  - identifier: core_organization_create
     name: Create Organization
     status: ACTIVE
     allowedScopeLevels:
       - account
-  - identifier: core.organization.view
+  - identifier: core_organization_view
     name: View Organization
     status: ACTIVE
     allowedScopeLevels:
       - organization
-  - identifier: core.organization.edit
+  - identifier: core_organization_edit
     name: Edit Organization
     status: ACTIVE
     allowedScopeLevels:
       - organization
-  - identifier: core.organization.delete
+  - identifier: core_organization_delete
     name: Delete Organization
     status: ACTIVE
     allowedScopeLevels:
       - organization
-  - identifier: core.secret.create
+  - identifier: core_secret_create
     name: Create Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.secret.view
+  - identifier: core_secret_view
     name: View Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.secret.edit
+  - identifier: core_secret_edit
     name: Edit Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.secret.delete
+  - identifier: core_secret_delete
     name: Delete Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.connector.create
+  - identifier: core_connector_create
     name: Create Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.connector.view
+  - identifier: core_connector_view
     name: View Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.connector.edit
+  - identifier: core_connector_edit
     name: Edit Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.connector.delete
+  - identifier: core_connector_delete
     name: Delete Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core.pipeline.view
+  - identifier: core_pipeline_view
     name: View Pipeline
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.pipeline.edit
+  - identifier: core_pipeline_edit
     name: Edit Pipeline
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.pipeline.delete
+  - identifier: core_pipeline_delete
     name: Delete Pipeline
     status: ACTIVE
     allowedScopeLevels:
       - project
-  - identifier: core.pipeline.execute
+  - identifier: core_pipeline_execute
     name: Run Pipeline
     status: ACTIVE
     allowedScopeLevels:
