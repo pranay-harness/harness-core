@@ -6,15 +6,27 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
+    <artifactId>980-java-agent</artifactId>
     <packaging>pom</packaging>
     <modules>
         <module>java-agent</module>
         <module>java-agent-boot</module>
         <module>java-agent-trampoline</module>
     </modules>
-    <artifactId>980-java-agent</artifactId>
-
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
-
-
