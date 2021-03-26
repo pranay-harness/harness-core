@@ -11,7 +11,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
-import io.harness.product.ci.scm.proto.BitbucketProvider;
+import io.harness.product.ci.scm.proto.BitbucketCloudProvider;
 import io.harness.product.ci.scm.proto.GithubProvider;
 import io.harness.product.ci.scm.proto.GitlabProvider;
 import io.harness.product.ci.scm.proto.Provider;
@@ -38,13 +38,13 @@ public class ScmGitProviderMapper {
   }
 
   private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
-    return Provider.newBuilder().setBitbucket(createBitbucketProvider(bitbucketConnector)).build();
+    return Provider.newBuilder().setBitbucketCloud(createBitbucketProvider(bitbucketConnector)).build();
   }
 
-  private BitbucketProvider createBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
+  private BitbucketCloudProvider createBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
     // todo @deepak: Implement the bitbucket type, currently confused about the two options
-    //  avaiable here
-    return BitbucketProvider.newBuilder().build();
+    //  avaiable here using bitbucket cloud for now
+    return BitbucketCloudProvider.newBuilder().build();
   }
 
   private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector) {
