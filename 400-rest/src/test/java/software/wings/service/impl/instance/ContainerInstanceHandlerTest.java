@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.model.HarnessLabelValues.colorBlue;
 import static io.harness.k8s.model.HarnessLabelValues.colorGreen;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -30,6 +31,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SER
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -43,6 +45,7 @@ import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -50,6 +53,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -92,6 +96,8 @@ import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
@@ -126,6 +132,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private InstanceService instanceService;
@@ -1987,5 +1994,206 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
     verify(instanceService, times(0)).save(any(Instance.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseNewPod() {
+    List<Instance> instancesInDb = asList(createK8sPodInstance("instance1", "release1", "namespace1"),
+        createK8sPodInstance("instance2", "release1", "namespace1"),
+        createK8sPodInstance("instance3", "release1", "namespace1"));
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("release1", "namespace1", "instance1", "instance2", "instance3", "instance4");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, singletonList("instance4"), emptyList());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseNoNewPods() {
+    List<Instance> instancesInDb = asList(createK8sPodInstance("instance1", "release1", "namespace1"),
+        createK8sPodInstance("instance2", "release1", "namespace1"),
+        createK8sPodInstance("instance3", "release1", "namespace1"));
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("release1", "namespace1", "instance1", "instance2", "instance3");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), emptyList());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseDeletedPods() {
+    List<Instance> instancesInDb = asList(createK8sPodInstance("instance1", "release1", "namespace1"),
+        createK8sPodInstance("instance2", "release1", "namespace1"),
+        createK8sPodInstance("instance3", "release1", "namespace1"));
+
+    K8sInstanceSyncResponse instanceSyncResponse = creteK8sPodSyncResponseWith("release1", "namespace1", "instance1");
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), asList("instance2", "instance3"));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseMixed() {
+    List<Instance> instancesInDb = asList(createK8sPodInstance("instance1", "release1", "namespace1"),
+        createK8sPodInstance("instance2", "release1", "namespace1"),
+        createK8sPodInstance("instance3", "release1", "namespace1"));
+
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("release1", "namespace1", "instance2", "instance4", "instance5");
+    assertSavedAndDeletedInstances(
+        instancesInDb, instanceSyncResponse, asList("instance4", "instance5"), asList("instance1", "instance3"));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareNewPods() {
+    List<Instance> instancesInDb = Arrays.asList(createK8sPodInstance("instance1", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance2", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance3", "releaseX", "namespaceY"),
+        createK8sPodInstance("instance4", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance5", "releaseY", "namespaceY"));
+
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2", "instance6");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, singletonList("instance6"), emptyList());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareNoNewPods() {
+    List<Instance> instancesInDb = Arrays.asList(createK8sPodInstance("instance1", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance2", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance3", "releaseX", "namespaceY"),
+        createK8sPodInstance("instance4", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance5", "releaseY", "namespaceY"));
+
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), emptyList());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareDeletedPods() {
+    List<Instance> instancesInDb = Arrays.asList(createK8sPodInstance("instance1", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance2", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance3", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance4", "releaseX", "namespaceY"),
+        createK8sPodInstance("instance5", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance6", "releaseY", "namespaceY"));
+
+    K8sInstanceSyncResponse instanceSyncResponse = creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance2");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), asList("instance1", "instance3"));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareMixed() {
+    List<Instance> instancesInDb = Arrays.asList(createK8sPodInstance("instance1", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance2", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance3", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance4", "releaseX", "namespaceX"),
+        createK8sPodInstance("instance5", "releaseX", "namespaceY"),
+        createK8sPodInstance("instance6", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance7", "releaseY", "namespaceY"));
+
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance2", "instance3", "instance8", "instance9");
+
+    assertSavedAndDeletedInstances(
+        instancesInDb, instanceSyncResponse, asList("instance8", "instance9"), asList("instance1", "instance4"));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldAddInstancesFromPerpetualTaskEvenIfNoAnyOtherInstancesExistsInDb() {
+    List<Instance> instancesInDb = Arrays.asList(createK8sPodInstance("instance4", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance5", "releaseY", "namespaceX"),
+        createK8sPodInstance("instance6", "releaseY", "namespaceY"));
+
+    K8sInstanceSyncResponse instanceSyncResponse =
+        creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2", "instance3");
+
+    assertSavedAndDeletedInstances(
+        instancesInDb, instanceSyncResponse, asList("instance1", "instance2", "instance3"), emptyList());
+  }
+
+  private void assertSavedAndDeletedInstances(List<Instance> instancesInDb, K8sInstanceSyncResponse syncResponse,
+      List<String> savedInstances, List<String> deletedInstances) {
+    ContainerInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder()
+            .appId(APP_ID)
+            .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+            .build();
+    infrastructureMapping.setUuid(UUID);
+
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(APP_ID, UUID);
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(
+        infrastructureMapping, K8sTaskExecutionResponse.builder().k8sTaskResponse(syncResponse).build());
+
+    ArgumentCaptor<Instance> savedInstancesCaptor = ArgumentCaptor.forClass(Instance.class);
+    ArgumentCaptor<Set<String>> deletedInstancesCaptor =
+        ArgumentCaptor.forClass((Class<Set<String>>) (Object) Set.class);
+
+    // don't care about the number of calls until we save/delete right instances
+    verify(instanceService, atLeast(0)).saveOrUpdate(savedInstancesCaptor.capture());
+    verify(instanceService, atLeast(0)).delete(deletedInstancesCaptor.capture());
+
+    assertThat(savedInstancesCaptor.getAllValues()
+                   .stream()
+                   .map(Instance::getInstanceInfo)
+                   .map(K8sPodInfo.class ::cast)
+                   .map(K8sPodInfo::getPodName))
+        .containsExactlyInAnyOrderElementsOf(savedInstances);
+    assertThat(deletedInstancesCaptor.getAllValues().stream().flatMap(Set::stream).collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(deletedInstances);
+  }
+
+  private Instance createK8sPodInstance(String id, String releaseName, String namespace) {
+    return Instance.builder()
+        .uuid(id)
+        .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+        .podInstanceKey(PodInstanceKey.builder().podName(id).namespace(namespace).build())
+        .instanceInfo(K8sPodInfo.builder()
+                          .clusterName(KUBE_CLUSTER)
+                          .podName(id)
+                          .namespace(namespace)
+                          .releaseName(releaseName)
+                          .containers(singletonList(K8sContainerInfo.builder().image("test").build()))
+                          .build())
+        .lastWorkflowExecutionId("1")
+        .build();
+  }
+
+  private K8sInstanceSyncResponse creteK8sPodSyncResponseWith(String releaseName, String namespace, String... podIds) {
+    return K8sInstanceSyncResponse.builder()
+        .releaseName(releaseName)
+        .namespace(namespace)
+        .k8sPodInfoList(
+            Arrays.stream(podIds).map(id -> createK8sPod(id, releaseName, namespace)).collect(Collectors.toList()))
+        .build();
+  }
+
+  private K8sPod createK8sPod(String id, String releaseName, String namespace) {
+    return K8sPod.builder()
+        .podIP(id)
+        .name(id)
+        .releaseName(releaseName)
+        .namespace(namespace)
+        .containerList(singletonList(K8sContainer.builder().name(id).image("test").containerId(id).build()))
+        .build();
   }
 }
