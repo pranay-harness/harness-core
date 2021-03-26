@@ -1218,6 +1218,34 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "K8sGcpInfrastructure": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cluster": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "releaseName": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "K8sManifest": {
       "allOf": [
         {
@@ -2198,6 +2226,9 @@
             "source"
           ],
           "properties": {
+            "delegateSelectors": {
+              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
+            },
             "environmentVariables": {
               "type": "array",
               "items": {

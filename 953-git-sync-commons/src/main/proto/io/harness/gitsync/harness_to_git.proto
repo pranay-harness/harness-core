@@ -33,6 +33,9 @@ message FileInfo {
 }
 
 message InfoForPush {
-  bytes connector = 1;
-  string file_path = 2;
+  google.protobuf.BytesValue connector = 1;
+  google.protobuf.StringValue file_path = 2;
+  // status 0 = failed, 1 = success
+  bool status = 3;
+  google.protobuf.BytesValue exception = 4;
 }

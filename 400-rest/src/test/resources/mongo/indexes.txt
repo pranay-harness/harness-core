@@ -402,23 +402,20 @@ lambdaSpecifications {"name": "accountId_1", "background": true} {"accountId": 1
 lambdaSpecifications {"name": "appId_1", "background": true} {"appId": 1}
 lambdaSpecifications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 lambdaSpecifications {"name": "serviceId_1", "unique": true} {"serviceId": 1}
-learningEngineAnalysisTask {"name": "accountId_1", "background": true} {"accountId": 1}
 learningEngineAnalysisTask {"name": "appId_1", "background": true} {"appId": 1}
 learningEngineAnalysisTask {"name": "createdAt_1", "background": true} {"createdAt": 1}
-learningEngineAnalysisTask {"name": "cvConfigStatusIdx", "background": true} {"cvConfigId": 1, "analysis_minute": -1, "executionStatus": 1}
+learningEngineAnalysisTask {"name": "cv_config_status_index", "background": true} {"cvConfigId": 1, "executionStatus": 1, "analysis_minute": -1}
 learningEngineAnalysisTask {"name": "executionStatus_1", "background": true} {"executionStatus": 1}
-learningEngineAnalysisTask {"name": "nextLETaskIndex", "background": true} {"priority": 1, "createdAt": 1, "executionStatus": 1}
-learningEngineAnalysisTask {"name": "task_fetch_idx", "background": true} {"state_execution_id": 1, "analysis_minute": -1, "executionStatus": 1, "ml_analysis_type": 1, "cluster_level": 1, "group_name": 1, "version": 1, "createdAt": -1}
-learningEngineAnalysisTask {"name": "task_fetch_priority_idx", "background": true} {"state_execution_id": 1, "priority": -1, "executionStatus": 1, "ml_analysis_type": 1, "cluster_level": 1, "group_name": 1, "version": 1, "createdAt": -1}
+learningEngineAnalysisTask {"name": "task_fetch_idx", "background": true} {"state_execution_id": 1, "analysis_minute": 1, "executionStatus": 1, "ml_analysis_type": 1, "cluster_level": 1, "group_name": 1, "version": 1, "createdAt": -1}
 learningEngineAnalysisTask {"name": "usageMetricsIndex", "background": true} {"executionStatus": 1, "ml_analysis_type": 1, "is24x7Task": 1, "createdAt": -1}
 learningEngineAnalysisTask {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 learningEngineExperimentalAnalysisTask {"name": "appId_1", "background": true} {"appId": 1}
 learningEngineExperimentalAnalysisTask {"name": "createdAt_1", "background": true} {"createdAt": 1}
-learningEngineExperimentalAnalysisTask {"name": "cvConfigStatusIdx", "background": true} {"cvConfigId": 1, "analysis_minute": -1, "executionStatus": 1}
+learningEngineExperimentalAnalysisTask {"name": "cvConfigStatusIdx", "background": true} {"cvConfigId": 1, "executionStatus": 1, "analysis_minute": -1}
 learningEngineExperimentalAnalysisTask {"name": "executionStatus_1", "background": true} {"executionStatus": 1}
 learningEngineExperimentalAnalysisTask {"name": "state_execution_id_1", "background": true} {"state_execution_id": 1}
 learningEngineExperimentalAnalysisTask {"name": "taskFetchIdx", "background": true} {"experiment_name": 1, "executionStatus": 1, "retry": 1, "createdAt": -1}
-learningEngineExperimentalAnalysisTask {"name": "taskQueueIdx", "background": true} {"state_execution_id": 1, "analysis_minute": -1, "executionStatus": 1, "ml_analysis_type": 1, "cluster_level": 1, "group_name": 1, "version": 1, "createdAt": -1}
+learningEngineExperimentalAnalysisTask {"name": "taskQueueIdx", "background": true} {"state_execution_id": 1, "executionStatus": 1, "ml_analysis_type": 1, "cluster_level": 1, "group_name": 1, "version": 1, "analysis_minute": -1, "createdAt": -1}
 learningEngineExperimentalAnalysisTask {"name": "usageMetricsIndex", "background": true} {"executionStatus": 1, "ml_analysis_type": 1, "is24x7Task": 1, "createdAt": -1}
 learningEngineExperimentalAnalysisTask {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 licenses {"name": "appId_1", "background": true} {"appId": 1}
@@ -427,25 +424,20 @@ limitCounters {"name": "accountId_1", "background": true} {"accountId": 1}
 limitCounters {"name": "appId_1", "background": true} {"appId": 1}
 limitCounters {"name": "createdAt_1", "background": true} {"createdAt": 1}
 limitCounters {"name": "key_1", "unique": true} {"key": 1}
-logAnalysisRecords {"name": "accountId_1", "background": true} {"accountId": 1}
-logAnalysisRecords {"name": "analysisSummaryIdx", "background": true} {"stateExecutionId": 1, "logCollectionMinute": -1, "analysisStatus": 1, "lastUpdatedAt": -1}
+logAnalysisRecords {"name": "analysisSummaryIndex", "background": true} {"stateExecutionId": 1, "logCollectionMinute": 1, "analysisStatus": 1, "lastUpdatedAt": -1}
 logAnalysisRecords {"name": "appId_1", "background": true} {"appId": 1}
 logAnalysisRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 logAnalysisRecords {"name": "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1", "background": true} {"cvConfigId": 1, "analysisStatus": 1, "logCollectionMinute": -1}
 logAnalysisRecords {"name": "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1", "background": true} {"cvConfigId": 1, "deprecated": 1, "logCollectionMinute": -1, "lastUpdatedAt": -1}
-logAnalysisRecords {"name": "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx", "background": true} {"cvConfigId": 1, "analysisStatus": 1, "logCollectionMinute": -1, "deprecated": 1}
 logAnalysisRecords {"name": "stateExecStatusIdx", "background": true} {"stateExecutionId": 1, "analysisStatus": 1}
 logAnalysisRecords {"name": "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1", "background": true} {"stateExecutionId": 1, "analysisStatus": 1, "logCollectionMinute": -1}
 logAnalysisRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-logAnalysisRecords {"name": "workflowExecutionId_1", "background": true} {"workflowExecutionId": 1}
-logDataRecords {"name": "accountId_1", "background": true} {"accountId": 1}
 logDataRecords {"name": "appId_1", "background": true} {"appId": 1}
 logDataRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
+logDataRecords {"name": "cvBumpIdx", "background": true} {"cvConfigId": 1, "logCollectionMinute": 1, "host": 1, "createdAt": -1}
 logDataRecords {"name": "cvRawRecordIdx", "background": true} {"cvConfigId": 1, "logCollectionMinute": 1, "clusterLevel": 1}
-logDataRecords {"name": "cv_bump_idx", "background": true} {"cvConfigId": 1, "clusterLevel": 1, "logCollectionMinute": -1, "host": 1, "createdAt": -1}
 logDataRecords {"name": "cv_config_created_at_idx", "background": true} {"cvConfigId": 1, "createdAt": -1}
-logDataRecords {"name": "serviceId_1", "background": true} {"serviceId": 1}
-logDataRecords {"name": "stateBumpIdx", "background": true} {"stateExecutionId": 1, "clusterLevel": 1, "logCollectionMinute": -1, "host": 1}
+logDataRecords {"name": "stateBumpIndex", "background": true} {"stateExecutionId": 1, "clusterLevel": 1, "logCollectionMinute": 1, "host": 1}
 logDataRecords {"name": "stateHostIdx", "background": true} {"stateExecutionId": 1, "logCollectionMinute": 1}
 logDataRecords {"name": "state_Prev_Ex_Idx", "background": true} {"workflowExecutionId": 1, "clusterLevel": 1, "stateType": 1}
 logDataRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
@@ -479,7 +471,7 @@ newRelicMetricRecords {"name": "accountId_1", "background": true} {"accountId": 
 newRelicMetricRecords {"name": "appId_1", "background": true} {"appId": 1}
 newRelicMetricRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 newRelicMetricRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
-newRelicMetricRecords {"name": "serviceGuardIdx", "background": true} {"dataCollectionMinute": -1, "cvConfigId": 1}
+newRelicMetricRecords {"name": "serviceGuardIndex", "background": true} {"cvConfigId": 1, "dataCollectionMinute": -1}
 newRelicMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 newRelicMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
@@ -714,8 +706,6 @@ timeSeriesMetricGroup {"name": "stateExecutionId_1", "background": true} {"state
 timeSeriesMetricGroup {"name": "uniqueIdx", "unique": true} {"stateType": 1, "stateExecutionId": 1}
 timeSeriesMetricGroup {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesMetricRecords {"name": "accountId_1", "background": true} {"accountId": 1}
-timeSeriesMetricRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
-timeSeriesMetricRecords {"name": "serviceGuardIdx", "background": true} {"dataCollectionMinute": -1, "cvConfigId": 1}
 timeSeriesMetricRecords {"name": "service_guard_idx", "background": true} {"cvConfigId": 1, "dataCollectionMinute": -1}
 timeSeriesMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 timeSeriesMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

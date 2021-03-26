@@ -951,8 +951,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:4OeFha6WdntK0EnRRcZ1q02W8yAkC4uCidpIlYtTEi4=",
-    version = "v1.8.1-0.20210111143840-199eee180289",
+    sum = "h1:nHYK9TSF4kFRQDKeS23Zg+lA3vghXfTo9AxHf9+EE0s=",
+    version = "v1.10.0",
 )
 
 go_repository(
@@ -1647,8 +1647,8 @@ maven_install(
         "net.bytebuddy:byte-buddy:1.10.7",
         "net.engio:mbassador:1.3.0",
         "net.i2p.crypto:eddsa:0.2.0",
-        "net.java.dev.jna:jna-platform:4.0.0",
-        "net.java.dev.jna:jna:4.0.0",
+        "net.java.dev.jna:jna-platform:5.5.0",
+        "net.java.dev.jna:jna:5.5.0",
         "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
         "net.jcip:jcip-annotations:1.0",
         "net.jodah:expiringmap:0.5.7",
@@ -1774,7 +1774,7 @@ maven_install(
         "org.codehaus.mojo:animal-sniffer-annotations:1.18",
         "org.codehaus.plexus:plexus-utils:3.0.20",
         "org.codehaus.woodstox:stax2-api:4.2",
-        "org.conscrypt:conscrypt-openjdk-uber:2.2.1",
+        "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
         "org.coursera:metrics-datadog:1.1.13",
         "org.cryptacular:cryptacular:1.1.3",
         "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",

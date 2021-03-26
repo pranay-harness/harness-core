@@ -2024,8 +2024,11 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog("CommitId: " + gitStoreDelegateConfig.getCommitId());
     }
 
-    gitStoreDelegateConfig.getPaths().stream().collect(
-        Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
+    StringBuilder sb = new StringBuilder(1024);
+    sb.append("\nFetching manifest files at path: \n");
+    gitStoreDelegateConfig.getPaths().forEach(
+        filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
+    executionLogCallback.saveExecutionLog(sb.toString());
   }
 
   private boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,

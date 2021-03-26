@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
-use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
+use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM, UNKNOWN_LOCATION};
 use crate::java_module::{modules, JavaModule};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -862,6 +862,10 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.deprecated {
+        return results;
+    }
+
+    if UNKNOWN_LOCATION.eq(&class.location) {
         return results;
     }
 

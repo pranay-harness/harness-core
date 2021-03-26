@@ -66,6 +66,22 @@ public class AuditFilterPropertiesValidator {
           String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
               resourceScope.getProjectIdentifier()));
     }
+    if (isEmpty(resourceScope.getProjectIdentifier()) && isNotEmpty(resourceScope.getLabels())) {
+      throw new InvalidRequestException(
+          "Invalid resource scope filter with labels present but missing projectIdentifier.");
+    }
+    List<KeyValuePair> labels = resourceScope.getLabels();
+    if (isNotEmpty(labels)) {
+      labels.forEach(label -> {
+        if (isEmpty(label.getKey())) {
+          throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
+        }
+        if (isEmpty(label.getValue())) {
+          throw new InvalidRequestException(
+              "Invalid resource scope filter with missing value in resource scope labels.");
+        }
+      });
+    }
   }
 
   private void verifyResources(List<Resource> resources) {

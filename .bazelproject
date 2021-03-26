@@ -117,6 +117,7 @@ directories:
   run-configurations
   200-functional-test
   tools
+  toolset
   scripts
   cargo
 

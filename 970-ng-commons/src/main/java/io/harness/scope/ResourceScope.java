@@ -4,12 +4,18 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
+import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,12 +27,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 @Data
 @Builder(builderClassName = "Builder")
+@JsonInclude(NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
 public class ResourceScope {
   @NotNull @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+  List<KeyValuePair> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {
@@ -59,7 +67,7 @@ public class ResourceScope {
             .projectIdentifier(((ProjectScope) resourceScope).getProjectIdentifier())
             .build();
       default:
-        throw new IllegalArgumentException("Illegal scope of resource {}".format(resourceScope.getScope()));
+        throw new InvalidArgumentsException(String.format("Illegal scope of resource %s", resourceScope.getScope()));
     }
   }
 }

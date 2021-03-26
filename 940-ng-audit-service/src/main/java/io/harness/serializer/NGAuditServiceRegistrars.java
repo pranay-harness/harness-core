@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NGAuditServiceMorphiaRegistrar;
@@ -8,6 +11,7 @@ import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class NGAuditServiceRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =

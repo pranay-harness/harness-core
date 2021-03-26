@@ -1,6 +1,5 @@
 package io.harness.cdng.creator.plan.execution;
 
-import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
@@ -104,7 +103,7 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
                                            .asArray())
                                    .orElse(Collections.emptyList());
 
-    return InfrastructurePmsPlanCreator.getStepYamlFields(yamlNodes);
+    return PlanCreatorUtils.getStepYamlFields(yamlNodes);
   }
 
   PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {

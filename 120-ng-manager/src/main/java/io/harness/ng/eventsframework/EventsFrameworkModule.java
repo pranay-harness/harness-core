@@ -1,7 +1,9 @@
 package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -16,6 +18,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;

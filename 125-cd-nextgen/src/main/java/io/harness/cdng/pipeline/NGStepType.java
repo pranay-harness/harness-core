@@ -45,18 +45,18 @@ public enum NGStepType {
       StepSpecTypeConstants.K8S_CANARY_DEPLOY),
 
   // Infrastructure Provisioners
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_APPLY)
   TERRAFORM_APPLY("Terraform Apply", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_APPLY),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_PLAN)
   TERRAFORM_PLAN("Terraform Plan", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_PLAN),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_DESTROY)
   TERRAFORM_DESTROY("Terraform Destroy", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_DESTROY),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
   TERRAFORM_ROLLBACK("Terraform Rollback", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_ROLLBACK),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   CREATE_STACK("Create Stack", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),

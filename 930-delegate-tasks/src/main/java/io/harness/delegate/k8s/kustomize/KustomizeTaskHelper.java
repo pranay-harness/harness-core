@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
 import io.harness.cli.CliResponse;
@@ -53,7 +54,12 @@ public class KustomizeTaskHelper {
       return Collections.singletonList(
           FileData.builder().fileName("manifest.yaml").fileContent(cliResponse.getOutput()).build());
     } else {
-      throw new InvalidRequestException("Kustomize build failed. Msg: " + cliResponse.getOutput(), WingsException.USER);
+      StringBuilder stringBuilder = new StringBuilder("Kustomize build failed.");
+      if (isNotBlank(cliResponse.getOutput())) {
+        stringBuilder.append(" Msg: ").append(cliResponse.getOutput());
+      }
+
+      throw new InvalidRequestException(stringBuilder.toString(), WingsException.USER);
     }
   }
 

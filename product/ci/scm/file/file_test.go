@@ -14,19 +14,53 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestFindFileNegativePath(t *testing.T) {
+func TestFindFilePositivePath(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		content, _ := ioutil.ReadFile("testdata/FileErrorSource.json")
-		fmt.Fprint(w, content)
+		content, _ := ioutil.ReadFile("testdata/FileFindSource.json")
+		fmt.Fprint(w, string(content))
 	}))
 	defer ts.Close()
 
-	in := &pb.FileFindRequest{
+	in := &pb.GetFileRequest{
 		Slug: "tphoney/scm-test",
 		Path: "jello",
-		Type: &pb.FileFindRequest_Branch{
+		Type: &pb.GetFileRequest_Branch{
+			Branch: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Contains(t, got.Content, "test repo for source control operations")
+}
+
+func TestFindFileNegativePath(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(404)
+		content, _ := ioutil.ReadFile("testdata/FileErrorSource.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.GetFileRequest{
+		Slug: "tphoney/scm-test",
+		Path: "jello",
+		Type: &pb.GetFileRequest_Branch{
 			Branch: "main",
 		},
 		Provider: &pb.Provider{
@@ -52,7 +86,7 @@ func TestCreateFile(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(201)
 		content, _ := ioutil.ReadFile("testdata/FileCreateSource.json")
-		fmt.Fprint(w, content)
+		fmt.Fprint(w, string(content))
 	}))
 	defer ts.Close()
 
@@ -63,7 +97,7 @@ func TestCreateFile(t *testing.T) {
 		Type: &pb.FileModifyRequest_Branch{
 			Branch: "main",
 		},
-		Data: "data",
+		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
 			Email: "tp@harness.io",
@@ -92,7 +126,7 @@ func TestUpdateFile(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		content, _ := ioutil.ReadFile("testdata/FileUpdateSource.json")
-		fmt.Fprint(w, content)
+		fmt.Fprint(w, string(content))
 	}))
 	defer ts.Close()
 
@@ -103,8 +137,8 @@ func TestUpdateFile(t *testing.T) {
 		Type: &pb.FileModifyRequest_Branch{
 			Branch: "main",
 		},
-		Data: "data",
-		Sha:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Content: "data",
+		Sha:     "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
 			Email: "tp@harness.io",
@@ -129,7 +163,7 @@ func TestUpdateFile(t *testing.T) {
 }
 
 func TestDeleteFile(t *testing.T) {
-	in := &pb.FileDeleteRequest{
+	in := &pb.DeleteFileRequest{
 		Slug: "tphoney/scm-test",
 		Path: "jello",
 		Provider: &pb.Provider{
@@ -149,20 +183,30 @@ func TestDeleteFile(t *testing.T) {
 
 	assert.NotNil(t, err, "throws an error")
 }
-func TestUpsertNewFile(t *testing.T) {
+
+func TestPushNewFile(t *testing.T) {
+	serveActualFile := false
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		if r.Method == http.MethodGet {
-			content, _ := ioutil.ReadFile("testdata/FileError.json")
-			fmt.Fprint(w, content)
+			if serveActualFile {
+				// 3. file find
+				content, _ := ioutil.ReadFile("testdata/FileFindSource.json")
+				fmt.Fprint(w, string(content))
+			} else {
+				// 1. file does not exist yet
+				content, _ := ioutil.ReadFile("testdata/FileError.json")
+				fmt.Fprint(w, string(content))
+			}
 		} else {
+			// 2. file is created
 			content, _ := ioutil.ReadFile("testdata/FileCreateSource.json")
-			fmt.Fprint(w, content)
+			serveActualFile = true
+			fmt.Fprint(w, string(content))
 		}
 	}))
 	defer ts.Close()
-
 	in := &pb.FileModifyRequest{
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
@@ -170,7 +214,7 @@ func TestUpsertNewFile(t *testing.T) {
 		Type: &pb.FileModifyRequest_Branch{
 			Branch: "main",
 		},
-		Data: "data",
+		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
 			Email: "tp@harness.io",
@@ -188,17 +232,17 @@ func TestUpsertNewFile(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	got, err := UpsertFile(context.Background(), in, log.Sugar())
+	got, err := PushFile(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, got.Status, int32(200), "status matches")
 }
 
-func TestFindFileRealRequest(t *testing.T) {
-	in := &pb.FileFindRequest{
+func TestBatchFindFileGithubRealRequest(t *testing.T) {
+	in1 := &pb.GetFileRequest{
 		Slug: "tphoney/scm-test",
 		Path: "README.md",
-		Type: &pb.FileFindRequest_Branch{
+		Type: &pb.GetFileRequest_Branch{
 			Branch: "main",
 		},
 		Provider: &pb.Provider{
@@ -212,63 +256,56 @@ func TestFindFileRealRequest(t *testing.T) {
 		},
 	}
 
+	in := &pb.GetBatchFileRequest{
+		FindRequest: []*pb.GetFileRequest{in1},
+	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	got, err := FindFile(context.Background(), in, log.Sugar())
+	got, err := BatchFindFile(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.Equal(t, got.Status, int32(0), "status matches")
-	assert.Contains(t, got.Data, "test repo for source control operations")
+	assert.Contains(t, got.FileContents[0].Content, "test repo for source control operations")
 }
 
-func Test_getValidRef(t *testing.T) {
-	type args struct {
-		inputRef    string
-		inputBranch string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "use ref",
-			args: args{
-				inputRef:    "bla",
-				inputBranch: "",
+func TestFindFilesInBranchGithubRealRequest(t *testing.T) {
+	in := &pb.FindFilesInBranchRequest{
+		Slug:   "tphoney/scm-test",
+		Branch: "main",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
 			},
-			want:    "bla",
-			wantErr: false,
-		},
-		{
-			name: "use branch",
-			args: args{
-				inputRef:    "",
-				inputBranch: "foo",
-			},
-			want:    "refs/heads/foo",
-			wantErr: false,
-		},
-		{
-			name: "error if no valid args",
-			args: args{
-				inputRef:    "",
-				inputBranch: "",
-			},
-			want:    "",
-			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getValidRef(tt.args.inputRef, tt.args.inputBranch)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getValidRef() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("getValidRef() = %v, want %v", got, tt.want)
-			}
-		})
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindFilesInBranch(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.GreaterOrEqual(t, len(got.File), 1, "more than one file changed")
+}
+
+func TestFindFilesInCommitGithubRealRequest(t *testing.T) {
+	in := &pb.FindFilesInCommitRequest{
+		Slug: "tphoney/scm-test",
+		Ref:  "9a9b31a127e7ed3ee781b6268ae3f9fb7e4525bb",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+		},
 	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindFilesInCommit(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.GreaterOrEqual(t, len(got.File), 1, "more than one file changed")
 }

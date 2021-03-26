@@ -12,6 +12,7 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
@@ -394,14 +395,16 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     rollbackInfoBuilder.group(RollbackNodeType.STEP.name());
     String rollbackStepsNodeId = getStageRollbackStepsNodeId(currentField);
     String executionStepsNodeId = getExecutionStepsNodeId(currentField);
-    rollbackInfoBuilder.nodeTypeToUuid(
-        RollbackNodeType.STAGE.name(), rollbackStepsNodeId == null ? null : rollbackStepsNodeId + "_executionrollback");
+    rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STAGE.name(),
+        rollbackStepsNodeId == null ? null : rollbackStepsNodeId + PlanCreationConstants.ROLLBACK_STEPS_NODE_ID_PREFIX);
 
     // Check if stepGroupsRollback is there or not.
     YamlNode executionField = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
     if (PlanCreatorUtils.checkIfAnyStepGroupRollback(executionField)) {
       rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(),
-          executionStepsNodeId == null ? null : executionStepsNodeId + "_stepGrouprollback");
+          executionStepsNodeId == null
+              ? null
+              : executionStepsNodeId + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX);
     } else {
       rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(), null);
     }

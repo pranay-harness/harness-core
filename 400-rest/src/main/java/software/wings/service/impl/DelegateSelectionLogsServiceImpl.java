@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
@@ -87,6 +88,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
+  private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
 
   private LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -264,6 +266,25 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                      .message("Matched exclude scope " + scopeName)
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(EXCLUDE_SCOPE_MATCHED_GROUP_ID)
+                     .build());
+  }
+
+  @Override
+  public void logOwnerRuleNotMatched(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateOwner owner) {
+    if (batch == null || owner == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
+                     .message("Not matched owner entityType " + owner.getEntityType() + ", id " + owner.getEntityId())
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(TARGETED_OWNER_NOT_MATCHED_GROUP_ID)
                      .build());
   }
 

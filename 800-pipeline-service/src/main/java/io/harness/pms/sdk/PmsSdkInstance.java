@@ -47,5 +47,5 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
 
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
-  @Version Long version;
+  @Setter @NonFinal @Version Long version;
 }

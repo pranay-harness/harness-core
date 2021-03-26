@@ -82,6 +82,8 @@ public interface TriggerService
    */
   boolean delete(@NotEmpty String appId, @NotEmpty String triggerId);
 
+  boolean delete(@NotEmpty String appId, @NotEmpty String triggerId, boolean syncFromGit);
+
   /**
    * Generate web hook token web hook token.
    *

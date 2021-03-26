@@ -108,7 +108,7 @@ aggregatorModuleConfig:
     mongodb.ssl.enabled: ${MONGODB_SSL_ENABLED:-false}
     connector.class: ${CONNECTOR_CLASS:-io.debezium.connector.mongodb.MongoDbConnector}
     database.include.list: ${DATABASE_INCLUDE_LIST:-accesscontrol}
-    collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups}
+    collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
   enabled: ${AGGREGATOR_ENABLED:-true}
 
 enableAuth: ${ENABLE_AUTH:-true}

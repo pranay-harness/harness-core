@@ -1,10 +1,12 @@
 package io.harness.ng.core.event;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.ng.core.AccountOrgProjectValidator;
@@ -19,6 +21,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class HarnessSMManager {

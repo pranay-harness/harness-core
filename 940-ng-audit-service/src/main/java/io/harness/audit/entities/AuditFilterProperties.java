@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.audit.beans.Principal;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.Resource;
@@ -32,7 +33,7 @@ public class AuditFilterProperties extends FilterProperties {
   List<Resource> resources;
 
   List<ModuleType> modules;
-  List<String> actions;
+  List<Action> actions;
   List<String> environmentIdentifiers;
   List<Principal> principals;
 

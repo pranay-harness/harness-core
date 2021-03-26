@@ -1,5 +1,6 @@
 package io.harness.consumers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,12 +14,15 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.SourceMetadata;
 import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -31,26 +35,30 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   public static final String SOME_RANDOM_ID = "some_random_id";
   private RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer;
   private ACLService aclService;
   private ResourceGroupService resourceGroupService;
   private RoleService roleService;
+  private UserGroupService userGroupService;
 
   @Before
   public void setup() {
     aclService = mock(ACLService.class);
     resourceGroupService = mock(ResourceGroupService.class);
     roleService = mock(RoleService.class);
-    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(aclService, roleService, resourceGroupService);
+    userGroupService = mock(UserGroupService.class);
+    roleAssignmentChangeConsumer =
+        new RoleAssignmentChangeConsumerImpl(aclService, roleService, userGroupService, resourceGroupService);
   }
 
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testRoleAssignmentCreation() {
-    RoleAssignmentDBO roleAssignmentDBO = RoleAssignmentDBO.builder().build();
+    RoleAssignmentDBO roleAssignmentDBO = RoleAssignmentDBO.builder().principalType(PrincipalType.USER).build();
     when(roleService.get(any(), any(), any()))
         .thenReturn(
             Optional.of(Role.builder()

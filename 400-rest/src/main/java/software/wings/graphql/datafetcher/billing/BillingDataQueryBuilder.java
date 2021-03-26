@@ -1473,7 +1473,7 @@ public class BillingDataQueryBuilder {
       case Region:
         return schema.getRegion();
       case CloudProvider:
-        return schema.getCloudProvider();
+        return schema.getCloudProviderId();
       default:
         throw new InvalidRequestException("Group by entity not supported in filter values");
     }

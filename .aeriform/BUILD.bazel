@@ -308,6 +308,10 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
+aeriform("//952-scm-java-client:module")
+
+aeriform("//952-scm-java-client:tests")
+
 aeriform("//953-git-sync-commons:module")
 
 aeriform("//954-connector-beans:module")
@@ -323,10 +327,6 @@ aeriform("//955-filters-sdk:tests")
 aeriform("//955-outbox-sdk:module")
 
 aeriform("//955-outbox-sdk:tests")
-
-aeriform("//955-scm-java-client:module")
-
-aeriform("//955-scm-java-client:tests")
 
 aeriform("//955-setup-usage-sdk:module")
 
