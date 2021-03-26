@@ -10,11 +10,10 @@ import static io.harness.persistence.GoogleDataStoreAware.readLong;
 import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 
@@ -27,6 +26,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,32 +44,6 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by rsingh on 6/20/17.
  */
-
-@CdIndex(name = "stateHostIdx", fields = { @Field("stateExecutionId")
-                                           , @Field("logCollectionMinute") })
-@CdIndex(name = "stateBumpIdx",
-    fields =
-    {
-      @Field("stateExecutionId")
-      , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
-    })
-@CdIndex(
-    name = "state_Prev_Ex_Idx", fields = { @Field("workflowExecutionId")
-                                           , @Field("clusterLevel"), @Field("stateType") })
-@CdIndex(name = "cvRawRecordIdx",
-    fields =
-    { @Field("cvConfigId")
-      , @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel") })
-@CdIndex(name = "cv_config_created_at_idx",
-    fields = { @Field("cvConfigId")
-               , @Field(value = "createdAt", type = IndexType.DESC) })
-@CdIndex(name = "cv_bump_idx",
-    fields =
-    {
-      @Field("cvConfigId")
-      , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
-          @Field(value = "createdAt", type = IndexType.DESC)
-    })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LogDataRecordKeys")
@@ -79,13 +53,53 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("stateHostIdx")
+                 .field(LogDataRecordKeys.stateExecutionId)
+                 .field(LogDataRecordKeys.logCollectionMinute)
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("stateBumpIndex")
+                .field(LogDataRecordKeys.stateExecutionId)
+                .field(LogDataRecordKeys.clusterLevel)
+                .field(LogDataRecordKeys.logCollectionMinute)
+                .field(LogDataRecordKeys.host)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("state_Prev_Ex_Idx")
+                .field(LogDataRecordKeys.workflowExecutionId)
+                .field(LogDataRecordKeys.clusterLevel)
+                .field(LogDataRecordKeys.stateType)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("cvRawRecordIdx")
+                .field(LogDataRecordKeys.cvConfigId)
+                .field(LogDataRecordKeys.logCollectionMinute)
+                .field(LogDataRecordKeys.clusterLevel)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("cv_config_created_at_idx")
+                .field(LogDataRecordKeys.cvConfigId)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("cvBumpIdx")
+                .field(LogDataRecordKeys.cvConfigId)
+                .field(LogDataRecordKeys.logCollectionMinute)
+                .field(LogDataRecordKeys.host)
+                .descSortField(CREATED_AT_KEY)
+                .build())
+        .build();
+  }
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String workflowId;
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty @FdIndex private String serviceId;
+  @NotEmpty private String serviceId;
 
   @NotEmpty private String stateExecutionId;
 
@@ -106,7 +120,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
   @NotEmpty private ClusterLevel clusterLevel;
   @NotEmpty private long logCollectionMinute;
 
-  @FdIndex private String accountId;
+  private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
