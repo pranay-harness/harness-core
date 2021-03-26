@@ -83,7 +83,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       // TODO: these errors needs to go to execution log so that we can connect it with the right context and show them
       // in the UI.
       // TODO: setup alert
-      log.error("Failed to orchestrate: {}", orchestrator, e);
+      // log.error("Failed to orchestrate: ", e);
       throw e;
     }
   }
@@ -109,6 +109,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
 
     AnalysisStatus stateMachineStatus = null;
+    if (currentlyExecutingStateMachine == null) {
+      return;
+    }
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
