@@ -28,4 +28,5 @@ public class EntityYamlRootNames {
   public static String DEPLOYMENT_STEP = "deploymentSteps";
   public static String DEPLOYMENT_STAGE = "deploymentStage";
   public static String APPROVAL_STAGE = "approvalStage";
+  public static String TRIGGERS = "trigger";
 }
