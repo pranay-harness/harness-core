@@ -26,9 +26,9 @@ public class OutboxSDKConstants {
 
   public static final OutboxEventIteratorConfiguration DEFAULT_OUTBOX_ITERATOR_CONFIGURATION =
       OutboxEventIteratorConfiguration.builder()
-          .threadPoolSize(2)
-          .intervalInSeconds(90)
-          .targetIntervalInSeconds(60)
+          .threadPoolSize(3)
+          .intervalInSeconds(5)
+          .targetIntervalInSeconds(15)
           .acceptableNoAlertDelayInSeconds(60)
           .maximumOutboxEventHandlingAttempts(10)
           .build();
