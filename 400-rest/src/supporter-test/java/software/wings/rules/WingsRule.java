@@ -34,6 +34,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -413,11 +414,20 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new AuthModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder()
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
             .target(((MainConfiguration) configuration).getGrpcClientConfig().getTarget())
             .authority(((MainConfiguration) configuration).getGrpcClientConfig().getAuthority())
-            .build()));
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "Manager";
+      }
+    });
     modules.add(new SearchModule());
     return modules;
   }
