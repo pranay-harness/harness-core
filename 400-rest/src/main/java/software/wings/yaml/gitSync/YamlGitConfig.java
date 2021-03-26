@@ -4,8 +4,8 @@ import static software.wings.settings.SettingVariableTypes.YAML_GIT_SYNC;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -29,8 +31,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@NgUniqueIndex(name = "locate", fields = { @Field("accountId")
-                                           , @Field("entityId"), @Field("entityType") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -39,6 +39,18 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
 public class YamlGitConfig extends Base implements EncryptableSetting {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_locate")
+                 .unique(true)
+                 .field(YamlGitConfigKeys.accountId)
+                 .field(YamlGitConfigKeys.entityId)
+                 .field(YamlGitConfigKeys.entityType)
+                 .build())
+        .build();
+  }
+
   public static final String ENTITY_ID_KEY = "entityId";
   public static final String ENTITY_TYPE_KEY = "entityType";
   public static final String WEBHOOK_TOKEN_KEY = "webhookToken";
