@@ -44,7 +44,7 @@ public class ExecutionRollbackPMSPlanCreator {
                                         .build();
     PlanNode executionRollbackNode =
         PlanNode.builder()
-            .uuid(rollbackStepsField.getNode().getUuid() + "_executionrollback")
+            .uuid(rollbackStepsField.getNode().getUuid() + PlanCreationConstants.ROLLBACK_STEPS_NODE_ID_PREFIX)
             .name(PlanCreationConstants.ROLLBACK_NODE_NAME)
             .identifier(PlanCreationConstants.ROLLBACK_NODE_NAME)
             .stepType(NGSectionStep.STEP_TYPE)
