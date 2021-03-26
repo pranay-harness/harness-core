@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class InfoForPush {
+public class InfoForGitPush {
   ScmConnector scmConnector;
   String filePath;
 }
