@@ -62,7 +62,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     when(roleService.get(any(), any(), any()))
         .thenReturn(
             Optional.of(Role.builder()
-                            .permissions(Sets.newHashSet(ImmutableList.of("core.secret.create", "core.secret.edit")))
+                            .permissions(Sets.newHashSet(ImmutableList.of("core_secret_create", "core_secret_edit")))
                             .build()));
     when(resourceGroupService.get(any(), any()))
         .thenReturn(Optional.of(ResourceGroup.builder()
@@ -94,7 +94,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     when(roleService.get(any(), any(), any()))
         .thenReturn(
             Optional.of(Role.builder()
-                            .permissions(Sets.newHashSet(ImmutableList.of("core.secret.create", "core.secret.edit")))
+                            .permissions(Sets.newHashSet(ImmutableList.of("core_secret_create", "core_secret_edit")))
                             .build()));
     when(resourceGroupService.get(any(), any())).thenReturn(Optional.empty());
     long count = roleAssignmentChangeConsumer.consumeCreateEvent(SOME_RANDOM_ID, roleAssignmentDBO);
@@ -112,7 +112,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
                                                  .build())
                              .scopeIdentifier("/ACCOUNT/account/ORG/org")
                              .principalIdentifier("qwerty")
-                             .permissionIdentifier("core.secret.edit")
+                             .permissionIdentifier("core_secret_edit")
                              .resourceSelector("/SECRETS/abcde")
                              .build()));
   }
