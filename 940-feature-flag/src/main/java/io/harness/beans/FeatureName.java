@@ -170,7 +170,8 @@ public enum FeatureName {
   ENHANCED_GCR_CONNECTIVITY_CHECK,
   SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
-  AWS_SM_ASSUME_IAM_ROLE;
+  AWS_SM_ASSUME_IAM_ROLE,
+  VAULT_SSH_NAMESPACE;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
