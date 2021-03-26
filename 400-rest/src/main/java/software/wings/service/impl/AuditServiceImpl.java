@@ -45,6 +45,7 @@ import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuditPreference;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
@@ -55,14 +56,18 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.RestrictedApi;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
@@ -88,6 +93,7 @@ import java.util.stream.Collectors;
 import javax.activity.InvalidActivityException;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -104,6 +110,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
+  @Inject private EntityMetadataHelper entityMetadataHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
   @Inject private YamlResourceService yamlResourceService;
@@ -112,6 +119,10 @@ public class AuditServiceImpl implements AuditService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private AuditPreferenceHelper auditPreferenceHelper;
   @Inject private MainConfiguration configuration;
+  @Inject private AccountService accountService;
+  @Inject private UserService userService;
+  @Inject private AuditHelper auditHelper;
+  @Inject private ApiKeyService apiKeyService;
 
   private WingsPersistence wingsPersistence;
 
@@ -430,6 +441,27 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private AuditHeader getAuditHeaderById(@NotNull String Id) {
+    return wingsPersistence.createQuery(AuditHeader.class).filter(AuditHeader.ID_KEY2, Id).get();
+  }
+
+  private <T> void addDetails(String accountId, T entity, String auditHeaderId, Type type) {
+    if (auditHeaderId == null) {
+      return;
+    }
+    AuditHeader header = getAuditHeaderById(auditHeaderId);
+    if (header == null) {
+      return;
+    }
+    if (entity instanceof User) {
+      entityMetadataHelper.addUserEntityDetails(accountId, entity, header);
+    } else if (entity instanceof ApiKeyEntry && type.equals(Type.INVOKED)) {
+      entityMetadataHelper.addAPIKeyDetails(accountId, entity, header);
+    } else if (header.getCreatedBy() != null) {
+      entityMetadataHelper.addUserDetails(accountId, entity, header);
+    }
+  }
+
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
     try {
@@ -479,6 +511,9 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        addDetails(accountId, entityToQuery, auditHeaderId, type);
+      }
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case LOCK:
