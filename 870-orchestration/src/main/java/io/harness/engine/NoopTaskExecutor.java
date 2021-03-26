@@ -4,6 +4,7 @@ import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.tasks.ResponseData;
 
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public class NoopTaskExecutor implements TaskExecutor {
   @Override
-  public String queueTask(Map<String, String> setupAbstractions, TaskRequest task) {
+  public String queueTask(Map<String, String> setupAbstractions, TaskRequest task, Duration holdFor) {
     return null;
   }
 

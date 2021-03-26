@@ -29,6 +29,7 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -40,6 +41,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -159,6 +161,10 @@ public class RoleAssignmentResource {
     return ResponseDTO.newResponse(toResponseDTO(updatedRoleAssignment));
   }
 
+  /**
+   * idempotent call, calling it multiple times won't create any side effect,
+   * returns all role assignments which were created ignoring duplicates or failures, if any.
+   */
   @POST
   @Path("/multi")
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
@@ -170,13 +176,19 @@ public class RoleAssignmentResource {
             .stream()
             .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
             .collect(Collectors.toList());
+    List<RoleAssignment> filteredRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
-      harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
-      if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
-        harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+      try {
+        harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
+        if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
+          harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+        }
+        filteredRoleAssignments.add(roleAssignment);
+      } catch (InvalidRequestException | UnexpectedException exception) {
+        // ignore creation of this role assignment since sync failed
       }
     }
-    return ResponseDTO.newResponse(roleAssignmentService.createMulti(roleAssignmentsPayload)
+    return ResponseDTO.newResponse(roleAssignmentService.createMulti(filteredRoleAssignments)
                                        .stream()
                                        .map(RoleAssignmentDTOMapper::toResponseDTO)
                                        .collect(toList()));

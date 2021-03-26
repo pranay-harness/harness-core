@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.product.ci.scm.proto.ContentResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 
 @OwnedBy(DX)
 public interface ScmClient {
-  ContentResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
+  CreateFileResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 }
