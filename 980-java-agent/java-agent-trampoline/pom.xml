@@ -10,6 +10,14 @@
     <properties>
         <harness.runtime.package.name>harness.agent.rt</harness.runtime.package.name>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>java-agent</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>
