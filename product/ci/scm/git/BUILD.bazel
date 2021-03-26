@@ -2,8 +2,8 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["file.go"],
-    importpath = "github.com/wings-software/portal/product/ci/scm/file",
+    srcs = ["git.go"],
+    importpath = "github.com/wings-software/portal/product/ci/scm/git",
     visibility = ["//visibility:public"],
     deps = [
         "//commons/go/lib/utils:go_default_library",
@@ -16,8 +16,7 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["file_test.go"],
-    data = glob(["testdata/**"]),
+    srcs = ["git_test.go"],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
