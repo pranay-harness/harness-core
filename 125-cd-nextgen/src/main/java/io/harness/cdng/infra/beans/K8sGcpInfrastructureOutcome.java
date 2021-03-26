@@ -12,22 +12,23 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
-@TypeAlias("cdng.infra.beans.K8sDirectInfrastructureOutcome")
+@JsonTypeName(InfrastructureKind.KUBERNETES_GCP)
+@TypeAlias("cdng.infra.beans.K8sGcpInfrastructureOutcome")
 @OwnedBy(HarnessTeam.CDP)
-public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
+public class K8sGcpInfrastructureOutcome implements InfrastructureOutcome {
   String connectorRef;
   String namespace;
+  String cluster;
   String releaseName;
   EnvironmentOutcome environment;
 
   @Override
   public String getKind() {
-    return InfrastructureKind.KUBERNETES_DIRECT;
+    return InfrastructureKind.KUBERNETES_GCP;
   }
 
   @Override
   public String getType() {
-    return InfrastructureKind.KUBERNETES_DIRECT;
+    return InfrastructureKind.KUBERNETES_GCP;
   }
 }
