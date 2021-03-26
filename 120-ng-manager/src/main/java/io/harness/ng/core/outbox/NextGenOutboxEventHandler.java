@@ -1,22 +1,26 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class NextGenOutboxEventHandler implements OutboxEventHandler {
-  private final OrgEventHandler orgEventHandler;
+  private final OrganizationEventHandler organizationEventHandler;
   private final ProjectEventHandler projectEventHandler;
 
   @Inject
-  public NextGenOutboxEventHandler(OrgEventHandler orgEventHandler, ProjectEventHandler projectEventHandler) {
-    this.orgEventHandler = orgEventHandler;
+  public NextGenOutboxEventHandler(
+      OrganizationEventHandler organizationEventHandler, ProjectEventHandler projectEventHandler) {
+    this.organizationEventHandler = organizationEventHandler;
     this.projectEventHandler = projectEventHandler;
   }
 
@@ -25,13 +29,13 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
     try {
       switch (outboxEvent.getResource().getType()) {
         case ORGANIZATION:
-          return orgEventHandler.handle(outboxEvent);
+          return organizationEventHandler.handle(outboxEvent);
         case PROJECT:
           return projectEventHandler.handle(outboxEvent);
         default:
           return true;
       }
-    } catch (Exception IOException) {
+    } catch (Exception exception) {
       return false;
     }
   }

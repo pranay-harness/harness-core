@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 
@@ -8,6 +9,7 @@ import static software.wings.beans.alert.AlertType.InvalidKMS;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -15,6 +17,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
@@ -29,6 +32,7 @@ import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerConfig> {
   @Inject private AccountService accountService;
@@ -54,7 +58,9 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
                 -> query.criteria(SecretManagerConfigKeys.encryptionType)
-                       .in(Sets.newHashSet(EncryptionType.VAULT, EncryptionType.VAULT_SSH)))
+                       .in(Sets.newHashSet(EncryptionType.VAULT, EncryptionType.VAULT_SSH))
+                       .criteria(SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.deleted)
+                       .notEqual(true))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

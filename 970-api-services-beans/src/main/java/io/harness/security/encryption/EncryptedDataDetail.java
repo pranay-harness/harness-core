@@ -1,13 +1,17 @@
 package io.harness.security.encryption;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @NoArgsConstructor

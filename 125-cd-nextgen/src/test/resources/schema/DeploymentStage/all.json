@@ -248,6 +248,7 @@
     "CriteriaSpecWrapper": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -575,6 +576,28 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "GcsStoreConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bucketName": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "GitLabStore": {
       "allOf": [
         {
@@ -828,6 +851,9 @@
           "properties": {
             "assertion": {
               "type": "string"
+            },
+            "delegateSelectors": {
+              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
             },
             "headers": {
               "type": "array",
@@ -1186,6 +1212,34 @@
             },
             "skipDryRun": {
               "$ref": "#/definitions/ParameterFieldBoolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sGcpInfrastructure": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cluster": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "releaseName": {
+              "type": "string"
             }
           }
         }
@@ -1787,6 +1841,36 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterFieldListTaskSelectorYaml": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskSelectorYaml"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PercentageInstanceSelection": {
       "allOf": [
         {
@@ -1886,6 +1970,31 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "S3StoreConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bucketName": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "SecretNGVariable": {
@@ -2389,6 +2498,15 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TaskSelectorYaml": {
+      "type": "object",
+      "properties": {
+        "delegateSelectors": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ValuesManifest": {

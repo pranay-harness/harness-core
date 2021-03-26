@@ -1,7 +1,9 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -17,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j

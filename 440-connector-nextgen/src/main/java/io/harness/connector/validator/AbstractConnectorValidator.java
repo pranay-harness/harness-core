@@ -26,15 +26,17 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
   @Inject private EncryptionHelper encryptionHelper;
   public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    ConnectorTaskParams taskParameters =
-        (ConnectorTaskParams) getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (connectorConfig instanceof DelegateSelectable) {
-      taskParameters.setDelegateSelectors(((DelegateSelectable) connectorConfig).getDelegateSelectors());
+    TaskParameters taskParameters =
+        getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+
+    if (taskParameters instanceof ConnectorTaskParams && connectorConfig instanceof DelegateSelectable) {
+      ((ConnectorTaskParams) taskParameters)
+          .setDelegateSelectors(((DelegateSelectable) connectorConfig).getDelegateSelectors());
     }
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(accountIdentifier)
                                                   .taskType(getTaskType())
-                                                  .taskParameters((TaskParameters) taskParameters)
+                                                  .taskParameters(taskParameters)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .forceExecute(true)
                                                   .build();

@@ -25,7 +25,6 @@ import java.util.Set;
 
 public class GitSyncSdkGrpcServerModule extends AbstractModule {
   private static GitSyncSdkGrpcServerModule instance;
-  private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
   public static GitSyncSdkGrpcServerModule getInstance() {
     if (instance == null) {
@@ -42,6 +41,7 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("gitsync-sdk-service-manager")
   public ServiceManager serviceManager(Set<Service> services) {
     return new ServiceManager(services);
   }
@@ -49,7 +49,8 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("gitsync-sdk-grpc-service")
-  public Service gitSyncGrpcService(HealthStatusManager healthStatusManager, Set<BindableService> services,
+  public Service gitSyncGrpcService(HealthStatusManager healthStatusManager,
+      @Named("git-sync-sdk-bindable-services") Set<BindableService> services,
       GitSyncSdkConfiguration gitSyncSdkConfiguration) {
     if (gitSyncSdkConfiguration.getDeployMode() == REMOTE) {
       return new GrpcServer(gitSyncSdkConfiguration.getGrpcServerConfig().getConnectors().get(0), services,
@@ -59,6 +60,7 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
   }
 
   @Provides
+  @Named("git-sync-sdk-bindable-services")
   private Set<BindableService> bindableServices(
       HealthStatusManager healthStatusManager, GitToHarnessGrpcService gitToHarnessGrpcService) {
     Set<BindableService> services = new HashSet<>();

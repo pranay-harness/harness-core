@@ -46,10 +46,8 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
     return InfraStepParameters.class;
   }
 
-  InfraMapping createInfraMappingObject(String serviceIdentifier, Infrastructure infrastructureSpec) {
-    InfraMapping infraMapping = infrastructureSpec.getInfraMapping();
-    infraMapping.setServiceIdentifier(serviceIdentifier);
-    return infraMapping;
+  InfraMapping createInfraMappingObject(Infrastructure infrastructureSpec) {
+    return infrastructureSpec.getInfraMapping();
   }
 
   @Override

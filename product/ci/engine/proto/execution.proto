@@ -8,7 +8,7 @@ option go_package = "cienginepb";
 import "product/ci/engine/proto/artifact.proto";
 
 message StepContext {
-  int32 num_retries = 1;
+  int32 num_retries = 1;  // Deprecated
   int64 execution_timeout_secs = 2;
 }
 
@@ -48,15 +48,15 @@ message RunTestsStep {
 message RunStep {
   string command = 1;
   StepContext context = 2;
-  repeated string envVarOutputs = 3;  // produced output variables
-  uint32 container_port = 4;          // Port of the container on which run step needs to be executed
+  repeated string envVarOutputs = 3;  // output variables to export as step outcome
+  uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
 }
 
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;  // Port of the container on which plugin step needs to be executed
+  uint32 container_port = 3;  // Deprecated. Port of the container on which plugin step needs to be executed
 }
 
 message SaveCacheStep {
@@ -84,6 +84,8 @@ message UnitStep {
   string task_id = 8;
   string skip_condition = 11;
   string log_key = 12;
+  string account_id = 13;
+  uint32 container_port = 14;  // Port of the container on which step needs to be executed
 }
 
 message ParallelStep {
@@ -145,14 +147,16 @@ message PingRequest {}
 message PingResponse {}
 
 message ExecuteStepRequest {
-  string id = 1;
+  string execution_id = 1;
   UnitStep step = 2;
+  string tmp_file_path = 3;
 }
 
 message ExecuteStepResponse {}
 
 service LiteEngine {
   // Synchronous RPC to execute a step
+  // Deprecated
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
 
   // Synchronous RPC to fetch image entrypoint

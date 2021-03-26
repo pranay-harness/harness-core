@@ -73,6 +73,8 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.chartmuseum.NGChartMuseumService;
+import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.encryptors.CustomEncryptor;
@@ -130,6 +132,7 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.invites.client.NgInviteClientModule;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -1291,6 +1294,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
+    bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
@@ -1323,6 +1327,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
+
+    // User-Sync Dependencies
+    install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies

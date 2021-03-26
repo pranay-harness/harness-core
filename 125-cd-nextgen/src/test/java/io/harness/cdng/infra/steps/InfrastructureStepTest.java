@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.steps;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,8 +13,10 @@ import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
+import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -44,20 +47,37 @@ public class InfrastructureStepTest extends CategoryTest {
   public void testCreateInfraMappingObject() {
     String namespace = "namespace";
     String connector = "connector";
-    String serviceIdentifier = "serviceIdentifier";
 
     Infrastructure infrastructureSpec = K8SDirectInfrastructure.builder()
                                             .connectorRef(ParameterField.createValueField(connector))
                                             .namespace(ParameterField.createValueField(namespace))
                                             .build();
 
-    InfraMapping expectedInfraMapping = K8sDirectInfraMapping.builder()
-                                            .serviceIdentifier(serviceIdentifier)
-                                            .k8sConnector(connector)
-                                            .namespace(namespace)
+    InfraMapping expectedInfraMapping =
+        K8sDirectInfraMapping.builder().k8sConnector(connector).namespace(namespace).build();
+
+    InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(infrastructureSpec);
+    assertThat(infraMapping).isEqualTo(expectedInfraMapping);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateK8sGcpInfraMapping() {
+    String namespace = "namespace";
+    String connector = "connector";
+    String cluster = "cluster";
+
+    Infrastructure infrastructureSpec = K8sGcpInfrastructure.builder()
+                                            .connectorRef(ParameterField.createValueField(connector))
+                                            .namespace(ParameterField.createValueField(namespace))
+                                            .cluster(ParameterField.createValueField(cluster))
                                             .build();
 
-    InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(serviceIdentifier, infrastructureSpec);
+    InfraMapping expectedInfraMapping =
+        K8sGcpInfraMapping.builder().k8sConnector(connector).namespace(namespace).cluster(cluster).build();
+
+    InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(infrastructureSpec);
     assertThat(infraMapping).isEqualTo(expectedInfraMapping);
   }
 
@@ -65,6 +85,7 @@ public class InfrastructureStepTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testProcessEnvironment() {
+    // TODO this test is not asserting anything.
     HashMap<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put(SetupAbstractionKeys.accountId, "accountId");
     setupAbstractions.put(SetupAbstractionKeys.projectIdentifier, "projectId");

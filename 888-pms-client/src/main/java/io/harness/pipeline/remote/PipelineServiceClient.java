@@ -16,7 +16,7 @@ import java.util.List;
 import javax.ws.rs.DefaultValue;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 @TargetModule(HarnessModule._888_PMS_CLIENT)
@@ -24,11 +24,11 @@ import retrofit2.http.Query;
 public interface PipelineServiceClient {
   String PIPELINE_ENDPOINT = "pipelines/";
 
-  @GET(PIPELINE_ENDPOINT + "list/")
+  @POST(PIPELINE_ENDPOINT + "list/")
   Call<ResponseDTO<PageResponse<PMSPipelineSummaryResponseDTO>>> listPipelines(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query("page") @DefaultValue("0") int page, @Query("size") @DefaultValue("25") int size,
       @Query("sort") List<String> sort, @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @Query("module") String module, @Query("filterIdentifier") String filterIdentifier,

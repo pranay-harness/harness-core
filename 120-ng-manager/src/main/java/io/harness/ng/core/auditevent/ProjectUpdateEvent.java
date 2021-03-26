@@ -1,7 +1,9 @@
 package io.harness.ng.core.auditevent;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.Resource;
@@ -11,26 +13,27 @@ import io.harness.ng.core.dto.ProjectDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 public class ProjectUpdateEvent implements Event {
-  private ProjectDTO newProjectDTO;
-  private ProjectDTO oldProjectDTO;
+  private ProjectDTO newProject;
+  private ProjectDTO oldProject;
 
   private String accountIdentifier;
 
-  public ProjectUpdateEvent(String accountIdentifier, ProjectDTO newProjectDTO, ProjectDTO oldProjectDTO) {
-    this.newProjectDTO = newProjectDTO;
-    this.oldProjectDTO = oldProjectDTO;
+  public ProjectUpdateEvent(String accountIdentifier, ProjectDTO newProject, ProjectDTO oldProject) {
+    this.newProject = newProject;
+    this.oldProject = oldProject;
     this.accountIdentifier = accountIdentifier;
   }
 
   public ResourceScope getResourceScope() {
-    return new OrgScope(accountIdentifier, oldProjectDTO.getOrgIdentifier());
+    return new OrgScope(accountIdentifier, oldProject.getOrgIdentifier());
   }
 
   public Resource getResource() {
-    return Resource.builder().identifier(oldProjectDTO.getIdentifier()).type(PROJECT).build();
+    return Resource.builder().identifier(oldProject.getIdentifier()).type(PROJECT).build();
   }
 
   public String getEventType() {

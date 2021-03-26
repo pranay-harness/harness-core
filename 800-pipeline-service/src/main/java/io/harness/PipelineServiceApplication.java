@@ -1,12 +1,14 @@
 package io.harness;
 
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
@@ -22,6 +24,10 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.pipeline.PipelineEntityCrudObserver;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
@@ -34,13 +40,13 @@ import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
-import io.harness.pms.triggers.webhook.scm.SCMGrpcClientModule;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.scm.SCMGrpcClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
@@ -99,6 +105,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {
   private static final String APPLICATION_NAME = "Pipeline Service Application";
 
@@ -170,6 +177,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerManagedBeans(environment, injector);
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
+    registerObservers(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -189,6 +197,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     MaintenanceController.forceMaintenance(false);
   }
 
+  public static void registerObservers(Injector injector) {
+    // Register Pipeline Observers
+    PMSPipelineServiceImpl pmsPipelineService =
+        (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
+    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
+    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
+  }
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }

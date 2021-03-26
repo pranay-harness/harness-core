@@ -112,7 +112,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>955-filters-sdk</artifactId>
+            <artifactId>952-filters-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
