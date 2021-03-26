@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.amazonaws.services.ecs.model.LaunchType;
@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

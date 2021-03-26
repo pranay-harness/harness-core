@@ -1,6 +1,6 @@
 package software.wings.verification.newrelic;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.verification.CVConfigurationYaml;
@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 /**
  * The type Yaml.
  */
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @Builder
 @AllArgsConstructor

@@ -1,6 +1,6 @@
 package io.harness.governance;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("ALL")

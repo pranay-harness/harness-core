@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static software.wings.beans.InfrastructureProvisionerType.ARM;
 
-import io.harness.annotations.dev.Module;
+import static org.apache.commons.lang3.StringUtils.trim;
+
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
@@ -14,7 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -33,7 +35,7 @@ public final class ARMInfrastructureProvisionerYaml extends InfraProvisionerYaml
       ARMResourceType resourceType) {
     super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);
     this.sourceType = sourceType;
-    this.templateBody = templateBody;
+    this.templateBody = trim(templateBody);
     this.gitFileConfig = gitFileConfig;
     this.scopeType = scopeType;
     this.resourceType = resourceType;

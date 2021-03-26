@@ -2,7 +2,6 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 
-import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;

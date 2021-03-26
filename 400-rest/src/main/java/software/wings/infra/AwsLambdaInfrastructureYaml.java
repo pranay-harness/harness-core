@@ -2,7 +2,7 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(AWS_LAMBDA)

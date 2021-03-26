@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.UsageRestrictionsYaml;
@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -24,11 +24,13 @@ public final class AwsConfigYaml extends CloudProviderYaml {
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
+  private boolean useIRSA;
 
   @Builder
   public AwsConfigYaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId,
-      String secretKey, UsageRestrictionsYaml usageRestrictions, boolean useEc2IamCredentials, String tag,
-      boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
+      String secretKey, UsageRestrictionsYaml usageRestrictions, boolean useIRSA, boolean useEc2IamCredentials,
+      String tag, boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes,
+      String defaultRegion) {
     super(type, harnessApiVersion, usageRestrictions);
     this.accessKey = accessKey;
     this.accessKeySecretId = accessKeySecretId;
@@ -38,5 +40,6 @@ public final class AwsConfigYaml extends CloudProviderYaml {
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
     this.defaultRegion = defaultRegion;
+    this.useIRSA = useIRSA;
   }
 }

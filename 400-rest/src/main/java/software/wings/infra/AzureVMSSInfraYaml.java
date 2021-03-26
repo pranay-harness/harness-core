@@ -2,7 +2,7 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.VMSSAuthType;
@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(AZURE_VMSS)

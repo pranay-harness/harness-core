@@ -2,7 +2,7 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.infrastructure.Host;
@@ -15,7 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(PHYSICAL_INFRA)

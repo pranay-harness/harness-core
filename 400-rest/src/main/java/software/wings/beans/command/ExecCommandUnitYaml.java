@@ -1,15 +1,13 @@
 package software.wings.beans.command;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
-@Data
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("EXEC")
 public class ExecCommandUnitYaml extends ExecCommandUnitAbstractYaml {
