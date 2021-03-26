@@ -29,6 +29,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.ng.core.common.beans.Generation;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -157,8 +158,8 @@ public class UserResourceTest extends WingsBaseTest {
   public void shouldCheckInvite() {
     String accountId = UUIDGenerator.generateUuid();
     String inviteId = UUIDGenerator.generateUuid();
-    userResource.checkInvite(accountId, inviteId);
-    verify(USER_SERVICE, times(1)).checkInviteStatus(any());
+    userResource.checkInvite(accountId, inviteId, Generation.CG);
+    verify(USER_SERVICE, times(1)).checkInviteStatus(any(), any());
   }
 
   @Test

@@ -1,7 +1,10 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.ng.NextGenConfiguration;
@@ -27,6 +30,7 @@ import com.google.inject.name.Named;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class InviteModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String managerServiceSecret;

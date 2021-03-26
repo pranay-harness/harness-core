@@ -1,18 +1,22 @@
 package io.harness;
 
 import io.harness.beans.SampleBean;
-import io.harness.gitsync.ChangeSet;
-import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub;
+import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.repositories.TestRepository;
 
 import com.google.inject.Inject;
 
 public class Tester {
   @Inject TestRepository cdRepository;
-  @Inject GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub;
+  @Inject HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
 
-  public SampleBean save(String stringToSave) {
-    gitToHarnessServiceBlockingStub.syncRequestFromGit(ChangeSet.newBuilder().build());
-    return cdRepository.save(SampleBean.builder().test1(stringToSave).build());
+  public SampleBean save() {
+    return cdRepository.save(SampleBean.builder()
+                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                 .projectIdentifier("test_cd")
+                                 .orgIdentifier("test_org")
+                                 .name("xyz")
+                                 .identifier("id")
+                                 .build());
   }
 }

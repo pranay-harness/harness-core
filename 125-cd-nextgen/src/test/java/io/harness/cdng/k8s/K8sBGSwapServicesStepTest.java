@@ -90,7 +90,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     doReturn(OptionalSweepingOutput.builder().found(true).output(blueGreenOutcome).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
-            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+            ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     doReturn(infrastructureOutcome).when(k8sStepHelper).getInfrastructureOutcome(ambiance);
   }
 
@@ -158,14 +158,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testObtainTaskInRollbackWhenSwapServicesDidNotExecuteInForwardPhase() {
-    Ambiance ambiance =
-        Ambiance.newBuilder()
-            .addLevels(
-                Level.newBuilder()
-                    .setStepType(
-                        StepType.newBuilder().setType(RollbackOptionalChildChainStep.STEP_TYPE.getType()).build())
-                    .build())
-            .build();
+    Ambiance ambiance = getAmbianceForRollback();
     OptionalOutcome optionalOutcome = OptionalOutcome.builder().found(false).build();
     doReturn(optionalOutcome)
         .when(outcomeService)
@@ -193,6 +186,22 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testHandleTaskResultInRollback() {
+    Ambiance ambiance = getAmbianceForRollback();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+        K8sDeployResponse.builder()
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .commandExecutionStatus(SUCCESS)
+            .build());
+
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
+    assertThat(response.getStepOutcomes()).isEmpty();
   }
 
   @Test
@@ -231,9 +240,18 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     doReturn(OptionalSweepingOutput.builder().found(false).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
-            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+            ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(BG_STEP_MISSING_ERROR);
+  }
+
+  private Ambiance getAmbianceForRollback() {
+    return Ambiance.newBuilder()
+        .addLevels(
+            Level.newBuilder()
+                .setStepType(StepType.newBuilder().setType(RollbackOptionalChildChainStep.STEP_TYPE.getType()).build())
+                .build())
+        .build();
   }
 }

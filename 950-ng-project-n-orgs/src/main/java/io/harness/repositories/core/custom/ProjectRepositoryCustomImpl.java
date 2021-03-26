@@ -1,5 +1,8 @@
 package io.harness.repositories.core.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 
@@ -16,6 +19,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   private final MongoTemplate mongoTemplate;
@@ -35,7 +39,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
-  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+  public Project restore(String accountIdentifier, String orgIdentifier, String identifier) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.orgIdentifier)
@@ -46,7 +50,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
                             .is(Boolean.TRUE);
     Query query = new Query(criteria);
     Update update = new Update().set(ProjectKeys.deleted, Boolean.FALSE);
-    return mongoTemplate.findAndModify(query, update, Project.class) != null;
+    return mongoTemplate.findAndModify(query, update, Project.class);
   }
 
   @Override
@@ -55,7 +59,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
-  public Boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version) {
+  public Project delete(String accountIdentifier, String orgIdentifier, String identifier, Long version) {
     Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(ProjectKeys.orgIdentifier)
@@ -69,6 +73,6 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
     }
     Query query = new Query(criteria);
     Update update = new Update().set(ProjectKeys.deleted, Boolean.TRUE);
-    return mongoTemplate.findAndModify(query, update, Project.class) != null;
+    return mongoTemplate.findAndModify(query, update, Project.class);
   }
 }

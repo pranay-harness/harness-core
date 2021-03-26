@@ -85,7 +85,8 @@ public class BatchJobRunner {
       endAt = Instant.now().minus(15, ChronoUnit.HOURS);
     }
     // delaying billing batch job by 2 days so that cur data is presennt
-    if (ImmutableSet.of("R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q").contains(accountId)
+    if (ImmutableSet.of("R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q", "DVExhMPMScy6RpRNKwyvZQ")
+            .contains(accountId)
         && batchJobType == BatchJobType.INSTANCE_BILLING) {
       endAt = Instant.now().minus(40, ChronoUnit.HOURS);
     }

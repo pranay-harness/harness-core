@@ -8,3 +8,5 @@
   permissionKey: connector
 - identifier: SECRET
   permissionKey: secret
+- identifier: PIPELINE
+  permissionKey: pipeline

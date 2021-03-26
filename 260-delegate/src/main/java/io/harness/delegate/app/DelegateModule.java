@@ -46,6 +46,8 @@ import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.chartmuseum.NGChartMuseumService;
+import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
@@ -102,6 +104,7 @@ import io.harness.delegate.task.cek8s.CEKubernetesValidationHandler;
 import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
+import io.harness.delegate.task.citasks.CIExecuteStepTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.docker.DockerValidationHandler;
@@ -951,6 +954,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureManagementClient.class).to(AzureManagementClientImpl.class);
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
     bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
+    bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1295,6 +1299,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.CI_BUILD).toInstance(CIBuildCommandTask.class);
+    mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
     mapBinder.addBinding(TaskType.CI_LE_STATUS).toInstance(StepStatusTask.class);
     mapBinder.addBinding(TaskType.EXECUTE_COMMAND).toInstance(ExecuteCommandTask.class);
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);

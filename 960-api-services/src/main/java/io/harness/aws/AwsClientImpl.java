@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import io.harness.exception.InvalidRequestException;
 
+import com.amazonaws.arn.Arn;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -117,8 +118,12 @@ public class AwsClientImpl implements AwsClient {
   }
 
   @Override
-  public void confirmSnsSubscription(String confirmationMessage) {
-    SnsMessageManager snsMessageManager = new SnsMessageManager();
+  public void confirmSnsSubscription(String confirmationMessage, String topicArnString) {
+    if (isEmpty(topicArnString)) {
+      throw new InvalidRequestException("Topic arn can't be empty");
+    }
+    String region = Arn.fromString(topicArnString).getRegion();
+    SnsMessageManager snsMessageManager = new SnsMessageManager(region);
     snsMessageManager.handleMessage(
         IOUtils.toInputStream(confirmationMessage, Charset.defaultCharset()), new DefaultSnsMessageHandler() {
           @Override

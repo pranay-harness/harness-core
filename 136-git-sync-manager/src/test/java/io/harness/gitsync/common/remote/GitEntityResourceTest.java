@@ -1,11 +1,13 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.GitSyncTestBase;
@@ -26,6 +28,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class GitEntityResourceTest extends GitSyncTestBase {
   @Inject GitEntityResource gitEntityResource;
   @Inject GitFileLocationRepository gitFileLocationRepository;

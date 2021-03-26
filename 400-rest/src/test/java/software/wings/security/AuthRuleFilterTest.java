@@ -47,10 +47,12 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.User;
 import software.wings.resources.AccountResource;
@@ -110,6 +112,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock ContainerRequestContext requestContext;
   @Mock UriInfo uriInfo;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
@@ -175,6 +178,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
       when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
       when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
       when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(true);
       mockUriInfo(PATH, uriInfo);
       when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
       when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
@@ -197,15 +201,62 @@ public class AuthRuleFilterTest extends WingsBaseTest {
       when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
       when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
       when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(true);
       mockUriInfo("whitelist/isEnabled", uriInfo);
       when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
       when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
-      when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(false);
+      authRuleFilter.filter(requestContext);
+    } catch (Exception e) {
+    } finally {
+      verify(auditServiceHelper, times(0))
+          .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(), eq(Event.Type.INVOKED));
+    }
+  }
+
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void testAuditAPIKeyInvoked() {
+    try {
+      Set<Action> actions = new HashSet<>();
+      actions.add(Action.DEFAULT);
+      when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+      when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+      when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(true);
+      mockUriInfo(PATH, uriInfo);
+      when(requestContext.getHeaderString("X-Api-Key")).thenReturn("mock-api-key");
+      when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+      when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
       authRuleFilter.filter(requestContext);
     } catch (Exception e) {
     } finally {
       verify(auditServiceHelper, times(1))
-          .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(User.class), eq(Event.Type.NON_WHITELISTED));
+          .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(ApiKeyEntry.class), eq(Event.Type.INVOKED));
+    }
+  }
+
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void testAuditAPIKeyNotInvoked() {
+    try {
+      Set<Action> actions = new HashSet<>();
+      actions.add(Action.DEFAULT);
+      when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+      when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+      when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(false);
+      mockUriInfo(PATH, uriInfo);
+      when(requestContext.getHeaderString("X-Api-Key")).thenReturn(null);
+      when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+      when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+      authRuleFilter.filter(requestContext);
+    } catch (Exception e) {
+    } finally {
+      verify(auditServiceHelper, times(0))
+          .reportForAuditingUsingAccountId(
+              eq(ACCOUNT_ID), eq(null), any(ApiKeyEntry.class), eq(Event.Type.NON_WHITELISTED));
     }
   }
 

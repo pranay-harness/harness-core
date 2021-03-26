@@ -1,9 +1,11 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
@@ -35,6 +37,7 @@ import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(PL)
 @Api(value = "secrets", hidden = true)
 @Path("/ng/secrets")
 @Produces("application/json")

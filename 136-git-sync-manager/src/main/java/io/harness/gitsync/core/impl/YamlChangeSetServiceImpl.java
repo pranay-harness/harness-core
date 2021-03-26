@@ -73,7 +73,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   private GitSyncMetadata buildGitSyncMetadata(YamlGitConfigDTO yamlGitConfig) {
     return GitSyncMetadata.builder()
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .branchName(yamlGitConfig.getBranch())
         .repoName(yamlGitConfig.getRepo())
         .yamlGitConfigId(yamlGitConfig.getIdentifier())
@@ -86,8 +86,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private String buildQueueKey(YamlGitConfigDTO yamlGitConfig) {
-    return format(
-        "%s:%s:%s", yamlGitConfig.getAccountId(), yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranch());
+    return format("%s:%s:%s", yamlGitConfig.getAccountIdentifier(), yamlGitConfig.getGitConnectorRef(),
+        yamlGitConfig.getBranch());
   }
 
   @NotNull

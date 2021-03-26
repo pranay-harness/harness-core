@@ -1,10 +1,13 @@
 package io.harness.delegate.task.helm;
 
+import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.USER_PASSWORD;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.S3_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
@@ -22,9 +25,14 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
@@ -57,7 +65,10 @@ import org.zeroturnaround.exec.ProcessResult;
 @Singleton
 @Slf4j
 public class HelmTaskHelperBase {
+  public static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
+
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private NGChartMuseumService ngChartMuseumService;
 
   public void initHelm(String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) throws IOException {
     String helmHomePath = getHelmHomePath(workingDirectory);
@@ -298,6 +309,74 @@ public class HelmTaskHelperBase {
     fetchChartFromRepo(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
         manifest.getChartName(), manifest.getChartVersion(), destinationDirectory, manifest.getHelmVersion(),
         manifest.getHelmCommandFlag(), timeoutInMillis);
+  }
+
+  public void downloadChartFilesUsingChartMuseum(
+      HelmChartManifestDelegateConfig manifest, String destinationDirectory, long timeoutInMillis) throws Exception {
+    String resourceDirectory = null;
+    ChartMuseumServer chartMuseumServer = null;
+    String repoName = null;
+    String repoDisplayName = null;
+    StoreDelegateConfig storeDelegateConfig = manifest.getStoreDelegateConfig();
+    if (S3_HELM == storeDelegateConfig.getType()) {
+      S3HelmStoreDelegateConfig s3StoreDelegateConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
+      repoName = s3StoreDelegateConfig.getRepoName();
+      repoDisplayName = s3StoreDelegateConfig.getRepoDisplayName();
+    } else if (GCS_HELM == storeDelegateConfig.getType()) {
+      GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
+      repoName = gcsHelmStoreDelegateConfig.getRepoName();
+      repoDisplayName = gcsHelmStoreDelegateConfig.getRepoDisplayName();
+    }
+
+    try {
+      resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
+      chartMuseumServer =
+          ngChartMuseumService.startChartMuseumServer(manifest.getStoreDelegateConfig(), resourceDirectory);
+
+      addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), destinationDirectory,
+          manifest.getHelmVersion(), timeoutInMillis);
+      fetchChartFromRepo(repoName, repoDisplayName, manifest.getChartName(), manifest.getChartVersion(),
+          destinationDirectory, manifest.getHelmVersion(), manifest.getHelmCommandFlag(), timeoutInMillis);
+
+    } finally {
+      if (chartMuseumServer != null) {
+        ngChartMuseumService.stopChartMuseumServer(chartMuseumServer);
+      }
+
+      if (repoName != null) {
+        removeRepo(repoName, destinationDirectory, manifest.getHelmVersion(), timeoutInMillis);
+      }
+
+      cleanup(resourceDirectory);
+    }
+  }
+
+  public void addChartMuseumRepo(String repoName, String repoDisplayName, int port, String chartDirectory,
+      HelmVersion helmVersion, long timeoutInMillis) {
+    String repoAddCommand = getChartMuseumRepoAddCommand(repoName, port, chartDirectory, helmVersion);
+    log.info(repoAddCommand);
+    log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
+
+    ProcessResult processResult =
+        executeCommand(repoAddCommand, chartDirectory, ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis);
+    if (processResult.getExitValue() != 0) {
+      throw new HelmClientException(
+          "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
+          USER);
+    }
+  }
+
+  private String getChartMuseumRepoAddCommand(
+      String repoName, int port, String workingDirectory, HelmVersion helmVersion) {
+    String repoUrl = CHART_MUSEUM_SERVER_URL.replace("${PORT}", Integer.toString(port));
+
+    String repoAddCommand =
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_ADD_CHART_MEUSEUM, helmVersion)
+            .replace(HELM_PATH_PLACEHOLDER, getHelmPath(helmVersion))
+            .replace(REPO_NAME, repoName)
+            .replace(REPO_URL, repoUrl);
+
+    return applyHelmHomePath(repoAddCommand, workingDirectory);
   }
 
   public void printHelmChartInfoInExecutionLogs(

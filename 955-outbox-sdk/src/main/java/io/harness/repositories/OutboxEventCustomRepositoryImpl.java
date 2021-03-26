@@ -1,5 +1,8 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.outbox.OutboxEvent;
 
 import com.google.inject.Inject;
@@ -12,6 +15,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class OutboxEventCustomRepositoryImpl implements OutboxEventCustomRepository {
   private final MongoTemplate mongoTemplate;

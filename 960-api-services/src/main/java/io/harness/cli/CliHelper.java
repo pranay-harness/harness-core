@@ -36,21 +36,20 @@ public class CliHelper {
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog(loggingCommand, LogLevel.INFO, RUNNING);
 
-    ProcessExecutor processExecutor =
-        new ProcessExecutor()
-            .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
-            .command("/bin/sh", "-c", command)
-            .readOutput(true)
-            .environment(envVariables)
-            .directory(new File(directory))
-            .redirectOutput(logOutputStream)
-            .redirectError(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                log.error(line);
-                executionLogCallback.saveExecutionLog(line, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-              }
-            });
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
+                                          .command("/bin/sh", "-c", command)
+                                          .readOutput(true)
+                                          .environment(envVariables)
+                                          .directory(new File(directory))
+                                          .redirectOutput(logOutputStream)
+                                          .redirectError(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              log.error(line);
+                                              executionLogCallback.saveExecutionLog(line, LogLevel.ERROR);
+                                            }
+                                          });
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;

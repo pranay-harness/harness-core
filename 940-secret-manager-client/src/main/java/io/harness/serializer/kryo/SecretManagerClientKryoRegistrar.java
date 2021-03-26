@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
@@ -15,6 +18,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(PL)
 public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {

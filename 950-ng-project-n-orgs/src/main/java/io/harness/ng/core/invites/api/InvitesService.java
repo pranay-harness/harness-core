@@ -3,6 +3,7 @@ package io.harness.ng.core.invites.api;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 
@@ -23,7 +24,9 @@ public interface InvitesService {
 
   Optional<Invite> deleteInvite(String inviteId);
 
-  Optional<Invite> verify(String jwtToken);
+  InviteAcceptResponse acceptInvite(String jwtToken);
 
   Optional<Invite> updateInvite(Invite invite);
+
+  boolean completeInvite(String token);
 }

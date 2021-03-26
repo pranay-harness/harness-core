@@ -1,9 +1,7 @@
 package io.harness.gitsync.core.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.encryption.ScopeHelper.getScope;
 
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
@@ -27,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-@OwnedBy(DX)
 public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
   private GitFileLocationRepository gitFileLocationRepository;
   private YamlGitConfigService yamlGitConfigService;
@@ -38,8 +35,8 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
       String projectId, String entityName, String entityType, String entityIdentifier) {
     GitFileLocation gitFileLocation =
         getGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier, entityName);
-    YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.getByFolderIdentifierAndIsEnabled(
-        projectId, orgId, accountId, gitFileLocation.getEntityRootFolderId());
+    YamlGitConfigDTO yamlGitConfig =
+        yamlGitConfigService.getByFolderIdentifierAndIsEnabled(projectId, orgId, accountId, null);
     if (yamlGitConfig == null) {
       throw new InvalidRequestException("No git sync configured for given scope");
     }
@@ -71,7 +68,7 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
         .syncFromGit(false)
         .accountId(gitFileLocation.getAccountId())
         .rootPath(gitFileLocation.getEntityRootFolderName())
-        .rootPathId(gitFileLocation.getEntityRootFolderId())
+        .rootPathId(null)
         .changeType(changeType)
         .rootPath(gitFileLocation.getEntityRootFolderName())
         .build();
@@ -100,14 +97,12 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
                                                     .entityName(entityName)
                                                     .organizationId(orgId)
                                                     .projectId(projectId)
-                                                    .yamlGitFolderConfigId(rootFolder.getIdentifier())
                                                     .entityRootFolderName(rootFolder.getRootFolder())
-                                                    .entityRootFolderId(rootFolder.getIdentifier())
                                                     .entityGitPath(GitFileLocationHelper.getEntityPath(
                                                         rootFolder.getRootFolder(), entityType, entityIdentifier))
                                                     .branch(yamlGitConfig.getBranch())
                                                     .repo(yamlGitConfig.getRepo())
-                                                    .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                                                    .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                                                     .scope(yamlGitConfig.getScope())
                                                     .build());
         })

@@ -58,7 +58,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
     }
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     if (!optionalSweepingOutput.isFound()) {
       throw new InvalidRequestException(BG_STEP_MISSING_ERROR, USER);
     }
@@ -101,14 +101,18 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
           .build();
     }
 
-    K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
-    return stepResponseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
-                         .outcome(bgSwapServicesOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
-                         .build())
-        .build();
+    // Save BGSwapServices Outcome only if you are in forward phase. We use this in rollback to check if we need to run
+    // this step or not.
+    if (!StepUtils.isStepInRollbackSection(ambiance)) {
+      K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
+      stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
+                                          .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
+                                          .outcome(bgSwapServicesOutcome)
+                                          .group(StepOutcomeGroup.STAGE.name())
+                                          .build());
+    }
+
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override
