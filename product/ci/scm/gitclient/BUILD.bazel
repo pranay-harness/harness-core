@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["gitclient.go"],
+    importpath = "github.com/wings-software/portal/product/ci/scm/gitclient",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/scm/proto:go_default_library",
+        "@com_github_drone_go_scm//scm:go_default_library",
+        "@com_github_drone_go_scm//scm/driver/bitbucket:go_default_library",
+        "@com_github_drone_go_scm//scm/driver/gitea:go_default_library",
+        "@com_github_drone_go_scm//scm/driver/github:go_default_library",
+        "@com_github_drone_go_scm//scm/driver/gitlab:go_default_library",
+        "@com_github_drone_go_scm//scm/transport:go_default_library",
+        "@com_github_drone_go_scm//scm/transport/oauth2:go_default_library",
+        "@org_golang_google_grpc//codes:go_default_library",
+        "@org_golang_google_grpc//status:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["gitclient_test.go"],
+    embed = [":go_default_library"],
+)
