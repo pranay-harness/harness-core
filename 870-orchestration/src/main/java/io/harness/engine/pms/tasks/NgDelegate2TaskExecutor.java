@@ -16,10 +16,12 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.protobuf.util.Timestamps;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -32,16 +34,19 @@ import lombok.extern.slf4j.Slf4j;
 public class NgDelegate2TaskExecutor implements TaskExecutor {
   @Inject private DelegateServiceBlockingStub delegateServiceBlockingStub;
   @Inject private DelegateSyncService delegateSyncService;
+  @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private Supplier<DelegateCallbackToken> tokenSupplier;
 
   @Override
-  public String queueTask(Map<String, String> setupAbstractions, TaskRequest taskRequest) {
+  public String queueTask(Map<String, String> setupAbstractions, TaskRequest taskRequest, Duration holdFor) {
     TaskRequestValidityCheck check = validateTaskRequest(taskRequest, TaskMode.ASYNC);
     if (!check.isValid()) {
       throw new InvalidRequestException(check.getMessage());
     }
     SubmitTaskRequest submitTaskRequest = buildSubmitTaskRequest(taskRequest);
     SubmitTaskResponse submitTaskResponse = delegateServiceBlockingStub.submitTask(submitTaskRequest);
+    delegateAsyncService.setupTimeoutForTask(submitTaskResponse.getTaskId().getId(),
+        Timestamps.toMillis(submitTaskResponse.getTotalExpiry()), currentTimeMillis() + holdFor.toMillis());
     return submitTaskResponse.getTaskId().getId();
   }
 
@@ -103,13 +108,14 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
         .addAllCapabilities(delegateTaskRequest.getCapabilitiesList())
         .setCallbackToken(tokenSupplier.get())
         .setSelectionTrackingLogEnabled(delegateTaskRequest.getSelectionTrackingLogEnabled())
+        .setForceExecute(delegateTaskRequest.getForceExecute())
         .build();
   }
 
   @Value
   @Builder
   private static class TaskRequestValidityCheck {
-    private boolean valid;
-    private String message;
+    boolean valid;
+    String message;
   }
 }
