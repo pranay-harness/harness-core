@@ -27,7 +27,7 @@ var (
 
 const (
 	cgSchemaPath = "callgraph.avsc"
-	cgFile = "callgraph.json"
+	cgFile       = "callgraph.json"
 )
 
 // handler is used to implement EngineServer

@@ -194,7 +194,7 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"callgraph.avsc": &bintree{callgraphAvsc, map[string]*bintree{}},
+	"callgraph.avsc": {callgraphAvsc, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory
