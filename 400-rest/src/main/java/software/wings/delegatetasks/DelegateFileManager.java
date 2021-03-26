@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.FileBucket;
@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by rishi on 12/19/16.
  */
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @BreakDependencyOn("io.harness.delegate.beans.DelegateAgentFileService")
 @BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
 public interface DelegateFileManager extends DelegateFileManagerBase {

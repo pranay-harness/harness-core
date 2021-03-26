@@ -1,7 +1,10 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.SecretCrudService;
@@ -42,6 +45,7 @@ import lombok.AllArgsConstructor;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(PL)
 @Path("/v2/secrets")
 @Api("/v2/secrets")
 @Produces({"application/json", "application/yaml"})

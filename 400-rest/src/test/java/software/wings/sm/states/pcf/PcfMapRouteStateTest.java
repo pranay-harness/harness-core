@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
@@ -57,6 +58,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -137,6 +139,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfMapRouteStateTest extends WingsBaseTest {
   public static final String PCF_OLD_APP_NAME = "pcfOldAppName";
   private static final String BASE_URL = "https://env.harness.io/";

@@ -198,7 +198,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     doReturn(artifactStream).when(mockYamlHelper).getArtifactStreamWithName(any(), any(), any());
     doReturn("k8s").when(mockYamlHelper).getServiceNameFromArtifactId(any(), any());
     doReturn("library_nginx").when(mockYamlHelper).getArtifactStreamName(any(), any());
-    doReturn(Optional.of(anApplication().build()))
+    doReturn(Optional.of(anApplication().uuid(APP_ID).build()))
         .when(mockYamlHelper)
         .getApplicationIfPresent(anyString(), anyString());
     doReturn(handler).when(mockYamlHandlerFactory).getYamlHandler(YamlType.TRIGGER, null);
@@ -856,6 +856,36 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
         validTriggerFiles.Trigger8Edited, TriggerConditionType.NEW_ARTIFACT, WorkflowType.ORCHESTRATION, savedTrigger);
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    String yamlFileName = validTriggerFiles.Trigger20;
+
+    File yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+    assertThat(yamlFile).isNotNull();
+    String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
+    ChangeContext<Trigger.Yaml> changeContext = getChangeContext(yamlString);
+    changeContext.getChange().setSyncFromGit(true);
+    Trigger.Yaml yaml = (Trigger.Yaml) getYaml(yamlString, Trigger.Yaml.class);
+    changeContext.setYaml(yaml);
+
+    handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    verify(triggerService).save(captor.capture());
+    Trigger capturedTrigger = captor.getValue();
+    assertThat(capturedTrigger).isNotNull();
+    assertThat(capturedTrigger.isSyncFromGit()).isTrue();
+
+    doReturn(capturedTrigger).when(mockYamlHelper).getTrigger(anyString(), anyString());
+
+    handler.delete(changeContext);
+    verify(triggerService).delete(APP_ID, null, true);
+  }
+
   private void saveAndRetrieveTrigger(String trigger1) throws IOException {
     doReturn(null).when(mockYamlHelper).getTrigger(anyString(), anyString());
     File yamlFile = null;
@@ -918,7 +948,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
 
     handler.delete(changeContext);
 
-    verify(triggerService).delete(anyString(), anyString());
+    verify(triggerService).delete(anyString(), anyString(), anyBoolean());
     reset(triggerService);
   }
 

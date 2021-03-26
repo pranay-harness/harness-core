@@ -5,6 +5,8 @@ import static software.wings.security.PermissionAttribute.PermissionType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
+import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -26,7 +28,6 @@ import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
-import software.wings.service.impl.InviteOperationResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.net.URISyntaxException;
@@ -330,9 +331,10 @@ public interface UserService extends OwnedByAccount {
    * Complete the user invite and login the user in one call.
    *
    * @param userInvite the user invite
+   * @param gen
    * @return the logged-in user
    */
-  User completeInviteAndSignIn(UserInvite userInvite);
+  User completeInviteAndSignIn(UserInvite userInvite, Generation gen);
 
   /**
    * Complete the trial user signup. Both the trial account and the account admin user will be created
@@ -534,7 +536,7 @@ public interface UserService extends OwnedByAccount {
 
   long getTotalUserCount(String accountId, boolean listPendingUsers);
 
-  InviteOperationResponse checkInviteStatus(UserInvite userInvite);
+  InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
 
@@ -545,4 +547,10 @@ public interface UserService extends OwnedByAccount {
   List<User> getUsers(List<String> userIds);
 
   String sanitizeUserName(String name);
+
+  List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId);
+
+  void addUserToAccount(String userId, String accountId);
+
+  boolean safeDeleteUser(String userId, String accountId);
 }

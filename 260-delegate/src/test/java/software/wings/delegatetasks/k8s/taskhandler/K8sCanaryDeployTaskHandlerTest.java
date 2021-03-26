@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -30,7 +31,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sCanaryBaseHandler;
@@ -75,7 +77,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sTaskHelper k8sTaskHelper;

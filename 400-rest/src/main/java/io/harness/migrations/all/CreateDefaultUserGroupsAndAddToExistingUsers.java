@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -25,7 +25,7 @@ import org.apache.commons.collections.CollectionUtils;
  * @author rktummala on 3/15/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
   @Inject private AuthHandler authHandler;
   @Inject private UserService userService;

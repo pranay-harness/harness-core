@@ -9,7 +9,7 @@ import io.harness.persistence.PersistentEntity;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -17,7 +17,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Value
 @Builder
 @FieldNameConstants(innerTypeName = "TriggerEventHistoryKeys")
 @Entity(value = "triggerEventHistory", noClassnameStored = true)

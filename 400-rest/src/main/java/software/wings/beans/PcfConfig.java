@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -28,6 +31,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class PcfConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true)

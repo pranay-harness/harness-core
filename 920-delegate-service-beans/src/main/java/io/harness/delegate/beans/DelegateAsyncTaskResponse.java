@@ -20,6 +20,7 @@ public class DelegateAsyncTaskResponse implements PersistentEntity {
   @Id @org.springframework.data.annotation.Id private String uuid;
   private byte[] responseData;
   @FdIndex private long processAfter;
+  private Long holdUntil;
 
   @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusHours(2).toInstant());
 }

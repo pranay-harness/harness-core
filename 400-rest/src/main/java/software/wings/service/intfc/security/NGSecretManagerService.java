@@ -1,7 +1,9 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(PL)
 public interface NGSecretManagerService {
   static boolean isReadOnlySecretManager(SecretManagerConfig secretManagerConfig) {
     if (secretManagerConfig == null) {

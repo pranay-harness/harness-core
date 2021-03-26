@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -126,6 +127,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
@@ -935,12 +937,16 @@ public class EcsStateHelper {
       updateContainerElementAfterSuccessfulResize(context);
     }
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(listParam)
-        .notifyElement(listParam)
-        .build();
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(executionData)
+                                           .executionStatus(executionStatus)
+                                           .contextElement(listParam)
+                                           .notifyElement(listParam);
+
+    if (null != deployResponse && deployResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+    return builder.build();
   }
 
   private List<InstanceDetails> generateEcsInstanceDetails(List<InstanceElement> allInstanceElements) {

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.delegatecapability;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
@@ -11,6 +11,7 @@ import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChe
 import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
+import io.harness.delegate.task.executioncapability.LiteEngineConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
@@ -31,13 +32,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CapabilityCheckFactory {
   @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject LiteEngineConnectionCapabilityCheck liteEngineConnectionCapabilityCheck;
   @Inject SmtpCapabilityCheck smtpCapabilityCheck;
   @Inject AlwaysFalseValidationCapabilityCheck alwaysFalseValidationCapabilityCheck;
   @Inject WinrmHostValidationCapabilityCheck winrmHostValidationCapabilityCheck;
@@ -99,6 +101,8 @@ public class CapabilityCheckFactory {
         return smbConnectionCapabilityCheck;
       case GIT_CONNECTION_NG:
         return gitConnectionNGCapabilityCheck;
+      case LITE_ENGINE:
+        return liteEngineConnectionCapabilityCheck;
       default:
         return null;
     }

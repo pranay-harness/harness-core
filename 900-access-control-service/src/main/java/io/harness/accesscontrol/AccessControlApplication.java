@@ -1,8 +1,17 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.accesscontrol.AccessControlConfiguration.getResourceClasses;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -10,7 +19,9 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EventListenerService;
+import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -25,6 +36,7 @@ import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -52,6 +64,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
+@OwnedBy(PL)
 @Slf4j
 public class AccessControlApplication extends Application<AccessControlConfiguration> {
   private static final String APPLICATION_NAME = "Access Control Service";
@@ -83,6 +96,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+
+    bootstrap.getObjectMapper().configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
   }
 
   @Override
@@ -109,6 +124,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
+    injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
   }
 
   private void registerJerseyFeatures(Environment environment) {
@@ -176,8 +192,16 @@ public class AccessControlApplication extends Application<AccessControlConfigura
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
     Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getJwtAuthSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(NG_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(CI_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(CV_NEXT_GEN.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(NOTIFICATION_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(PIPELINE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
     environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
   }
 

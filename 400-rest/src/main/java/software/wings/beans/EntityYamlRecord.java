@@ -9,8 +9,6 @@ import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
-import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
-
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -25,16 +23,12 @@ import org.mongodb.morphia.annotations.Id;
 @CdIndex(name = "index_1",
     fields =
     {
-      @Field(EntityYamlRecordKeys.accountId)
-      , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
-          @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
+      @Field("accountId"), @Field("entityId"), @Field("entityType"), @Field(value = "createdAt", type = IndexType.DESC)
     })
 @CdIndex(name = "index_2",
     fields =
     {
-      @Field(EntityYamlRecordKeys.accountId)
-      , @Field(EntityYamlRecordKeys.entityType), @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC),
-          @Field(EntityYamlRecordKeys.yamlPath)
+      @Field("accountId"), @Field("entityType"), @Field(value = "createdAt", type = IndexType.DESC), @Field("yamlPath")
     })
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
   @Id private String uuid;

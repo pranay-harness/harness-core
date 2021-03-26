@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
@@ -12,6 +13,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.mongodb.morphia.annotations.Transient;
 
+@OwnedBy(CDP)
 public class AwsLambdaRollback extends AwsLambdaState {
   @Inject @Transient protected transient ArtifactService artifactService;
 

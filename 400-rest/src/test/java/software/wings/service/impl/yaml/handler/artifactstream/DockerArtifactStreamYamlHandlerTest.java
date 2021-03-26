@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -66,42 +67,73 @@ public class DockerArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void upsertFromYamlWithArtifactStreamRefactorDisabled() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    DockerArtifactStreamYaml baseYaml = DockerArtifactStreamYaml.builder()
-                                            .imageName("hello-world")
-                                            .harnessApiVersion("1.0")
-                                            .serverName("test server")
-                                            .build();
-    ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
-                                      .withYamlType(YamlType.ARTIFACT_STREAM)
-                                      .withYaml(baseYaml)
-                                      .withChange(GitFileChange.Builder.aGitFileChange()
-                                                      .withFilePath("Setup/Applications/a1/Services/s1/as1/test.yaml")
-                                                      .withFileContent("harnessApiVersion: '1.0'\n"
-                                                          + "type: DOCKER\n"
-                                                          + "imageName: hello-world\n"
-                                                          + "serverName: test server")
-                                                      .withAccountId(ACCOUNT_ID)
-                                                      .withChangeType(MODIFY)
-                                                      .build())
-                                      .build();
-    Application application = Application.Builder.anApplication().name("a1").uuid(APP_ID).accountId(ACCOUNT_ID).build();
-    when(appService.getAppByName(ACCOUNT_ID, "a1")).thenReturn(application);
-    when(appService.get(APP_ID)).thenReturn(application);
+    mocksSetup();
+    ChangeContext changeContext = getChangeContext();
     when(yamlHelper.getAppId(
              changeContext.getChange().getAccountId(), "Setup/Applications/a1/Services/s1/as1/test.yaml"))
         .thenReturn(APP_ID);
     when(yamlHelper.getServiceId(APP_ID, "Setup/Applications/a1/Services/s1/as1/test.yaml")).thenReturn(SERVICE_ID);
     final ArgumentCaptor<DockerArtifactStream> captor = ArgumentCaptor.forClass(DockerArtifactStream.class);
+
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     verify(artifactStreamService).createWithBinding(anyString(), captor.capture(), anyBoolean());
     final DockerArtifactStream artifactStream = captor.getValue();
     assertThat(artifactStream).isNotNull();
     assertThat(artifactStream.getImageName()).isEqualTo("hello-world");
     assertThat(artifactStream.getArtifactStreamType()).isEqualTo(DOCKER.name());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnUpsertFromYamlWithArtifactStreamRefactorDisabled() {
+    mocksSetup();
+    ChangeContext changeContext = getChangeContext();
+    changeContext.getChange().setSyncFromGit(true);
+    when(yamlHelper.getAppId(
+             changeContext.getChange().getAccountId(), "Setup/Applications/a1/Services/s1/as1/test.yaml"))
+        .thenReturn(APP_ID);
+    final ArgumentCaptor<DockerArtifactStream> captor = ArgumentCaptor.forClass(DockerArtifactStream.class);
+
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    verify(artifactStreamService).createWithBinding(anyString(), captor.capture(), anyBoolean());
+    final DockerArtifactStream artifactStream = captor.getValue();
+    assertThat(artifactStream).isNotNull();
+    assertThat(artifactStream.isSyncFromGit()).isTrue();
+    assertThat(artifactStream.getArtifactStreamType()).isEqualTo(DOCKER.name());
+  }
+
+  private void mocksSetup() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    Application application = Application.Builder.anApplication().name("a1").uuid(APP_ID).accountId(ACCOUNT_ID).build();
+    when(appService.getAppByName(ACCOUNT_ID, "a1")).thenReturn(application);
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(yamlHelper.getServiceId(APP_ID, "Setup/Applications/a1/Services/s1/as1/test.yaml")).thenReturn(SERVICE_ID);
+  }
+
+  private ChangeContext getChangeContext() {
+    DockerArtifactStreamYaml baseYaml = DockerArtifactStreamYaml.builder()
+                                            .imageName("hello-world")
+                                            .harnessApiVersion("1.0")
+                                            .serverName("test server")
+                                            .build();
+    return ChangeContext.Builder.aChangeContext()
+        .withYamlType(YamlType.ARTIFACT_STREAM)
+        .withYaml(baseYaml)
+        .withChange(GitFileChange.Builder.aGitFileChange()
+                        .withFilePath("Setup/Applications/a1/Services/s1/as1/test.yaml")
+                        .withFileContent("harnessApiVersion: '1.0'\n"
+                            + "type: DOCKER\n"
+                            + "imageName: hello-world\n"
+                            + "serverName: test server")
+                        .withAccountId(ACCOUNT_ID)
+                        .withChangeType(MODIFY)
+                        .build())
+        .build();
   }
 
   @Test

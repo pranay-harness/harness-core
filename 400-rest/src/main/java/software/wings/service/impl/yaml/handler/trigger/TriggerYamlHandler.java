@@ -94,7 +94,8 @@ public class TriggerYamlHandler extends BaseYamlHandler<TriggerYaml, Trigger> {
       return;
     }
 
-    triggerService.delete(optionalApplication.get().getUuid(), trigger.getUuid());
+    triggerService.delete(
+        optionalApplication.get().getUuid(), trigger.getUuid(), changeContext.getChange().isSyncFromGit());
   }
 
   @Override
@@ -177,6 +178,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<TriggerYaml, Trigger> {
     Trigger existingTrigger = yamlHelper.getTrigger(appId, change.getFilePath());
 
     Trigger trigger = toBean(appId, changeContext, changeSetContext);
+    trigger.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (existingTrigger == null) {
       trigger = triggerService.save(trigger);

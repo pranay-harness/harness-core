@@ -62,7 +62,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
     List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(resizeParams.getRegion(),
         contextData.settingAttribute, contextData.encryptedDataDetails, resizeParams.getClusterName(),
         containerServiceData.getName(), containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
-        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback, false);
 
     createAutoScalarConfigIfServiceReachedMaxSize(contextData, containerServiceData, executionLogCallback);
 

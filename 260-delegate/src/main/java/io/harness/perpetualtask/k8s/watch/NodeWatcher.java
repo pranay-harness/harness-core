@@ -5,7 +5,7 @@ import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_
 
 import static java.util.Optional.ofNullable;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class NodeWatcher implements ResourceEventHandler<V1Node> {
   private final EventPublisher eventPublisher;
   private final Set<String> publishedNodes;

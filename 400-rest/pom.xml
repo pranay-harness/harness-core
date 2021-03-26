@@ -314,7 +314,6 @@
         <dependency>
             <groupId>com.jcraft.harness</groupId>
             <artifactId>jsch-0-1-54-harness-patch</artifactId>
-            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
@@ -328,7 +327,10 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
-            <version>1.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
@@ -600,7 +602,11 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk15on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.cloudfoundry</groupId>
@@ -784,7 +790,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>870-cg-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>874-orchestration-delay</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

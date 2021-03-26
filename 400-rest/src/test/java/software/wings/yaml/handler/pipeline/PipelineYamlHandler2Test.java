@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.pipeline;
 
 import static io.harness.rule.OwnerRule.DHRUV;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.api.DeploymentType.SSH;
@@ -19,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -29,6 +31,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
@@ -90,6 +93,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -123,6 +127,8 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
 
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Pipelines/" + PIPELINE_NAME + ".yaml";
+
+  ArgumentCaptor<Pipeline> captor = ArgumentCaptor.forClass(Pipeline.class);
 
   @Before
   public void setUp() throws IOException {
@@ -435,6 +441,47 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
     });
 
     testCRUDpipeline(readYamlStringInFile(ValidPipelineFiles.pipelineTemplatized));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws IOException {
+    String validYamlContent = readYamlStringInFile(ValidPipelineFiles.pipelineUserGroup);
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+    gitFileChange.setSyncFromGit(true);
+
+    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.PIPELINE);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    when(pipelineService.save(any())).thenAnswer(invocationOnMock -> {
+      Pipeline pipeline = invocationOnMock.getArgumentAt(0, Pipeline.class);
+      pipeline.getPipelineStages()
+          .stream()
+          .flatMap(ps -> ps.getPipelineStageElements().stream())
+          .filter(pse -> pse.getType().equals(StateType.ENV_STATE.name()))
+          .forEach(pse -> pse.getProperties().put("workflowId", pse.getName()));
+      return pipeline;
+    });
+
+    yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    verify(pipelineService).save(captor.capture());
+    Pipeline capturedPipeline = captor.getValue();
+    assertThat(capturedPipeline).isNotNull();
+    assertThat(capturedPipeline.isSyncFromGit()).isTrue();
+
+    when(pipelineService.getPipelineByName(anyString(), anyString()))
+        .thenReturn(Pipeline.builder().appId(APP_ID).uuid(PIPELINE_ID).build());
+    yamlHandler.delete(changeContext);
+    verify(pipelineService).deleteByYamlGit(APP_ID, PIPELINE_ID, true);
   }
 
   private void testCRUDpipeline(String validYamlContent) throws IOException {

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -10,7 +11,10 @@ import software.wings.beans.config.ArtifactoryConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author rktummala on 11/19/17
@@ -33,6 +37,7 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Arti
                                      .url(artifactoryConfig.getArtifactoryUrl())
                                      .username(artifactoryConfig.getUsername())
                                      .password(encryptedPassword)
+                                     .delegateSelectors(getDelegateSelectors(artifactoryConfig.getDelegateSelectors()))
                                      .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -50,8 +55,15 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Arti
                                    .artifactoryUrl(yaml.getUrl())
                                    .encryptedPassword(yaml.getPassword())
                                    .username(yaml.getUsername())
+                                   .delegateSelectors(getDelegateSelectors(yaml.getDelegateSelectors()))
                                    .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+  }
+
+  private List<String> getDelegateSelectors(List<String> delegateSelectors) {
+    return isNotEmpty(delegateSelectors)
+        ? delegateSelectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList())
+        : new ArrayList<>();
   }
 
   @Override

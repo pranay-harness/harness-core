@@ -1,7 +1,10 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.service.GitEntityService;
@@ -26,6 +29,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class GitEntityResource {
   private GitEntityService gitEntityService;
 

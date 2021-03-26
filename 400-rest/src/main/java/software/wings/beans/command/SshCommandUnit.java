@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -11,6 +14,7 @@ import lombok.EqualsAndHashCode;
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
+@OwnedBy(CDP)
 public abstract class SshCommandUnit extends AbstractCommandUnit {
   /**
    * Instantiates a new command unit.

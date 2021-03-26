@@ -11,6 +11,7 @@ shared_dependencies = [
     "//910-delegate-service-driver:module",
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
+    "//930-ng-core-clients:module",
     "//940-notification-client:module",
     "//950-ng-project-n-orgs:module",
     "//960-ng-core-beans:module",
@@ -340,11 +341,11 @@ shared_dependencies = [
     "@maven//:software_amazon_ion_ion_java",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    main_class = "io.harness.notification.NotificationApplication",
+    #    main_class = "io.harness.notification.NotificationApplication",
     resources = [
         "//830-notification-service/src/main/resources:resource",
     ],

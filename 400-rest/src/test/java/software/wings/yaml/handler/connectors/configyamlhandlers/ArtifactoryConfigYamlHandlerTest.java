@@ -19,6 +19,7 @@ import software.wings.beans.config.ArtifactoryConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,12 +28,14 @@ import org.mockito.InjectMocks;
 public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private ArtifactoryConfigYamlHandler yamlHandler;
 
-  public static final String url = "https://harness.jfrog.io/harness";
+  public static final String URL = "https://harness.jfrog.io/harness";
 
   private String invalidYamlContent = "url_invalid: https://harness.jfrog.io/harness\n"
       + "username: admin\n"
       + "password: safeharness:JAhmPyeCQYaVVRO4YULw6A\n"
       + "harnessApiVersion: '1.0'\n"
+      + "delegateSelectors:\n"
+      + "- primary\n"
       + "type: ARTIFACTORY";
 
   private Class yamlClass = ArtifactoryConfigYaml.class;
@@ -72,9 +75,10 @@ public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHand
             .withAccountId(ACCOUNT_ID)
             .withValue(ArtifactoryConfig.builder()
                            .accountId(ACCOUNT_ID)
-                           .artifactoryUrl(url)
+                           .artifactoryUrl(URL)
                            .username(userName)
                            .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .delegateSelectors(Lists.newArrayList("primary"))
                            .build())
             .build());
   }
@@ -89,7 +93,7 @@ public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHand
         .name(name)
         .configclazz(ArtifactoryConfig.class)
         .updateMethodName("setArtifactoryUrl")
-        .currentFieldValue(url)
+        .currentFieldValue(URL)
         .build();
   }
 }

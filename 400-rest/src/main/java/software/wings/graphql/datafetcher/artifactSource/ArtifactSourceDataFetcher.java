@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ArtifactSourceDataFetcher extends AbstractObjectDataFetcher<QLArtifactSource, QLArtifactSourceQueryParam> {
   @Inject ArtifactStreamService artifactStreamService;
 

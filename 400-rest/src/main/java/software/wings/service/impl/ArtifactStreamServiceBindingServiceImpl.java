@@ -10,6 +10,7 @@ import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABL
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.ArtifactStreamServiceImpl.ARTIFACT_STREAM_DEBUG_LOG;
 
 import static java.lang.String.format;
 
@@ -45,6 +46,7 @@ import software.wings.service.intfc.WorkflowService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -283,6 +285,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public ArtifactStream createOld(String appId, String serviceId, String artifactStreamId) {
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Linking artifact stream id: {} to service {}", artifactStreamId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
       throw new InvalidRequestException("Service does not exist", USER);
@@ -435,7 +438,9 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     }
 
     if (!hasFeatureFlag(artifactStream.getAccountId())) {
-      return serviceResourceService.listByArtifactStreamId(appId, artifactStreamId);
+      String serviceId = artifactStream.getServiceId();
+      Service service = serviceResourceService.get(serviceId);
+      return service == null ? null : Collections.singletonList(service);
     }
 
     List<ServiceVariable> serviceVariables =
@@ -495,6 +500,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
     List<Service> services = listServices(appId, artifactStreamId);
     if (isEmpty(services)) {
       if (throwException) {
+        log.info(ARTIFACT_STREAM_DEBUG_LOG + "Deleting artifact stream {} from getService", artifactStreamId);
         artifactStreamService.delete(appId, artifactStreamId);
         throw new InvalidArtifactServerException(
             format("Artifact stream %s is a zombie.", artifactStreamId), Level.INFO, USER);

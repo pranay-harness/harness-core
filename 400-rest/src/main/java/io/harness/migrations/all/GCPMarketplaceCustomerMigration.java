@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.ENTITLEMENT_ACTIVATED;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.migrations.Migration;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class GCPMarketplaceCustomerMigration implements Migration {
   private final WingsPersistence wingsPersistence;
   private final GcpProcurementService gcpProcurementService;

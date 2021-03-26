@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
@@ -125,6 +126,13 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       }
 
       status = CommandExecutionStatus.SUCCESS;
+    } catch (TimeoutException ex) {
+      log.error(ExceptionUtils.getMessage(ex), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+      log.error("Completed operation with errors");
+      executionLogCallback.saveExecutionLog(
+          format("Completed operation with errors%n%s%n", DASH_STRING), LogLevel.ERROR);
+      throw ex;
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);

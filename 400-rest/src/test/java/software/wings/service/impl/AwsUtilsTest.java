@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -11,6 +12,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -28,6 +30,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class AwsUtilsTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator mockExpressionEvaluator;
 

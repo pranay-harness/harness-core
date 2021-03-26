@@ -3,7 +3,9 @@ package io.harness.cdng.pipeline.stepinfo;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
@@ -41,16 +43,18 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   @JsonIgnore String identifier;
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, ExecutionTarget executionTarget,
       ParameterField<Boolean> onDelegate, String name, String identifier, List<NGVariable> outputVariables,
-      List<NGVariable> environmentVariables) {
+      List<NGVariable> environmentVariables, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(shell, source, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -90,6 +94,8 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
         .identifier(baseStepParameterInfo.getIdentifier())
         .description(baseStepParameterInfo.getDescription())
         .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .delegateSelectors(ParameterField.createValueField(
+            CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
         .build();
   }
 }

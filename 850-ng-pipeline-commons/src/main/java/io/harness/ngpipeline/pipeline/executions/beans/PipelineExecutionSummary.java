@@ -1,10 +1,7 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
@@ -27,13 +24,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "pipelineExecutionSummary", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("pipelineExecutionSummary")
-@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier_planExecutionId",
-    fields =
-    {
-      @Field(PipelineExecutionSummaryKeys.accountIdentifier)
-      , @Field(PipelineExecutionSummaryKeys.orgIdentifier), @Field(PipelineExecutionSummaryKeys.projectIdentifier),
-          @Field(PipelineExecutionSummaryKeys.planExecutionId)
-    })
 public class PipelineExecutionSummary implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String id;
 

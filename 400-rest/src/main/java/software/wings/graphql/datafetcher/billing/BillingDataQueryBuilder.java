@@ -5,7 +5,7 @@ import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
@@ -83,7 +83,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private CeActivePodCountTableSchema podTableSchema = new CeActivePodCountTableSchema();
@@ -158,6 +158,7 @@ public class BillingDataQueryBuilder {
           && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
           && areAggregationsValidForPreAggregation(aggregateFunction)) {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
       } else {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
       }
@@ -408,7 +409,12 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     if (isValidGroupByForFilterValues(groupBy)) {
@@ -1467,14 +1473,16 @@ public class BillingDataQueryBuilder {
       case Region:
         return schema.getRegion();
       case CloudProvider:
-        return schema.getCloudProvider();
+        return schema.getCloudProviderId();
       default:
         throw new InvalidRequestException("Group by entity not supported in filter values");
     }
   }
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
-    if (ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ")
+    if (ImmutableSet
+            .of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q",
+                "DVExhMPMScy6RpRNKwyvZQ")
             .contains(accountId)) {
       return false;
     }

@@ -856,7 +856,7 @@ public class AuthServiceImpl implements AuthService {
       log.info("Generating bearer token");
       AuthToken authToken = new AuthToken(
           user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-      authToken.setJwtToken(generateJWTSecret(authToken));
+      authToken.setJwtToken(generateJWTSecret(authToken, user.getEmail()));
       saveAuthToken(authToken);
       boolean isFirstLogin = user.getLastLogin() == 0L;
       user.setLastLogin(System.currentTimeMillis());
@@ -900,7 +900,7 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  private String generateJWTSecret(AuthToken authToken) {
+  private String generateJWTSecret(AuthToken authToken, String email) {
     String jwtAuthSecret = secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET);
     int duration = JWT_CATEGORY.AUTH_SECRET.getValidityDuration();
     try {
@@ -914,15 +914,15 @@ public class AuthServiceImpl implements AuthService {
                                           .withClaim("env", configuration.getEnvPath());
       // User Principal needed in token for environments without gateway as this token will be sent back to different
       // microservices
-      addUserPrincipal(authToken, jwtBuilder);
+      addUserPrincipal(authToken.getUserId(), email, authToken.getAccountId(), jwtBuilder);
       return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException("JWTToken could not be generated", exception);
     }
   }
 
-  private void addUserPrincipal(AuthToken authToken, JWTCreator.Builder jwtBuilder) {
-    UserPrincipal userPrincipal = new UserPrincipal(authToken.getUserId(), authToken.getAccountId());
+  private void addUserPrincipal(String userId, String email, String accountId, JWTCreator.Builder jwtBuilder) {
+    UserPrincipal userPrincipal = new UserPrincipal(userId, email, accountId);
     Map<String, String> userClaims = userPrincipal.getJWTClaims();
     userClaims.forEach(jwtBuilder::withClaim);
   }
@@ -1130,6 +1130,14 @@ public class AuthServiceImpl implements AuthService {
     if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
       accountIds.forEach(accountId
           -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, loggedInUser, Event.Type.LOGIN));
+    }
+  }
+
+  @Override
+  public void auditLogin2FA(List<String> accountIds, User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
+      accountIds.forEach(accountId
+          -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, loggedInUser, Event.Type.LOGIN_2FA));
     }
   }
 

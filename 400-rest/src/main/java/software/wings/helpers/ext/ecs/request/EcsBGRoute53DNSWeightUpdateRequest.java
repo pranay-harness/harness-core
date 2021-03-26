@@ -2,7 +2,7 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.ROUTE53_DNS_WEIGHT_UPDATE;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsConfig;
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsBGRoute53DNSWeightUpdateRequest extends EcsCommandRequest {
   private boolean rollback;
   private String serviceName;
@@ -34,8 +34,9 @@ public class EcsBGRoute53DNSWeightUpdateRequest extends EcsCommandRequest {
       String region, String cluster, AwsConfig awsConfig, boolean rollback, String serviceName,
       String serviceNameDownsized, int serviceCountDownsized, boolean downsizeOldService, int oldServiceWeight,
       int newServiceWeight, String parentRecordName, String parentRecordHostedZoneId, String oldServiceDiscoveryArn,
-      String newServiceDiscoveryArn, int timeout, int ttl) {
-    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, ROUTE53_DNS_WEIGHT_UPDATE);
+      String newServiceDiscoveryArn, int timeout, int ttl, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, ROUTE53_DNS_WEIGHT_UPDATE,
+        timeoutErrorSupported);
     this.rollback = rollback;
     this.serviceName = serviceName;
     this.serviceNameDownsized = serviceNameDownsized;

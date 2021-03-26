@@ -24,6 +24,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
@@ -50,6 +51,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   @InjectMocks private K8sCanaryDeleteStep canaryDeleteStep;
 
   @Mock private InfrastructureOutcome infrastructureOutcome;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
@@ -79,8 +81,8 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepParameters), any(K8sDeleteRequest.class), eq(ambiance), eq(infrastructureOutcome));
     doReturn(k8sCanaryOutcome)
-        .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+        .when(executionSweepingOutputService)
+        .resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));

@@ -14,21 +14,20 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,11 +59,17 @@ import org.mongodb.morphia.annotations.Transient;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "PipelineKeys")
 @Entity(value = "pipelines", noClassnameStored = true)
-@CdIndex(name = "accountIdCreatedAt",
-    fields = { @Field(PipelineKeys.accountId)
-               , @Field(value = PipelineKeys.createdAt, type = IndexType.DESC) })
 @HarnessEntity(exportable = true)
 public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdCreatedAt")
+                 .field(PipelineKeys.accountId)
+                 .descSortField(PipelineKeys.createdAt)
+                 .build())
+        .build();
+  }
   public static final String NAME_KEY = "name";
   public static final String DESCRIPTION_KEY = "description";
 

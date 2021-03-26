@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static org.mockito.Mockito.mock;
 
@@ -27,6 +27,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -34,11 +35,11 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -127,6 +128,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
@@ -173,7 +175,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     closingFactory.addServer(new Closeable() {
@@ -189,7 +191,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
+        NG_ORCHESTRATION, payload -> publisher.send(Collections.singletonList(NG_ORCHESTRATION), payload));
 
     NotifierScheduledExecutorService notifierScheduledExecutorService =
         injector.getInstance(NotifierScheduledExecutorService.class);

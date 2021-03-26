@@ -15,11 +15,11 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.NodeExecutionUpdateEventHandler;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
-import io.harness.event.StatusUpdateEventHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -53,7 +53,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
   @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject NodeExecutionUpdateEventHandler nodeExecutionUpdateEventHandler;
-  @Inject StatusUpdateEventHelper statusUpdateEventHelper;
+  @Inject GraphStatusUpdateHelper graphStatusUpdateHelper;
 
   @Override
   public OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId) {
@@ -154,23 +154,27 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraph buildOrchestrationGraphBasedOnLogs(String planExecutionId) {
     OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
     List<OrchestrationEventLog> unprocessedEventLogs;
+    log.info("Getting Unprocessed orchestrationEventLogs for planExecutionId [{}]", planExecutionId);
     if (orchestrationGraph == null) {
       unprocessedEventLogs = orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId);
     } else {
       unprocessedEventLogs =
           orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, orchestrationGraph.getLastUpdatedAt());
     }
+    log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
     long lastUpdatedAt = 0L;
     if (orchestrationGraph != null) {
       lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
     }
     if (!unprocessedEventLogs.isEmpty()) {
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+        log.info("Starting Processing Orchestration Event log with id [{}]", orchestrationEventLog.getId());
+
         OrchestrationEventType eventType = orchestrationEventLog.getEvent().getEventType();
         switch (eventType) {
           case NODE_EXECUTION_STATUS_UPDATE:
             orchestrationGraph =
-                statusUpdateEventHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+                graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
             break;
           case ORCHESTRATION_START:
             orchestrationGraph = orchestrationStartEventHandler.handleEventFromLog(orchestrationEventLog.getEvent());
@@ -197,10 +201,11 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       log.warn("More than 5 Events Processed at a time for given planExecutionId:[{}]", planExecutionId);
     }
     if (orchestrationGraph != null) {
+      orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cacheOrchestrationGraph(orchestrationGraph);
     }
-
+    log.info("Processing of [{}] orchestration event logs completed", unprocessedEventLogs.size());
     return orchestrationGraph;
   }
 

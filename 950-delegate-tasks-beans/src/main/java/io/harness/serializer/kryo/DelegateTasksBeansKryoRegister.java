@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -28,6 +31,14 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiConfirmSubParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiResult;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskResponse;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.ImageType;
@@ -45,6 +56,7 @@ import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.K8ExecCommandParams;
 import io.harness.delegate.beans.ci.K8ExecuteCommandTaskParams;
@@ -115,6 +127,7 @@ import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
@@ -129,6 +142,8 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
+import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiRequestType;
 import io.harness.delegate.beans.gitapi.GitApiResult;
@@ -141,8 +156,10 @@ import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -243,8 +260,7 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
+import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -265,6 +281,7 @@ import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
+import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -321,6 +338,7 @@ import org.eclipse.jgit.api.GitCommand;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+@OwnedBy(DEL)
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -473,7 +491,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ImageType.class, 19366);
     kryo.register(JiraTaskNGParameters.class, 19367);
     kryo.register(JiraTaskNGResponse.class, 19368);
-    kryo.register(JiraIssueData.class, 19369);
     kryo.register(JiraConnectionTaskParams.class, 19370);
     kryo.register(JiraTestConnectionTaskNGResponse.class, 19371);
     kryo.register(JSONArray.class, 19373);
@@ -595,6 +612,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
     kryo.register(HttpHelmStoreDelegateConfig.class, 19642);
     kryo.register(KustomizeManifestDelegateConfig.class, 19700);
+    kryo.register(OpenshiftManifestDelegateConfig.class, 19701);
+    kryo.register(S3HelmStoreDelegateConfig.class, 19702);
+    kryo.register(GcsHelmStoreDelegateConfig.class, 19703);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -656,5 +676,20 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
     kryo.register(ChecksumType.class, 5065);
+
+    kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
+    kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
+
+    kryo.register(AwsCodeCommitApiConfirmSubParams.class, 543268);
+    kryo.register(AwsCodeCommitDataObtainmentParams.class, 543269);
+    kryo.register(AwsCodeCommitApiParams.class, 543270);
+    kryo.register(AwsCodeCommitApiResult.class, 543271);
+    kryo.register(AwsCodeCommitApiTaskParams.class, 543272);
+    kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
+    kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
+    kryo.register(AwsCodeCommitRequestType.class, 543275);
+
+    kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
+    kryo.register(LiteEngineConnectionCapability.class, 543277);
   }
 }

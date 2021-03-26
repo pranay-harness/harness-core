@@ -60,6 +60,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
 
 redisLockConfig:
@@ -152,9 +153,12 @@ baseUrls:
   ui: http://localhost:8080/
   ngUi: http://localhost:8080/ng/#/
 
-ResoureGroupConfig:
+resourceGroupConfig:
   ng-manager:
     baseUrl: http://localhost:7457/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipeline-service:
+    baseUrl: http://localhost:12001/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   manager:
     baseUrl: http://localhost:3457/api/
@@ -166,3 +170,10 @@ accessControlClient:
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+accessControlAdminClient:
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

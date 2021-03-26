@@ -6,7 +6,6 @@ import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -25,7 +24,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @NotEmpty private PodsSetupInfo podsSetupInfo;
   @NotEmpty private String workDir;
-  private Set<String> publishArtifactStepIds;
   private Map<String, ConnectorConversionInfo> stepConnectorRefs;
 
   @Override

@@ -6,6 +6,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.Account;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.service.intfc.AccountService;
 
 import com.google.inject.Inject;
@@ -32,6 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 public class AccountResourceNG {
   private final AccountService accountService;
+  private SubdomainUrlHelper subdomainUrlHelper;
 
   @GET
   @Path("{accountId}")
@@ -58,5 +60,11 @@ public class AccountResourceNG {
   public RestResponse<Boolean> isFeatureFlagEnabled(
       @QueryParam("featureName") String featureName, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
+  }
+
+  @GET
+  @Path("/baseUrl")
+  public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
   }
 }

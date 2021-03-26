@@ -3,9 +3,7 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import static java.util.Arrays.asList;
-
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
@@ -100,6 +98,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -115,7 +114,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags<QLDeploymentAggregationFunction,
     QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria, QLDeploymentTagType,
     QLDeploymentTagAggregation, QLDeploymentEntityAggregation> {
@@ -1349,7 +1348,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       }
       if (filter.getEnvironmentType() != null) {
         filterMap.put(DeploymentMetaDataFields.ENVTYPE,
-            asList(filter.getEnvironmentType().getValues())
+            Arrays.asList(filter.getEnvironmentType().getValues())
                 .stream()
                 .map(Enum::name)
                 .collect(Collectors.toList())

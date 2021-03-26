@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
@@ -11,6 +12,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -53,6 +55,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class PcfHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;

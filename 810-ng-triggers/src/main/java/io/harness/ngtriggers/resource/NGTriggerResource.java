@@ -93,7 +93,7 @@ public class NGTriggerResource {
     try {
       TriggerDetails triggerDetails =
           ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
-      // ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      ngTriggerService.validateTriggerConfig(triggerDetails);
       createdEntity = ngTriggerService.create(triggerDetails.getNgTriggerEntity());
       return ResponseDTO.newResponse(
           createdEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(createdEntity));
@@ -134,7 +134,7 @@ public class NGTriggerResource {
     try {
       TriggerDetails triggerDetails =
           ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
-      // ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      ngTriggerService.validateTriggerConfig(triggerDetails);
       triggerDetails.getNgTriggerEntity().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
       NGTriggerEntity updatedEntity = ngTriggerService.update(triggerDetails.getNgTriggerEntity());

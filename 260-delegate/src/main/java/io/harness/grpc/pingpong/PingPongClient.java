@@ -1,6 +1,6 @@
 package io.harness.grpc.pingpong;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.event.Ping;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.ProcessIdUtil;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class PingPongClient extends AbstractScheduledService {
   private static final String PROCESS_ID = ProcessIdUtil.getProcessId();
   private final PingPongServiceBlockingStub pingPongServiceBlockingStub;

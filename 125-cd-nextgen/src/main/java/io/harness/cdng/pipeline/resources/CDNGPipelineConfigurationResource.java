@@ -1,6 +1,10 @@
 package io.harness.cdng.pipeline.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStrategyType;
+import io.harness.cdng.infra.beans.ProvisionerType;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.helpers.CDNGPipelineConfigurationHelper;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
@@ -26,6 +30,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Api("pipelines")
 @Path("pipelines/configuration")
 @Produces({"application/json", "application/yaml"})
@@ -60,6 +65,17 @@ public class CDNGPipelineConfigurationResource {
   }
 
   @GET
+  @Path("/strategies/provisioner-yaml-snippets")
+  @ApiOperation(value = "Gets Yaml for Execution Strategy based on Provisioner Type",
+      nickname = "getProvisionerExecutionStrategyYaml")
+  public ResponseDTO<String>
+  getProvisionerExecutionStrategyYaml(@NotNull @QueryParam("provisionerType") ProvisionerType provisionerType)
+      throws IOException {
+    return ResponseDTO.newResponse(
+        cdngPipelineConfigurationHelper.getProvisionerExecutionStrategyYaml(provisionerType));
+  }
+
+  @GET
   @Path("/serviceDefinitionTypes")
   @ApiOperation(value = "Git list of service definition types", nickname = "getServiceDefinitionTypes")
   public ResponseDTO<List<ServiceDefinitionType>> getServiceDefinitionTypes() {
@@ -72,5 +88,12 @@ public class CDNGPipelineConfigurationResource {
   public ResponseDTO<StepCategory> getSteps(
       @NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType) {
     return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getSteps(serviceDefinitionType));
+  }
+
+  @GET
+  @Path("/provisioner-steps")
+  @ApiOperation(value = "get provisioner steps", nickname = "getProvisionerSteps")
+  public ResponseDTO<StepCategory> getProvisionerSteps() {
+    return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getStepsForProvisioners());
   }
 }

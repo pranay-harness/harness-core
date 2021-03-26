@@ -1,13 +1,16 @@
 package io.harness.delegate.task.k8s;
 
-import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.delegate.task.k8s.ManifestType.HELM_CHART;
 
+import io.harness.delegate.beans.connector.awsconnector.AwsCapabilityHelper;
+import io.harness.delegate.beans.connector.gcp.GcpCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -47,11 +50,30 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
                              .criteria(String.format("Helm %s Installed", helManifestConfig.getHelmVersion()))
                              .build());
 
-        if (HTTP_HELM == helManifestConfig.getStoreDelegateConfig().getType()) {
-          HttpHelmStoreDelegateConfig httpHelmStoreConfig =
-              (HttpHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
-          capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
+        switch (helManifestConfig.getStoreDelegateConfig().getType()) {
+          case HTTP_HELM:
+            HttpHelmStoreDelegateConfig httpHelmStoreConfig =
+                (HttpHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
+            capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
+            break;
+
+          case S3_HELM:
+            S3HelmStoreDelegateConfig s3HelmStoreConfig =
+                (S3HelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
+            capabilities.addAll(AwsCapabilityHelper.fetchRequiredExecutionCapabilities(
+                s3HelmStoreConfig.getAwsConnector(), maskingEvaluator));
+            break;
+
+          case GCS_HELM:
+            GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
+                (GcsHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
+            capabilities.addAll(GcpCapabilityHelper.fetchRequiredExecutionCapabilities(
+                gcsHelmStoreDelegateConfig.getGcpConnector(), maskingEvaluator));
+            break;
+
+          default:
+            // No capabilities to add
         }
       }
     }

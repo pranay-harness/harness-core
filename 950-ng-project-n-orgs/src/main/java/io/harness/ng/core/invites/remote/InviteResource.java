@@ -17,6 +17,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InvitesService;
 import io.harness.ng.core.invites.dto.CreateInviteListDTO;
@@ -24,18 +25,16 @@ import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.annotations.PublicApi;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +50,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -68,22 +66,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private static final String PROJECT_URL_FORMAT = "account/%s/projects/%s/orgs/%s/details";
-  private static final String ORG_URL_FORMAT = "account/%s/admin/organizations/%s";
-  private static final String SIGN_UP_URL = "#/login";
-  private static final String INVALID_TOKEN_REDIRECT_URL = "account/%s/error?code=INVITE_EXPIRED";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
-  private final String uiBaseUrl;
-  private final String ngUiBaseUrl;
 
   @Inject
-  InviteResource(InvitesService invitesService, NgUserService ngUserService, @Named("uiBaseUrl") String uiBaseUrl,
-      @Named("ngUiBaseUrl") String ngUiBaseUrl) {
+  InviteResource(InvitesService invitesService, NgUserService ngUserService) {
     this.invitesService = invitesService;
     this.ngUserService = ngUserService;
-    this.uiBaseUrl = uiBaseUrl;
-    this.ngUiBaseUrl = ngUiBaseUrl;
   }
 
   @GET
@@ -154,38 +143,19 @@ public class InviteResource {
   }
 
   @GET
-  @Path("/verify")
-  @PublicApi
+  @Path("/accept")
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite")
-  public Response verify(
-      @QueryParam("token") @NotNull String jwtToken, @QueryParam("accountIdentifier") String accountIdentifier) {
-    Optional<Invite> inviteOpt = invitesService.verify(jwtToken);
-    URI redirectURI;
-    if (inviteOpt.isPresent()) {
-      Invite invite = inviteOpt.get();
-
-      // TODO @Ankush when user signup, check if he has any pending approved invites
-      redirectURI = getRedirectURI(invite);
-    } else {
-      redirectURI = URI.create(ngUiBaseUrl + String.format(INVALID_TOKEN_REDIRECT_URL, accountIdentifier));
-    }
-    return Response.seeOther(redirectURI).build();
+  @InternalApi
+  public ResponseDTO<InviteAcceptResponse> accept(@QueryParam("token") @NotNull String jwtToken) {
+    return ResponseDTO.newResponse(invitesService.acceptInvite(jwtToken));
   }
 
-  private URI getRedirectURI(Invite invite) {
-    URI redirectURI;
-    if (Boolean.TRUE.equals(invite.getDeleted())) {
-      if (invite.getProjectIdentifier() == null) {
-        redirectURI = URI.create(
-            String.format(ngUiBaseUrl + ORG_URL_FORMAT, invite.getAccountIdentifier(), invite.getOrgIdentifier()));
-      } else {
-        redirectURI = URI.create(String.format(ngUiBaseUrl + PROJECT_URL_FORMAT, invite.getAccountIdentifier(),
-            invite.getProjectIdentifier(), invite.getOrgIdentifier()));
-      }
-    } else {
-      redirectURI = URI.create(uiBaseUrl + SIGN_UP_URL);
-    }
-    return redirectURI;
+  @GET
+  @Path("/complete")
+  @ApiOperation(value = "Complete user invite", nickname = "completeInvite")
+  @NextGenManagerAuth
+  public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
+    return ResponseDTO.newResponse(invitesService.completeInvite(token));
   }
 
   @PUT
@@ -203,7 +173,6 @@ public class InviteResource {
 
   @DELETE
   @Path("/{inviteId}")
-  @Consumes()
   @ApiOperation(value = "Delete a invite for the specified project/organization", nickname = "deleteInvite")
   @NextGenManagerAuth
   public ResponseDTO<Optional<InviteDTO>> delete(

@@ -61,16 +61,17 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<ConfigFileOve
     ConfigFileOverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
+    boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
       configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
-          EntityType.ENVIRONMENT, targetFilePath);
+          EntityType.ENVIRONMENT, targetFilePath, syncFromGit);
     } else {
       Service service = yamlHelper.getServiceByName(optionalApplication.get().getAppId(), serviceName);
       notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
       String serviceTemplateId = yamlHelper.getServiceTemplateId(
           optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(), service.getName());
-      configService.delete(
-          optionalApplication.get().getUuid(), serviceTemplateId, EntityType.SERVICE_TEMPLATE, targetFilePath);
+      configService.delete(optionalApplication.get().getUuid(), serviceTemplateId, EntityType.SERVICE_TEMPLATE,
+          targetFilePath, syncFromGit);
     }
   }
 

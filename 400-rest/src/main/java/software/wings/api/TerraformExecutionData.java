@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.provision.TfVarSource;
@@ -18,6 +21,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class TerraformExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
 

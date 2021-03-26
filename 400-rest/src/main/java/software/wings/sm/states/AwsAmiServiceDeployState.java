@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -25,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -114,6 +116,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsAmiServiceDeployState extends State {
   public static final String ASG_COMMAND_NAME = "Resize AutoScaling Group";
 

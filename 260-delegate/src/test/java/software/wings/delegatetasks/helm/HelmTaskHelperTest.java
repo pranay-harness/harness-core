@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
@@ -36,12 +38,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
-import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
@@ -60,7 +63,6 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
-import software.wings.helpers.ext.chartmuseum.ChartMuseumServer;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
@@ -69,7 +71,6 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
-import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -98,7 +99,8 @@ import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmTaskHelperTest extends WingsBaseTest {
   public static final String V_3_HELM_SEARCH_REPO_COMMAND =
       "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";
@@ -839,12 +841,12 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
-        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doReturn(getHelmCollectionResult(""))
         .when(helmTaskHelper)
         .executeCommandWithLogOutput(eq(V_3_HELM_SEARCH_REPO_COMMAND), eq("dir"), anyString());
@@ -858,8 +860,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     verify(processExecutor, times(1)).execute();
     verify(chartMuseumClient, times(1))
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
   }
 
   @NotNull
@@ -927,11 +929,11 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
-        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doAnswer(new Answer() {
       private int count = 0;
 
@@ -979,12 +981,13 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     verify(chartMuseumClient, never()).stopChartMuseumServer(chartMuseumServer.getStartedProcess());
   }
 
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testInitHelm() throws Exception {
     String workingDirectory = "/working/directory";
     String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
-    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
         .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,

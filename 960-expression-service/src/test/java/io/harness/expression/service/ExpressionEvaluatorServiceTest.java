@@ -78,6 +78,42 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   }
 
   @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldEvaluateSingleExpression() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("'hello' == 'hello'")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":\"VALUE\"}}")
+                            .setIsSkipCondition(true)
+                            .build())
+
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("true");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotEvaluateSingleExpression() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("'hello' == 'hello'")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":\"VALUE\"}}")
+                            .setIsSkipCondition(false)
+                            .build())
+
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("'hello' == 'hello'");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldEvaluateDoublyNestedVariable() {

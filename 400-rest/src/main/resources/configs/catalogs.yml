@@ -35,6 +35,8 @@ ARTIFACT_TYPE:
       value: IIS_APP
     - name: IIS Virtual Directory
       value: IIS_VirtualDirectory
+    - name: Microsoft NuGet
+      value: NUGET
     - name: Other
       value: OTHER
 
@@ -381,6 +383,8 @@ TASK_TYPES:
       value: APM
     - name: AppDynamics
       value: APPDYNAMICS
+    - name: Artifact Collection In Pipeline
+      value: ARTIFACT_COLLECT
     - name: Artifactory
       value: ARTIFACTORY
     - name: Azure Container Registry
@@ -401,10 +405,16 @@ TASK_TYPES:
       value: CONNECTIVITY_VALIDATION
     - name: Container
       value: CONTAINER
+    - name: Continuous Efficiency
+      value: CE
+    - name: Continuous Integration
+      value: CI
     - name: Custom Artifact Source
       value: CUSTOM
     - name: Custom Log Collection and Bugsnag
       value: LOG
+    - name: Custom Manifest Fetch Values Task
+      value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
     - name: Docker Hub
       value: DOCKER
     - name: Dynatrace
@@ -473,12 +483,6 @@ TASK_TYPES:
       value: TERRAFORM
     - name: Trigger
       value: TRIGGER
-    - name: Continuous Integration
-      value: CI
-    - name: Artifact Collection In Pipeline
-      value: ARTIFACT_COLLECT
-    - name: Custom Manifest Fetch Values Task
-      value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
 
 EXECUTION_STATUS:
     - name: Aborted

@@ -1,12 +1,15 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SAINATH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -27,6 +30,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AwsConfigYamlHandler yamlHandler;
   @Mock SecretManager secretManager;
@@ -64,6 +68,22 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     AwsConfigYaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKey()).isEqualTo(null);
     assertThat(yaml.getSecretKey()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testToYamlUseIRSA() {
+    AwsConfig awsConfig = AwsConfig.builder().useIRSA(true).accessKey(null).secretKey(null).build();
+    SettingAttribute settingAttribute = new SettingAttribute();
+
+    settingAttribute.setValue(awsConfig);
+    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+    assertThat(yaml.getAccessKey()).isEqualTo(null);
+    assertThat(yaml.getSecretKey()).isEqualTo(null);
+    assertThat(yaml.isUseEc2IamCredentials()).isFalse();
+    assertThat(yaml.isAssumeCrossAccountRole()).isFalse();
+    assertThat(yaml.isUseIRSA()).isTrue();
   }
 
   @Test
@@ -156,5 +176,28 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     assertThat(awsConfig.getDefaultRegion()).isEqualTo(defaultRegion);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testToBeanUseIRSA() {
+    AwsConfig.Yaml yaml = AwsConfig.Yaml.builder().useIRSA(true).build();
+
+    Change change = Change.Builder.aFileChange()
+                        .withAccountId("accountId")
+                        .withFilePath("Setup/Cloud Providers/test-harness.yaml")
+                        .build();
+    ChangeContext<AwsConfig.Yaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                      .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                      .withYaml(yaml)
+                                                      .withChange(change)
+                                                      .build();
+
+    SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    assertThat(awsConfig.isUseIRSA()).isTrue();
+    assertThat(awsConfig.isAssumeCrossAccountRole()).isFalse();
+    assertThat(awsConfig.isUseEc2IamCredentials()).isFalse();
   }
 }

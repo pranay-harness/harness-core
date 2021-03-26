@@ -14,7 +14,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.Capability;
@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   public static final String NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK =
       "No delegate available to handle perpetual task of %s task type";
@@ -210,8 +210,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
   public void rebalance(PerpetualTaskRecord taskRecord) {
     if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
-      perpetualTaskRecordDao.appointDelegate(
-          taskRecord.getUuid(), taskRecord.getDelegateId(), taskRecord.getClientContext().getLastContextUpdated());
+      perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskRecord.getUuid(), taskRecord.getDelegateId(),
+          taskRecord.getClientContext().getLastContextUpdated());
       return;
     }
     assign(taskRecord);

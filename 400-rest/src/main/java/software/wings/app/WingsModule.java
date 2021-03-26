@@ -3,12 +3,13 @@ package software.wings.app;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.CgOrchestrationModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
@@ -49,10 +50,8 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.ApiException;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
-import io.harness.cf.client.api.CfClientException;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -74,6 +73,8 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.chartmuseum.NGChartMuseumService;
+import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.encryptors.CustomEncryptor;
@@ -131,6 +132,7 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.invites.client.NgInviteClientModule;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -169,8 +171,6 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.service.impl.DelegateCacheImpl;
-import io.harness.service.intfc.DelegateCache;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -750,7 +750,7 @@ import org.jetbrains.annotations.NotNull;
  * Guice Module for initializing all beans.
  */
 @Slf4j
-@TargetModule(Module._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -1017,7 +1017,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AzureResourceService.class).to(AzureResourceServiceImpl.class);
     bind(AzureMachineImageBuildService.class).to(AzureMachineImageBuildServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
-    bind(DelegateCache.class).to(DelegateCacheImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(WebHookService.class).to(WebHookServiceImpl.class);
@@ -1295,6 +1294,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
+    bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
@@ -1328,6 +1328,11 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    // User-Sync Dependencies
+    install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
@@ -1590,12 +1595,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     log.info("Using CF API key {}", cfClientConfig.getApiKey());
     String apiKey = cfClientConfig.getApiKey();
 
-    try {
-      return new CfClient(apiKey);
-    } catch (CfClientException | ApiException e) {
-      log.error("Failed to initialize the CF client, {}", e.getMessage());
-    }
-    return null;
+    return new CfClient(apiKey);
   }
 
   @Provides

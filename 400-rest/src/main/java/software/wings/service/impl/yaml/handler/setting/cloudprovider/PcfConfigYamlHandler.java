@@ -1,8 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.PcfConfig;
@@ -15,6 +17,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfConfigYamlHandler extends CloudProviderYamlHandler<PcfConfigYaml, PcfConfig> {
   @Override
   public PcfConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {

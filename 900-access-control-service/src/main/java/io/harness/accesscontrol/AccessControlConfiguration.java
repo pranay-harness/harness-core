@@ -1,12 +1,16 @@
 package io.harness.accesscontrol;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
+import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -28,6 +32,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.reflections.Reflections;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,10 +51,13 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
+  @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
   @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
+  @JsonProperty("identityServiceSecret") private String identityServiceSecret;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

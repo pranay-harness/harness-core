@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -76,6 +78,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class SpotInstDeployStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;

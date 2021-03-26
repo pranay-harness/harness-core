@@ -3,17 +3,21 @@ roles:
       name: Project Admin
       description: Administrate an existing project.
       permissions:
-        - core.project.view
-        - core.project.edit
-        - core.project.delete
-        - core.secret.create
-        - core.secret.view
-        - core.secret.edit
-        - core.secret.delete
-        - core.connector.create
-        - core.connector.view
-        - core.connector.edit
-        - core.connector.delete
+        - core_project_view
+        - core_project_edit
+        - core_project_delete
+        - core_secret_create
+        - core_secret_view
+        - core_secret_edit
+        - core_secret_delete
+        - core_connector_create
+        - core_connector_view
+        - core_connector_edit
+        - core_connector_delete
+        - core_pipeline_view
+        - core_pipeline_edit
+        - core_pipeline_delete
+        - core_pipeline_execute
       allowedScopeLevels:
         - project
       managed: true
@@ -21,9 +25,10 @@ roles:
       name: Project Viewer
       description: View a project
       permissions:
-        - core.project.view
-        - core.secret.view
-        - core.connector.view
+        - core_project_view
+        - core_secret_view
+        - core_connector_view
+        - core_pipeline_view
       allowedScopeLevels:
         - project
       managed: true
@@ -31,18 +36,18 @@ roles:
       name: Organization Admin
       description: Administer an existing organizationn
       permissions:
-        - core.organization.view
-        - core.organization.edit
-        - core.organization.delete
-        - core.project.create
-        - core.secret.create
-        - core.secret.view
-        - core.secret.edit
-        - core.secret.delete
-        - core.connector.create
-        - core.connector.view
-        - core.connector.edit
-        - core.connector.delete
+        - core_organization_view
+        - core_organization_edit
+        - core_organization_delete
+        - core_project_create
+        - core_secret_create
+        - core_secret_view
+        - core_secret_edit
+        - core_secret_delete
+        - core_connector_create
+        - core_connector_view
+        - core_connector_edit
+        - core_connector_delete
       allowedScopeLevels:
         - organization
       managed: true
@@ -50,9 +55,9 @@ roles:
       name: Organization Viewer
       description: View an organization
       permissions:
-        - core.organization.view
-        - core.secret.view
-        - core.connector.view
+        - core_organization_view
+        - core_secret_view
+        - core_connector_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -60,17 +65,17 @@ roles:
       name: Account Admin
       description: Administer an account
       permissions:
-        - core.account.edit
-        - core.account.delete
-        - core.organization.create
-        - core.secret.create
-        - core.secret.view
-        - core.secret.edit
-        - core.secret.delete
-        - core.connector.create
-        - core.connector.view
-        - core.connector.edit
-        - core.connector.delete
+        - core_account_edit
+        - core_account_delete
+        - core_organization_create
+        - core_secret_create
+        - core_secret_view
+        - core_secret_edit
+        - core_secret_delete
+        - core_connector_create
+        - core_connector_view
+        - core_connector_edit
+        - core_connector_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -78,8 +83,19 @@ roles:
       name: Account Viewer
       description: View an account
       permissions:
-        - core.secret.view
-        - core.connector.view
+        - core_secret_view
+        - core_connector_view
       allowedScopeLevels:
         - account
+      managed: true
+    - identifier: _pipeline_executor
+      name: Pipeline Executor
+      description: Execute a pipeline
+      permissions:
+        - core_secret_view
+        - core_connector_view
+        - core_pipeline_view
+        - core_pipeline_execute
+      allowedScopeLevels:
+        - project
       managed: true

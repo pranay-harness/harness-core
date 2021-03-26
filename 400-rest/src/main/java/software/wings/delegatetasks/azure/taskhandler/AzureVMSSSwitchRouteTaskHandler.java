@@ -23,7 +23,7 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(

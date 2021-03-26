@@ -4,11 +4,12 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REG
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 
 import software.wings.beans.AwsConfig;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
@@ -22,12 +23,13 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 class AwsHelperServiceDelegateBase {
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
   @Inject protected AwsCallTracker tracker;
   @Inject protected AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
+  @Inject protected AwsClusterService awsClusterService;
 
   protected void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     awsEcrApiHelperServiceDelegateBase.attachCredentialsAndBackoffPolicy(

@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -10,6 +11,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.previousOperation;
 import static org.springframework.data.mongodb.core.aggregation.Fields.UNDERSCORE_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
@@ -51,6 +53,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private GitFileActivitySummaryRepository gitFileActivitySummaryRepository;
   @Inject private GitFileActivityRepository gitFileActivityRepository;
@@ -304,7 +307,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitMessage(commitMessageToPersist)
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .repo(yamlGitConfig.getRepo())
         .rootFolder(GitFileLocationHelper.getRootPathSafely(change.getFilePath()))
         .branchName(yamlGitConfig.getBranch())

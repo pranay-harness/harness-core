@@ -1,15 +1,21 @@
 package io.harness.remote.client;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
 import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
+import static io.harness.security.JWTAuthenticationFilter.X_SOURCE_PRINCIPAL;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static org.apache.http.HttpHeaders.AUTHORIZATION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -23,6 +29,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
+import java.time.Duration;
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import okhttp3.ConnectionPool;
@@ -33,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@OwnedBy(PL)
 public abstract class AbstractHttpClientFactory {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
@@ -69,15 +77,27 @@ public abstract class AbstractHttpClientFactory {
   }
 
   protected Retrofit getRetrofit() {
+    /*
+    .baseUrl(baseUrl)
+    .addConverterFactory(kryoConverterFactory)
+    .client(getUnsafeOkHttpClient(baseUrl))
+    .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
+    .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+    .build();
+
+     Order of factories of a particular type is important while creating the builder, please do not change the order
+     */
     String baseUrl = serviceHttpClientConfig.getBaseUrl();
-    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-                                           .baseUrl(baseUrl)
-                                           .addConverterFactory(kryoConverterFactory)
-                                           .client(getUnsafeOkHttpClient(baseUrl, this.clientMode))
-                                           .addConverterFactory(JacksonConverterFactory.create(objectMapper));
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder().baseUrl(baseUrl);
+    if (this.kryoConverterFactory != null) {
+      retrofitBuilder.addConverterFactory(kryoConverterFactory);
+    }
+    retrofitBuilder.client(getUnsafeOkHttpClient(baseUrl, this.clientMode));
     if (this.enableCircuitBreaker) {
       retrofitBuilder.addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()));
     }
+    retrofitBuilder.addConverterFactory(JacksonConverterFactory.create(objectMapper));
+
     return retrofitBuilder.build();
   }
 
@@ -126,17 +146,23 @@ public abstract class AbstractHttpClientFactory {
   protected Interceptor getAuthorizationInterceptor(ClientMode clientMode) {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
+      Request.Builder builder = chain.request().newBuilder();
+      String authorizationToken;
       if (ClientMode.PRIVILEGED == clientMode) {
-        SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
+        authorizationToken = tokenGenerator.getServiceTokenWithDuration(
+            secretKeySupplier.get(), Duration.ofHours(4), new ServicePrincipal(this.clientId));
       } else {
-        boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
-        if (!isPrincipalInContext) {
-          SecurityContextBuilder.unsetPrincipalContext();
-        }
+        authorizationToken = tokenGenerator.getServiceTokenWithDuration(
+            secretKeySupplier.get(), Duration.ofHours(4), SecurityContextBuilder.getPrincipal());
       }
-      String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
-      Request request = chain.request();
-      return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
+      Principal sourcePrincipal = SourcePrincipalContextBuilder.getSourcePrincipal() != null
+          ? SourcePrincipalContextBuilder.getSourcePrincipal()
+          : SecurityContextBuilder.getPrincipal();
+      String sourcePrincipalToken =
+          tokenGenerator.getServiceTokenWithDuration(secretKeySupplier.get(), Duration.ofHours(4), sourcePrincipal);
+      builder.header(X_SOURCE_PRINCIPAL, clientId + StringUtils.SPACE + sourcePrincipalToken);
+      builder.header(AUTHORIZATION, clientId + StringUtils.SPACE + authorizationToken);
+      return chain.proceed(builder.build());
     };
   }
 

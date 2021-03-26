@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.HelmChartSpecification;
@@ -17,6 +20,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class HelmChartSpecificationYamlHandler
     extends DeploymentSpecificationYamlHandler<HelmChartSpecificationYaml, HelmChartSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;

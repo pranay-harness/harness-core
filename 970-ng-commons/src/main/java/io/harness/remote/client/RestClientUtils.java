@@ -1,5 +1,8 @@
 package io.harness.remote.client;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -15,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(PL)
 @UtilityClass
 @Slf4j
 public class RestClientUtils {

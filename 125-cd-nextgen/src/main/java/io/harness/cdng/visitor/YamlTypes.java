@@ -33,9 +33,9 @@ public interface YamlTypes {
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String HELM_CHART_MANIFEST = ManifestType.HelmChart;
   String KUSTOMIZE_MANIFEST = ManifestType.Kustomize;
+  String OPENSHIFT_MANIFEST = ManifestType.OpenshiftTemplate;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
-  String HTTP_STEP = StepSpecTypeConstants.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
   String SERVICE_CONFIG = "serviceConfig";
   String SERVICE_ENTITY = "service";
@@ -55,6 +55,7 @@ public interface YamlTypes {
   String COMMIT_ID = "commitId";
   String NAMESPACE = "namespace";
   String RELEASE_NAME = "releaseName";
+  String CLUSTER = "cluster";
   String STORE_CONFIG_WRAPPER = "store";
 
   String SKIP_DRY_RUN = "skipDryRun";
@@ -70,6 +71,4 @@ public interface YamlTypes {
   String ENVIRONMENT_VARIABLES = "environmentVariables";
 
   String COMMAND_FLAGS_WRAPPER = "commandFlags";
-  String SKIP_RESOURCE_VERSIONING = "skipResourceVersioning";
-  String PLUGIN_PATH = "pluginPath";
 }

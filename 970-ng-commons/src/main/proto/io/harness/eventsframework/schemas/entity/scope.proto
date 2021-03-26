@@ -1,0 +1,10 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entity;
+option java_multiple_files = true;
+
+enum ScopeProtoEnum {
+  ACCOUNT = 0;
+  ORG = 1;
+  PROJECT = 2;
+  UNKNOWN = 3;
+}

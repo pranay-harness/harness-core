@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -33,6 +36,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
@@ -43,6 +47,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
   @Attributes(title = "Ec2 Iam role tags") private String tag;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
+  private boolean useIRSA;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
@@ -55,7 +60,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
-      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
+      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean useIRSA, boolean assumeCrossAccountRole,
       AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion, boolean useEncryptedAccessKey,
       String encryptedAccessKey) {
     this();
@@ -66,6 +71,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
     this.ccmConfig = ccmConfig;
+    this.useIRSA = useIRSA;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
     this.defaultRegion = defaultRegion;

@@ -26,27 +26,30 @@ public class CliHelper {
   @Nonnull
   public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String directory, LogCallback executionLogCallback) throws IOException, InterruptedException, TimeoutException {
-    executionLogCallback.saveExecutionLog(command, LogLevel.INFO, RUNNING);
-    ProcessExecutor processExecutor =
-        new ProcessExecutor()
-            .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
-            .command("/bin/sh", "-c", command)
-            .readOutput(true)
-            .environment(envVariables)
-            .directory(new File(directory))
-            .redirectOutput(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                // Not logging as secrets will be exposed
-              }
-            })
-            .redirectError(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                log.error(line);
-                executionLogCallback.saveExecutionLog(line, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-              }
-            });
+    return executeCliCommand(
+        command, timeoutInMillis, envVariables, directory, executionLogCallback, command, new EmptyLogOutputStream());
+  }
+
+  @Nonnull
+  public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
+      String directory, LogCallback executionLogCallback, String loggingCommand, LogOutputStream logOutputStream)
+      throws IOException, InterruptedException, TimeoutException {
+    executionLogCallback.saveExecutionLog(loggingCommand, LogLevel.INFO, RUNNING);
+
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
+                                          .command("/bin/sh", "-c", command)
+                                          .readOutput(true)
+                                          .environment(envVariables)
+                                          .directory(new File(directory))
+                                          .redirectOutput(logOutputStream)
+                                          .redirectError(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              log.error(line);
+                                              executionLogCallback.saveExecutionLog(line, LogLevel.ERROR);
+                                            }
+                                          });
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;

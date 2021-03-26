@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -12,13 +13,12 @@ import static io.harness.logging.LogLevel.INFO;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
@@ -74,7 +74,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;

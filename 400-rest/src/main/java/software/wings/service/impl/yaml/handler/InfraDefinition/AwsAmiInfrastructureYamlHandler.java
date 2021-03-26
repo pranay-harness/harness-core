@@ -1,9 +1,12 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.InfrastructureType;
@@ -17,6 +20,7 @@ import software.wings.service.intfc.SettingsService;
 import com.google.inject.Inject;
 import java.util.List;
 
+@OwnedBy(CDP)
 public class AwsAmiInfrastructureYamlHandler
     extends CloudProviderInfrastructureYamlHandler<AwsAmiInfrastructureYaml, AwsAmiInfrastructure> {
   @Inject private SettingsService settingsService;

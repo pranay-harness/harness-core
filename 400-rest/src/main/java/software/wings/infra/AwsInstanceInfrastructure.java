@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.validation.Validator.ensureType;
@@ -10,6 +11,7 @@ import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
@@ -38,6 +40,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AwsInstanceInfrastructureKeys")
+@OwnedBy(CDP)
 public class AwsInstanceInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, SshBasedInfrastructure, ProvisionerAware {
   private String cloudProviderId;

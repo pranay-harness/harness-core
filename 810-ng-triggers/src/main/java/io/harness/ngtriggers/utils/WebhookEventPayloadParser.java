@@ -18,7 +18,10 @@ import io.harness.service.WebhookParserSCMService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,13 +54,27 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  public boolean containsHeaderKey(Set<String> headerKeys, String key) {
+  public boolean containsHeaderKey(Map<String, List<String>> headers, String key) {
+    Set<String> headerKeys = headers.keySet();
     if (isEmpty(headerKeys) || isBlank(key)) {
       return false;
     }
 
     return headerKeys.contains(key) || headerKeys.contains(key.toLowerCase())
         || headerKeys.stream().anyMatch(key::equalsIgnoreCase);
+  }
+
+  public List<String> getHeaderValue(Map<String, List<String>> headers, String key) {
+    Set<String> headerKeys = headers.keySet();
+    if (isEmpty(headerKeys) || isBlank(key)) {
+      return Collections.emptyList();
+    }
+    Optional<String> caseInsensitiveKey = headerKeys.stream().filter(key::equalsIgnoreCase).findFirst();
+    if (caseInsensitiveKey.isPresent()) {
+      return headers.get(caseInsensitiveKey.get());
+    } else {
+      return Collections.emptyList();
+    }
   }
 
   public WebhookEventHeaderData obtainWebhookSourceKeyData(List<HeaderConfig> headerConfigs) {

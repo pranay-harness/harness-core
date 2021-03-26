@@ -34,7 +34,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
-import io.harness.outbox.OutboxEventPollService;
+import io.harness.outbox.OutboxEventIteratorHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -52,6 +52,7 @@ import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
+import io.harness.scm.SCMGrpcClientModule;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -180,6 +181,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
+    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
 
     modules.add(GitSyncGrpcModule.getInstance());
     Injector injector = Guice.createInjector(modules);
@@ -217,7 +219,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
     if (nextGenConfiguration.getShouldDeployWithGitSync()) {
       log.info("Initializing gRPC servers...");
-      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      ServiceManager serviceManager =
+          injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
     }
@@ -225,6 +228,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+    injector.getInstance(OutboxEventIteratorHandler.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -283,7 +287,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
-    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -406,8 +409,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .or(resourceInfoAndRequest
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
-                    "/swagger.json"));
+                    "/swagger.yaml"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(

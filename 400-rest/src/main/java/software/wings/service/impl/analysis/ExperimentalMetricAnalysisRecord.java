@@ -2,13 +2,14 @@ package software.wings.service.impl.analysis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,16 +22,6 @@ import org.mongodb.morphia.annotations.Entity;
  *
  * Created by Pranjal on 08/14/2018
  */
-
-@NgUniqueIndex(name = "MetricAnalysisUniqueIdx",
-    fields =
-    { @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") })
-@CdIndex(name = "ExperimentalMetricListIdx",
-    fields = { @Field("analysisMinute")
-               , @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC) })
-@CdIndex(name = "analysisMinStateExecutionIdIndex", fields = { @Field("analysisMinute")
-                                                               , @Field("stateExecutionId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -40,6 +31,29 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "experimentalTimeSeriesAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("MetricAnalysisUniqueIdx")
+                 .unique(true)
+                 .field(MetricAnalysisRecordKeys.workflowExecutionId)
+                 .field(MetricAnalysisRecordKeys.stateExecutionId)
+                 .field(MetricAnalysisRecordKeys.analysisMinute)
+                 .field(MetricAnalysisRecordKeys.groupName)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("ExperimentalMetricListIdx")
+                .field(MetricAnalysisRecordKeys.analysisMinute)
+                .field(ExperimentalMetricAnalysisRecordKeys.mismatched)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("analysisMinStateExecutionIdIndex")
+                .field(MetricAnalysisRecordKeys.analysisMinute)
+                .field(MetricAnalysisRecordKeys.stateExecutionId)
+                .build())
+        .build();
+  }
   private String envId;
   @Builder.Default @FdIndex private boolean mismatched = true;
   @Builder.Default private ExperimentStatus experimentStatus = ExperimentStatus.UNDETERMINED;

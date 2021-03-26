@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.amazonaws.services.ecs.model.ServiceField.TAGS;
@@ -7,11 +8,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
@@ -43,9 +46,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsEcsHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcsHelperServiceDelegate {
   @VisibleForTesting
@@ -234,5 +239,20 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return emptyList();
+  }
+
+  @Override
+  public boolean serviceExists(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptionDetails,
+      String region, String cluster, String serviceName) {
+    try {
+      Optional<Service> services =
+          awsClusterService.getService(region, settingAttribute, encryptionDetails, cluster, serviceName);
+      return services.isPresent();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return false;
   }
 }

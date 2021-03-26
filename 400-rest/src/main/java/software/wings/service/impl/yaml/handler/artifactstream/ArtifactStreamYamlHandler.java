@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
+import static software.wings.service.impl.ArtifactStreamServiceImpl.ARTIFACT_STREAM_DEBUG_LOG;
 
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
@@ -82,6 +83,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStreamYaml, B 
       ArtifactStream artifactStream =
           yamlHelper.getArtifactStream(application.getUuid(), serviceOptional.get().getUuid(), yamlFilePath);
       if (artifactStream != null) {
+        log.info(ARTIFACT_STREAM_DEBUG_LOG + "Deleting Artifact Stream {} from yaml", artifactStream.getName());
         artifactStreamService.deleteWithBinding(
             application.getUuid(), artifactStream.getUuid(), false, changeContext.getChange().isSyncFromGit());
       }
@@ -149,6 +151,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStreamYaml, B 
         artifactStream.setAppId(appId);
         toBean(artifactStream, changeContext, appId);
         artifactStream.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+        log.info(ARTIFACT_STREAM_DEBUG_LOG + "Creating Artifact Stream {} from yaml", artifactStream.getName());
         return (B) artifactStreamService.createWithBinding(appId, artifactStream, !artifactStream.isSyncFromGit());
       } else {
         if (changeContext.getYamlType() == YamlType.ARTIFACT_STREAM) {

@@ -2,11 +2,13 @@ package io.harness.connector.validator;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
+import io.harness.connector.DelegateSelectable;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.ConnectorValidationException;
@@ -24,13 +26,20 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
   @Inject private EncryptionHelper encryptionHelper;
   public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    DelegateTaskRequest delegateTaskRequest =
-        DelegateTaskRequest.builder()
-            .accountId(accountIdentifier)
-            .taskType(getTaskType())
-            .taskParameters(getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier))
-            .executionTimeout(Duration.ofMinutes(2))
-            .build();
+    TaskParameters taskParameters =
+        getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+
+    if (taskParameters instanceof ConnectorTaskParams && connectorConfig instanceof DelegateSelectable) {
+      ((ConnectorTaskParams) taskParameters)
+          .setDelegateSelectors(((DelegateSelectable) connectorConfig).getDelegateSelectors());
+    }
+    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                  .accountId(accountIdentifier)
+                                                  .taskType(getTaskType())
+                                                  .taskParameters(taskParameters)
+                                                  .executionTimeout(Duration.ofMinutes(2))
+                                                  .forceExecute(true)
+                                                  .build();
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     if (responseData instanceof ErrorNotifyResponseData) {

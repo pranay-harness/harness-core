@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
@@ -14,7 +14,7 @@ import software.wings.dl.WingsPersistence;
 import com.google.inject.Inject;
 import org.mongodb.morphia.query.UpdateOperations;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SweepingPhaseMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

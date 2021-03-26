@@ -2,12 +2,14 @@ package io.harness.ng.core.remote;
 
 import static io.harness.NGConstants.FILE_KEY;
 import static io.harness.NGConstants.SECRET_MANAGER_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.SecretTypeAllowedValues;
 import io.harness.ng.core.api.NGSecretFileService;
@@ -44,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(PL)
 @Path("secrets/files")
 @Api("secrets/files")
 @Produces({"application/json", "application/yaml"})

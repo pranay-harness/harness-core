@@ -1,13 +1,13 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
 import io.kubernetes.client.openapi.models.V1Node;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class V1NodeHandler extends BaseHandler<V1Node> {
   public V1NodeHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     super(eventPublisher, clusterDetails);

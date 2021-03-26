@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
@@ -7,6 +9,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REG
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -33,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @JsonTypeName("AWS_AMI")
 @FieldNameConstants(innerTypeName = "AwsAmiInfrastructureMappingKeys")
+@OwnedBy(CDP)
 public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)

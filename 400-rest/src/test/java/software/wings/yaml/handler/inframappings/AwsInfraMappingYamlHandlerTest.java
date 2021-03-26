@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -9,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -26,6 +28,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(CDP)
 public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent1 = "harnessApiVersion: '1.0'\n"
       + "type: AWS_SSH\n"

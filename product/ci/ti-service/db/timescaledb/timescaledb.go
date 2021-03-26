@@ -331,3 +331,62 @@ func (tdb *TimeScaleDb) GetTestSuites(
 	metadata := types.ResponseMetadata{TotalItems: total, PageSize: pageSize, PageItemCount: len(testSuites), TotalPages: numPages}
 	return types.TestSuites{Metadata: metadata, Suites: testSuites}, nil
 }
+
+func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string, s types.SelectTestsResp) error {
+	entries := 12
+	valueArgs := make([]interface{}, 0, entries)
+	valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
+		s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests)
+	stmt := fmt.Sprintf(
+		`
+					INSERT INTO %s
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
+					test_count, test_selected, source_code_test, new_test, updated_test)
+					VALUES %s`, table, constructPsqlInsertStmt(1, entries))
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
+	if err != nil {
+		tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId string) (types.SelectionOverview, error) {
+	var ztotal, zsrc, znew, zupd zero.Int
+	query := fmt.Sprintf(
+		`
+		SELECT test_count, source_code_test, new_test, updated_test
+		FROM %s
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, table)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId)
+	if err != nil {
+		tdb.Log.Errorw("could not query database for test suites", zap.Error(err))
+		return types.SelectionOverview{}, err
+	}
+	res := types.SelectionOverview{}
+	for rows.Next() {
+		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd)
+		if err != nil {
+			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
+			return types.SelectionOverview{}, err
+		}
+		res.Total = int(ztotal.ValueOrZero())
+		res.Selected.New = int(znew.ValueOrZero())
+		res.Selected.Upd = int(zupd.ValueOrZero())
+		res.Selected.Src = int(zsrc.ValueOrZero())
+		res.Skipped = res.Total - res.Selected.New - res.Selected.Upd - res.Selected.Src
+		return res, nil
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+
+	return res, nil
+}
+
+func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string, files []types.File) error {
+	return nil
+}

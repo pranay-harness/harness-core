@@ -1,5 +1,6 @@
 package io.harness.shell;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.CONNECTION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_KEY;
@@ -12,6 +13,7 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 
 import com.jcraft.jsch.JSchException;
@@ -25,6 +27,7 @@ import java.net.UnknownHostException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class SshHelperUtils {
   /**
    * Normalize error.

@@ -1,11 +1,13 @@
 package io.harness.yaml.snippets;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.JacksonClassHelper;
@@ -44,12 +46,15 @@ import org.reflections.Reflections;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class AbstractSnippetChecker {
   List<YamlSchemaRootClass> yamlSchemaRootClasses;
+  ObjectMapper objectMapper;
 
   @Inject
-  public AbstractSnippetChecker(List<YamlSchemaRootClass> yamlSchemaRootClasses) {
+  public AbstractSnippetChecker(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper) {
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+    this.objectMapper = objectMapper;
   }
   public void snippetTests() throws IOException {
     if (isEmpty(yamlSchemaRootClasses)) {
@@ -62,7 +67,7 @@ public class AbstractSnippetChecker {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final Class tagsEnum = getTagsEnum(reflections);
     for (Pair<String, Pair<EntityType, ClassLoader>> snippet : snippetsIndex) {

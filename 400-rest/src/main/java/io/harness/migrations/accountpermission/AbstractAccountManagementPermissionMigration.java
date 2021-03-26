@@ -6,7 +6,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
@@ -25,7 +25,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public abstract class AbstractAccountManagementPermissionMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   private static final String debugMessage = "ACCOUNT_PERMISSION_MIGRATION: ";

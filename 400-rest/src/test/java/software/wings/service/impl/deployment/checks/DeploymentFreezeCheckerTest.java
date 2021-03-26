@@ -12,7 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -41,7 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class DeploymentFreezeCheckerTest extends WingsBaseTest {
   public static final String FREEZE_ID = "FREEZE_ID";
   @Mock EnvironmentService environmentService;

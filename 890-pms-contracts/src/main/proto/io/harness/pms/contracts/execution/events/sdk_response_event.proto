@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.events;
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+import "io/harness/pms/contracts/execution/status.proto";
+import "io/harness/pms/contracts/execution/executable_response.proto";
+import "io/harness/pms/contracts/steps/io/step_response_proto.proto";
+
+option java_multiple_files = true;
+
+message SdkResponseEventRequest {
+  oneof request {
+    QueueTaskRequest queueTaskRequest = 1;
+    QueueNodeExecutionRequest queueNodeExecutionRequest = 2;
+    AddExecutableResponseRequest addExecutableResponseRequest = 4;
+    HandleStepResponseRequest handleStepResponseRequest = 5;
+  }
+  string nodeExecutionId = 3;
+}
+
+message QueueTaskRequest {
+  string nodeExecutionId = 1;
+  map<string, string> setupAbstractions = 3;
+  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
+}
+
+message QueueNodeExecutionRequest {
+  NodeExecutionProto nodeExecution = 1;
+}
+
+message AddExecutableResponseRequest {
+  string nodeExecutionId = 1;
+  io.harness.pms.contracts.execution.Status status = 2;
+  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
+  repeated string callbackIds = 4;
+}
+
+message HandleStepResponseRequest {
+  string nodeExecutionId = 1;
+  steps.io.StepResponseProto stepResponse = 2;
+}
+
+enum SdkResponseEventType {
+  UNKNOWN_EVENT_TYPE = 0;
+  QUEUE_NODE = 1;
+  ADD_EXECUTABLE_RESPONSE = 2;
+  HANDLE_STEP_RESPONSE = 3;
+}

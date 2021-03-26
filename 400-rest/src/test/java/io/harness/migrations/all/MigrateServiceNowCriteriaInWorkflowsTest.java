@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -47,7 +47,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateServiceNowCriteriaInWorkflowsTest extends WingsBaseTest {
   @InjectMocks @Inject private MigrateServiceNowCriteriaInWorkflows migrateSNOW;
   @Mock private WorkflowService workflowService;

@@ -1,14 +1,17 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
@@ -56,11 +59,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.Service")
+@OwnedBy(DEL)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;
@@ -84,6 +88,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
+  private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
 
   private LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -265,6 +270,25 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   }
 
   @Override
+  public void logOwnerRuleNotMatched(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateOwner owner) {
+    if (batch == null || owner == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
+                     .message("Not matched owner entityType " + owner.getEntityType() + ", id " + owner.getEntityId())
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(TARGETED_OWNER_NOT_MATCHED_GROUP_ID)
+                     .build());
+  }
+
+  @Override
   public void logProfileScopeRuleNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId,
       String delegateProfileId, Set<String> scopingRulesDescriptions) {
     if (batch == null) {
@@ -384,14 +408,17 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
 
       String delegateProfileName = "";
+      String delegateType = "";
       if (delegate != null) {
         DelegateProfile delegateProfile = persistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
         delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
+        delegateType = delegate.getDelegateType();
       }
 
       DelegateSelectionLogParamsBuilder delegateSelectionLogParamsBuilder =
           DelegateSelectionLogParams.builder()
               .delegateId(delegateId)
+              .delegateType(delegateType)
               .delegateName(delegateName)
               .delegateHostName(delegateHostName)
               .delegateProfileName(delegateProfileName)

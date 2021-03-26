@@ -2,7 +2,7 @@ package software.wings.yaml.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 /**
  * @author rktummala on 10/26/17
  */
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor

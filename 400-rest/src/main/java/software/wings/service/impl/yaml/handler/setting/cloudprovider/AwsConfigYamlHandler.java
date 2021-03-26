@@ -1,8 +1,10 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.AwsConfig;
@@ -14,6 +16,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class AwsConfigYamlHandler extends CloudProviderYamlHandler<AwsConfigYaml, AwsConfig> {
   @Override
   public AwsConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
@@ -31,6 +34,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<AwsConfigYaml
                              .secretKey(secretValueYamlRef)
                              .type(awsConfig.getType())
                              .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
+                             .useIRSA(awsConfig.isUseIRSA())
                              .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
                              .crossAccountAttributes(awsConfig.getCrossAccountAttributes())
                              .tag(awsConfig.getTag())
@@ -66,6 +70,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<AwsConfigYaml
                            .encryptedSecretKey(yaml.getSecretKey())
                            .useEc2IamCredentials(yaml.isUseEc2IamCredentials())
                            .tag(yaml.getTag())
+                           .useIRSA(yaml.isUseIRSA())
                            .assumeCrossAccountRole(yaml.isAssumeCrossAccountRole())
                            .crossAccountAttributes(yaml.getCrossAccountAttributes())
                            .defaultRegion(yaml.getDefaultRegion())

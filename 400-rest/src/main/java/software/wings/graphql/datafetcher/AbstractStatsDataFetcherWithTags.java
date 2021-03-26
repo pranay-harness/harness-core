@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static java.util.function.Function.identity;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends TagAggregation, EA>
     extends AbstractStatsDataFetcher<A, F, G, S> {
   protected abstract TA getTagAggregation(G groupBy);

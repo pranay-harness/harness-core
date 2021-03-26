@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -17,6 +19,7 @@ import software.wings.service.intfc.SettingsService;
 import com.google.inject.Inject;
 import java.util.List;
 
+@OwnedBy(CDP)
 public class CloudFormationInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<CloudFormationInfrastructureProvisionerYaml,
         CloudFormationInfrastructureProvisioner> {

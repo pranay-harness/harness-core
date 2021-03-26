@@ -69,8 +69,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<ConfigFileYaml, Confi
 
     ConfigFileYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
-    configService.delete(
-        optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE, targetFilePath);
+    configService.delete(optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE,
+        targetFilePath, changeContext.getChange().isSyncFromGit());
   }
 
   @Override

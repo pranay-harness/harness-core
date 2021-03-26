@@ -1,10 +1,12 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
@@ -13,6 +15,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -30,19 +33,22 @@ import org.reflections.Reflections;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class AbstractSchemaChecker {
-  public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses) throws IOException, ClassNotFoundException {
+  public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
-    ensureSchemaUpdated(yamlSchemaRootClasses);
+    ensureSchemaUpdated(yamlSchemaRootClasses, objectMapper);
     ensureOneOfHasCorrectValues(reflections);
   }
 
-  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses) throws IOException, ClassNotFoundException {
+  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
     if (isEmpty(yamlSchemaRootClasses)) {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final ObjectWriter objectWriter = yamlSchemaGenerator.getObjectWriter();
     for (YamlSchemaRootClass schemaRoot : yamlSchemaRootClasses) {
@@ -58,7 +64,7 @@ public class AbstractSchemaChecker {
       try {
         final String schemaInUT =
             IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-        if (!schemaInUT.equals(s)) {
+        if (!schemaInUT.trim().equals(s.trim())) {
           log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
           throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
         }

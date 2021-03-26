@@ -1,9 +1,11 @@
 package software.wings.service.intfc.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -19,6 +21,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   @Inject private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;
 

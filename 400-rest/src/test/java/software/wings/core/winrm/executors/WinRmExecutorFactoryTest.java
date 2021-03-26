@@ -1,10 +1,12 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.DINESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -12,6 +14,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class WinRmExecutorFactoryTest extends CategoryTest {
   @Mock WinRmExecutorFactory winRmExecutorFactory = new WinRmExecutorFactory();
   WinRmSessionConfig winRmSessionConfig;

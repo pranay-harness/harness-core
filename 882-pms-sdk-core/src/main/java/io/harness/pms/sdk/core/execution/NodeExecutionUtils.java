@@ -62,7 +62,7 @@ public class NodeExecutionUtils {
     return ExpressionEvaluatorUtils.updateExpressions(o, new ExtractResolveFunctorImpl());
   }
 
-  public static class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {
+  public class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {
     @Override
     public String processString(String expression) {
       return expression;

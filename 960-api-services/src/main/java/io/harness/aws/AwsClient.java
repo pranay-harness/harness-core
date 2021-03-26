@@ -2,6 +2,8 @@ package io.harness.aws;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.policy.Policy;
+import com.amazonaws.services.codecommit.model.Commit;
+import com.amazonaws.services.codecommit.model.RepositoryMetadata;
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.identitymanagement.model.EvaluationResult;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -15,6 +17,12 @@ public interface AwsClient {
   void validateAwsAccountCredential(AwsConfig awsConfig);
 
   void validateAwsCodeCommitCredential(AwsConfig awsConfig, String region, String repo);
+
+  RepositoryMetadata fetchRepositoryInformation(AwsConfig awsConfig, String region, String repo);
+
+  List<Commit> fetchCommitInformation(AwsConfig awsConfig, String region, String repo, List<String> commitIds);
+
+  void confirmSnsSubscription(String confirmationMessage, String topicArnString);
 
   String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region);
 

@@ -13,9 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(PL)
 @Getter
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SERVICE")
 public class ServicePrincipal extends Principal {

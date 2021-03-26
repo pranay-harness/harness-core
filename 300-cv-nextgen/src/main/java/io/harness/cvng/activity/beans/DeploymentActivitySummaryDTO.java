@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.beans;
 
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,5 +13,5 @@ public class DeploymentActivitySummaryDTO {
   String envName;
   String envIdentifier;
   String deploymentTag;
-  DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary;
+  DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary;
 }

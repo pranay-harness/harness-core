@@ -4,7 +4,9 @@ import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.utils.DateTimeUtils;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,27 @@ public class HealthVerificationJob extends VerificationJob {
     return false;
   }
 
+  @Override
+  public Instant roundToClosestBoundary(Instant deploymentStartTime, Instant startTime) {
+    return DateTimeUtils.roundDownTo5MinBoundary(startTime);
+  }
+
+  @Override
+  public Duration getExecutionDuration() {
+    return getDuration().plus(getDuration());
+  }
+
+  @Override
+  public Instant getAnalysisStartTime(Instant startTime) {
+    return getPreActivityVerificationStartTime(startTime, null);
+  }
+
+  @Override
+  public Instant eligibleToStartAnalysisTime(Instant startTime, Duration dataCollectionDelay, Instant createdAt) {
+    // It is running as live monitoring so does not depend on dataCollectionDelay or createdAt
+    return getAnalysisStartTime(startTime);
+  }
+
   public static class HealthVerificationUpdatableEntity
       extends VerificationJobUpdatableEntity<HealthVerificationJob, HealthVerificationJobDTO> {
     @Override
@@ -79,5 +102,21 @@ public class HealthVerificationJob extends VerificationJob {
         UpdateOperations<HealthVerificationJob> updateOperations, HealthVerificationJobDTO dto) {
       setCommonOperations(updateOperations, dto);
     }
+  }
+
+  public Instant getPreActivityVerificationStartTime(Instant startTime, Instant preActivityStartTime) {
+    // TODO: migration logic. Remove this after the release
+    if (preActivityStartTime != null) {
+      return preActivityStartTime;
+    }
+    return startTime.minus(getDuration());
+  }
+
+  public Instant getPostActivityVerificationStartTime(Instant startTime, Instant postActivityStartTime) {
+    // TODO: remove this in the next release
+    if (postActivityStartTime != null) {
+      return postActivityStartTime;
+    }
+    return startTime;
   }
 }

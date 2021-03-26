@@ -23,7 +23,7 @@ import static software.wings.sm.StateType.ENV_STATE;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -72,7 +72,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
   public static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";

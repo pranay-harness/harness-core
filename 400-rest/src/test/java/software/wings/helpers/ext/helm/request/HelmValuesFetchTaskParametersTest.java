@@ -1,11 +1,13 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -21,6 +23,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class HelmValuesFetchTaskParametersTest {
   @Test
   @Owner(developers = ANSHUL)

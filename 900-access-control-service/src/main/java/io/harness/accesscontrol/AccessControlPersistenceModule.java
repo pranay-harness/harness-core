@@ -1,12 +1,16 @@
 package io.harness.accesscontrol;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
+import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
 import io.harness.aggregator.AggregatorPersistenceConfig;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -30,6 +34,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class AccessControlPersistenceModule extends PersistenceModule {
   private static AccessControlPersistenceModule instance;
   private final MongoConfig mongoConfig;
@@ -98,8 +103,8 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   @Override
   protected Class<?>[] getConfigClasses() {
     return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
-        PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class,
-        ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
+        UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class, RolePersistenceConfig.class,
+        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

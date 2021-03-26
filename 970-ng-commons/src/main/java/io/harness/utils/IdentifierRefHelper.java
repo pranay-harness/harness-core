@@ -14,6 +14,18 @@ import lombok.experimental.UtilityClass;
 public class IdentifierRefHelper {
   public final String IDENTIFIER_REF_DELIMITER = "\\."; // check if this is the correct delimiter
 
+  public IdentifierRef createIdentifierRefWithUnknownScope(String accountId, String orgIdentifier,
+      String projectIdentifier, String unknownIdentifier, Map<String, String> metadata) {
+    return IdentifierRef.builder()
+        .scope(Scope.UNKNOWN)
+        .metadata(metadata)
+        .accountIdentifier(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .identifier(unknownIdentifier)
+        .build();
+  }
+
   public IdentifierRef getIdentifierRef(
       String scopedIdentifierConfig, String accountId, String orgIdentifier, String projectIdentifier) {
     return getIdentifierRef(scopedIdentifierConfig, accountId, orgIdentifier, projectIdentifier, null);

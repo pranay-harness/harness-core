@@ -14,6 +14,7 @@ enum GitProvider {
   GITLAB = 3;
   GOGS = 4;
   STASH = 5;
+  CODECOMMIT = 6;
 }
 
 enum Action {
@@ -208,16 +209,9 @@ message GiteaProvider {
   string access_token = 1;
 }
 
-message BitbucketProvider {
-  oneof provider {
-    BitbucketCloudProvider bitbucket_cloud = 1;
-    BitbucketServerProvider bitbucket_server = 2;
-  }
-}
-
 message BitbucketCloudProvider {
-  string access_token = 1;
-  string private_key = 2;
+  string username = 1;
+  string app_password = 2;
 }
 
 message BitbucketServerProvider {
@@ -225,17 +219,26 @@ message BitbucketServerProvider {
   string personal_token = 2;
 }
 
+message CodecommitProvider {
+  string access_key = 1;
+  string secret_key = 2;
+}
+
 message Provider {
   oneof hook {
     GithubProvider github = 1;
     GitlabProvider gitlab = 2;
     GiteaProvider gitea = 3;
-    BitbucketProvider bitbucket = 4;
+    BitbucketCloudProvider bitbucket_cloud = 4;
+    BitbucketServerProvider bitbucket_server = 5;
+    CodecommitProvider codecommit = 6;
   }
-  string endpoint = 5;
+  string endpoint = 7;
+  bool skipVerify = 8;
+  bool debug = 9;
 }
 
-message FileFindRequest {
+message GetFileRequest {
   string slug = 1;
   string path = 2;
   oneof type {
@@ -245,7 +248,18 @@ message FileFindRequest {
   Provider provider = 5;
 }
 
-message FileDeleteRequest {
+message GetBatchFileRequest {
+  repeated GetFileRequest findRequest = 1;
+}
+
+message GetLatestFileRequest {
+  string slug = 1;
+  string path = 2;
+  string branch = 3;
+  Provider provider = 4;
+}
+
+message DeleteFileRequest {
   string slug = 1;
   string path = 2;
   oneof type {
@@ -253,6 +267,18 @@ message FileDeleteRequest {
     string ref = 4;
   }
   Provider provider = 5;
+}
+
+message DeleteFileResponse {
+  int32 status = 1;
+}
+
+message CreateFileResponse {
+  int32 status = 1;
+}
+
+message UpdateFileResponse {
+  int32 status = 1;
 }
 
 message FileModifyRequest {
@@ -262,25 +288,118 @@ message FileModifyRequest {
     string branch = 3;
     string ref = 4;
   }
-  string data = 5;
+  string content = 5;
   string message = 6;
-  string sha = 7;
+  string sha = 7;  // only needed for the UpdateFile service. Not pushfile
   Signature signature = 8;
   Provider provider = 9;
 }
 
-message ContentResponse {
-  string data = 1;
+message FileContent {
+  string content = 1;
   int32 status = 2;
+  string object_id = 3;
+  string path = 4;
+}
+
+message FileBatchContentResponse {
+  repeated FileContent file_contents = 1;
+}
+
+message FindFilesInBranchRequest {
+  string slug = 1;
+  string branch = 2;
+  Provider provider = 3;
+}
+
+message FindFilesInCommitRequest {
+  string slug = 1;
+  string ref = 2;
+  Provider provider = 3;
+}
+
+message FileChange {
+  string path = 1;
+  bool added = 2;
+  bool renamed = 3;
+  bool deleted = 4;
+  string object_id = 5;
+}
+
+message IsLatestFileRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  string object_id = 6;
+  Provider provider = 7;
+}
+
+message IsLatestFileResponse {
+  bool latest = 1;
+}
+
+message FindFilesInBranchResponse {
+  repeated FileChange file = 1;
+}
+
+message FindFilesInCommitResponse {
+  repeated FileChange file = 1;
+}
+
+message GetLatestCommitRequest {
+  string slug = 1;
+  string branch = 2;
+  Provider provider = 3;
+}
+
+message GetLatestCommitResponse {
+  string commit_id = 1;
+}
+
+message ListBranchesRequest {
+  string slug = 1;
+  Provider provider = 2;
+}
+
+message ListBranchesResponse {
+  repeated string branches = 1;
+}
+
+message ListCommitsRequest {
+  string slug = 1;
+  oneof type {
+    string branch = 2;
+    string ref = 3;
+  }
+  Provider provider = 4;
+}
+
+message ListCommitsResponse {
+  repeated string commit_ids = 1;
 }
 
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
+
   // File functions
-  rpc CreateFile(FileModifyRequest) returns (ContentResponse);
-  rpc DeleteFile(FileDeleteRequest) returns (ContentResponse);
-  rpc FindFile(FileFindRequest) returns (ContentResponse);
-  rpc UpdateFile(FileModifyRequest) returns (ContentResponse);
-  rpc UpsertFile(FileModifyRequest) returns (ContentResponse);
+  rpc GetFile(GetFileRequest) returns (FileContent);
+  rpc GetBatchFile(GetBatchFileRequest) returns (FileBatchContentResponse);
+  rpc GetLatestFile(GetLatestFileRequest) returns (FileContent);
+  rpc IsLatestFile(IsLatestFileRequest) returns (IsLatestFileResponse);
+  rpc PushFile(FileModifyRequest) returns (FileContent);
+  // helpers
+  rpc CreateFile(FileModifyRequest) returns (CreateFileResponse);
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+  rpc UpdateFile(FileModifyRequest) returns (UpdateFileResponse);
+
+  // Git functions. branch and commits
+  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
+  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
+  rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
+  rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
+  rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
 }

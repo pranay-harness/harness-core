@@ -327,8 +327,8 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     yaml.setVariableOverrides(Arrays.asList(existing_1_override));
     ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
     yamlHandler.upsertFromYaml(changeContext, null);
-    verify(mockServiceVariableService, times(1)).delete(anyString(), anyString(), anyBoolean());
-    verify(mockServiceVariableService, times(1)).update(captor.capture(), anyBoolean());
+    verify(mockServiceVariableService, times(1)).delete(anyString(), anyString(), eq(true));
+    verify(mockServiceVariableService, times(1)).update(captor.capture(), eq(true));
     String encrypted_serviceVariableValue = String.valueOf(captor.getValue().getValue());
     assertThat(encrypted_serviceVariableValue).isEqualTo(expected_value_for_encrypted_var);
   }
@@ -400,7 +400,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
 
     yamlHandler.upsertFromYaml(changeContext, null);
-    verify(mockServiceVariableService, times(1)).save(captor.capture(), anyBoolean());
+    verify(mockServiceVariableService, times(1)).save(captor.capture(), eq(true));
     List<String> varNames =
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList());
     assertThat(varNames).containsExactlyInAnyOrder(new_override.getValue());
@@ -421,5 +421,44 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     List<VariableOverrideYaml> variableOverrides = yaml.getVariableOverrides();
     assertThat(variableOverrides).isNotNull().hasSize(2);
     assertThat(variableOverrides).contains(new_override);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnUpsertFromYaml() throws IOException {
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(WingsTestConstants.ACCOUNT_ID);
+    gitFileChange.setSyncFromGit(true);
+
+    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.ENVIRONMENT);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    when(mockEnvironmentService.save(environment)).thenReturn(environment);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    verify(mockEnvironmentService, times(1)).save(captor.capture());
+    Environment savedEnv = captor.getValue();
+    assertThat(savedEnv).isNotNull();
+    assertThat(savedEnv.isSyncFromGit()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnDelete() {
+    Environment env = getDefaultEnvironment();
+    Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    changeContext.getChange().setSyncFromGit(true);
+
+    yamlHandler.delete(changeContext);
+    verify(mockEnvironmentService, times(1)).delete(APP_ID, ENV_ID, true);
   }
 }

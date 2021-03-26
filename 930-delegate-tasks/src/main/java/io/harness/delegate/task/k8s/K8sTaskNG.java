@@ -7,6 +7,7 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
@@ -14,8 +15,10 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -168,8 +171,24 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
       case HTTP_HELM:
         HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
-        decryptionService.decrypt(
-            httpHelmStoreConfig.getHttpHelmConnector(), httpHelmStoreConfig.getEncryptedDataDetails());
+        for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
+        for (DecryptableEntity decryptableEntity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
+        for (DecryptableEntity decryptableEntity :
+            gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(decryptableEntity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+        }
         break;
 
       default:

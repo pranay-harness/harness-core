@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.datacollection;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   private String accountId;
   private String requestUuid;

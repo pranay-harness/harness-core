@@ -35,8 +35,8 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
       String projectId, String entityName, String entityType, String entityIdentifier) {
     GitFileLocation gitFileLocation =
         getGitFileLocation(accountId, orgId, projectId, entityType, entityIdentifier, entityName);
-    YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.getByFolderIdentifierAndIsEnabled(
-        projectId, orgId, accountId, gitFileLocation.getEntityRootFolderId());
+    YamlGitConfigDTO yamlGitConfig =
+        yamlGitConfigService.getByFolderIdentifierAndIsEnabled(projectId, orgId, accountId, null);
     if (yamlGitConfig == null) {
       throw new InvalidRequestException("No git sync configured for given scope");
     }
@@ -68,7 +68,7 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
         .syncFromGit(false)
         .accountId(gitFileLocation.getAccountId())
         .rootPath(gitFileLocation.getEntityRootFolderName())
-        .rootPathId(gitFileLocation.getEntityRootFolderId())
+        .rootPathId(null)
         .changeType(changeType)
         .rootPath(gitFileLocation.getEntityRootFolderName())
         .build();
@@ -97,14 +97,12 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
                                                     .entityName(entityName)
                                                     .organizationId(orgId)
                                                     .projectId(projectId)
-                                                    .yamlGitFolderConfigId(rootFolder.getIdentifier())
                                                     .entityRootFolderName(rootFolder.getRootFolder())
-                                                    .entityRootFolderId(rootFolder.getIdentifier())
                                                     .entityGitPath(GitFileLocationHelper.getEntityPath(
                                                         rootFolder.getRootFolder(), entityType, entityIdentifier))
                                                     .branch(yamlGitConfig.getBranch())
                                                     .repo(yamlGitConfig.getRepo())
-                                                    .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                                                    .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                                                     .scope(yamlGitConfig.getScope())
                                                     .build());
         })

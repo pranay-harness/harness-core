@@ -1,5 +1,6 @@
 package software.wings.yaml.handler;
 
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -8,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -17,6 +19,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationYaml;
+import software.wings.beans.Event;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -25,6 +28,7 @@ import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -45,6 +49,7 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private ApplicationYamlHandler yamlHandler;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
+  @Mock private YamlPushService yamlPushService;
 
   private final String APP_NAME = "app1";
   private Application application;
@@ -98,6 +103,38 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
     compareApp(application, applicationFromGet);
 
     yamlHandler.delete(changeContext);
+
+    Application application = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertThat(application).isNull();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+    gitFileChange.setSyncFromGit(true);
+
+    ChangeContext<ApplicationYaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.APPLICATION);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    ApplicationYaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Application savedApplication = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareApp(application, savedApplication);
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, null, savedApplication, Event.Type.CREATE, true, false);
+
+    yamlHandler.delete(changeContext);
+    verify(yamlPushService)
+        .pushYamlChangeSet(application.getAccountId(), savedApplication, null, Event.Type.DELETE, true, false);
 
     Application application = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     assertThat(application).isNull();

@@ -5,7 +5,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 6/20/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddRestrictionsToSecrets implements Migration {
   @Inject private SecretManager secretManager;
   @Inject private AccountService accountService;

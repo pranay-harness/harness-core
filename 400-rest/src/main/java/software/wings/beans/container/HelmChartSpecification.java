@@ -1,6 +1,9 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.AccountAccess;
 
@@ -20,6 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "HelmChartSpecificationKeys")
 @Entity("helmChartSpecifications")
 @HarnessEntity(exportable = true)
+@OwnedBy(CDP)
 public class HelmChartSpecification extends DeploymentSpecification implements AccountAccess {
   @NotEmpty @FdUniqueIndex private String serviceId;
   @NotNull private String chartUrl;

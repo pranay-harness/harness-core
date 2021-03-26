@@ -1,9 +1,13 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.cdng.creator.plan.infrastructure.InfraRollbackPMSPlanCreator;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.beans.PlanCreationConstants;
@@ -33,14 +37,26 @@ public class RollbackPlanCreator {
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
+    YamlField infraField = executionField.getNode().nextSiblingNodeFromParentObject(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    PlanCreationResponse infraRollbackPlan = InfraRollbackPMSPlanCreator.createInfraRollbackPlan(infraField);
+    if (isNotEmpty(infraRollbackPlan.getNodes())) {
+      String infraNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
+          stageNode.getIdentifier(), PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER);
+      stepParametersBuilder.childNode(RollbackNode.builder()
+                                          .nodeId(infraField.getNode().getUuid() + "infraRollback")
+                                          .dependentNodeIdentifier(infraNodeFullIdentifier)
+                                          .build());
+    }
+
     PlanCreationResponse stepGroupsRollbackPlanNode =
         StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(executionStepsField);
 
     String executionNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
         stageNode.getIdentifier(), PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
-    if (EmptyPredicate.isNotEmpty(stepGroupsRollbackPlanNode.getNodes())) {
+    if (isNotEmpty(stepGroupsRollbackPlanNode.getNodes())) {
       stepParametersBuilder.childNode(RollbackNode.builder()
-                                          .nodeId(executionStepsField.getNode().getUuid() + "_stepGrouprollback")
+                                          .nodeId(executionStepsField.getNode().getUuid()
+                                              + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX)
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)
                                           .build());
     }
@@ -48,11 +64,12 @@ public class RollbackPlanCreator {
 
     PlanCreationResponse executionRollbackPlanNode =
         ExecutionRollbackPMSPlanCreator.createExecutionRollbackPlanNode(executionRollbackSteps);
-    if (EmptyPredicate.isNotEmpty(executionRollbackPlanNode.getNodes())) {
-      stepParametersBuilder.childNode(RollbackNode.builder()
-                                          .nodeId(executionRollbackSteps.getNode().getUuid() + "_executionrollback")
-                                          .dependentNodeIdentifier(executionNodeFullIdentifier)
-                                          .build());
+    if (isNotEmpty(executionRollbackPlanNode.getNodes())) {
+      stepParametersBuilder.childNode(
+          RollbackNode.builder()
+              .nodeId(executionRollbackSteps.getNode().getUuid() + PlanCreationConstants.ROLLBACK_STEPS_NODE_ID_PREFIX)
+              .dependentNodeIdentifier(executionNodeFullIdentifier)
+              .build());
     }
 
     if (EmptyPredicate.isEmpty(stepParametersBuilder.build().getChildNodes())) {
@@ -78,6 +95,7 @@ public class RollbackPlanCreator {
         PlanCreationResponse.builder().node(deploymentStageRollbackNode.getUuid(), deploymentStageRollbackNode).build();
     finalResponse.merge(stepGroupsRollbackPlanNode);
     finalResponse.merge(executionRollbackPlanNode);
+    finalResponse.merge(infraRollbackPlan);
 
     return finalResponse;
   }

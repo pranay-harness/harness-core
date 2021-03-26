@@ -5,6 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
+import static software.wings.beans.LogColor.Cyan;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+
 import static java.util.stream.Collectors.toList;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -110,9 +114,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService(), ngManagerLogCallback);
 
     ngManagerLogCallback.saveExecutionLog("Manifests Processed");
-    ngManagerLogCallback.saveExecutionLog("Fetching Artifacts");
+    ngManagerLogCallback.saveExecutionLog("Processing Artifacts");
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
-        artifactStep.getArtifactsWithCorrespondingOverrides(stepParameters.getService());
+        artifactStep.getArtifactsWithCorrespondingOverrides(stepParameters.getService(), ngManagerLogCallback);
     ServiceStepPassThroughData passThroughData =
         ServiceStepPassThroughData.builder()
             .artifactsWithCorrespondingOverrides(artifactsWithCorrespondingOverrides)
@@ -130,16 +134,26 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     }
 
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
-    return TaskChainResponse.builder()
-        .taskRequest(taskRequest)
-        .chainEnd(artifactsWithCorrespondingOverrides.size() == 1)
-        .passThroughData(passThroughData)
-        .build();
+    boolean chainEnd = artifactsWithCorrespondingOverrides.size() == 1;
+    ngManagerLogCallback.saveExecutionLog(color("Starting delegate task for fetching details of artifact :"
+            + passThroughData.artifactsWithCorrespondingOverrides.get(passThroughData.currentIndex)
+                  .getArtifact()
+                  .getIdentifier(),
+        Cyan, Bold));
+    TaskChainResponse taskChainResponse = TaskChainResponse.builder()
+                                              .taskRequest(taskRequest)
+                                              .chainEnd(chainEnd)
+                                              .passThroughData(passThroughData)
+                                              .build();
+    ngManagerLogCallback.saveExecutionLog(color("Delegate task completed...", Cyan, Bold));
+    return taskChainResponse;
   }
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, ServiceStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+    NGManagerLogCallback ngManagerLogCallback =
+        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
     DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     int currentIndex = serviceStepPassThroughData.getCurrentIndex();
@@ -155,11 +169,20 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     int nextIndex = currentIndex + 1;
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
     serviceStepPassThroughData.setCurrentIndex(nextIndex);
-    return TaskChainResponse.builder()
-        .taskRequest(taskRequest)
-        .chainEnd(artifactsWithCorrespondingOverrides.size() == nextIndex + 1)
-        .passThroughData(passThroughData)
-        .build();
+    boolean chainEnd = artifactsWithCorrespondingOverrides.size() == nextIndex + 1;
+    ngManagerLogCallback.saveExecutionLog(color("Starting delegate task for fetching details of artifact: "
+            + ((ServiceStepPassThroughData) passThroughData)
+                  .artifactsWithCorrespondingOverrides.get(((ServiceStepPassThroughData) passThroughData).currentIndex)
+                  .getArtifact()
+                  .getIdentifier(),
+        Cyan, Bold));
+    TaskChainResponse taskChainResponse = TaskChainResponse.builder()
+                                              .taskRequest(taskRequest)
+                                              .chainEnd(chainEnd)
+                                              .passThroughData(passThroughData)
+                                              .build();
+    ngManagerLogCallback.saveExecutionLog(color("Delegate task completed...", Cyan, Bold));
+    return taskChainResponse;
   }
 
   @SneakyThrows
@@ -191,8 +214,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         : serviceStepParameters.getService();
     serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
 
-    ServiceOutcome serviceOutcome = createServiceOutcome(
-        ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken());
+    ServiceOutcome serviceOutcome = createServiceOutcome(ambiance, serviceConfig,
+        serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken(), managerLogCallback);
     managerLogCallback.saveExecutionLog("Service Step Succeeded", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
     return StepResponse.builder()
         .stepOutcome(StepOutcome.builder()
@@ -228,7 +251,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   @VisibleForTesting
   ServiceOutcome createServiceOutcome(Ambiance ambiance, ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes,
-      long expressionFunctorToken) throws IOException {
+      long expressionFunctorToken, NGManagerLogCallback managerLogCallback) throws IOException {
     ServiceEntity serviceEntity = getServiceEntity(serviceConfig, ambiance);
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
@@ -249,7 +272,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                                                  .filter(outcome -> outcome instanceof ArtifactOutcome)
                                                  .map(a -> (ArtifactOutcome) a)
                                                  .collect(toList());
-    handleArtifactOutcome(outcomeBuilder, artifactOutcomes, serviceConfig);
+    handleArtifactOutcome(outcomeBuilder, artifactOutcomes, serviceConfig, managerLogCallback);
 
     // Handle ManifestOutcome
     Optional<Outcome> optionalManifestOutcome =
@@ -259,12 +282,13 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     handleManifestOutcome(manifestsOutcome, outcomeBuilder);
 
     handleVariablesOutcome(outcomeBuilder, serviceConfig, expressionFunctorToken);
-    handlePublishingStageOverrides(outcomeBuilder, manifestsOutcome, serviceConfig, expressionFunctorToken);
+    handlePublishingStageOverrides(
+        outcomeBuilder, manifestsOutcome, serviceConfig, expressionFunctorToken, managerLogCallback);
     return outcomeBuilder.build();
   }
 
   private void handlePublishingStageOverrides(ServiceOutcomeBuilder outcomeBuilder, ManifestsOutcome manifestsOutcome,
-      ServiceConfig serviceConfig, long expressionFunctorToken) {
+      ServiceConfig serviceConfig, long expressionFunctorToken, NGManagerLogCallback managerLogCallback) {
     if (serviceConfig.getStageOverrides() == null) {
       return;
     }
@@ -281,7 +305,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     // Adding artifact Stage overrides.
     ArtifactListConfig stageOverrideArtifacts = serviceConfig.getStageOverrides().getArtifacts();
     if (stageOverrideArtifacts != null) {
-      List<ArtifactConfig> artifactConfigs = ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrideArtifacts);
+      List<ArtifactConfig> artifactConfigs =
+          ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrideArtifacts, managerLogCallback);
       ArtifactsOutcomeBuilder artifactsOutcomeBuilder = ArtifactsOutcome.builder();
       for (ArtifactConfig artifactConfig : artifactConfigs) {
         ArtifactOutcome stageArtifactOutcome =
@@ -382,8 +407,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     }
   }
 
-  private void handleArtifactOutcome(
-      ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes, ServiceConfig serviceConfig) {
+  private void handleArtifactOutcome(ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes,
+      ServiceConfig serviceConfig, NGManagerLogCallback managerLogCallback) {
     ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
     Map<String, Map<String, Object>> artifactsMap = new HashMap<>();
     for (ArtifactOutcome artifactOutcome : artifactOutcomes) {
@@ -407,7 +432,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     ArtifactListConfig originalArtifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (originalArtifacts != null) {
-      List<ArtifactConfig> artifactConfigs = ArtifactUtils.convertArtifactListIntoArtifacts(originalArtifacts);
+      List<ArtifactConfig> artifactConfigs =
+          ArtifactUtils.convertArtifactListIntoArtifacts(originalArtifacts, managerLogCallback);
       for (ArtifactConfig artifactConfig : artifactConfigs) {
         ArtifactOutcome artifactOutcome =
             ArtifactResponseToOutcomeMapper.toArtifactOutcome(artifactConfig, null, false);
@@ -431,9 +457,11 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         : artifactOverrideSetsWrappers.stream().map(ArtifactOverrideSetWrapper::getOverrideSet).collect(toList());
 
     if (EmptyPredicate.isNotEmpty(artifactOverrideSets)) {
+      managerLogCallback.saveExecutionLog("Found artifact overrides\n", LogLevel.INFO);
       for (ArtifactOverrideSets artifactOverrideSet : artifactOverrideSets) {
         ArtifactListConfig artifacts = artifactOverrideSet.getArtifacts();
-        List<ArtifactConfig> artifactConfigs = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
+        List<ArtifactConfig> artifactConfigs =
+            ArtifactUtils.convertArtifactListIntoArtifacts(artifacts, managerLogCallback);
         artifactsBuilder = ArtifactsOutcome.builder();
         for (ArtifactConfig artifactConfig : artifactConfigs) {
           ArtifactOutcome overrideArtifactOutcome =

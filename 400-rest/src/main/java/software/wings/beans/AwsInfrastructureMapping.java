@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,6 +8,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @JsonTypeName("AWS_SSH")
 @FieldNameConstants(innerTypeName = "AwsInfrastructureMappingKeys")
+@OwnedBy(CDP)
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   private String restrictionType;
   private String restrictionExpression;

@@ -1,16 +1,21 @@
 package io.harness.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
+import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
+import io.harness.service.intfc.PerpetualTaskStateObserver;
 
 import software.wings.beans.DelegateInsightsBarDetails;
 import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
+import software.wings.beans.DelegatePerpetualTaskUsageInsights;
+import software.wings.beans.DelegatePerpetualTaskUsageInsightsEventType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
@@ -29,20 +34,22 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-public class DelegateInsightsServiceImpl implements DelegateInsightsService, DelegateTaskStatusObserver {
+public class DelegateInsightsServiceImpl
+    implements DelegateInsightsService, DelegateTaskStatusObserver, PerpetualTaskStateObserver {
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateCache delegateCache;
 
   @Override
-  public void onTaskAssigned(String accountId, String taskId, String delegateId, String delegateGroupId) {
+  public void onTaskAssigned(String accountId, String taskId, String delegateId) {
     if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
-      String finalDelegateGroupId = isEmpty(delegateGroupId) ? delegateId : delegateGroupId;
+      String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
 
       DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, finalDelegateGroupId, DelegateTaskUsageInsightsEventType.STARTED);
+          accountId, taskId, delegateId, delegateGroupId, DelegateTaskUsageInsightsEventType.STARTED);
 
       DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, finalDelegateGroupId, DelegateTaskUsageInsightsEventType.UNKNOWN);
+          accountId, taskId, delegateId, delegateGroupId, DelegateTaskUsageInsightsEventType.UNKNOWN);
 
       persistence.save(delegateTaskUsageInsightsCreateEvent);
       persistence.save(delegateTaskUsageInsightsUnknownEvent);
@@ -67,6 +74,35 @@ public class DelegateInsightsServiceImpl implements DelegateInsightsService, Del
 
       persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
     }
+  }
+
+  @Override
+  public void onPerpetualTaskAssigned(String accountId, String taskId, String delegateId) {
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
+      String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
+
+      DelegatePerpetualTaskUsageInsights perpetualTaskUsageInsights =
+          DelegatePerpetualTaskUsageInsights.builder()
+              .accountId(accountId)
+              .taskId(taskId)
+              .delegateId(delegateId)
+              .delegateGroupId(delegateGroupId)
+              .eventType(DelegatePerpetualTaskUsageInsightsEventType.ASSIGNED)
+              .timestamp(System.currentTimeMillis())
+              .build();
+
+      persistence.save(perpetualTaskUsageInsights);
+    }
+  }
+
+  private String obtainDelegateGroupId(String accountId, String delegateId) {
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
+
+    if (delegate != null && isNotBlank(delegate.getDelegateGroupId())) {
+      return delegate.getDelegateGroupId();
+    }
+
+    return delegateId;
   }
 
   private DelegateTaskUsageInsights createDelegateTaskUsageInsightsEvent(String accountId, String taskId,

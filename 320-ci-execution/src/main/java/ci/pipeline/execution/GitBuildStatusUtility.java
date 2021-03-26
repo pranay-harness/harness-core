@@ -3,6 +3,7 @@ package ci.pipeline.execution;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
@@ -31,6 +32,7 @@ import io.harness.steps.StepOutcomeGroup;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +97,7 @@ public class GitBuildStatusUtility {
                                                       .taskDescription("CI git build status task")
                                                       .build();
 
-        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
@@ -113,6 +115,13 @@ public class GitBuildStatusUtility {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
 
+    boolean isAccountLevelConnector = isAccountLevelConnector(gitConnector, buildStatusUpdateParameter.getRepoName());
+
+    String repoName = buildStatusUpdateParameter.getRepoName();
+    if (!isAccountLevelConnector) {
+      repoName = gitClientHelper.getGitRepo(retrieveURL(gitConnector));
+    }
+
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
     return CIBuildStatusPushParameters.builder()
         .detailsUrl(getBuildDetailsUrl(
@@ -124,7 +133,7 @@ public class GitBuildStatusUtility {
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))
         .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
-        .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
+        .repo(repoName)
         .identifier(buildStatusUpdateParameter.getIdentifier())
         .state(retrieveBuildStatusState(gitSCMType, status))
         .build();
@@ -159,6 +168,29 @@ public class GitBuildStatusUtility {
     } else {
       throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
     }
+  }
+
+  private boolean isAccountLevelConnector(ConnectorDetails gitConnector, String repoName) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      if (gitConfigDTO.getConnectionType() == ACCOUNT) {
+        return true;
+      }
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      if (gitConfigDTO.getConnectionType() == ACCOUNT) {
+        return true;
+      }
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      if (gitConfigDTO.getConnectionType() == ACCOUNT) {
+        return true;
+      }
+    } else {
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
+    }
+
+    return false;
   }
 
   private String retrieveBuildStatusState(GitSCMType gitSCMType, Status status) {

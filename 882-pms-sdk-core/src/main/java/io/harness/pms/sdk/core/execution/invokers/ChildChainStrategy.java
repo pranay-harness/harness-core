@@ -17,7 +17,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.EngineResumeCallback;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
@@ -32,7 +31,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -132,15 +130,16 @@ public class ChildChainStrategy implements ExecuteStrategy {
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
 
     PlanNodeProto planNode = nodeExecution.getNode();
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    callback.notify(Collections.singletonMap(ignoreNotifyId,
-        StepResponseNotifyData.builder()
-            .nodeUuid(planNode.getUuid())
-            .identifier(planNode.getIdentifier())
-            .group(planNode.getGroup())
-            .status(SUSPENDED)
-            .description("Ignoring Execution as next child found to be null")
-            .build()));
+    pmsNodeExecutionService.resumeNodeExecution(nodeExecution.getUuid(),
+        Collections.singletonMap(ignoreNotifyId,
+            StepResponseNotifyData.builder()
+                .nodeUuid(planNode.getUuid())
+                .identifier(planNode.getIdentifier())
+                .group(planNode.getGroup())
+                .status(SUSPENDED)
+                .description("Ignoring Execution as next child found to be null")
+                .build()),
+        false);
   }
 
   private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {

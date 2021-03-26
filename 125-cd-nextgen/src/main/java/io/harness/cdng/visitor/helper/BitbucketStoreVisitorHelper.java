@@ -9,6 +9,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -18,6 +19,7 @@ import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,13 +45,24 @@ public class BitbucketStoreVisitorHelper implements ConfigValidator, EntityRefer
     if (ParameterField.isNull(bitbucketStore.getConnectorRef())) {
       return result;
     }
+    String fullQualifiedDomainName =
+        VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!bitbucketStore.getConnectorRef().isExpression()) {
       String connectorRefString = bitbucketStore.getConnectorRef().getValue();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-      Map<String, String> metadata = Collections.singletonMap("fqn", fullQualifiedDomainName);
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
+      EntityDetailProtoDTO entityDetail =
+          EntityDetailProtoDTO.newBuilder()
+              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+              .setType(EntityTypeProtoEnum.CONNECTORS)
+              .build();
+      result.add(entityDetail);
+    } else {
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, bitbucketStore.getConnectorRef().getExpressionValue());
+      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
+          orgIdentifier, projectIdentifier, bitbucketStore.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =
           EntityDetailProtoDTO.newBuilder()
               .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))

@@ -43,6 +43,7 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   @Attributes(title = "Username") private String username;
 
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  private List<String> delegateSelectors;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -52,14 +53,15 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
     super(SettingVariableTypes.ARTIFACTORY.name());
   }
 
-  public ArtifactoryConfig(
-      String artifactoryUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public ArtifactoryConfig(String artifactoryUrl, String username, char[] password, List<String> delegateSelectors,
+      String accountId, String encryptedPassword) {
     this();
     this.artifactoryUrl = artifactoryUrl;
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.delegateSelectors = delegateSelectors;
   }
 
   // NOTE: Do not remove this. As UI expects this field should be there..Lombok Default is not working

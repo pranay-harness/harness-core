@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.security.dto.Principal;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -26,9 +27,13 @@ import java.util.concurrent.atomic.AtomicReference;
 @OwnedBy(PL)
 public class ServiceTokenGenerator {
   public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
+  private static ServiceTokenGenerator serviceTokenGenerator;
 
-  public static ServiceTokenGenerator newInstance() {
-    return new ServiceTokenGenerator();
+  public static synchronized ServiceTokenGenerator newInstance() {
+    if (serviceTokenGenerator == null) {
+      serviceTokenGenerator = new ServiceTokenGenerator();
+    }
+    return serviceTokenGenerator;
   }
 
   public String getVerificationServiceToken() {
@@ -38,17 +43,21 @@ public class ServiceTokenGenerator {
   }
 
   public String getServiceTokenWithDuration(String secretKey, Duration duration) {
+    return getServiceTokenWithDuration(secretKey, duration, SecurityContextBuilder.getPrincipal());
+  }
+
+  public String getServiceTokenWithDuration(String secretKey, Duration duration, Principal principal) {
     if (isNotEmpty(secretKey)) {
-      return createNewToken(secretKey, duration);
+      return createNewToken(secretKey, duration, principal);
     }
     throw new InvalidArgumentsException("secretKey cannot be empty", null);
   }
 
   public String getServiceToken(String secretKey) {
-    return getServiceTokenWithDuration(secretKey, Duration.ofHours(4));
+    return getServiceTokenWithDuration(secretKey, Duration.ofHours(4), SecurityContextBuilder.getPrincipal());
   }
 
-  private String createNewToken(String serviceSecret, Duration tokenDuration) {
+  private String createNewToken(String serviceSecret, Duration tokenDuration, Principal principal) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(serviceSecret);
 
@@ -60,17 +69,17 @@ public class ServiceTokenGenerator {
               .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
               .withIssuedAt(new Date());
 
-      addPrincipalToJWTBuilder(jwtBuilder);
+      addPrincipalToJWTBuilder(jwtBuilder, principal);
       return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new InvalidRequestException("error creating jwt token", exception);
     }
   }
 
-  private void addPrincipalToJWTBuilder(JWTCreator.Builder jwtBuilder) {
+  private void addPrincipalToJWTBuilder(JWTCreator.Builder jwtBuilder, Principal principal) {
     Map<String, String> claims = new HashMap<>();
-    if (SecurityContextBuilder.getPrincipal() != null) {
-      claims = SecurityContextBuilder.getPrincipal().getJWTClaims();
+    if (principal != null) {
+      claims = principal.getJWTClaims();
     }
     if (claims.size() > 0) {
       claims.forEach(jwtBuilder::withClaim);
@@ -78,6 +87,6 @@ public class ServiceTokenGenerator {
   }
 
   private String createNewToken(String serviceSecret) {
-    return createNewToken(serviceSecret, Duration.ofHours(4));
+    return createNewToken(serviceSecret, Duration.ofHours(4), SecurityContextBuilder.getPrincipal());
   }
 }

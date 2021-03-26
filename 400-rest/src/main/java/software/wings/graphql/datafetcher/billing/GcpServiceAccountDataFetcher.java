@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import static java.util.Collections.singletonList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.graphql.GcpServiceAccountQueryArguments;
 import io.harness.ccm.config.CEGcpServiceAccountService;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GcpServiceAccountDataFetcher
     extends AbstractArrayDataFetcher<GcpServiceAccountDTO, GcpServiceAccountQueryArguments> {
   @Inject CEGcpServiceAccountService ceGcpServiceAccountService;

@@ -4,6 +4,7 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
+import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.visitor.YamlTypes;
@@ -12,6 +13,8 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.execution.utils.RunInfoUtils;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -63,15 +66,25 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     if (infraField == null) {
       throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
     }
-    YamlNode infraNode = infraField.getNode();
+    PipelineInfrastructure actualInfraConfig = InfrastructurePmsPlanCreator.getActualInfraConfig(
+        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
         ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
     planCreationResponseMap.put(
         infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
+    String infraSectionNodeChildId = infraStepNode.getUuid();
+
+    if (InfrastructurePmsPlanCreator.isProvisionerConfigured(actualInfraConfig)) {
+      planCreationResponseMap.putAll(InfrastructurePmsPlanCreator.createPlanForProvisioner(
+          actualInfraConfig, infraField, infraStepNode.getUuid(), kryoSerializer));
+      infraSectionNodeChildId = InfrastructurePmsPlanCreator.getProvisionerNodeId(infraField);
+    }
+
+    YamlNode infraNode = infraField.getNode();
 
     PlanNode infraSectionPlanNode =
-        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraStepNode.getUuid(),
+        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraSectionNodeChildId,
             ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer, infraField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
@@ -100,7 +113,8 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
-        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
+        .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();

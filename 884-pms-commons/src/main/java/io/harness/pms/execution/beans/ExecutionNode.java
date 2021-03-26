@@ -17,6 +17,7 @@ import org.bson.Document;
 @Builder
 public class ExecutionNode {
   String uuid;
+  String setupId;
   String name;
   String identifier;
   String baseFqn;
@@ -31,4 +32,5 @@ public class ExecutionNode {
   List<ExecutableResponse> executableResponses;
   Map<String, List<ProgressData>> taskIdToProgressDataMap;
   List<UnitProgress> unitProgresses;
+  List<DelegateInfo> delegateInfoList;
 }
