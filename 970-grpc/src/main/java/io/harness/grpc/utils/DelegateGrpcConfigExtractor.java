@@ -1,7 +1,6 @@
 package io.harness.grpc.utils;
 
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.configuration.DeployMode.isOnPrem;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,7 +18,8 @@ public class DelegateGrpcConfigExtractor {
   private static String MANAGER_GRPC_PORT = "9879";
   public static String extractTarget(String managerUrl) {
     try {
-      if ("KUBERNETES_ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+      if (("KUBERNETES_ONPREM".equals(System.getenv().get(DEPLOY_MODE)))
+          && ("http".equals(extractScheme(managerUrl)))) {
         return new URI(managerUrl).getAuthority() + ":" + MANAGER_GRPC_PORT;
       }
       return new URI(managerUrl).getAuthority();
@@ -29,7 +29,7 @@ public class DelegateGrpcConfigExtractor {
   }
 
   public static String extractAuthority(String managerUrl, String svc) {
-    if (isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+    if ("http".equals(extractScheme(managerUrl))) {
       return "default-authority.harness.io";
     }
     try {
