@@ -53,7 +53,8 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     roleService = mock(RoleService.class);
     scopeService = mock(ScopeService.class);
     userGroupService = mock(UserGroupService.class);
-    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(aclService, roleService, userGroupService,resourceGroupService);
+    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
+        aclService, roleService, userGroupService, resourceGroupService, scopeService);
   }
 
   @Test

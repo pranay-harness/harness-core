@@ -15,10 +15,9 @@ import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
-
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -128,11 +127,11 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
     role.getPermissions().forEach(permission -> {
       if (resourceGroup.isFullScopeSelected()) {
         Scope scope = scopeService.buildScopeFromScopeIdentifier(resourceGroup.getScopeIdentifier());
-        acls.add(getACL(roleAssignmentDBO, permission,
+        acls.addAll(getACLs(roleAssignmentDBO, permission,
             getResourceSelector(scope.getLevel().getResourceType(), scope.getInstanceId())));
       } else {
         resourceGroup.getResourceSelectors().forEach(
-            resourceSelector -> acls.add(getACL(roleAssignmentDBO, permission, resourceSelector)));
+            resourceSelector -> acls.addAll(getACLs(roleAssignmentDBO, permission, resourceSelector)));
       }
     });
 
