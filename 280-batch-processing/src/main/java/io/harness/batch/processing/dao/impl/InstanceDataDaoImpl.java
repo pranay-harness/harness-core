@@ -353,7 +353,9 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .lessThanOrEq(startTime);
     try (HIterator<InstanceData> instanceItr = new HIterator<>(query.fetch())) {
       for (InstanceData instanceData : instanceItr) {
-        instanceIds.add(instanceData.getInstanceId());
+        if (null == instanceData.getUsageStopTime()) {
+          instanceIds.add(instanceData.getInstanceId());
+        }
       }
     }
     return instanceIds;
