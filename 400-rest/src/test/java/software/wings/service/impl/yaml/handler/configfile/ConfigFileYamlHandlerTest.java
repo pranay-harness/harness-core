@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -120,6 +121,32 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
         .get(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), eq(yaml.getTargetFilePath()));
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws IOException {
+    String yamlString = getYamlFile(UNENCRYPTED_CONFIG_FILE_YAML);
+    ChangeContext<ConfigFile.Yaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
+    changeContext.getChange().setSyncFromGit(true);
+    ConfigFile.Yaml yaml = changeContext.getYaml();
+    boolean isEncrypted = yaml.isEncrypted();
+
+    List<ChangeContext> changeSetContext = getChangeSetContext(CONFIG_FILE, configFilePath, changeContext, isEncrypted);
+
+    testSetUp(yaml);
+
+    ConfigFile savedConfigFile = testSaveConfigFile(changeContext, isEncrypted, changeSetContext);
+    assertThat(savedConfigFile.isSyncFromGit()).isTrue();
+
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
+
+    ConfigFile updatedConfigFile = testUpdateYaml(changeContext, isEncrypted, changeSetContext, savedConfigFile);
+    assertThat(updatedConfigFile.isSyncFromGit()).isTrue();
+
+    configFileYamlHandler.delete(changeContext);
+    verify(configService).delete(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), anyString(), eq(true));
+  }
+
   private void testCrudConfigFiles(
       String yamlFileName, String configFileName, String yamlFilePath, String configFilePath) throws IOException {
     String yamlString = getYamlFile(yamlFileName);
@@ -147,7 +174,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(yamlContent).isEqualTo(yamlString);
 
     configFileYamlHandler.delete(changeContext);
-    verify(configService).delete(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), anyString());
+    verify(configService).delete(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), anyString(), anyBoolean());
   }
 
   private List<ChangeContext> getChangeSetContext(String configFileName, String configFilePath,
