@@ -59,4 +59,6 @@ public interface HarnessUserGroupService {
   boolean delete(@NotEmpty String uuid);
 
   boolean isHarnessSupportEnabledForAccount(String accountId);
+
+  HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds, Set<String> accountIds, String groupType);
 }

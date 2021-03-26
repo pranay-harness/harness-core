@@ -122,4 +122,17 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   public boolean delete(String uuid) {
     return wingsPersistence.delete(HarnessUserGroup.class, uuid);
   }
+
+  @Override
+  public HarnessUserGroup createHarnessUserGroup(
+      String name, String description, Set<String> memberIds, Set<String> accountIds, String groupType) {
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .name(name)
+                                            .description(description)
+                                            .memberIds(memberIds)
+                                            .accountIds(accountIds)
+                                            .groupType(groupType)
+                                            .build();
+    return harnessUserGroup;
+  }
 }
