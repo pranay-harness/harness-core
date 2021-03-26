@@ -1,6 +1,8 @@
 package io.harness.resourcegroupclient.remote;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
@@ -13,6 +15,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+@OwnedBy(HarnessTeam.PL)
 public interface ResourceGroupClient {
   String RESOURCE_GROUP_API = "resourcegroup";
   String RESOURCE_TYPE_API = "resourcetype";

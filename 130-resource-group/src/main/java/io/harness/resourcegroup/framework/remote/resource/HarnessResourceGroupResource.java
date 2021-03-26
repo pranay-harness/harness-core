@@ -4,6 +4,8 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -46,6 +48,7 @@ import lombok.AllArgsConstructor;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@OwnedBy(HarnessTeam.PL)
 public class HarnessResourceGroupResource {
   ResourceGroupService resourceGroupService;
 
