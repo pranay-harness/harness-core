@@ -9,8 +9,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.List;
+
 @OwnedBy(PL)
 public interface AuditRepositoryCustom {
   Page<AuditEvent> findAll(Criteria criteria, Pageable pageable);
   AuditEvent get(Criteria criteria);
+  void deleteAfterTimestamp(Criteria criteria);
+  List<String> fetchDistinctAccountIdentifiers(Criteria criteria);
 }

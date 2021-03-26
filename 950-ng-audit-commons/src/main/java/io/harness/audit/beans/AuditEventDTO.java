@@ -11,6 +11,8 @@ import io.harness.request.RequestMetadata;
 import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -32,7 +34,7 @@ public class AuditEventDTO {
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
-  @NotNull Long timestamp;
+  @NotNull Instant timestamp;
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 

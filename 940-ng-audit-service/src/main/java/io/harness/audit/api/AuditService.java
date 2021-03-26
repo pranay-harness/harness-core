@@ -10,10 +10,17 @@ import io.harness.ng.beans.PageRequest;
 
 import org.springframework.data.domain.Page;
 
+import java.time.Instant;
+import java.util.List;
+
 @OwnedBy(PL)
 public interface AuditService {
   Boolean create(AuditEventDTO auditEventDTO);
 
   Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);
+
+  void deleteExpiredAudits(String accountIdentifier, Instant toBeDeletedTillTimestamp);
+
+  List<String> fetchDistinctAccounts();
 }

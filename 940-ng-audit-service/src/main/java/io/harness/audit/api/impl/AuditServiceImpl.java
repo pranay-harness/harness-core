@@ -24,6 +24,8 @@ import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -49,6 +51,16 @@ public class AuditServiceImpl implements AuditService {
           auditEvent.getResourceScope().getAccountIdentifier());
       return true;
     }
+  }
+
+  @Override
+  public void deleteExpiredAudits(String accountIdentifier, Instant toBeDeletedTillTimestamp) {
+    auditRepository.deleteAfterTimestamp(new Criteria().where(AuditEventKeys.timestamp).lte(toBeDeletedTillTimestamp));
+  }
+
+  @Override
+  public List<String> fetchDistinctAccounts(){
+    return auditRepository.fetchDistinctAccountIdentifiers(new Criteria().where(AuditEventKeys.timestamp).gte(0));
   }
 
   @Override

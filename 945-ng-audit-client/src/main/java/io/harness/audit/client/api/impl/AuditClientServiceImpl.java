@@ -20,6 +20,8 @@ import io.harness.security.dto.Principal;
 
 import com.google.inject.Inject;
 
+import java.time.Instant;
+
 public class AuditClientServiceImpl implements AuditClientService {
   @Inject private AuditClient auditClient;
 
@@ -43,7 +45,7 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .resourceScope(auditEntry.getResourceScope())
                                                     .insertId(auditEntry.getInsertId())
                                                     .module(auditEntry.getModule())
-                                                    .timestamp(auditEntry.getTimestamp());
+                                                    .timestamp(Instant.ofEpochMilli(auditEntry.getTimestamp()));
 
     if (principal != null) {
       auditEventDTOBuilder.authenticationInfo(
