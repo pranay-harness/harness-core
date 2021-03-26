@@ -14,6 +14,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface AuditRepositoryCustom {
   Page<AuditEvent> findAll(Criteria criteria, Pageable pageable);
   AuditEvent get(Criteria criteria);
-  void deleteAfterTimestamp(Criteria criteria);
+  void deleteBeforeTimestamp(Criteria criteria);
   List<String> fetchDistinctAccountIdentifiers(Criteria criteria);
 }

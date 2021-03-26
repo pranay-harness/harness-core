@@ -1,11 +1,17 @@
 package io.harness.audit.retention;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.entities.AuditRetention;
 import io.harness.audit.repositories.AuditRetentionRepository;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(PL)
 public class AuditRetentionServiceImpl implements AuditRetentionService {
   @Inject private AuditRetentionRepository auditRetentionRepository;
 
@@ -19,17 +25,25 @@ public class AuditRetentionServiceImpl implements AuditRetentionService {
   @Override
   public AuditRetention update(String accountIdentifier, int months) {
     AuditRetention auditRetention = get(accountIdentifier);
-    auditRetention.setRetentionPeriodInMonths(months);
+    if (auditRetention != null) {
+      auditRetention.setRetentionPeriodInMonths(months);
+      return auditRetentionRepository.save(auditRetention);
+    }
+    return create(accountIdentifier, months);
+  }
+
+  @Override
+  public AuditRetention create(String accountIdentifier, int months) {
+    AuditRetention auditRetention =
+        AuditRetention.builder().accountIdentifier(accountIdentifier).retentionPeriodInMonths(months).build();
     return auditRetentionRepository.save(auditRetention);
   }
 
   @Override
-  public AuditRetention create(String accountIdentifier) {
-    if (get(accountIdentifier) == null) {
-      AuditRetention auditRetention =
-          AuditRetention.builder().accountIdentifier(accountIdentifier).retentionPeriodInMonths(24).build();
-      return auditRetentionRepository.save(auditRetention);
-    }
-    return null;
+  public List<AuditRetention> fetchAll() {
+    List<AuditRetention> auditRetentionList = new ArrayList<>();
+    auditRetentionRepository.findAll().iterator().forEachRemaining(
+        auditRetention -> auditRetentionList.add(auditRetention));
+    return auditRetentionList;
   }
 }

@@ -1,6 +1,9 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.ActionConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
@@ -29,6 +32,7 @@ import com.google.inject.name.Named;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class ProjectEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;

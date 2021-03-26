@@ -9,7 +9,7 @@ import io.harness.audit.entities.AuditEvent;
 import io.harness.ng.beans.PageRequest;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
@@ -21,5 +21,5 @@ public interface AuditService {
 
   void deleteExpiredAudits(String accountIdentifier, Instant toBeDeletedTillTimestamp);
 
-  List<String> fetchDistinctAccounts();
+  Set<String> fetchDistinctAccounts();
 }

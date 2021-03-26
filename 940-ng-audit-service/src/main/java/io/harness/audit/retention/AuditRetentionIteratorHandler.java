@@ -36,7 +36,7 @@ public class AuditRetentionIteratorHandler implements MongoPersistenceIterator.H
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("OutboxEventIteratorTask")
+            .name("AuditRetentionIteratorTask")
             .poolSize(3)
             .interval(ofMinutes(2))
             .build(),

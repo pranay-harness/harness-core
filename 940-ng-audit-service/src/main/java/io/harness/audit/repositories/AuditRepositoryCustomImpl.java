@@ -36,7 +36,7 @@ public class AuditRepositoryCustomImpl implements AuditRepositoryCustom {
   }
 
   @Override
-  public void deleteAfterTimestamp(Criteria criteria) {
+  public void deleteBeforeTimestamp(Criteria criteria) {
     Query query = new Query(criteria);
     mongoTemplate.findAllAndRemove(query, AuditEvent.class);
   }

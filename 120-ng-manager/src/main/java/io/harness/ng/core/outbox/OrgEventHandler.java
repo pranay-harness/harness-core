@@ -1,8 +1,10 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.ActionConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
@@ -32,6 +34,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class OrgEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;

@@ -26,7 +26,9 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -54,12 +56,17 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public void deleteExpiredAudits(String accountIdentifier, Instant toBeDeletedTillTimestamp) {
-    auditRepository.deleteAfterTimestamp(new Criteria().where(AuditEventKeys.timestamp).lte(toBeDeletedTillTimestamp));
+    auditRepository.deleteBeforeTimestamp(new Criteria()
+                                              .where(AuditEventKeys.timestamp)
+                                              .lte(toBeDeletedTillTimestamp)
+                                              .and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                                              .is(accountIdentifier));
   }
 
   @Override
-  public List<String> fetchDistinctAccounts() {
-    return auditRepository.fetchDistinctAccountIdentifiers(new Criteria().where(AuditEventKeys.timestamp).gte(0));
+  public Set<String> fetchDistinctAccounts() {
+    return new HashSet<>(
+        auditRepository.fetchDistinctAccountIdentifiers(new Criteria().where(AuditEventKeys.timestamp).gte(0)));
   }
 
   @Override
