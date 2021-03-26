@@ -2,8 +2,6 @@ package io.harness.audit.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentIterable;
@@ -11,6 +9,11 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
+
+import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,10 +23,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 @Getter

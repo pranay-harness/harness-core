@@ -4,11 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.entities.AuditEvent;
+import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 
 import com.google.inject.Inject;
 import java.util.List;
-
-import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,13 +36,13 @@ public class AuditRepositoryCustomImpl implements AuditRepositoryCustom {
   }
 
   @Override
-  public void deleteAfterTimestamp(Criteria criteria){
+  public void deleteAfterTimestamp(Criteria criteria) {
     Query query = new Query(criteria);
     mongoTemplate.findAllAndRemove(query, AuditEvent.class);
   }
 
   @Override
-  public List<String> fetchDistinctAccountIdentifiers(Criteria criteria){
+  public List<String> fetchDistinctAccountIdentifiers(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.findDistinct(query, AuditEventKeys.ACCOUNT_IDENTIFIER_KEY, AuditEvent.class, String.class);
   }

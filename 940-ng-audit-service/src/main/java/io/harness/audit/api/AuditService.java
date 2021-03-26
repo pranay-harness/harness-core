@@ -8,10 +8,9 @@ import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.ng.beans.PageRequest;
 
-import org.springframework.data.domain.Page;
-
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
 public interface AuditService {

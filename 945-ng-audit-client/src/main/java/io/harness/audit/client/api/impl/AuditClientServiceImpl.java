@@ -19,7 +19,6 @@ import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
 
 import com.google.inject.Inject;
-
 import java.time.Instant;
 
 public class AuditClientServiceImpl implements AuditClientService {

@@ -24,7 +24,6 @@ import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +58,7 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
-  public List<String> fetchDistinctAccounts(){
+  public List<String> fetchDistinctAccounts() {
     return auditRepository.fetchDistinctAccountIdentifiers(new Criteria().where(AuditEventKeys.timestamp).gte(0));
   }
 

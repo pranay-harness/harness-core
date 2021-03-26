@@ -10,5 +10,4 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @OwnedBy(PL)
 @HarnessRepo
-public interface AuditRepository extends PagingAndSortingRepository<AuditEvent, String>, AuditRepositoryCustom {
-}
+public interface AuditRepository extends PagingAndSortingRepository<AuditEvent, String>, AuditRepositoryCustom {}

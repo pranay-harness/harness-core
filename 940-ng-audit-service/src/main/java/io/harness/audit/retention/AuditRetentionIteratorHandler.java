@@ -2,10 +2,9 @@ package io.harness.audit.retention;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
-
-import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
@@ -15,10 +14,11 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 public class AuditRetentionIteratorHandler implements MongoPersistenceIterator.Handler<AuditRetention> {
@@ -28,7 +28,8 @@ public class AuditRetentionIteratorHandler implements MongoPersistenceIterator.H
 
   @Override
   public void handle(AuditRetention auditRetention) {
-    Instant toBeDeletedTillTimestamp = Instant.now().minus(auditRetention.getRetentionPeriodInMonths(), ChronoUnit.MONTHS);
+    Instant toBeDeletedTillTimestamp =
+        Instant.now().minus(auditRetention.getRetentionPeriodInMonths(), ChronoUnit.MONTHS);
     auditService.deleteExpiredAudits(auditRetention.getAccountIdentifier(), toBeDeletedTillTimestamp);
   }
 
