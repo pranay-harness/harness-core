@@ -21,6 +21,7 @@ import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -42,6 +43,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private ACLService aclService;
   private ResourceGroupService resourceGroupService;
   private RoleService roleService;
+  private ScopeService scopeService;
   private UserGroupService userGroupService;
 
   @Before
@@ -49,9 +51,10 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     aclService = mock(ACLService.class);
     resourceGroupService = mock(ResourceGroupService.class);
     roleService = mock(RoleService.class);
+    scopeService = mock(ScopeService.class);
     userGroupService = mock(UserGroupService.class);
-    roleAssignmentChangeConsumer =
-        new RoleAssignmentChangeConsumerImpl(aclService, roleService, userGroupService, resourceGroupService);
+    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
+        aclService, roleService, userGroupService, resourceGroupService, scopeService);
   }
 
   @Test
@@ -62,7 +65,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     when(roleService.get(any(), any(), any()))
         .thenReturn(
             Optional.of(Role.builder()
-                            .permissions(Sets.newHashSet(ImmutableList.of("core.secret.create", "core.secret.edit")))
+                            .permissions(Sets.newHashSet(ImmutableList.of("core_secret_create", "core_secret_edit")))
                             .build()));
     when(resourceGroupService.get(any(), any()))
         .thenReturn(Optional.of(ResourceGroup.builder()
@@ -94,7 +97,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     when(roleService.get(any(), any(), any()))
         .thenReturn(
             Optional.of(Role.builder()
-                            .permissions(Sets.newHashSet(ImmutableList.of("core.secret.create", "core.secret.edit")))
+                            .permissions(Sets.newHashSet(ImmutableList.of("core_secret_create", "core_secret_edit")))
                             .build()));
     when(resourceGroupService.get(any(), any())).thenReturn(Optional.empty());
     long count = roleAssignmentChangeConsumer.consumeCreateEvent(SOME_RANDOM_ID, roleAssignmentDBO);
@@ -112,7 +115,7 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
                                                  .build())
                              .scopeIdentifier("/ACCOUNT/account/ORG/org")
                              .principalIdentifier("qwerty")
-                             .permissionIdentifier("core.secret.edit")
+                             .permissionIdentifier("core_secret_edit")
                              .resourceSelector("/SECRETS/abcde")
                              .build()));
   }

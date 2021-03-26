@@ -1,5 +1,6 @@
 package io.harness.consumers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.mockito.Matchers.any;
@@ -19,6 +20,7 @@ import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -31,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class ResourceGroupChangeConsumerImplTest extends CategoryTest {
   private ResourceGroupChangeConsumerImpl resourceGroupChangeConsumer;
   private ACLService aclService;
@@ -67,7 +70,7 @@ public class ResourceGroupChangeConsumerImplTest extends CategoryTest {
                                                  .build())
                              .scopeIdentifier("/ACCOUNT/account/ORG/org")
                              .principalIdentifier("qwerty")
-                             .permissionIdentifier("core.secret.edit")
+                             .permissionIdentifier("core_secret_edit")
                              .resourceSelector("/SECRETS/abcde")
                              .build()));
   }

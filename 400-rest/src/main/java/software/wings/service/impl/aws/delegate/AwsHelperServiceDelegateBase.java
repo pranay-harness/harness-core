@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 
 import software.wings.beans.AwsConfig;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
@@ -28,6 +29,7 @@ class AwsHelperServiceDelegateBase {
   @Inject protected EncryptionService encryptionService;
   @Inject protected AwsCallTracker tracker;
   @Inject protected AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
+  @Inject protected AwsClusterService awsClusterService;
 
   protected void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     awsEcrApiHelperServiceDelegateBase.attachCredentialsAndBackoffPolicy(

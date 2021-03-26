@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -110,6 +111,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -226,9 +228,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     ContainerSyncResponse containerSyncResponse =
         ContainerSyncResponse.builder().containerInfoList(Collections.emptyList()).build();
 
-    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instances)
+        .when(instanceService)
+        .getInstancesForAppAndInframappingNotRemovedFully(anyString(), anyString());
     doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
-
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForDelete(INSTANCE_1_ID);
   }
@@ -287,11 +290,72 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                                               .build()))
                                                       .build();
 
-    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instances)
+        .when(instanceService)
+        .getInstancesForAppAndInframappingNotRemovedFully(anyString(), anyString());
     doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForSave("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testSyncInstancesDoNothing7DaysOldDeletedAndAddNew_ECS() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+
+    final List<Instance> instances = asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_ECS.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
+            .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("taskARN:0").build())
+            .lastWorkflowExecutionId("id")
+            .isDeleted(true)
+            .instanceInfo(Builder.anEcsContainerInfo()
+                              .withClusterName("ECSCluster")
+                              .withServiceName("service_a_1")
+                              .withStartedAt(0)
+                              .withStartedBy("user1")
+                              .withTaskArn("taskARN:0")
+                              .withTaskDefinitionArn("taskDefinitionArn")
+                              .build())
+            .build());
+
+    ContainerSyncResponse containerSyncResponse = ContainerSyncResponse.builder()
+                                                      .containerInfoList(asList(Builder.anEcsContainerInfo()
+                                                                                    .withClusterName(ECS_CLUSTER)
+                                                                                    .withServiceName("service_a_1")
+                                                                                    .withTaskArn("taskARN:2")
+                                                                                    .withStartedAt(0)
+                                                                                    .withStartedBy("user1")
+                                                                                    .build()))
+                                                      .build();
+
+    doReturn(instances)
+        .when(instanceService)
+        .getInstancesForAppAndInframappingNotRemovedFully(anyString(), anyString());
+    doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
+
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
+    assertionsForSave("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE);
+    Set<String> instancesToNotDelete = new HashSet<>();
+    instancesToNotDelete.add(INSTANCE_1_ID);
+    verify(instanceService, never()).delete(eq(instancesToNotDelete));
   }
 
   @Test
@@ -328,7 +392,9 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .build())
             .build());
 
-    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instances)
+        .when(instanceService)
+        .getInstancesForAppAndInframappingNotRemovedFully(anyString(), anyString());
     doReturn(ContainerSyncResponse.builder().containerInfoList(Collections.EMPTY_LIST).build())
         .when(containerSync)
         .getInstances(any(), anyList());
@@ -357,7 +423,9 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    doReturn(Collections.emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(Collections.emptyList())
+        .when(instanceService)
+        .getInstancesForAppAndInframappingNotRemovedFully(anyString(), anyString());
     doReturn(ContainerSyncResponse.builder()
                  .containerInfoList(asList(Builder.anEcsContainerInfo()
                                                .withClusterName(ECS_CLUSTER)

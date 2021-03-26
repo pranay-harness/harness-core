@@ -76,7 +76,6 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
   }
 
   private boolean updateLifecyclesInternal(List<Lifecycle> lifecycleList) {
-    Preconditions.checkNotNull(wingsPersistence);
     final BulkWriteOperation bulkWriteOperation =
         wingsPersistence.getCollection(InstanceData.class).initializeUnorderedBulkOperation();
 
@@ -84,16 +83,31 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
       try {
         Instant instanceTime = HTimestamps.toInstant(lifecycle.getTimestamp());
 
-        BasicDBObject filter = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.instanceId, lifecycle.getInstanceId(),
-            InstanceDataKeys.instanceState, InstanceState.RUNNING.name(), InstanceDataKeys.usageStartTime,
-            new BasicDBObject("$lte", instanceTime)));
+        if (lifecycle.getType() == Lifecycle.EventType.EVENT_TYPE_STOP) {
+          BasicDBObject filter = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.instanceId,
+              lifecycle.getInstanceId(), InstanceDataKeys.instanceState, InstanceState.RUNNING.name(),
+              InstanceDataKeys.usageStartTime, new BasicDBObject("$lte", instanceTime)));
 
-        BasicDBObject updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStopTime, instanceTime,
-            InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
-        updateOperations.append(InstanceDataKeys.ttl, new Date(instanceTime.plus(180, ChronoUnit.DAYS).toEpochMilli()));
+          BasicDBObject updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStopTime,
+              instanceTime, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
+          updateOperations.append(
+              InstanceDataKeys.ttl, new Date(instanceTime.plus(180, ChronoUnit.DAYS).toEpochMilli()));
 
-        updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
-        bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
+          updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
+          bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
+        } else if (lifecycle.getType() == Lifecycle.EventType.EVENT_TYPE_START) {
+          BasicDBObject filter = new BasicDBObject(InstanceDataKeys.clusterId, lifecycle.getClusterId())
+                                     .append(InstanceDataKeys.instanceId, lifecycle.getInstanceId())
+                                     .append(InstanceDataKeys.usageStopTime, new BasicDBObject("$lte", instanceTime));
+
+          BasicDBObject updateOperations =
+              new BasicDBObject(InstanceDataKeys.instanceState, InstanceState.RUNNING.name())
+                  .append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
+
+          bulkWriteOperation.find(filter).update(
+              new BasicDBObject("$set", updateOperations)
+                  .append("$unset", ImmutableMap.of(InstanceDataKeys.usageStopTime, "", InstanceDataKeys.ttl, "")));
+        }
       } catch (Exception ex) {
         log.error("Error updating syncEvent {}", lifecycle.toString(), ex);
       }

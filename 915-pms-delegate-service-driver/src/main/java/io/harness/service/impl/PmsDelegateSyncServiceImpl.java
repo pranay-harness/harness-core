@@ -40,10 +40,10 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
       if (isNotEmpty(syncTaskWaitMap)) {
         Query query = query(where("_id").in(syncTaskWaitMap.keySet()));
         query.fields().include("_id");
-        List<String> completedSyncTasks =
-            persistence.find(query, String.class, morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class));
-        for (String taskId : completedSyncTasks) {
-          AtomicLong endAt = syncTaskWaitMap.get(taskId);
+        List<DelegateSyncTaskResponse> completedSyncTasks = persistence.find(
+            query, DelegateSyncTaskResponse.class, morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class));
+        for (DelegateSyncTaskResponse taskResponse : completedSyncTasks) {
+          AtomicLong endAt = syncTaskWaitMap.get(taskResponse.getUuid());
           if (endAt != null) {
             synchronized (endAt) {
               endAt.set(0L);
