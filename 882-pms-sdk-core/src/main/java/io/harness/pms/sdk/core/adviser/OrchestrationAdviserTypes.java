@@ -11,6 +11,9 @@ public enum OrchestrationAdviserTypes {
   // SUCCESS
   ON_SUCCESS,
 
+  // NEXT_STEP
+  NEXT_STEP,
+
   // FAILURES
   ON_FAIL,
   IGNORE,

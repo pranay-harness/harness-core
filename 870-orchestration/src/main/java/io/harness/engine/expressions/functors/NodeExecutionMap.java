@@ -19,6 +19,7 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 
@@ -101,7 +102,7 @@ public class NodeExecutionMap extends LateBindingMap {
     return children.containsKey(key) ? Optional.of(children.get(key)) : Optional.empty();
   }
 
-  // This function calculates status of the node TILL now.
+  // This function calculates final status of the node TILL now.
   private Optional<Object> fetchCurrentStatus(String key) {
     if (!key.equals(OrchestrationConstants.CURRENT_STATUS)) {
       return Optional.empty();
@@ -112,7 +113,7 @@ public class NodeExecutionMap extends LateBindingMap {
     List<NodeExecution> allChildren = nodeExecutionsCache.findAllChildren(nodeExecution.getUuid());
     List<NodeExecution> childrenNodesWithoutCurrentNodeList =
         allChildren.stream()
-            .filter(node -> node.getUuid().equals(nodeExecution.getUuid()))
+            .filter(node -> StatusUtils.finalStatuses().contains(node.getStatus()))
             .collect(Collectors.toList());
     Status status =
         OrchestrationUtils.calculateStatus(childrenNodesWithoutCurrentNodeList, ambiance.getPlanExecutionId());

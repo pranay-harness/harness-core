@@ -135,11 +135,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
     boolean chainEnd = artifactsWithCorrespondingOverrides.size() == 1;
-    ngManagerLogCallback.saveExecutionLog(color("Starting delegate task for fetching details of artifact :"
-            + passThroughData.artifactsWithCorrespondingOverrides.get(passThroughData.currentIndex)
-                  .getArtifact()
-                  .getIdentifier(),
-        Cyan, Bold));
+    ArtifactStepParameters artifactStepParameters =
+        passThroughData.artifactsWithCorrespondingOverrides.get(passThroughData.currentIndex);
+    String artifactIdentifier = artifactStepParameters.getArtifact() != null
+        ? (artifactStepParameters.getArtifact().getIdentifier())
+        : (artifactStepParameters.getArtifactOverrideSet() != null
+                ? (artifactStepParameters.getArtifactOverrideSet().getIdentifier())
+                : (artifactStepParameters.getArtifactStageOverride().getIdentifier()));
+    ngManagerLogCallback.saveExecutionLog(
+        color("Starting delegate task for fetching details of artifact :" + artifactIdentifier, Cyan, Bold));
     TaskChainResponse taskChainResponse = TaskChainResponse.builder()
                                               .taskRequest(taskRequest)
                                               .chainEnd(chainEnd)
