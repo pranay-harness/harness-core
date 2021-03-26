@@ -1,7 +1,9 @@
 package io.harness.cdng.creator.plan.stage;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -16,7 +18,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
+import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
@@ -114,7 +117,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
@@ -131,9 +134,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
                 .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                    OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+                    NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
                 .build());
       }
     }
