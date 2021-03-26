@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.AuditFilterModule;
+import io.harness.audit.AuditRetentionModule;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.api.impl.AuditServiceImpl;
 import io.harness.govern.ProviderModule;
@@ -92,6 +93,7 @@ public class AuditServiceModule extends AbstractModule {
     install(new AuditPersistenceModule());
 
     install(new AuditFilterModule());
+    install(new AuditRetentionModule());
     bind(AuditService.class).to(AuditServiceImpl.class);
   }
 
