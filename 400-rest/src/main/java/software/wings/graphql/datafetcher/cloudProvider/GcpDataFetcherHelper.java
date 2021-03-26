@@ -12,6 +12,8 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProv
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
+import java.util.List;
 
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
@@ -26,7 +28,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegate);
+      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegateSelectors);
     }
 
     if (input.getUseDelegateSelectors().isPresent()) {
@@ -34,7 +36,8 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+      //      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+      configBuilder.delegateSelectors((List<String>) input.getDelegateSelector());
     }
 
     if (input.getDelegateSelectors().isPresent()) {
@@ -66,7 +69,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(config::setUseDelegate);
+      input.getUseDelegate().getValue().ifPresent(config::setUseDelegateSelectors);
     }
 
     if (input.getUseDelegateSelectors().isPresent()) {
@@ -74,7 +77,8 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+      //      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+      config.setDelegateSelectors((List<String>) input.getDelegateSelector());
     }
 
     if (input.getDelegateSelectors().isPresent()) {

@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
+import software.wings.api.CloudProviderType;
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpConfig.GcpConfigKeys;
@@ -16,6 +17,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
+import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -40,7 +42,9 @@ public class GcpConfigMultipleDelegateMigration implements Migration {
 
       try (HIterator<SettingAttribute> settingAttributes =
                new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                                   .filter(SettingAttribute.SettingAttributeKeys.accountId, accountId)
+                                   .filter(SettingAttributeKeys.accountId, accountId)
+                                   .filter(SettingAttributeKeys.value + "." + SettingValue.SettingValueKeys.type,
+                                       CloudProviderType.GCP.name())
                                    .fetch())) {
         while (settingAttributes.hasNext()) {
           SettingAttribute settingAttribute = settingAttributes.next();
@@ -59,8 +63,7 @@ public class GcpConfigMultipleDelegateMigration implements Migration {
               log.info(StringUtils.join(DEBUG_LINE,
                   format("useDelegate to useDelegateSelectors migration done for settingAttribute for %s",
                       settingAttribute.getUuid())));
-              if ((clusterConfig.isUseDelegate() || clusterConfig.isUseDelegateSelectors())
-                  && isNotBlank(clusterConfig.getDelegateSelector())) {
+              if (clusterConfig.isUseDelegate() && isNotBlank(clusterConfig.getDelegateSelector())) {
                 List<String> delegateSelectors = Collections.singletonList(clusterConfig.getDelegateSelector());
                 wingsPersistence.updateField(SettingAttribute.class, settingAttribute.getUuid(),
                     new StringBuilder()
