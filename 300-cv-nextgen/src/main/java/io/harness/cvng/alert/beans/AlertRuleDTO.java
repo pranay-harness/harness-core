@@ -27,6 +27,7 @@ public class AlertRuleDTO {
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
+  String addNewField;
 
   @Data
   @Builder
