@@ -1,11 +1,15 @@
 package io.harness.accesscontrol.acl.daos;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
 
+@OwnedBy(PL)
 public interface ACLDAO {
   List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired);
 
@@ -18,6 +22,8 @@ public interface ACLDAO {
   void deleteAll(List<ACL> acls);
 
   long deleteByRoleAssignmentId(String roleAssignmentId);
+
+  List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier);
 
   List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed);
 
