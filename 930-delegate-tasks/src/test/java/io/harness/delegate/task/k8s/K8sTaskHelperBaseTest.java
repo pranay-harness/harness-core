@@ -1,5 +1,6 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.model.Kind.ConfigMap;
@@ -38,15 +39,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
@@ -123,6 +127,7 @@ import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
+@OwnedBy(CDP)
 public class K8sTaskHelperBaseTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
   private static final String DEFAULT = "default";
@@ -888,6 +893,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                                  .chartName("chartName")
                                                                  .chartVersion("1.0.0")
                                                                  .storeDelegateConfig(httpStoreDelegateConfig)
+                                                                 .helmVersion(HelmVersion.V3)
                                                                  .build();
 
     doReturn("list of files").when(spyTaskHelperBase).getManifestFileNamesInLogFormat("manifest");
@@ -896,6 +902,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
 
     assertThat(result).isTrue();
+    verify(helmTaskHelperBase, times(1)).initHelm("manifest", HelmVersion.V3, 9000L);
     verify(helmTaskHelperBase, times(1))
         .printHelmChartInfoInExecutionLogs(manifestDelegateConfig, executionLogCallback);
     verify(helmTaskHelperBase, times(1)).downloadChartFilesFromHttpRepo(manifestDelegateConfig, "manifest", 9000L);
@@ -905,12 +912,27 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testFetchManifestFilesAndWriteToDirectoryS3Helm() throws Exception {
-    K8sTaskHelperBase spyTaskHelperBase = spy(k8sTaskHelperBase);
     S3HelmStoreDelegateConfig s3HelmStoreDelegateConfig = S3HelmStoreDelegateConfig.builder().build();
+    testFetchManifestFilesAndWriteToDirectoryUsingChartMuseum(s3HelmStoreDelegateConfig);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectoryGCSHelm() throws Exception {
+    GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = GcsHelmStoreDelegateConfig.builder().build();
+    testFetchManifestFilesAndWriteToDirectoryUsingChartMuseum(gcsHelmStoreDelegateConfig);
+  }
+
+  private void testFetchManifestFilesAndWriteToDirectoryUsingChartMuseum(StoreDelegateConfig storeDelegateConfig)
+      throws Exception {
+    K8sTaskHelperBase spyTaskHelperBase = spy(k8sTaskHelperBase);
+
     HelmChartManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
                                                                  .chartName("chartName")
                                                                  .chartVersion("1.0.0")
-                                                                 .storeDelegateConfig(s3HelmStoreDelegateConfig)
+                                                                 .storeDelegateConfig(storeDelegateConfig)
+                                                                 .helmVersion(HelmVersion.V2)
                                                                  .build();
 
     doReturn("list of files").when(spyTaskHelperBase).getManifestFileNamesInLogFormat("manifest");
@@ -919,6 +941,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
 
     assertThat(result).isTrue();
+    verify(helmTaskHelperBase, times(1)).initHelm("manifest", HelmVersion.V2, 9000L);
     verify(helmTaskHelperBase, times(1))
         .printHelmChartInfoInExecutionLogs(manifestDelegateConfig, executionLogCallback);
     verify(helmTaskHelperBase, times(1)).downloadChartFilesUsingChartMuseum(manifestDelegateConfig, "manifest", 9000L);
