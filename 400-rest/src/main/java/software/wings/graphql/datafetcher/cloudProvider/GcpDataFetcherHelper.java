@@ -13,7 +13,6 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProv
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
-import java.util.List;
 
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
@@ -36,8 +35,8 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      //      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
-      configBuilder.delegateSelectors((List<String>) input.getDelegateSelector());
+      input.getDelegateSelector().getValue().ifPresent(
+          delegateSelector -> configBuilder.delegateSelectors(Collections.singletonList(delegateSelector)));
     }
 
     if (input.getDelegateSelectors().isPresent()) {
@@ -77,8 +76,8 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      //      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
-      config.setDelegateSelectors((List<String>) input.getDelegateSelector());
+      input.getDelegateSelector().getValue().ifPresent(
+          delegateSelector -> config.setDelegateSelectors(Collections.singletonList(delegateSelector)));
     }
 
     if (input.getDelegateSelectors().isPresent()) {

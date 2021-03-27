@@ -10,7 +10,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
 
-import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -29,6 +28,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -59,8 +59,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector, boolean useDelegateSelectors, List<String> delegateSelectors,
-      boolean skipValidation) {
+      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector,
+      boolean useDelegateSelectors, List<String> delegateSelectors, boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
         serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
@@ -97,8 +97,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean useDelegateSelectors, List<String> delegateSelectors,
-        boolean skipValidation) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector,
+        boolean useDelegateSelectors, List<String> delegateSelectors, boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
       this.delegateSelectors = delegateSelectors;
