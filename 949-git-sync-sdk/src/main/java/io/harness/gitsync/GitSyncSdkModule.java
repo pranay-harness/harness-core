@@ -1,5 +1,6 @@
 package io.harness.gitsync;
 
+import io.harness.SCMJavaClientModule;
 import io.harness.gitsync.gittoharness.ChangeSetInterceptorService;
 import io.harness.gitsync.gittoharness.GitToHarnessProcessor;
 import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
@@ -28,6 +29,7 @@ public class GitSyncSdkModule extends AbstractModule {
   protected void configure() {
     install(GitSyncGrpcClientModule.getInstance());
     install(GitSyncSdkGrpcServerModule.getInstance());
+    install(SCMJavaClientModule.getInstance());
     bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
     bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>() {});
     bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
