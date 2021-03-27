@@ -18,7 +18,7 @@ import java.util.List;
 @OwnedBy(CDP)
 public enum NGStepType {
   // k8s steps
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_APPLY)
   APPLY("Apply", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   SCALE("Scale", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),

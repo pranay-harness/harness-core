@@ -14,7 +14,7 @@ public class QuantityUtils {
     double numeric = Double.parseDouble(memoryQuantity.getNumericValue());
     double multiplier = Math.pow(memoryQuantity.getUnit().getBase(), memoryQuantity.getUnit().getExponent());
     double targetUnitMultiplier = Math.pow(targetUnit.getBase(), targetUnit.getExponent());
-    return Math.toIntExact((long) Math.ceil(numeric * (multiplier / targetUnitMultiplier)));
+    return Math.toIntExact((long) Math.ceil(1 * numeric * (multiplier / targetUnitMultiplier)));
   }
 
   public Integer getCpuQuantityValueInUnit(String cpuQuantityString, DecimalQuantityUnit targetUnit) {
