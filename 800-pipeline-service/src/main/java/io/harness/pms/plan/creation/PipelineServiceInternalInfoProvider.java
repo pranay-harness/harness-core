@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.approval.ApprovalStageFilterJsonCreator;
 import io.harness.plancreator.approval.ApprovalStagePlanCreator;
-import io.harness.plancreator.execution.ExecutionPlanCreator;
+import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
@@ -14,6 +14,7 @@ import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -41,8 +42,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new ParallelPlanCreator());
     planCreators.add(new PMSStepPlanCreator());
     planCreators.add(new ApprovalStagePlanCreator());
-    planCreators.add(new ExecutionPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
+    planCreators.add(new ExecutionPMSPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -63,6 +64,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     variableCreators.add(new PipelineVariableCreator());
     variableCreators.add(new HTTPStepVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
+    variableCreators.add(new ExecutionVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }
