@@ -6,6 +6,8 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "//870-yaml-beans:module",
     "//890-sm-core:module",
+    "//908-access-control-sdk:module",
+    "//908-access-control-admin-client:module",
     "//910-delegate-service-driver:module",
     "//930-ng-core-clients:module",
     "//955-delegate-beans:module",

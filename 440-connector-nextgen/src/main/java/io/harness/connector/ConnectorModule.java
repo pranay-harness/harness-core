@@ -1,5 +1,9 @@
 package io.harness.connector;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+
+import io.harness.AccessControlClientConfiguration;
+import io.harness.AccessControlClientModule;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsClientImpl;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
@@ -23,22 +27,27 @@ import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
 
-  private final CEAwsSetupConfig ceAwsSetupConfig;
+//  private final CEAwsSetupConfig ceAwsSetupConfig;
+// Move this too
+//  public ConnectorModule(CEAwsSetupConfig ceAwsSetupConfig) {
+//    this.ceAwsSetupConfig = ceAwsSetupConfig;
+//  }
 
-  public ConnectorModule(CEAwsSetupConfig ceAwsSetupConfig) {
-    this.ceAwsSetupConfig = ceAwsSetupConfig;
-  }
+  @Inject CEAwsSetupConfig ceAwsSetupConfig;
+  @Inject AccessControlClientConfiguration accessControlClientConfiguration;
 
   @Override
   protected void configure() {
     registerRequiredBindings();
     install(FiltersModule.getInstance());
+    install(AccessControlClientModule.getInstance(this.accessControlClientConfiguration, NG_MANAGER.getServiceId()));
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
