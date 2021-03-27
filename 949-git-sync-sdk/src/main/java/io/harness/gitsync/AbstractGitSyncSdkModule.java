@@ -6,6 +6,8 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.scm.SCMGrpcClientModule;
+import io.harness.scm.ScmConnectionConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -18,6 +20,7 @@ import java.util.function.Supplier;
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   @Override
   protected void configure() {
+    install(new SCMGrpcClientModule(getScmConnectionConfig()));
     install(GitSyncSdkModule.getInstance());
     if (getGitSyncSdkConfiguration().getEventsRedisConfig().getRedisUrl().equals("dummyRedisUrl")) {
       bind(Producer.class)
@@ -33,6 +36,12 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   }
 
   public abstract GitSyncSdkConfiguration getGitSyncSdkConfiguration();
+
+  @Provides
+  @Singleton
+  public ScmConnectionConfig getScmConnectionConfig() {
+    return getGitSyncSdkConfiguration().getScmConnectionConfig();
+  }
 
   @Provides
   @Singleton
