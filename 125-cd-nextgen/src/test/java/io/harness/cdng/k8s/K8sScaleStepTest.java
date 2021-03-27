@@ -37,11 +37,8 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -175,13 +172,12 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -190,14 +186,13 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .errorMessage("Execution failed.")
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .errorMessage("Execution failed.")
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }

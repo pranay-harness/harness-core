@@ -29,12 +29,11 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -43,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class CleanupStep implements TaskExecutable<CleanupStepInfo> {
+public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecutionResponse> {
   public static final StepType STEP_TYPE = CleanupStepInfo.STEP_TYPE;
   public static final String TASK_TYPE = "CI_CLEANUP";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
@@ -99,10 +98,8 @@ public class CleanupStep implements TaskExecutable<CleanupStepInfo> {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, CleanupStepInfo stepParameters, Map<String, ResponseData> responseDataMap) {
-    K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
-
+      Ambiance ambiance, CleanupStepInfo stepParameters, Supplier<K8sTaskExecutionResponse> responseSupplier) {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info("Cleanup of K8 pod, secret is successful for pod name {} ", stepParameters.getPodName());
       return StepResponse.builder().status(Status.SUCCEEDED).build();
