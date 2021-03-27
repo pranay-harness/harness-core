@@ -32,10 +32,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -105,13 +102,13 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   public void testHandleTaskResult() {
     K8sCanaryDeleteStepParameters stepParameters =
         K8sCanaryDeleteStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
+
+    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
@@ -124,14 +121,13 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
                                                        .timeout(ParameterField.createValueField("10m"))
                                                        .rollbackInfo(rollbackInfo)
                                                        .build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(FAILURE)
-            .errorMessage("task failed")
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(FAILURE)
+                                         .errorMessage("task failed")
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(FAILED);
     assertThat(stepResponse.getFailureInfo().getErrorMessage()).isEqualTo("task failed");
     assertThat(stepResponse.getStepOutcomes()).hasSize(1);

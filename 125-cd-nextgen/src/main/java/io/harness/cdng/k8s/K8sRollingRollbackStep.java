@@ -16,6 +16,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -23,12 +24,11 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.Map;
+import java.util.function.Supplier;
 
-public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters> {
+public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
@@ -76,26 +76,25 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters,
+      Supplier<K8sDeployResponse> responseSupplier) {
+    try {
+      K8sDeployResponse executionResponse = responseSupplier.get();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return stepResponseBuilder.status(Status.FAILED)
+            .failureInfo(
+                FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
+            .build();
+      }
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (ErrorDataException ex) {
       return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
           .build();
     }
-
-    K8sDeployResponse executionResponse = (K8sDeployResponse) responseData;
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return stepResponseBuilder.status(Status.FAILED)
-          .failureInfo(
-              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
-          .build();
-    }
-
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 }

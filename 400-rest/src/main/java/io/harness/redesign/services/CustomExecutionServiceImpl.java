@@ -85,18 +85,6 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getMetadata());
-  }
-
-  @Override
-  public PlanExecution executeSimpleTimeoutPlan(String accountId, String appId) {
-    return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId), getMetadata());
-  }
-
-  @Override
   public PlanExecution executeTaskChainPlanV1() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN), getAbstractions(),
