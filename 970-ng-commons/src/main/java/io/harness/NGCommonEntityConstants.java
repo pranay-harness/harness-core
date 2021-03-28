@@ -1,7 +1,12 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class NGCommonEntityConstants {
   public static final String ACCOUNT_KEY = "accountIdentifier";
@@ -16,6 +21,7 @@ public class NGCommonEntityConstants {
   public static final String DELETED_KEY = "deleted";
   public static final String PIPELINE_KEY = "pipelineIdentifier";
   public static final String INPUT_SET_IDENTIFIER_KEY = "inputSetIdentifier";
+  public static final String ENVIRONMENT_IDENTIFIER_KEY = "environmentIdentifier";
   public static final String STATUS = "status";
   public static final String MONGODB_ID = "_id";
   public static final String CONNECTOR_IDENTIFIER_KEY = "connectorIdentifier";

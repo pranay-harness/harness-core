@@ -1,10 +1,12 @@
 package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class FeatureFlagStreamConsumer implements Runnable {
@@ -29,11 +32,14 @@ public class FeatureFlagStreamConsumer implements Runnable {
   @Inject
   public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) Consumer eventConsumer,
       @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
-      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener) {
+      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener,
+      @Named("access_control_migration"
+          + FEATURE_FLAG_STREAM) MessageListener accessControlMigrationFeatureFlagStreamListener) {
     this.eventConsumer = eventConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationFeatureFlagStreamListener);
     messageListenersList.add(connectorFeatureFlagStreamListener);
+    messageListenersList.add(accessControlMigrationFeatureFlagStreamListener);
   }
 
   @Override

@@ -3,7 +3,7 @@ package io.harness;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static org.mockito.Mockito.mock;
 
@@ -33,6 +33,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.jackson.HarnessJacksonModule;
+import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -41,11 +42,11 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -182,6 +183,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
+        bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
@@ -230,7 +232,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     final QueuePublisher<NotifyEvent> publisher =
@@ -238,7 +240,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
+        NG_ORCHESTRATION, payload -> publisher.send(Collections.singletonList(NG_ORCHESTRATION), payload));
 
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);

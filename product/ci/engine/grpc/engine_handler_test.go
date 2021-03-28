@@ -142,7 +142,7 @@ func TestEvaluateJEXLErr(t *testing.T) {
 	}
 
 	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, force bool, log *zap.SugaredLogger) (
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, isSkipCondition bool, log *zap.SugaredLogger) (
 		map[string]string, error) {
 		return nil, fmt.Errorf("invalid expression")
 	}
@@ -164,7 +164,7 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	}
 
 	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, force bool, log *zap.SugaredLogger) (
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, isSkipCondition bool, log *zap.SugaredLogger) (
 		map[string]string, error) {
 		return nil, nil
 	}
@@ -173,5 +173,16 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewEngineHandler(log.Sugar())
 	_, err := h.EvaluateJEXL(ctx, arg)
+	assert.Nil(t, err)
+}
+
+func TestPing(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	arg := &pb.PingRequest{}
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	h := NewEngineHandler(log.Sugar())
+	_, err := h.Ping(ctx, arg)
 	assert.Nil(t, err)
 }

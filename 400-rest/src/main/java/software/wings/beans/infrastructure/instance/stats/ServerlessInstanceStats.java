@@ -1,10 +1,13 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -21,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -36,11 +40,20 @@ import org.mongodb.morphia.annotations.Id;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity(value = "serverless-instance-stats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@NgUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
-                                                                   , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceStatsKeys")
+@OwnedBy(CDP)
 public class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                                 UpdatedAtAware, UpdatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_timestamp_unique_idx")
+                 .unique(true)
+                 .field(ServerlessInstanceStatsKeys.accountId)
+                 .field(ServerlessInstanceStatsKeys.timestamp)
+                 .build())
+        .build();
+  }
   public static final InvocationCountKey DEFAULT_INVOCATION_COUNT_KEY = InvocationCountKey.LAST_30_DAYS;
   @Id @NotNull(groups = {Update.class}) private String uuid;
 

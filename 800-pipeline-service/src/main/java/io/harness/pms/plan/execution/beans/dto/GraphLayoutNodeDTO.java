@@ -34,4 +34,5 @@ public class GraphLayoutNodeDTO {
   EdgeLayoutListDTO edgeLayoutList;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
+  Boolean barrierFound;
 }

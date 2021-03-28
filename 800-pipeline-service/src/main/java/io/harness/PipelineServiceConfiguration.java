@@ -8,8 +8,8 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
-import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.scm.ScmConnectionConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;

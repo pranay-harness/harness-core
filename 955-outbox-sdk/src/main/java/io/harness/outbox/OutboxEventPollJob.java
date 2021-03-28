@@ -1,8 +1,10 @@
 package io.harness.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_MAX_ATTEMPTS;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.ng.beans.PageRequest;
@@ -14,6 +16,7 @@ import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class OutboxEventPollJob implements Runnable {
   private final OutboxService outboxService;

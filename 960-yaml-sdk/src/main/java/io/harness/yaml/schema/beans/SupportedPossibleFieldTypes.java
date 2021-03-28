@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 public enum SupportedPossibleFieldTypes {
   string,
   number,
+  integer,
+  bool,
   list,
   map,
   /**

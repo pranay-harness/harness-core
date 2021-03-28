@@ -1,5 +1,8 @@
 package io.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
@@ -22,6 +25,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(PL)
 public class NGCommonsKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -43,6 +47,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Resource.class, 22009);
     kryo.register(HttpRequestInfo.class, 22010);
     kryo.register(RequestMetadata.class, 22011);
+    kryo.register(io.harness.scope.ResourceScope.class, 22012);
 
     kryo.register(HttpHeaderConfig.class, 19462);
   }

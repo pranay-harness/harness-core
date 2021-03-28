@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.vaultconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.security.encryption.AccessType;
 
@@ -16,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(PL)
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)

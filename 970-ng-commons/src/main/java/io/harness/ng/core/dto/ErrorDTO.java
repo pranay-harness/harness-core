@@ -1,5 +1,8 @@
 package io.harness.ng.core.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.ng.core.CorrelationContext;
@@ -13,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)

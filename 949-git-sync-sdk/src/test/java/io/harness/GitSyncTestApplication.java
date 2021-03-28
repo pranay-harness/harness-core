@@ -5,6 +5,8 @@ import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration.DeployMode;
+import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.maintenance.MaintenanceController;
 
@@ -61,25 +63,33 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new GitSyncTestModule(config));
+    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+    final GitSyncSdkConfiguration gitSyncSdkConfiguration =
+        GitSyncSdkConfiguration.builder()
+            .gitSyncSortOrder(sortOrder)
+            .grpcClientConfig(config.getGrpcClientConfig())
+            .grpcServerConfig(config.getGrpcServerConfig())
+            .deployMode(DeployMode.REMOTE)
+            .microservice(Microservice.PMS)
+            .scmConnectionConfig(config.getScmConnectionConfig())
+            .eventsRedisConfig(config.getRedisConfig())
+            .serviceHeader(AuthorizationServiceHeader.PIPELINE_SERVICE)
+            .build();
     modules.add(new AbstractGitSyncSdkModule() {
       @Override
       public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
-        final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
-        return GitSyncSdkConfiguration.builder()
-            .gitSyncSortOrder(sortOrder)
-            .grpcClientConfig(config.getGrpcClientConfig())
-            .build();
+        return gitSyncSdkConfiguration;
       }
     });
     Injector injector = Guice.createInjector(modules);
-
+    GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, gitSyncSdkConfiguration);
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(IO_HARNESS);
+    Reflections reflections = new Reflections(IO_HARNESS + ".resource");
     final Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : typesAnnotatedWith) {
       if (Resource.isAcceptable(resource)) {

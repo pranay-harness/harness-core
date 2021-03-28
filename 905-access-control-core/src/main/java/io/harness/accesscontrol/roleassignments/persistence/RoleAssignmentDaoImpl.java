@@ -4,11 +4,13 @@ import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.toDBO;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
@@ -16,14 +18,17 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @ValidateOnExecution
 public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   private final RoleAssignmentRepository roleAssignmentRepository;
@@ -39,9 +44,9 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
     try {
       return fromDBO(roleAssignmentRepository.save(roleAssignmentDBO));
     } catch (DuplicateKeyException e) {
-      throw new DuplicateFieldException(
-          String.format("A role assignment with identifier %s in this scope %s is already present",
-              roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getScopeIdentifier()));
+      throw new DuplicateFieldException(String.format(
+          "A role assignment with the same resource group, role and principal is already present in the scope %s",
+          roleAssignmentDBO.getScopeIdentifier()));
     }
   }
 
@@ -86,6 +91,16 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   @Override
   public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
     return roleAssignmentRepository.deleteMulti(createCriteriaFromFilter(roleAssignmentFilter));
+  }
+
+  @Override
+  public List<RoleAssignment> insertAllIgnoringDuplicates(List<RoleAssignment> roleAssignments) {
+    return roleAssignmentRepository
+        .insertAllIgnoringDuplicates(
+            roleAssignments.stream().map(RoleAssignmentDBOMapper::toDBO).collect(Collectors.toList()))
+        .stream()
+        .map(RoleAssignmentDBOMapper::fromDBO)
+        .collect(Collectors.toList());
   }
 
   private Criteria createCriteriaFromFilter(RoleAssignmentFilter roleAssignmentFilter) {

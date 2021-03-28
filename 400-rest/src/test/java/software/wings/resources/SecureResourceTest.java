@@ -45,6 +45,7 @@ import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -149,6 +150,7 @@ public class SecureResourceTest extends CategoryTest {
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
   private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
   private static ConfigurationController configurationController = mock(ConfigurationController.class);
+  private static io.harness.ff.FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   private static AuthService authService =
       new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
@@ -156,7 +158,7 @@ public class SecureResourceTest extends CategoryTest {
           harnessUserGroupService, secretManager, versionInfoManager, configurationController);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
-      accountService, whitelistService, harnessUserGroupService, graphQLUtils);
+      accountService, whitelistService, harnessUserGroupService, graphQLUtils, featureFlagService);
 
   /**
    * The constant resources.

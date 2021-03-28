@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
@@ -38,20 +39,18 @@ public class YamlGitConfigResource {
 
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")
-  public GitSyncConfigDTO create(@QueryParam("projectId") String projectId,
-      @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @NotNull @Valid GitSyncConfigDTO request) {
-    YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.save(toYamlGitConfigDTO(request));
+  public GitSyncConfigDTO create(
+      @QueryParam("accountIdentifier") @NotEmpty String accountId, @NotNull @Valid GitSyncConfigDTO request) {
+    YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.save(toYamlGitConfigDTO(request, accountId));
     return toSetupGitSyncDTO(yamlGitConfig);
   }
 
   @PUT
-  @Path("{identifier}")
   @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
-  public GitSyncConfigDTO update(@QueryParam("projectId") String projectId,
-      @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("identifier") @NotEmpty String identifier, @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
-    YamlGitConfigDTO yamlGitConfigDTOUpdated = yamlGitConfigService.update(toYamlGitConfigDTO(updateGitSyncConfigDTO));
+  public GitSyncConfigDTO update(@QueryParam("accountIdentifier") @NotEmpty String accountId,
+      @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
+    YamlGitConfigDTO yamlGitConfigDTOUpdated =
+        yamlGitConfigService.update(toYamlGitConfigDTO(updateGitSyncConfigDTO, accountId));
     return toSetupGitSyncDTO(yamlGitConfigDTOUpdated);
   }
 
@@ -69,9 +68,19 @@ public class YamlGitConfigResource {
 
   @GET
   @ApiOperation(value = "List Git Sync", nickname = "listGitSync")
-  public List<GitSyncConfigDTO> list(@QueryParam("projectId") String projectId,
-      @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId) {
+  public List<GitSyncConfigDTO> list(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationId,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.list(projectId, organizationId, accountId);
     return yamlGitConfigDTOs.stream().map(YamlGitConfigMapper::toSetupGitSyncDTO).collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("/git-sync-enabled")
+  @ApiOperation(value = "Is Git Sync EnabledForProject", nickname = "isGitSyncEnabled")
+  public Boolean isGitSyncEnabled(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
+    return yamlGitConfigService.isGitSyncEnabled(accountIdentifier, organizationIdentifier, projectIdentifier);
   }
 }

@@ -12,4 +12,5 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PL)
 public interface AuditRepositoryCustom {
   Page<AuditEvent> findAll(Criteria criteria, Pageable pageable);
+  AuditEvent get(Criteria criteria);
 }

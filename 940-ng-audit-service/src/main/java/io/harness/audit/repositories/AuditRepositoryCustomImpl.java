@@ -27,4 +27,10 @@ public class AuditRepositoryCustomImpl implements AuditRepositoryCustom {
     return PageableExecutionUtils.getPage(
         auditEvents, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), AuditEvent.class));
   }
+
+  @Override
+  public AuditEvent get(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findOne(query, AuditEvent.class);
+  }
 }

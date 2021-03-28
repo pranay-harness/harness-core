@@ -70,9 +70,11 @@ public class ChartMuseumClientHelper {
 
   public ChartMuseumServer startGCSChartMuseumServer(
       String bucket, String basePath, char[] serviceAccountKey, String resourceDirectory) throws Exception {
-    String credentialFilePath = writeGCSCredentialsFile(resourceDirectory, serviceAccountKey);
     Map<String, String> environment = new HashMap<>();
-    environment.put(GOOGLE_APPLICATION_CREDENTIALS, credentialFilePath);
+    if (serviceAccountKey != null) {
+      String credentialFilePath = writeGCSCredentialsFile(resourceDirectory, serviceAccountKey);
+      environment.put(GOOGLE_APPLICATION_CREDENTIALS, credentialFilePath);
+    }
 
     String evaluatedTemplate =
         GCS_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket).replace("${FOLDER_PATH}", basePath);

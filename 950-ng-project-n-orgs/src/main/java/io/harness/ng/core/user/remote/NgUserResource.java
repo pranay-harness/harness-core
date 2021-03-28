@@ -11,7 +11,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.invites.remote.UserSearchMapper;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.utils.PageUtils;
 
@@ -52,7 +52,7 @@ public class NgUserResource {
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
     Pageable pageable = getPageRequest(pageRequest);
-    Page<User> users = ngUserService.list(accountIdentifier, searchString, pageable);
+    Page<UserInfo> users = ngUserService.list(accountIdentifier, searchString, pageable);
     return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserSearchMapper::writeDTO)));
   }
 }

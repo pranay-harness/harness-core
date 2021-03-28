@@ -951,8 +951,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:4OeFha6WdntK0EnRRcZ1q02W8yAkC4uCidpIlYtTEi4=",
-    version = "v1.8.1-0.20210111143840-199eee180289",
+    sum = "h1:nHYK9TSF4kFRQDKeS23Zg+lA3vghXfTo9AxHf9+EE0s=",
+    version = "v1.10.0",
 )
 
 go_repository(
@@ -1045,6 +1045,14 @@ maven_install(
         maven.artifact(
             group = "com.amazonaws",
             artifact = "aws-java-sdk-codecommit",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
+            artifact = "aws-java-sdk-sns",
             version = "1.11.834",
             exclusions = [
                 "commons-logging:commons-logging",
@@ -1220,11 +1228,12 @@ maven_install(
         ),
         "com.auth0:java-jwt:3.1.0",
         "com.azure:azure-identity:1.1.2",
+        "com.azure:azure-core:1.10.0",
         "com.azure:azure-storage-blob:12.9.0",
         "com.azure:azure-storage-common:12.9.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
         "com.bettercloud:vault-java-driver:4.0.0",
-        "com.bugsnag:bugsnag:3.6.1",
+        "com.bugsnag:bugsnag:3.6.2",
         "com.carrotsearch:hppc:0.8.1",
         "com.coveo:saml-client:3.0.2",
         "com.cronutils:cron-utils:9.0.1",
@@ -1638,8 +1647,8 @@ maven_install(
         "net.bytebuddy:byte-buddy:1.10.7",
         "net.engio:mbassador:1.3.0",
         "net.i2p.crypto:eddsa:0.2.0",
-        "net.java.dev.jna:jna-platform:4.0.0",
-        "net.java.dev.jna:jna:4.0.0",
+        "net.java.dev.jna:jna-platform:5.5.0",
+        "net.java.dev.jna:jna:5.5.0",
         "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
         "net.jcip:jcip-annotations:1.0",
         "net.jodah:expiringmap:0.5.7",
@@ -1765,7 +1774,7 @@ maven_install(
         "org.codehaus.mojo:animal-sniffer-annotations:1.18",
         "org.codehaus.plexus:plexus-utils:3.0.20",
         "org.codehaus.woodstox:stax2-api:4.2",
-        "org.conscrypt:conscrypt-openjdk-uber:2.2.1",
+        "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
         "org.coursera:metrics-datadog:1.1.13",
         "org.cryptacular:cryptacular:1.1.3",
         "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
@@ -1882,9 +1891,11 @@ maven_install(
         "org.opensaml:opensaml-storage-api:3.4.3",
         "org.opensaml:opensaml-xmlsec-api:3.4.3",
         "org.opensaml:opensaml-xmlsec-impl:3.4.3",
-        "org.ow2.asm:asm-commons:5.0.3",
-        "org.ow2.asm:asm-tree:5.0.3",
-        "org.ow2.asm:asm:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.4",
+        "org.ow2.asm:asm-tree:5.0.4",
+        "org.ow2.asm:asm:5.0.4",
+        "org.ow2.asm:asm-analysis:5.0.4",
+        "org.ow2.asm:asm-util:5.0.4",
         "org.passay:passay:1.3.1",
         "org.postgresql:postgresql:42.2.14",
         "org.powermock:powermock-api-mockito-common:1.7.4",
@@ -5289,6 +5300,13 @@ go_repository(
     importpath = "go.mongodb.org/mongo-driver",
     sum = "h1:zs/dKNwX0gYUtzwrN9lLiR15hCO0nDwQj5xXx+vjCdE=",
     version = "v1.3.4",
+)
+
+go_repository(
+    name = "com_github_linkedin_goavro_v2",
+    importpath = "github.com/linkedin/goavro/v2",
+    sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",
+    version = "v2.10.0",
 )
 
 go_repository(

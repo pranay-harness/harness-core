@@ -3,7 +3,10 @@ package io.harness;
 import static java.util.Collections.singletonList;
 
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.redis.RedisConfig;
+import io.harness.scm.ScmConnectionConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.Singleton;
@@ -20,7 +23,10 @@ import lombok.EqualsAndHashCode;
 @Singleton
 public class GitSyncTestConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
-  @JsonProperty("gitSyncClientConfig") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("gitSyncClientConfig") GrpcClientConfig grpcClientConfig;
+  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
+  @JsonProperty("redis") private RedisConfig redisConfig;
 
   public GitSyncTestConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

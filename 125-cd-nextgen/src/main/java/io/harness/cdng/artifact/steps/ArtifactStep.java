@@ -67,15 +67,16 @@ public class ArtifactStep {
                                                       .build();
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .taskType(artifactStepHelper.getArtifactStepTaskType(finalArtifact))
+                                  .taskType(artifactStepHelper.getArtifactStepTaskType(finalArtifact).name())
                                   .parameters(new Object[] {taskParameters})
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
+    String taskName = artifactStepHelper.getArtifactStepTaskType(finalArtifact).getDisplayName() + " : "
+        + taskParameters.getArtifactTaskType().getDisplayName();
     return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, Collections.singletonList(SERVICE_STEP_COMMAND_UNIT));
+        ambiance, taskData, kryoSerializer, Collections.singletonList(SERVICE_STEP_COMMAND_UNIT), taskName);
   }
-
   public StepOutcome processDelegateResponse(
       DelegateResponseData notifyResponseData, ArtifactStepParameters stepParameters) {
     if (notifyResponseData instanceof ArtifactTaskResponse) {

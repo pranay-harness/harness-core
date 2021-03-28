@@ -10,21 +10,32 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
+import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.repositories.ng.core.spring.NGTriggerRepository;
 import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
 
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.parser.CronParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -175,6 +186,34 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     } catch (Exception e) {
       log.error("Failed while retrieving connectors", e);
       throw new TriggerException("Failed while retrieving connectors" + e.getMessage(), e, USER_SRE);
+    }
+  }
+
+  @Override
+  public void validateTriggerConfig(TriggerDetails triggerDetails) {
+    // TODO: come up with a comprehensive list of back-end checks for the trigger details for which an error
+    // will be returned if certain conditions are not met. Either use this as a gateway or spin off a specific class
+    // for the validation.
+
+    // trigger source validation
+    NGTriggerSource triggerSource = triggerDetails.getNgTriggerConfig().getSource();
+    switch (triggerSource.getType()) {
+      case WEBHOOK:
+        return; // TODO(adwait): define trigger source validation
+      case SCHEDULED:
+        ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) triggerSource.getSpec();
+        CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+        CronParser cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
+        Cron cron = cronParser.parse(cronTriggerSpec.getExpression());
+        ExecutionTime executionTime = ExecutionTime.forCron(cron);
+        Optional<ZonedDateTime> nextTime = executionTime.nextExecution(ZonedDateTime.now());
+        if (!nextTime.isPresent()) {
+          throw new InvalidArgumentsException("cannot find iteration time!");
+        }
+        return;
+      case NEW_ARTIFACT: // fall through
+      default:
+        return; // not implemented
     }
   }
 

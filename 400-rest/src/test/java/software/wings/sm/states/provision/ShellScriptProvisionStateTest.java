@@ -3,6 +3,7 @@ package software.wings.sm.states.provision;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.PARDHA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -240,5 +241,26 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     assertThat(activity.getEnvironmentName()).isEqualTo(envName);
     assertThat(activity.getEnvironmentId()).isEqualTo(envId);
     assertThat(activity.getEnvironmentType()).isEqualTo(envType);
+  }
+
+  @Test
+  @Owner(developers = PARDHA)
+  @Category(UnitTests.class)
+  public void shouldPopulateDelegateSelectorsFromExecutionContext() {
+    state.setDelegateSelectors(Collections.singletonList("primary"));
+    ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+
+    when(activityService.save(any())).thenReturn(mock(Activity.class));
+    when(executionContext.getApp()).thenReturn(mock(Application.class));
+    when(executionContext.getEnv()).thenReturn(mock(Environment.class));
+    when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
+        .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
+    state.execute(executionContext);
+
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    ShellScriptProvisionParameters populatedParameters =
+        (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
+    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList("primary"));
   }
 }

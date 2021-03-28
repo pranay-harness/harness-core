@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -14,10 +15,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -53,6 +57,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -726,6 +731,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(generateUuid())
+                            .delegateType("dummyType")
                             .delegateName("name")
                             .hostName("hostname")
                             .delegateProfileId(delegateProfile.getUuid())
@@ -764,6 +770,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     assertThat(delegateSelectionLogParams.size()).isEqualTo(1);
     assertThat(delegateSelectionLogParams.get(0).getDelegateId()).isEqualTo(delegate.getUuid());
+    assertThat(delegateSelectionLogParams.get(0).getDelegateType()).isEqualTo(delegate.getDelegateType());
     assertThat(delegateSelectionLogParams.get(0).getDelegateName()).isEqualTo(delegate.getDelegateName());
     assertThat(delegateSelectionLogParams.get(0).getDelegateHostName()).isEqualTo(delegate.getHostName());
     assertThat(delegateSelectionLogParams.get(0).getDelegateProfileName()).isEqualTo(delegateProfile.getName());
@@ -1108,6 +1115,34 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
         .isEqualTo("Delegate was not targeted for profile script execution");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void shouldNotLogOwnerRuleNotMatched() {
+    assertThatCode(() -> delegateSelectionLogsService.logOwnerRuleNotMatched(null, null, null, null))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> delegateSelectionLogsService.logOwnerRuleNotMatched(
+                           BatchDelegateSelectionLog.builder().build(), null, null, null))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testLogOwnerRuleNotMatched() {
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    DelegateOwner owner = DelegateOwner.builder().entityType("projectId").entityId("p1").build();
+    delegateSelectionLogsService.logOwnerRuleNotMatched(batch, accountId, delegateId, owner);
+    assertThat(batch.getDelegateSelectionLogs()).hasSize(1);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Not matched owner entityType projectId, id p1");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo("TARGETED_OWNER_MATCHED_GROUP_ID");
   }
 
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {

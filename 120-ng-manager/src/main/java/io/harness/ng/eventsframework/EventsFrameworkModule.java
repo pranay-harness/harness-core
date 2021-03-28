@@ -1,7 +1,9 @@
 package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -16,6 +18,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
@@ -53,6 +56,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -95,6 +102,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, NG_MANAGER.getServiceId(),
               redisConfig, EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE));
+      // todo(abhinav): move this to git sync manager if it is carved out.
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM, redisConfig,
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE));
     }
   }
 }

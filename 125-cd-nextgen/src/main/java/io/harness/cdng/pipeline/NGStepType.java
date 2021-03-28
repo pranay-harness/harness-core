@@ -1,5 +1,8 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.executions.steps.StepSpecTypeConstants;
 
@@ -12,6 +15,7 @@ import java.util.List;
 /*
    Todo: Change StepSpecTypeConstants.PLACEHOLDER to their respective type once the StepInfo for those is implemented.
  */
+@OwnedBy(CDP)
 public enum NGStepType {
   // k8s steps
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
@@ -41,15 +45,18 @@ public enum NGStepType {
       StepSpecTypeConstants.K8S_CANARY_DEPLOY),
 
   // Infrastructure Provisioners
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_APPLY)
   TERRAFORM_APPLY("Terraform Apply", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
-  TERRAFORM_PROVISION("Terraform Provision", Arrays.asList(ServiceDefinitionType.values()),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
-  TERRAFORM_DELETE("Terraform Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES),
-      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.PLACEHOLDER),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_APPLY),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_PLAN)
+  TERRAFORM_PLAN("Terraform Plan", Arrays.asList(ServiceDefinitionType.values()),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_PLAN),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_DESTROY)
+  TERRAFORM_DESTROY("Terraform Destroy", Arrays.asList(ServiceDefinitionType.values()),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_DESTROY),
+  @JsonProperty(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+  TERRAFORM_ROLLBACK("Terraform Rollback", Arrays.asList(ServiceDefinitionType.values()),
+      "Infrastructure Provisioners/Terraform", StepSpecTypeConstants.TERRAFORM_ROLLBACK),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   CREATE_STACK("Create Stack", Arrays.asList(ServiceDefinitionType.values()),
       "Infrastructure Provisioners/Cloudformation", StepSpecTypeConstants.PLACEHOLDER),

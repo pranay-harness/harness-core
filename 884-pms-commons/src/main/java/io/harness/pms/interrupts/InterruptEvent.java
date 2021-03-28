@@ -25,7 +25,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "InterruptEventKeys")
-@Entity(value = "interruptEventQueue")
+@Entity(value = "interruptEventQueue", noClassnameStored = true)
 @Document("interruptEventQueue")
 @TypeAlias("interruptEvent")
 @HarnessEntity(exportable = false)

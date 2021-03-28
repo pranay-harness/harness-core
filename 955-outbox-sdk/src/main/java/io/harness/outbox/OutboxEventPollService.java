@@ -1,5 +1,9 @@
 package io.harness.outbox;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import io.dropwizard.lifecycle.Managed;
@@ -8,6 +12,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 public class OutboxEventPollService implements Managed {
   private final OutboxEventPollJob outboxEventPollJob;
   private final ScheduledExecutorService executorService;
@@ -22,7 +27,7 @@ public class OutboxEventPollService implements Managed {
 
   @Override
   public void start() {
-    outboxPollJobFuture = executorService.scheduleWithFixedDelay(outboxEventPollJob, 20, 10, TimeUnit.SECONDS);
+    outboxPollJobFuture = executorService.scheduleWithFixedDelay(outboxEventPollJob, 5, 3, TimeUnit.SECONDS);
   }
 
   @Override

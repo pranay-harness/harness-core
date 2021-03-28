@@ -332,6 +332,11 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public boolean delete(String appId, String triggerId) {
+    return delete(appId, triggerId, false);
+  }
+
+  @Override
+  public boolean delete(String appId, String triggerId, boolean syncFromGit) {
     Trigger trigger = get(appId, triggerId);
     boolean answer = triggerServiceHelper.delete(triggerId);
 
@@ -340,7 +345,7 @@ public class TriggerServiceImpl implements TriggerService {
       harnessTagService.pruneTagLinks(accountId, triggerId);
     }
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId) && (trigger != null)) {
-      yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, trigger.isSyncFromGit(), false);
+      yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, syncFromGit, false);
     } else {
       // TODO: Once this flag is enabled for all accounts, this can be removed
       auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);

@@ -1,10 +1,12 @@
 package io.harness.service;
 
 import io.harness.ff.FeatureFlagModule;
+import io.harness.service.impl.DelegateCacheImpl;
 import io.harness.service.impl.DelegateCallbackRegistryImpl;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
 import io.harness.service.impl.DelegateTaskSelectorMapServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateInsightsService;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
@@ -21,5 +23,6 @@ public class DelegateServiceModule extends AbstractModule {
     bind(DelegateCallbackRegistry.class).to(DelegateCallbackRegistryImpl.class);
     bind(DelegateTaskSelectorMapService.class).to(DelegateTaskSelectorMapServiceImpl.class);
     bind(DelegateInsightsService.class).to(DelegateInsightsServiceImpl.class);
+    bind(DelegateCache.class).to(DelegateCacheImpl.class);
   }
 }

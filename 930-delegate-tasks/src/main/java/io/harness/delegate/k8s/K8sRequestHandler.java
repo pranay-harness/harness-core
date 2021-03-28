@@ -53,7 +53,7 @@ public abstract class K8sRequestHandler {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                   .errorMessage("Failed to complete k8s task")
+                   .errorMessage("Failed to complete K8s task. Please check execution logs.")
                    .build();
     }
     return result;
@@ -67,7 +67,7 @@ public abstract class K8sRequestHandler {
     return K8sDeployResponse.builder()
         .commandExecutionStatus(FAILURE)
         .k8sNGTaskResponse(taskResponse)
-        .errorMessage("Failed to complete K8s task. Please check logs.")
+        .errorMessage("Failed to complete K8s task. Please check execution logs.")
         .build();
   }
 

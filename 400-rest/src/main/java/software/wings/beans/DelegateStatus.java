@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -14,6 +16,7 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.DEL)
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value

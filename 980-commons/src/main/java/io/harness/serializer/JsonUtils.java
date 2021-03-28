@@ -1,8 +1,13 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -44,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The Class JsonUtils.
  */
+@OwnedBy(CDC)
 @UtilityClass
 @Slf4j
 public class JsonUtils {
@@ -386,6 +392,18 @@ public class JsonUtils {
       for (StackTraceElement elem : e.getStackTrace()) {
         log.error("Trace: {}", elem);
       }
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static <T> T treeToValue(TreeNode node, Class<T> cls) {
+    return treeToValue(mapper, node, cls);
+  }
+
+  public static <T> T treeToValue(ObjectMapper objectMapper, TreeNode node, Class<T> cls) {
+    try {
+      return objectMapper.treeToValue(node, cls);
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }

@@ -1,5 +1,7 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -10,19 +12,21 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.AccountScope;
-import io.harness.ng.core.Resource;
+import io.harness.ng.core.auditevent.OrganizationCreateEvent;
+import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
+import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
+import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
-import io.harness.ng.core.dto.EntityChangeEvent;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
@@ -38,7 +42,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -51,6 +54,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
@@ -79,8 +83,6 @@ public class OrganizationServiceImpl implements OrganizationService {
       validate(organization);
       Organization savedOrganization = saveOrganization(organization);
       log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
-
-      createUserProjectMap(organization);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -93,24 +95,11 @@ public class OrganizationServiceImpl implements OrganizationService {
   private Organization saveOrganization(Organization organization) {
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       Organization savedOrganization = organizationRepository.save(organization);
-      publishEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
+      outboxService.save(
+          new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
+      createUserProjectMap(organization);
       return savedOrganization;
     }));
-  }
-
-  private void publishEvent(Organization organization, String action) {
-    log.info(String.format("Saving organization %s event to outbox for organization with identifier %s ...", action,
-        organization.getIdentifier()));
-    outboxService.save(EntityChangeEvent.builder()
-                           .resourceScope(new AccountScope(organization.getAccountIdentifier()))
-                           .resource(Resource.builder()
-                                         .type(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
-                                         .identifier(organization.getIdentifier())
-                                         .build())
-                           .action(action)
-                           .build());
-    log.info(String.format("Successfully saved organization %s event to outbox for organization with identifier %s",
-        action, organization.getIdentifier()));
   }
 
   private void createUserProjectMap(Organization organization) {
@@ -156,13 +145,14 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (organization.getVersion() == null) {
         organization.setVersion(existingOrganization.getVersion());
       }
-
       validate(organization);
-      Organization updatedOrganization = organizationRepository.save(organization);
-      log.info(String.format("Organization with identifier %s was successfully updated", identifier));
-
-      publishEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
-      return updatedOrganization;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        Organization updatedOrganization = organizationRepository.save(organization);
+        log.info(String.format("Organization with identifier %s was successfully updated", identifier));
+        outboxService.save(new OrganizationUpdateEvent(organization.getAccountIdentifier(),
+            OrganizationMapper.writeDto(updatedOrganization), OrganizationMapper.writeDto(existingOrganization)));
+        return updatedOrganization;
+      }));
     }
     throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
   }
@@ -200,7 +190,7 @@ public class OrganizationServiceImpl implements OrganizationService {
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
-    if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
+    if (isNotEmpty(organizationFilterDTO.getIdentifiers())) {
       Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
     }
     return criteria;
@@ -208,28 +198,29 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
-    boolean delete = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
-    if (delete) {
-      log.info(String.format("Organization with identifier %s was successfully deleted", organizationIdentifier));
-    } else {
-      log.error(String.format("Organization with identifier %s could not be deleted", organizationIdentifier));
-    }
-    if (delete) {
-      publishEvent(
-          Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
-          EventsFrameworkMetadataConstants.DELETE_ACTION);
-    }
-    return delete;
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Organization organization = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
+      boolean delete = organization != null;
+      if (delete) {
+        log.info(String.format("Organization with identifier %s was successfully deleted", organizationIdentifier));
+        outboxService.save(new OrganizationDeleteEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+      } else {
+        log.error(String.format("Organization with identifier %s could not be deleted", organizationIdentifier));
+      }
+      return delete;
+    }));
   }
 
   @Override
   public boolean restore(String accountIdentifier, String identifier) {
-    boolean success = organizationRepository.restore(accountIdentifier, identifier);
-    if (success) {
-      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
-          EventsFrameworkMetadataConstants.RESTORE_ACTION);
-    }
-    return success;
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Organization organization = organizationRepository.restore(accountIdentifier, identifier);
+      boolean success = organization != null;
+      if (success) {
+        outboxService.save(new OrganizationRestoreEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+      }
+      return success;
+    }));
   }
 
   private void validateUpdateOrganizationRequest(String identifier, OrganizationDTO organization) {

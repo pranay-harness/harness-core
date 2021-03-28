@@ -1,9 +1,11 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.remote.UserSearchMapper.writeDTO;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
@@ -19,7 +21,7 @@ import io.harness.ng.core.invites.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.services.api.NgUserService;
 
 import com.google.inject.Inject;
@@ -37,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AggregateProjectServiceImpl implements AggregateProjectService {
@@ -108,7 +111,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   }
 
   private Map<String, UserSearchDTO> getUserMap(List<String> userIds) {
-    List<User> users = ngUserService.getUsersByIds(userIds);
+    List<UserInfo> users = ngUserService.getUsersByIds(userIds);
     Map<String, UserSearchDTO> userMap = new HashMap<>();
     users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
     return userMap;

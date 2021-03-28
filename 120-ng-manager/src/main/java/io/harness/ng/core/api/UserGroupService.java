@@ -1,15 +1,18 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+@OwnedBy(PL)
 public interface UserGroupService {
   UserGroup create(UserGroupDTO userGroup);
 
@@ -22,8 +25,14 @@ public interface UserGroupService {
 
   List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO);
 
-  List<UserGroup> list(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Set<String> userGroupIdentifiers);
-
   UserGroup delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier);
+
+  UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier);
+
+  UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier);
 }

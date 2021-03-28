@@ -1,12 +1,15 @@
 package io.harness.audit.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.filter.FilterConstants.AUDIT_FILTER;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.ResourceScope;
+import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -20,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(AUDIT_FILTER)
 @Data
@@ -33,8 +37,8 @@ public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
   List<ResourceScope> scopes;
   List<Resource> resources;
 
-  List<ModuleType> moduleTypes;
-  List<String> actions;
+  List<ModuleType> modules;
+  List<Action> actions;
   List<String> environmentIdentifiers;
   List<Principal> principals;
 

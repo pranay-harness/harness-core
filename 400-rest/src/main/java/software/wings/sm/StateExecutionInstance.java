@@ -13,10 +13,10 @@ import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -25,11 +25,11 @@ import io.harness.persistence.UuidAware;
 import software.wings.api.PhaseElement;
 import software.wings.beans.LoopParams;
 import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,28 +53,32 @@ import org.simpleframework.xml.Transient;
 @Data
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@CdIndex(name = "appIdExecutionIdStatus",
-    fields =
-    {
-      @Field(StateExecutionInstanceKeys.appId)
-      , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.status)
-    })
-@CdIndex(name = "stateTypes2",
-    fields =
-    {
-      @Field(StateExecutionInstanceKeys.executionUuid)
-      , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
-    })
-@CdIndex(name = "parentInstances2",
-    fields =
-    {
-      @Field(StateExecutionInstanceKeys.executionUuid)
-      , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
-    })
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                                UpdatedAtAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appIdExecutionIdStatus")
+                 .field(StateExecutionInstanceKeys.appId)
+                 .field(StateExecutionInstanceKeys.executionUuid)
+                 .field(StateExecutionInstanceKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("stateTypes2")
+                 .field(StateExecutionInstanceKeys.executionUuid)
+                 .field(StateExecutionInstanceKeys.stateType)
+                 .field(StateExecutionInstanceKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("parentInstances2")
+                 .field(StateExecutionInstanceKeys.executionUuid)
+                 .field(StateExecutionInstanceKeys.parentInstanceId)
+                 .field(StateExecutionInstanceKeys.createdAt)
+                 .build())
+        .build();
+  }
   @Id private String uuid;
   @FdIndex protected String appId;
   @FdIndex private long createdAt;

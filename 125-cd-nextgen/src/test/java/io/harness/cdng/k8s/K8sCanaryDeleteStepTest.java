@@ -24,6 +24,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
@@ -31,10 +32,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +48,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   @InjectMocks private K8sCanaryDeleteStep canaryDeleteStep;
 
   @Mock private InfrastructureOutcome infrastructureOutcome;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
@@ -79,8 +78,8 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepParameters), any(K8sDeleteRequest.class), eq(ambiance), eq(infrastructureOutcome));
     doReturn(k8sCanaryOutcome)
-        .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+        .when(executionSweepingOutputService)
+        .resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
@@ -103,13 +102,13 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   public void testHandleTaskResult() {
     K8sCanaryDeleteStepParameters stepParameters =
         K8sCanaryDeleteStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
+
+    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
@@ -122,14 +121,13 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
                                                        .timeout(ParameterField.createValueField("10m"))
                                                        .rollbackInfo(rollbackInfo)
                                                        .build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(FAILURE)
-            .errorMessage("task failed")
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(FAILURE)
+                                         .errorMessage("task failed")
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(FAILED);
     assertThat(stepResponse.getFailureInfo().getErrorMessage()).isEqualTo("task failed");
     assertThat(stepResponse.getStepOutcomes()).hasSize(1);

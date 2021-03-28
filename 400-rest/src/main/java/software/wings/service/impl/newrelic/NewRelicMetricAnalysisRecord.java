@@ -8,10 +8,10 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -22,6 +22,7 @@ import software.wings.sm.StateType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -35,14 +36,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-/**
- * Created by rsingh on 08/30/17.
- */
-
-@NgUniqueIndex(name = "analysisUniqueIdx",
-    fields =
-    { @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -52,6 +45,19 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 public class NewRelicMetricAnalysisRecord
     extends Base implements Comparable<NewRelicMetricAnalysisRecord>, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_analysis")
+                 .unique(true)
+                 .field(NewRelicMetricAnalysisRecordKeys.workflowExecutionId)
+                 .field(NewRelicMetricAnalysisRecordKeys.stateExecutionId)
+                 .field(NewRelicMetricAnalysisRecordKeys.groupName)
+                 .field(NewRelicMetricAnalysisRecordKeys.analysisMinute)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String message;

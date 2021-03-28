@@ -1,5 +1,8 @@
 package io.harness.ng;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
@@ -8,6 +11,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class LocalConfigDTOMapper {
   public static LocalConfigDTO getLocalConfigDTO(

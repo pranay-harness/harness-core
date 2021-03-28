@@ -1,9 +1,11 @@
 package io.harness.ng;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretManagerConnectorServiceImpl implements ConnectorService {

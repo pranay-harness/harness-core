@@ -1,9 +1,13 @@
 package io.harness;
 
+import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.impl.NGTriggerServiceImpl;
+import io.harness.ngtriggers.utils.AwsCodeCommitDataObtainer;
+import io.harness.ngtriggers.utils.GitProviderBaseDataObtainer;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NGTriggersModule extends AbstractModule {
@@ -20,5 +24,8 @@ public class NGTriggersModule extends AbstractModule {
   protected void configure() {
     install(SCMJavaClientModule.getInstance());
     bind(NGTriggerService.class).to(NGTriggerServiceImpl.class);
+    MapBinder<String, GitProviderBaseDataObtainer> mapBinder =
+        MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class);
+    mapBinder.addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name()).to(AwsCodeCommitDataObtainer.class);
   }
 }

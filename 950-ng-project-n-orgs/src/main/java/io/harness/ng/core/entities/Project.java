@@ -12,6 +12,7 @@ import io.harness.mongo.CollationStrength;
 import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
@@ -55,11 +56,28 @@ public class Project implements PersistentEntity, NGAccountAccess {
                  .collation(
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("acctModulesOrgIdx")
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedModulesLastModifiedAtIdx")
                  .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
                  .field(ProjectKeys.modules)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountDeletedOrgIdentifierLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
                  .field(ProjectKeys.orgIdentifier)
+                 .field(ProjectKeys.identifier)
+                 .field(ProjectKeys.lastModifiedAt)
                  .unique(false)
                  .build())
         .build();

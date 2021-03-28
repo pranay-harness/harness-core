@@ -1,10 +1,13 @@
 package io.harness.aggregator.consumers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.services.ACLService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -18,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @NoArgsConstructor
 @AllArgsConstructor
 @Slf4j
@@ -46,8 +50,8 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
         aclService.deleteAll(aclsToDelete);
       }
 
-      Map<ACL.RoleAssignmentResourceSelector, List<ACL>> roleAssignmentToACLMapping =
-          acls.stream().collect(Collectors.groupingBy(ACL::roleAssignmentResourceSelector));
+      Map<ACL.RoleAssignmentResourceSelectorPrincipal, List<ACL>> roleAssignmentToACLMapping =
+          acls.stream().collect(Collectors.groupingBy(ACL::roleAssignmentResourceSelectorPrincipal));
 
       // add new ACLs for new permissions
       List<ACL> aclsToCreate = new ArrayList<>();

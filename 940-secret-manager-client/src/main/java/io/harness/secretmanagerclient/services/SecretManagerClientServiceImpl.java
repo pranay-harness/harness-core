@@ -1,7 +1,9 @@
 package io.harness.secretmanagerclient.services;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -17,6 +19,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretManagerClientServiceImpl implements SecretManagerClientService {

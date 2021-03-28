@@ -337,6 +337,17 @@
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-sns</artifactId>
+                <version>1.11.834</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-sts</artifactId>
                 <version>${aws.sdk.version}</version>
                 <exclusions>
@@ -350,6 +361,16 @@
                 <groupId>com.auth0</groupId>
                 <artifactId>java-jwt</artifactId>
                 <version>3.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-core</artifactId>
+                <version>1.10.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-identity</artifactId>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>com.bertramlabs.plugins</groupId>
@@ -752,6 +773,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.microsoft.rest</groupId>
+                <artifactId>client-runtime</artifactId>
+                <version>1.7.4</version>
+            </dependency>
+            <dependency>
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
                 <version>1.0.45</version>
@@ -1073,6 +1099,16 @@
                 <version>1.0.1</version>
             </dependency>
             <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>5.5.0</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>5.5.0</version>
+            </dependency>
+            <dependency>
                 <groupId>net.jodah</groupId>
                 <artifactId>expiringmap</artifactId>
                 <version>0.5.7</version>
@@ -1210,6 +1246,11 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk15on</artifactId>
+                <version>1.64</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>1.64</version>
             </dependency>
@@ -1331,12 +1372,6 @@
                 <groupId>org.eclipse.jgit</groupId>
                 <artifactId>org.eclipse.jgit</artifactId>
                 <version>${jgit.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.bouncycastle</groupId>
-                        <artifactId>bcpg-jdk15on</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jgit</groupId>
@@ -1459,8 +1494,18 @@
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>5.0.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-commons</artifactId>
-                <version>5.0.3</version>
+                <version>5.0.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm-tree</artifactId>
+                <version>5.0.4</version>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>

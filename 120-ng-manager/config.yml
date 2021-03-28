@@ -30,6 +30,8 @@ nextGen:
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
+enableAudit: false
+
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181
@@ -88,6 +90,11 @@ managerClientConfig:
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -187,6 +194,9 @@ resourceGroupConfig:
   ng-manager:
     baseUrl: http://localhost:7457/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipeline-service:
+    baseUrl: http://localhost:12001/api/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   manager:
     baseUrl: http://localhost:3457/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
@@ -196,9 +206,9 @@ logStreamingServiceConfig:
   serviceToken: token
 
 outboxIteratorConfig:
-  threadPoolSize: 2
-  intervalInSeconds: 90
-  targetIntervalInSeconds: 60
+  threadPoolSize: 3
+  intervalInSeconds: 5
+  targetIntervalInSeconds: 15
   acceptableNoAlertDelayInSeconds: 60
   maximumOutboxEventHandlingAttempts: 10
 
@@ -211,3 +221,18 @@ accessControlAdminClient:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+resourceGroupClientConfig:
+  baseUrl: ${RESOURCE_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+resourceGroupClientSecret: ${RESOURCE_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+gitGrpcClientConfigs:
+  pms:
+    target: localhost:12011
+    authority: localhost
+
+scmConnectionConfig:
+  url: localhost:8091
+

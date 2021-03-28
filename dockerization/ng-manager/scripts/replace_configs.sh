@@ -109,20 +109,16 @@ if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
 
+if [[ "" != "$AUDIT_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE enableAudit "$AUDIT_ENABLED"
+fi
+
 if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
 
-if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
-fi
-
 if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-fi
-
-if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$SMTP_HOST" ]]; then
@@ -198,6 +194,10 @@ if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
 fi
 
+if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
 fi
@@ -228,9 +228,23 @@ replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BAS
 
 replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
+replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
+
 replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value outboxIteratorConfig.threadPoolSize "$OUTBOX_ITERATOR_THREAD_POOL_SIZE"
+
+replace_key_value outboxIteratorConfig.intervalInSeconds "$OUTBOX_ITERATOR_INTERVAL"
+
+replace_key_value outboxIteratorConfig.targetIntervalInSeconds "$OUTBOX_ITERATOR_TARGET_INTERVAL"
+
+replace_key_value outboxIteratorConfig.acceptableNoAlertDelayInSeconds "$OUTBOX_ITERATOR_NO_ALERT_DELAY"
+
+replace_key_value outboxIteratorConfig.maximumOutboxEventHandlingAttempts "$OUTBOX_ITERATOR_MAX_ATTEMPTS"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]

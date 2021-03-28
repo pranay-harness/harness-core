@@ -11,8 +11,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.*;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -30,6 +29,7 @@ import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.delegateservice.DelegateServiceGrpcAgentClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
@@ -161,17 +161,27 @@ public class DelegateApplication {
         new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
             configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
-    String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder()
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
             .target(Optional.ofNullable(configuration.getManagerTarget())
-                        .orElseGet(() -> extractTarget(managerHostAndPort)))
+                        .orElseGet(() -> extractTarget(configuration.getManagerUrl())))
             .authority(Optional.ofNullable(configuration.getManagerAuthority())
-                           .orElseGet(() -> extractAuthority(managerHostAndPort, "manager")))
+                           .orElseGet(() -> extractAuthority(configuration.getManagerUrl(), "manager")))
+            .scheme(extractScheme(configuration.getManagerUrl()))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
-            .build()));
-    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "Delegate";
+      }
+    });
+
+    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
       modules.add(new PerpetualTaskWorkerModule());
       modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
@@ -206,7 +216,7 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));

@@ -1,5 +1,7 @@
 package io.harness.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag.Scope;
 
 import lombok.Getter;
@@ -8,6 +10,7 @@ import lombok.Getter;
  * Add your feature name here. When the feature is fully launched and no longer needs to be flagged,
  * delete the feature name.
  */
+@OwnedBy(HarnessTeam.PL)
 public enum FeatureName {
   APPD_CV_TASK,
   ARTIFACT_PERPETUAL_TASK,
@@ -19,6 +22,7 @@ public enum FeatureName {
   AZURE_VMSS,
   AZURE_WEBAPP,
   AZURE_ARM,
+  AUDIT_TRAIL_ENHANCEMENT,
   BIND_FETCH_FILES_TASK_TO_DELEGATE,
   CDNG_ENABLED,
   CENG_ENABLED,
@@ -94,6 +98,7 @@ public enum FeatureName {
   NEWRELIC_24_7_CV_TASK,
   NEXT_GEN_ENABLED,
   NG_RBAC_ENABLED,
+  NG_ACCESS_CONTROL_MIGRATION,
   NG_DASHBOARDS,
   NG_USERPROFILE,
   ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER,
@@ -168,8 +173,10 @@ public enum FeatureName {
   NG_BARRIERS,
   NG_HELM_SOURCE_REPO,
   ENHANCED_GCR_CONNECTIVITY_CHECK,
-  SETTING_API_BATCH_RBAC,
-  NG_PROVISIONERS; /*Flag to use batch RBAC api exposed by SecretManager*/
+  SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
+  NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
+  AWS_SM_ASSUME_IAM_ROLE,
+  SERVICE_DASHBOARD_NG;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

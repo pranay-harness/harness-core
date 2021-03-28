@@ -4,6 +4,7 @@ import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 
@@ -35,6 +36,13 @@ public class ServiceElementMapper {
         .deleted(serviceEntity.getDeleted())
         .tags(convertToMap(serviceEntity.getTags()))
         .version(serviceEntity.getVersion())
+        .build();
+  }
+  public ServiceResponse toResponseWrapper(ServiceEntity serviceEntity) {
+    return ServiceResponse.builder()
+        .service(writeDTO(serviceEntity))
+        .createdAt(serviceEntity.getCreatedAt())
+        .lastModifiedAt(serviceEntity.getLastModifiedAt())
         .build();
   }
 }

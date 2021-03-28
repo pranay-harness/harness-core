@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.data.RawOptionalSweepingOutput;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -19,6 +21,15 @@ import com.google.inject.Singleton;
 @Singleton
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
+
+  @Override
+  public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
+    RawOptionalSweepingOutput sweepingOutput = pmsSweepingOutputService.resolveOptional(ambiance, refObject);
+    return OptionalSweepingOutput.builder()
+        .found(sweepingOutput.isFound())
+        .output(RecastOrchestrationUtils.fromDocumentJson(sweepingOutput.getOutput(), SweepingOutput.class))
+        .build();
+  }
 
   @Override
   public String consume(Ambiance ambiance, String name, SweepingOutput value, String groupName) {

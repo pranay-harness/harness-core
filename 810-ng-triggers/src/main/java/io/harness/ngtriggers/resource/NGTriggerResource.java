@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -8,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -74,6 +76,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
     })
 @PipelineServiceAuth
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NGTriggerResource {
   private final NGTriggerService ngTriggerService;
   private final NGTriggerElementMapper ngTriggerElementMapper;
@@ -93,7 +96,7 @@ public class NGTriggerResource {
     try {
       TriggerDetails triggerDetails =
           ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
-      // ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      ngTriggerService.validateTriggerConfig(triggerDetails);
       createdEntity = ngTriggerService.create(triggerDetails.getNgTriggerEntity());
       return ResponseDTO.newResponse(
           createdEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(createdEntity));
@@ -134,7 +137,7 @@ public class NGTriggerResource {
     try {
       TriggerDetails triggerDetails =
           ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
-      // ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      ngTriggerService.validateTriggerConfig(triggerDetails);
       triggerDetails.getNgTriggerEntity().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
       NGTriggerEntity updatedEntity = ngTriggerService.update(triggerDetails.getNgTriggerEntity());

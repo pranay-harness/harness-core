@@ -8,4 +8,6 @@ import lombok.Data;
 public class DelegateInfo {
   String id;
   String name;
+  String taskId;
+  String taskName;
 }

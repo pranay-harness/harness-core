@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
@@ -22,59 +23,69 @@ import lombok.SneakyThrows;
 
 @OwnedBy(DX)
 public class YamlGitConfigMapper {
-  public static final YamlGitConfig toYamlGitConfig(YamlGitConfigDTO yamlGitConfigDTO) {
+  public static final YamlGitConfig toYamlGitConfig(YamlGitConfigDTO yamlGitConfigDTO, String accountId) {
     return YamlGitConfig.builder()
-        .accountId(yamlGitConfigDTO.getAccountId())
-        .organizationId(nullIfEmpty(yamlGitConfigDTO.getOrganizationId()))
+        .accountId(yamlGitConfigDTO.getAccountIdentifier())
+        .orgIdentifier(nullIfEmpty(yamlGitConfigDTO.getOrganizationIdentifier()))
         .uuid(nullIfEmpty(yamlGitConfigDTO.getIdentifier()))
-        .projectId(nullIfEmpty(yamlGitConfigDTO.getProjectId()))
+        .projectIdentifier(nullIfEmpty(yamlGitConfigDTO.getProjectIdentifier()))
         .branch(yamlGitConfigDTO.getBranch())
         .repo(yamlGitConfigDTO.getRepo())
-        .gitConnectorId(yamlGitConfigDTO.getGitConnectorId())
+        .gitConnectorRef(yamlGitConfigDTO.getGitConnectorRef())
         .scope(yamlGitConfigDTO.getScope())
         .rootFolders(yamlGitConfigDTO.getRootFolders())
         .defaultRootFolder(yamlGitConfigDTO.getDefaultRootFolder())
+        .accountId(accountId)
+        .gitConnectorType(yamlGitConfigDTO.getGitConnectorType())
         .build();
   }
 
   public static final YamlGitConfigDTO toYamlGitConfigDTO(YamlGitConfig yamlGitConfig) {
     return YamlGitConfigDTO.builder()
-        .accountId(yamlGitConfig.getAccountId())
-        .organizationId(nullIfEmpty(yamlGitConfig.getOrganizationId()))
+        .accountIdentifier(yamlGitConfig.getAccountId())
+        .organizationIdentifier(nullIfEmpty(yamlGitConfig.getOrgIdentifier()))
         .identifier(nullIfEmpty(yamlGitConfig.getUuid()))
-        .projectId(nullIfEmpty(yamlGitConfig.getProjectId()))
+        .projectIdentifier(nullIfEmpty(yamlGitConfig.getProjectIdentifier()))
         .branch(yamlGitConfig.getBranch())
         .repo(yamlGitConfig.getRepo())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorRef(yamlGitConfig.getGitConnectorRef())
         .scope(yamlGitConfig.getScope())
         .rootFolders(yamlGitConfig.getRootFolders())
         .defaultRootFolder(yamlGitConfig.getDefaultRootFolder())
+        .gitConnectorType(yamlGitConfig.getGitConnectorType())
         .build();
   }
 
-  public static final YamlGitConfigDTO toYamlGitConfigDTO(GitSyncConfigDTO gitSyncConfigDTO) {
-    Scope scope = getScope(
-        gitSyncConfigDTO.getAccountId(), gitSyncConfigDTO.getOrganizationId(), gitSyncConfigDTO.getProjectId());
+  public static final YamlGitConfigDTO toYamlGitConfigDTO(GitSyncConfigDTO gitSyncConfigDTO, String accountIdentifier) {
+    Scope scope =
+        getScope(accountIdentifier, gitSyncConfigDTO.getOrgIdentifier(), gitSyncConfigDTO.getProjectIdentifier());
     return YamlGitConfigDTO.builder()
-        .accountId(gitSyncConfigDTO.getAccountId())
-        .organizationId(gitSyncConfigDTO.getOrganizationId())
-        .projectId(gitSyncConfigDTO.getProjectId())
+        .accountIdentifier(accountIdentifier)
+        .organizationIdentifier(gitSyncConfigDTO.getOrgIdentifier())
+        .projectIdentifier(gitSyncConfigDTO.getProjectIdentifier())
         .scope(scope)
         .rootFolders(toRootFolders(gitSyncConfigDTO.getGitSyncFolderConfigDTOs()))
         .defaultRootFolder(getDefaultRootFolder(gitSyncConfigDTO.getGitSyncFolderConfigDTOs()))
-        .gitConnectorId(gitSyncConfigDTO.getGitConnectorId())
+        .gitConnectorRef(gitSyncConfigDTO.getGitConnectorRef())
         .branch(gitSyncConfigDTO.getBranch())
         .repo(gitSyncConfigDTO.getRepo())
         .identifier(gitSyncConfigDTO.getIdentifier())
+        .gitConnectorType(gitSyncConfigDTO.getGitConnectorType())
         .build();
   }
 
   private static List<YamlGitConfigDTO.RootFolder> toRootFolders(List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOS) {
+    if (isEmpty(gitSyncFolderConfigDTOS)) {
+      return null;
+    }
     return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(Collectors.toList());
   }
 
   private static YamlGitConfigDTO.RootFolder getDefaultRootFolder(
       List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOS) {
+    if (isEmpty(gitSyncFolderConfigDTOS)) {
+      return null;
+    }
     Optional<GitSyncFolderConfigDTO> gitSyncFolderDTO =
         gitSyncFolderConfigDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault).findFirst();
     return gitSyncFolderDTO.map(YamlGitConfigMapper::getRootFolders).orElse(null);
@@ -90,20 +101,23 @@ public class YamlGitConfigMapper {
 
   public static final GitSyncConfigDTO toSetupGitSyncDTO(YamlGitConfigDTO yamlGitConfig) {
     return GitSyncConfigDTO.builder()
-        .accountId(yamlGitConfig.getAccountId())
         .identifier(yamlGitConfig.getIdentifier())
-        .organizationId(yamlGitConfig.getOrganizationId())
-        .projectId(yamlGitConfig.getProjectId())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .orgIdentifier(yamlGitConfig.getOrganizationIdentifier())
+        .projectIdentifier(yamlGitConfig.getProjectIdentifier())
+        .gitConnectorRef(yamlGitConfig.getGitConnectorRef())
         .branch(yamlGitConfig.getBranch())
         .repo(yamlGitConfig.getRepo())
         .gitSyncFolderConfigDTOs(
             toGitSyncFolderDTO(yamlGitConfig.getRootFolders(), yamlGitConfig.getDefaultRootFolder()))
+        .gitConnectorType(yamlGitConfig.getGitConnectorType())
         .build();
   }
 
   private static List<GitSyncFolderConfigDTO> toGitSyncFolderDTO(
       List<YamlGitConfigDTO.RootFolder> rootFolders, YamlGitConfigDTO.RootFolder defaultRootFolder) {
+    if (isEmpty(rootFolders)) {
+      return null;
+    }
     return rootFolders.stream()
         .map(rootFolder -> {
           GitSyncFolderConfigDTOBuilder gitSyncFolderDTOBuilder = GitSyncFolderConfigDTO.builder()

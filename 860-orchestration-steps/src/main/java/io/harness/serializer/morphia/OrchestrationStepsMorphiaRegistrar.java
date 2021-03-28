@@ -9,6 +9,8 @@ import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
+import io.harness.steps.approval.step.jira.JiraApprovalStepParameters;
+import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -36,6 +38,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ResourceRestraintInstance.class);
     set.add(ApprovalInstance.class);
     set.add(HarnessApprovalInstance.class);
+    set.add(JiraApprovalInstance.class);
   }
 
   @Override
@@ -52,6 +55,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
     h.put("steps.approval.ApprovalStageStepParameters", ApprovalStageStepParameters.class);
-    h.put("steps.approval.HarnessApprovalStepParameters", HarnessApprovalStepParameters.class);
+    h.put("steps.approval.step.harness.HarnessApprovalStepParameters", HarnessApprovalStepParameters.class);
+    h.put("steps.approval.step.jira.JiraApprovalStepParameters", JiraApprovalStepParameters.class);
   }
 }

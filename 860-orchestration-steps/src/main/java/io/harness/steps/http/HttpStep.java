@@ -3,7 +3,6 @@ package io.harness.steps.http;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -14,12 +13,14 @@ import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBu
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -31,7 +32,8 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
+
+import software.wings.beans.TaskType;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -39,11 +41,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class HttpStep implements TaskExecutable<HttpStepParameters> {
+public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;
@@ -80,34 +83,19 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
         TaskData.builder()
             .async(true)
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.HTTP_TASK_NG.name())
+            .taskType(TaskType.HTTP_TASK_NG.name())
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
   }
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, HttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, HttpStepParameters stepParameters, Supplier<HttpStepResponse> responseSupplier) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
-    if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
-      responseBuilder.status(Status.FAILED);
-      responseBuilder.failureInfo(FailureInfo.newBuilder()
-                                      .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                                      .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                                          errorNotifyResponseData.getFailureTypes()))
-                                      .build());
-      if (stepParameters.getRollbackInfo() != null) {
-        responseBuilder.stepOutcome(
-            StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
-      }
-    } else {
-      HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
+    try {
+      HttpStepResponse httpStepResponse = responseSupplier.get();
 
       Map<String, Object> outputVariables = stepParameters.getOutputVariables();
       Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
@@ -142,8 +130,24 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       }
       responseBuilder.stepOutcome(
           StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
+      return responseBuilder.build();
+    } catch (ErrorDataException ex) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) ex.getErrorResponseData();
+      responseBuilder.status(Status.FAILED);
+      responseBuilder.failureInfo(FailureInfo.newBuilder()
+                                      .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                                      .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                                          errorNotifyResponseData.getFailureTypes()))
+                                      .build());
+      if (stepParameters.getRollbackInfo() != null) {
+        responseBuilder.stepOutcome(
+            StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return responseBuilder.build();
     }
-    return responseBuilder.build();
   }
 
   public static boolean validateAssertions(HttpStepResponse httpStepResponse, HttpStepParameters stepParameters) {

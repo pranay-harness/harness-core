@@ -1,5 +1,8 @@
 package io.harness.annotations.dev;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+@OwnedBy(DX)
 public enum HarnessModule {
   UNDEFINED,
   _280_BATCH_PROCESSING,
@@ -26,11 +29,12 @@ public enum HarnessModule {
   _860_ORCHESTRATION_STEPS,
   _860_ORCHESTRATION_VISUALIZATION,
   _870_CG_YAML_BEANS,
-  _870_ORCHESTRATION,
+  _870_CG_ORCHESTRATION,
   _870_YAML_BEANS,
   _880_ORCHESTRATION_BEANS,
   _882_PMS_SDK_CORE,
   _884_PMS_COMMONS,
+  _888_PMS_CLIENT,
   _890_ORCHESTRATION_PERSISTENCE,
   _890_PMS_CONTRACTS,
   _890_SM_CORE,

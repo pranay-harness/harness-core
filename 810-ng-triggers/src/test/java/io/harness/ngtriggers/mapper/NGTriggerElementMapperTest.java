@@ -6,6 +6,7 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
@@ -14,6 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
@@ -46,10 +49,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGTriggerElementMapperTest extends CategoryTest {
   private String ngTriggerYaml;
   private String ngCustomTriggerYaml;
   private String ngTriggerGitConnYaml;
+  private String ngTriggerCronYaml;
 
   @Mock private TriggerEventHistoryRepository triggerEventHistoryRepository;
   @InjectMocks @Inject private NGTriggerElementMapper ngTriggerElementMapper;
@@ -67,6 +72,9 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     String fileNameForGitRepoPayloadTrigger = "ng-trigger-git-connector.yaml";
     ngTriggerGitConnYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(fileNameForGitRepoPayloadTrigger)), StandardCharsets.UTF_8);
+    String fileNameForCronPayloadTrigger = "ng-trigger-cron.yaml";
+    ngTriggerCronYaml = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(fileNameForCronPayloadTrigger)), StandardCharsets.UTF_8);
   }
 
   @Test
@@ -193,6 +201,15 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(metadata.getWebhook().getGit().getConnectorIdentifier()).isEqualTo("account.gitAccount");
     assertThat(metadata.getWebhook().getGit().getRepoName()).isEqualTo("ngtriggerdemo");
     assertThat(metadata.getWebhook().getType()).isEqualTo("GITHUB");
+  }
+
+  @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
+  public void testTriggerEntityCronHasNextIterations() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerCronYaml).getNgTriggerEntity();
+    assertThat(ngTriggerEntity.getNextIterations()).isNotEmpty();
   }
 
   @Test

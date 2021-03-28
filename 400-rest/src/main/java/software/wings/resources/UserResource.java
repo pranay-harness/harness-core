@@ -30,6 +30,8 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
@@ -64,7 +66,6 @@ import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
-import software.wings.service.impl.InviteOperationResponse;
 import software.wings.service.impl.MarketplaceTypeLogContext;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
@@ -1019,13 +1020,13 @@ public class UserResource {
   @Path("invites/{inviteId}/status")
   @Timed
   @ExceptionMetered
-  public RestResponse<InviteOperationResponse> checkInvite(
-      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("inviteId") @NotEmpty String inviteId) {
+  public RestResponse<InviteOperationResponse> checkInvite(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("generation") Generation gen) {
     UserInvite userInvite = new UserInvite();
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
     try {
-      return new RestResponse<>(userService.checkInviteStatus(userInvite));
+      return new RestResponse<>(userService.checkInviteStatus(userInvite, gen));
     } catch (Exception e) {
       log.error("error checking invite", e);
       return new RestResponse<>(InviteOperationResponse.FAIL);
@@ -1120,10 +1121,11 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
+      @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("generation") Generation gen,
+      @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
-    return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    return new RestResponse<>(userService.completeInviteAndSignIn(userInvite, gen));
   }
 
   @PublicApi

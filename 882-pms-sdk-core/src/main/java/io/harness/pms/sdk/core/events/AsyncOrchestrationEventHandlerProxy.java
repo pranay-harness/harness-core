@@ -27,9 +27,13 @@ public class AsyncOrchestrationEventHandlerProxy implements OrchestrationEventHa
 
   public void handleEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
-      log.info("Started executing async event for orchestrationEvent");
-      eventHandler.handleEvent(event);
-      log.info("Completed event ");
+      try {
+        log.info("Started executing async event for orchestrationEvent");
+        eventHandler.handleEvent(event);
+        log.info("Completed event ");
+      } catch (Exception ex) {
+        log.error("Orchestration Async Event failed with Exception", ex);
+      }
     }
   }
 }

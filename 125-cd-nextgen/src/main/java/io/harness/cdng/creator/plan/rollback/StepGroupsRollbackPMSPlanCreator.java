@@ -6,6 +6,7 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.R
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
@@ -71,7 +72,7 @@ public class StepGroupsRollbackPMSPlanCreator {
     if (EmptyPredicate.isNotEmpty(childChainStepParameters.getChildNodes())) {
       PlanNode stepGroupsRollbackNode =
           PlanNode.builder()
-              .uuid(executionStepsField.getNode().getUuid() + "_stepGrouprollback")
+              .uuid(executionStepsField.getNode().getUuid() + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX)
               .name("Step Groups Rollback")
               .identifier(PlanCreatorConstants.STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER)
               .stepType(RollbackOptionalChildChainStep.STEP_TYPE)

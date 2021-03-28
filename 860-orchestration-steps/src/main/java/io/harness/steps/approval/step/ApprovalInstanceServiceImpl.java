@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.repositories.ApprovalInstanceRepository;
@@ -31,6 +34,7 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   private final ApprovalInstanceRepository approvalInstanceRepository;

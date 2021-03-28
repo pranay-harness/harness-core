@@ -7,9 +7,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 
@@ -18,7 +18,9 @@ import software.wings.beans.Base;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,8 +36,6 @@ import org.mongodb.morphia.annotations.Transient;
  * Class representing an entity of cumulative sums and risk for each window of analysis.
  * Created by Praveen.
  */
-@CdIndex(name = "minute_idx", fields = { @Field("cvConfigId")
-                                         , @Field("analysisMinute"), @Field("tag") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -46,6 +46,16 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "timeSeriesRiskSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesRiskSummary extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("minute_idx")
+                 .field(TimeSeriesRiskSummaryKeys.cvConfigId)
+                 .field(TimeSeriesRiskSummaryKeys.analysisMinute)
+                 .field(TimeSeriesRiskSummaryKeys.tag)
+                 .build())
+        .build();
+  }
   @NotEmpty private String cvConfigId;
   @NotEmpty private int analysisMinute;
   @Transient Map<String, Map<String, Integer>> txnMetricRisk;

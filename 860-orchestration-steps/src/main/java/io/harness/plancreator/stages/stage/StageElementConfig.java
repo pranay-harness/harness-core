@@ -30,10 +30,10 @@ public class StageElementConfig {
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
-  ParameterField<String> skipCondition;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> when;
+  ParameterField<String> when;
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
@@ -44,13 +44,14 @@ public class StageElementConfig {
 
   @Builder
   public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
-      List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType,
+      List<FailureStrategyConfig> failureStrategies, List<NGVariable> variables, String type, StageInfoConfig stageType,
       ParameterField<String> skipCondition, ParameterField<String> when) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
     this.description = description;
     this.failureStrategies = failureStrategies;
+    this.variables = variables;
     this.type = type;
     this.stageType = stageType;
     this.skipCondition = skipCondition;

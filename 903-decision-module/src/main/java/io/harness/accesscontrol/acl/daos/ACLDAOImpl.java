@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.acl.daos;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.repository.ACLRepository;
@@ -8,6 +10,7 @@ import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -17,7 +20,9 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
@@ -77,7 +82,11 @@ public class ACLDAOImpl implements ACLDAO {
 
   @Override
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    return aclRepository.insertAllIgnoringDuplicates(acls);
+    try {
+      return aclRepository.insertAllIgnoringDuplicates(acls);
+    } catch (DuplicateKeyException duplicateKeyException) {
+      return 0;
+    }
   }
 
   @Override
@@ -93,6 +102,11 @@ public class ACLDAOImpl implements ACLDAO {
   @Override
   public long deleteByRoleAssignmentId(String roleAssignmentId) {
     return aclRepository.deleteByRoleAssignmentId(roleAssignmentId);
+  }
+
+  @Override
+  public List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
+    return aclRepository.findByUserGroup(scopeIdentifier, userGroupIdentifier);
   }
 
   @Override

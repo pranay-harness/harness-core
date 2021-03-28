@@ -15,8 +15,10 @@ import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
@@ -35,6 +37,7 @@ import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GithubStore;
@@ -50,6 +53,7 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -140,6 +144,9 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
 
+    kryo.register(K8sGcpInfrastructureOutcome.class, 8300);
+    kryo.register(K8sGcpInfrastructure.class, 8301);
+
     // Starting using 12500 series as 8100 series is also used in 400-rest
     kryo.register(K8sBlueGreenOutcome.class, 12500);
     kryo.register(K8sManifestOutcome.class, 12502);
@@ -177,5 +184,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(OpenshiftManifestOutcome.class, 12535);
     kryo.register(OpenshiftParamManifest.class, 12536);
     kryo.register(OpenshiftParamManifestOutcome.class, 12537);
+    kryo.register(S3StoreConfig.class, 12538);
+    kryo.register(GcsStoreConfig.class, 12539);
   }
 }

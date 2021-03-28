@@ -13,6 +13,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
+import io.harness.service.intfc.PerpetualTaskStateObserver;
 
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateObserver;
@@ -56,12 +57,16 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
+  @Getter private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject = new Subject<>();
 
   @Override
   public void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated) {
     perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
 
     broadcastAggregateSet.add(Pair.of(accountId, delegateId));
+
+    perpetualTaskStateObserverSubject.fireInform(
+        PerpetualTaskStateObxxxxxxxx:onPerpetualTaskAssigned, accountId, taskId, delegateId);
   }
 
   public void broadcastToDelegate() {
