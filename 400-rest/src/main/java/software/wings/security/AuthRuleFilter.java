@@ -246,22 +246,31 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
+    boolean isBearerTokenWithApiKeyAuthorized = false;
     if (isApiKeyAuthorized) {
       checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
 
-      List<PermissionAttribute> requiredPermissionAttributes = getApiKeyAuthorizedPermissionAttributes(requestContext);
-      boolean skipAuth = skipAuth(requiredPermissionAttributes);
-      user = setUserAndUserRequestContextUsingApiKey(
-          accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes, skipAuth);
+      if (user != null) {
+        isBearerTokenWithApiKeyAuthorized = true;
+      } else {
+        List<PermissionAttribute> requiredPermissionAttributes =
+            getApiKeyAuthorizedPermissionAttributes(requestContext);
+        boolean skipAuth = skipAuth(requiredPermissionAttributes);
+        user = setUserAndUserRequestContextUsingApiKey(
+            accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes, skipAuth);
+        if (user == null) {
+          return;
+        }
 
-      if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+        if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+          return;
+        }
+
+        boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
+        authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
+            accountLevelPermissions);
         return;
       }
-
-      boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
-      authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
-          accountLevelPermissions);
-      return;
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
@@ -317,7 +326,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (servletRequest != null && !graphQLRequest) {
       checkForWhitelisting(accountId, null, requestContext, user);
     }
-    requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+
+    if (isBearerTokenWithApiKeyAuthorized) {
+      requiredPermissionAttributes = getApiKeyAuthorizedPermissionAttributes(requestContext);
+    } else {
+      requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+    }
 
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
       UserRequestContext userRequestContext =
@@ -823,6 +837,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
+    if (isEmpty(apiKey)) {
+      return null;
+    }
 
     User user = new User();
     ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
