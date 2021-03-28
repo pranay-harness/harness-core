@@ -57,6 +57,7 @@ modules = [
     "//490-ce-commons",
     "//800-pipeline-service",
     "//810-ng-triggers",
+    "//820-platform-service",
     "//830-notification-service",
     "//850-execution-plan",
     "//850-ng-pipeline-commons",
