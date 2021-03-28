@@ -1,5 +1,7 @@
 package io.harness.migrations.all;
 
+import static software.wings.settings.SettingValue.SettingValueKeys;
+
 import static io.fabric8.utils.Strings.isNotBlank;
 import static java.lang.String.format;
 import static org.reflections.Reflections.log;
@@ -17,7 +19,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
-import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -40,12 +41,11 @@ public class GcpConfigMultipleDelegateMigration implements Migration {
       String accountId = account.getUuid();
       log.info(StringUtils.join(DEBUG_LINE, "Starting moving variable names for accountId:", accountId));
 
-      try (HIterator<SettingAttribute> settingAttributes =
-               new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
-                                   .filter(SettingAttributeKeys.accountId, accountId)
-                                   .filter(SettingAttributeKeys.value + "." + SettingValue.SettingValueKeys.type,
-                                       CloudProviderType.GCP.name())
-                                   .fetch())) {
+      try (HIterator<SettingAttribute> settingAttributes = new HIterator<>(
+               wingsPersistence.createQuery(SettingAttribute.class)
+                   .filter(SettingAttributeKeys.accountId, accountId)
+                   .filter(SettingAttributeKeys.value + "." + SettingValueKeys.type, CloudProviderType.GCP.name())
+                   .fetch())) {
         while (settingAttributes.hasNext()) {
           SettingAttribute settingAttribute = settingAttributes.next();
 

@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import com.google.common.collect.ImmutableList;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
@@ -111,10 +110,11 @@ import io.harness.migrations.all.UpdateWorkflowExecutionAccountId;
 import io.harness.migrations.all.UpdateWorkflowExecutionDuration;
 import io.harness.migrations.all.WFEAddDeploymentMetaData;
 import io.harness.migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 @TargetModule(Module._390_DB_MIGRATION)
