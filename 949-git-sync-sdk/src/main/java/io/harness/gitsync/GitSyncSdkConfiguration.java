@@ -1,5 +1,6 @@
 package io.harness.gitsync;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -28,6 +29,7 @@ public class GitSyncSdkConfiguration {
   RedisConfig eventsRedisConfig;
   DeployMode deployMode;
   ScmConnectionConfig scmConnectionConfig;
+  AuthorizationServiceHeader serviceHeader;
 
   public enum DeployMode { REMOTE, IN_PROCESS }
 }

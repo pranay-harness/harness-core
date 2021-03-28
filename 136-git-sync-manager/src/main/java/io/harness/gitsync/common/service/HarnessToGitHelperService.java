@@ -2,6 +2,7 @@ package io.harness.gitsync.common.service;
 
 import io.harness.EntityType;
 import io.harness.common.EntityReference;
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 
@@ -10,4 +11,6 @@ public interface HarnessToGitHelperService {
       EntityReference entityReference, EntityType entityType);
 
   void postPushOperation(PushInfo pushInfo);
+
+  Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo);
 }
