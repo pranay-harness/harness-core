@@ -14,6 +14,7 @@ import java.util.List;
 
 /*
    Todo: Change StepSpecTypeConstants.PLACEHOLDER to their respective type once the StepInfo for those is implemented.
+   add a comment
  */
 @OwnedBy(CDP)
 public enum NGStepType {
