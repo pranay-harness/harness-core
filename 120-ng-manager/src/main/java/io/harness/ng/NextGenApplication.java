@@ -32,6 +32,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
+import io.harness.ng.core.user.UserMembershipMigrationService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventIteratorHandler;
@@ -289,6 +290,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(DefaultResourceGroupCreationService.class));
+    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

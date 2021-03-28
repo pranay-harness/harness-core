@@ -44,7 +44,9 @@ public class DefaultResourceGroupCreationService implements Managed {
 
   @Override
   public void stop() throws Exception {
-    defaultResourceGroupCreationFuture.cancel(true);
+    if (defaultResourceGroupCreationFuture != null) {
+      defaultResourceGroupCreationFuture.cancel(true);
+    }
     executorService.shutdown();
     executorService.awaitTermination(5, TimeUnit.SECONDS);
   }
