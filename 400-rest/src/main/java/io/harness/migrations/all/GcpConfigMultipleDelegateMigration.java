@@ -1,9 +1,7 @@
 package io.harness.migrations.all;
 
-import software.wings.settings.SettingValue.SettingValueKeys;
-
-import static io.fabric8.utils.Strings.isNotBlank;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.reflections.Reflections.log;
 
 import io.harness.annotations.dev.Module;
@@ -19,6 +17,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
+import software.wings.settings.SettingValue.SettingValueKeys;
 
 import com.google.inject.Inject;
 import java.util.Collections;
