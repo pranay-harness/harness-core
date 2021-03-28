@@ -41,6 +41,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   private final EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   private final KryoSerializer kryoSerializer;
   private final ScmClient scmClient;
+  private final EntityKeySource entityKeySource;
   // todo(abhinav): Add branching logic for find.
 
   @Override
@@ -102,10 +103,15 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     getAndSetBranchInfo(objectToSave);
     final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
     final EntityDetail entityDetail = objectToSave.getEntityDetail();
-    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
-    doScmPush(yaml, gitBranchInfo, infoForPush);
-    final T savedObject = mongoTemplate.save(objectToSave);
-    postPushInformationToGitMsvc(gitBranchInfo, entityDetail, infoForPush);
+    T savedObject;
+    if (entityKeySource.fetchKey(entityDetail.getEntityRef())) {
+      final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
+      doScmPush(yaml, gitBranchInfo, infoForPush);
+      savedObject = mongoTemplate.save(objectToSave);
+      postPushInformationToGitMsvc(gitBranchInfo, entityDetail, infoForPush);
+    } else {
+      savedObject = mongoTemplate.save(objectToSave);
+    }
     return savedObject;
   }
 

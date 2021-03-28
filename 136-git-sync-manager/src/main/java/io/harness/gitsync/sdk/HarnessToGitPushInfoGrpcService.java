@@ -1,10 +1,12 @@
 package io.harness.gitsync.sdk;
 
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
 import io.harness.gitsync.InfoForPush;
+import io.harness.gitsync.IsGitSyncEnabled;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.common.beans.InfoForGitPush;
@@ -61,6 +63,13 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     }
 
     responseObserver.onNext(pushInfoBuilder.build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
+    final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
+    responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
     responseObserver.onCompleted();
   }
 }
