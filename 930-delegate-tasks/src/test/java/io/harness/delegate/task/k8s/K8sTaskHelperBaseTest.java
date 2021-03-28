@@ -1036,20 +1036,21 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         KustomizeManifestDelegateConfig.builder()
             .pluginPath(kustomizePluginPath)
             .storeDelegateConfig(GitStoreDelegateConfig.builder().paths(Arrays.asList("kustomize-dir")).build())
+            .kustomizeDirPath("kustomize-dir-path")
             .build();
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().kustomizeBinaryPath(kustomizePath).build();
     List<FileData> renderedFiles = new ArrayList<>();
     doReturn(renderedFiles)
         .when(kustomizeTaskHelper)
-        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir", executionLogCallback);
+        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir-path", executionLogCallback);
 
     List<FileData> result = k8sTaskHelperBase.renderTemplate(delegateTaskParams, manifestDelegateConfig, "manifest",
         valuesList, "release", "namespace", executionLogCallback, 10);
 
     assertThat(result).isEqualTo(renderedFiles);
     verify(kustomizeTaskHelper, times(1))
-        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir", executionLogCallback);
+        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir-path", executionLogCallback);
   }
 
   @Test

@@ -1892,10 +1892,8 @@ public class K8sTaskHelperBase {
 
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
-        GitStoreDelegateConfig gitStoreDelegateConfig =
-            (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
+            kustomizeManifest.getPluginPath(), kustomizeManifest.getKustomizeDirPath(), executionLogCallback);
 
       case OPENSHIFT_TEMPLATE:
         OpenshiftManifestDelegateConfig openshiftManifestConfig =
