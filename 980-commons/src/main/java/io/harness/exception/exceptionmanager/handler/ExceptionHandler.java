@@ -1,7 +1,7 @@
-package io.harness.delegate.exceptionhandler.handler;
+package io.harness.exception.exceptionmanager.handler;
 
 import io.harness.exception.WingsException;
 
-public interface DelegateExceptionHandler {
+public interface ExceptionHandler {
   WingsException handleException(Exception exception);
 }

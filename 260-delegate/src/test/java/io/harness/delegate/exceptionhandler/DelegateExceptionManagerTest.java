@@ -10,9 +10,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.GeneralException;
 import io.harness.exception.HintException;
 import io.harness.exception.HourAggregationException;
 import io.harness.exception.InvalidArtifactServerException;
@@ -41,26 +41,32 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testBasicSanityCaseForSingleException() {
-    AmazonCodeDeployException amazonServiceException = new AmazonCodeDeployException("Amazon Code deploy exception");
+    String errorMessage = "Amazon Code deploy exception";
+    AmazonCodeDeployException amazonServiceException = new AmazonCodeDeployException(errorMessage);
     DelegateResponseData delegateResponseData =
         delegateExceptionManager.getResponseData(amazonServiceException, null, true);
     assertThat(delegateResponseData).isNotNull();
 
     ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
     assertThat(errorNotifyResponseData.getException()).isNotNull();
+    assertThat(errorNotifyResponseData.getException() instanceof InvalidRequestException).isTrue();
+    assertThat(errorNotifyResponseData.getException().getMessage().equals(amazonServiceException.getMessage()))
+        .isTrue();
   }
 
   @Test
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testUnhandledException() {
-    RuntimeException exception = new RuntimeException("Unknown Runtime exception");
+    String errorMessage = "Unknown Runtime exception";
+    RuntimeException exception = new RuntimeException(errorMessage);
     DelegateResponseData delegateResponseData = delegateExceptionManager.getResponseData(exception, null, true);
     assertThat(delegateResponseData).isNotNull();
 
     ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
     assertThat(errorNotifyResponseData.getException()).isNotNull();
-    assertThat(errorNotifyResponseData.getException() instanceof DelegateErrorHandlerException).isTrue();
+    assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
+    assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
   }
 
   @Test

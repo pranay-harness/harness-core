@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
@@ -18,7 +19,7 @@ import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmazonServiceExceptionHandler implements DelegateExceptionHandler {
+public class AmazonServiceExceptionHandler implements ExceptionHandler {
   @Override
   public WingsException handleException(Exception exception) {
     AmazonServiceException amazonServiceException = (AmazonServiceException) exception;

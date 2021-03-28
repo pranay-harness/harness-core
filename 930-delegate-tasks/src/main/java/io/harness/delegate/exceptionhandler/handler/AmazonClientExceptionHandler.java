@@ -8,10 +8,11 @@ import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
 
 import com.amazonaws.AmazonClientException;
 
-public class AmazonClientExceptionHandler implements DelegateExceptionHandler {
+public class AmazonClientExceptionHandler implements ExceptionHandler {
   @Override
   public WingsException handleException(Exception exception) {
     AmazonClientException amazonClientException = (AmazonClientException) exception;
