@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import static software.wings.settings.SettingValue.SettingValueKeys;
+import software.wings.settings.SettingValue.SettingValueKeys;
 
 import static io.fabric8.utils.Strings.isNotBlank;
 import static java.lang.String.format;
