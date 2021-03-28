@@ -95,7 +95,7 @@ public class AwsClientImpl implements AwsClient {
                 ExplanationException.EXPLANATION_EMPTY_SECRET_KEY, amazonEC2Exception);
           }
         }
-        checkCredentials(awsConfig);
+        //        checkCredentials(awsConfig);
       }
       throw amazonEC2Exception;
     }
