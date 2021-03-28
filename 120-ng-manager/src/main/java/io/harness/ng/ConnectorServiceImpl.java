@@ -292,6 +292,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       validationResult = defaultConnectorService.validate(connector, accountIdentifier);
       return validationResult;
     } catch (WingsException ex) {
+      // Special case handling for flows registered with error handling framework
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = ex.getMessage();
@@ -302,20 +303,10 @@ public class ConnectorServiceImpl implements ConnectorService {
       }
       validationResult = validationFailureBuilder.build();
       throw ex;
-    } catch (Exception ex) {
-      log.info("Encountered unexpected error while validating the connector {}",
-          String.format(CONNECTOR_STRING, connectorInfoDTO.getIdentifier(), accountIdentifier,
-              connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier()),
-          ex);
-      validationResult = createValidationResultWithGenericError(ex);
-      throw ex;
     } finally {
-      try {
-        updateTheConnectorValidationResultInTheEntity(validationResult, accountIdentifier,
-            connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(),
-            connectorInfoDTO.getIdentifier());
-      } catch (Exception ignored) {
-      }
+      updateTheConnectorValidationResultInTheEntity(validationResult, accountIdentifier,
+          connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(),
+          connectorInfoDTO.getIdentifier());
     }
   }
 
@@ -329,6 +320,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    ConnectorValidationResult connectorValidationResult = null;
     try (AutoLogContext ignore1 =
              new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
@@ -337,17 +329,30 @@ public class ConnectorServiceImpl implements ConnectorService {
       if (connectorDTO.isPresent()) {
         ConnectorResponseDTO connectorResponse = connectorDTO.get();
         ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
-        ConnectorValidationResult connectorValidationResult =
+        connectorValidationResult =
             getConnectorService(connectorInfoDTO.getConnectorType())
                 .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-        updateTheConnectorValidationResultInTheEntity(
-            connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
         return connectorValidationResult;
       } else {
         throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
                                               accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
             USER);
       }
+    } catch (WingsException wingsException) {
+      // Special case handling for flows registered with error handling framework
+      ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
+      validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
+      String errorMessage = wingsException.getMessage();
+      if (isNotEmpty(errorMessage)) {
+        String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
+        List<ErrorDetail> errorDetail = Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage));
+        validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
+      }
+      connectorValidationResult = validationFailureBuilder.build();
+      throw wingsException;
+    } finally {
+      updateTheConnectorValidationResultInTheEntity(
+          connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
   }
 
