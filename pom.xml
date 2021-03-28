@@ -773,6 +773,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.microsoft.rest</groupId>
+                <artifactId>client-runtime</artifactId>
+                <version>1.7.4</version>
+            </dependency>
+            <dependency>
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
                 <version>1.0.45</version>

@@ -25,6 +25,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.server.Connector;
@@ -315,9 +316,17 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
     modules.add(new ManagerQueueModule());
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder().target("localhost:9880").authority("localhost").build()));
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder().target("localhost:9880").authority("localhost").build();
+      }
 
+      @Override
+      public String application() {
+        return "Manager";
+      }
+    });
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));

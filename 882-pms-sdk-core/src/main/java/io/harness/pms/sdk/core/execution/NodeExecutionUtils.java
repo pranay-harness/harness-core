@@ -59,7 +59,9 @@ public class NodeExecutionUtils {
     if (o == null) {
       return null;
     }
-    return ExpressionEvaluatorUtils.updateExpressions(o, new ExtractResolveFunctorImpl());
+
+    ExpressionResolveFunctor extractResolveFunctor = new ExtractResolveFunctorImpl();
+    return ExpressionEvaluatorUtils.updateExpressions(o, extractResolveFunctor);
   }
 
   public static class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {

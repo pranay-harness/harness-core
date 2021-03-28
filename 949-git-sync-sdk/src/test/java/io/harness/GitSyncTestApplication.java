@@ -70,6 +70,7 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
                                                                 .grpcServerConfig(config.getGrpcServerConfig())
                                                                 .deployMode(DeployMode.REMOTE)
                                                                 .microservice(Microservice.PMS)
+                                                                .scmConnectionConfig(config.getScmConnectionConfig())
                                                                 .eventsRedisConfig(config.getRedisConfig())
                                                                 .build();
     modules.add(new AbstractGitSyncSdkModule() {
@@ -79,7 +80,7 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
       }
     });
     Injector injector = Guice.createInjector(modules);
-    GitSyncSdkInitHelper.initGitSyncSdk(injector, gitSyncSdkConfiguration);
+    GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, gitSyncSdkConfiguration);
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);

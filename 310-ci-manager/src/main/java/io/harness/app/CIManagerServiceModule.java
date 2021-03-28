@@ -16,6 +16,7 @@ import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
@@ -128,10 +129,21 @@ public class CIManagerServiceModule extends AbstractModule {
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
-    install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
-                                            .target(ciManagerConfiguration.getManagerTarget())
-                                            .authority(ciManagerConfiguration.getManagerAuthority())
-                                            .build()));
+
+    install(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
+            .target(ciManagerConfiguration.getManagerTarget())
+            .authority(ciManagerConfiguration.getManagerAuthority())
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "CIManager";
+      }
+    });
 
     install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));

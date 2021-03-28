@@ -30,6 +30,8 @@ com.amazonaws:aws-java-sdk-route53:jar:1.11.834
 com.amazonaws:aws-java-sdk-s3:jar:1.11.834
 com.amazonaws:aws-java-sdk-secretsmanager:jar:1.11.834
 com.amazonaws:aws-java-sdk-servicediscovery:jar:1.11.834
+com.amazonaws:aws-java-sdk-sns:jar:1.11.834
+com.amazonaws:aws-java-sdk-sqs:jar:1.11.834
 com.amazonaws:aws-java-sdk-sts:jar:1.11.834
 com.amazonaws:jmespath-java:jar:1.11.834
 com.auth0:java-jwt:jar:3.1.0
@@ -211,7 +213,7 @@ com.microsoft.azure:azure-storage:jar:6.1.0
 com.microsoft.azure:azure:jar:1.31.1
 com.microsoft.azure:msal4j-persistence-extension:jar:1.0.0
 com.microsoft.azure:msal4j:jar:1.8.1
-com.microsoft.rest:client-runtime:jar:1.7.0
+com.microsoft.rest:client-runtime:jar:1.7.4
 com.networknt:json-schema-validator:jar:1.0.45
 com.nimbusds:content-type:jar:2.0
 com.nimbusds:lang-tag:jar:1.4.4
@@ -234,7 +236,7 @@ com.squareup.okhttp3:mockwebxxxxxxxxjar:3.9.0:test
 com.squareup.okhttp3:okhttp-urlconnection:jar:3.12.2
 com.squareup.okhttp3:okhttp:jar:3.6.0
 com.squareup.okio:okio:jar:1.11.0
-com.squareup.retrofit2:adapter-rxjava:jar:2.6.2
+com.squareup.retrofit2:adapter-rxjava:jar:2.7.2
 com.squareup.retrofit2:converter-gson:jar:2.3.0
 com.squareup.retrofit2:converter-jackson:jar:2.2.0
 com.squareup.retrofit2:converter-simplexml:jar:2.1.0
@@ -335,8 +337,8 @@ io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1
 io.grpc:grpc-testing:jar:1.33.1:test
 io.gsonfire:gson-fire:jar:1.8.3
-io.harness.cf:cf-client-sdk-java:jar:0.0.2
 io.harness.cv:data-collection-dsl:jar:0.18-RELEASE
+io.harness:ff-java-server-sdk:jar:0.0.3
 io.jsonwebtoken:jjwt:jar:0.9.1
 io.kubernetes:client-java-api:jar:8.0.2
 io.kubernetes:client-java-extended:jar:8.0.2
@@ -482,6 +484,7 @@ org.atmosphere:wasync:jar:2.1.7
 org.atteo:evo-inflector:jar:1.2.2
 org.awaitility:awaitility:jar:2.0.0:test
 org.bitbucket.b_c:jose4j:jar:0.7.0
+org.bouncycastle:bcpg-jdk15on:jar:1.64
 org.bouncycastle:bcpkix-jdk15on:jar:1.64
 org.bouncycastle:bcprov-ext-jdk15on:jar:1.64
 org.bouncycastle:bcprov-jdk15on:jar:1.64
@@ -529,7 +532,6 @@ org.eclipse.jetty:jetty-webapp:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-xml:jar:9.4.35.v20201120
 org.eclipse.jgit:org.eclipse.jgit.http.apache:jar:5.3.0.201903130848-r
 org.eclipse.jgit:org.eclipse.jgit:jar:5.3.0.201903130848-r
-org.ehcache:ehcache:jar:3.0.0
 org.elasticsearch.client:elasticsearch-rest-client:jar:7.7.0
 org.elasticsearch.client:elasticsearch-rest-high-level-client:jar:7.7.0
 org.elasticsearch.plugin:aggs-matrix-stats-client:jar:7.7.0

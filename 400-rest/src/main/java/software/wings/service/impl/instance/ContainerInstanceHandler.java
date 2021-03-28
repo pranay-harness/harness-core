@@ -23,6 +23,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -100,7 +102,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,6 +120,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class ContainerInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
@@ -154,12 +156,25 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         getDeploymentSummaryMap(newDeploymentSummaries, containerMetadataInstanceMap, containerInfraMapping);
 
     loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
-
     log.info("Found {} containerSvcNames for app {} and infraMapping",
         containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
 
     if (containerMetadataInstanceMap == null) {
       return;
+    }
+
+    if (instanceSyncFlow == PERPETUAL_TASK && responseData instanceof K8sTaskExecutionResponse) {
+      K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) responseData;
+      K8sInstanceSyncResponse syncResponse = (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+      ContainerMetadata perpetualTaskMetadata = getContainerMetadataFromK8sInstanceSyncResponse(syncResponse);
+
+      // In case if there is no any entry in containerMetadataInstanceMap (meaning that there is no any instance in db
+      // for given release name and namespace) we will add all instances from perpetual task response
+      if (perpetualTaskMetadata != null && !containerMetadataInstanceMap.containsKey(perpetualTaskMetadata)) {
+        processK8sPodsInstances(containerInfraMapping, perpetualTaskMetadata, emptyList(), deploymentSummaryMap,
+            syncResponse.getK8sPodInfoList());
+        return;
+      }
     }
 
     // This is to handle the case of the instances stored in the new schema.
@@ -175,8 +190,24 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           log.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
               containerMetadata.getReleaseName());
 
-          handleK8sInstances(responseData, instanceSyncFlow, containerInfraMapping, deploymentSummaryMap,
-              containerMetadata, instancesInDB);
+          if (instanceSyncFlow == PERPETUAL_TASK && responseData instanceof K8sTaskExecutionResponse) {
+            K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) responseData;
+            K8sInstanceSyncResponse syncResponse =
+                (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+            // In case instances are from perpetual task response, we would like to apply it only if the response
+            // release name and namespace matches the current ContainerMetadata releaseName and namespace
+            // Otherwise it will lead to deleting the pods that are not part of response's releaseName and namespace
+            if (isNotEmpty(syncResponse.getNamespace()) && isNotEmpty(syncResponse.getReleaseName())
+                && syncResponse.getNamespace().equals(containerMetadata.getNamespace())
+                && syncResponse.getReleaseName().equals(containerMetadata.getReleaseName())) {
+              processK8sPodsInstances(containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap,
+                  syncResponse.getK8sPodInfoList());
+            }
+          } else {
+            // For iterator and new deployment flow will fetch existing pods from cluster
+            handleK8sInstances(containerInfraMapping, deploymentSummaryMap, containerMetadata, instancesInDB);
+          }
+
         } else {
           if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
             ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
@@ -369,25 +400,11 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     return Optional.ofNullable(instanceSyncResponse.getContainerInfoList()).orElse(emptyList());
   }
 
-  private void handleK8sInstances(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,
-      ContainerInfrastructureMapping containerInfraMapping,
+  private void handleK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
       Collection<Instance> instancesInDB) {
-    List<K8sPod> k8sPods = getK8sPods(responseData, instanceSyncFlow, containerInfraMapping, containerMetadata);
+    List<K8sPod> k8sPods = getK8sPodsFromDelegate(containerInfraMapping, containerMetadata);
     processK8sPodsInstances(containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap, k8sPods);
-  }
-
-  private List<K8sPod> getK8sPods(DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow,
-      ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
-    if (PERPETUAL_TASK != instanceSyncFlow) {
-      return getK8sPodsFromDelegate(containerInfraMapping, containerMetadata);
-    } else if (responseData instanceof K8sTaskExecutionResponse) {
-      K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) responseData;
-      K8sInstanceSyncResponse k8sInstanceSyncResponse =
-          (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
-      return k8sInstanceSyncResponse.getK8sPodInfoList();
-    }
-    return Collections.emptyList();
   }
 
   @VisibleForTesting
@@ -657,6 +674,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     return deploymentSummaryMap;
   }
+
   private void loadContainerSvcNameInstanceMap(
       ContainerInfrastructureMapping containerInfraMapping, Multimap<ContainerMetadata, Instance> instanceMap) {
     String appId = containerInfraMapping.getAppId();
@@ -691,6 +709,20 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         throw new GeneralException("UnSupported instance deploymentInfo type" + instance.getInstanceType().name());
       }
     }
+  }
+
+  private ContainerMetadata getContainerMetadataFromK8sInstanceSyncResponse(K8sInstanceSyncResponse syncResponse) {
+    String syncNamespace = syncResponse.getNamespace();
+    String syncReleaseName = syncResponse.getReleaseName();
+    if (isNotEmpty(syncNamespace) && isNotEmpty(syncReleaseName)) {
+      return ContainerMetadata.builder()
+          .type(ContainerMetadataType.K8S)
+          .namespace(syncNamespace)
+          .releaseName(syncReleaseName)
+          .build();
+    }
+
+    return null;
   }
 
   @Override

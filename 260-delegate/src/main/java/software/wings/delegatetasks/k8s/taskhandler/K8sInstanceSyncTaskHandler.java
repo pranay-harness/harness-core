@@ -57,8 +57,11 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
     List<K8sPod> k8sPodList =
         k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis);
 
-    K8sInstanceSyncResponse k8sInstanceSyncResponse =
-        K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build();
+    K8sInstanceSyncResponse k8sInstanceSyncResponse = K8sInstanceSyncResponse.builder()
+                                                          .k8sPodInfoList(k8sPodList)
+                                                          .releaseName(releaseName)
+                                                          .namespace(namespace)
+                                                          .build();
 
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sInstanceSyncResponse, (k8sPodList != null) ? SUCCESS : FAILURE);
   }

@@ -1,5 +1,6 @@
 package io.harness.gitsync.persistance;
 
+import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -13,7 +14,9 @@ import io.harness.gitsync.interceptor.GitBranchInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -37,7 +40,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   private final HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
   private final EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   private final KryoSerializer kryoSerializer;
-
+  private final ScmClient scmClient;
   // todo(abhinav): Add branching logic for find.
 
   @Override
@@ -100,17 +103,32 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
     final EntityDetail entityDetail = objectToSave.getEntityDetail();
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
-    String commitId = scmHelper.pushToGit(yaml, changeType, infoForPush.getScmConnector(), infoForPush.getFilePath());
+    doScmPush(yaml, gitBranchInfo, infoForPush);
     final T savedObject = mongoTemplate.save(objectToSave);
+    postPushInformationToGitMsvc(gitBranchInfo, entityDetail, infoForPush);
+    return savedObject;
+  }
+
+  private void postPushInformationToGitMsvc(
+      GitBranchInfo gitBranchInfo, EntityDetail entityDetail, InfoForGitPush infoForPush) {
     harnessToGitPushInfoServiceBlockingStub.pushFromHarness(
         PushInfo.newBuilder()
             .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
-            .setCommitId(commitId)
+            .setCommitId("commitId")
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
             .setFilePath(infoForPush.getFilePath())
             .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
             .build());
-    return savedObject;
+  }
+
+  private <Y> CreateFileResponse doScmPush(Y yaml, GitBranchInfo gitBranchInfo, InfoForGitPush infoForPush) {
+    final GitFileDetails gitFileDetails = GitFileDetails.builder()
+                                              .branch(gitBranchInfo.getBranch())
+                                              .commitMessage("test")
+                                              .fileContent(yaml.toString())
+                                              .filePath(gitBranchInfo.getFilePath())
+                                              .build();
+    return scmClient.createFile(infoForPush.getScmConnector(), gitFileDetails);
   }
 
   @Override
