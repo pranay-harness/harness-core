@@ -226,7 +226,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
-      Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
+      Response<SysMountsResponse> response =
+          restClient.getAllMounts(vaultConfig.getAuthToken(), vaultConfig.getNamespace()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
         log.info("Found Vault sys mount points: {}", sysMountMap.keySet());
