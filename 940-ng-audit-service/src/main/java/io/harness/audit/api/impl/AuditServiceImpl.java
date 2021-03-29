@@ -69,8 +69,9 @@ public class AuditServiceImpl implements AuditService {
     if (auditFilterPropertiesDTO == null) {
       return criteriaList.get(0);
     }
+    List<Criteria> coreInfoCriteriaList = new ArrayList<>();
     if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
-      criteriaList.add(getScopeCriteria(auditFilterPropertiesDTO.getScopes()));
+      coreInfoCriteriaList.add(getScopeCriteria(auditFilterPropertiesDTO.getScopes()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
@@ -78,7 +79,6 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
     }
-    List<Criteria> coreInfoCriteriaList = new ArrayList<>();
     if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
       coreInfoCriteriaList.add(getModuleCriteria(auditFilterPropertiesDTO.getModules()));
     }
@@ -109,21 +109,36 @@ public class AuditServiceImpl implements AuditService {
   private Criteria getScopeCriteria(List<ResourceScope> resourceScopes) {
     List<Criteria> criteriaList = new ArrayList<>();
     resourceScopes.forEach(resourceScope -> {
-      Criteria criteria =
-          Criteria.where(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(resourceScope.getAccountIdentifier());
+      Criteria criteria = new Criteria();
       ResourceScopeDBO dbo = ResourceScopeMapper.fromDTO(resourceScope);
       List<KeyValuePair> labels = dbo.getLabels();
+      List<Criteria> labelsCriteria = new ArrayList<>();
+      if (isNotEmpty(resourceScope.getOrgIdentifier())) {
+        labelsCriteria.add(Criteria.where(AuditEventKeys.coreInfo)
+                               .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                              .is(AuditCommonConstants.ORG_IDENTIFIER)
+                                              .and(KeyValuePairKeys.value)
+                                              .is(resourceScope.getOrgIdentifier())));
+      }
+      if (isNotEmpty(resourceScope.getProjectIdentifier())) {
+        labelsCriteria.add(Criteria.where(AuditEventKeys.coreInfo)
+                               .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                              .is(AuditCommonConstants.PROJECT_IDENTIFIER)
+                                              .and(KeyValuePairKeys.value)
+                                              .is(resourceScope.getProjectIdentifier())));
+      }
       if (isNotEmpty(labels)) {
-        List<Criteria> labelsCriteria = new ArrayList<>();
         labels.forEach(label
-            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
+            -> labelsCriteria.add(Criteria.where(AuditEventKeys.coreInfo)
                                       .elemMatch(Criteria.where(KeyValuePairKeys.key)
                                                      .is(label.getKey())
                                                      .and(KeyValuePairKeys.value)
                                                      .is(label.getValue()))));
-        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
-      criteriaList.add(criteria);
+      if (isNotEmpty(labelsCriteria)) {
+        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
+        criteriaList.add(criteria);
+      }
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
   }

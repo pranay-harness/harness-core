@@ -9,6 +9,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 @UtilityClass
 public class AuditCommonConstants {
+  public static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
+  public static final String ORG_IDENTIFIER = "orgIdentifier";
+  public static final String PROJECT_IDENTIFIER = "projectIdentifier";
   public static final String MODULE = "module";
   public static final String ACTION = "action";
   public static final String ENVIRONMENT_IDENTIFIER = "environmentIdentifier";

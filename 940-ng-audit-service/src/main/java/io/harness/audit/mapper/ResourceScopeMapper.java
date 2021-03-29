@@ -2,9 +2,7 @@ package io.harness.audit.mapper;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.ResourceScopeDBO;
 import io.harness.ng.core.common.beans.KeyValuePair;
@@ -20,32 +18,26 @@ import lombok.experimental.UtilityClass;
 public class ResourceScopeMapper {
   public static ResourceScopeDBO fromDTO(ResourceScope dto) {
     List<KeyValuePair> labels = KeyValuePairMapper.convertToList(dto.getLabels());
-    if (isNotEmpty(dto.getOrgIdentifier())) {
-      labels.add(KeyValuePair.builder().key(NGCommonEntityConstants.ORG_KEY).value(dto.getOrgIdentifier()).build());
-    }
-    if (isNotEmpty(dto.getProjectIdentifier())) {
-      labels.add(
-          KeyValuePair.builder().key(NGCommonEntityConstants.PROJECT_KEY).value(dto.getProjectIdentifier()).build());
-    }
     if (isEmpty(labels)) {
       labels = null;
     }
-    return ResourceScopeDBO.builder().accountIdentifier(dto.getAccountIdentifier()).labels(labels).build();
+    return ResourceScopeDBO.builder()
+        .accountIdentifier(dto.getAccountIdentifier())
+        .orgIdentifier(dto.getOrgIdentifier())
+        .projectIdentifier(dto.getProjectIdentifier())
+        .labels(labels)
+        .build();
   }
 
   public static ResourceScope toDTO(ResourceScopeDBO dbo) {
     Map<String, String> labels = KeyValuePairMapper.convertToMap(dbo.getLabels());
-    String orgIdentifier = labels.get(NGCommonEntityConstants.ORG_KEY);
-    String projectIdentifier = labels.get(NGCommonEntityConstants.PROJECT_KEY);
-    labels.remove(NGCommonEntityConstants.ORG_KEY);
-    labels.remove(NGCommonEntityConstants.PROJECT_KEY);
     if (isEmpty(labels)) {
       labels = null;
     }
     return ResourceScope.builder()
         .accountIdentifier(dbo.getAccountIdentifier())
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
+        .orgIdentifier(dbo.getOrgIdentifier())
+        .projectIdentifier(dbo.getProjectIdentifier())
         .labels(labels)
         .build();
   }

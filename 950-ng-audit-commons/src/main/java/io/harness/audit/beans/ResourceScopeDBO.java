@@ -25,5 +25,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
 public class ResourceScopeDBO {
   @NotNull @NotEmpty String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
   List<KeyValuePair> labels;
 }

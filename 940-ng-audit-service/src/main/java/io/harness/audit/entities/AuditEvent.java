@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfoDBO;
 import io.harness.audit.beans.AuthenticationInfoDBO.AuthenticationInfoKeys;
@@ -61,7 +63,11 @@ public class AuditEvent {
 
   @NotNull @Valid AuthenticationInfoDBO authenticationInfo;
 
+  @NotNull ModuleType module;
+  String environmentIdentifier;
+
   @NotNull @Valid ResourceDBO resource;
+  @NotNull Action action;
 
   YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
@@ -110,46 +116,6 @@ public class AuditEvent {
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("ngAuditTimeAccountScopeCorePrincipalResourceIdx")
-                 .field(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("ngAuditTimeAccountScopeCoreResourceIdx")
-                 .field(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("ngAuditTimeAccountScopePrincipalResourceIdx")
-                 .field(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("ngAuditTimeAccountScopeResourceIdx")
-                 .field(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .build())
-        .add(CompoundMongoIndex.builder()
                  .name("uniqueNgAuditEventIdx")
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.timestamp)
@@ -163,11 +129,6 @@ public class AuditEvent {
   public static final class AuditEventKeys {
     public static final String ACCOUNT_IDENTIFIER_KEY =
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.accountIdentifier;
-    public static final String RESOURCE_SCOPE_LABEL_KEY = AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels;
-    public static final String RESOURCE_SCOPE_LABEL_KEYS_KEY =
-        AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels + "." + KeyValuePairKeys.key;
-    public static final String RESOURCE_SCOPE_LABEL_VALUES_KEY =
-        AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels + "." + KeyValuePairKeys.value;
 
     public static final String PRINCIPAL_TYPE_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;

@@ -2,10 +2,9 @@ package io.harness.audit.mapper;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.Action;
 import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.entities.AuditEvent;
@@ -26,6 +25,22 @@ public class AuditEventMapper {
       additionalInfo = null;
     }
     List<KeyValuePair> coreInfo = new ArrayList<>();
+    if (isNotEmpty(dto.getResourceScope().getOrgIdentifier())) {
+      coreInfo.add(KeyValuePair.builder()
+                       .key(AuditCommonConstants.ORG_IDENTIFIER)
+                       .value(dto.getResourceScope().getOrgIdentifier())
+                       .build());
+    }
+    if (isNotEmpty(dto.getResourceScope().getProjectIdentifier())) {
+      coreInfo.add(KeyValuePair.builder()
+                       .key(AuditCommonConstants.PROJECT_IDENTIFIER)
+                       .value(dto.getResourceScope().getProjectIdentifier())
+                       .build());
+    }
+    if (isNotEmpty(dto.getResourceScope().getLabels())) {
+      dto.getResourceScope().getLabels().forEach(
+          (key, value) -> coreInfo.add(KeyValuePair.builder().key(key).value(value).build()));
+    }
     coreInfo.add(KeyValuePair.builder().key(AuditCommonConstants.MODULE).value(dto.getModule().name()).build());
     coreInfo.add(KeyValuePair.builder().key(AuditCommonConstants.ACTION).value(dto.getAction().name()).build());
     coreInfo.add(KeyValuePair.builder()
@@ -42,6 +57,9 @@ public class AuditEventMapper {
         .resource(ResourceMapper.fromDTO(dto.getResource()))
         .yamlDiff(dto.getYamlDiff())
         .auditEventData(dto.getAuditEventData())
+        .module(dto.getModule())
+        .action(dto.getAction())
+        .environmentIdentifier(dto.getEnvironmentIdentifier())
         .coreInfo(coreInfo)
         .additionalInfo(additionalInfo)
         .build();
@@ -52,10 +70,6 @@ public class AuditEventMapper {
     if (isEmpty(additionalInfo)) {
       additionalInfo = null;
     }
-    Map<String, String> coreInfo = KeyValuePairMapper.convertToMap(auditEvent.getCoreInfo());
-    ModuleType module = ModuleType.valueOf(coreInfo.get(AuditCommonConstants.MODULE));
-    Action action = Action.valueOf(coreInfo.get(AuditCommonConstants.ACTION));
-    String environmentIdentifier = coreInfo.get(AuditCommonConstants.ENVIRONMENT_IDENTIFIER);
     return AuditEventDTO.builder()
         .insertId(auditEvent.getInsertId())
         .resourceScope(ResourceScopeMapper.toDTO(auditEvent.getResourceScope()))
@@ -63,10 +77,10 @@ public class AuditEventMapper {
         .requestMetadata(auditEvent.getRequestMetadata())
         .timestamp(auditEvent.getTimestamp())
         .authenticationInfo(AuthenticationInfoMapper.toDTO(auditEvent.getAuthenticationInfo()))
-        .module(module)
+        .module(auditEvent.getModule())
         .resource(ResourceMapper.toDTO(auditEvent.getResource()))
-        .action(action)
-        .environmentIdentifier(environmentIdentifier)
+        .action(auditEvent.getAction())
+        .environmentIdentifier(auditEvent.getEnvironmentIdentifier())
         .yamlDiff(auditEvent.getYamlDiff())
         .auditEventData(auditEvent.getAuditEventData())
         .additionalInfo(additionalInfo)

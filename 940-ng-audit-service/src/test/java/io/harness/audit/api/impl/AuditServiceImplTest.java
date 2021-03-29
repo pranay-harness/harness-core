@@ -110,18 +110,20 @@ public class AuditServiceImplTest extends CategoryTest {
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
     Document scopeDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) scopeDocument.get(MONGO_OR_OPERATOR);
-    assertNotNull(orList);
-    Document accountOrgScopeDocument = (Document) orList.get(0);
-    assertEquals(2, accountOrgScopeDocument.size());
-    assertEquals(accountIdentifier, accountOrgScopeDocument.get(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
-    BasicDBList labelsList = (BasicDBList) accountOrgScopeDocument.get(MONGO_AND_OPERATOR);
-    assertEquals(1, labelsList.size());
-    Document labelsDocument = (Document) labelsList.get(0);
-    Document elemMatchDocument = (Document) labelsDocument.get(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY);
-    Document orgScopeElemMatchDocument = (Document) elemMatchDocument.get(MONGO_ELEM_MATCH_OPERATOR);
-    assertEquals(NGCommonEntityConstants.ORG_KEY, orgScopeElemMatchDocument.getString(KeyValuePairKeys.key));
-    assertEquals(orgIdentifier, orgScopeElemMatchDocument.getString(KeyValuePairKeys.value));
+    BasicDBList andOrgList = (BasicDBList) scopeDocument.get(MONGO_AND_OPERATOR);
+    assertNotNull(andOrgList);
+    assertEquals(1, andOrgList.size());
+    Document orOrgDocument = (Document) andOrgList.get(0);
+    BasicDBList orOrgList = (BasicDBList) orOrgDocument.get(MONGO_OR_OPERATOR);
+    assertEquals(1, orOrgList.size());
+    Document andOrgScopeDocument = (Document) orOrgList.get(0);
+    BasicDBList andOrgScopeList = (BasicDBList) andOrgScopeDocument.get(MONGO_AND_OPERATOR);
+    assertEquals(1, andOrgScopeList.size());
+    Document coreInfoDocument = (Document) andOrgScopeList.get(0);
+    Document orgCoreInfoDocument = (Document) coreInfoDocument.get(AuditEventKeys.coreInfo);
+    Document elemMatchDocument = (Document) orgCoreInfoDocument.get(MONGO_ELEM_MATCH_OPERATOR);
+    assertEquals(NGCommonEntityConstants.ORG_KEY, elemMatchDocument.getString(KeyValuePairKeys.key));
+    assertEquals(orgIdentifier, elemMatchDocument.getString(KeyValuePairKeys.value));
   }
 
   @Test

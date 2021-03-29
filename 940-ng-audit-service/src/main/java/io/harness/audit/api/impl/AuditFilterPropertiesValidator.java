@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.exception.InvalidRequestException;
@@ -87,9 +87,10 @@ public class AuditFilterPropertiesValidator {
           throw new InvalidRequestException(
               "Invalid resource scope filter with missing value in resource scope labels.");
         }
-        if (NGCommonEntityConstants.ACCOUNT_KEY.equals(key)) {
+        if (AuditCommonConstants.ACCOUNT_IDENTIFIER.equals(key) || AuditCommonConstants.ORG_IDENTIFIER.equals(key)
+            || AuditCommonConstants.PROJECT_IDENTIFIER.equals(key)) {
           throw new InvalidRequestException(
-              "Invalid resource scope filter with key as accountIdentifier in resource scope labels.");
+              String.format("Invalid resource scope filter with key as %s in resource scope labels.", key));
         }
       });
     }
