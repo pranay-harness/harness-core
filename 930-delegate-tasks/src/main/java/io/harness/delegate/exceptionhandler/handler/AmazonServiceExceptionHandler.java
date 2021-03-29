@@ -7,7 +7,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
+import io.harness.exception.exceptionmanager.ExceptionHandler;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;

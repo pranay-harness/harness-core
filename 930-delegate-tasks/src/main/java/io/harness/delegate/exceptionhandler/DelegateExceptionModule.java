@@ -2,7 +2,7 @@ package io.harness.delegate.exceptionhandler;
 
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
-import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
+import io.harness.exception.exceptionmanager.ExceptionHandler;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;

@@ -1,4 +1,4 @@
-package io.harness.exception.exceptionmanager.handler;
+package io.harness.exception.exceptionmanager;
 
 import io.harness.exception.WingsException;
 

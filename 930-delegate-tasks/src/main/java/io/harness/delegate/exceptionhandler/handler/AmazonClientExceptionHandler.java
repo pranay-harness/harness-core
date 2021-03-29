@@ -8,7 +8,7 @@ import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
+import io.harness.exception.exceptionmanager.ExceptionHandler;
 
 import com.amazonaws.AmazonClientException;
 

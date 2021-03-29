@@ -1,7 +1,5 @@
 package io.harness.exception.exceptionmanager;
 
-import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;

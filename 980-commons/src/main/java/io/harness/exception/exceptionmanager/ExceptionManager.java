@@ -9,7 +9,6 @@ import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
-import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
 import io.harness.logging.ExceptionLogger;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
