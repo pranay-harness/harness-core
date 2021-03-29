@@ -3,6 +3,7 @@ package io.harness.waiter;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -95,12 +96,13 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
         } else {
           ((OldNotifyCallback) notifyCallback).notify(responseMap);
         }
-      }
-      if (notifyCallback instanceof PushThroughNotifyCallback) {
+      } else if (notifyCallback instanceof PushThroughNotifyCallback) {
         ((PushThroughNotifyCallback) notifyCallback).push(responseMap);
-      }
-      if (notifyCallback instanceof NotifyCallbackWithErrorHandling) {
+      } else if (notifyCallback instanceof NotifyCallbackWithErrorHandling) {
         ((NotifyCallbackWithErrorHandling) notifyCallback).notify(prepareResponseWithError(responseMap));
+      } else {
+        throw new UnsupportedOperationException(
+            "No handling present for notify callback : " + notifyCallback.toString());
       }
       log.info("WaitInstance callback finished");
     } catch (Exception exception) {
