@@ -2,7 +2,6 @@ package io.harness.delegate.app;
 
 import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
@@ -19,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
-import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
