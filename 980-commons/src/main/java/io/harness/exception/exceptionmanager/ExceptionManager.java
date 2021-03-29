@@ -60,8 +60,7 @@ public class ExceptionManager {
         if (delegateExceptionHandler != null) {
           handledException = delegateExceptionHandler.handleException(exception);
         } else {
-          throw new DelegateErrorHandlerException(
-              "Delegate exception handler not registered for exception : " + exception);
+          throw new DelegateErrorHandlerException("Exception handler not registered for exception : " + exception);
         }
         if (exception.getCause() != null) {
           WingsException cascadedException = handledException;
