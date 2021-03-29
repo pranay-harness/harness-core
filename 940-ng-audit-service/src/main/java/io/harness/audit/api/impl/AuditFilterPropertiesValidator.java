@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.exception.InvalidRequestException;
@@ -105,23 +104,6 @@ public class AuditFilterPropertiesValidator {
   private void verifyResource(Resource resource) {
     if (isEmpty(resource.getType())) {
       throw new InvalidRequestException("Invalid resource filter with missing resource type.");
-    }
-    Map<String, String> labels = resource.getLabels();
-    if (isNotEmpty(labels)) {
-      labels.forEach((key, value) -> {
-        if (isEmpty(key)) {
-          throw new InvalidRequestException("Invalid resource filter with missing key in resource labels.");
-        }
-        if (isEmpty(value)) {
-          throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
-        }
-        if (AuditCommonConstants.TYPE.equals(key)) {
-          throw new InvalidRequestException("Invalid resource filter with key as type in resource labels.");
-        }
-        if (AuditCommonConstants.IDENTIFIER.equals(key)) {
-          throw new InvalidRequestException("Invalid resource filter with key as identifier in resource labels.");
-        }
-      });
     }
   }
 

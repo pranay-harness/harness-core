@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Mockito.spy;
@@ -55,28 +54,12 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
   public void testInvalidResourceAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    String resourceType = randomAlphabetic(10);
-    String randomValue = randomAlphabetic(10);
     AuditFilterPropertiesDTO invalidResourceFilter =
         AuditFilterPropertiesDTO.builder()
             .resources(singletonList(Resource.builder().identifier(identifier).build()))
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidResourceFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-    AuditFilterPropertiesDTO invalidResourceLabelsFilter =
-        AuditFilterPropertiesDTO.builder()
-            .resources(singletonList(Resource.builder()
-                                         .identifier(identifier)
-                                         .type(resourceType)
-                                         .labels(singletonMap("", randomValue))
-                                         .build()))
-            .build();
-    try {
-      auditFilterPropertiesValidator.validate(accountIdentifier, invalidResourceLabelsFilter);
       fail();
     } catch (InvalidRequestException exception) {
       // continue

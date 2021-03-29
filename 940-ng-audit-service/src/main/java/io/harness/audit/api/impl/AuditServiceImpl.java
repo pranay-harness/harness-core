@@ -15,11 +15,9 @@ import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
-import io.harness.audit.beans.ResourceDBO;
 import io.harness.audit.beans.ResourceScopeDBO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
-import io.harness.audit.mapper.ResourceMapper;
 import io.harness.audit.mapper.ResourceScopeMapper;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.ng.beans.PageRequest;
@@ -133,20 +131,10 @@ public class AuditServiceImpl implements AuditService {
   private Criteria getResourceCriteria(List<Resource> resources) {
     List<Criteria> criteriaList = new ArrayList<>();
     resources.forEach(resource -> {
-      Criteria criteria = new Criteria();
-      ResourceDBO dbo = ResourceMapper.fromDTO(resource);
-      List<KeyValuePair> labels = dbo.getLabels();
-      if (isNotEmpty(labels)) {
-        List<Criteria> labelsCriteria = new ArrayList<>();
-        labels.forEach(label
-            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
-                                      .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                                     .is(label.getKey())
-                                                     .and(KeyValuePairKeys.value)
-                                                     .is(label.getValue()))));
-        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
+      Criteria criteria = Criteria.where(AuditEventKeys.RESOURCE_TYPE_KEY).is(resource.getType());
+      if (isNotEmpty(resource.getIdentifier())) {
+        criteria.and(AuditEventKeys.RESOURCE_IDENTIFIER_KEY).is(resource.getIdentifier());
       }
-
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

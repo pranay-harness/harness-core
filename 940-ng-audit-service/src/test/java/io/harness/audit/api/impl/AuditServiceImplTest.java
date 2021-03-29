@@ -148,24 +148,13 @@ public class AuditServiceImplTest extends CategoryTest {
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
-    Document orDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) orDocument.get(MONGO_OR_OPERATOR);
-    assertEquals(1, orList.size());
-    Document andLabelsDocument = (Document) orList.get(0);
-    BasicDBList andLabelsList = (BasicDBList) andLabelsDocument.get(MONGO_AND_OPERATOR);
-    assertEquals(2, andLabelsList.size());
-
-    Document typeDocument = (Document) andLabelsList.get(0);
-    Document labelsTypeDocument = (Document) typeDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
-    Document elemMatchLabelsTypeDocument = (Document) labelsTypeDocument.get(MONGO_ELEM_MATCH_OPERATOR);
-    assertEquals(AuditCommonConstants.TYPE, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.key));
-    assertEquals(resourceType, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.value));
-
-    Document identifierDocument = (Document) andLabelsList.get(1);
-    Document labelsIdentifierDocument = (Document) identifierDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
-    Document elemMatchLabelsIdentifierDocument = (Document) labelsIdentifierDocument.get(MONGO_ELEM_MATCH_OPERATOR);
-    assertEquals(AuditCommonConstants.IDENTIFIER, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.key));
-    assertEquals(identifier, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.value));
+    Document resourceDocument = (Document) andList.get(1);
+    BasicDBList orList = (BasicDBList) resourceDocument.get(MONGO_OR_OPERATOR);
+    assertNotNull(orList);
+    Document resourceTypeIdentifierScopeDocument = (Document) orList.get(0);
+    assertEquals(2, resourceTypeIdentifierScopeDocument.size());
+    assertEquals(resourceType, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_TYPE_KEY));
+    assertEquals(identifier, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_IDENTIFIER_KEY));
   }
 
   @Test

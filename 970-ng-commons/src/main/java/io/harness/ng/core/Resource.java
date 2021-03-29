@@ -7,7 +7,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -21,5 +20,4 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Resource {
   @NotEmpty String type;
   @NotEmpty String identifier;
-  Map<String, String> labels;
 }

@@ -81,8 +81,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.CORE_INFO_VALUES_KEY)
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountCoreResourceIdx")
@@ -90,8 +90,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.CORE_INFO_KEYS_KEY)
                  .field(AuditEventKeys.CORE_INFO_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountPrincipalResourceIdx")
@@ -99,15 +99,15 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountResourceIdx")
                  .field(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountScopeCorePrincipalResourceIdx")
@@ -115,12 +115,10 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.CORE_INFO_KEYS_KEY)
-                 .field(AuditEventKeys.CORE_INFO_VALUES_KEY)
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountScopeCoreResourceIdx")
@@ -128,10 +126,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.CORE_INFO_KEYS_KEY)
-                 .field(AuditEventKeys.CORE_INFO_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountScopePrincipalResourceIdx")
@@ -141,8 +137,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditTimeAccountScopeResourceIdx")
@@ -150,8 +146,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
                  .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueNgAuditEventIdx")
@@ -178,11 +174,8 @@ public class AuditEvent {
     public static final String PRINCIPAL_IDENTIFIER_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.identifier;
 
-    public static final String RESOURCE_LABEL_KEY = AuditEventKeys.resource + "." + ResourceKeys.labels;
-    public static final String RESOURCE_LABEL_KEYS_KEY =
-        AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
-    public static final String RESOURCE_LABEL_VALUES_KEY =
-        AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.value;
+    public static final String RESOURCE_TYPE_KEY = AuditEventKeys.resource + "." + ResourceKeys.type;
+    public static final String RESOURCE_IDENTIFIER_KEY = AuditEventKeys.resource + "." + ResourceKeys.identifier;
 
     public static final String CORE_INFO_KEYS_KEY = AuditEventKeys.coreInfo + "." + KeyValuePairKeys.key;
     public static final String CORE_INFO_VALUES_KEY = AuditEventKeys.coreInfo + "." + KeyValuePairKeys.value;
