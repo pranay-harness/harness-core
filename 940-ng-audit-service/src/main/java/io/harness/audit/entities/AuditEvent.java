@@ -155,9 +155,9 @@ public class AuditEvent {
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueNgAuditEventIdx")
+                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.insertId)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .unique(true)
                  .build())
         .build();

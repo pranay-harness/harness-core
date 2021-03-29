@@ -18,8 +18,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
@@ -36,6 +38,7 @@ import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
+import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +54,11 @@ public class AuditServiceImplTest extends CategoryTest {
   private AuditFilterPropertiesValidator auditFilterPropertiesValidator;
   private AuditService auditService;
   private final PageRequest samplePageRequest = PageRequest.builder().pageIndex(0).pageSize(50).build();
+  private static final String MONGO_OR_OPERATOR = "$or";
+  private static final String MONGO_AND_OPERATOR = "$and";
+  private static final String MONGO_ELEM_MATCH_OPERATOR = "$elemMatch";
+  private static final String MONGO_GTE_OPERATOR = "$gte";
+  private static final String MONGO_LTE_OPERATOR = "$lte";
 
   @Before
   public void setup() {
@@ -94,23 +102,23 @@ public class AuditServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     assertNotNull(auditEvents);
     assertNotNull(criteria);
-    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get(MONGO_AND_OPERATOR);
     assertNotNull(andList);
     assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
     Document scopeDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) scopeDocument.get("$or");
+    BasicDBList orList = (BasicDBList) scopeDocument.get(MONGO_OR_OPERATOR);
     assertNotNull(orList);
     Document accountOrgScopeDocument = (Document) orList.get(0);
     assertEquals(2, accountOrgScopeDocument.size());
     assertEquals(accountIdentifier, accountOrgScopeDocument.get(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
-    BasicDBList labelsList = (BasicDBList) accountOrgScopeDocument.get("$and");
+    BasicDBList labelsList = (BasicDBList) accountOrgScopeDocument.get(MONGO_AND_OPERATOR);
     assertEquals(1, labelsList.size());
     Document labelsDocument = (Document) labelsList.get(0);
     Document elemMatchDocument = (Document) labelsDocument.get(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY);
-    Document orgScopeElemMatchDocument = (Document) elemMatchDocument.get("$elemMatch");
+    Document orgScopeElemMatchDocument = (Document) elemMatchDocument.get(MONGO_ELEM_MATCH_OPERATOR);
     assertEquals(NGCommonEntityConstants.ORG_KEY, orgScopeElemMatchDocument.getString(KeyValuePairKeys.key));
     assertEquals(orgIdentifier, orgScopeElemMatchDocument.getString(KeyValuePairKeys.value));
   }
@@ -133,28 +141,28 @@ public class AuditServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     assertNotNull(auditEvents);
     assertNotNull(criteria);
-    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get(MONGO_AND_OPERATOR);
     assertNotNull(andList);
     assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
     Document orDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) orDocument.get("$or");
+    BasicDBList orList = (BasicDBList) orDocument.get(MONGO_OR_OPERATOR);
     assertEquals(1, orList.size());
     Document andLabelsDocument = (Document) orList.get(0);
-    BasicDBList andLabelsList = (BasicDBList) andLabelsDocument.get("$and");
+    BasicDBList andLabelsList = (BasicDBList) andLabelsDocument.get(MONGO_AND_OPERATOR);
     assertEquals(2, andLabelsList.size());
 
     Document typeDocument = (Document) andLabelsList.get(0);
     Document labelsTypeDocument = (Document) typeDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
-    Document elemMatchLabelsTypeDocument = (Document) labelsTypeDocument.get("$elemMatch");
+    Document elemMatchLabelsTypeDocument = (Document) labelsTypeDocument.get(MONGO_ELEM_MATCH_OPERATOR);
     assertEquals(AuditCommonConstants.TYPE, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.key));
     assertEquals(resourceType, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.value));
 
     Document identifierDocument = (Document) andLabelsList.get(1);
     Document labelsIdentifierDocument = (Document) identifierDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
-    Document elemMatchLabelsIdentifierDocument = (Document) labelsIdentifierDocument.get("$elemMatch");
+    Document elemMatchLabelsIdentifierDocument = (Document) labelsIdentifierDocument.get(MONGO_ELEM_MATCH_OPERATOR);
     assertEquals(AuditCommonConstants.IDENTIFIER, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.key));
     assertEquals(identifier, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.value));
   }
@@ -177,14 +185,14 @@ public class AuditServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     assertNotNull(auditEvents);
     assertNotNull(criteria);
-    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get(MONGO_AND_OPERATOR);
     assertNotNull(andList);
     assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
     Document principalDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) principalDocument.get("$or");
+    BasicDBList orList = (BasicDBList) principalDocument.get(MONGO_OR_OPERATOR);
     assertNotNull(orList);
     Document principalTypeIdentifierScopeDocument = (Document) orList.get(0);
     assertEquals(2, principalTypeIdentifierScopeDocument.size());
@@ -205,7 +213,7 @@ public class AuditServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     assertNotNull(auditEvents);
     assertNotNull(criteria);
-    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get(MONGO_AND_OPERATOR);
     assertNotNull(andList);
     assertEquals(3, andList.size());
     Document accountDocument = (Document) andList.get(0);
@@ -215,63 +223,38 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(startTimeDocument);
     Document startTimestampDocument = (Document) startTimeDocument.get(AuditEventKeys.timestamp);
     assertNotNull(startTimestampDocument);
-    assertEquals(17L, startTimestampDocument.get("$gte"));
+    assertEquals(17L, startTimestampDocument.get(MONGO_GTE_OPERATOR));
 
     Document endTimeDocument = (Document) andList.get(2);
     assertNotNull(endTimeDocument);
     Document endTimestampDocument = (Document) endTimeDocument.get(AuditEventKeys.timestamp);
-    assertEquals(18L, endTimestampDocument.get("$lte"));
+    assertEquals(18L, endTimestampDocument.get(MONGO_LTE_OPERATOR));
   }
 
-  //  @Test
-  //  @Owner(developers = KARAN)
-  //  @Category(UnitTests.class)
-  //  public void testModuleTypeActionAndEnvironmentIdentifierAuditFilter() {
-  //    String accountIdentifier = randomAlphabetic(10);
-  //    ModuleType moduleType = ModuleType.CD;
-  //    Action action = Action.CREATE;
-  //    String environmentIdentifier = randomAlphabetic(10);
-  //    ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
-  //    when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
-  //    AuditFilterPropertiesDTO correctFilter = AuditFilterPropertiesDTO.builder()
-  //                                                 .modules(singletonList(ModuleType.CD))
-  //                                                 .actions(singletonList(action))
-  //                                                 .environmentIdentifiers(singletonList(environmentIdentifier))
-  //                                                 .build();
-  //    Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
-  //    verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
-  //    Criteria criteria = criteriaArgumentCaptor.getValue();
-  //    assertNotNull(auditEvents);
-  //    assertNotNull(criteria);
-  //    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
-  //    assertNotNull(andList);
-  //    assertEquals(6, andList.size());
-  //    Document accountDocument = (Document) andList.get(0);
-  //    assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
-  //
-  //    Document moduleTypeDocument = (Document) andList.get(1);
-  //    assertNotNull(moduleTypeDocument);
-  //    Document moduleTypeListDocument = (Document) moduleTypeDocument.get(AuditEventKeys.module);
-  //    assertNotNull(moduleTypeListDocument);
-  //    List<ModuleType> moduleTypeList = (List<ModuleType>) moduleTypeListDocument.get("$in");
-  //    assertEquals(1, moduleTypeList.size());
-  //    assertEquals(moduleType, moduleTypeList.get(0));
-  //
-  //    Document actionDocument = (Document) andList.get(2);
-  //    assertNotNull(actionDocument);
-  //    Document actionListDocument = (Document) actionDocument.get(AuditEventKeys.action);
-  //    assertNotNull(actionListDocument);
-  //    List<String> actionList = (List<String>) actionListDocument.get("$in");
-  //    assertEquals(1, actionList.size());
-  //    assertEquals(action, actionList.get(0));
-  //
-  //    Document environmentIdentifierDocument = (Document) andList.get(3);
-  //    assertNotNull(environmentIdentifierDocument);
-  //    Document environmentIdentifierValueDocument =
-  //        (Document) environmentIdentifierDocument.get(AuditEventKeys.environmentIdentifier);
-  //    assertNotNull(environmentIdentifierValueDocument);
-  //    List<String> environmentIdentifierValueList = (List<String>) environmentIdentifierValueDocument.get("$in");
-  //    assertEquals(1, environmentIdentifierValueList.size());
-  //    assertEquals(environmentIdentifier, environmentIdentifierValueList.get(0));
-  //  }
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testModuleTypeActionAndEnvironmentIdentifierAuditFilter() {
+    String accountIdentifier = randomAlphabetic(10);
+    ModuleType moduleType = ModuleType.CD;
+    Action action = Action.CREATE;
+    String environmentIdentifier = randomAlphabetic(10);
+    ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
+    when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
+    AuditFilterPropertiesDTO correctFilter = AuditFilterPropertiesDTO.builder()
+                                                 .modules(singletonList(moduleType))
+                                                 .actions(singletonList(action))
+                                                 .environmentIdentifiers(singletonList(environmentIdentifier))
+                                                 .build();
+    Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
+    verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    Criteria criteria = criteriaArgumentCaptor.getValue();
+    assertNotNull(auditEvents);
+    assertNotNull(criteria);
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    assertNotNull(andList);
+    assertEquals(6, andList.size());
+    Document accountDocument = (Document) andList.get(0);
+    assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
+  }
 }

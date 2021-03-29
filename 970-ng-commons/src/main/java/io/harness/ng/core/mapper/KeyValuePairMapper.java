@@ -1,7 +1,9 @@
 package io.harness.ng.core.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.KeyValuePair;
 
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class KeyValuePairMapper {
   public static List<KeyValuePair> convertToList(Map<String, String> keyValuePair) {
