@@ -21,6 +21,7 @@ import org.redisson.client.RedisException;
 
 @Slf4j
 public class RedisProducer extends AbstractProducer {
+  private static final String PRODUCER = "producer";
   private final RStream<String, String> stream;
   private final RedissonClient redissonClient;
   // This is used when the consumer for the event are no longer accepting due to some failure and
@@ -29,8 +30,8 @@ public class RedisProducer extends AbstractProducer {
   // particular use-case which is pushing to the topic
   private final int maxTopicSize;
 
-  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize) {
-    super(topicName);
+  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName) {
+    super(topicName, producerName);
     this.maxTopicSize = maxTopicSize;
     this.redissonClient = RedisUtils.getClient(redisConfig);
     this.stream = RedisUtils.getStream(topicName, redissonClient, redisConfig.getEnvNamespace());
@@ -40,6 +41,7 @@ public class RedisProducer extends AbstractProducer {
   public String send(Message message) throws ProducerShutdownException {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
+    redisData.put(PRODUCER, this.getProducerName());
     while (true) {
       try {
         StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
@@ -58,8 +60,9 @@ public class RedisProducer extends AbstractProducer {
     redissonClient.shutdown();
   }
 
-  public static RedisProducer of(String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength) {
-    return new RedisProducer(topicName, redisConfig, maxTopicLength);
+  public static RedisProducer of(
+      String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength, String producerName) {
+    return new RedisProducer(topicName, redisConfig, maxTopicLength, producerName);
   }
 
   private void waitForRedisToComeUp() {

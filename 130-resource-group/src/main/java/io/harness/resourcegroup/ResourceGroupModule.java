@@ -81,8 +81,8 @@ public class ResourceGroupModule extends AbstractModule {
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
     }
-    return RedisProducer.of(
-        EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE);
+    return RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+        EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId());
   }
 
   @Provides

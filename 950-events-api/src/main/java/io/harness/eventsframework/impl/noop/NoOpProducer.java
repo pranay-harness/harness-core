@@ -6,7 +6,7 @@ import io.harness.eventsframework.producer.Message;
 
 public class NoOpProducer extends AbstractProducer {
   public NoOpProducer(String topicName) {
-    super(topicName);
+    super(topicName, "dummyProducer");
   }
 
   @Override

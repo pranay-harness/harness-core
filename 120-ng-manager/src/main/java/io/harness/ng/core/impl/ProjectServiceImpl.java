@@ -1,5 +1,6 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.NGCommonEntityConstants.MONGODB_ID;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -12,6 +13,10 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -25,6 +30,8 @@ import io.harness.ng.core.auditevent.ProjectCreateEvent;
 import io.harness.ng.core.auditevent.ProjectDeleteEvent;
 import io.harness.ng.core.auditevent.ProjectRestoreEvent;
 import io.harness.ng.core.auditevent.ProjectUpdateEvent;
+import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
+import io.harness.ng.core.beans.ProjectsPerOrganizationCount.ProjectsPerOrganizationCountKeys;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
@@ -49,8 +56,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +69,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -275,6 +290,29 @@ public class ProjectServiceImpl implements ProjectService {
       }
       return success;
     }));
+  }
+
+  @Override
+  public Map<String, Integer> getProjectsCountPerOrganization(String accountIdentifier, List<String> orgIdentifiers) {
+    Criteria criteria =
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE);
+    if (isNotEmpty(orgIdentifiers)) {
+      criteria.and(ProjectKeys.orgIdentifier).in(orgIdentifiers);
+    }
+    MatchOperation matchStage = Aggregation.match(criteria);
+    SortOperation sortStage = sort(Sort.by(ProjectKeys.orgIdentifier));
+    GroupOperation groupByOrganizationStage =
+        group(ProjectKeys.orgIdentifier).count().as(ProjectsPerOrganizationCountKeys.count);
+    ProjectionOperation projectionStage =
+        project().and(MONGODB_ID).as(ProjectKeys.orgIdentifier).andInclude(ProjectsPerOrganizationCountKeys.count);
+    Map<String, Integer> result = new HashMap<>();
+    projectRepository
+        .aggregate(newAggregation(matchStage, sortStage, groupByOrganizationStage, projectionStage),
+            ProjectsPerOrganizationCount.class)
+        .getMappedResults()
+        .forEach(projectsPerOrganizationCount
+            -> result.put(projectsPerOrganizationCount.getOrgIdentifier(), projectsPerOrganizationCount.getCount()));
+    return result;
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

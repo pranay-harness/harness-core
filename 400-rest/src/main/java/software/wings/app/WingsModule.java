@@ -880,19 +880,19 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
-                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE));
+                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
     });

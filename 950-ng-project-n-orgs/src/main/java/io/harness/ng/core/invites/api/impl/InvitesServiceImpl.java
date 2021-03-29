@@ -68,7 +68,7 @@ public class InvitesServiceImpl implements InvitesService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
   private static final String MAIL_SUBJECT_FORMAT_FOR_PROJECT = "Invitation for project %s on Harness";
-  private static final String MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION = "Invitation for organisation %s on Harness";
+  private static final String MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION = "Invitation for organization %s on Harness";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private final String jwtPasswordSecret;
