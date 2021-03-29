@@ -146,9 +146,10 @@ public class CIK8CtlHandler {
 
       // Either pod is in pending phase where it is waiting for scheduling / creation of containers
       // or pod is waiting for containers to move to running state.
-      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod)) {
+      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod) && isIpAssigned(pod)) {
         return PodStatus.builder()
             .status(PodStatus.Status.RUNNING)
+            .ip(pod.getStatus().getPodIP())
             .ciContainerStatusList(getContainersStatus(pod))
             .build();
       }
@@ -193,6 +194,13 @@ public class CIK8CtlHandler {
       if (containerStatus.getState().getWaiting() != null) {
         return true;
       }
+    }
+    return false;
+  }
+
+  private boolean isIpAssigned(Pod pod) {
+    if (pod.getStatus().getPodIP() != null) {
+      return true;
     }
     return false;
   }

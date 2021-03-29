@@ -53,7 +53,7 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
     }
 
     YamlField executionRollbackField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
-    if (executionRollbackField != null) {
+    if (executionRollbackField != null && executionRollbackField.getNode().asArray().size() != 0) {
       Map<String, YamlField> executionYamlFieldMap = new HashMap<>();
       executionYamlFieldMap.put(executionRollbackField.getNode().getUuid(), executionRollbackField);
       responseMap.put(executionRollbackField.getNode().getUuid(),

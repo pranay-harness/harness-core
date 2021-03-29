@@ -83,6 +83,11 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.ng.userprofile.commons.SCMType;
+import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
+import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
+import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -114,6 +119,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -362,6 +368,12 @@ public class NextGenModule extends AbstractModule {
 
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
+
+    bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
+
+    MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
+        MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
   }
