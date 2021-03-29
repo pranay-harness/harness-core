@@ -112,16 +112,15 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
 
   private Map<String, Supplier<ResponseData>> prepareResponseWithError(Map<String, ResponseData> responseMap) {
     Map<String, Supplier<ResponseData>> finalResponseMap = new HashMap<>();
-    responseMap.entrySet().stream().forEach(entry -> {
-      ResponseData responseData = entry.getValue();
+    responseMap.forEach((k, v) -> {
       final Supplier<ResponseData> responseDataSupplier = () -> {
-        if (responseData instanceof ErrorResponseData) {
-          throw((ErrorResponseData) responseData).getException();
+        if (v instanceof ErrorResponseData) {
+          throw((ErrorResponseData) v).getException();
         } else {
-          return responseData;
+          return v;
         }
       };
-      finalResponseMap.put(entry.getKey(), responseDataSupplier);
+      finalResponseMap.put(k, responseDataSupplier);
     });
 
     return finalResponseMap;
