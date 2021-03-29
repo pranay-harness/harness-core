@@ -69,6 +69,8 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Default Boolean deleted = Boolean.FALSE;
+  List<String> branches;
+  String objectId;
 
   @EntityName String name;
   @Size(max = 1024) String description;

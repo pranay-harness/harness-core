@@ -29,6 +29,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
+import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
 
@@ -39,6 +40,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -80,6 +82,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
   private PMSYamlSchemaService pmsYamlSchemaService;
+  private PMSPipelineRepository pmsPipelineRepository;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -89,10 +92,35 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
+    for (int i = 0; i < 1000; i++) {
+      accountId = "accountId" + i;
+      for (int j = 0; j < 500; j++) {
+        String pipelineId = "pipeline" + j;
+        for (int k = 0; k < 100; k++) {
+          List<String> branches = new ArrayList<>();
+          if (k == 0) {
+            branches = getBranchesList(0, 5000);
+          } else {
+            branches = getBranchesList(k, 10);
+          }
+          pmsPipelineRepository.save(
+              PipelineEntity.builder().accountId(accountId).branches(branches).identifier(pipelineId).build());
+        }
+      }
+    }
+
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
+  }
+
+  private List<String> getBranchesList(int i, int count) {
+    List<String> branchesList = new ArrayList<>();
+    for (int j = 0; j < count; j++) {
+      branchesList.add("branch" + i + j);
+    }
+    return branchesList;
   }
 
   @POST
