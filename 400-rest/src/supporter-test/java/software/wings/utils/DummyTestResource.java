@@ -27,4 +27,9 @@ public class DummyTestResource {
   public RestResponse<Void> testApiKeyAuthorizationAnnotation() {
     return new RestResponse<>();
   }
+
+  @ApiKeyAuthorized(allowEmptyApiKey = true)
+  public RestResponse<Void> testApiKeyAuthorizationAnnotationWithAllowEmptyApiKey() {
+    return new RestResponse<>();
+  }
 }

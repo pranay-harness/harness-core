@@ -41,6 +41,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -399,10 +400,11 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithApiKeyAuthorizedAnnotation());
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
 
-    assertThatThrownBy(() -> authRuleFilter.filter(requestContext))
-        .isInstanceOf(AccessDeniedException.class)
-        .hasMessage("Api Key cannot be empty");
+    authRuleFilter.filter(requestContext);
+    verify(requestContext).getHeaderString(API_KEY_HEADER);
   }
 
   @Test
@@ -432,9 +434,37 @@ public class AuthRuleFilterTest extends WingsBaseTest {
 
     authRuleFilter.filter(requestContext);
     assertThat(requestContext.getMethod()).isEqualTo("GET");
-    verify(requestContext).getHeaderString(API_KEY_HEADER);
+    verify(requestContext, times(2)).getHeaderString(API_KEY_HEADER);
+    verify(whitelistService).checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class));
     User user = UserThreadLocal.get();
     assertThat(user).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAnnotation_withBearerToken() {
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithApiKeyAuthorizedAnnotation());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
+    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
+
+    authRuleFilter.filter(requestContext);
+    assertThat(requestContext.getMethod()).isEqualTo("GET");
+    verify(whitelistService).checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class));
+    verify(requestContext, never()).getHeaderString(API_KEY_HEADER);
+    User user = UserThreadLocal.get();
+    assertThat(user).isNotNull();
+    verify(authHandler).authorizeAccountPermission(any(), any());
   }
 
   private void testHarnessUserMethod(String url, String method, boolean exception) {
