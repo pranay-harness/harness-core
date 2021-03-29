@@ -30,7 +30,7 @@ public class DelegateExceptionManager {
     }
 
     Exception exception = (Exception) throwable;
-    WingsException processedException = exceptionManager.transformException(exception);
+    WingsException processedException = exceptionManager.processException(exception);
     DelegateResponseData responseData =
         prepareErrorResponse(processedException, errorNotifyResponseDataBuilder).exception(processedException).build();
 

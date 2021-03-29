@@ -1,17 +1,22 @@
 package io.harness.exception.exceptionmanager;
 
+import static io.harness.exception.WingsException.ReportTarget.REST_API;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.handler.ExceptionHandler;
+import io.harness.logging.ExceptionLogger;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,9 +27,14 @@ public class ExceptionManager {
   @Inject private Map<Class<? extends Exception>, ExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
 
-  public WingsException transformException(Exception exception) {
+  public WingsException processException(Exception exception) {
     WingsException processedException = handleException(exception);
     return ensureExceptionIsKryoSerializable(processedException);
+  }
+
+  public List<ResponseMessage> buildResponseFromException(Exception exception) {
+    WingsException processedException = processException(exception);
+    return ExceptionLogger.getResponseMessageList(processedException, REST_API);
   }
 
   // ---------- PRIVATE METHODS -------------
