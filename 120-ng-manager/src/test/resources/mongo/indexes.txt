@@ -651,6 +651,7 @@ settingAttributes {"name": "nextIteration_1", "background": true} {"nextIteratio
 settingAttributes {"name": "secretsMigrationIdx", "background": true} {"value.type": 1, "nextSecretMigrationIteration": 1}
 settingAttributes {"name": "secretsMigrationPerAccountIdx", "background": true} {"value.type": 1, "secretsMigrated": 1, "accountId": 1}
 settingAttributes {"name": "typeNextIterationIdx", "background": true} {"value.type": 1, "nextIteration": 1}
+sourceCodeManagers {"name": "query_idx", "unique": true} {"userIdentifier": 1, "name": 1}
 ssoSettings {"name": "accountIdTypeIdx", "background": true} {"accountId": 1, "type": 1}
 ssoSettings {"name": "appId_1", "background": true} {"appId": 1}
 ssoSettings {"name": "createdAt_1", "background": true} {"createdAt": 1}
