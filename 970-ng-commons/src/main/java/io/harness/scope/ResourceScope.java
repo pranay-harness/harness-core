@@ -11,11 +11,10 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
-import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -34,7 +33,7 @@ public class ResourceScope {
   @NotNull @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  List<KeyValuePair> labels;
+  Map<String, String> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {

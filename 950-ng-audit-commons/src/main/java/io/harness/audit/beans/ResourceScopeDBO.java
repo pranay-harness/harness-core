@@ -5,21 +5,25 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.Map;
-import javax.validation.Valid;
+import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 @Data
-@Builder
+@Builder(builderClassName = "Builder")
 @JsonInclude(NON_NULL)
-@FieldNameConstants(innerTypeName = "AuthenticationInfoKeys")
-public class AuthenticationInfo {
-  @NotNull @Valid Principal principal;
-  Map<String, String> labels;
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "ResourceScopeKeys")
+public class ResourceScopeDBO {
+  @NotNull @NotEmpty String accountIdentifier;
+  List<KeyValuePair> labels;
 }

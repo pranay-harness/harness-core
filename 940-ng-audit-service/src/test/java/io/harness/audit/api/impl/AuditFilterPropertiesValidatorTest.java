@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Mockito.spy;
@@ -15,7 +16,6 @@ import io.harness.audit.beans.Principal;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
@@ -69,12 +69,11 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
     }
     AuditFilterPropertiesDTO invalidResourceLabelsFilter =
         AuditFilterPropertiesDTO.builder()
-            .resources(
-                singletonList(Resource.builder()
-                                  .identifier(identifier)
-                                  .type(resourceType)
-                                  .labels(singletonList(KeyValuePair.builder().key("").value(randomValue).build()))
-                                  .build()))
+            .resources(singletonList(Resource.builder()
+                                         .identifier(identifier)
+                                         .type(resourceType)
+                                         .labels(singletonMap("", randomValue))
+                                         .build()))
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidResourceLabelsFilter);

@@ -7,13 +7,20 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
+import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
+import io.harness.audit.beans.ResourceDBO;
+import io.harness.audit.beans.ResourceScopeDBO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
+import io.harness.audit.mapper.ResourceMapper;
+import io.harness.audit.mapper.ResourceScopeMapper;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
@@ -71,14 +78,13 @@ public class AuditServiceImpl implements AuditService {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.module).in(auditFilterPropertiesDTO.getModules()));
+      criteriaList.add(getModuleCriteria(auditFilterPropertiesDTO.getModules()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
+      criteriaList.add(getActionCriteria(auditFilterPropertiesDTO.getActions()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.environmentIdentifier)
-                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+      criteriaList.add(getEnvironmentIdentifierCriteria(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
@@ -101,21 +107,15 @@ public class AuditServiceImpl implements AuditService {
     resourceScopes.forEach(resourceScope -> {
       Criteria criteria =
           Criteria.where(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(resourceScope.getAccountIdentifier());
-      if (isNotEmpty(resourceScope.getOrgIdentifier())) {
-        criteria.and(AuditEventKeys.ORG_IDENTIFIER_KEY).is(resourceScope.getOrgIdentifier());
-        if (isNotEmpty(resourceScope.getProjectIdentifier())) {
-          criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
-          List<KeyValuePair> labels = resourceScope.getLabels();
-          if (isNotEmpty(labels)) {
-            labels.forEach(label
-                -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
-                       .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                      .is(label.getKey())
-                                      .and(KeyValuePairKeys.value)
-                                      .is(label.getValue())));
-          }
-          criteriaList.add(criteria);
-        }
+      ResourceScopeDBO dbo = ResourceScopeMapper.fromDTO(resourceScope);
+      List<KeyValuePair> labels = dbo.getLabels();
+      if (isNotEmpty(labels)) {
+        labels.forEach(label
+            -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
+                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                  .is(label.getKey())
+                                  .and(KeyValuePairKeys.value)
+                                  .is(label.getValue())));
       }
       criteriaList.add(criteria);
     });
@@ -125,11 +125,9 @@ public class AuditServiceImpl implements AuditService {
   private Criteria getResourceCriteria(List<Resource> resources) {
     List<Criteria> criteriaList = new ArrayList<>();
     resources.forEach(resource -> {
-      Criteria criteria = Criteria.where(AuditEventKeys.RESOURCE_TYPE_KEY).is(resource.getType());
-      if (isNotEmpty(resource.getIdentifier())) {
-        criteria.and(AuditEventKeys.RESOURCE_IDENTIFIER_KEY).is(resource.getIdentifier());
-      }
-      List<KeyValuePair> labels = resource.getLabels();
+      Criteria criteria = new Criteria();
+      ResourceDBO dbo = ResourceMapper.fromDTO(resource);
+      List<KeyValuePair> labels = dbo.getLabels();
       if (isNotEmpty(labels)) {
         labels.forEach(label
             -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
@@ -143,13 +141,41 @@ public class AuditServiceImpl implements AuditService {
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
   }
 
+  private Criteria getModuleCriteria(List<ModuleType> modules) {
+    List<String> modulesList = new ArrayList<>();
+    modules.forEach(moduleType -> modulesList.add(moduleType.name()));
+    return Criteria.where(AuditEventKeys.coreInfo)
+        .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                       .is(AuditCommonConstants.MODULE)
+                       .and(KeyValuePairKeys.value)
+                       .in(modulesList));
+  }
+
+  private Criteria getActionCriteria(List<Action> actions) {
+    List<String> actionsList = new ArrayList<>();
+    actions.forEach(action -> actionsList.add(action.name()));
+    return Criteria.where(AuditEventKeys.coreInfo)
+        .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                       .is(AuditCommonConstants.ACTION)
+                       .and(KeyValuePairKeys.value)
+                       .in(actionsList));
+  }
+
+  private Criteria getEnvironmentIdentifierCriteria(List<String> environmentIdentifiers) {
+    return Criteria.where(AuditEventKeys.coreInfo)
+        .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                       .is(AuditCommonConstants.ENVIRONMENT_IDENTIFIER)
+                       .and(KeyValuePairKeys.value)
+                       .in(environmentIdentifiers));
+  }
+
   private Criteria getPrincipalCriteria(List<Principal> principals) {
     List<Criteria> criteriaList = new ArrayList<>();
     principals.forEach(principal -> {
-      Criteria criteria = Criteria.where(AuditEventKeys.PRINCIPAL_TYPE_KEY).is(principal.getType());
-      if (isNotEmpty(principal.getIdentifier())) {
-        criteria.and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY).is(principal.getIdentifier());
-      }
+      Criteria criteria = Criteria.where(AuditEventKeys.PRINCIPAL_TYPE_KEY)
+                              .is(principal.getType())
+                              .and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
+                              .is(principal.getIdentifier());
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

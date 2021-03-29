@@ -4,16 +4,18 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 
 @OwnedBy(PL)
@@ -47,6 +49,9 @@ public class AuditFilterPropertiesValidator {
       if (principal.getType() == null) {
         throw new InvalidRequestException("Invalid principal filter with missing principal type.");
       }
+      if (isEmpty(principal.getIdentifier())) {
+        throw new InvalidRequestException("Invalid principal filter with missing principal identifier.");
+      }
     });
   }
 
@@ -70,15 +75,19 @@ public class AuditFilterPropertiesValidator {
       throw new InvalidRequestException(
           "Invalid resource scope filter with labels present but missing projectIdentifier.");
     }
-    List<KeyValuePair> labels = resourceScope.getLabels();
+    Map<String, String> labels = resourceScope.getLabels();
     if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
+      labels.forEach((key, value) -> {
+        if (isEmpty(key)) {
           throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
         }
-        if (isEmpty(label.getValue())) {
+        if (isEmpty(value)) {
           throw new InvalidRequestException(
               "Invalid resource scope filter with missing value in resource scope labels.");
+        }
+        if (NGCommonEntityConstants.ACCOUNT_KEY.equals(key)) {
+          throw new InvalidRequestException(
+              "Invalid resource scope filter with key as accountIdentifier in resource scope labels.");
         }
       });
     }
@@ -94,14 +103,20 @@ public class AuditFilterPropertiesValidator {
     if (isEmpty(resource.getType())) {
       throw new InvalidRequestException("Invalid resource filter with missing resource type.");
     }
-    List<KeyValuePair> labels = resource.getLabels();
+    Map<String, String> labels = resource.getLabels();
     if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
+      labels.forEach((key, value) -> {
+        if (isEmpty(key)) {
           throw new InvalidRequestException("Invalid resource filter with missing key in resource labels.");
         }
-        if (isEmpty(label.getValue())) {
+        if (isEmpty(value)) {
           throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
+        }
+        if (AuditCommonConstants.TYPE.equals(key)) {
+          throw new InvalidRequestException("Invalid resource filter with key as type in resource labels.");
+        }
+        if (AuditCommonConstants.IDENTIFIER.equals(key)) {
+          throw new InvalidRequestException("Invalid resource filter with key as identifier in resource labels.");
         }
       });
     }

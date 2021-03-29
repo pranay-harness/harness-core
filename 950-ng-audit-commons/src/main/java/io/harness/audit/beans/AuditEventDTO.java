@@ -8,14 +8,13 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
 import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -50,5 +49,5 @@ public class AuditEventDTO {
   YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
-  List<KeyValuePair> additionalInfo;
+  Map<String, String> additionalInfo;
 }
