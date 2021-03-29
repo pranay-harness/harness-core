@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
+  private static final String GIT_SYNC_SDK = "GitSyncSdk";
   @Override
   protected void configure() {
     install(new SCMGrpcClientModule(getScmConnectionConfig()));
@@ -39,7 +40,7 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH,
               getGitSyncSdkConfiguration().getEventsRedisConfig(),
-              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE));
+              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE, GIT_SYNC_SDK));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM,
