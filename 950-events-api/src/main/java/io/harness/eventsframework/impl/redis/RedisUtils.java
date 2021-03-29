@@ -1,12 +1,12 @@
 package io.harness.eventsframework.impl.redis;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.protobuf.util.Timestamps.fromMillis;
 import static java.lang.Long.parseLong;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
@@ -28,7 +28,7 @@ import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
 import org.redisson.config.SingleServerConfig;
 
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
 @UtilityClass
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance

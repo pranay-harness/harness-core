@@ -1,5 +1,8 @@
 package io.harness.limits;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.checker.MongoStaticLimitChecker;
 import io.harness.limits.checker.rate.MongoSlidingWindowRateLimitChecker;
 import io.harness.limits.configuration.InvalidLimitConfigurationException;
@@ -18,6 +21,7 @@ import com.google.inject.Singleton;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@OwnedBy(PL)
 @Singleton
 @ParametersAreNonnullByDefault
 public class LimitCheckerFactoryImpl implements LimitCheckerFactory {

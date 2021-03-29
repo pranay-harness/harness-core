@@ -1,5 +1,8 @@
 package io.harness.limits.defaults.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -19,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+@OwnedBy(PL)
 @Singleton
 public class DefaultLimitsServiceImpl implements DefaultLimitsService {
   private static final Integer MAX_APP_COUNT = 500;

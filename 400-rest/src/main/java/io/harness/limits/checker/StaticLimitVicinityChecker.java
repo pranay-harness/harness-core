@@ -1,7 +1,11 @@
 package io.harness.limits.checker;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.impl.model.StaticLimit;
 
+@OwnedBy(PL)
 public interface StaticLimitVicinityChecker {
   /**
    * Checks if certain percent of limit has been crossed.
