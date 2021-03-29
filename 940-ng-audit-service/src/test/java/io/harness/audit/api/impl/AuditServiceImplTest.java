@@ -38,6 +38,7 @@ import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
+import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,6 +59,7 @@ public class AuditServiceImplTest extends CategoryTest {
   private static final String MONGO_ELEM_MATCH_OPERATOR = "$elemMatch";
   private static final String MONGO_GTE_OPERATOR = "$gte";
   private static final String MONGO_LTE_OPERATOR = "$lte";
+  private static final String MONGO_IN_OPERATOR = "$in";
 
   @Before
   public void setup() {
@@ -250,10 +252,44 @@ public class AuditServiceImplTest extends CategoryTest {
     Criteria criteria = criteriaArgumentCaptor.getValue();
     assertNotNull(auditEvents);
     assertNotNull(criteria);
-    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
+    BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get(MONGO_AND_OPERATOR);
     assertNotNull(andList);
-    assertEquals(6, andList.size());
+    assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
+    Document coreInfoDocument = (Document) andList.get(1);
+    BasicDBList coreInfoAndList = (BasicDBList) coreInfoDocument.get(MONGO_AND_OPERATOR);
+    assertEquals(3, coreInfoAndList.size());
+
+    Document moduleCoreInfoDocument = (Document) coreInfoAndList.get(0);
+    Document moduleCoreInfoElemMatchDocument = (Document) moduleCoreInfoDocument.get(AuditEventKeys.coreInfo);
+    Document elemMatchModuleDocument = (Document) moduleCoreInfoElemMatchDocument.get(MONGO_ELEM_MATCH_OPERATOR);
+    assertEquals(AuditCommonConstants.MODULE, elemMatchModuleDocument.getString(KeyValuePairKeys.key));
+    Document moduleValueDocument = (Document) elemMatchModuleDocument.get(KeyValuePairKeys.value);
+    List<String> moduleInList = (List<String>) moduleValueDocument.get(MONGO_IN_OPERATOR);
+    assertEquals(1, moduleInList.size());
+    assertEquals(moduleType.name(), moduleInList.get(0));
+
+    Document actionCoreInfoDocument = (Document) coreInfoAndList.get(1);
+    Document actionCoreInfoElemMatchDocument = (Document) actionCoreInfoDocument.get(AuditEventKeys.coreInfo);
+    Document elemMatchActionDocument = (Document) actionCoreInfoElemMatchDocument.get(MONGO_ELEM_MATCH_OPERATOR);
+    assertEquals(AuditCommonConstants.ACTION, elemMatchActionDocument.getString(KeyValuePairKeys.key));
+    Document actionValueDocument = (Document) elemMatchActionDocument.get(KeyValuePairKeys.value);
+    List<String> actionInList = (List<String>) actionValueDocument.get(MONGO_IN_OPERATOR);
+    assertEquals(1, actionInList.size());
+    assertEquals(action.name(), actionInList.get(0));
+
+    Document environmentIdentifierCoreInfoDocument = (Document) coreInfoAndList.get(2);
+    Document environmentIdentifierCoreInfoElemMatchDocument =
+        (Document) environmentIdentifierCoreInfoDocument.get(AuditEventKeys.coreInfo);
+    Document elemMatchEnvironmentIdentifierDocument =
+        (Document) environmentIdentifierCoreInfoElemMatchDocument.get(MONGO_ELEM_MATCH_OPERATOR);
+    assertEquals(AuditCommonConstants.ENVIRONMENT_IDENTIFIER,
+        elemMatchEnvironmentIdentifierDocument.getString(KeyValuePairKeys.key));
+    Document environmentIdentifierValueDocument =
+        (Document) elemMatchEnvironmentIdentifierDocument.get(KeyValuePairKeys.value);
+    List<String> environmentIdentifierInList = (List<String>) environmentIdentifierValueDocument.get(MONGO_IN_OPERATOR);
+    assertEquals(1, environmentIdentifierInList.size());
+    assertEquals(environmentIdentifier, environmentIdentifierInList.get(0));
   }
 }
