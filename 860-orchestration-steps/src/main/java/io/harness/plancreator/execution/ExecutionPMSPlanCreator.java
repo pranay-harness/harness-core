@@ -1,9 +1,9 @@
-package io.harness.cdng.creator.plan.execution;
+package io.harness.plancreator.execution;
 
-import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
-import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
@@ -28,11 +28,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, ExecutionElementConfig config) {
@@ -52,12 +52,12 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
 
-    YamlField executionStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS);
-
-    PlanCreationResponse planForRollback = RollbackPlanCreator.createPlanForRollback(ctx.getCurrentField());
-    if (EmptyPredicate.isNotEmpty(planForRollback.getNodes())) {
-      responseMap.put(
-          Objects.requireNonNull(executionStepsField).getNode().getUuid() + "_combinedRollback", planForRollback);
+    YamlField executionRollbackField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+    if (executionRollbackField != null) {
+      Map<String, YamlField> executionYamlFieldMap = new HashMap<>();
+      executionYamlFieldMap.put(executionRollbackField.getNode().getUuid(), executionRollbackField);
+      responseMap.put(executionRollbackField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(executionYamlFieldMap).build());
     }
     return responseMap;
   }

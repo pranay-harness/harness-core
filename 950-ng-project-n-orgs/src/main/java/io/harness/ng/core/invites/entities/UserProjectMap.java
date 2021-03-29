@@ -42,6 +42,13 @@ public class UserProjectMap implements PersistentEntity {
                  .field(UserProjectMapKeys.orgIdentifier)
                  .field(UserProjectMapKeys.projectIdentifier)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .unique(false)
+                 .name("accountOrgProjectMapIdx")
+                 .field(UserProjectMapKeys.accountIdentifier)
+                 .field(UserProjectMapKeys.orgIdentifier)
+                 .field(UserProjectMapKeys.projectIdentifier)
+                 .build())
         .build();
   }
 

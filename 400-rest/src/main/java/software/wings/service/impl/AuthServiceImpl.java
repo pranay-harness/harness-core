@@ -1142,6 +1142,13 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public void auditUnsuccessfulLogin(String accountId, User user) {
+    if (Objects.nonNull(user) && Objects.nonNull(accountId)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.UNSUCCESSFUL_LOGIN);
+    }
+  }
+
+  @Override
   public void authorizeAppAccess(String accountId, String appId, User user, Action action) {
     UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, false);
 
