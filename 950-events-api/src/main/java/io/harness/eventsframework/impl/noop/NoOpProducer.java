@@ -1,9 +1,13 @@
 package io.harness.eventsframework.impl.noop;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 
+@OwnedBy(PL)
 public class NoOpProducer extends AbstractProducer {
   public NoOpProducer(String topicName) {
     super(topicName, "dummyProducer");
