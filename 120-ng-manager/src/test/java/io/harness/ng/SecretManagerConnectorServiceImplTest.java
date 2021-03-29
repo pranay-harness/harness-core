@@ -3,12 +3,12 @@ package io.harness.ng;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static javafx.beans.binding.Bindings.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -29,8 +29,8 @@ import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.testng.annotations.Test;
 
 public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private static final String ACCOUNT = "account";
@@ -118,8 +118,12 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
         .thenReturn(random(VaultConfigDTO.class));
     when(defaultConnectorService.update(any(), any())).thenReturn(null);
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
-    ConnectorResponseDTO connectorDTO = secretManagerConnectorService.update(getRequestDTO(), ACCOUNT);
-    assertThat(connectorDTO).isEqualTo(null);
+    try {
+      ConnectorResponseDTO connectorDTO = secretManagerConnectorService.update(getRequestDTO(), ACCOUNT);
+      fail("Should fail if execution reaches here");
+    } catch (InvalidRequestException exception) {
+      // do nothing
+    }
   }
 
   @Test
