@@ -1,7 +1,13 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static software.wings.graphql.datafetcher.budget.BudgetAlertsQueryMetadata.BudgetAlertsMetaDataFields.ALERTBASEDON;
+import static software.wings.graphql.datafetcher.budget.BudgetAlertsQueryMetadata.BudgetAlertsMetaDataFields.ALERTTHRESHOLD;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.AlertThreshold.AlertThresholdBuilder;
+import io.harness.ccm.budget.AlertThresholdBase;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
@@ -39,6 +45,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -144,6 +151,43 @@ public class BudgetTimescaleQueryHelper {
     }
   }
 
+  public List<AlertThreshold> getLatestAlertsSend(String budgetId, String accountId) {
+    try {
+      if (timeScaleDBService.isValid()) {
+        String query = formLatestBudgetAlertsSendQuery(budgetId, accountId);
+        ResultSet resultSet = null;
+        boolean successful = false;
+        int retryCount = 0;
+        while (!successful && retryCount < MAX_RETRY) {
+          try (Connection connection = timeScaleDBService.getDBConnection();
+               Statement statement = connection.createStatement()) {
+            resultSet = statement.executeQuery(query);
+            successful = true;
+            return fetchLatestAlerts(resultSet);
+          } catch (SQLException e) {
+            retryCount++;
+            if (retryCount >= MAX_RETRY) {
+              log.error(
+                  "Failed to execute query in BudgetTimescaleQueryHelper, max retry count reached, query=[{}],accountId=[{}]",
+                  query, accountId, e);
+            } else {
+              log.warn(
+                  "Failed to execute query in BudgetTimescaleQueryHelper, query=[{}],accountId=[{}], retryCount=[{}]",
+                  query, accountId, retryCount);
+            }
+          } finally {
+            DBUtils.close(resultSet);
+          }
+        }
+        return Collections.EMPTY_LIST;
+      } else {
+        throw new InvalidRequestException("Cannot process request in BudgetTimescaleQueryHelper");
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException("Error while fetching budget alerts {}", e);
+    }
+  }
+
   private BudgetAlertsQueryMetadata getThresholdCheckForBudgetAlert(BudgetAlertsData data) {
     BudgetAlertsQueryMetadataBuilder queryMetaDataBuilder = BudgetAlertsQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
@@ -218,6 +262,19 @@ public class BudgetTimescaleQueryHelper {
     return totalCostData;
   }
 
+  private List<AlertThreshold> fetchLatestAlerts(ResultSet resultSet) throws SQLException {
+    List<AlertThreshold> alertsSend = new ArrayList<>();
+    while (null != resultSet && resultSet.next()) {
+      AlertThresholdBuilder builder = AlertThreshold.builder();
+      builder.crossedAt(
+          resultSet.getTimestamp(schema.getAlertTime().getColumnNameSQL(), utils.getDefaultCalendar()).getTime());
+      builder.basedOn(AlertThresholdBase.valueOf(resultSet.getString(ALERTBASEDON.getFieldName())));
+      builder.percentage(resultSet.getDouble(ALERTTHRESHOLD.getFieldName()));
+      alertsSend.add(builder.build());
+    }
+    return alertsSend;
+  }
+
   private BillingDataQueryMetadata formBudgetCostQuery(
       String accountId, List<QLBillingDataFilter> filters, QLCCMAggregationFunction aggregateFunction) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
@@ -272,6 +329,23 @@ public class BudgetTimescaleQueryHelper {
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
+  }
+
+  private String formLatestBudgetAlertsSendQuery(String budgetId, String accountId) {
+    BudgetAlertsQueryMetadataBuilder queryMetaDataBuilder = BudgetAlertsQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.setFetchNext(2);
+    selectQuery.addCustomFromTable(schema.getBudgetAlertsTable());
+    selectQuery.addColumns(schema.getAlertTime());
+    selectQuery.addColumns(schema.getAlertThreshold());
+    selectQuery.addColumns(schema.getAlertBasedOn());
+    selectQuery.addCondition(BinaryCondition.equalTo(schema.getBudgetId(), budgetId));
+    selectQuery.addCustomOrdering(schema.getAlertTime(), OrderObject.Dir.DESCENDING);
+
+    addAccountFilter(selectQuery, accountId);
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.query(selectQuery.toString());
+    return queryMetaDataBuilder.build().getQuery();
   }
 
   private void addAggregation(SelectQuery selectQuery, QLCCMAggregationFunction aggregationFunction,

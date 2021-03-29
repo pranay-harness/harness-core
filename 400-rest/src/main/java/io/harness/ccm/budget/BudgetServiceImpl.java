@@ -35,12 +35,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +59,6 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject CeAccountExpirationChecker accountChecker;
   @Inject CEViewService viewService;
 
-  private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
-  private String DATE_TEMPLATE = "MM-dd-yyyy";
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
@@ -243,20 +239,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public QLBudgetTableData getBudgetDetails(Budget budget) {
     List<Double> alertAt = new ArrayList<>();
-    List<String> notificationMessages = new ArrayList<>();
-    if (budget.getAlertThresholds() != null && budget.getBudgetAmount() != null) {
-      for (AlertThreshold alertThreshold : budget.getAlertThresholds()) {
-        alertAt.add(alertThreshold.getPercentage());
-        if (alertThreshold.getAlertsSent() != 0) {
-          String costType =
-              alertThreshold.getBasedOn() == AlertThresholdBase.ACTUAL_COST ? "Actual costs" : "Forecasted costs";
-          SimpleDateFormat formatter = new SimpleDateFormat(DATE_TEMPLATE);
-          Date date = new Date(alertThreshold.getCrossedAt());
-          notificationMessages.add(String.format(NOTIFICATION_TEMPLATE, formatter.format(date), costType,
-              alertThreshold.getPercentage() + "%", budget.getBudgetAmount()));
-        }
-      }
-    }
+    List<String> notificationMessages = budgetUtils.getLatestAlertsSend(budget);
     BudgetScope scope = budget.getScope();
 
     String environment = "-";

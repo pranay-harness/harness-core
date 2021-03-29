@@ -28,7 +28,8 @@ public class BudgetAlertsQueryMetadata {
     ACCOUNTID("ACCOUNTID", DataType.STRING, QLFilterKind.SIMPLE),
     ACTUALCOST("ACTUALCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
     BUDGETEDCOST("BUDGETEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
-    ALERTTHRESHOLD("ALERTTHRESHOLD", DataType.DOUBLE, QLFilterKind.SIMPLE);
+    ALERTTHRESHOLD("ALERTTHRESHOLD", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    ALERTBASEDON("ALERTBASEDON", DataType.STRING, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

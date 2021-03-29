@@ -46,6 +46,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import com.google.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -56,6 +57,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -73,6 +75,8 @@ public class BudgetUtils {
   private String DEFAULT_TIMEZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
+  private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
+  private String DATE_TEMPLATE = "MM-dd-yyyy";
 
   public QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
@@ -165,6 +169,22 @@ public class BudgetUtils {
       return 0;
     }
     return billingAmountData.getCost().doubleValue();
+  }
+
+  public List<String> getLatestAlertsSend(Budget budget) {
+    List<AlertThreshold> alerts =
+        budgetTimescaleQueryHelper.getLatestAlertsSend(budget.getUuid(), budget.getAccountId());
+    List<String> notifications = new ArrayList<>();
+    if (alerts != null) {
+      alerts.forEach(alert -> {
+        String costType = alert.getBasedOn() == AlertThresholdBase.ACTUAL_COST ? "Actual costs" : "Forecasted costs";
+        SimpleDateFormat formatter = new SimpleDateFormat(DATE_TEMPLATE);
+        Date date = new Date(alert.getCrossedAt());
+        notifications.add(String.format(NOTIFICATION_TEMPLATE, formatter.format(date), costType,
+            alert.getPercentage() + "%", budget.getBudgetAmount()));
+      });
+    }
+    return notifications;
   }
 
   // Methods for adding various filters in budget total cost and forecast cost calculation

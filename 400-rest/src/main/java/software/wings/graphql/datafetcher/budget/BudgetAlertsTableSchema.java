@@ -47,7 +47,7 @@ public class BudgetAlertsTableSchema {
     budgetId = budgetAlertsTable.addColumn("budgetid", "text", null);
     accountId = budgetAlertsTable.addColumn("accountid", "text", null);
     alertThreshold = budgetAlertsTable.addColumn("alertthreshold", doubleType, null);
-    alertBasedOn = budgetAlertsTable.addColumn("alertbasedon", doubleType, null);
+    alertBasedOn = budgetAlertsTable.addColumn("alertbasedon", "text", null);
     actualCost = budgetAlertsTable.addColumn("actualcost", doubleType, null);
     budgetedCost = budgetAlertsTable.addColumn("budgetedcost", doubleType, null);
   }
