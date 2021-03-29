@@ -18,10 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.Action;
 import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
@@ -108,11 +106,13 @@ public class AuditServiceImplTest extends CategoryTest {
     Document accountOrgScopeDocument = (Document) orList.get(0);
     assertEquals(2, accountOrgScopeDocument.size());
     assertEquals(accountIdentifier, accountOrgScopeDocument.get(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
-    Document orgScopeDocument = (Document) accountOrgScopeDocument.get(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY);
-    Document labelsDocument = (Document) orgScopeDocument.get("$elemMatch");
-    assertEquals(2, labelsDocument.size());
-    assertEquals(NGCommonEntityConstants.ORG_KEY, labelsDocument.getString(KeyValuePairKeys.key));
-    assertEquals(orgIdentifier, labelsDocument.getString(KeyValuePairKeys.value));
+    BasicDBList labelsList = (BasicDBList) accountOrgScopeDocument.get("$and");
+    assertEquals(1, labelsList.size());
+    Document labelsDocument = (Document) labelsList.get(0);
+    Document elemMatchDocument = (Document) labelsDocument.get(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY);
+    Document orgScopeElemMatchDocument = (Document) elemMatchDocument.get("$elemMatch");
+    assertEquals(NGCommonEntityConstants.ORG_KEY, orgScopeElemMatchDocument.getString(KeyValuePairKeys.key));
+    assertEquals(orgIdentifier, orgScopeElemMatchDocument.getString(KeyValuePairKeys.value));
   }
 
   @Test
@@ -139,13 +139,24 @@ public class AuditServiceImplTest extends CategoryTest {
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
-    Document resourceDocument = (Document) andList.get(1);
-    BasicDBList orList = (BasicDBList) resourceDocument.get("$or");
-    assertNotNull(orList);
-    Document resourceTypeIdentifierScopeDocument = (Document) orList.get(0);
-    assertEquals(2, resourceTypeIdentifierScopeDocument.size());
-    //    assertEquals(resourceType, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_TYPE_KEY));
-    //    assertEquals(identifier, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_IDENTIFIER_KEY));
+    Document orDocument = (Document) andList.get(1);
+    BasicDBList orList = (BasicDBList) orDocument.get("$or");
+    assertEquals(1, orList.size());
+    Document andLabelsDocument = (Document) orList.get(0);
+    BasicDBList andLabelsList = (BasicDBList) andLabelsDocument.get("$and");
+    assertEquals(2, andLabelsList.size());
+
+    Document typeDocument = (Document) andLabelsList.get(0);
+    Document labelsTypeDocument = (Document) typeDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
+    Document elemMatchLabelsTypeDocument = (Document) labelsTypeDocument.get("$elemMatch");
+    assertEquals(AuditCommonConstants.TYPE, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.key));
+    assertEquals(resourceType, elemMatchLabelsTypeDocument.getString(KeyValuePairKeys.value));
+
+    Document identifierDocument = (Document) andLabelsList.get(1);
+    Document labelsIdentifierDocument = (Document) identifierDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
+    Document elemMatchLabelsIdentifierDocument = (Document) labelsIdentifierDocument.get("$elemMatch");
+    assertEquals(AuditCommonConstants.IDENTIFIER, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.key));
+    assertEquals(identifier, elemMatchLabelsIdentifierDocument.getString(KeyValuePairKeys.value));
   }
 
   @Test
