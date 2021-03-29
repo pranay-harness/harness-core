@@ -1,7 +1,9 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.Slack;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationServiceConstants.TEST_SLACK_TEMPLATE;
@@ -11,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.SlackTaskParams;
@@ -38,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import org.apache.commons.text.StrSubstitutor;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class SlackServiceImpl implements ChannelService {
@@ -132,9 +136,15 @@ public class SlackServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     Slack slackChannelDetails = notificationRequest.getSlack();
     List<String> recipients = new ArrayList<>(slackChannelDetails.getSlackWebHookUrlsList());
-    List<String> slackWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-        slackChannelDetails.getUserGroupIdsList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
-    recipients.addAll(slackWebHookUrls);
+    if (isNotEmpty(slackChannelDetails.getUserGroupIdsList())) {
+      List<String> slackWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
+          slackChannelDetails.getUserGroupIdsList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
+      recipients.addAll(slackWebHookUrls);
+    } else {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
+          slackChannelDetails.getUserGroupList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    }
     return recipients;
   }
 }

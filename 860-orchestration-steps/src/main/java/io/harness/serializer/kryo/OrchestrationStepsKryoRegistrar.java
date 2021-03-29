@@ -9,6 +9,9 @@ import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
+import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
+import io.harness.steps.approval.step.jira.JiraApprovalStepParameters;
+import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -59,6 +62,9 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(HarnessApprovalResponseData.class, 3220);
     kryo.register(HarnessApprovalOutcome.class, 3221);
+    kryo.register(JiraApprovalStepParameters.class, 3222);
+    kryo.register(JiraApprovalResponseData.class, 3223);
+    kryo.register(JiraApprovalOutcome.class, 3224);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);
