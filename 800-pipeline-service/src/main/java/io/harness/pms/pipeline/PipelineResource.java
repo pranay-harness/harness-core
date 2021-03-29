@@ -92,7 +92,6 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
-
     for (int i = 0; i < 1000; i++) {
       accountId = "accountId" + i;
       for (int j = 0; j < 500; j++) {
