@@ -84,7 +84,7 @@ import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspectionListener;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ContinuePipelineResponseData;
@@ -743,7 +743,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
             expiryTs = evaluateExpiryTs(currentState, context);
           }
-          NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
+          OldNotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
               stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
           waitNotifyEngine.waitForAllOn(
               ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
@@ -939,7 +939,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         // update expiry and status to paused/waiting
         updateStateExecutionInstanceForRuntimeInputs(stateExecutionInstance, status, executionEventAdvice);
-        NotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
+        OldNotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(),
             stateExecutionInstance.getPipelineStageElementId());
         waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback,

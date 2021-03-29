@@ -46,12 +46,12 @@ public class WaitNotifyEngine {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
 
-  public String waitForAllOn(String publisherName, NotifyCallback notifyCallback, String... correlationIds) {
+  public String waitForAllOn(String publisherName, OldNotifyCallback notifyCallback, String... correlationIds) {
     return waitForAllOn(publisherName, notifyCallback, null, correlationIds);
   }
 
   public String waitForAllOn(
-      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, String... correlationIds) {
+      String publisherName, OldNotifyCallback callback, ProgressCallback progressCallback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
     if (log.isDebugEnabled()) {
@@ -70,12 +70,12 @@ public class WaitNotifyEngine {
     return waitForAllOn(publisherName, callback, progressCallback, list);
   }
 
-  public String waitForAllOnInList(String publisherName, NotifyCallback callback, List<String> list) {
+  public String waitForAllOnInList(String publisherName, OldNotifyCallback callback, List<String> list) {
     return waitForAllOn(publisherName, callback, null, list);
   }
 
   public String waitForAllOn(
-      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
+      String publisherName, OldNotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
     final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
                                                         .uuid(generateUuid())
                                                         .callback(callback)

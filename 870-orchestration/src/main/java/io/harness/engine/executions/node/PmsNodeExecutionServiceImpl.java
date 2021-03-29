@@ -35,7 +35,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -77,7 +77,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
     TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
     String taskId =
         Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest, Duration.ofSeconds(0)));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
     ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);
     return taskId;
@@ -87,7 +87,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   public void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds) {
     if (EmptyPredicate.isNotEmpty(callbackIds)) {
-      NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
     }
 

@@ -12,7 +12,7 @@ public class AsyncWaitEngineImpl implements AsyncWaitEngine {
   }
 
   @Override
-  public void waitForAllOn(NotifyCallback notifyCallback, String... correlationIds) {
+  public void waitForAllOn(OldNotifyCallback notifyCallback, String... correlationIds) {
     waitNotifyEngine.waitForAllOn(publisherName, notifyCallback, correlationIds);
   }
 }

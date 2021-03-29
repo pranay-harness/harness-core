@@ -69,7 +69,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
         }
       }
 
-      NotifyCallback callback = waitInstance.getCallback();
+      OldNotifyCallback callback = waitInstance.getCallback();
       if (callback != null) {
         injector.injectMembers(callback);
         try {
