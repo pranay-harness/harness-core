@@ -17,6 +17,7 @@ import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 
 import com.esotericsoftware.kryo.Kryo;
+import java.time.ZonedDateTime;
 
 public class CommonsKryoRegistrar implements KryoRegistrar {
   @Override
@@ -28,6 +29,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(BinaryResponseData.class, 3006);
     kryo.register(FailureResponseData.class, 3007);
     kryo.register(KeyValuePair.class, 3008);
+    kryo.register(ZonedDateTime.class, 71123);
 
     // Promoted Classes
     kryo.register(ArtifactoryServerException.class, 7214);
