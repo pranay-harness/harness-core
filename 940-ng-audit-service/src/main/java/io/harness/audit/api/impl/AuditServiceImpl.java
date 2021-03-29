@@ -77,17 +77,23 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
-      criteriaList.add(getModuleCriteria(auditFilterPropertiesDTO.getModules()));
-    }
-    if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
-      criteriaList.add(getActionCriteria(auditFilterPropertiesDTO.getActions()));
-    }
-    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(getEnvironmentIdentifierCriteria(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
-    }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
+    }
+    List<Criteria> coreInfoCriteriaList = new ArrayList<>();
+    if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
+      coreInfoCriteriaList.add(getModuleCriteria(auditFilterPropertiesDTO.getModules()));
+    }
+    if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
+      coreInfoCriteriaList.add(getActionCriteria(auditFilterPropertiesDTO.getActions()));
+    }
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
+      coreInfoCriteriaList.add(getEnvironmentIdentifierCriteria(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+    }
+    if (isNotEmpty(coreInfoCriteriaList)) {
+      Criteria coreInfoCriteria = new Criteria();
+      coreInfoCriteria.andOperator(coreInfoCriteriaList.toArray(new Criteria[0]));
+      criteriaList.add(coreInfoCriteria);
     }
     criteriaList.add(
         Criteria.where(AuditEventKeys.timestamp)
@@ -110,12 +116,14 @@ public class AuditServiceImpl implements AuditService {
       ResourceScopeDBO dbo = ResourceScopeMapper.fromDTO(resourceScope);
       List<KeyValuePair> labels = dbo.getLabels();
       if (isNotEmpty(labels)) {
+        List<Criteria> labelsCriteria = new ArrayList<>();
         labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
-                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                  .is(label.getKey())
-                                  .and(KeyValuePairKeys.value)
-                                  .is(label.getValue())));
+            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
+                                      .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                     .is(label.getKey())
+                                                     .and(KeyValuePairKeys.value)
+                                                     .is(label.getValue()))));
+        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
       criteriaList.add(criteria);
     });
@@ -129,12 +137,14 @@ public class AuditServiceImpl implements AuditService {
       ResourceDBO dbo = ResourceMapper.fromDTO(resource);
       List<KeyValuePair> labels = dbo.getLabels();
       if (isNotEmpty(labels)) {
+        List<Criteria> labelsCriteria = new ArrayList<>();
         labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
-                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                  .is(label.getKey())
-                                  .and(KeyValuePairKeys.value)
-                                  .is(label.getValue())));
+            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
+                                      .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                     .is(label.getKey())
+                                                     .and(KeyValuePairKeys.value)
+                                                     .is(label.getValue()))));
+        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
       criteriaList.add(criteria);
     });

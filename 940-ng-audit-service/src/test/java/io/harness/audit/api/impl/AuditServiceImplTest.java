@@ -33,13 +33,11 @@ import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
-import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
