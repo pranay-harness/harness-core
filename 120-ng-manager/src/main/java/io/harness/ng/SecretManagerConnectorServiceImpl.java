@@ -25,6 +25,7 @@ import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -133,24 +134,6 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     connectorRepository.updateMultiple(query, update);
   }
 
-  private void makeHarnessSecretManagerAsDefault(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(ConnectorKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(ConnectorKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(ConnectorKeys.deleted)
-                            .ne(Boolean.TRUE)
-                            .and(ConnectorKeys.identifier)
-                            .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
-
-    Query query = new Query(criteria);
-    Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
-    connectorRepository.update(query, update);
-  }
-
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
@@ -167,7 +150,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     if (Optional.ofNullable(currentConfigOfSecretManager).isPresent()) {
       alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
     } else {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret Manager Not Found", SRE);
+      throw new InvalidRequestException(
+          String.format("Secret Manager with identifier %s not found.", connectorInfo.getIdentifier()));
     }
 
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
@@ -177,14 +161,32 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
-      } else if (alreadyDefaultSM && !isDefaultSecretManager(connector.getConnectorInfo())) {
-        makeHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+      } else if (alreadyDefaultSM) {
+        setHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);
     }
     throw new SecretManagementException(
         SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest.", SRE);
+  }
+
+  private void setHarnessSecretManagerAsDefault(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ConnectorKeys.deleted)
+                            .ne(Boolean.TRUE)
+                            .and(ConnectorKeys.identifier)
+                            .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
+
+    Query query = new Query(criteria);
+    Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
+    connectorRepository.update(query, update);
   }
 
   @Override
