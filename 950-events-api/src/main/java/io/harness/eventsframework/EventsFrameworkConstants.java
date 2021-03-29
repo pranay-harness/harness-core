@@ -1,11 +1,12 @@
 package io.harness.eventsframework;
 
-import io.harness.annotations.dev.HarnessTeam;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
 
 import java.time.Duration;
 
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
 public final class EventsFrameworkConstants {
   public static final String ENTITY_CRUD = "entity_crud";
   public static final String FEATURE_FLAG_STREAM = "harness_internal_feature_flags";
