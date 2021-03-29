@@ -107,14 +107,15 @@ public class AuditServiceImpl implements AuditService {
           criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
           List<KeyValuePair> labels = resourceScope.getLabels();
           if (isNotEmpty(labels)) {
+            List<Criteria> labelsCriteria = new ArrayList<>();
             labels.forEach(label
-                -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
-                       .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                      .is(label.getKey())
-                                      .and(KeyValuePairKeys.value)
-                                      .is(label.getValue())));
+                -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
+                                          .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                         .is(label.getKey())
+                                                         .and(KeyValuePairKeys.value)
+                                                         .is(label.getValue()))));
+            criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
           }
-          criteriaList.add(criteria);
         }
       }
       criteriaList.add(criteria);
@@ -131,13 +132,16 @@ public class AuditServiceImpl implements AuditService {
       }
       List<KeyValuePair> labels = resource.getLabels();
       if (isNotEmpty(labels)) {
+        List<Criteria> labelsCriteria = new ArrayList<>();
         labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
-                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                  .is(label.getKey())
-                                  .and(KeyValuePairKeys.value)
-                                  .is(label.getValue())));
+            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
+                                      .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                     .is(label.getKey())
+                                                     .and(KeyValuePairKeys.value)
+                                                     .is(label.getValue()))));
+        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
+
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
