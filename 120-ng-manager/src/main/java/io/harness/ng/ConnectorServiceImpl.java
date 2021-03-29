@@ -321,6 +321,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     ConnectorValidationResult connectorValidationResult = null;
+    WingsException invalidRequestException = null;
     try (AutoLogContext ignore1 =
              new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
@@ -334,12 +335,17 @@ public class ConnectorServiceImpl implements ConnectorService {
                 .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
         return connectorValidationResult;
       } else {
-        throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
-            USER);
+        invalidRequestException =
+            new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+                                            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+                USER);
       }
     } catch (WingsException wingsException) {
       // Special case handling for flows registered with error handling framework
+      if (wingsException.equals(invalidRequestException)) {
+        // hack to handle case if invalid request exception thrown by same method
+        throw wingsException;
+      }
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = wingsException.getMessage();
@@ -351,8 +357,10 @@ public class ConnectorServiceImpl implements ConnectorService {
       connectorValidationResult = validationFailureBuilder.build();
       throw wingsException;
     } finally {
-      updateTheConnectorValidationResultInTheEntity(
-          connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      if (connectorValidationResult != null) {
+        updateTheConnectorValidationResultInTheEntity(
+            connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      }
     }
   }
 
