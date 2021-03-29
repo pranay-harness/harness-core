@@ -10,7 +10,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
@@ -37,7 +36,7 @@ import javax.ws.rs.core.Response;
 @Api("webhooks")
 @Path("/webhooks")
 @Produces("application/json")
-@PublicApiWithWhitelist
+@ApiKeyAuthorized(allowEmptyApiKey = true, skipAuth = true)
 public class WebHookResource {
   private WebHookService webHookService;
   private FeatureFlagService featureFlagService;
@@ -63,7 +62,6 @@ public class WebHookResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}")
-  @ApiKeyAuthorized
   public Response execute(@HeaderParam(API_KEY_HEADER) String apiKey, @QueryParam("accountId") String accountId,
       @PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
