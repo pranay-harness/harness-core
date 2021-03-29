@@ -9,6 +9,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -69,19 +71,10 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
         }
       }
 
-      OldNotifyCallback callback = waitInstance.getCallback();
+      NotifyCallback callback = waitInstance.getCallback();
       if (callback != null) {
         injector.injectMembers(callback);
-        try {
-          if (isError) {
-            callback.notifyError(responseMap);
-          } else {
-            callback.notify(responseMap);
-          }
-          log.info("WaitInstance callback finished");
-        } catch (Exception exception) {
-          log.error("WaitInstance callback failed", exception);
-        }
+        processCallback(callback, responseMap, isError);
       }
 
       try {
@@ -92,5 +85,43 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
 
       waitInstanceService.checkProcessingTime(now);
     }
+  }
+
+  private void processCallback(NotifyCallback notifyCallback, Map<String, ResponseData> responseMap, boolean isError) {
+    try {
+      if (notifyCallback instanceof OldNotifyCallback) {
+        if (isError) {
+          ((OldNotifyCallback) notifyCallback).notifyError(responseMap);
+        } else {
+          ((OldNotifyCallback) notifyCallback).notify(responseMap);
+        }
+      }
+      if (notifyCallback instanceof PushThroughNotifyCallback) {
+        ((PushThroughNotifyCallback) notifyCallback).push(responseMap);
+      }
+      if (notifyCallback instanceof NotifyCallbackWithErrorHandling) {
+        ((NotifyCallbackWithErrorHandling) notifyCallback).notify(prepareResponseWithError(responseMap));
+      }
+      log.info("WaitInstance callback finished");
+    } catch (Exception exception) {
+      log.error("WaitInstance callback failed", exception);
+    }
+  }
+
+  private Map<String, Supplier<ResponseData>> prepareResponseWithError(Map<String, ResponseData> responseMap) {
+    Map<String, Supplier<ResponseData>> finalResponseMap = new HashMap<>();
+    responseMap.entrySet().stream().forEach(entry -> {
+      ResponseData responseData = entry.getValue();
+      final Supplier<ResponseData> responseDataSupplier = () -> {
+        if (responseData instanceof ErrorResponseData) {
+          throw((ErrorResponseData) responseData).getException();
+        } else {
+          return responseData;
+        }
+      };
+      finalResponseMap.put(entry.getKey(), responseDataSupplier);
+    });
+
+    return finalResponseMap;
   }
 }
