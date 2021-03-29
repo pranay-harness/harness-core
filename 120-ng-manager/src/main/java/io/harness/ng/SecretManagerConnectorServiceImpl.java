@@ -157,8 +157,9 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     boolean alreadyDefaultSM = false;
     if (Optional.ofNullable(currentConfigOfSecretManager).isPresent()) {
       alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
-    } else
+    } else {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret Manager Not Found", SRE);
+    }
 
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
