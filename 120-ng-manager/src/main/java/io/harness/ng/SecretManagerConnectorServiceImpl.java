@@ -1,18 +1,11 @@
 package io.harness.ng;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.ConnectorCatalogueResponseDTO;
-import io.harness.connector.ConnectorCategory;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorFilterPropertiesDTO;
-import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.*;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector.VaultConnectorKeys;
 import io.harness.connector.services.ConnectorService;
@@ -43,7 +36,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretManagerConnectorServiceImpl implements ConnectorService {
@@ -132,6 +124,24 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     connectorRepository.updateMultiple(query, update);
   }
 
+  private void makeHarnessSecretManagerAsDefault(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ConnectorKeys.deleted)
+                            .ne(Boolean.TRUE)
+                            .and(ConnectorKeys.identifier)
+                            .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
+
+    Query query = new Query(criteria);
+    Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
+    connectorRepository.update(query, update);
+  }
+
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
@@ -142,6 +152,13 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
     SecretManagerConfigUpdateDTO dto =
         SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorConfigDTO);
+    Optional<ConnectorResponseDTO> currentConfigOfSecretManager = get(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    boolean alreadyDefaultSM = false;
+    if (Optional.ofNullable(currentConfigOfSecretManager).isPresent()) {
+      alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
+    } else
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret Manager Not Found", SRE);
 
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
@@ -149,6 +166,9 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier());
+      } else if (alreadyDefaultSM && !isDefaultSecretManager(connector.getConnectorInfo())) {
+        makeHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);
