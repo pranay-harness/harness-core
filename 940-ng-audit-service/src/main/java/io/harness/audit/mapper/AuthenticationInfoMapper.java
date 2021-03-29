@@ -24,11 +24,11 @@ public class AuthenticationInfoMapper {
     return AuthenticationInfoDBO.builder().principal(dto.getPrincipal()).labels(labels).build();
   }
 
-  public static AuthenticationInfo toDTO(AuthenticationInfoDBO resourceDBO) {
-    Map<String, String> labels = KeyValuePairMapper.convertToMap(resourceDBO.getLabels());
+  public static AuthenticationInfo toDTO(AuthenticationInfoDBO dbo) {
+    Map<String, String> labels = KeyValuePairMapper.convertToMap(dbo.getLabels());
     if (isEmpty(labels)) {
       labels = null;
     }
-    return AuthenticationInfo.builder().principal(resourceDBO.getPrincipal()).labels(labels).build();
+    return AuthenticationInfo.builder().principal(dbo.getPrincipal()).labels(labels).build();
   }
 }

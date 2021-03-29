@@ -33,8 +33,8 @@ public class ResourceScopeMapper {
     return ResourceScopeDBO.builder().accountIdentifier(dto.getAccountIdentifier()).labels(labels).build();
   }
 
-  public static ResourceScope toDTO(ResourceScopeDBO resourceDBO) {
-    Map<String, String> labels = KeyValuePairMapper.convertToMap(resourceDBO.getLabels());
+  public static ResourceScope toDTO(ResourceScopeDBO dbo) {
+    Map<String, String> labels = KeyValuePairMapper.convertToMap(dbo.getLabels());
     String orgIdentifier = labels.get(NGCommonEntityConstants.ORG_KEY);
     String projectIdentifier = labels.get(NGCommonEntityConstants.PROJECT_KEY);
     labels.remove(NGCommonEntityConstants.ORG_KEY);
@@ -43,7 +43,7 @@ public class ResourceScopeMapper {
       labels = null;
     }
     return ResourceScope.builder()
-        .accountIdentifier(resourceDBO.getAccountIdentifier())
+        .accountIdentifier(dbo.getAccountIdentifier())
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .labels(labels)

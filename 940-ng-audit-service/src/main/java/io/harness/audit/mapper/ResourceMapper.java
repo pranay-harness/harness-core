@@ -24,8 +24,8 @@ public class ResourceMapper {
     return ResourceDBO.builder().labels(labels).build();
   }
 
-  public static Resource toDTO(ResourceDBO resourceDBO) {
-    Map<String, String> labels = KeyValuePairMapper.convertToMap(resourceDBO.getLabels());
+  public static Resource toDTO(ResourceDBO dbo) {
+    Map<String, String> labels = KeyValuePairMapper.convertToMap(dbo.getLabels());
     String type = labels.get(AuditCommonConstants.TYPE);
     String identifier = labels.get(AuditCommonConstants.IDENTIFIER);
     labels.remove(AuditCommonConstants.TYPE);
