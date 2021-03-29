@@ -61,83 +61,82 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-    //    Container gkeContainerService = gcpHelperService.getGkeContainerService(
-    //        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
-    //    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    //    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
-    //    String location = locationCluster[0];
-    //    String clusterName = locationCluster[1];
-    //    // See if the cluster already exists
-    //    try {
-    //      Cluster cluster = gkeContainerService.projects()
-    //                            .locations()
-    //                            .clusters()
-    //                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
-    //                            .execute();
-    //      log.info("Cluster already exists");
-    //      log.debug("Cluster {}, location {}, project {}", clusterName, location, projectId);
-    //      return configFromCluster(cluster, namespace);
-    //    } catch (IOException e) {
-    //      logNotFoundOrError(e, projectId, location, clusterName, "getting");
-    //    }
-    //
-    //    // Cluster doesn't exist. Create it.
-    //    try {
-    //      CreateClusterRequest content = new CreateClusterRequest().setCluster(
-    //          new Cluster()
-    //              .setName(clusterName)
-    //              .setNodeConfig(new NodeConfig().setMachineType(params.get("machineType")))
-    //              .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
-    //              .setMasterAuth(
-    //                  new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));
-    //      Operation createOperation =
-    //          gkeContainerService.projects()
-    //              .locations()
-    //              .clusters()
-    //              .create("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName, content)
-    //              .execute();
-    //      String operationStatus =
-    //          waitForOperationToComplete(createOperation, gkeContainerService, projectId, location, "Provisioning");
-    //      if (operationStatus.equals("DONE")) {
-    //        Cluster cluster = gkeContainerService.projects()
-    //                              .locations()
-    //                              .clusters()
-    //                              .get("projects/" + projectId + "/locations/" + location + "/clusters/" +
-    //                              clusterName) .execute();
-    //        log.info("Cluster status: {}", cluster.getStatus());
-    //        log.debug("Master endpoint: {}", cluster.getEndpoint());
-    //        return configFromCluster(cluster, namespace);
-    //      }
-    //    } catch (IOException e) {
-    //      logNotFoundOrError(e, projectId, location, clusterName, "creating");
-    //    }
-    //    return null;
-    //  }
-    //
-    //  private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
-    //    MasterAuth masterAuth = cluster.getMasterAuth();
-    //    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder()
-    //                                                          .masterUrl("https://" + cluster.getEndpoint() + "/")
-    //                                                          .namespace(isNotBlank(namespace) ? namespace :
-    //                                                          "default");
-    //    if (masterAuth.getUsername() != null) {
-    //      kubernetesConfigBuilder.username(masterAuth.getUsername().toCharArray());
-    //    }
-    //    if (masterAuth.getPassword() != null) {
-    //      kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());
-    //    }
-    //    if (masterAuth.getClusterCaCertificate() != null) {
-    //      kubernetesConfigBuilder.caCert(masterAuth.getClusterCaCertificate().toCharArray());
-    //    }
-    //    if (masterAuth.getClientCertificate() != null) {
-    //      kubernetesConfigBuilder.clientCert(masterAuth.getClientCertificate().toCharArray());
-    //    }
-    //    if (masterAuth.getClientKey() != null) {
-    //      kubernetesConfigBuilder.clientKey(masterAuth.getClientKey().toCharArray());
-    //    }
-    //    return kubernetesConfigBuilder.build();
-    return gkeClusterHelper.createCluster(gcpConfig.getServiceAccountKeyFileContent(),
-        gcpConfig.isUseDelegateSelectors(), locationClusterName, namespace, params);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
+    // See if the cluster already exists
+    try {
+      Cluster cluster = gkeContainerService.projects()
+                            .locations()
+                            .clusters()
+                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                            .execute();
+      log.info("Cluster already exists");
+      log.debug("Cluster {}, location {}, project {}", clusterName, location, projectId);
+      return configFromCluster(cluster, namespace);
+    } catch (IOException e) {
+      logNotFoundOrError(e, projectId, location, clusterName, "getting");
+    }
+
+    // Cluster doesn't exist. Create it.
+    try {
+      CreateClusterRequest content = new CreateClusterRequest().setCluster(
+          new Cluster()
+              .setName(clusterName)
+              .setNodeConfig(new NodeConfig().setMachineType(params.get("machineType")))
+              .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
+              .setMasterAuth(
+                  new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));
+      Operation createOperation =
+          gkeContainerService.projects()
+              .locations()
+              .clusters()
+              .create("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName, content)
+              .execute();
+      String operationStatus =
+          waitForOperationToComplete(createOperation, gkeContainerService, projectId, location, "Provisioning");
+      if (operationStatus.equals("DONE")) {
+        Cluster cluster = gkeContainerService.projects()
+                              .locations()
+                              .clusters()
+                              .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                              .execute();
+        log.info("Cluster status: {}", cluster.getStatus());
+        log.debug("Master endpoint: {}", cluster.getEndpoint());
+        return configFromCluster(cluster, namespace);
+      }
+    } catch (IOException e) {
+      logNotFoundOrError(e, projectId, location, clusterName, "creating");
+    }
+    return null;
+  }
+
+  private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
+    MasterAuth masterAuth = cluster.getMasterAuth();
+    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder()
+                                                          .masterUrl("https://" + cluster.getEndpoint() + "/")
+                                                          .namespace(isNotBlank(namespace) ? namespace : "default");
+    if (masterAuth.getUsername() != null) {
+      kubernetesConfigBuilder.username(masterAuth.getUsername().toCharArray());
+    }
+    if (masterAuth.getPassword() != null) {
+      kubernetesConfigBuilder.password(masterAuth.getPassword().toCharArray());
+    }
+    if (masterAuth.getClusterCaCertificate() != null) {
+      kubernetesConfigBuilder.caCert(masterAuth.getClusterCaCertificate().toCharArray());
+    }
+    if (masterAuth.getClientCertificate() != null) {
+      kubernetesConfigBuilder.clientCert(masterAuth.getClientCertificate().toCharArray());
+    }
+    if (masterAuth.getClientKey() != null) {
+      kubernetesConfigBuilder.clientKey(masterAuth.getClientKey().toCharArray());
+    }
+    return kubernetesConfigBuilder.build();
+//    return gkeClusterHelper.createCluster(
+//            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors(), locationClusterName, namespace, params);
   }
 
   private GcpConfig validateAndGetCredentials(SettingAttribute computeProviderSetting) {
@@ -189,41 +188,40 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       String locationClusterName, String namespace, boolean isInstanceSync) {
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);
-    //    Container gkeContainerService = gcpHelperService.getGkeContainerService(
-    //        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
-    //    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    //    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
-    //    String location = locationCluster[0];
-    //    String clusterName = locationCluster[1];
-    //    try {
-    //      Cluster cluster = gkeContainerService.projects()
-    //                            .locations()
-    //                            .clusters()
-    //                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
-    //                            .execute();
-    //      log.debug("Found cluster {} in location {} for project {}", clusterName, location, projectId);
-    //      log.info("Cluster status: {}", cluster.getStatus());
-    //      log.debug("Master endpoint: {}", cluster.getEndpoint());
-    //      return configFromCluster(cluster, namespace);
-    //    } catch (IOException e) {
-    //      // PL-1118: In case the cluster is being destroyed/torn down. Return null will immediately reclaim the
-    //      service
-    //      // instances
-    //      if (e instanceof GoogleJsonResponseException
-    //          && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-    //        String errorMessage =
-    //            format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId);
-    //        log.warn(errorMessage, e);
-    //        throw new WingsException(CLUSTER_NOT_FOUND, e).addParam("message", errorMessage);
-    //      } else {
-    //        String errorMessage =
-    //            format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId);
-    //        log.error(errorMessage, e);
-    //        throw new InvalidRequestException(errorMessage, e);
-    //      }
-    //    }
-    return gkeClusterHelper.getCluster(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors(),
-        locationClusterName, namespace);
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
+    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    String location = locationCluster[0];
+    String clusterName = locationCluster[1];
+    try {
+      Cluster cluster = gkeContainerService.projects()
+                            .locations()
+                            .clusters()
+                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
+                            .execute();
+      log.debug("Found cluster {} in location {} for project {}", clusterName, location, projectId);
+      log.info("Cluster status: {}", cluster.getStatus());
+      log.debug("Master endpoint: {}", cluster.getEndpoint());
+      return configFromCluster(cluster, namespace);
+    } catch (IOException e) {
+      // PL-1118: In case the cluster is being destroyed/torn down. Return null will immediately reclaim the service
+      // instances
+      if (e instanceof GoogleJsonResponseException
+          && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        String errorMessage =
+            format("Cluster %s does not exist in location %s for project %s", clusterName, location, projectId);
+        log.warn(errorMessage, e);
+        throw new WingsException(CLUSTER_NOT_FOUND, e).addParam("message", errorMessage);
+      } else {
+        String errorMessage =
+            format("Error getting cluster %s in location %s for project %s", clusterName, location, projectId);
+        log.error(errorMessage, e);
+        throw new InvalidRequestException(errorMessage, e);
+      }
+    }
+//    return gkeClusterHelper.getCluster(
+//            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors(), locationClusterName, namespace);
   }
 
   @Override
