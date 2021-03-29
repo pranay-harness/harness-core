@@ -113,7 +113,7 @@ public class BudgetAlertsServiceImpl {
     // For sending alerts based on forecast cost
     AlertThreshold[] alertsBasedOnForecastCost =
         budgetUtils.getSortedAlertThresholds(FORECASTED_COST, budget.getAlertThresholds());
-    double forecastCost = budgetUtils.getForecastCost(budget, cloudProviderTable);
+    double forecastCost = budget.getForecastCost();
     checkAlertThresholdsAndSendAlerts(budget, alertsBasedOnForecastCost, slackWebhook, emailAddresses, forecastCost);
   }
 

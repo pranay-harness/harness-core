@@ -6,7 +6,6 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetUtils;
-import io.harness.ccm.budget.dao.BudgetDao;
 
 import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
@@ -26,7 +25,6 @@ public class BudgetCostUpdateService {
   @Autowired private BudgetUtils budgetUtils;
   @Autowired private CloudBillingHelper cloudBillingHelper;
   @Autowired private BatchMainConfig mainConfiguration;
-  @Autowired private BudgetDao budgetDao;
 
   public void updateCosts() {
     List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
@@ -37,10 +35,7 @@ public class BudgetCostUpdateService {
       String cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(
           mainConfiguration.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified);
       List<Budget> budgets = budgetUtils.listBudgetsForAccount(accountId);
-      budgets.forEach(budget -> {
-        budgetUtils.updateBudgetCosts(budget, cloudProviderTable);
-        budgetDao.update(budget.getUuid(), budget);
-      });
+      budgets.forEach(budget -> budgetUtils.updateBudgetCosts(budget, cloudProviderTable));
     });
   }
 }

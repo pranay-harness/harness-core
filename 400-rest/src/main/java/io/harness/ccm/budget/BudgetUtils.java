@@ -351,6 +351,7 @@ public class BudgetUtils {
       budget.setActualCost(actualCost);
       budget.setForecastCost(forecastCost);
       budget.setLastMonthCost(lastMonthCost);
+      budgetDao.update(budget.getUuid(), budget);
     } catch (Exception e) {
       log.error("Error occurred while updating costs of budget: {}, Exception : {}", budget.getUuid(), e);
     }
