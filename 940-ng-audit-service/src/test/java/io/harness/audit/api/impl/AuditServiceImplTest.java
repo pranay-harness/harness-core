@@ -38,7 +38,6 @@ import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
-import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
