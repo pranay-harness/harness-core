@@ -71,6 +71,9 @@ public class AuditFilterPropertiesValidator {
           String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
               resourceScope.getProjectIdentifier()));
     }
+    if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getLabels())) {
+      throw new InvalidRequestException("Invalid resource scope filter with labels present but missing orgIdentifier.");
+    }
     if (isEmpty(resourceScope.getProjectIdentifier()) && isNotEmpty(resourceScope.getLabels())) {
       throw new InvalidRequestException(
           "Invalid resource scope filter with labels present but missing projectIdentifier.");

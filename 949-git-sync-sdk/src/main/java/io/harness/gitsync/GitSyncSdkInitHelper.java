@@ -1,5 +1,6 @@
 package io.harness.gitsync;
 
+import io.harness.gitsync.events.GitSyncEventConsumerService;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 
 import com.google.common.util.concurrent.ServiceManager;
@@ -17,6 +18,11 @@ public class GitSyncSdkInitHelper {
     String serviceName = config.getMicroservice().name();
     initializeServiceManager(injector, serviceName);
     registerInterceptor(environment);
+    registerEventConsumer(injector, environment);
+  }
+
+  private static void registerEventConsumer(Injector injector, Environment environment) {
+    environment.lifecycle().manage(injector.getInstance(GitSyncEventConsumerService.class));
   }
 
   private static void registerInterceptor(Environment environment) {

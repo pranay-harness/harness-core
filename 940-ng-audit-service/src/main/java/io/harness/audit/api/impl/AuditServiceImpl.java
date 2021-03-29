@@ -146,6 +146,7 @@ public class AuditServiceImpl implements AuditService {
                                                      .is(label.getValue()))));
         criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
+
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

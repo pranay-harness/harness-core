@@ -210,6 +210,10 @@ public class Event {
      */
     LOGIN,
     /**
+     * Unsuccessful login type.
+     */
+    UNSUCCESSFUL_LOGIN,
+    /**
      * Link SSO type.
      */
     LINK_SSO,
