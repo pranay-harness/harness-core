@@ -2041,7 +2041,7 @@ maven_install(
     name = "maven_harness",
     artifacts = [
         "io.harness:ff-java-server-sdk:0.0.2",
-        "io.harness.cv:data-collection-dsl:0.18-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.21-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
