@@ -85,11 +85,6 @@ public class K8sDelete extends AbstractK8sState {
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
 
   @Override
-  public List<String> getDelegateSelectors(ExecutionContext context) {
-    return getDelegateSelectors();
-  }
-
-  @Override
   public Integer getTimeoutMillis() {
     return StateTimeoutUtils.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }

@@ -179,6 +179,10 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
+
   public AbstractK8sState(String name, String stateType) {
     super(name, stateType);
   }
@@ -1058,7 +1062,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   @Override public abstract void handleAbortEvent(ExecutionContext context);
 
-  public abstract List<String> getDelegateSelectors(ExecutionContext context);
+//  public abstract List<String> getDelegateSelectors(ExecutionContext context);
 
   protected Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
     return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors(context));

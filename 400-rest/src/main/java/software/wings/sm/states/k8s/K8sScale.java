@@ -78,11 +78,6 @@ public class K8sScale extends AbstractK8sState {
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   @Override
-  public List<String> getDelegateSelectors(ExecutionContext context) {
-    return getDelegateSelectors();
-  }
-
-  @Override
   public Integer getTimeoutMillis() {
     return StateTimeoutUtils.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }

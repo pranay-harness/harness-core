@@ -60,11 +60,6 @@ public class K8sTrafficSplitState extends AbstractK8sState {
   private List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
 
   @Override
-  public List<String> getDelegateSelectors(ExecutionContext context) {
-    return getDelegateSelectors();
-  }
-
-  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       log.info("Executing K8sTrafficSplitState");
