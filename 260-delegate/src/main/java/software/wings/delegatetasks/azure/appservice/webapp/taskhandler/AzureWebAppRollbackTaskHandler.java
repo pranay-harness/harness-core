@@ -67,7 +67,7 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     if (slotDeploymentDidNotHappen(rollbackParameters)) {
       return Collections.emptyList();
     }
-    return azureAppServiceDeploymentService.fetchDeploymentData(
+    return azureAppServiceService.fetchDeploymentData(
         azureWebClientContext, rollbackParameters.getPreDeploymentData().getSlotName());
   }
 
@@ -138,8 +138,8 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     message = "Slot container settings was not changed. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS, message);
 
-    azureAppServiceDeploymentService.startSlotAsyncWithSteadyCheck(logStreamingTaskClient,
-        rollbackParameters.getTimeoutIntervalInMin(), deploymentContext, rollbackParameters.getPreDeploymentData());
+    azureAppServiceDeploymentService.startSlotAsyncWithSteadyCheck(
+        deploymentContext, rollbackParameters.getPreDeploymentData());
 
     message = "Slot traffic was not changed. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, SLOT_TRAFFIC_PERCENTAGE, message);
@@ -156,8 +156,8 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     message = "Slot container settings was not changed. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS, message);
 
-    azureAppServiceDeploymentService.startSlotAsyncWithSteadyCheck(logStreamingTaskClient,
-        rollbackParameters.getTimeoutIntervalInMin(), deploymentContext, rollbackParameters.getPreDeploymentData());
+    azureAppServiceDeploymentService.startSlotAsyncWithSteadyCheck(
+        deploymentContext, rollbackParameters.getPreDeploymentData());
 
     message = "Slot traffic was not changed. Hence skipping this step";
     markCommandUnitAsDone(logStreamingTaskClient, SLOT_TRAFFIC_PERCENTAGE, message);

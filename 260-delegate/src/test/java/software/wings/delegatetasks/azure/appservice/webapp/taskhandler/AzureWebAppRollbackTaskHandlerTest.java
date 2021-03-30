@@ -26,6 +26,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
+import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 
 import java.util.Collections;
 import org.junit.Before;
@@ -46,6 +47,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private ILogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;
   @Mock private AzureAppServiceDeploymentService azureAppServiceDeploymentService;
+  @Mock private AzureAppServiceService azureAppServiceService;
 
   @Spy @InjectMocks AzureWebAppRollbackTaskHandler azureWebAppRollbackTaskHandler;
 
@@ -104,7 +106,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
     AzureAppServiceTaskResponse azureAppServiceTaskResponse =
         azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
     assertThat(azureAppServiceTaskResponse).isNotNull();
-    verify(azureAppServiceDeploymentService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
+    verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
     verify(azureAppServiceDeploymentService, never()).deployDockerImage(any(), any());
 
     rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
@@ -112,8 +114,8 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
     azureAppServiceTaskResponse =
         azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
     assertThat(azureAppServiceTaskResponse).isNotNull();
-    verify(azureAppServiceDeploymentService).startSlotAsyncWithSteadyCheck(any(), eq((long) TIME_OUT), any(), any());
-    verify(azureAppServiceDeploymentService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
+    verify(azureAppServiceDeploymentService).startSlotAsyncWithSteadyCheck(any(), any());
+    verify(azureAppServiceService, never()).fetchDeploymentData(any(), eq(SLOT_NAME));
     verify(azureAppServiceDeploymentService, never()).deployDockerImage(any(), any());
 
     rollbackParameters.getPreDeploymentData().setDeploymentProgressMarker(
@@ -122,8 +124,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
         azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
     assertThat(azureAppServiceTaskResponse).isNotNull();
     verify(azureAppServiceDeploymentService, never()).deployDockerImage(any(), any());
-    verify(azureAppServiceDeploymentService, never())
-        .stopSlotAsyncWithSteadyCheck(any(), eq((long) TIME_OUT), any(), any());
+    verify(azureAppServiceDeploymentService, never()).stopSlotAsyncWithSteadyCheck(any(), any());
   }
 
   private void mockDeployDockerImage() {

@@ -11,12 +11,14 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 
 import com.google.inject.Inject;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class AbstractAzureWebAppTaskHandler extends AbstractAzureAppServiceTaskHandler {
   @Inject protected AzureAppServiceDeploymentService azureAppServiceDeploymentService;
+  @Inject protected AzureAppServiceService azureAppServiceService;
 
   protected AzureWebClientContext buildAzureWebClientContext(
       AzureAppServiceTaskParameters appServiceTaskParameters, AzureConfig azureConfig) {

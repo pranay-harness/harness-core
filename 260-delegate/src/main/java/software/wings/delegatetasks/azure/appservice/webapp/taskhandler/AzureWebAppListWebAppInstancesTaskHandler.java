@@ -11,8 +11,8 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListW
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppInstancesResponse;
 
-import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
+import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,8 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppListWebAppInstancesTaskHandler extends AbstractAzureWebAppTaskHandler {
-  @Inject private AzureAppServiceDeploymentService deploymentService;
-
   @Override
   public AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
@@ -44,7 +42,7 @@ public class AzureWebAppListWebAppInstancesTaskHandler extends AbstractAzureWebA
                                                       .build();
 
     List<AzureAppDeploymentData> deploymentData =
-        deploymentService.fetchDeploymentData(azureWebClientContext, slotName);
+        azureAppServiceService.fetchDeploymentData(azureWebClientContext, slotName);
 
     return AzureWebAppListWebAppInstancesResponse.builder().deploymentData(deploymentData).build();
   }

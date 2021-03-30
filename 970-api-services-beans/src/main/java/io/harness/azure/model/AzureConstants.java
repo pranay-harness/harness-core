@@ -178,6 +178,9 @@ public interface AzureConstants {
       "Parameter trafficWeightInPercentage cannot be less then 0% or higher then 100%";
   String SOURCE_SLOT_NAME_BLANK_ERROR_MSG = "Parameter sourceSlotName cannot be null or empty";
   String TARGET_SLOT_NAME_BLANK_ERROR_MSG = "Parameter targetSlotName cannot be null or empty";
+  String FILE_BLANK_ERROR_MSG = "Parameter file is required and cannot be null";
+  String ARTIFACT_FILE_BLANK_ERROR_MSG = "Parameter artifactFile cannot be null";
+  String ARTIFACT_TYPE_BLANK_ERROR_MSG = "Parameter artifactType cannot be null";
   String ACTIVITY_LOG_EVENT_DATA_TEMPLATE = "Operation name : [%s]%n"
       + "Event initiated by : [%s]%n"
       + "Status : [%s]%n"
@@ -249,4 +252,6 @@ public interface AzureConstants {
   String ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE = "RoleAssignmentExists";
 
   String ARTIFACT_PATH_PREFIX = "artifact/";
+  String REPOSITORY_DIR_PATH = "./repository";
+  String AZURE_APP_SVC_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/azureappsvcartifacts";
 }

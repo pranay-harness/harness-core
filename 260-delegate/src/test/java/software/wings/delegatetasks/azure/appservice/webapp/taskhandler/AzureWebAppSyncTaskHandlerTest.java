@@ -31,6 +31,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
@@ -56,6 +57,7 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
   @Mock private AzureWebClient azureWebClient;
   @Mock private ILogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private AzureAppServiceDeploymentService deploymentService;
+  @Mock private AzureAppServiceService azureAppServiceService;
 
   @InjectMocks private AzureWebAppListWebAppDeploymentSlotNamesTaskHandler listWebAppDeploymentSlotNamesTaskHandler;
   @InjectMocks private AzureWebAppListWebAppNamesTaskHandler listWebAppNamesTaskHandler;
@@ -166,7 +168,7 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
                                   .appName(WEB_APP)
                                   .deploySlot(WEB_APP_SLOT)
                                   .build()));
-    doReturn(deploymentData).when(deploymentService).fetchDeploymentData(any(), eq(WEB_APP_SLOT));
+    doReturn(deploymentData).when(azureAppServiceService).fetchDeploymentData(any(), eq(WEB_APP_SLOT));
 
     AzureWebAppListWebAppInstancesResponse response =
         (AzureWebAppListWebAppInstancesResponse) listWebAppInstancesTaskHandler.executeTaskInternal(

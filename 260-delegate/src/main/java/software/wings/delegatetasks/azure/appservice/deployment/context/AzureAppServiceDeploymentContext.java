@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.deployment.context;
 
+import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_ERROR_MSG;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
@@ -11,6 +13,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
@@ -23,7 +26,7 @@ public class AzureAppServiceDeploymentContext {
   private Map<String, AzureAppServiceApplicationSetting> appSettingsToRemove;
   private Map<String, AzureAppServiceConnectionString> connSettingsToAdd;
   private Map<String, AzureAppServiceConnectionString> connSettingsToRemove;
-  private String slotName;
+  @NotBlank(message = SLOT_NAME_BLANK_ERROR_MSG) private String slotName;
   private String targetSlotName;
   private int steadyStateTimeoutInMin;
 }

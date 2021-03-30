@@ -6,7 +6,10 @@ import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PRO
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
+import static io.harness.azure.model.AzureConstants.FILE_BLANK_ERROR_MSG;
+import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -38,6 +41,8 @@ import com.microsoft.azure.management.appservice.implementation.SiteInstanceInne
 import com.microsoft.azure.management.appservice.implementation.StringDictionaryInner;
 import com.microsoft.rest.ServiceCallback;
 import com.microsoft.rest.ServiceFuture;
+import java.io.File;
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -614,5 +619,101 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     PagedList<SiteInstanceInner> siteInstanceInners =
         azure.webApps().inner().listInstanceIdentifiersSlot(resourceGroupName, appName, slotName);
     return new ArrayList<>(siteInstanceInners);
+  }
+
+  public void deployZipToSlot(AzureWebClientContext context, final String slotName, final File file) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
+    }
+
+    log.debug("Start deploying zip file on slot, fileAbsoluteFile: {}, slotName: {}, context: {}",
+        file.getAbsolutePath(), slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    deploymentSlot.zipDeploy(file);
+  }
+
+  public Completable deployZipToSlotAsync(AzureWebClientContext context, final String slotName, final File file) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
+    }
+
+    log.debug("Start deploying zip file async on slot, fileAbsoluteFile: {}, slotName: {}, context: {}",
+        file.getAbsolutePath(), slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    return deploymentSlot.zipDeployAsync(file);
+  }
+
+  public void deployWarToSlot(AzureWebClientContext context, final String slotName, final File file) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
+    }
+
+    log.debug("Start deploying war file on slot, fileAbsoluteFile: {}, slotName: {}, context: {}",
+        file.getAbsolutePath(), slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    deploymentSlot.warDeploy(file);
+  }
+
+  public Completable deployWarToSlotAsync(AzureWebClientContext context, final String slotName, final File file) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
+    }
+
+    log.debug("Start deploying war file async on slot, fileAbsoluteFile: {}, slotName: {}, context: {}",
+        file.getAbsolutePath(), slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    return deploymentSlot.warDeployAsync(file);
+  }
+
+  public InputStream streamDeploymentLogs(AzureWebClientContext context, final String slotName, final File file) {
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_BLANK_ERROR_MSG);
+    }
+
+    log.debug("Start streaming deployment log on slot, slotName: {}, context: {}", slotName, context);
+    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
+    return deploymentSlot.streamDeploymentLogs();
+  }
+
+  public SiteConfigResourceInner updateSlotConfigurationWithAppCommandLineScript(
+      AzureWebClientContext context, final String slotName, final String startupCommand) {
+    if (isBlank(startupCommand)) {
+      return null;
+    }
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    Azure azure = getAzureClientByContext(context);
+    if (isBlank(slotName)) {
+      throw new IllegalArgumentException(SLOT_NAME_BLANK_VALIDATION_MSG);
+    }
+    if (isBlank(webAppName)) {
+      throw new IllegalArgumentException(WEB_APP_NAME_BLANK_ERROR_MSG);
+    }
+    if (isBlank(resourceGroupName)) {
+      throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
+    }
+
+    final SiteConfigResourceInner siteConfigResourceInner =
+        azure.webApps().inner().getConfigurationSlot(resourceGroupName, webAppName, slotName);
+    siteConfigResourceInner.withAppCommandLine(startupCommand);
+
+    log.debug("Start updating slot with app command line, slotName: {}, context: {}", slotName, context);
+    return azure.webApps().inner().updateConfigurationSlot(
+        resourceGroupName, webAppName, slotName, siteConfigResourceInner);
   }
 }
