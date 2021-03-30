@@ -4,6 +4,7 @@ import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.CREATE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -157,13 +158,12 @@ public class ConnectorResource {
 
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = CREATE_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return createConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
         connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
   }
-
+  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = CREATE_CONNECTOR_PERMISSION)
   private ResponseDTO<ConnectorResponseDTO> createConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
       String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
@@ -183,7 +183,7 @@ public class ConnectorResource {
     return updateConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
         connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
   }
-
+  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
   private ResponseDTO<ConnectorResponseDTO> updateConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
       String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
