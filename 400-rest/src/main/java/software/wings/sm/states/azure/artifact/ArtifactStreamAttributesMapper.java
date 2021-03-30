@@ -9,6 +9,9 @@ package software.wings.sm.states.azure.artifact;
 
 import static io.harness.azure.model.AzureConstants.ARTIFACT_PATH_PREFIX;
 
+import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys.artifactFileName;
+import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys.artifactPath;
+
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
