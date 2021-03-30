@@ -105,8 +105,20 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_connector_runtimeAccess
+    name: Runtime Access to Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
   - identifier: core_pipeline_view
     name: View Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_pipeline_create
+    name: Create Pipeline
     status: ACTIVE
     allowedScopeLevels:
       - project
@@ -124,4 +136,74 @@ permissions:
     name: Run Pipeline
     status: ACTIVE
     allowedScopeLevels:
+      - project
+  - identifier: core_service_view
+    name: View Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_create
+    name: Create Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_edit
+    name: Edit Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_delete
+    name: Delete Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_runtimeAccess
+    name: Runtime Access to Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_view
+    name: View Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_create
+    name: Create Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_edit
+    name: Edit Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_delete
+    name: Delete Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_runtimeAccess
+    name: Runtime Access to Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
       - project
