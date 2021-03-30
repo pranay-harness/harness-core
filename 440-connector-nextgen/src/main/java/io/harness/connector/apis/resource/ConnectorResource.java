@@ -160,6 +160,12 @@ public class ConnectorResource {
   @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = CREATE_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return createConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
+        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
+  }
+
+  private ResponseDTO<ConnectorResponseDTO> createConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -174,6 +180,12 @@ public class ConnectorResource {
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return updateConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
+        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
+  }
+
+  private ResponseDTO<ConnectorResponseDTO> updateConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
