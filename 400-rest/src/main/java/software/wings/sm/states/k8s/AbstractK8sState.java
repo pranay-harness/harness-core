@@ -1062,7 +1062,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   @Override public abstract void handleAbortEvent(ExecutionContext context);
 
-//  public abstract List<String> getDelegateSelectors(ExecutionContext context);
+  //  public abstract List<String> getDelegateSelectors(ExecutionContext context);
 
   protected Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
     return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors(context));
