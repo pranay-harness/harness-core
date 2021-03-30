@@ -358,7 +358,11 @@ public class InvitesServiceImpl implements InvitesService {
       return false;
     }
     UserInfo user = userOpt.get();
-    ngUserService.createUserProjectMap(invite, user);
+    try {
+      ngUserService.createUserProjectMap(invite, user);
+    } catch (Exception e) {
+      log.error("Couldn't create role assingment for email {}", user.getEmail(), e);
+    }
     markInviteApprovedAndDeleted(invite);
     return true;
   }
