@@ -1,10 +1,15 @@
 package io.harness.steps.approval.step.jira.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@OwnedBy(CDC)
 public enum CriteriaSpecType {
-  @JsonProperty("Jexl") JEXL("Jexl"),
-  @JsonProperty("KeyValues") KEY_VALUES("KeyValues");
+  @JsonProperty(CriteriaSpecTypeConstants.JEXL) JEXL(CriteriaSpecTypeConstants.JEXL),
+  @JsonProperty(CriteriaSpecTypeConstants.KEY_VALUES) KEY_VALUES(CriteriaSpecTypeConstants.KEY_VALUES);
 
   private final String displayName;
 

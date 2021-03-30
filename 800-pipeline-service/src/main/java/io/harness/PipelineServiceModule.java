@@ -37,6 +37,7 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
+import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -63,6 +64,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.yaml.YamlSdkModule;
@@ -201,6 +203,7 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
+    bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
   }
 
   @Provides

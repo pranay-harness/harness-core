@@ -15,8 +15,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.ApprovalStepParameters;
-import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
-import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.timeout.TimeoutParameters;
@@ -80,6 +78,7 @@ public abstract class ApprovalInstance implements PersistentEntity, NGAccess, Pe
   public String getIdentifier() {
     return id;
   }
+
   protected void updateFromStepParameters(Ambiance ambiance, ApprovalStepParameters stepParameters) {
     if (stepParameters == null) {
       return;
@@ -96,24 +95,6 @@ public abstract class ApprovalInstance implements PersistentEntity, NGAccess, Pe
     setApprovalMessage((String) stepParameters.getApprovalMessage().fetchFinalValue());
     setIncludePipelineExecutionHistory((boolean) stepParameters.getIncludePipelineExecutionHistory().fetchFinalValue());
     setDeadline(calculateDeadline(stepParameters.getTimeout()));
-  }
-
-  public ApprovalInstanceResponseDTO toApprovalInstanceResponseDTO() {
-    return ApprovalInstanceResponseDTO.builder()
-        .id(id)
-        .type(type)
-        .status(status)
-        .approvalMessage(approvalMessage)
-        .includePipelineExecutionHistory(includePipelineExecutionHistory)
-        .deadline(deadline)
-        .details(toApprovalInstanceDetailsDTO())
-        .createdAt(createdAt)
-        .lastModifiedAt(lastModifiedAt)
-        .build();
-  }
-
-  public ApprovalInstanceDetailsDTO toApprovalInstanceDetailsDTO() {
-    return null;
   }
 
   @Override
