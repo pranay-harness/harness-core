@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +12,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SecretChangeLog;
 import io.harness.exception.SecretManagementDelegateException;
@@ -54,6 +56,7 @@ import retrofit2.Response;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(_890_SM_CORE)
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   @Override
   public void signPublicKey(HostConnectionAttributes hostConnectionAttributes, SSHVaultConfig sshVaultConfig) {

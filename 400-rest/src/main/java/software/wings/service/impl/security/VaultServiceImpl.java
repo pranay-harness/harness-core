@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretChangeLog;
@@ -60,6 +62,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(_890_SM_CORE)
 public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultService, RuntimeCredentialsInjector {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
