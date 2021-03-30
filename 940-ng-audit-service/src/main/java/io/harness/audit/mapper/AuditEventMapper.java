@@ -43,10 +43,12 @@ public class AuditEventMapper {
     }
     coreInfo.add(KeyValuePair.builder().key(AuditCommonConstants.MODULE).value(dto.getModule().name()).build());
     coreInfo.add(KeyValuePair.builder().key(AuditCommonConstants.ACTION).value(dto.getAction().name()).build());
-    coreInfo.add(KeyValuePair.builder()
-                     .key(AuditCommonConstants.ENVIRONMENT_IDENTIFIER)
-                     .value(dto.getEnvironmentIdentifier())
-                     .build());
+    if (isNotEmpty(dto.getEnvironmentIdentifier())) {
+      coreInfo.add(KeyValuePair.builder()
+                       .key(AuditCommonConstants.ENVIRONMENT_IDENTIFIER)
+                       .value(dto.getEnvironmentIdentifier())
+                       .build());
+    }
     return AuditEvent.builder()
         .insertId(dto.getInsertId())
         .resourceScope(ResourceScopeMapper.fromDTO(dto.getResourceScope()))
