@@ -17,7 +17,6 @@ import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.dtos.RepoProviders;
-import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.EntityDetail;
@@ -108,7 +107,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
-        .filePath(getEntityPath(entity))
+        .filePath(entity.getEntityGitPath())
         .yamlGitConfigId(entity.getYamlGitConfigId())
         .accountId(entity.getAccountId())
         .build();
@@ -143,12 +142,6 @@ public class GitEntityServiceImpl implements GitEntityService {
       log.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
     }
     return repositoryUrl;
-  }
-
-  @NotNull
-  private String getEntityPath(GitFileLocation entity) {
-    return GitFileLocationHelper.getEntityPath(
-        entity.getEntityRootFolderName(), entity.getEntityType(), entity.getEntityIdentifier());
   }
 
   @Override

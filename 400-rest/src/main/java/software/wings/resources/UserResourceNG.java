@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -38,8 +40,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class UserResourceNG {
   private final UserService userService;
+  private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @GET
   @Path("/search")
@@ -48,13 +52,16 @@ public class UserResourceNG {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
-    PageResponse<UserInfo> pageResponse = aPageResponse()
-                                              .withOffset(offset.toString())
-                                              .withLimit(pageSize.toString())
-                                              .withResponse(convertUserToNgUser(userList))
-                                              .withTotal(userService.getTotalUserCount(accountId, true))
-                                              .build();
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+
+    PageResponse<UserInfo> pageResponse =
+        aPageResponse()
+            .withOffset(offset.toString())
+            .withLimit(pageSize.toString())
+            .withResponse(userList.stream().map(this::convertUserToNgUser).collect(Collectors.toList()))
+            .withTotal(userService.getTotalUserCount(accountId, true))
+            .build();
+
     return new RestResponse<>(pageResponse);
   }
 
@@ -144,6 +151,11 @@ public class UserResourceNG {
         .email(user.getEmail())
         .name(user.getName())
         .uuid(user.getUuid())
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
         .accountIds(user.getAccountIds())
         .build();
   }

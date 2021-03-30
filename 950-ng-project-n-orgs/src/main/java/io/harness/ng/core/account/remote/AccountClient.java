@@ -1,5 +1,8 @@
 package io.harness.ng.core.account.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.rest.RestResponse;
 
@@ -9,6 +12,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+@OwnedBy(PL)
 public interface AccountClient {
   String ACCOUNT_DTO_API = "ng/accounts/dto";
   String FEATURE_FLAG_CHECK_API = "ng/accounts/feature-flag-enabled";

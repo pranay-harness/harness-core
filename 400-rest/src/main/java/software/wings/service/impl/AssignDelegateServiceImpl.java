@@ -27,6 +27,7 @@ import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateInstanceStatus;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -166,7 +167,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       }
     }
 
-    boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
+    boolean canAssign = canAssignOwner(batch, delegate, task.getSetupAbstractions())
+        && canAssignDelegateScopes(batch, delegate, task)
         && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
         && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
 
@@ -203,9 +205,33 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegate == null) {
       return false;
     }
-    return canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
+    return canAssignOwner(batch, delegate, taskSetupAbstractions)
+        && canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
         && canAssignDelegateProfileScopes(batch, delegate, taskSetupAbstractions)
         && canAssignSelectors(batch, delegate, executionCapabilities);
+  }
+
+  private boolean canAssignOwner(
+      BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
+    boolean canAssign = true;
+    List<DelegateOwner> owners = delegate.getOwners();
+
+    if (isNotEmpty(owners)) {
+      if (isEmpty(taskSetupAbstractions)) {
+        canAssign = false;
+      } else {
+        for (DelegateOwner owner : owners) {
+          canAssign = owner.getEntityId().equals(taskSetupAbstractions.get(owner.getEntityType()));
+          if (!canAssign) {
+            delegateSelectionLogsService.logOwnerRuleNotMatched(
+                batch, delegate.getAccountId(), delegate.getUuid(), owner);
+            break;
+          }
+        }
+      }
+    }
+
+    return canAssign;
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {

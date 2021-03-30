@@ -344,7 +344,8 @@ public class K8sStepHelperTest extends CategoryTest {
             .store(GitStore.builder()
                        .branch(ParameterField.createValueField("test"))
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
-                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .paths(ParameterField.createValueField(Arrays.asList("file1")))
+                       .folderPath(ParameterField.createValueField("kustomize-dir"))
                        .build())
             .pluginPath("/usr/bin/kustomize")
             .build();
@@ -363,6 +364,11 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(delegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     KustomizeManifestDelegateConfig kustomizeManifestDelegateConfig = (KustomizeManifestDelegateConfig) delegateConfig;
     assertThat(kustomizeManifestDelegateConfig.getPluginPath()).isEqualTo("/usr/bin/kustomize");
+    assertThat(kustomizeManifestDelegateConfig.getKustomizeDirPath()).isEqualTo("kustomize-dir");
+    assertThat(kustomizeManifestDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        (GitStoreDelegateConfig) kustomizeManifestDelegateConfig.getStoreDelegateConfig();
+    assertThat(gitStoreDelegateConfig.getPaths().get(0)).isEmpty();
   }
 
   @Test

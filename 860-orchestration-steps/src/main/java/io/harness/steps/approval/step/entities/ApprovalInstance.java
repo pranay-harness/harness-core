@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -14,8 +15,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.ApprovalStepParameters;
-import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
-import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.timeout.TimeoutParameters;
@@ -46,7 +45,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("approvalInstances")
 @Entity(value = "approvalInstances", noClassnameStored = true)
 @Persistent
-public abstract class ApprovalInstance implements PersistentEntity, NGAccess {
+public abstract class ApprovalInstance implements PersistentEntity, NGAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -67,12 +66,13 @@ public abstract class ApprovalInstance implements PersistentEntity, NGAccess {
   String approvalMessage;
   boolean includePipelineExecutionHistory;
   long deadline;
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
+  @NotNull String accountIdentifier;
+  @NotNull String orgIdentifier;
+  @NotNull String projectIdentifier;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+  long nextIteration;
 
   @Override
   public String getIdentifier() {
@@ -97,22 +97,19 @@ public abstract class ApprovalInstance implements PersistentEntity, NGAccess {
     setDeadline(calculateDeadline(stepParameters.getTimeout()));
   }
 
-  public ApprovalInstanceResponseDTO toApprovalInstanceResponseDTO() {
-    return ApprovalInstanceResponseDTO.builder()
-        .id(id)
-        .type(type)
-        .status(status)
-        .approvalMessage(approvalMessage)
-        .includePipelineExecutionHistory(includePipelineExecutionHistory)
-        .deadline(deadline)
-        .details(toApprovalInstanceDetailsDTO())
-        .createdAt(createdAt)
-        .lastModifiedAt(lastModifiedAt)
-        .build();
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    this.nextIteration = nextIteration;
   }
 
-  public ApprovalInstanceDetailsDTO toApprovalInstanceDetailsDTO() {
-    return null;
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return this.nextIteration;
+  }
+
+  @Override
+  public String getUuid() {
+    return id;
   }
 
   private static long calculateDeadline(ParameterField<String> timeoutField) {

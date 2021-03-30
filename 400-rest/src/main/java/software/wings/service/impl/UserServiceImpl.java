@@ -1097,6 +1097,14 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
+  @Override
+  public List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId) {
+    return wingsPersistence.createQuery(UserGroup.class)
+        .filter(UserGroupKeys.accountId, accountId)
+        .filter(UserGroupKeys.memberIds, userId)
+        .asList();
+  }
+
   private List<UserGroup> getUserGroups(String accountId, SetView<String> userGroupIds) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter("_id", IN, userGroupIds.toArray())

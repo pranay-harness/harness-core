@@ -2,8 +2,10 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -35,6 +37,7 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
+import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -61,6 +64,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.yaml.YamlSdkModule;
@@ -91,6 +95,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(PIPELINE)
 @Slf4j
 public class PipelineServiceModule extends AbstractModule {
   private final PipelineServiceConfiguration configuration;
@@ -155,6 +160,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
     install(YamlSdkModule.getInstance());
+    install(AccessControlClientModule.getInstance(
+        configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
 
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
@@ -196,6 +203,7 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
+    bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
   }
 
   @Provides

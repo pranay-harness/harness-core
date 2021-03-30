@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -12,6 +12,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,21 +25,30 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
 /**
- * Created by rishi on 10/30/16.
- *
  * This has been deprecated in favor of {@link software.wings.beans.security.UserGroup#notificationSettings}
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
-@NgUniqueIndex(name = "yaml", fields = { @Field("accountId")
-                                         , @Field("name") })
 @HarnessEntity(exportable = true)
 @Deprecated
+@FieldNameConstants(innerTypeName = "NotificationGroupKeys")
 public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_yaml")
+                 .unique(true)
+                 .field(NotificationGroupKeys.accountId)
+                 .field(NotificationGroupKeys.name)
+                 .build())
+        .build();
+  }
+
   public static final String NAME_KEY = "name";
 
   @NotEmpty private String accountId;

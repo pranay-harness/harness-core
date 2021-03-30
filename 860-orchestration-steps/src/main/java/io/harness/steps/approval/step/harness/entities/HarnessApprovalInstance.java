@@ -7,7 +7,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
@@ -18,7 +17,6 @@ import io.harness.steps.approval.step.harness.beans.ApproversDTO;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalAction;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivity;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
-import io.harness.steps.approval.step.harness.beans.HarnessApprovalInstanceDetailsDTO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +47,7 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   @NotNull ApproversDTO approvers;
   List<ApproverInputInfoDTO> approverInputs;
 
-  private Optional<HarnessApprovalActivity> fetchLastApprovalActivity() {
+  public Optional<HarnessApprovalActivity> fetchLastApprovalActivity() {
     if (EmptyPredicate.isEmpty(approvalActivities)) {
       return Optional.empty();
     }
@@ -96,23 +94,6 @@ public class HarnessApprovalInstance extends ApprovalInstance {
       }
     }
     return names.size() == 0;
-  }
-
-  @Override
-  public ApprovalInstanceDetailsDTO toApprovalInstanceDetailsDTO() {
-    return HarnessApprovalInstanceDetailsDTO.builder()
-        .approvers(approvers)
-        .approvalActivities(approvalActivities)
-        .approverInputs(
-            fetchLastApprovalActivity()
-                .map(approvalActivity
-                    -> approvalActivity.getApproverInputs() == null ? new ArrayList<ApproverInputInfoDTO>()
-                                                                    : approvalActivity.getApproverInputs()
-                                                                          .stream()
-                                                                          .map(ApproverInput::toApproverInputInfoDTO)
-                                                                          .collect(Collectors.toList()))
-                .orElse(approverInputs))
-        .build();
   }
 
   public HarnessApprovalOutcome toHarnessApprovalOutcome() {

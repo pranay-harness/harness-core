@@ -1,9 +1,12 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretService;
@@ -37,6 +40,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(PL)
 @Path("secrets")
 @Api("secrets")
 @Produces({"application/json", "application/yaml"})

@@ -27,7 +27,7 @@ public class OutboxEventPollService implements Managed {
 
   @Override
   public void start() {
-    outboxPollJobFuture = executorService.scheduleWithFixedDelay(outboxEventPollJob, 20, 10, TimeUnit.SECONDS);
+    outboxPollJobFuture = executorService.scheduleWithFixedDelay(outboxEventPollJob, 5, 3, TimeUnit.SECONDS);
   }
 
   @Override

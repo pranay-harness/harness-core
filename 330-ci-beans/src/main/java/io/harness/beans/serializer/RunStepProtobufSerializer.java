@@ -10,10 +10,12 @@ import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
@@ -71,6 +73,54 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
+        .build();
+  }
+
+  public UnitStep serializeStepWithStepParameters(RunStepInfo runStepInfo, Integer port, String callbackId,
+      String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout, String accountId) {
+    if (callbackId == null) {
+      throw new CIStageExecutionException("CallbackId can not be null");
+    }
+
+    if (port == null) {
+      throw new CIStageExecutionException("Port can not be null");
+    }
+
+    RunStep.Builder runStepBuilder = RunStep.newBuilder();
+    runStepBuilder.setCommand(
+        RunTimeInputHandler.resolveStringParameter("Command", "Run", identifier, runStepInfo.getCommand(), true));
+
+    runStepBuilder.setContainerPort(port);
+
+    UnitTestReport reports = runStepInfo.getReports();
+    if (reports != null) {
+      if (reports.getType() == UnitTestReportType.JUNIT) {
+        JUnitTestReport junitTestReport = (JUnitTestReport) reports.getSpec();
+        List<String> resolvedReport = junitTestReport.resolve(identifier, "run");
+
+        Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolvedReport).build();
+        runStepBuilder.addReports(report);
+      }
+    }
+
+    List<String> output = RunTimeInputHandler.resolveListParameter(
+        "OutputVariables", "Run", identifier, runStepInfo.getOutputVariables(), false);
+    if (isNotEmpty(output)) {
+      runStepBuilder.addAllEnvVarOutputs(output);
+    }
+
+    long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, runStepInfo.getDefaultTimeout());
+    runStepBuilder.setContext(StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build());
+
+    return UnitStep.newBuilder()
+        .setAccountId(accountId)
+        .setContainerPort(port)
+        .setId(identifier)
+        .setTaskId(callbackId)
+        .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
+        .setDisplayName(Optional.ofNullable("run").orElse("")) // TODO Set name
+        .setRun(runStepBuilder.build())
         .setLogKey(logKey)
         .build();
   }

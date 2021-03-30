@@ -4,8 +4,13 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.SCMGrpcClientModule;
+import io.harness.ScmConnectionConfig;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -76,6 +81,9 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+            .toInstance(mock(NoOpProducer.class));
       }
     });
 
@@ -116,6 +124,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
     modules.add(NGCoreModule.getInstance());
     modules.add(new WaiterModule());
     modules.add(new EntitySetupUsageModule());
+    modules.add(new SCMGrpcClientModule(ScmConnectionConfig.builder().url("dummyurl").build()));
     return modules;
   }
 

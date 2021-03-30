@@ -1,5 +1,10 @@
 package io.harness.executions.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface StepSpecTypeConstants {
   String K8S_ROLLING_DEPLOY = "K8sRollingDeploy";
   String K8S_ROLLING_ROLLBACK = "K8sRollingRollback";
@@ -10,6 +15,11 @@ public interface StepSpecTypeConstants {
   String K8S_CANARY_DELETE = "K8sCanaryDelete";
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   String K8S_DELETE = "K8sDelete";
+
+  String TERRAFORM_APPLY = "TerraformApply";
+  String TERRAFORM_PLAN = "TerraformPlan";
+  String TERRAFORM_DESTROY = "TerraformDestroy";
+  String TERRAFORM_ROLLBACK = "TerraformRollback";
 
   String SHELL_SCRIPT = "ShellScript";
   String PLACEHOLDER = "Placeholder";

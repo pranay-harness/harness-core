@@ -46,13 +46,13 @@ public class LiteEngineConnectionCapabilityCheck implements CapabilityCheck, Pro
     try {
       try {
         LiteEngineGrpc.LiteEngineBlockingStub liteEngineBlockingStub = LiteEngineGrpc.newBlockingStub(channel);
-        liteEngineBlockingStub.withDeadlineAfter(2, TimeUnit.SECONDS).ping(PingRequest.newBuilder().build());
+        liteEngineBlockingStub.withDeadlineAfter(120, TimeUnit.SECONDS).ping(PingRequest.newBuilder().build());
         return true;
       } finally {
         // ManagedChannels use resources like threads and TCP connections. To prevent leaking these
         // resources the channel should be shut down when it will no longer be used. If it may be used
         // again leave it running.
-        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        channel.shutdownNow();
       }
     } catch (Exception e) {
       log.error("Failed to connect to lite engine target {} with err: {}", target, e);

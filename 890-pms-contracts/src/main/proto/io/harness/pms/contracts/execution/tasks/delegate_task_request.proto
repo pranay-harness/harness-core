@@ -18,4 +18,5 @@ message DelegateTaskRequest {
   repeated string logKeys = 8;
   bool selectionTrackingLogEnabled = 9;
   string taskName = 10;
+  bool forceExecute = 11;
 }

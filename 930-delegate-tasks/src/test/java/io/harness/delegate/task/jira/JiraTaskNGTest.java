@@ -1,20 +1,19 @@
 package io.harness.delegate.task.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -25,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDC)
 public class JiraTaskNGTest extends CategoryTest {
   @Mock private JiraTaskNGHelper jiraTaskNGHelper;
   @InjectMocks
@@ -49,13 +49,9 @@ public class JiraTaskNGTest extends CategoryTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void testRun() {
-    JiraTaskNGResponse taskResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    JiraTaskNGResponse taskResponse = JiraTaskNGResponse.builder().build();
     when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenReturn(taskResponse);
-    DelegateResponseData response = jiraTaskNG.run(JiraTaskNGParameters.builder().build());
-
-    assertThat(((JiraTaskNGResponse) response).getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThatCode(() -> jiraTaskNG.run(JiraTaskNGParameters.builder().build())).doesNotThrowAnyException();
     verify(jiraTaskNGHelper).getJiraTaskResponse(JiraTaskNGParameters.builder().build());
   }
 }

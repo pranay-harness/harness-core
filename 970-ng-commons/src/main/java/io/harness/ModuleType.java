@@ -1,8 +1,13 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@OwnedBy(PL)
 public enum ModuleType {
   @JsonProperty("CD") CD,
   @JsonProperty("CI") CI,

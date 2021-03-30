@@ -59,7 +59,7 @@ public class CEViewServiceImpl implements CEViewService {
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
   private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
   private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
-  private static final int VIEW_COUNT = 50;
+  private static final int VIEW_COUNT = 100;
   @Override
   public CEView save(CEView ceView) {
     validateView(ceView);

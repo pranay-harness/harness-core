@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ApiModel("JexlCriteria")
+@ApiModel("JexlCriteriaSpec")
 public class JexlCriteriaSpecDTO implements CriteriaSpecDTO {
   @NotEmpty String expression;
 

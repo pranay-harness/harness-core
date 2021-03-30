@@ -1,5 +1,7 @@
 package io.harness.gitsync.persistance;
 
+import io.harness.git.model.ChangeType;
+
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
@@ -24,6 +26,8 @@ public interface GitAwarePersistence {
   <Y> DeleteResult remove(@NotNull GitSyncableEntity object, @NotNull String collectionName, Y yaml);
 
   <Y> DeleteResult remove(@NotNull Object object, Y yaml);
+
+  <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml, ChangeType changeType);
 
   <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml);
 

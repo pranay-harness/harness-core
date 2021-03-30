@@ -1,5 +1,8 @@
 package io.harness.repositories.core.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 
@@ -11,11 +14,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(PL)
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   private final MongoTemplate mongoTemplate;
@@ -70,5 +76,10 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
     Query query = new Query(criteria);
     Update update = new Update().set(ProjectKeys.deleted, Boolean.TRUE);
     return mongoTemplate.findAndModify(query, update, Project.class);
+  }
+
+  @Override
+  public <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn) {
+    return mongoTemplate.aggregate(aggregation, Project.class, classToFillResultIn);
   }
 }

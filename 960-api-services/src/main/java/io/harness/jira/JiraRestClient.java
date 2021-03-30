@@ -20,7 +20,7 @@ public interface JiraRestClient {
   Call<JiraIssueNG> getIssue(@Path("issueKey") String issueKey, @Query("expand") String expand);
 
   @GET("issue/createmeta")
-  Call<JiraIssueCreateMetaResponseNG> getIssueCreateMeta(@Query("projectKeys") String projectKeys,
+  Call<JiraIssueCreateMetadataNG> getIssueCreateMetadata(@Query("projectKeys") String projectKeys,
       @Query("issueTypeNames") String issueTypes, @Query("expand") String expand);
 
   @GET("status") Call<List<JiraStatusNG>> getStatuses();

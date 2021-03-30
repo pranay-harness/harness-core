@@ -55,7 +55,6 @@ import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
-import retrofit2.http.Query;
 
 @OwnedBy(PL)
 @Api("organizations")
@@ -103,7 +102,7 @@ public class OrganizationResource {
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
   public ResponseDTO<PageResponse<OrganizationResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();

@@ -5,6 +5,7 @@ import static io.harness.filter.FilterConstants.AUDIT_FILTER;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.Resource;
@@ -37,7 +38,7 @@ public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
   List<Resource> resources;
 
   List<ModuleType> modules;
-  List<String> actions;
+  List<Action> actions;
   List<String> environmentIdentifiers;
   List<Principal> principals;
 

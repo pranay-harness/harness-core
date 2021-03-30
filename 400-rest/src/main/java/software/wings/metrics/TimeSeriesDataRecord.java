@@ -15,11 +15,10 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -42,6 +41,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.nio.charset.StandardCharsets;
@@ -68,22 +68,6 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rsingh on 08/30/17.
  */
-
-@CdIndex(name = "stateExIdx",
-    fields =
-    { @Field("stateExecutionId")
-      , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
-@CdIndex(name = "workflowExIdx",
-    fields =
-    {
-      @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-    })
-@CdIndex(name = "serviceGuardIdx",
-    fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-               , @Field("cvConfigId") })
-@CdIndex(name = "service_guard_idx",
-    fields = { @Field("cvConfigId")
-               , @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
 @Data
 @Builder
 @NoArgsConstructor
@@ -96,6 +80,27 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("stateExIdx")
+                 .field(TimeSeriesMetricRecordKeys.stateExecutionId)
+                 .field(TimeSeriesMetricRecordKeys.groupName)
+                 .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("workflowExIdx")
+                .field(TimeSeriesMetricRecordKeys.workflowExecutionId)
+                .field(TimeSeriesMetricRecordKeys.groupName)
+                .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("service_guard_idx")
+                .field(TimeSeriesMetricRecordKeys.cvConfigId)
+                .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                .build())
+        .build();
+  }
   public static final String TOP_HATTER_ACCOUNT_ID = "pxxxyjHaRGKcEHGSIoGbAQ";
   @Id private String uuid;
 
@@ -107,7 +112,7 @@ public class TimeSeriesDataRecord
 
   private String serviceId;
 
-  @FdIndex private String cvConfigId;
+  private String cvConfigId;
 
   private String stateExecutionId;
 

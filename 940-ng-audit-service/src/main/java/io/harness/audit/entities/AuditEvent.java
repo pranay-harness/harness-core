@@ -2,9 +2,12 @@ package io.harness.audit.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
@@ -22,6 +25,7 @@ import io.harness.request.RequestMetadata;
 import io.harness.scope.ResourceScope;
 import io.harness.scope.ResourceScope.ResourceScopeKeys;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.Valid;
@@ -44,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "auditEvents", noClassnameStored = true)
 @Document("auditEvents")
 @TypeAlias("auditEvents")
+@JsonInclude(NON_NULL)
 @StoreIn(DbAliases.AUDITS)
 public class AuditEvent {
   @NotBlank String insertId;
@@ -59,9 +64,10 @@ public class AuditEvent {
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
   @NotNull ModuleType module;
+  String environmentIdentifier;
 
   @NotNull @Valid Resource resource;
-  @NotBlank String action;
+  @NotNull Action action;
 
   YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
@@ -73,57 +79,76 @@ public class AuditEvent {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeModulePrincipalResourceActionIdx")
+                 .name("ngAuditTimeScopeModulePrincipalResourceEnvironmentActionIdx")
                  .descSortField(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .field(AuditEventKeys.module)
+                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
+                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.environmentIdentifier)
+                 .field(AuditEventKeys.action)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("ngAuditTimeScopeModuleResourceEnvironmentActionIdx")
+                 .descSortField(AuditEventKeys.timestamp)
+                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.module)
+                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.environmentIdentifier)
+                 .field(AuditEventKeys.action)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("ngAuditTimeScopePrincipalResourceEnvironmentActionIdx")
+                 .descSortField(AuditEventKeys.timestamp)
+                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
                  .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.environmentIdentifier)
                  .field(AuditEventKeys.action)
                  .build())
         .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeModuleResourceActionIdx")
+                 .name("ngAuditTimeScopeResourceEnvironmentActionIdx")
                  .descSortField(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.module)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
                  .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.environmentIdentifier)
                  .field(AuditEventKeys.action)
                  .build())
         .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopePrincipalResourceActionIdx")
+                 .name("ngAuditTimeScopeEnvironmentActionIdx")
                  .descSortField(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.action)
-                 .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeResourceActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
+                 .field(AuditEventKeys.environmentIdentifier)
                  .field(AuditEventKeys.action)
                  .build())
         .add(SortCompoundMongoIndex.builder()
@@ -144,6 +169,11 @@ public class AuditEvent {
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.orgIdentifier;
     public static final String PROJECT_IDENTIFIER_KEY =
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.projectIdentifier;
+    public static final String RESOURCE_SCOPE_LABEL_KEY = AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels;
+    public static final String RESOURCE_SCOPE_LABEL_KEYS_KEY =
+        AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels + "." + KeyValuePairKeys.key;
+    public static final String RESOURCE_SCOPE_LABEL_VALUES_KEY =
+        AuditEventKeys.resourceScope + "." + ResourceScopeKeys.labels + "." + KeyValuePairKeys.value;
 
     public static final String PRINCIPAL_TYPE_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;

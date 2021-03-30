@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -136,7 +135,7 @@ public class InfrastructurePmsPlanCreator {
 
     // Add each step dependency
     LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
-    List<YamlField> stepYamlFields = getStepYamlFields(stepYamlNodes);
+    List<YamlField> stepYamlFields = PlanCreatorUtils.getStepYamlFields(stepYamlNodes);
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
@@ -180,24 +179,6 @@ public class InfrastructurePmsPlanCreator {
                 .build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
-  }
-
-  public List<YamlField> getStepYamlFields(List<YamlNode> stepYamlNodes) {
-    List<YamlField> stepFields = new LinkedList<>();
-
-    stepYamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
-      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
-      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
-      if (stepField != null) {
-        stepFields.add(stepField);
-      } else if (stepGroupField != null) {
-        stepFields.add(stepGroupField);
-      } else if (parallelStepField != null) {
-        stepFields.add(parallelStepField);
-      }
-    });
-    return stepFields;
   }
 
   PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {

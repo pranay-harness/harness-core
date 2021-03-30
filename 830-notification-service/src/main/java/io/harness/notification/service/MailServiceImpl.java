@@ -1,6 +1,8 @@
 package io.harness.notification.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 
@@ -9,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.MailTaskParams;
 import io.harness.delegate.beans.NotificationTaskResponse;
@@ -49,6 +52,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.EmailValidator;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class MailServiceImpl implements ChannelService {
@@ -205,9 +209,15 @@ public class MailServiceImpl implements ChannelService {
   private List<String> resolveRecipients(NotificationRequest notificationRequest) {
     NotificationRequest.Email emailDetails = notificationRequest.getEmail();
     List<String> recipients = new ArrayList<>(emailDetails.getEmailIdsList());
-    List<String> resolvedRecipients = notificationSettingsService.getNotificationSettingsForGroups(
-        emailDetails.getUserGroupIdsList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
-    recipients.addAll(resolvedRecipients);
+    if (isNotEmpty(emailDetails.getUserGroupIdsList())) {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationSettingsForGroups(
+          emailDetails.getUserGroupIdsList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    } else {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
+          emailDetails.getUserGroupList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    }
     return recipients;
   }
 

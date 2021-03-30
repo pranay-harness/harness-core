@@ -1,9 +1,14 @@
 package io.harness.eventsframework.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Getter;
 
+@OwnedBy(PL)
 public abstract class AbstractConsumer implements Consumer {
   private static final int CONSUMER_NAME_LENGTH = 4;
   @Getter private final String topicName;
