@@ -182,6 +182,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
@@ -2939,9 +2940,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
-    WorkflowExecution execution =
-        workflowExecutionService.triggerOrchestrationWorkflowExecution(appId, env.getUuid(), workflow.getUuid(), null,
-            executionArgs, callback, Trigger.builder().uuid(TRIGGER_ID).webHookToken("WEBHOOK_TOKEN").build());
+    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(appId, env.getUuid(),
+        workflow.getUuid(), null, executionArgs, callback,
+        Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build());
     callback.await(ofSeconds(15));
 
     assertThat(execution).isNotNull();

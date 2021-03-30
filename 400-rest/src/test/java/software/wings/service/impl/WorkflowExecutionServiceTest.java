@@ -113,6 +113,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
@@ -1000,7 +1001,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(()
                            -> workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs,
-                               Trigger.builder().uuid(TRIGGER_ID).webHookToken("WEBHOOK_TOKEN").build()))
+                               Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build()))
         .isInstanceOf(WingsException.class)
         .hasMessage("You can not deploy an empty pipeline.");
     verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
