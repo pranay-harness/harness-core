@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("sampleBean")
 @FieldNameConstants(innerTypeName = "SampleBeanKeys")
-public class SampleBean implements UuidAware, PersistentEntity, GitSyncableEntity, NGDTO {
+public class SampleBean1 implements UuidAware, PersistentEntity, GitSyncableEntity, NGDTO {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String test1;
   String branch;
