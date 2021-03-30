@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.product.ci.scm.proto.ContentResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.FileModifyRequest;
 import io.harness.product.ci.scm.proto.Provider;
 import io.harness.product.ci.scm.proto.SCMGrpc;
@@ -28,7 +28,7 @@ public class SCMServiceGitClientImpl implements ScmClient {
   ScmGitProviderHelper scmGitProviderHelper;
 
   @Override
-  public ContentResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+  public CreateFileResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     // todo @deepak: To run the request please add username and email in the signature
@@ -37,7 +37,7 @@ public class SCMServiceGitClientImpl implements ScmClient {
                                               .setSlug(slug)
                                               .setPath(gitFileDetails.getFilePath())
                                               .setBranch(gitFileDetails.getBranch())
-                                              .setData(gitFileDetails.getFileContent())
+                                              .setContent(gitFileDetails.getFileContent())
                                               .setMessage(gitFileDetails.getCommitMessage())
                                               .setProvider(gitProvider)
                                               .setSignature(Signature.newBuilder().build())

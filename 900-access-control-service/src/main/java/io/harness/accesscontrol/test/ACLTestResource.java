@@ -1,10 +1,13 @@
 package io.harness.accesscontrol.test;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -24,6 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Path("/acl")
 @Api("/acl")
 @Produces({"application/json", "application/yaml"})
@@ -56,9 +60,8 @@ public class ACLTestResource {
                                                                      .orgIdentifier(org)
                                                                      .projectIdentifier(project)
                                                                      .build())
-                                                  .permission("core.secret.create")
+                                                  .permission("core_secret_create")
                                                   .build());
-
     return ResponseDTO.newResponse("accessible");
   }
 }

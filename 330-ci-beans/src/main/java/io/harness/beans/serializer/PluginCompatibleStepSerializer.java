@@ -5,9 +5,11 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
@@ -49,6 +51,41 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(pluginCompatibleStep.getDisplayName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setPlugin(pluginStep)
+        .setLogKey(logKey)
+        .build();
+  }
+
+  public UnitStep serializeStepWithStepParameters(PluginCompatibleStep pluginCompatibleStep, Integer port,
+      String callbackId, String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout,
+      String accountId) {
+    if (port == null) {
+      throw new CIStageExecutionException("Port can not be null");
+    }
+
+    if (callbackId == null) {
+      throw new CIStageExecutionException("callbackId can not be null");
+    }
+
+    long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginCompatibleStep.getDefaultTimeout());
+
+    StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
+
+    PluginStep pluginStep =
+        PluginStep.newBuilder()
+            .setContainerPort(port)
+            .setImage(RunTimeInputHandler.resolveStringParameter("Image", "Plugin",
+                pluginCompatibleStep.getIdentifier(), pluginCompatibleStep.getContainerImage(), true))
+            .setContext(stepContext)
+            .build();
+
+    return UnitStep.newBuilder()
+        .setAccountId(accountId)
+        .setContainerPort(port)
+        .setId(identifier)
+        .setTaskId(callbackId)
+        .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
+        .setDisplayName(Optional.ofNullable("plugin").orElse("")) // TODO Set name
         .setPlugin(pluginStep)
         .setLogKey(logKey)
         .build();

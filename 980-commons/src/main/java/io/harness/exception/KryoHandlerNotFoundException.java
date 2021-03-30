@@ -11,4 +11,9 @@ public class KryoHandlerNotFoundException extends WingsException {
     super(message, null, KRYO_HANDLER_NOT_FOUND_ERROR, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public KryoHandlerNotFoundException(String message, Throwable cause) {
+    super(message, cause, KRYO_HANDLER_NOT_FOUND_ERROR, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

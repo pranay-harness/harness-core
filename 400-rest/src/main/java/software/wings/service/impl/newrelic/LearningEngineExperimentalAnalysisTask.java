@@ -3,11 +3,10 @@ package software.wings.service.impl.newrelic;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.version.ServiceApiVersion;
 
 import software.wings.beans.Base;
@@ -19,6 +18,7 @@ import software.wings.sm.StateType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -34,31 +34,6 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by rsingh on 1/8/18.
  */
-
-@CdIndex(name = "taskQueueIdx",
-    fields =
-    {
-      @Field("state_execution_id")
-      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
-          @Field("cluster_level"), @Field("group_name"), @Field("version"),
-          @Field(value = "createdAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "cvConfigStatusIdx",
-    fields =
-    { @Field("cvConfigId")
-      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus") })
-@CdIndex(name = "usageMetricsIndex",
-    fields =
-    {
-      @Field("executionStatus")
-      , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "taskFetchIdx",
-    fields =
-    {
-      @Field("experiment_name")
-      , @Field("executionStatus"), @Field(value = "retry"), @Field(value = "createdAt", type = IndexType.DESC)
-    })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
@@ -67,6 +42,41 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "learningEngineExperimentalAnalysisTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LearningEngineExperimentalAnalysisTask extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("taskQueueIdx")
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id)
+                 .descSortField(LearningEngineExperimentalAnalysisTaskKeys.analysis_minute)
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.executionStatus)
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.ml_analysis_type)
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.cluster_level)
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.group_name)
+                 .field(LearningEngineExperimentalAnalysisTaskKeys.version)
+                 .descSortField(CREATED_AT_KEY)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("cvConfigStatusIdx")
+                .field(LearningEngineExperimentalAnalysisTaskKeys.cvConfigId)
+                .descSortField(LearningEngineExperimentalAnalysisTaskKeys.analysis_minute)
+                .field(LearningEngineExperimentalAnalysisTaskKeys.executionStatus)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("usageMetricsIndex")
+                .field(LearningEngineExperimentalAnalysisTaskKeys.executionStatus)
+                .field(LearningEngineExperimentalAnalysisTaskKeys.ml_analysis_type)
+                .field(LearningEngineExperimentalAnalysisTaskKeys.is24x7Task)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("taskFetchIdx")
+                .field(LearningEngineExperimentalAnalysisTaskKeys.experiment_name)
+                .field(LearningEngineExperimentalAnalysisTaskKeys.executionStatus)
+                .field(LearningEngineExperimentalAnalysisTaskKeys.retry)
+                .descSortField(CREATED_AT_KEY)
+                .build())
+        .build();
+  }
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;
 

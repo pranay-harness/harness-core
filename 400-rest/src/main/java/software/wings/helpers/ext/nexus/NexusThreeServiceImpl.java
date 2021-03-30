@@ -755,7 +755,7 @@ public class NexusThreeServiceImpl {
     boolean hasMoreResults = true;
     String continuationToken = null;
     int page = 0;
-    while (hasMoreResults && page <= MAX_PAGES) {
+    while (hasMoreResults && page < MAX_PAGES) {
       page++;
       hasMoreResults = false;
       if (nexusConfig.hasCredentials()) {
@@ -773,11 +773,8 @@ public class NexusThreeServiceImpl {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
               versions.add(version);
-              // get artifact urls for each version
-              Response<Nexus3AssetResponse> versionResponse = getNexus3MavenAssets(
-                  nexusConfig, version, groupId, artifactName, repoId, extension, classifier, nexusThreeRestClient);
               List<ArtifactFileMetadata> artifactFileMetadata =
-                  getDownloadUrlsForMaven(versionResponse, repoId, supportForNexusGroupReposEnabled);
+                  getArtifactMetadata(component.getAssets(), repoId, supportForNexusGroupReposEnabled);
 
               if (isNotEmpty(artifactFileMetadata)) {
                 versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
@@ -800,24 +797,25 @@ public class NexusThreeServiceImpl {
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
-  private List<ArtifactFileMetadata> getDownloadUrlsForMaven(
-      Response<Nexus3AssetResponse> response, String repoId, boolean supportForNexusGroupReposEnabled) {
+  private List<ArtifactFileMetadata> getArtifactMetadata(
+      List<Asset> assets, String repoId, boolean supportForNexusGroupReposEnabled) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isSuccessful(response) && response.body() != null && isNotEmpty(response.body().getItems())) {
-      for (Asset item : response.body().getItems()) {
-        String url = item.getDownloadUrl();
-        String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
-        if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5") || artifactFileName.endsWith("sha1")) {
-          continue;
-        }
-        // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
-        // Replacing the repository name in url with group repo name if the repotype is group
-        // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
-        if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
-          url = url.replace(item.getRepository(), repoId);
-        }
-        artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
+    if (isEmpty(assets)) {
+      return artifactFileMetadata;
+    }
+    for (Asset item : assets) {
+      String url = item.getDownloadUrl();
+      String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
+      if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5") || artifactFileName.endsWith("sha1")) {
+        continue;
       }
+      // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
+      // Replacing the repository name in url with group repo name if the repotype is group
+      // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
+      if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
+        url = url.replace(item.getRepository(), repoId);
+      }
+      artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
     }
     return artifactFileMetadata;
   }
@@ -830,7 +828,7 @@ public class NexusThreeServiceImpl {
     boolean hasMoreResults = true;
     String continuationToken = null;
     int page = 0;
-    while (hasMoreResults && page <= MAX_PAGES) {
+    while (hasMoreResults && page < MAX_PAGES) {
       page++;
       hasMoreResults = false;
       if (nexusConfig.hasCredentials()) {

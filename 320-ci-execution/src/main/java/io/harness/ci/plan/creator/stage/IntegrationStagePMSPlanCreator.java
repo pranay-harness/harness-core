@@ -126,7 +126,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
         .stepType(IntegrationStageStepPMS.STEP_TYPE)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
+        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen(), true))
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }

@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.iterator.PersistentRegularIterable;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
@@ -31,13 +30,12 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "approvalInstances", noClassnameStored = true)
 @Persistent
 @TypeAlias("jiraApprovalInstances")
-public class JiraApprovalInstance extends ApprovalInstance implements PersistentRegularIterable {
+public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String connectorRef;
   @NotEmpty String projectKey;
   @NotEmpty String issueId;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
-  long nextIteration;
 
   public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, JiraApprovalStepParameters stepParameters) {
     if (stepParameters == null) {
@@ -72,20 +70,5 @@ public class JiraApprovalInstance extends ApprovalInstance implements Persistent
 
   public JiraApprovalOutcome toJiraApprovalOutcome() {
     return JiraApprovalOutcome.builder().build();
-  }
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
-  }
-
-  @Override
-  public String getUuid() {
-    return getId();
   }
 }

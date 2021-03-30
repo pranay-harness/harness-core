@@ -5,7 +5,7 @@ import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
-import io.harness.ng.core.AccountScope;
+import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -26,7 +26,7 @@ public class OrganizationDeleteEvent implements Event {
   }
 
   public ResourceScope getResourceScope() {
-    return new AccountScope(accountIdentifier);
+    return new OrgScope(accountIdentifier, organization.getIdentifier());
   }
 
   public Resource getResource() {

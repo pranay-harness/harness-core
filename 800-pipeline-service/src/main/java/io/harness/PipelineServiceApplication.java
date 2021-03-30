@@ -23,6 +23,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -40,6 +41,7 @@ import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
@@ -181,8 +183,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
+    injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();

@@ -3,8 +3,11 @@ package io.harness.resourcegroup;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.environment.EnvironmentResourceClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -33,6 +36,7 @@ import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.StaticResourceGroupValidatorServiceImpl;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
+import io.harness.service.ServiceResourceClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -47,6 +51,7 @@ import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@OwnedBy(HarnessTeam.PL)
 public class ResourceGroupModule extends AbstractModule {
   private static final String RESOURCE_GROUP_CLIENT = "ng-manager";
   private static final String RESOURCE_GROUP_CONSUMER_GROUP = "resource-group";
@@ -81,8 +86,8 @@ public class ResourceGroupModule extends AbstractModule {
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
     }
-    return RedisProducer.of(
-        EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE);
+    return RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+        EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId());
   }
 
   @Provides
@@ -136,5 +141,11 @@ public class ResourceGroupModule extends AbstractModule {
     install(new PipelineRemoteClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getPipelineService().getBaseUrl()).build(),
         resourceGroupConfig.getPipelineService().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new ServiceResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new EnvironmentResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
   }
 }

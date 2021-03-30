@@ -1,9 +1,11 @@
 package io.harness.accesscontrol.acl.models;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
 import io.harness.accesscontrol.acl.models.SourceMetadata.SourceMetadataKeys;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -26,6 +28,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -36,6 +39,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(ACCESS_CONTROL)
 public class ACL implements PersistentEntity {
   private static final String DELIMITER = "$";
+  public static final String ROLE_ASSIGNMENT_IDENTIFIER_KEY =
+      ACLKeys.sourceMetadata + "." + SourceMetadataKeys.roleAssignmentIdentifier;
+  public static final String USER_GROUP_IDENTIFIER_KEY =
+      ACLKeys.sourceMetadata + "." + SourceMetadataKeys.userGroupIdentifier;
+  public static final String ROLE_IDENTIFIER_KEY = ACLKeys.sourceMetadata + "." + SourceMetadataKeys.roleIdentifier;
+  public static final String RESOURCE_GROUP_IDENTIFIER_KEY =
+      ACLKeys.sourceMetadata + "." + SourceMetadataKeys.resourceGroupIdentifier;
 
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @CreatedDate Long createdAt;
@@ -56,27 +66,46 @@ public class ACL implements PersistentEntity {
   }
 
   @Value
-  public static class RoleAssignmentPermission {
+  public static class RoleAssignmentPermissionPrincipal {
     String scopeIdentifier;
     String roleAssignmentIdentifier;
     String permissionIdentifier;
+    String principalIdentifier;
+    String principalType;
   }
 
   @Value
-  public static class RoleAssignmentResourceSelector {
+  public static class RoleAssignmentResourceSelectorPrincipal {
     String scopeIdentifier;
     String roleAssignmentIdentifier;
     String resourceSelector;
+    String principalIdentifier;
+    String principalType;
   }
 
-  public RoleAssignmentPermission roleAssignmentPermission() {
-    return new RoleAssignmentPermission(
-        this.scopeIdentifier, this.sourceMetadata.getRoleAssignmentIdentifier(), this.permissionIdentifier);
+  @Value
+  public static class RoleAssignmentResourceSelectorPermission {
+    String scopeIdentifier;
+    String roleAssignmentIdentifier;
+    String resourceSelector;
+    String permissionIdentifier;
   }
 
-  public RoleAssignmentResourceSelector roleAssignmentResourceSelector() {
-    return new RoleAssignmentResourceSelector(
-        this.scopeIdentifier, this.sourceMetadata.getRoleAssignmentIdentifier(), this.resourceSelector);
+  public RoleAssignmentPermissionPrincipal roleAssignmentPermissionPrincipal() {
+    return new RoleAssignmentPermissionPrincipal(this.scopeIdentifier,
+        this.sourceMetadata.getRoleAssignmentIdentifier(), this.permissionIdentifier, this.principalIdentifier,
+        this.principalType);
+  }
+
+  public RoleAssignmentResourceSelectorPrincipal roleAssignmentResourceSelectorPrincipal() {
+    return new RoleAssignmentResourceSelectorPrincipal(this.scopeIdentifier,
+        this.sourceMetadata.getRoleAssignmentIdentifier(), this.resourceSelector, this.principalIdentifier,
+        this.principalType);
+  }
+
+  public RoleAssignmentResourceSelectorPermission roleAssignmentResourceSelectorPermission() {
+    return new RoleAssignmentResourceSelectorPermission(this.scopeIdentifier,
+        this.sourceMetadata.getRoleAssignmentIdentifier(), this.resourceSelector, this.permissionIdentifier);
   }
 
   public static ACL copyOf(ACL acl) {
@@ -108,10 +137,10 @@ public class ACL implements PersistentEntity {
         .add(CompoundMongoIndex.builder()
                  .name("uniqueIdx")
                  .field(ACLKeys.scopeIdentifier)
-                 .field(SourceMetadataKeys.roleAssignmentIdentifier)
-                 .field(SourceMetadataKeys.userGroupIdentifier)
-                 .field(SourceMetadataKeys.roleIdentifier)
-                 .field(SourceMetadataKeys.resourceGroupIdentifier)
+                 .field(ROLE_ASSIGNMENT_IDENTIFIER_KEY)
+                 .field(USER_GROUP_IDENTIFIER_KEY)
+                 .field(ROLE_IDENTIFIER_KEY)
+                 .field(RESOURCE_GROUP_IDENTIFIER_KEY)
                  .field(ACLKeys.resourceSelector)
                  .field(ACLKeys.permissionIdentifier)
                  .field(ACLKeys.principalIdentifier)

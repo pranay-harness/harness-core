@@ -16,6 +16,7 @@ public enum JiraAction {
   GET_CREATE_METADATA("Get Create Metadata"),
 
   FETCH_ISSUE("Fetch Issue"),
+  FETCH_ISSUE_DATA("Fetch Issue Details"),
   CHECK_APPROVAL("Check Jira Approval");
 
   private final String displayName;

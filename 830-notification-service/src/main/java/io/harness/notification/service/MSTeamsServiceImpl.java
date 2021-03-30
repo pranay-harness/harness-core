@@ -1,7 +1,9 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.MSTeam;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationConstants.ABORTED_COLOR;
@@ -21,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.MicrosoftTeamsTaskParams;
 import io.harness.delegate.beans.NotificationTaskResponse;
@@ -53,6 +56,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.validator.routines.UrlValidator;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -180,9 +184,15 @@ public class MSTeamsServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     MSTeam msTeamDetails = notificationRequest.getMsTeam();
     List<String> recipients = new ArrayList<>(msTeamDetails.getMsTeamKeysList());
-    List<String> microsoftTeamWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-        msTeamDetails.getUserGroupIdsList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
-    recipients.addAll(microsoftTeamWebHookUrls);
+    if (isNotEmpty(msTeamDetails.getUserGroupIdsList())) {
+      List<String> microsoftTeamWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
+          msTeamDetails.getUserGroupIdsList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
+      recipients.addAll(microsoftTeamWebHookUrls);
+    } else {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
+          msTeamDetails.getUserGroupList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    }
     return recipients;
   }
 

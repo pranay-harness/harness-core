@@ -47,6 +47,9 @@ public class AuditFilterPropertiesValidator {
       if (principal.getType() == null) {
         throw new InvalidRequestException("Invalid principal filter with missing principal type.");
       }
+      if (isEmpty(principal.getIdentifier())) {
+        throw new InvalidRequestException("Invalid principal filter with missing principal identifier.");
+      }
     });
   }
 
@@ -65,6 +68,25 @@ public class AuditFilterPropertiesValidator {
       throw new InvalidRequestException(
           String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
               resourceScope.getProjectIdentifier()));
+    }
+    if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getLabels())) {
+      throw new InvalidRequestException("Invalid resource scope filter with labels present but missing orgIdentifier.");
+    }
+    if (isEmpty(resourceScope.getProjectIdentifier()) && isNotEmpty(resourceScope.getLabels())) {
+      throw new InvalidRequestException(
+          "Invalid resource scope filter with labels present but missing projectIdentifier.");
+    }
+    List<KeyValuePair> labels = resourceScope.getLabels();
+    if (isNotEmpty(labels)) {
+      labels.forEach(label -> {
+        if (isEmpty(label.getKey())) {
+          throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
+        }
+        if (isEmpty(label.getValue())) {
+          throw new InvalidRequestException(
+              "Invalid resource scope filter with missing value in resource scope labels.");
+        }
+      });
     }
   }
 

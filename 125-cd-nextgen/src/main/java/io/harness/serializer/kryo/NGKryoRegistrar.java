@@ -15,8 +15,10 @@ import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
@@ -141,6 +143,9 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
+
+    kryo.register(K8sGcpInfrastructureOutcome.class, 8300);
+    kryo.register(K8sGcpInfrastructure.class, 8301);
 
     // Starting using 12500 series as 8100 series is also used in 400-rest
     kryo.register(K8sBlueGreenOutcome.class, 12500);

@@ -1,5 +1,6 @@
 package io.harness.lock.redis;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.redis.RedisReadMode.SLAVE;
 import static io.harness.rule.OwnerRule.RAMA;
 
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.PersistenceTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.redis.RedisConfig;
@@ -35,6 +37,7 @@ import org.redisson.api.RedissonClient;
 /**
  * @author rktummala on 01/07/2020
  */
+@OwnedBy(PL)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Redisson.class)
 public class RedisPersistentLockerTest extends PersistenceTestBase {

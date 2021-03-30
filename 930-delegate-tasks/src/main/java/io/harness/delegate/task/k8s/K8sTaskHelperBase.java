@@ -1,5 +1,6 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GIT;
@@ -46,6 +47,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -188,6 +190,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class K8sTaskHelperBase {
   public static final Set<String> openshiftResources = ImmutableSet.of("Route");
   @Inject private TimeLimiter timeLimiter;
@@ -1889,10 +1892,8 @@ public class K8sTaskHelperBase {
 
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
-        GitStoreDelegateConfig gitStoreDelegateConfig =
-            (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
+            kustomizeManifest.getPluginPath(), kustomizeManifest.getKustomizeDirPath(), executionLogCallback);
 
       case OPENSHIFT_TEMPLATE:
         OpenshiftManifestDelegateConfig openshiftManifestConfig =
@@ -2024,8 +2025,11 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog("CommitId: " + gitStoreDelegateConfig.getCommitId());
     }
 
-    gitStoreDelegateConfig.getPaths().stream().collect(
-        Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
+    StringBuilder sb = new StringBuilder(1024);
+    sb.append("\nFetching manifest files at path: \n");
+    gitStoreDelegateConfig.getPaths().forEach(
+        filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
+    executionLogCallback.saveExecutionLog(sb.toString());
   }
 
   private boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
@@ -2040,6 +2044,8 @@ public class K8sTaskHelperBase {
           (HelmChartManifestDelegateConfig) manifestDelegateConfig;
       logCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
       helmTaskHelperBase.printHelmChartInfoInExecutionLogs(helmChartManifestConfig, logCallback);
+
+      helmTaskHelperBase.initHelm(destinationDirectory, helmChartManifestConfig.getHelmVersion(), timeoutInMillis);
 
       if (HTTP_HELM == manifestDelegateConfig.getStoreDelegateConfig().getType()) {
         helmTaskHelperBase.downloadChartFilesFromHttpRepo(
