@@ -1,7 +1,10 @@
 package io.harness.eventsframework.protohelper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
@@ -13,6 +16,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 import java.util.Map;
 
+@OwnedBy(PL)
 @Singleton
 public class IdentifierRefProtoDTOHelper {
   public IdentifierRefProtoDTO createIdentifierRefProtoDTO(

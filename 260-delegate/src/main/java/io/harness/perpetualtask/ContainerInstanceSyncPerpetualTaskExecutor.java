@@ -160,7 +160,11 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
           k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()
-          .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())
+          .k8sTaskResponse(K8sInstanceSyncResponse.builder()
+                               .k8sPodInfoList(k8sPodList)
+                               .releaseName(releaseName)
+                               .namespace(namespace)
+                               .build())
           .commandExecutionStatus((k8sPodList != null) ? SUCCESS : FAILURE)
           .build();
 

@@ -12,7 +12,6 @@ import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
@@ -39,6 +38,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
@@ -53,7 +53,6 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
@@ -66,12 +65,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters> {
+public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters, ShellScriptTaskResponseNG> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
 
@@ -225,12 +225,11 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, ResponseData> response) {
+  public StepResponse handleTaskResult(Ambiance ambiance, ShellScriptStepParameters stepParameters,
+      Supplier<ShellScriptTaskResponseNG> responseSupplier) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    ResponseData responseData = response.values().iterator().next();
-    if (responseData instanceof ShellScriptTaskResponseNG) {
-      ShellScriptTaskResponseNG taskResponse = (ShellScriptTaskResponseNG) responseData;
+    try {
+      ShellScriptTaskResponseNG taskResponse = responseSupplier.get();
       List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
           ? emptyList()
           : taskResponse.getUnitProgressData().getUnitProgresses();
@@ -281,10 +280,11 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                                               .build());
         }
       }
-    } else if (responseData instanceof ErrorNotifyResponseData) {
+      return stepResponseBuilder.build();
+    } catch (ErrorDataException ex) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
-          FailureInfo.newBuilder().setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage()).build());
+          FailureInfo.newBuilder().setErrorMessage(ex.getErrorResponseData().getErrorMessage()).build());
       if (stepParameters.getRollbackInfo() != null) {
         stepResponseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()
@@ -293,11 +293,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                 .build());
       }
       return stepResponseBuilder.build();
-    } else {
-      log.error(
-          "Unhandled DelegateResponseData class " + responseData.getClass().getCanonicalName(), new Exception(""));
     }
-    return stepResponseBuilder.build();
   }
 
   private ShellScriptOutcome prepareShellScriptOutcome(

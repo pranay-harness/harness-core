@@ -2,25 +2,35 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.yaml.BaseYaml;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
-/**
- * Created by peeyushaggarwal on 11/2/16.
- */
-@NgUniqueIndex(name = "locate", fields = { @Field("entityType")
-                                           , @Field("entityUuid"), @Field("version") })
 @Entity(value = "entityVersions", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "EntityVersionCollectionKeys")
+@HarnessEntity(exportable = true)
 public class EntityVersionCollection extends EntityVersion {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .addAll(EntityVersion.mongoIndexes())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_locate")
+                 .unique(true)
+                 .field(EntityVersionKeys.entityType)
+                 .field(EntityVersionKeys.entityUuid)
+                 .field(EntityVersionKeys.version)
+                 .build())
+        .build();
+  }
+
   public static final class Builder {
     private EntityType entityType;
     private String entityName;

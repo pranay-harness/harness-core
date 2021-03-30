@@ -29,7 +29,13 @@ logging:
       target: STDOUT
       stackdriverLogEnabled: false
 
-allowedOrigins: ${ALLOWED_ORIGINS:-https://localhost:8181,https://127.0.0.1:8181,http://localhost:8000,http://127.0.0.1:8000,https://localhost:8000,https://127.0.0.1:8000}
+allowedOrigins:
+  - "https://localhost:8181"
+  - "https://127.0.0.1:8181"
+  - "http://localhost:8000"
+  - "http://127.0.0.1:8000"
+  - "https://localhost:8000"
+  - "https://127.0.0.1:8000"
 
 mongo:
   uri: ${MONGO_URI:-mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0}
@@ -46,7 +52,10 @@ eventsConfig:
     sentinel: ${EVENTS_CONFIG_USE_SENTINEL:-false}
     masterName: ${EVENTS_CONFIG_SENTINEL_MASTER_NAME:-test}
     redisUrl: ${EVENTS_CONFIG_REDIS_URL:-redis://localhost:6379}
-    sentinelUrls: ${EVENTS_CONFIG_REDIS_SENTINELS:-redis://redis1:26379,redis://redis2:26379,redis://redis3:26379}
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
     envNamespace: ${EVENTS_CONFIG_ENV_NAMESPACE:-""}
     readMode: MASTER
     nettyThreads: 16

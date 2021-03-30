@@ -34,7 +34,6 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStepParameters;
 
 import software.wings.api.ARMStateExecutionData;
@@ -1095,7 +1094,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
     h.put("redesign.states.http.BasicHttpStepParameters", BasicHttpStepParameters.class);
     h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
-    h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
     h.put("redesign.states.email.EmailStepParameters", EmailStepParameters.class);
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SortCompoundMongoIndex implements MongoIndex {
   private String name;
   private boolean unique;
+  private boolean sparse;
   Collation collation;
   @Singular private List<String> fields;
   @Singular private List<String> sortFields;

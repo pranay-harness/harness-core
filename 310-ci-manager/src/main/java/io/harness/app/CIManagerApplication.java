@@ -2,7 +2,7 @@ package io.harness.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static java.util.Collections.singletonList;
 
@@ -60,7 +60,6 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
@@ -348,7 +347,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   private void registerQueueListeners(Injector injector, CIManagerConfiguration configuration) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
@@ -391,7 +389,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        ORCHESTRATION, payload -> publisher.send(singletonList(ORCHESTRATION), payload));
+        NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
   }
 
   private void registerExecutionPlanCreators(Injector injector) {
