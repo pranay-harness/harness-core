@@ -2,8 +2,7 @@ package software.wings.sm.states.azure.artifact;
 
 import static io.harness.azure.model.AzureConstants.ARTIFACT_PATH_PREFIX;
 
-import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys.artifactFileName;
-import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys.artifactPath;
+import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -26,8 +25,8 @@ public class ArtifactStreamAttributesMapper extends ArtifactStreamMapper {
   }
 
   private void populateArtifactStreamAttributes() {
-    artifactStreamAttributes.getMetadata().put(artifactFileName, artifactFileName());
-    artifactStreamAttributes.getMetadata().put(artifactPath, artifactPath());
+    artifactStreamAttributes.getMetadata().put(ArtifactMetadataKeys.artifactFileName, artifactFileName());
+    artifactStreamAttributes.getMetadata().put(ArtifactMetadataKeys.artifactPath, artifactPath());
   }
 
   private String artifactFileName() {
