@@ -48,6 +48,7 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
+import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -241,6 +242,8 @@ public class NextGenModule extends AbstractModule {
      });*/
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
+    install(new AuthenticationSettingsModule(
+        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
