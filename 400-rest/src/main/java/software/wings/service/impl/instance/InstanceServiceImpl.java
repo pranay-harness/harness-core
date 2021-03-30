@@ -338,7 +338,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public List<Instance> listInstancesNotRemovedFully(Query<Instance> query) {
-    long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+    long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(20);
     query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(sevenDaysOldTimeInMills),
         query.criteria(InstanceKeys.isDeleted).equal(false)));
     final long count = query.count();
