@@ -41,8 +41,8 @@ public class WebHookResource {
   @Timed
   @ExceptionMetered
   @Path("{webHookToken}")
-  public Response execute(@Context HttpHeaders httpHeaders, @QueryParam("accountId") String accountId,
-      @PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
+  public Response execute(
+      @Context HttpHeaders httpHeaders, @PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
     return webHookService.execute(webHookToken, webHookRequest, httpHeaders);
   }
 
