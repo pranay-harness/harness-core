@@ -3,7 +3,6 @@ package io.harness.ng.authenticationsettings.resources;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -22,9 +21,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("authentication-settings")
 @Path("/authentication-settings")
 @Produces(MediaType.APPLICATION_JSON)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class AuthenticationSettingsResource {
   AuthenticationSettingsService authenticationSettingsService;
 
