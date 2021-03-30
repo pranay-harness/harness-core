@@ -36,7 +36,9 @@ public interface VaultSysAuthRestClient {
   Call<SysMountsResponse> getAllMounts(
       @Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace);
 
-  @POST(APPROLE_LOGIN_URL) Call<VaultAppRoleLoginResponse> appRoleLogin(@Body VaultAppRoleLoginRequest request);
+  @POST(APPROLE_LOGIN_URL)
+  Call<VaultAppRoleLoginResponse> appRoleLogin(
+      @Header("X-Vault-Namespace") String namespace, @Body VaultAppRoleLoginRequest request);
 
   @GET(CONFIG_CA_URL)
   Call<SSHVaultAuthResponse> fetchAuthPublicKey(

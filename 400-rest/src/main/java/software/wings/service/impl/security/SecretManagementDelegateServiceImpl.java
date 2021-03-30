@@ -279,7 +279,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                   .roleId(vaultConfig.getAppRoleId())
                                                   .secretId(vaultConfig.getSecretId())
                                                   .build();
-      Response<VaultAppRoleLoginResponse> response = restClient.appRoleLogin(loginRequest).execute();
+      Response<VaultAppRoleLoginResponse> response =
+          restClient.appRoleLogin(vaultConfig.getNamespace(), loginRequest).execute();
 
       VaultAppRoleLoginResult result = null;
       if (response.isSuccessful()) {
