@@ -9,10 +9,10 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class TestCustomRepositoryImpl implements TestCustomRepository {
-  private final GitAwarePersistence mongoTemplate;
+  private final GitAwarePersistence<SampleBean, SampleBean> mongoTemplate;
 
   @Override
   public SampleBean save(SampleBean sampleBean) {
-    return mongoTemplate.save(sampleBean, sampleBean.toString());
+    return mongoTemplate.save(sampleBean, sampleBean);
   }
 }
