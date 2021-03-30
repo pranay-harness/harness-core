@@ -28,6 +28,13 @@ spec:
                 type: K8sCanaryDelete
                 timeout: 10m
                 spec: {}
+          rollbackSteps:
+            - step:
+                name: "Canary Delete"
+                identifier: canaryDelete
+                type: K8sCanaryDelete
+                timeout: 10m
+                spec: {}
       - stepGroup:
           name: Primary Deployment
           identifier: primaryDepoyment
