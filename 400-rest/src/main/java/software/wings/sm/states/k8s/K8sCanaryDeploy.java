@@ -47,6 +47,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +126,8 @@ public class K8sCanaryDeploy extends AbstractK8sState {
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
-            .delegateSelectors(new HashSet<>(this.getDelegateSelectors()))
+            .delegateSelectors(this.getDelegateSelectors() == null ? Collections.emptySet()
+                                                                   : new HashSet<>(this.getDelegateSelectors()))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters);
