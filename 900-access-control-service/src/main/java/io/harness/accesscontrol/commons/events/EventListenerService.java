@@ -1,22 +1,26 @@
 package io.harness.accesscontrol.commons.events;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
 import io.dropwizard.lifecycle.Managed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class EventListenerService implements Managed {
+@OwnedBy(HarnessTeam.PL)
+public abstract class EventListenerService implements Managed {
   private final EventListener eventListener;
   private final ExecutorService executorService;
   private Future<?> eventListenerFuture;
 
-  @Inject
+  public abstract String getServiceName();
+
   public EventListenerService(EventListener eventListener) {
     this.eventListener = eventListener;
     executorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("event-listener-main-thread").build());
+        new ThreadFactoryBuilder().setNameFormat(getServiceName() + "-listener-main-thread").build());
   }
 
   @Override
