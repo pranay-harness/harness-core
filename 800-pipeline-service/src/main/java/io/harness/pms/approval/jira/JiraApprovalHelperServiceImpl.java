@@ -1,4 +1,4 @@
-package io.harness.pms.approval;
+package io.harness.pms.approval.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -42,6 +42,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.entities.ApprovalInstance.ApprovalInstanceKeys;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
@@ -67,16 +68,16 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(CDC)
 @Slf4j
-public class JiraApprovalHelper {
-  private NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
-  private ConnectorResourceClient connectorResourceClient;
-  private KryoSerializer kryoSerializer;
-  private SecretManagerClient secretManagerClient;
-  private WaitNotifyEngine waitNotifyEngine;
-  private ApprovalInstanceRepository approvalInstanceRepository;
+public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService {
+  private final NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
+  private final ConnectorResourceClient connectorResourceClient;
+  private final KryoSerializer kryoSerializer;
+  private final SecretManagerClient secretManagerClient;
+  private final WaitNotifyEngine waitNotifyEngine;
+  private final ApprovalInstanceRepository approvalInstanceRepository;
 
   @Inject
-  public JiraApprovalHelper(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
+  public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
       SecretManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       ApprovalInstanceRepository approvalInstanceRepository) {
@@ -88,6 +89,7 @@ public class JiraApprovalHelper {
     this.approvalInstanceRepository = approvalInstanceRepository;
   }
 
+  @Override
   public void handlePollingEvent(JiraApprovalInstance entity) {
     log.info(
         "Polling Approval status for Jira Approval Instance {} approval type {}", entity.getId(), entity.getType());
@@ -96,18 +98,18 @@ public class JiraApprovalHelper {
       String accountIdentifier = entity.getAccountIdentifier();
       String orgIdentifier = entity.getOrgIdentifier();
       String projectIdentifier = entity.getProjectIdentifier();
-      String issueId = entity.getIssueId();
+      String issueKey = entity.getIssueKey();
       String connectorRef = entity.getConnectorRef();
 
       validateField(instanceId, ApprovalInstanceKeys.id);
       validateField(accountIdentifier, ApprovalInstanceKeys.accountIdentifier);
       validateField(orgIdentifier, ApprovalInstanceKeys.orgIdentifier);
       validateField(projectIdentifier, ApprovalInstanceKeys.projectIdentifier);
-      validateField(issueId, JiraApprovalInstanceKeys.issueId);
+      validateField(issueKey, JiraApprovalInstanceKeys.issueKey);
       validateField(connectorRef, JiraApprovalInstanceKeys.connectorRef);
 
       JiraTaskNGParameters jiraTaskNGParameters =
-          prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueId, connectorRef);
+          prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef);
       JiraTaskNGResponse jiraTaskNGResponse = fetchJiraTaskResponse(accountIdentifier, jiraTaskNGParameters);
       if (isNull(jiraTaskNGResponse.getIssue())) {
         throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse", USER_SRE);
@@ -210,7 +212,8 @@ public class JiraApprovalHelper {
         .build();
   }
 
-  private JiraConnectorDTO getJiraConnector(
+  @Override
+  public JiraConnectorDTO getJiraConnector(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifierRef) {
     try {
       IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
