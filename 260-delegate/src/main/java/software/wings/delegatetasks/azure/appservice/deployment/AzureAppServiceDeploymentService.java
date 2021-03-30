@@ -371,7 +371,7 @@ public class AzureAppServiceDeploymentService {
         format("Deploying artifact ZIP file on slot, %nArtifact file: %s%nApp name: %s%nSlot name: %s",
             artifactFile.getAbsolutePath(), azureWebClientContext.getAppName(), slotName));
     Completable deployment = azureWebClient.deployZipToSlotAsync(azureWebClientContext, slotName, artifactFile);
-    logCallback.saveExecutionLog("Deployment started");
+    logCallback.saveExecutionLog("Deployment started. This operation can take a while to complete ...");
 
     return deployment;
   }
@@ -382,7 +382,7 @@ public class AzureAppServiceDeploymentService {
         format("Deploying artifact WAR file on slot, %nArtifact file: %s%nApp name: %s%nSlot name: %s",
             artifactFile.getAbsolutePath(), azureWebClientContext.getAppName(), slotName));
     Completable deployment = azureWebClient.deployWarToSlotAsync(azureWebClientContext, slotName, artifactFile);
-    logCallback.saveExecutionLog("Deployment started");
+    logCallback.saveExecutionLog("Deployment started. This operation can take a while to complete ...");
 
     return deployment;
   }
