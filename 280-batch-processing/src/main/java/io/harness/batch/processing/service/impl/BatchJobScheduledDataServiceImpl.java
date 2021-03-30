@@ -63,6 +63,16 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
+    if (null != instant
+        && ImmutableSet
+               .of(BatchJobType.INSTANCE_BILLING, BatchJobType.ACTUAL_IDLE_COST_BILLING,
+                   BatchJobType.CLUSTER_DATA_TO_BIG_QUERY)
+               .contains(batchJobType)) {
+      Instant startInstant = Instant.now().minus(90, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+      return instant;
+    }
+
     if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
       Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
@@ -93,7 +103,7 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
     }
 
     if (null != instant && batchJobType == BatchJobType.K8S_WORKLOAD_RECOMMENDATION) {
-      Instant startInstant = Instant.now().minus(3, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      Instant startInstant = Instant.now().minus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
     return instant;
