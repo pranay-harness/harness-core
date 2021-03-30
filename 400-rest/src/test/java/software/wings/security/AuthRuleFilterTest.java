@@ -439,33 +439,6 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     assertThat(user).isNotNull();
   }
 
-  @Test
-  @Owner(developers = INDER)
-  @Category(UnitTests.class)
-  public void testApiKeyAuthorizedAnnotation_withBearerToken() {
-    Set<Action> actions = new HashSet<>();
-    actions.add(Action.DEFAULT);
-    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
-    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithApiKeyAuthorizedAnnotation());
-    when(requestContext.getMethod()).thenReturn("GET");
-    mockUriInfo(PATH, uriInfo);
-
-    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
-    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
-    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
-    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
-        .thenReturn(true);
-    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
-
-    authRuleFilter.filter(requestContext);
-    assertThat(requestContext.getMethod()).isEqualTo("GET");
-    verify(whitelistService).checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class));
-    verify(requestContext, never()).getHeaderString(API_KEY_HEADER);
-    User user = UserThreadLocal.get();
-    assertThat(user).isNotNull();
-    verify(authHandler).authorizeAccountPermission(any(), any());
-  }
-
   private void testHarnessUserMethod(String url, String method, boolean exception) {
     Set<Action> actions = new HashSet<>();
     actions.add(Action.READ);

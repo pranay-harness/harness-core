@@ -150,15 +150,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
       }
 
-      if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
-        return;
-      }
-
       if (isApiKeyAuthorizeRequest && isEmpty(apiKey)) {
         if (allowEmptyApiKey()) {
           return;
         }
         throw new AccessDeniedException("Api Key cannot be empty", USER);
+      }
+
+      if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
+        return;
       }
     }
 
