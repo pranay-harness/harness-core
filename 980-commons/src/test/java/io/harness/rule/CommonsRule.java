@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import io.harness.exception.exceptionmanager.ExceptionModuleTest;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -53,6 +54,7 @@ public class CommonsRule implements MethodRule, InjectorRuleMixin {
     List<Module> modules = new ArrayList<>();
     modules.add(new ComponentTestsModule());
     modules.add(KryoModule.getInstance());
+    modules.add(ExceptionModuleTest.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
