@@ -1,13 +1,16 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import static java.lang.String.format;
 
@@ -118,7 +121,7 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   @Override
-  public Response execute(String token, WebHookRequest webHookRequest) {
+  public Response execute(String token, WebHookRequest webHookRequest, HttpHeaders httpHeaders) {
     try {
       if (webHookRequest == null) {
         log.warn("Payload is mandatory");
@@ -145,6 +148,14 @@ public class WebHookServiceImpl implements WebHookService {
 
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
+
+      if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, app.getAccountId())
+          && Boolean.TRUE.equals(app.getIsManualTriggerAuthorized())
+          && isEmpty(httpHeaders.getHeaderString(API_KEY_HEADER))) {
+        WebHookResponse webHookResponse = WebHookResponse.builder().error("Api Key cannot be empty").build();
+        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+      }
+
       return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
 
     } catch (WingsException ex) {

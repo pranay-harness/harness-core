@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 public interface WebHookService {
-  Response execute(@NotEmpty String token, @Valid WebHookRequest webHookRequest);
+  Response execute(@NotEmpty String token, @Valid WebHookRequest webHookRequest, HttpHeaders httpHeaders);
   Response executeByEvent(@NotEmpty(message = "Token can not be empty") String token,
       @NotEmpty(message = "Payload can not be empty") String webhookEventPayload, HttpHeaders httpHeaders);
 }

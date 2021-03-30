@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -37,6 +38,7 @@ import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDat
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -69,6 +71,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -159,6 +162,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.User;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -186,6 +190,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -2917,5 +2922,40 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
     assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
     assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testWorkflowAuthorizationWithWebhookTriggerAuthorizationFfOn() throws InterruptedException {
+    String appId = app.getUuid();
+    when(featureFlagService.isEnabled(eq(WEBHOOK_TRIGGER_AUTHORIZATION), anyString())).thenReturn(true);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(singletonList(
+        Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    WorkflowExecution execution =
+        workflowExecutionService.triggerOrchestrationWorkflowExecution(appId, env.getUuid(), workflow.getUuid(), null,
+            executionArgs, callback, Trigger.builder().uuid(TRIGGER_ID).webHookToken("WEBHOOK_TOKEN").build());
+    callback.await(ofSeconds(15));
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    log.debug("Workflow executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrProperty("releaseNo")
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    verify(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
+    verify(authService).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
   }
 }
