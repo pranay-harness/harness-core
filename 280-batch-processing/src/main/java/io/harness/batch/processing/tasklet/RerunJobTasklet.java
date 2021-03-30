@@ -32,7 +32,7 @@ public class RerunJobTasklet implements Tasklet {
     Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
-    Instant startInstant = Instant.ofEpochMilli(startTime).minus(2, ChronoUnit.DAYS);
+    Instant startInstant = Instant.ofEpochMilli(startTime).minus(4, ChronoUnit.DAYS);
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
     if (null != ceMetadataRecord && isCloudDataPresent(ceMetadataRecord)) {
       log.info("invalidate jobs for {}", accountId);
@@ -43,8 +43,9 @@ public class RerunJobTasklet implements Tasklet {
   }
 
   private boolean isCloudDataPresent(CEMetadataRecord ceMetadataRecord) {
-    if (ceMetadataRecord.getAwsDataPresent() || ceMetadataRecord.getGcpDataPresent()
-        || ceMetadataRecord.getAzureDataPresent()) {
+    if ((null != ceMetadataRecord.getAwsDataPresent() && ceMetadataRecord.getAwsDataPresent())
+        || (null != ceMetadataRecord.getGcpDataPresent() && ceMetadataRecord.getGcpDataPresent())
+        || (null != ceMetadataRecord.getAzureDataPresent() && ceMetadataRecord.getAzureDataPresent())) {
       return true;
     }
     return false;
