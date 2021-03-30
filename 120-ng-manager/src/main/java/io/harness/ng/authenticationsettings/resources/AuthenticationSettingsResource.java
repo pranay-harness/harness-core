@@ -34,6 +34,7 @@ public class AuthenticationSettingsResource {
   @ExceptionMetered
   public RestResponse<AuthenticationSettingsResponse> getAuthenticationSettings(
       @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(authenticationSettingsService.getAuthenticationSettings(accountId));
+    AuthenticationSettingsResponse response = authenticationSettingsService.getAuthenticationSettings(accountId);
+    return new RestResponse<>(response);
   }
 }

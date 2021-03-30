@@ -11,6 +11,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.User;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class UserResourceNG {
+  private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private final UserService userService;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 

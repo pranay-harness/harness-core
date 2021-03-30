@@ -7,11 +7,13 @@ import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.Account;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
@@ -34,6 +36,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
+  private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
 
   @GET
   @Path("{accountId}")
@@ -66,5 +69,17 @@ public class AccountResourceNG {
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
+  }
+
+  @GET
+  @Path("{accountId}/whitelisted-domains")
+  public RestResponse<Set<String>> getWhitelistedDomains(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.getWhitelistedDomains(accountId));
+  }
+
+  @GET
+  @Path("two-factor-enabled/{accountId}")
+  public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
   }
 }

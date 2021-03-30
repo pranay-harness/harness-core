@@ -16,12 +16,15 @@ import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.PL)
 public interface AuthSettingsManagerClient {
-  @GET("/api/sso/access-management/{accountId}")
+  @GET("/api/ng/sso/access-management/{accountId}")
   Call<RestResponse<SSOConfig>> getAccountAccessManagementSettings(@Path("accountId") @NotEmpty String accountId);
 
-  @GET("/api/account/{accountId}/whitelisted-domains")
+  @GET("/api/ng/accounts/{accountId}/whitelisted-domains")
   Call<RestResponse<Set<String>>> getWhitelistedDomains(@Path("accountId") @NotEmpty String accountId);
 
-  @GET("/api/loginSettings/get-login-settings")
+  @GET("/api/ng/login-settings/username-password")
   Call<RestResponse<LoginSettings>> getUserNamePasswordSettings(@Query("accountId") @NotEmpty String accountId);
+
+  @GET("/api/ng/accounts/two-factor-enabled/{accountId}")
+  Call<RestResponse<Boolean>> twoFactorEnabled(@Path("accountId") @NotEmpty String accountId);
 }

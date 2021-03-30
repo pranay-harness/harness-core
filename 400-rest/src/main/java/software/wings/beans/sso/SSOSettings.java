@@ -13,6 +13,8 @@ import io.harness.persistence.AccountAccess;
 import software.wings.beans.Base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -28,6 +30,13 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 @Entity(value = "ssoSettings")
 @HarnessEntity(exportable = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@JsonSubTypes(value =
+    {
+      @JsonSubTypes.Type(value = SamlSettings.class, name = "SAML")
+      , @JsonSubTypes.Type(value = OauthSettings.class, name = "OAUTH"),
+          @JsonSubTypes.Type(value = LdapSettings.class, name = "LDAP")
+    })
 public abstract class SSOSettings extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
