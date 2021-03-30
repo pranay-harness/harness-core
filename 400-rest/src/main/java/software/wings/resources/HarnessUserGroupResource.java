@@ -5,6 +5,7 @@ import io.harness.rest.RestResponse;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.service.intfc.HarnessUserGroupService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.assertj.core.util.Sets;
 public class HarnessUserGroupResource {
   private final HarnessUserGroupService harnessUserGroupService;
 
+  @Inject
   public HarnessUserGroupResource(HarnessUserGroupService harnessUserGroupService) {
     this.harnessUserGroupService = harnessUserGroupService;
   }
@@ -40,8 +42,21 @@ public class HarnessUserGroupResource {
   }
 
   @GET
-  @Path("hello")
-  public RestResponse<String> hello(){
-    return new RestResponse<>("Hello");
+  @Path("delete")
+  public RestResponse<Boolean> deleteHarnessUserGroup(@QueryParam("harnessUserGroupId") String harnessUserGroupId) {
+    return new RestResponse<>(harnessUserGroupService.delete(harnessUserGroupId));
+  }
+
+  @GET
+  @Path("updateMembers")
+  public RestResponse<HarnessUserGroup> updateHarnessUserGroupMembers(
+      @QueryParam("harnessUserGroupId") String harnessUserGroupId, @QueryParam("memberIds") List<String> memberIds) {
+    return new RestResponse<>(harnessUserGroupService.updateMembers(harnessUserGroupId, Sets.newHashSet(memberIds)));
+  }
+
+  @GET
+  @Path("listHarnessUserGroupForAccount")
+  public RestResponse<List<HarnessUserGroup>> listHarnessUserGroup(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(harnessUserGroupService.listHarnessUserGroupForAccount(accountId));
   }
 }
