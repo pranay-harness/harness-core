@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 
 import static com.google.common.collect.Sets.symmetricDifference;
 
@@ -134,5 +135,15 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
                                             .groupType(groupType)
                                             .build();
     return harnessUserGroup;
+  }
+
+  @Override
+  public List<HarnessUserGroup> listHarnessUserGroupForAccount(String accountId) {
+    Account account = accountService.get(accountId);
+    notNullCheck("Invalid account with id: " + accountId, account);
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    query.filter("accountIds", accountId);
+    HarnessUserGroup harnessUserGroup = query.get();
+    return (List<HarnessUserGroup>) harnessUserGroup;
   }
 }

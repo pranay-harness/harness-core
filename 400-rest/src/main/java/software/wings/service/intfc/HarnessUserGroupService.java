@@ -61,4 +61,6 @@ public interface HarnessUserGroupService {
   boolean isHarnessSupportEnabledForAccount(String accountId);
 
   HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds, Set<String> accountIds, String groupType);
+
+  List<HarnessUserGroup> listHarnessUserGroupForAccount(String accountId);
 }
