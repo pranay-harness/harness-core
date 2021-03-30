@@ -1,9 +1,13 @@
 package io.harness.exception.exceptionmanager;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 
+@OwnedBy(HarnessTeam.DX)
 public class ExceptionModule extends AbstractModule {
   private static volatile ExceptionModule instance;
 
