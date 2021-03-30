@@ -27,8 +27,10 @@ import java.util.Map;
 @OwnedBy(CDC)
 public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_APPROVAL).build();
+
   @Inject private ApprovalInstanceRepository approvalInstanceRepository;
   @Inject private ApprovalInstanceService approvalInstanceService;
+
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, JiraApprovalStepParameters stepParameters, StepInputPackage inputPackage) {

@@ -22,19 +22,19 @@ import org.springframework.data.annotation.TypeAlias;
 public class JiraApprovalStepParameters extends ApprovalStepParameters {
   @NotEmpty ParameterField<String> connectorRef;
   @NotEmpty ParameterField<String> projectKey;
-  @NotNull ParameterField<String> issueId;
+  @NotEmpty ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
   @NotNull CriteriaSpecWrapper rejectionCriteria;
 
   @Builder(builderMethodName = "infoBuilder")
   public JiraApprovalStepParameters(String name, String identifier, ParameterField<String> timeout,
       ParameterField<String> approvalMessage, ParameterField<Boolean> includePipelineExecutionHistory,
-      ParameterField<String> connectorRef, ParameterField<String> projectKey, ParameterField<String> issueId,
+      ParameterField<String> connectorRef, ParameterField<String> projectKey, ParameterField<String> issueKey,
       CriteriaSpecWrapper approvalCriteria, CriteriaSpecWrapper rejectionCriteria) {
     super(name, identifier, timeout, ApprovalType.JIRA_APPROVAL, approvalMessage, includePipelineExecutionHistory);
     this.connectorRef = connectorRef;
     this.projectKey = projectKey;
-    this.issueId = issueId;
+    this.issueKey = issueKey;
     this.approvalCriteria = approvalCriteria;
     this.rejectionCriteria = rejectionCriteria;
   }

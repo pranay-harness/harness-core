@@ -32,11 +32,13 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
+  @NotNull String url;
   @NotNull String id;
   @NotNull String key;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
   public JiraIssueNG(JsonNode node) {
+    this.url = JsonNodeUtils.mustGetString(node, "self");
     this.id = JsonNodeUtils.mustGetString(node, "id");
     this.key = JsonNodeUtils.mustGetString(node, "key");
     Map<String, JsonNode> names = JsonNodeUtils.getMap(node, "names");
