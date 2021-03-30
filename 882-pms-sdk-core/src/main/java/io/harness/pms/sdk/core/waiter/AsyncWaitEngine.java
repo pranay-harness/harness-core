@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.waiter;
 
-import io.harness.waiter.OldNotifyCallback;
+import io.harness.waiter.NotifyCallback;
 
 public interface AsyncWaitEngine {
-  void waitForAllOn(OldNotifyCallback notifyCallback, String... correlationIds);
+  void waitForAllOn(NotifyCallback notifyCallback, String... correlationIds);
 }
