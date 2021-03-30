@@ -231,6 +231,7 @@ def sonarqube(
     )
 
 def _sq_project_impl(ctx):
+    print("SonarQube Running for {}".format(ctx.attr.project_name))
     local_runfiles = _build_sonar_project_properties(ctx, ctx.outputs.sq_properties)
 
     return [DefaultInfo(
