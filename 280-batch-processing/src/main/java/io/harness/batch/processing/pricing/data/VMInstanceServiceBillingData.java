@@ -10,8 +10,8 @@ import lombok.Value;
 public class VMInstanceServiceBillingData {
   private double cost;
   private Double effectiveCost;
-  private String resourceId;
+  private String resourceId; // ProviderId for Azure
   private String serviceCode;
-  private String productFamily;
+  private String productFamily; // MeterCategory for Azure
   private String usageType;
 }

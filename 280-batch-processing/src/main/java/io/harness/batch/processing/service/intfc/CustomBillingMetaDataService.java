@@ -4,6 +4,6 @@ import java.time.Instant;
 
 public interface CustomBillingMetaDataService {
   String getAwsDataSetId(String accountId);
-
+  String getAzureDataSetId(String accountId);
   Boolean checkPipelineJobFinished(String accountId, Instant startTime, Instant endTime);
 }

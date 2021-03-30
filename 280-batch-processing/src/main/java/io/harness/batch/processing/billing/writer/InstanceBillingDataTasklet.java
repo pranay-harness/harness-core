@@ -27,6 +27,7 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
@@ -71,6 +72,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
   @Autowired private BillingDataGenerationValidator billingDataGenerationValidator;
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private AwsCustomBillingService awsCustomBillingService;
+  @Autowired private AzureCustomBillingService azureCustomBillingService;
   @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
   @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private HPersistence persistence;
@@ -203,6 +205,25 @@ public class InstanceBillingDataTasklet implements Tasklet {
         log.info("Updating EKS Fargate Cache for Resource Id's List of Size: {}", eksFargateResourceIds.size());
         awsCustomBillingService.updateEksFargateDataCache(
             new ArrayList<>(eksFargateResourceIds), startTime, endTime, awsDataSetId);
+      }
+    }
+
+    String azureDataSetId = customBillingMetaDataService.getAzureDataSetId(accountId);
+    log.info("Azure data set {}", azureDataSetId);
+    if (azureDataSetId != null) {
+      Set<String> resourceIds = new HashSet<>();
+      instanceDataLists.forEach(instanceData -> {
+        String resourceId =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
+        String cloudProvider =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData);
+        if (null != resourceId && cloudProvider.equals(CloudProvider.AZURE.name())) {
+          resourceIds.add(resourceId.toLowerCase());
+        }
+      });
+      if (isNotEmpty(resourceIds)) {
+        azureCustomBillingService.updateAzureVMBillingDataCache(
+            new ArrayList<>(resourceIds), startTime, endTime, azureDataSetId);
       }
     }
 

@@ -36,6 +36,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   private LoadingCache<String, String> awsBillingMetaDataCache =
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
 
+  private LoadingCache<String, String> azureBillingMetaDataCache =
+          Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAzureBillingMetaData);
+
   private LoadingCache<CacheKey, Boolean> pipelineJobStatusCache =
       Caffeine.newBuilder()
           .expireAfterWrite(4, TimeUnit.HOURS)
@@ -65,6 +68,11 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   @Override
+  public String getAzureDataSetId(String accountId) {
+    return azureBillingMetaDataCache.get(accountId);
+  }
+
+  @Override
   public Boolean checkPipelineJobFinished(String accountId, Instant startTime, Instant endTime) {
     CacheKey cacheKey = new CacheKey(accountId, startTime, endTime);
     return pipelineJobStatusCache.get(cacheKey);
@@ -88,6 +96,21 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
     if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
         && ceMetadataRecord.getAwsDataPresent()) {
       return cloudBillingHelper.getDataSetId(accountId);
+    }
+    return null;
+  }
+
+  private String getAzureBillingMetaData(String accountId) {
+    // Enabled for all
+    List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
+            accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE);
+    log.info("Setting att size {}", settingAttributes.size());
+    if (!settingAttributes.isEmpty()) {
+      SettingAttribute settingAttribute = settingAttributes.get(0);
+      BillingDataPipelineRecord billingDataPipelineRecord =
+              billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
+      log.info("BDPR {}", billingDataPipelineRecord);
+      return billingDataPipelineRecord.getDataSetId();
     }
     return null;
   }

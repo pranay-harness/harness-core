@@ -17,4 +17,7 @@ public interface BigQueryHelperService {
   Map<String, VMInstanceBillingData> getAwsBillingData(Instant startTime, Instant endTime, String dataSetId);
 
   void updateCloudProviderMetaData(String accountId, CEMetadataRecordBuilder ceMetadataRecordBuilder);
+
+  Map<String, VMInstanceBillingData> getAzureVMBillingData(
+      List<String> resourceIds, Instant startTime, Instant endTime, String dataSetId);
 }
