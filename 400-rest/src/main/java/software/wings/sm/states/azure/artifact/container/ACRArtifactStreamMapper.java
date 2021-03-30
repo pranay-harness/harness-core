@@ -1,4 +1,4 @@
-package software.wings.sm.states.azure.artifact;
+package software.wings.sm.states.azure.artifact.container;
 
 import static io.harness.azure.model.AzureConstants.HTTPS_OR_HTTP_PREFIX_REGEX;
 
@@ -12,11 +12,12 @@ import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistry
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import java.util.Optional;
 
-public class ACRArtifactStreamMapper extends ArtifactStreamMapper {
-  protected ACRArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+public final class ACRArtifactStreamMapper extends ArtifactStreamMapper {
+  public ACRArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 
@@ -37,8 +38,14 @@ public class ACRArtifactStreamMapper extends ArtifactStreamMapper {
         .build();
   }
 
+  @Override
   public AzureRegistryType getAzureRegistryType() {
     return AzureRegistryType.ACR;
+  }
+
+  @Override
+  public boolean isDockerArtifactType() {
+    return true;
   }
 
   @Override

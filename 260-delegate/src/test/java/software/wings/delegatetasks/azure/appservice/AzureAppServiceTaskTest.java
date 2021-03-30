@@ -61,7 +61,9 @@ public class AzureAppServiceTaskTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     Map<String, AbstractAzureAppServiceTaskHandler> azureAppServiceTaskTypeToTaskHandlerMap = new HashMap<>();
     azureAppServiceTaskTypeToTaskHandlerMap.put(SLOT_SETUP.name(), setupTaskHandler);
-    doReturn(AzureTaskExecutionResponse.builder().build()).when(setupTaskHandler).executeTask(any(), any(), any());
+    doReturn(AzureTaskExecutionResponse.builder().build())
+        .when(setupTaskHandler)
+        .executeTask(any(), any(), any(), any());
 
     on(azureAppServiceTaskFactory)
         .set("azureAppServiceTaskTypeToTaskHandlerMap", azureAppServiceTaskTypeToTaskHandlerMap);

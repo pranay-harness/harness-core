@@ -15,6 +15,7 @@ import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class AzureTaskExecutionRequest
   private AzureConfigDTO azureConfigDTO;
   private List<EncryptedDataDetail> azureConfigEncryptionDetails;
   @Expression(ALLOW_SECRETS) private AzureTaskParameters azureTaskParameters;
+  private ArtifactStreamAttributes artifactStreamAttributes;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
