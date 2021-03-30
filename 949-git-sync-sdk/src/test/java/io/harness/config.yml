@@ -46,3 +46,5 @@ redis:
   useScriptCache: true
   password: ""
 
+scmConnectionConfig:
+  url: localhost:8091

@@ -32,11 +32,13 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
+  @NotNull String url;
   @NotNull String id;
   @NotNull String key;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
   public JiraIssueNG(JsonNode node) {
+    this.url = JsonNodeUtils.mustGetString(node, "self");
     this.id = JsonNodeUtils.mustGetString(node, "id");
     this.key = JsonNodeUtils.mustGetString(node, "key");
     Map<String, JsonNode> names = JsonNodeUtils.getMap(node, "names");
@@ -108,21 +110,21 @@ public class JiraIssueNG {
     fields.put(name + " Key", projectKey);
     String projectName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name + " Name", projectName);
-    fields.put(JiraConstantsNG.PROJECT_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.PROJECT_INTERNAL_NAME, valueNode.textValue());
   }
 
   private void addIssueTypeFields(String name, JsonNode valueNode) {
     // Returns 2 fields - "Issue Type", "__issuetype" (whole object for internal use)
     String issueTypeName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name, issueTypeName);
-    fields.put(JiraConstantsNG.ISSUE_TYPE_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.ISSUE_TYPE_INTERNAL_NAME, valueNode.textValue());
   }
 
   private void addStatusFields(String name, JsonNode valueNode) {
     // Returns 2 fields - "Status", "__status" (whole object for internal use)
     String statusName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name, statusName);
-    fields.put(JiraConstantsNG.STATUS_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.STATUS_INTERNAL_NAME, valueNode.textValue());
   }
 
   private static Object convertToFinalValue(JiraFieldTypeNG type, JsonNode valueNode) {

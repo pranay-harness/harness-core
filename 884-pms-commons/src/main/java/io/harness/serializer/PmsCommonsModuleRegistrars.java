@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.PmsCommonsKryoRegistrar;
 import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
@@ -14,6 +17,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class PmsCommonsModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(PmsCommonsKryoRegistrar.class).build();

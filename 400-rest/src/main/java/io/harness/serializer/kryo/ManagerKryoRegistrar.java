@@ -13,8 +13,6 @@ import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
-import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
@@ -1613,7 +1611,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BasicHttpStepParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
-    kryo.register(ShellScriptVariablesSweepingOutput.class, 7377);
     kryo.register(CustomSecretsManagerConfig.class, 7378);
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
@@ -1687,7 +1684,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GitConfig.UrlType.class, 7460);
     kryo.register(EmailStepParameters.class, 7461);
-    kryo.register(ShellScriptStepParameters.class, 7462);
     kryo.register(WaitStepParameters.class, 7463);
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);

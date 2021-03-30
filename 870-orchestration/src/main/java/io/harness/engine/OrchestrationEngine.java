@@ -190,6 +190,7 @@ public class OrchestrationEngine {
           nodeExecution = updateRunInfoAttribute(nodeExecution.getUuid(), nodeRunCheck);
         } else {
           failNodeExecution(nodeExecution.getUuid(), nodeRunCheck.getErrorMessage());
+          return;
         }
         if (!nodeRunCheck.getEvaluatedWhenCondition()) {
           skipNodeExecution(nodeExecution.getUuid(), nodeRunCheck);
@@ -206,6 +207,7 @@ public class OrchestrationEngine {
           nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
         } else {
           failNodeExecution(nodeExecution.getUuid(), skipCheck.getErrorMessage());
+          return;
         }
         if (skipCheck.getEvaluatedSkipCondition()) {
           skipNodeExecution(nodeExecution.getUuid(), skipCheck);

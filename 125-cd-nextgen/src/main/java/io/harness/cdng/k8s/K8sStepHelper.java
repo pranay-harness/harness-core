@@ -240,10 +240,17 @@ public class K8sStepHelper {
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
+        StoreConfig storeConfig = kustomizeManifestOutcome.getStore();
+        if (!ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
+          throw new UnsupportedOperationException(
+              format("Kustomize Manifest is not supported for store type: [%s]", storeConfig.getKind()));
+        }
+        GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
         return KustomizeManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
             .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
 
       case ManifestType.OpenshiftTemplate:
@@ -361,8 +368,10 @@ public class K8sStepHelper {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
       case ManifestType.HelmChart:
-      case ManifestType.Kustomize:
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
+        break;
+      case ManifestType.Kustomize:
+        paths.add("");
         break;
 
       default:

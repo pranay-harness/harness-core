@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestType;
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDP)
 public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
@@ -105,10 +109,6 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     StepResponseBuilder responseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, responseBuilder).build();
-    }
-
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
@@ -118,9 +118,15 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
                                             .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
                                             .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
                                             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
+                                            .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
                                             .build();
+
     executionSweepingOutputService.consume(
         ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, responseBuilder).build();
+    }
 
     return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()

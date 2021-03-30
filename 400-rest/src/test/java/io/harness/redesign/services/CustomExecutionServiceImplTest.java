@@ -2,10 +2,6 @@ package io.harness.redesign.services;
 
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static io.harness.rule.OwnerRule.GARVIT;
-
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -108,20 +104,6 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedRetryPlan);
     assertThat(planExecutionResponse.getStatus()).isEqualTo(RUNNING);
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void shouldExecuteSimpleShellScriptPlan() {
-    UserThreadLocal.set(user);
-    Plan expectedShellScriptPlan = customExecutionProvider.provideSimpleShellScriptPlan();
-    when(orchestrationService.startExecution(any(), any(), any()))
-        .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedShellScriptPlan).build());
-    PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan(ACCOUNT_ID, APP_ID);
-
-    assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedShellScriptPlan);
-    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.RUNNING);
   }
 
   @Test

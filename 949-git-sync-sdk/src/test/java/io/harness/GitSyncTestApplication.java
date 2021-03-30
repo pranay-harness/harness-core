@@ -64,14 +64,17 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     List<Module> modules = new ArrayList<>();
     modules.add(new GitSyncTestModule(config));
     final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
-    final GitSyncSdkConfiguration gitSyncSdkConfiguration = GitSyncSdkConfiguration.builder()
-                                                                .gitSyncSortOrder(sortOrder)
-                                                                .grpcClientConfig(config.getGrpcClientConfig())
-                                                                .grpcServerConfig(config.getGrpcServerConfig())
-                                                                .deployMode(DeployMode.REMOTE)
-                                                                .microservice(Microservice.PMS)
-                                                                .eventsRedisConfig(config.getRedisConfig())
-                                                                .build();
+    final GitSyncSdkConfiguration gitSyncSdkConfiguration =
+        GitSyncSdkConfiguration.builder()
+            .gitSyncSortOrder(sortOrder)
+            .grpcClientConfig(config.getGrpcClientConfig())
+            .grpcServerConfig(config.getGrpcServerConfig())
+            .deployMode(DeployMode.REMOTE)
+            .microservice(Microservice.PMS)
+            .scmConnectionConfig(config.getScmConnectionConfig())
+            .eventsRedisConfig(config.getRedisConfig())
+            .serviceHeader(AuthorizationServiceHeader.PIPELINE_SERVICE)
+            .build();
     modules.add(new AbstractGitSyncSdkModule() {
       @Override
       public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
@@ -79,7 +82,7 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
       }
     });
     Injector injector = Guice.createInjector(modules);
-    GitSyncSdkInitHelper.initGitSyncSdk(injector, gitSyncSdkConfiguration);
+    GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, gitSyncSdkConfiguration);
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);

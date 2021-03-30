@@ -13,6 +13,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
@@ -20,13 +21,12 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
+public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
 
@@ -68,25 +68,24 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sScaleStepParameter stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
+      Ambiance ambiance, K8sScaleStepParameter stepParameters, Supplier<K8sDeployResponse> responseSupplier) {
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
+      // do we need to include the newPods with instance details + summaries
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+            .build();
+      }
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (ErrorDataException ex) {
       return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
           .build();
     }
-
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-    // do we need to include the newPods with instance details + summaries
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
-          .build();
-    }
-
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override

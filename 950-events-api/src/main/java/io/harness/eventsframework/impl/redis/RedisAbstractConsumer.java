@@ -1,5 +1,8 @@
 package io.harness.eventsframework.impl.redis;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -19,6 +22,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
 import org.redisson.client.RedisException;
 
+@OwnedBy(PL)
 @Slf4j
 public abstract class RedisAbstractConsumer extends AbstractConsumer {
   protected RStream<String, String> stream;

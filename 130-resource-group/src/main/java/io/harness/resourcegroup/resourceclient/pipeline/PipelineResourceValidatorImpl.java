@@ -2,6 +2,7 @@ package io.harness.resourcegroup.resourceclient.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -32,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
-@OwnedBy(value = PIPELINE)
+@OwnedBy(PIPELINE)
 public class PipelineResourceValidatorImpl implements ResourceValidator {
   PipelineServiceClient pipelineServiceClient;
 
@@ -87,6 +88,6 @@ public class PipelineResourceValidatorImpl implements ResourceValidator {
 
   @Override
   public EnumSet<ValidatorType> getValidatorTypes() {
-    return EnumSet.of(DYNAMIC);
+    return EnumSet.of(STATIC, DYNAMIC);
   }
 }

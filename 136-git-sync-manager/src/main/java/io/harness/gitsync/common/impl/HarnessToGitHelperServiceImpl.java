@@ -6,6 +6,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.common.beans.InfoForGitPush;
@@ -84,5 +85,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityDetailRestToProtoMapper.createEntityDetailDTO(pushInfo.getEntityDetail()), yamlGitConfigDTO,
         pushInfo.getFilePath(), pushInfo.getCommitId());
     // todo(abhinav): record git commit and git file activity.
+  }
+
+  @Override
+  public Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo) {
+    return yamlGitConfigService.isGitSyncEnabled(entityScopeInfo.getAccountId(), entityScopeInfo.getOrgId().getValue(),
+        entityScopeInfo.getProjectId().getValue());
   }
 }

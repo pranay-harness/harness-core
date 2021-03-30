@@ -1,7 +1,10 @@
 package io.harness.limits.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static java.lang.System.lineSeparator;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
@@ -13,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(PL)
 @Slf4j
 public class InvalidLimitConfigurationException extends RuntimeException {
   private ObjectMapper mapper = new ObjectMapper();

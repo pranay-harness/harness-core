@@ -1,10 +1,18 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -14,20 +22,30 @@ import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.ResourceType;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.EntityType;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
+@OwnedBy(CDC)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ResourceLookupServiceTest extends WingsBaseTest {
+  private static final String TEST_APP_ID = "TEST_APP_ID";
+  private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
+
+  @Mock private AppService appService;
   @InjectMocks @Inject private ResourceLookupService resourceLookupService;
   @Inject private HPersistence persistence;
 
@@ -221,5 +239,74 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
     assertThat(updatedResourceLookup).isNotNull();
 
     persistence.delete(resourceLookup);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testUpdateResourceLookupWithTags() {
+    String uuid = generateUuid();
+    ResourceLookup resourceLookup = ResourceLookup.builder()
+                                        .uuid(uuid)
+                                        .resourceId(entityId)
+                                        .resourceName(entityName)
+                                        .resourceType(ResourceType.USER.name())
+                                        .build();
+
+    persistence.save(resourceLookup);
+
+    resourceLookupService.updateResourceLookupRecordWithTags(
+        resourceLookup.getAccountId(), resourceLookup.getResourceId(), "tagKey", "tagValue", true);
+    ResourceLookup updatedResourceLookup = persistence.get(ResourceLookup.class, uuid);
+
+    assertThat(updatedResourceLookup).isNotNull();
+    assertThat(updatedResourceLookup.getTags().get(0).getName()).isEqualTo("tagKey");
+    assertThat(updatedResourceLookup.getTags().get(0).getValue()).isEqualTo("tagValue");
+
+    // update existing
+    resourceLookupService.updateResourceLookupRecordWithTags(
+        resourceLookup.getAccountId(), resourceLookup.getResourceId(), "tagKey", "updatedTagValue", true);
+    ResourceLookup updatedResourceLookup2 = persistence.get(ResourceLookup.class, uuid);
+    assertThat(updatedResourceLookup2.getTags().get(0).getValue()).isEqualTo("updatedTagValue");
+
+    persistence.delete(resourceLookup);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testListResourceLookupWithTagFilters() {
+    String uuid = generateUuid();
+    ResourceLookup resourceLookup =
+        ResourceLookup.builder()
+            .uuid(uuid)
+            .resourceId(entityId)
+            .resourceName(entityName)
+            .resourceType(ResourceType.SERVICE.name())
+            .accountId(TEST_ACCOUNT_ID)
+            .appId(TEST_APP_ID)
+            .tags(Arrays.asList(NameValuePair.builder().name("tagName").value("tagValue").build()))
+            .build();
+
+    Service service = Service.builder().appId(TEST_APP_ID).accountId(TEST_ACCOUNT_ID).uuid(entityId).build();
+
+    persistence.save(resourceLookup);
+    persistence.save(service);
+
+    PageRequest<ResourceLookup> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", SearchFilter.Operator.IN, "TEST_APP_ID");
+
+    when(appService.getAccountIdByAppId(eq(TEST_APP_ID))).thenReturn(TEST_ACCOUNT_ID);
+
+    String filter =
+        "{\"resourceTypes\":[\"SERVICE\"],\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"tagName\",\"operator\":\"IN\",\"values\":[\"tagValue\"]}]}}";
+    PageResponse<ResourceLookup> response =
+        resourceLookupService.listWithTagFilters(pageRequest, filter, EntityType.SERVICE, false);
+
+    assertThat(response).isNotNull();
+    assertThat(response.size()).isEqualTo(1);
+
+    persistence.delete(resourceLookup);
+    persistence.delete(service);
   }
 }

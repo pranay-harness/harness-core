@@ -16,6 +16,8 @@ import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -45,6 +47,7 @@ import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -80,6 +83,12 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.ng.userprofile.commons.SCMType;
+import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
+import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
+import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
+import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -89,6 +98,7 @@ import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
+import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -110,6 +120,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -128,6 +139,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
@@ -245,7 +257,8 @@ public class NextGenModule extends AbstractModule {
     });
     install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
-    install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
+    install(AccessControlMigrationModule.getInstance());
+    install(new InviteModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());
@@ -254,13 +267,13 @@ public class NextGenModule extends AbstractModule {
     install(NGModule.getInstance(getOrchestrationConfig()));
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
     install(new SecretManagementModule());
-    install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
@@ -329,6 +342,8 @@ public class NextGenModule extends AbstractModule {
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule());
+    install(new ResourceGroupClientModule(
+        appConfig.getResourceGroupClientConfig(), appConfig.getResourceGroupClientSecret(), NG_MANAGER.getServiceId()));
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
@@ -354,6 +369,13 @@ public class NextGenModule extends AbstractModule {
 
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
+
+    bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
+
+    MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
+        MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
   }

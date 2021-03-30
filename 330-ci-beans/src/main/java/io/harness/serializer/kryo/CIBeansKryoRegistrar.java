@@ -24,6 +24,7 @@ import io.harness.beans.execution.WebhookGitUser;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
 import io.harness.beans.outcomes.DependencyOutcome;
+import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.steps.CiStepOutcome;
@@ -44,6 +45,7 @@ import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
@@ -147,5 +149,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToArtifactoryStepInfo.class, 100086);
     kryo.register(PodCleanupDetails.class, 100087);
     kryo.register(CustomExecutionSource.class, 100088);
+    kryo.register(LiteEnginePodDetailsOutcome.class, 100089);
+    kryo.register(ContainerPortDetails.class, 100090);
   }
 }

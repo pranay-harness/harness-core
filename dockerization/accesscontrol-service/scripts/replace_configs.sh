@@ -31,3 +31,17 @@ fi
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
 fi
+
+if [[ "" != "$EVENTS_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE eventsConfig.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$ALLOWED_ORIGINS" ]]; then
+  yq delete -i $CONFIG_FILE allowedOrigins
+  yq write -i $CONFIG_FILE allowedOrigins "$ALLOWED_ORIGINS"
+fi

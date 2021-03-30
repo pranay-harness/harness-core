@@ -114,7 +114,7 @@ I tested using grpc calls using `https://github.com/uw-labs/bloomrpc`
     }
   }
 }
-// upsert - with create
+// pushFile - with create
 {
   "slug": "tphoney/scm-test",
   "path": "upsert",

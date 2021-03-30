@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE;
@@ -34,16 +35,16 @@ public class EventsFrameworkModule extends AbstractModule {
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisProducer.of(
-              EventsFrameworkConstants.SETUP_USAGE, redisConfig, EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
+              EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))
-          .toInstance(RedisProducer.of(
-              WEBHOOK_REQUEST_PAYLOAD_DETAILS, redisConfig, WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE));
+          .toInstance(RedisProducer.of(WEBHOOK_REQUEST_PAYLOAD_DETAILS, redisConfig,
+              WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-          .toInstance(RedisProducer.of(
-              EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
     }
   }
 }

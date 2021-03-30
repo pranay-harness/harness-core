@@ -29,4 +29,7 @@ public class ContainerSyncResponse implements DelegateTaskNotifyResponseData {
   This field should help if the containerInfoList is empty to tell which controller has has being scaled down to 0
    */
   private String controllerName;
+
+  private boolean isEcs;
+  private boolean ecsServiceExists;
 }

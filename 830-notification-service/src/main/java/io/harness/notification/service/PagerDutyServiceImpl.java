@@ -1,7 +1,9 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.PagerDuty;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationClientConstants.HARNESS_NAME;
@@ -11,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.PagerDutyTaskParams;
@@ -49,6 +52,7 @@ import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.text.WordUtils;
 import org.json.JSONObject;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class PagerDutyServiceImpl implements ChannelService {
@@ -183,9 +187,16 @@ public class PagerDutyServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     PagerDuty pagerDutyDetails = notificationRequest.getPagerDuty();
     List<String> recipients = new ArrayList<>(pagerDutyDetails.getPagerDutyIntegrationKeysList());
-    List<String> pagerDutyKeys = notificationSettingsService.getNotificationSettingsForGroups(
-        pagerDutyDetails.getUserGroupIdsList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
-    recipients.addAll(pagerDutyKeys);
+    if (isNotEmpty(pagerDutyDetails.getUserGroupIdsList())) {
+      List<String> pagerDutyKeys =
+          notificationSettingsService.getNotificationSettingsForGroups(pagerDutyDetails.getUserGroupIdsList(),
+              NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
+      recipients.addAll(pagerDutyKeys);
+    } else {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
+          pagerDutyDetails.getUserGroupList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    }
     return recipients;
   }
 

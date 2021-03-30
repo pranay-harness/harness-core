@@ -2,10 +2,10 @@ package software.wings.service.impl.analysis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -13,8 +13,10 @@ import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -23,18 +25,23 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-/**
- * Created by rsingh on 08/30/17.
- */
-
-@NgUniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
-                                              , @Field("stateExecutionId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricGroupKeys")
 public class TimeSeriesMetricGroup extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_state_execution_per_type")
+                 .unique(true)
+                 .field(TimeSeriesMetricGroupKeys.stateType)
+                 .field(TimeSeriesMetricGroupKeys.stateExecutionId)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private StateType stateType;
 
   @NotEmpty @FdIndex private String stateExecutionId;
