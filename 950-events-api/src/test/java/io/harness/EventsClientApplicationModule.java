@@ -1,7 +1,6 @@
 package io.harness;
 
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.redis.RedisConfig;
@@ -31,12 +30,6 @@ public class EventsClientApplicationModule extends AbstractModule {
 
   protected void configure() {
     bind(RedisConfig.class).annotatedWith(Names.named("lock")).toInstance(this.appConfig.getRedisLockConfig());
-  }
-
-  @Provides
-  @Singleton
-  RedisProducer getRedisProducer() {
-    return RedisProducer.of("project_update", appConfig.getEventsFrameworkConfiguration().getRedisConfig(), 10000);
   }
 
   @Provides

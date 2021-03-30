@@ -5,6 +5,7 @@ package io.harness.gitsync;
 import "google/protobuf/wrappers.proto";
 import "io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/eventsframework/schemas/entity/entity_detail.proto";
+import "io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
 
 option java_multiple_files = true;
 
@@ -12,6 +13,7 @@ service HarnessToGitPushInfoService {
   rpc pushFromHarness(PushInfo) returns (PushResponse);
   // todo(abhinav): make rpc to get user profile connector when available.
   rpc getConnectorInfo(FileInfo) returns (InfoForPush);
+  rpc isGitSyncEnabledForScope(io.harness.eventsframework.schemas.entity.EntityScopeInfo) returns (IsGitSyncEnabled);
 }
 
 message PushInfo {
@@ -38,4 +40,8 @@ message InfoForPush {
   // status 0 = failed, 1 = success
   bool status = 3;
   google.protobuf.BytesValue exception = 4;
+}
+
+message IsGitSyncEnabled {
+  bool enabled = 1;
 }

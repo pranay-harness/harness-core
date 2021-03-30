@@ -1,4 +1,4 @@
-package io.harness.steps.approval.step.jira.beans.evaluation;
+package io.harness.steps.approval.step.jira.evaluation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

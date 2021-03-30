@@ -154,7 +154,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return updatedOrganization;
       }));
     }
-    throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
+    throw new InvalidRequestException(String.format("Organization with identifier [%s] not found", identifier), USER);
   }
 
   @Override
