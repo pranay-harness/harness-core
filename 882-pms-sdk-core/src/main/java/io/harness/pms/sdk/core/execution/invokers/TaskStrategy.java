@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.contracts.execution.Status.NO_OP;
 import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -15,7 +16,6 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.StringOutcome;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
@@ -25,14 +25,10 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.tasks.ErrorResponseData;
-import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.Map;
-import java.util.function.Supplier;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -62,16 +58,6 @@ public class TaskStrategy implements ExecuteStrategy {
             buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     pmsNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
-  }
-
-  private Supplier buildResponseDataSupplier(Map<String, ResponseData> responseDataMap) {
-    return () -> {
-      ResponseData data = responseDataMap.values().iterator().next();
-      if (data instanceof ErrorResponseData) {
-        throw new ErrorDataException((ErrorResponseData) data);
-      }
-      return data;
-    };
   }
 
   private TaskExecutable extractTaskExecutable(NodeExecutionProto nodeExecution) {

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
+import io.harness.accesscontrol.preference.AccessControlPreferencePersistenceConfig;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
@@ -104,7 +105,8 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   protected Class<?>[] getConfigClasses() {
     return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
         UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class, RolePersistenceConfig.class,
-        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
+        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class,
+        AccessControlPreferencePersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

@@ -28,7 +28,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -83,6 +85,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
@@ -118,7 +121,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         .extractUnresolvedTextVariables(anyListOf(NameValuePair.class));
     doAnswer(doExtractEncryptedVariables)
         .when(infrastructureProvisionerService)
-        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString());
+        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString(), anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString());
   }
 

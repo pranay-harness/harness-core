@@ -65,7 +65,7 @@ import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -1146,7 +1146,13 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   public void testGetConnectorMapper() {
     Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").build();
 
-    doReturn(new DockerArtifactStream()).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
+    ArtifactStream artifactStream = mock(ArtifactStream.class);
+    doReturn(artifactStream).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
+
+    ArtifactStreamAttributes artifactStreamAttributes = mock(ArtifactStreamAttributes.class);
+    doReturn(ArtifactType.DOCKER).when(artifactStreamAttributes).getArtifactType();
+    doReturn(ArtifactStreamType.DOCKER.name()).when(artifactStreamAttributes).getArtifactStreamType();
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(any());
 
     ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);

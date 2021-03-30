@@ -34,7 +34,7 @@ func TestExecuteStepInAsync(t *testing.T) {
 }
 
 func TestExecuteStepSuccess(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -52,18 +52,18 @@ func TestExecuteStepSuccess(t *testing.T) {
 	}
 
 	mockStepExecutor := mexecutor.NewMockStepExecutor(ctrl)
-	mockStepExecutor.EXPECT().Run(ctx, gomock.Any()).Return(nil)
+	mockStepExecutor.EXPECT().Run(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 	oldStepExecutor := newStepExecutor
 	defer func() { newStepExecutor = oldStepExecutor }()
 	newStepExecutor = func(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
 		return mockStepExecutor
 	}
-	executeStep(ctx, arg, log.Sugar())
+	executeStep(arg, log.Sugar())
 }
 
 func TestExecuteStepFail(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	arg := &pb.ExecuteStepRequest{
@@ -80,7 +80,7 @@ func TestExecuteStepFail(t *testing.T) {
 	}
 
 	mockStepExecutor := mexecutor.NewMockStepExecutor(ctrl)
-	mockStepExecutor.EXPECT().Run(ctx, gomock.Any()).Return(errors.New("failed"))
+	mockStepExecutor.EXPECT().Run(gomock.Any(), gomock.Any()).AnyTimes().Return(errors.New("failed"))
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	oldStepExecutor := newStepExecutor
@@ -88,5 +88,5 @@ func TestExecuteStepFail(t *testing.T) {
 	newStepExecutor = func(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
 		return mockStepExecutor
 	}
-	executeStep(ctx, arg, log.Sugar())
+	executeStep(arg, log.Sugar())
 }

@@ -15,7 +15,9 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -90,6 +92,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
   private static final String FETCH_FILES_COMMAND_UNIT = "Fetch Files";
@@ -223,7 +226,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     }
 
     Map<String, EncryptedDataDetail> encryptedInfrastructureVariables =
-        infrastructureProvisionerService.extractEncryptedTextVariables(getVariables(), executionContext.getAppId());
+        infrastructureProvisionerService.extractEncryptedTextVariables(
+            getVariables(), executionContext.getAppId(), executionContext.getWorkflowExecutionId());
 
     Map<String, EncryptedDataDetail> renderedEncryptedInfrastructureVariables = encryptedInfrastructureVariables;
     if (EmptyPredicate.isNotEmpty(encryptedInfrastructureVariables.entrySet())) {

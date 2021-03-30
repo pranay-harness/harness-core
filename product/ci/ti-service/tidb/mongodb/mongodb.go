@@ -71,8 +71,12 @@ func NewRelation(source int, tests []int) *Relation {
 	}
 }
 
-func New(username, password, host, port, dbName string, log *zap.SugaredLogger) (*MongoDb, error) {
-	connStr := fmt.Sprintf("mongodb://%s:%s/?connect=direct", host, port)
+func New(username, password, host, port, dbName string, connStr string, log *zap.SugaredLogger) (*MongoDb, error) {
+	// If any connStr is provided, use that
+	if connStr == "" {
+		connStr = fmt.Sprintf("mongodb://%s:%s/?connect=direct", host, port)
+	}
+
 	log.Infow("trying to connect to mongo", "connStr", connStr)
 	ctx := context.Background()
 	credential := options.Credential{

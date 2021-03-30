@@ -230,4 +230,29 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .workingDirectory(autoCloseableWorkingDirectory.workingDir())
         .build();
   }
+
+  private AzureAppServicePackageDeploymentContext toAzureAppServicePackageDeploymentContext(
+      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, AzureWebClientContext azureWebClientContext,
+      ArtifactStreamAttributes streamAttributes, ILogStreamingTaskClient logStreamingTaskClient) {
+    List<AzureAppServiceApplicationSetting> applicationSettings =
+        azureWebAppSlotSetupParameters.getApplicationSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd = applicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
+
+    List<AzureAppServiceConnectionString> connectionStrings = azureWebAppSlotSetupParameters.getConnectionStrings();
+    Map<String, AzureAppServiceConnectionString> connSettingsToAdd = connectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+
+    return AzureAppServicePackageDeploymentContext.builder()
+        .logStreamingTaskClient(logStreamingTaskClient)
+        .appSettingsToAdd(appSettingsToAdd)
+        .connSettingsToAdd(connSettingsToAdd)
+        .slotName(azureWebAppSlotSetupParameters.getSlotName())
+        .targetSlotName(azureWebAppSlotSetupParameters.getTargetSlotName())
+        .azureWebClientContext(azureWebClientContext)
+        .artifactStreamAttributes(streamAttributes)
+        .startupCommand(azureWebAppSlotSetupParameters.getStartupCommand())
+        .steadyStateTimeoutInMin(azureWebAppSlotSetupParameters.getTimeoutIntervalInMin())
+        .build();
+  }
 }
