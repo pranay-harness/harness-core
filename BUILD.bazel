@@ -55,7 +55,7 @@ modules = [
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
-    "//800-pipeline-service",
+#    "//800-pipeline-service",
     "//810-ng-triggers",
     "//820-platform-service",
     "//830-notification-service",
