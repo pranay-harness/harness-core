@@ -1,5 +1,7 @@
 package io.harness.executions.steps;
 
+import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_APPLY;
+
 import io.harness.cdng.visitor.YamlTypes;
 
 public enum ExecutionNodeType {
@@ -21,7 +23,8 @@ public enum ExecutionNodeType {
 
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollbackSection"),
   GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
-  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP);
+  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP),
+  TF_APPLY("TF_APPLY", TERRAFORM_APPLY);
 
   private final String name;
   private final String yamlType;
