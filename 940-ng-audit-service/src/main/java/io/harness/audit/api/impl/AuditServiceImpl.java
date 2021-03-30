@@ -71,7 +71,10 @@ public class AuditServiceImpl implements AuditService {
     }
     List<Criteria> coreInfoCriteriaList = new ArrayList<>();
     if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
-      coreInfoCriteriaList.add(getScopeCriteria(auditFilterPropertiesDTO.getScopes()));
+      Criteria scopeCriteria = getScopeCriteria(auditFilterPropertiesDTO.getScopes());
+      if (scopeCriteria != null) {
+        coreInfoCriteriaList.add(scopeCriteria);
+      }
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
@@ -140,7 +143,11 @@ public class AuditServiceImpl implements AuditService {
         criteriaList.add(criteria);
       }
     });
-    return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+    if (isNotEmpty(criteriaList)) {
+      return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+    } else {
+      return null;
+    }
   }
 
   private Criteria getResourceCriteria(List<Resource> resources) {
