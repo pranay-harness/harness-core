@@ -1,4 +1,4 @@
-package software.wings.sm.states.azure.artifact;
+package software.wings.sm.states.azure.artifact.container;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
@@ -14,11 +14,12 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import java.util.Optional;
 
-public class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
-  protected ArtifactoryArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+public final class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
+  public ArtifactoryArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 
@@ -41,8 +42,14 @@ public class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
         .build();
   }
 
+  @Override
   public AzureRegistryType getAzureRegistryType() {
     return AzureRegistryType.ARTIFACTORY_PRIVATE_REGISTRY;
+  }
+
+  @Override
+  public boolean isDockerArtifactType() {
+    return true;
   }
 
   @Override

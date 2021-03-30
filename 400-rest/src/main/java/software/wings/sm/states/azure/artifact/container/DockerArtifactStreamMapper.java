@@ -1,4 +1,4 @@
-package software.wings.sm.states.azure.artifact;
+package software.wings.sm.states.azure.artifact.container;
 
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;
 
@@ -17,16 +17,18 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import java.util.Optional;
 
-public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
+public final class DockerArtifactStreamMapper extends ArtifactStreamMapper {
   private static final String PUBLIC_DOCKER_REGISTER_URL = "https://index.docker.io";
 
   public DockerArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
 
+  @Override
   public ConnectorConfigDTO getConnectorDTO() {
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
@@ -43,6 +45,7 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
         .build();
   }
 
+  @Override
   public AzureRegistryType getAzureRegistryType() {
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
@@ -52,6 +55,11 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
     } else {
       return AzureRegistryType.DOCKER_HUB_PUBLIC;
     }
+  }
+
+  @Override
+  public boolean isDockerArtifactType() {
+    return true;
   }
 
   @Override
