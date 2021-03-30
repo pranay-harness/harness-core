@@ -2,7 +2,9 @@ package io.harness.redesign.states.http;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.github.reinert.jjschema.Attributes;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public class BasicHttpStepParameters implements StepParameters {
   @Attributes(required = true, title = "URL") String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
