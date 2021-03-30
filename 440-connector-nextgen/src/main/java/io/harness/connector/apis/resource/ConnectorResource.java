@@ -3,8 +3,8 @@ package io.harness.connector.apis.resource;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.CREATE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
-import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -165,7 +165,8 @@ public class ConnectorResource {
   }
   @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = CREATE_CONNECTOR_PERMISSION)
   private ResponseDTO<ConnectorResponseDTO> createConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
-      String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
+      @AccountIdentifier String accountIdentifier, @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
+      @io.harness.accesscontrol.OrgIdentifier String orgIdentifier, @ResourceIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -185,7 +186,8 @@ public class ConnectorResource {
   }
   @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
   private ResponseDTO<ConnectorResponseDTO> updateConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
-      String accountIdentifier, String projectIdentifier, String orgIdentifier, String connectorIdentifier) {
+      @AccountIdentifier String accountIdentifier, @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
+      @io.harness.accesscontrol.OrgIdentifier String orgIdentifier, @ResourceIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
