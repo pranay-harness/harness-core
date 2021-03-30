@@ -5,7 +5,7 @@ import static io.harness.audit.ResourceTypeConstants.PROJECT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
-import io.harness.ng.core.OrgScope;
+import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -29,7 +29,7 @@ public class ProjectUpdateEvent implements Event {
   }
 
   public ResourceScope getResourceScope() {
-    return new OrgScope(accountIdentifier, oldProject.getOrgIdentifier());
+    return new ProjectScope(accountIdentifier, newProject.getOrgIdentifier(), newProject.getIdentifier());
   }
 
   public Resource getResource() {

@@ -5,10 +5,10 @@ import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURREN
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.FeatureName;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
@@ -20,6 +20,7 @@ import software.wings.sm.StateType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -31,13 +32,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-/**
- * @author Vaibhav Tulsyan
- * 05/Oct/2018
- */
-
-@NgUniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
-                                                    , @Field("envId"), @Field("name") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
@@ -45,6 +39,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "verificationServiceConfigurations")
 @HarnessEntity(exportable = true)
 public class CVConfiguration extends Base implements NameAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_name")
+                 .unique(true)
+                 .field("appId")
+                 .field(CVConfigurationKeys.envId)
+                 .field(CVConfigurationKeys.name)
+                 .build())
+        .build();
+  }
+
   @NotNull private String name;
   @NotNull @FdIndex private String accountId;
   @NotNull private String connectorId;

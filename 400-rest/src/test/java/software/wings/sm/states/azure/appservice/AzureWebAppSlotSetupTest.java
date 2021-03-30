@@ -6,6 +6,7 @@ import static io.harness.context.ContextElementType.AZURE_WEBAPP_SETUP;
 import static io.harness.rule.OwnerRule.ANIL;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.TaskType.AZURE_APP_SERVICE_TASK;
 import static software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -160,6 +161,9 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
     mockArtifactStreamMapper();
     doReturn(delegateResult).when(delegateService).queueTask(any());
+    doReturn(Collections.emptyMap())
+        .when(azureAppServiceManifestUtils)
+        .getAppServiceConfigurationManifests(eq(context));
 
     state.setSlotSteadyStateTimeout("10");
     AzureAppServiceConfiguration azureAppServiceConfiguration = new AzureAppServiceConfiguration();
@@ -514,6 +518,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .deploySlotName(DEPLOYMENT_SLOT)
         .appServiceName(APP_NAME)
         .activityId(ACTIVITY_ID)
+        .taskType(AZURE_APP_SERVICE_TASK)
         .build();
   }
 

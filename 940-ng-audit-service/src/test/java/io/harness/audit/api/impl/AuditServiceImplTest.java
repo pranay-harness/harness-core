@@ -1,6 +1,5 @@
 package io.harness.audit.api.impl;
 
-import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -21,6 +20,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
@@ -31,7 +31,6 @@ import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
@@ -213,7 +212,7 @@ public class AuditServiceImplTest extends CategoryTest {
   public void testModuleTypeActionAndEnvironmentIdentifierAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     ModuleType moduleType = ModuleType.CD;
-    String action = randomAlphabetic(10);
+    Action action = Action.CREATE;
     String environmentIdentifier = randomAlphabetic(10);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
@@ -251,13 +250,9 @@ public class AuditServiceImplTest extends CategoryTest {
 
     Document environmentIdentifierDocument = (Document) andList.get(3);
     assertNotNull(environmentIdentifierDocument);
-    Document environmentIdentifierLabelsDocument =
-        (Document) environmentIdentifierDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
-    assertNotNull(environmentIdentifierLabelsDocument);
-    Document elemMatchDocument = (Document) environmentIdentifierLabelsDocument.get("$elemMatch");
-    String environmentIdentifierKey = elemMatchDocument.getString(KeyValuePairKeys.key);
-    assertEquals(ENVIRONMENT_IDENTIFIER_KEY, environmentIdentifierKey);
-    Document environmentIdentifierValueDocument = (Document) elemMatchDocument.get(KeyValuePairKeys.value);
+    Document environmentIdentifierValueDocument =
+        (Document) environmentIdentifierDocument.get(AuditEventKeys.environmentIdentifier);
+    assertNotNull(environmentIdentifierValueDocument);
     List<String> environmentIdentifierValueList = (List<String>) environmentIdentifierValueDocument.get("$in");
     assertEquals(1, environmentIdentifierValueList.size());
     assertEquals(environmentIdentifier, environmentIdentifierValueList.get(0));

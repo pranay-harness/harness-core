@@ -45,6 +45,11 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
   }
 
   @Override
+  protected boolean supportRemoteManifest() {
+    return false;
+  }
+
+  @Override
   public String skipMessage() {
     return "No Target slot detail is found, hence skipping swap slot step";
   }
@@ -103,7 +108,7 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits() {
+  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
     return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_SWAP),
         new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }

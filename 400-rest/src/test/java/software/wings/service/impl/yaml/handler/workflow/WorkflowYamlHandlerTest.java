@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -12,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.OrchestrationWorkflowType;
@@ -23,6 +25,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
+import software.wings.beans.Event.Type;
 import software.wings.beans.Workflow;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.template.Template;
@@ -32,6 +35,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.utils.WingsTestConstants;
+import software.wings.yaml.workflow.BasicWorkflowYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -458,5 +462,30 @@ public class WorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
 
   private Template getTemplate(String templateType) {
     return Template.builder().type(templateType).build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws Exception {
+    File yamlFile = new File(resourcePath + PATH_DELIMITER + workflowYamlFiles.BASIC_WORKFLOW);
+    assertThat(yamlFile).isNotNull();
+
+    String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
+    ChangeContext<BasicWorkflowYaml> changeContext =
+        getChangeContext(yamlString, yamlFilePath, basicWorkflowYamlHandler);
+    changeContext.getChange().setSyncFromGit(true);
+
+    BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
+    changeContext.setYaml(yamlObject);
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    Workflow workflow = basicWorkflowYamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    assertThat(workflow).isNotNull();
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, null, workflow, Type.CREATE, true, false);
+
+    when(yamlHelper.getWorkflowByAppIdYamlPath(APP_ID, yamlFilePath)).thenReturn(workflow);
+    basicWorkflowYamlHandler.delete(changeContext);
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, workflow, null, Type.DELETE, true, false);
   }
 }

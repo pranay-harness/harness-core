@@ -1,5 +1,8 @@
 package io.harness.pms.pipeline.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.dto.GraphVertexDTO;
@@ -22,6 +25,7 @@ import org.bson.Document;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(PIPELINE)
 public class ExecutionGraphMapper {
   public ExecutionNode toExecutionNode(GraphVertexDTO graphVertex) {
     String basefqn = PlanExecutionUtils.getFQNUsingLevels(graphVertex.getAmbiance().getLevels());
@@ -29,6 +33,7 @@ public class ExecutionGraphMapper {
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
         .skipInfo(graphVertex.getSkipInfo())
+        .nodeRunInfo(graphVertex.getNodeRunInfo())
         .stepParameters(extractDocumentStepParameters(graphVertex.getStepParameters()))
         .name(graphVertex.getName())
         .baseFqn(basefqn)

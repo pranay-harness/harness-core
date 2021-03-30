@@ -236,6 +236,16 @@ replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
+replace_key_value outboxIteratorConfig.threadPoolSize "$OUTBOX_ITERATOR_THREAD_POOL_SIZE"
+
+replace_key_value outboxIteratorConfig.intervalInSeconds "$OUTBOX_ITERATOR_INTERVAL"
+
+replace_key_value outboxIteratorConfig.targetIntervalInSeconds "$OUTBOX_ITERATOR_TARGET_INTERVAL"
+
+replace_key_value outboxIteratorConfig.acceptableNoAlertDelayInSeconds "$OUTBOX_ITERATOR_NO_ALERT_DELAY"
+
+replace_key_value outboxIteratorConfig.maximumOutboxEventHandlingAttempts "$OUTBOX_ITERATOR_MAX_ATTEMPTS"
+
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"

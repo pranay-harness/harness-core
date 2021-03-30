@@ -14,6 +14,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
@@ -45,6 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -237,5 +239,20 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return emptyList();
+  }
+
+  @Override
+  public boolean serviceExists(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptionDetails,
+      String region, String cluster, String serviceName) {
+    try {
+      Optional<Service> services =
+          awsClusterService.getService(region, settingAttribute, encryptionDetails, cluster, serviceName);
+      return services.isPresent();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return false;
   }
 }

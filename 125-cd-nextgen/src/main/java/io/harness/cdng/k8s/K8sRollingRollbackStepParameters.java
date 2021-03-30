@@ -36,6 +36,7 @@ public class K8sRollingRollbackStepParameters extends K8sRollingRollbackBaseStep
       RollbackInfo rollbackInfo) {
     super(skipDryRun);
     this.timeout = timeout;
+    this.skipCondition = skipCondition;
     this.rollbackInfo = rollbackInfo;
     this.name = name;
     this.identifier = identifier;

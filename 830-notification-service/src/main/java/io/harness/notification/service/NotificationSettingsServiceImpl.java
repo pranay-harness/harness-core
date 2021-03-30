@@ -1,8 +1,11 @@
 package io.harness.notification.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
+import io.harness.NotificationRequest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.notification.NotificationSettingConfigDTO;
@@ -18,7 +21,9 @@ import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.usergroups.UserGroupClient;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +34,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NotificationSettingsServiceImpl implements NotificationSettingsService {
@@ -52,6 +58,33 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     return userGroups;
   }
 
+  private List<UserGroupDTO> getUserGroups(List<NotificationRequest.UserGroup> userGroups, String accountIdentifier) {
+    if (isEmpty(userGroups)) {
+      return new ArrayList<>();
+    }
+    List<UserGroupDTO> userGroupDTOS = new ArrayList<>();
+    try {
+      List<UserGroupFilterDTO> userGroupFilterDTO =
+          userGroups.stream()
+              .map(userGroup
+                  -> UserGroupFilterDTO.builder()
+                         .accountIdentifier(accountIdentifier)
+                         .identifierFilter(Sets.newHashSet(ImmutableList.of(userGroup.getIdentifier())))
+                         .orgIdentifier(userGroup.getOrgIdentifier())
+                         .projectIdentifier(userGroup.getProjectIdentifier())
+                         .build())
+              .collect(Collectors.toList());
+
+      for (UserGroupFilterDTO filterDTO : userGroupFilterDTO) {
+        userGroupDTOS.addAll(getResponse(userGroupClient.getFilteredUserGroups(filterDTO)));
+      }
+
+    } catch (Exception ex) {
+      log.error("Error while fetching user groups.", ex);
+    }
+    return userGroupDTOS;
+  }
+
   private List<String> getEmailsForUserIds(List<String> userIds) {
     if (isEmpty(userIds)) {
       return new ArrayList<>();
@@ -65,11 +98,23 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     return users.stream().map(UserInfo::getEmail).collect(Collectors.toList());
   }
 
+  @Override
+  public List<String> getNotificationRequestForUserGroups(List<NotificationRequest.UserGroup> notificationUserGroups,
+      NotificationChannelType notificationChannelType, String accountId) {
+    List<UserGroupDTO> userGroups = getUserGroups(notificationUserGroups, accountId);
+    return getNotificationSettings(notificationChannelType, userGroups);
+  }
+
+  @Override
   public List<String> getNotificationSettingsForGroups(
       List<String> userGroupIds, NotificationChannelType notificationChannelType, String accountId) {
     // get user groups by ids
     List<UserGroupDTO> userGroups = getUserGroups(userGroupIds);
+    return getNotificationSettings(notificationChannelType, userGroups);
+  }
 
+  private List<String> getNotificationSettings(
+      NotificationChannelType notificationChannelType, List<UserGroupDTO> userGroups) {
     Set<String> notificationSettings = new HashSet<>();
     for (UserGroupDTO userGroupDTO : userGroups) {
       for (NotificationSettingConfigDTO notificationSettingConfigDTO : userGroupDTO.getNotificationConfigs()) {

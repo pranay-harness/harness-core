@@ -2,15 +2,15 @@ package io.harness.ng.core.models;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
-import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.secretmanagerclient.SecretType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -28,13 +28,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "secrets", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
-@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_identifier",
-    fields =
-    {
-      @Field(SecretKeys.accountIdentifier)
-      , @Field(SecretKeys.orgIdentifier), @Field(SecretKeys.projectIdentifier), @Field(SecretKeys.identifier)
-    })
 public class Secret {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identification")
+                 .unique(true)
+                 .field(SecretKeys.accountIdentifier)
+                 .field(SecretKeys.orgIdentifier)
+                 .field(SecretKeys.projectIdentifier)
+                 .field(SecretKeys.identifier)
+                 .build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
   String orgIdentifier;

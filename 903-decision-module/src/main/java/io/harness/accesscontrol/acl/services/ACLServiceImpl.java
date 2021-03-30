@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.acl.services;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.daos.ACLDAO;
 import io.harness.accesscontrol.acl.models.ACL;
@@ -7,6 +9,7 @@ import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +18,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
@@ -76,6 +80,11 @@ public class ACLServiceImpl implements ACLService {
   @Override
   public long deleteByRoleAssignmentId(String roleAssignmentId) {
     return aclDAO.deleteByRoleAssignmentId(roleAssignmentId);
+  }
+
+  @Override
+  public List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
+    return aclDAO.getByUserGroup(scopeIdentifier, userGroupIdentifier);
   }
 
   @Override

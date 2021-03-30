@@ -1,6 +1,8 @@
 package io.harness.notification.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ANKUSH;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.NotificationRequest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.notification.beans.NotificationProcessingResponse;
@@ -33,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(PL)
 public class MSTeamsServiceImplTest extends CategoryTest {
   @Mock private NotificationSettingsService notificationSettingsService;
   @Mock private NotificationTemplateService notificationTemplateService;
@@ -134,6 +138,62 @@ public class MSTeamsServiceImplTest extends CategoryTest {
                               .setMsTeam(NotificationRequest.MSTeam.newBuilder()
                                              .setTemplateId(msTeamsTemplateName)
                                              .addAllMsTeamKeys(Collections.singletonList(msTeamsWebhookurl))
+                                             .build())
+                              .build();
+    notificationExpectedResponse =
+        NotificationProcessingResponse.builder().result(Arrays.asList(true, false)).shouldRetry(false).build();
+    when(notificationTemplateService.getTemplateAsString(eq(msTeamsTemplateName), any()))
+        .thenReturn(Optional.of("this is test notification"));
+    when(notificationSettingsService.getSendNotificationViaDelegate(eq(accountId))).thenReturn(true);
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(NotificationTaskResponse.builder().processingResponse(notificationExpectedResponse).build());
+    notificationProcessingResponse = msTeamService.send(notificationRequest);
+    assertEquals(notificationExpectedResponse, notificationProcessingResponse);
+  }
+
+  @SneakyThrows
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void sendNotification_ValidCaseMSteamUserGroup() {
+    NotificationRequest notificationRequest =
+        NotificationRequest.newBuilder()
+            .setId(id)
+            .setAccountId(accountId)
+            .setMsTeam(NotificationRequest.MSTeam.newBuilder()
+                           .setTemplateId(msTeamsTemplateName)
+                           .addAllMsTeamKeys(Collections.singletonList(msTeamsWebhookurl))
+                           .addUserGroup(NotificationRequest.UserGroup.newBuilder()
+                                             .setIdentifier("identifier")
+                                             .setProjectIdentifier("projectIdentifier")
+                                             .setOrgIdentifier("orgIdentifier")
+                                             .build())
+                           .build())
+            .build();
+    NotificationProcessingResponse notificationExpectedResponse =
+        NotificationProcessingResponse.builder().result(Arrays.asList(true, false)).shouldRetry(false).build();
+    when(notificationTemplateService.getTemplateAsString(eq(msTeamsTemplateName), any()))
+        .thenReturn(Optional.empty(), Optional.of("This is a test notification"));
+    when(notificationSettingsService.getSendNotificationViaDelegate(eq(accountId))).thenReturn(false);
+    when(msTeamsSender.send(any(), any(), any())).thenReturn(notificationExpectedResponse);
+
+    NotificationProcessingResponse notificationProcessingResponse = msTeamService.send(notificationRequest);
+    assertEquals(notificationProcessingResponse, NotificationProcessingResponse.trivialResponseWithNoRetries);
+
+    notificationProcessingResponse = msTeamService.send(notificationRequest);
+    assertEquals(notificationExpectedResponse, notificationProcessingResponse);
+
+    notificationRequest = NotificationRequest.newBuilder()
+                              .setId(id)
+                              .setAccountId(accountId)
+                              .setMsTeam(NotificationRequest.MSTeam.newBuilder()
+                                             .setTemplateId(msTeamsTemplateName)
+                                             .addAllMsTeamKeys(Collections.singletonList(msTeamsWebhookurl))
+                                             .addUserGroup(NotificationRequest.UserGroup.newBuilder()
+                                                               .setIdentifier("identifier")
+                                                               .setProjectIdentifier("projectIdentifier")
+                                                               .setOrgIdentifier("orgIdentifier")
+                                                               .build())
                                              .build())
                               .build();
     notificationExpectedResponse =

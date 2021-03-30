@@ -27,14 +27,18 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
 import software.wings.beans.AzureWebAppInfrastructureMapping;
+import software.wings.beans.TaskType;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -46,8 +50,8 @@ import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +92,11 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   }
 
   @Override
+  protected boolean supportRemoteManifest() {
+    return true;
+  }
+
+  @Override
   protected boolean shouldExecute(ExecutionContext context) {
     // setup is first step and hence should always be run
     return true;
@@ -123,6 +132,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .targetSlotName(targetSlotName)
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
         .appServiceSlotSetupTimeOut(getUserDefinedTimeOut(context))
+        .taskType(TaskType.AZURE_APP_SERVICE_TASK)
         .build();
   }
 
@@ -159,6 +169,42 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
     List<InstanceElement> instanceElements = getInstanceElements(context, slotSetupTaskResponse, stateExecutionData);
     return InstanceElementListParam.builder().instanceElements(instanceElements).build();
+  }
+
+  @Override
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
+    AzureAppServiceSlotSetupExecutionData stateExecutionData =
+        (AzureAppServiceSlotSetupExecutionData) context.getStateExecutionData();
+    TaskType taskType = stateExecutionData.getTaskType();
+    switch (taskType) {
+      case GIT_FETCH_FILES_TASK:
+        return handleAsyncResponseForGitTask(context, response, stateExecutionData);
+
+      case AZURE_APP_SERVICE_TASK:
+        return super.handleAsyncInternal(context, response);
+
+      default:
+        throw new InvalidRequestException("Unhandled task type " + taskType);
+    }
+  }
+
+  private ExecutionResponse handleAsyncResponseForGitTask(ExecutionContext context, Map<String, ResponseData> response,
+      AzureAppServiceSlotSetupExecutionData stateExecutionData) {
+    stateExecutionData.setGitFetchDone(true);
+    GitCommandExecutionResponse executionResponse = (GitCommandExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus =
+        executionResponse.getGitCommandStatus() == GitCommandExecutionResponse.GitCommandStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED == executionStatus) {
+      activityService.updateStatus(stateExecutionData.getActivityId(), context.getAppId(), executionStatus);
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
+    }
+
+    stateExecutionData.setFetchFilesResult(
+        (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult());
+    return super.execute(context);
   }
 
   @Override
@@ -228,13 +274,18 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SAVE_EXISTING_CONFIGURATIONS),
-        new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
-        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
-        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),
-        new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT),
-        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
+  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+    if (isGitFetch) {
+      commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.FETCH_FILES));
+    }
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.SAVE_EXISTING_CONFIGURATIONS));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
+    return commandUnits;
   }
 
   private AzureWebAppSlotSetupParameters buildSlotSetupParams(
@@ -264,8 +315,15 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
 
   private void provideAppServiceSettings(
       ExecutionContext context, AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
-    AzureAppServiceConfiguration appServiceConfiguration =
-        azureAppServiceManifestUtils.getAzureAppServiceConfiguration(context);
+    AzureAppServiceSlotSetupExecutionData setupExecutionData =
+        (AzureAppServiceSlotSetupExecutionData) context.getStateExecutionData();
+    AzureAppServiceConfiguration appServiceConfiguration;
+    if (setupExecutionData != null && setupExecutionData.isGitFetchDone()) {
+      appServiceConfiguration = azureAppServiceManifestUtils.getAzureAppServiceConfigurationGit(setupExecutionData);
+    } else {
+      appServiceConfiguration = azureAppServiceManifestUtils.getAzureAppServiceConfiguration(context);
+    }
+
     List<AzureAppServiceApplicationSetting> appSettings = appServiceConfiguration.getAppSettings();
     List<AzureAppServiceConnectionString> connStrings = appServiceConfiguration.getConnStrings();
 

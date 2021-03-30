@@ -1,6 +1,9 @@
 package io.harness.aggregator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.AccessControlEntity;
+import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDBO;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
@@ -9,6 +12,8 @@ import io.harness.aggregator.consumers.ChangeConsumer;
 import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
+import io.harness.aggregator.consumers.UserGroupChangeConsumerImpl;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 
+@OwnedBy(PL)
 @Slf4j
 public class AggregatorModule extends AbstractModule {
   private static final String MONGO_DB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
@@ -54,6 +60,7 @@ public class AggregatorModule extends AbstractModule {
   private static final String ROLE_ASSIGNMENTS = "roleassignments";
   private static final String ROLES = "roles";
   private static final String RESOURCE_GROUPS = "resourcegroups";
+  private static final String USER_GROUPS = "usergroups";
   private static final String UNKNOWN_PROPERTIES_IGNORED = "unknown.properties.ignored";
   private static AggregatorModule instance;
   private final AggregatorConfiguration configuration;
@@ -88,9 +95,13 @@ public class AggregatorModule extends AbstractModule {
       ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer = new ResourceGroupChangeConsumerImpl();
       requestInjection(resourceGroupChangeConsumer);
 
+      ChangeConsumer<UserGroupDBO> userGroupChangeConsumer = new UserGroupChangeConsumerImpl();
+      requestInjection(userGroupChangeConsumer);
+
       collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
       collectionToConsumerMap.put(ROLES, roleChangeConsumer);
       collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
+      collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
 
       // configuring id deserializer
       Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
@@ -114,6 +125,11 @@ public class AggregatorModule extends AbstractModule {
       Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
       resourceGroupSerde.configure(valueDeserializerConfig, false);
       collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
+
+      // configuring resource group deserializer
+      Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
+      userGroupSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
 
       AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
           new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);

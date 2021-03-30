@@ -8,6 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
 
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
@@ -32,6 +33,8 @@ public interface AwsEcsHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster);
   List<String> listTasksArnForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus);
+  boolean serviceExists(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptionDetails, String region,
+      String cluster, String serviceName);
   List<Task> listTasksForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus);
   List<ContainerInstance> listContainerInstancesForCluster(AwsConfig awsConfig,
