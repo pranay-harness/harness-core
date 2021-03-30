@@ -1603,6 +1603,8 @@ maven_install(
         "io.netty:netty-transport:4.1.52.Final",
         "io.opencensus:opencensus-api:0.24.0",
         "io.opencensus:opencensus-contrib-http-util:0.24.0",
+        "io.opencensus:opencensus-exporter-stats-stackdriver:0.28.0",
+        "io.opencensus:opencensus-impl:0.28.0",
         "io.perfmark:perfmark-api:0.19.0",
         "io.projectreactor.netty:reactor-netty:0.9.10.RELEASE",
         "io.projectreactor:reactor-core:3.3.8.RELEASE",
