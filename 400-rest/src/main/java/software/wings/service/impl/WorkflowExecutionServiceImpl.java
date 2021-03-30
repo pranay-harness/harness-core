@@ -826,6 +826,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void setWaitingForInputFlag(
       StateExecutionInstance stateExecutionInstance, PipelineStageExecution stageExecution) {
     stageExecution.setWaitingForInputs(stateExecutionInstance.isWaitingForInputs());
+    stageExecution.setNeedsInputButNotReceivedYet(
+        stateExecutionInstance.isWaitingForInputs() && !stateExecutionInstance.isContinued());
     if (stateExecutionInstance.getStatus() != PAUSED) {
       stageExecution.setWaitingForInputs(false);
     }
