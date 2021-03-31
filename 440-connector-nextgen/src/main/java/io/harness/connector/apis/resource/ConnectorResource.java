@@ -9,22 +9,25 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.NGResourceTypes;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.accesscontrol.ConnectorAccessControlHelper;
+import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -76,19 +79,21 @@ public class ConnectorResource {
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final CEAwsSetupConfig ceAwsSetupConfig;
   private static final String CATEGORY_KEY = "category";
+  private final  AccessControlClient accessControlClient;
 
   @Inject
   public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService,
-      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig) {
+      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig, AccessControlClient accessControlClient) {
     this.connectorService = connectorService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.ceAwsSetupConfig = ceAwsSetupConfig;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> get(
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @OrgIdentifier @QueryParam(
@@ -159,14 +164,21 @@ public class ConnectorResource {
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
+    boolean hasAccess = ConnectorAccessControlHelper.checkForCreateAccess(accountIdentifier,
+        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
+
+    if (hasAccess) {
+      if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
+        throw new InvalidRequestException(
+            String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
+      }
+      if (connector.getConnectorInfo().getConnectorType() == ConnectorType.LOCAL) {
+        throw new InvalidRequestException("Local Secret Manager creation not supported", USER);
+      }
+      return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
+    } else {
+      throw new AccessDeniedException("Insufficient permissions to perform this action", USER);
     }
-    if (connector.getConnectorInfo().getConnectorType() == ConnectorType.LOCAL) {
-      throw new InvalidRequestException("Local Secret Manager creation not supported", USER);
-    }
-    return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
   }
 
   @PUT
@@ -176,7 +188,7 @@ public class ConnectorResource {
     return updateConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
         connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
   }
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
   private ResponseDTO<ConnectorResponseDTO> updateConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
       @AccountIdentifier String accountIdentifier, @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
       @io.harness.accesscontrol.OrgIdentifier String orgIdentifier, @ResourceIdentifier String connectorIdentifier) {
@@ -188,7 +200,7 @@ public class ConnectorResource {
 
   @DELETE
   @Path("{identifier}")
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
+  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
   public ResponseDTO<Boolean> delete(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull String accountIdentifier,

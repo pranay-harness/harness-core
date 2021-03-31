@@ -12,7 +12,11 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static java.lang.Boolean.TRUE;
 =======
 
+<<<<<<< HEAD
 >>>>>>> [CDNG-5669]: added delegateSelector in git builder vaariants
+=======
+import io.harness.AccessControlClientConfiguration;
+>>>>>>> [CDNG-5543]: Added create api arbac
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -229,6 +233,12 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   public OutboxPollConfiguration getOutboxPollConfiguration() {
     return appConfig.getOutboxPollConfig();
+  }
+
+  @Provides
+  @Singleton
+  public AccessControlClientConfiguration getAccessControlClientConfiguration() {
+    return appConfig.getAccessControlClientConfiguration();
   }
 
   @Override
