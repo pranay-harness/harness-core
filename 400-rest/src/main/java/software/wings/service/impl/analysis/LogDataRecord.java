@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,6 +11,9 @@ import static io.harness.persistence.GoogleDataStoreAware.readLong;
 import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -52,6 +56,8 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "logMessage"})
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CV)
+@TargetModule(HarnessModule._360_CG_MANGER)
 public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -78,6 +84,12 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
                 .field(LogDataRecordKeys.cvConfigId)
                 .field(LogDataRecordKeys.logCollectionMinute)
                 .field(LogDataRecordKeys.clusterLevel)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("cv_raw_record_index")
+                .field(LogDataRecordKeys.cvConfigId)
+                .field(LogDataRecordKeys.clusterLevel)
+                .field(LogDataRecordKeys.logCollectionMinute)
                 .build(),
             SortCompoundMongoIndex.builder()
                 .name("cv_config_created_at_idx")
