@@ -15,6 +15,7 @@ import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskMode;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -60,6 +61,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.mapping.Mapper;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -202,6 +204,10 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
                     .setParked(false)
                     .setType(TaskType.newBuilder().setType(software.wings.beans.TaskType.JIRA_TASK_NG.name()).build())
                     .build())
+            .addAllSelectors(jiraTaskNGParameters.getDelegateSelectors()
+                                 .stream()
+                                 .map(s -> TaskSelector.newBuilder().setSelector(s).build())
+                                 .collect(Collectors.toList()))
             .addAllLogKeys(CollectionUtils.emptyIfNull(null))
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder().build())
             .setSelectionTrackingLogEnabled(true);
