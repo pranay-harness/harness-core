@@ -134,13 +134,13 @@ public class NgUserServiceImpl implements NgUserService {
     if (!userMembership.getScopes().contains(scope)) {
       userMembership.getScopes().add(scope);
     }
-    userMembershipRepository.save(userMembership);
+    userMembership = userMembershipRepository.save(userMembership);
     if (postCreation) {
-      postCreation(userId, scope);
+      postCreation(userMembership, userId, scope);
     }
   }
 
-  private void postCreation(String userId, Scope scope) {
+  private void postCreation(UserMembership userMembership, String userId, Scope scope) {
     //    Adding user to the account for signin flow to work
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));
@@ -150,6 +150,13 @@ public class NgUserServiceImpl implements NgUserService {
 
     //  Adding user to the parent scopes as well
     if (!isBlank(scope.getProjectIdentifier())) {
+      Scope orgScope = Scope.builder()
+                           .accountIdentifier(scope.getAccountIdentifier())
+                           .orgIdentifier(scope.getOrgIdentifier())
+                           .build();
+      if (!userMembership.getScopes().contains(orgScope)) {
+        userMembership.getScopes().add(orgScope);
+      }
       String orgDefaultResourceGroup = String.format("_%s", scope.getOrgIdentifier());
       RoleAssignmentDTO roleAssignmentDTO =
           RoleAssignmentDTO.builder()
@@ -168,6 +175,13 @@ public class NgUserServiceImpl implements NgUserService {
     }
 
     if (!isBlank(scope.getOrgIdentifier())) {
+      Scope accountScope = Scope.builder()
+                               .accountIdentifier(scope.getAccountIdentifier())
+                               .orgIdentifier(scope.getOrgIdentifier())
+                               .build();
+      if (!userMembership.getScopes().contains(accountScope)) {
+        userMembership.getScopes().add(accountScope);
+      }
       String accountDefaultResourceGroup = String.format("_%s", scope.getAccountIdentifier());
       RoleAssignmentDTO roleAssignmentDTO =
           RoleAssignmentDTO.builder()
@@ -184,6 +198,7 @@ public class NgUserServiceImpl implements NgUserService {
         log.error("Couldn't add user to the account scope", e);
       }
     }
+    userMembershipRepository.save(userMembership);
   }
 
   @Override

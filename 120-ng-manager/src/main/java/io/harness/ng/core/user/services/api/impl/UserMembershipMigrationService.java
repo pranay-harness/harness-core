@@ -78,6 +78,7 @@ public class UserMembershipMigrationService implements Managed {
   }
 
   private void userMembershipMigrationJob() {
+    log.info("Starting migration of UserProjectMap to UserMembership");
     Criteria criteria = Criteria.where(UserProjectMap.UserProjectMapKeys.migrated).exists(false);
     Optional<UserProjectMap> userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
     while (userProjectMapOptional.isPresent()) {
@@ -87,6 +88,7 @@ public class UserMembershipMigrationService implements Managed {
       userProjectMapRepository.save(userProjectMap);
       userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
     }
+    log.info("Completed migration of UserProjectMap to UserMembership");
   }
 
   private void handleMigration(UserProjectMap userProjectMap) {

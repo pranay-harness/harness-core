@@ -59,6 +59,6 @@ public class UserProjectMap implements PersistentEntity {
   @Trimmed @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
   @Trimmed @NotEmpty List<Role> roles;
-  boolean migrated;
+  Boolean migrated;
   @Wither @Version Long version;
 }
