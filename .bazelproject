@@ -2,6 +2,7 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  110-change-data-capture
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -126,6 +127,7 @@ import_run_configurations:
   run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml
