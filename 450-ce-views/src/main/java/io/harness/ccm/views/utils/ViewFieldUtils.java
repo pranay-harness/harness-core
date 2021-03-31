@@ -26,9 +26,10 @@ public class ViewFieldUtils {
         QLCEViewField.builder().fieldId("azureMeterId").fieldName("Resource guid").build(),
         QLCEViewField.builder().fieldId("azureResourceGroup").fieldName("Resource group name").build(),
         QLCEViewField.builder().fieldId("azureResourceType").fieldName("Resource type").build(),
-        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Resource").build(),
+        QLCEViewField.builder().fieldId("azureResource").fieldName("Resource").build(),
         QLCEViewField.builder().fieldId("azureServiceName").fieldName("Service name").build(),
-        QLCEViewField.builder().fieldId("azureServiceTier").fieldName("Service tier").build());
+        QLCEViewField.builder().fieldId("azureServiceTier").fieldName("Service tier").build(),
+        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Instance Id").build());
   }
   public static List<QLCEViewField> getClusterFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("clusterName").fieldName("Cluster Name").build(),
