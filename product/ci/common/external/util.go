@@ -2,7 +2,6 @@ package external
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -34,10 +33,11 @@ const (
 	dCommitSha       = "DRONE_COMMIT_SHA"
 	wrkspcPath       = "HARNESS_WORKSPACE"
 	gitBin           = "git"
-	diffFilesCmd     = "%s diff --name-status HEAD@{1} HEAD -1"
+	diffFilesCmd     = "%s diff --name-status --diff-filter=MADR HEAD@{1} HEAD -1"
 )
 
-// GetChangedFiles executes a shell command and retuns list of files changed in PR
+// GetChangedFiles executes a shell command and returns a list of files changed in the PR
+// along with their corresponding status
 func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]types.File, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
 	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
@@ -49,28 +49,29 @@ func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogg
 
 	for _, l := range strings.Split(string(out), "\n") {
 		t := strings.Fields(l)
+		// t looks like:
+		// <M/A/D file_name> for modified/added/deleted files
+		// <RXYZ old_file new_file> for renamed files where XYZ denotes %age similarity
 		if len(t) == 0 {
 			break
 		}
 
-		cs, err := convertGitStatus(t[0])
-		if err != nil {
-			return res, err
+		if t[0][0] == 'M' {
+			res = append(res, types.File{Status: types.FileModified, Name: t[1]})
+		} else if t[0][0] == 'A' {
+			res = append(res, types.File{Status: types.FileAdded, Name: t[1]})
+		} else if t[0][0] == 'D' {
+			res = append(res, types.File{Status: types.FileDeleted, Name: t[1]})
+		} else if t[0][0] == 'R' {
+			res = append(res, types.File{Status: types.FileDeleted, Name: t[1]})
+			res = append(res, types.File{Status: types.FileAdded, Name: t[2]})
+		} else {
+			// Log the error, don't error out for now
+			log.Errorw(fmt.Sprintf("unsupported file status: %s, file name: %s", t[0], t[1]))
+			return res, nil
 		}
-		res = append(res, types.File{Status: cs, Name: t[1]})
 	}
 	return res, nil
-}
-
-func convertGitStatus(s string) (types.FileStatus, error) {
-	if s == "M" {
-		return types.FileModified, nil
-	} else if s == "A" {
-		return types.FileAdded, nil
-	} else if s == "D" {
-		return types.FileDeleted, nil
-	}
-	return "", errors.New("unsupported file status")
 }
 
 func GetSecrets() []logs.Secret {
