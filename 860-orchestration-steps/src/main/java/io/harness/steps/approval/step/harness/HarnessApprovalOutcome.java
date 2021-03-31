@@ -16,7 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDC)
 @Value
 @Builder
-@JsonTypeName("harnessApprovalOutcome")
+@JsonTypeName("HarnessApprovalOutcome")
 @TypeAlias("harnessApprovalOutcome")
 public class HarnessApprovalOutcome implements Outcome {
   List<HarnessApprovalActivity> approvalActivities;
