@@ -30,6 +30,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
@@ -93,18 +94,18 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
 
   @Override
   public void handlePollingEvent(JiraApprovalInstance entity) {
-    log.info(
-        "Polling Approval status for Jira Approval Instance {} approval type {}", entity.getId(), entity.getType());
-    try {
+    try (AutoLogContext ignore = entity.autoLogContext()) {
+      log.info("Polling jira approval status");
+
       String instanceId = entity.getId();
-      String accountIdentifier = entity.getAccountIdentifier();
+      String accountIdentifier = entity.getAccountId();
       String orgIdentifier = entity.getOrgIdentifier();
       String projectIdentifier = entity.getProjectIdentifier();
       String issueKey = entity.getIssueKey();
       String connectorRef = entity.getConnectorRef();
 
       validateField(instanceId, ApprovalInstanceKeys.id);
-      validateField(accountIdentifier, ApprovalInstanceKeys.accountIdentifier);
+      validateField(accountIdentifier, ApprovalInstanceKeys.accountId);
       validateField(orgIdentifier, ApprovalInstanceKeys.orgIdentifier);
       validateField(projectIdentifier, ApprovalInstanceKeys.projectIdentifier);
       validateField(issueKey, JiraApprovalInstanceKeys.issueKey);

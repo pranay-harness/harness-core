@@ -1,7 +1,6 @@
 package io.harness.steps.approval.step;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -31,7 +30,7 @@ public abstract class ApprovalBaseStepInfo implements PMSStepInfo, WithRollbackI
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> approvalMessage;
 
   @NotNull
-  @YamlSchemaTypes(value = {string, bool})
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   ParameterField<Boolean> includePipelineExecutionHistory;
 }

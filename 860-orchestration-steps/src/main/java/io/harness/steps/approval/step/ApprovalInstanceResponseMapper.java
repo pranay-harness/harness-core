@@ -77,7 +77,7 @@ public class ApprovalInstanceResponseMapper {
   }
 
   private ApprovalInstanceDetailsDTO toJiraApprovalInstanceDetailsDTO(JiraApprovalInstance instance) {
-    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(instance.getAccountIdentifier(),
+    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(instance.getAccountId(),
         instance.getOrgIdentifier(), instance.getProjectIdentifier(), instance.getConnectorRef());
 
     return JiraApprovalInstanceDetailsDTO.builder()
