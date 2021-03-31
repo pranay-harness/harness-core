@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(PL)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("SAML")
 public class SamlSettings extends SSOSettings {
   @JsonIgnore @NotNull private String metaDataFile;
   @NotNull private String accountId;

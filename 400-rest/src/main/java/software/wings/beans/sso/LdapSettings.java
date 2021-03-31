@@ -17,6 +17,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("LDAP")
 public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;

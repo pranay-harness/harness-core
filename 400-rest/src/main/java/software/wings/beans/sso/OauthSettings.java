@@ -23,6 +23,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("OAUTH")
 public class OauthSettings extends SSOSettings {
   @NotBlank private String accountId;
   private String filter;
