@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.bitbucketconnectormapper;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuth;
@@ -25,10 +27,12 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
+@OwnedBy(HarnessTeam.DX)
 public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnectorDTO createConnectorDTO(BitbucketConnector connector) {
-    BitbucketAuthenticationDTO bitbucketAuthenticationDTO = buildBitbucketAuthentication(connector);
+    BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
+        buildBitbucketAuthentication(connector.getAuthType(), connector.getAuthenticationDetails());
     BitbucketApiAccessDTO bitbucketApiAccess = null;
     if (connector.isHasApiAccess()) {
       bitbucketApiAccess = buildApiAccess(connector);
@@ -41,9 +45,8 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
         .build();
   }
 
-  private BitbucketAuthenticationDTO buildBitbucketAuthentication(BitbucketConnector connector) {
-    final GitAuthType authType = connector.getAuthType();
-    final BitbucketAuthentication authenticationDetails = connector.getAuthenticationDetails();
+  public static BitbucketAuthenticationDTO buildBitbucketAuthentication(
+      GitAuthType authType, BitbucketAuthentication authenticationDetails) {
     BitbucketCredentialsDTO bitbucketCredentialsDTO = null;
     switch (authType) {
       case SSH:
@@ -71,7 +74,8 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
     return BitbucketAuthenticationDTO.builder().authType(authType).credentials(bitbucketCredentialsDTO).build();
   }
 
-  private BitbucketHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(BitbucketHttpAuthenticationType type, Object auth) {
+  private static BitbucketHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(
+      BitbucketHttpAuthenticationType type, Object auth) {
     BitbucketHttpCredentialsSpecDTO bitbucketHttpCredentialsSpecDTO = null;
     switch (type) {
       case USERNAME_AND_PASSWORD:

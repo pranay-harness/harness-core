@@ -183,6 +183,12 @@ public class StepUtils {
         Collections.emptyList(), true, null, selectors);
   }
 
+  public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
+      KryoSerializer kryoSerializer, List<String> units, String taskName, List<TaskSelector> selectors) {
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName, selectors);
+  }
+
   public static TaskRequest prepareTaskRequestWithoutLogs(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
     return prepareTaskRequest(

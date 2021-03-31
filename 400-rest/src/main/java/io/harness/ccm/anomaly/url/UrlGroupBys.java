@@ -1,5 +1,9 @@
 package io.harness.ccm.anomaly.url;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(CE)
 public enum UrlGroupBys {
   CLUSTER("Cluster"),
   NAMESPACE("Namespace"),

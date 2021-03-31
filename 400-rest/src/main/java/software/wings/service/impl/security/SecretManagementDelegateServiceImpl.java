@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +12,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SecretChangeLog;
 import io.harness.exception.SecretManagementDelegateException;
@@ -54,6 +56,7 @@ import retrofit2.Response;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(_890_SM_CORE)
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
   @Override
   public void signPublicKey(HostConnectionAttributes hostConnectionAttributes, SSHVaultConfig sshVaultConfig) {
@@ -135,9 +138,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String encryptedDataId = encryptedData.getUuid();
 
     try {
-      VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
-                                               .readSecretMetadata(vaultConfig.getAuthToken(),
-                                                   vaultConfig.getSecretEngineName(), encryptedData.getPath());
+      VaultSecretMetadata secretMetadata =
+          VaultRestClientFactory.create(vaultConfig)
+              .readSecretMetadata(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+                  vaultConfig.getSecretEngineName(), encryptedData.getPath());
       if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
@@ -187,7 +191,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             VaultRestClientFactory
                 .getVaultRetrofit(baseVaultConfig.getVaultUrl(), baseVaultConfig.isCertValidationRequired())
                 .create(VaultSysAuthRestClient.class);
-        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken()).execute().isSuccessful();
+        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken(), baseVaultConfig.getNamespace())
+                                   .execute()
+                                   .isSuccessful();
         if (isSuccessful) {
           return true;
         } else {
@@ -223,7 +229,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
-      Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
+      Response<SysMountsResponse> response =
+          restClient.getAllMounts(vaultConfig.getAuthToken(), vaultConfig.getNamespace()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
         log.info("Found Vault sys mount points: {}", sysMountMap.keySet());
@@ -275,7 +282,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                   .roleId(vaultConfig.getAppRoleId())
                                                   .secretId(vaultConfig.getSecretId())
                                                   .build();
-      Response<VaultAppRoleLoginResponse> response = restClient.appRoleLogin(loginRequest).execute();
+      Response<VaultAppRoleLoginResponse> response =
+          restClient.appRoleLogin(vaultConfig.getNamespace(), loginRequest).execute();
 
       VaultAppRoleLoginResult result = null;
       if (response.isSuccessful()) {

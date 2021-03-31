@@ -1,6 +1,8 @@
 package io.harness.steps.approval.step.beans;
 
-import io.harness.steps.approval.step.entities.ApprovalInstance;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
@@ -12,6 +14,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -33,11 +36,4 @@ public class ApprovalInstanceResponseDTO {
 
   Long createdAt;
   Long lastModifiedAt;
-
-  public static ApprovalInstanceResponseDTO fromApprovalInstance(ApprovalInstance instance) {
-    if (instance == null) {
-      return null;
-    }
-    return instance.toApprovalInstanceResponseDTO();
-  }
 }

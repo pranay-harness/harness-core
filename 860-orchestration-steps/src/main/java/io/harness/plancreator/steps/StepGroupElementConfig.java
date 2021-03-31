@@ -27,10 +27,10 @@ public class StepGroupElementConfig {
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
-  ParameterField<String> skipCondition;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> when;
+  ParameterField<String> when;
 
   List<FailureStrategyConfig> failureStrategies;
   @NotNull List<ExecutionWrapperConfig> steps;

@@ -85,6 +85,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     EnvironmentYaml finalEnvironmentYaml =
         environmentOverrides != null ? environmentYaml.applyOverrides(environmentOverrides) : environmentYaml;
     Environment environment = getEnvironmentObject(finalEnvironmentYaml, ambiance);
+    environmentService.upsert(environment);
     return EnvironmentMapper.toOutcome(finalEnvironmentYaml);
   }
 

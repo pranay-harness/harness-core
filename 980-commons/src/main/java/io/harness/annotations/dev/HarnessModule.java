@@ -1,5 +1,8 @@
 package io.harness.annotations.dev;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+@OwnedBy(DX)
 public enum HarnessModule {
   UNDEFINED,
   _280_BATCH_PROCESSING,
@@ -7,6 +10,7 @@ public enum HarnessModule {
   _320_CI_EXECUTION,
   _330_CI_BEANS,
   _360_CG_MANGER,
+  _375_CE_GRAPHQL,
   _380_CG_GRAPHQL,
   _390_DB_MIGRATION,
   _420_DELEGATE_AGENT,
@@ -26,7 +30,7 @@ public enum HarnessModule {
   _860_ORCHESTRATION_STEPS,
   _860_ORCHESTRATION_VISUALIZATION,
   _870_CG_YAML_BEANS,
-  _870_ORCHESTRATION,
+  _870_CG_ORCHESTRATION,
   _870_YAML_BEANS,
   _880_ORCHESTRATION_BEANS,
   _882_PMS_SDK_CORE,
@@ -56,6 +60,7 @@ public enum HarnessModule {
   _950_TIMEOUT_ENGINE,
   _950_WAIT_ENGINE,
   _950_WALKTREE_VISITOR,
+  _950_NG_SIGNUP,
   _955_ALERT_BEANS,
   _955_DELEGATE_BEANS,
   _960_API_SERVICES,

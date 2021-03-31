@@ -1,6 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -26,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @Entity(value = "lastReceivedPublishedMessage", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "LastReceivedPublishedMessageKeys")
+@OwnedBy(CE)
 public final class LastReceivedPublishedMessage
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

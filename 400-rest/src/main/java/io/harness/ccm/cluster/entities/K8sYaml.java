@@ -1,8 +1,11 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
@@ -30,6 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
+@OwnedBy(CE)
 public final class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

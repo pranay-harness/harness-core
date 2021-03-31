@@ -31,9 +31,13 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForIpAddressAuthority() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());
-    managerGrpcClientModule = new ManagerGrpcClientModule(
-        Config.builder().authority("manager-grpc-104.198.111.162:7143").target("104.198.111.162:7143").build());
-    assertThatCode(() -> managerGrpcClientModule.managerChannel(versionInfoManager)).doesNotThrowAnyException();
+    managerGrpcClientModule = ManagerGrpcClientModule.getInstance();
+    assertThatCode(
+        ()
+            -> managerGrpcClientModule.managerChannel(
+                Config.builder().authority("manager-grpc-104.198.111.162:7143").target("104.198.111.162:7143").build(),
+                "Delegate", versionInfoManager))
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -41,9 +45,13 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForInvalidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("${build.fullVersion}").build());
-    managerGrpcClientModule = new ManagerGrpcClientModule(
-        Config.builder().authority("manager-grpc-app.harness.io:443").target("app.harness.io:443").build());
-    assertThatCode(() -> managerGrpcClientModule.managerChannel(versionInfoManager)).doesNotThrowAnyException();
+    managerGrpcClientModule = ManagerGrpcClientModule.getInstance();
+    assertThatCode(
+        ()
+            -> managerGrpcClientModule.managerChannel(
+                Config.builder().authority("manager-grpc-app.harness.io:443").target("app.harness.io:443").build(),
+                "Manager", versionInfoManager))
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -51,8 +59,12 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForValidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());
-    managerGrpcClientModule = new ManagerGrpcClientModule(
-        Config.builder().authority("manager-grpc-app.harness.io:443").target("app.harness.io:443").build());
-    assertThatCode(() -> managerGrpcClientModule.managerChannel(versionInfoManager)).doesNotThrowAnyException();
+    managerGrpcClientModule = ManagerGrpcClientModule.getInstance();
+    assertThatCode(
+        ()
+            -> managerGrpcClientModule.managerChannel(
+                Config.builder().authority("manager-grpc-app.harness.io:443").target("app.harness.io:443").build(),
+                "Manager", versionInfoManager))
+        .doesNotThrowAnyException();
   }
 }

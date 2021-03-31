@@ -22,4 +22,8 @@ public class RollbackOutcome implements Outcome {
   public static RollbackOutcome getClonedRollbackOutcome(RollbackInfo rollbackInfo, String identifier, String group) {
     return RollbackOutcome.builder().rollbackInfo(rollbackInfo.getRollbackInfo(identifier, group)).build();
   }
+  @Override
+  public String toViewJson() {
+    return null;
+  }
 }

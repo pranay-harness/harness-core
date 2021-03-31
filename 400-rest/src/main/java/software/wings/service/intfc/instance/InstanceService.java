@@ -136,6 +136,8 @@ public interface InstanceService
 
   List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet);
 
+  List<Instance> getInstancesForAppAndInframappingNotRemovedFully(String appId, String infraMappingId);
+
   List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId);
 
   long getInstanceCount(String appId, String infraMappingId);

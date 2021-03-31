@@ -44,6 +44,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -74,7 +75,8 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   @Override
   public String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest taskRequest) {
     TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
-    String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest));
+    String taskId =
+        Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest, Duration.ofSeconds(0)));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
     ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);

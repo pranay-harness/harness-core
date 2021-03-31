@@ -7,7 +7,7 @@ import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
-import io.harness.product.ci.scm.proto.ContentResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.service.ScmOrchestratorService;
 
 import com.google.inject.Inject;
@@ -25,7 +25,7 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   private JgitGitServiceImpl jgitGitService;
 
   @Override
-  public ContentResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+  public CreateFileResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     return scmServiceGitClient.createFile(scmConnector, gitFileDetails);
   }
 }

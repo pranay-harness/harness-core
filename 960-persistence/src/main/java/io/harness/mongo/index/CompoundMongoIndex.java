@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CompoundMongoIndex implements MongoIndex {
   String name;
   boolean unique;
+  boolean sparse;
   Collation collation;
   @Singular private List<String> fields;
 

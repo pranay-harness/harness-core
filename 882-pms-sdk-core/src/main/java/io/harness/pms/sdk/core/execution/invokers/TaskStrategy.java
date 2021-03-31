@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.contracts.execution.Status.NO_OP;
 import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -52,8 +53,9 @@ public class TaskStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
-    StepResponse stepResponse = taskExecutable.handleTaskResult(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
+    StepResponse stepResponse =
+        taskExecutable.handleTaskResult(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     pmsNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }

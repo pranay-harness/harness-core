@@ -1,11 +1,14 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQueryMetaData.CEEventsMetaDataFields.BILLINGAMOUNT;
 import static software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQueryMetaData.CEEventsMetaDataFields.COST_CHANGE_PERCENT;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
@@ -36,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class EventsStatsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLEventsDataFilter,
         QLCCMGroupBy, QLEventsSortCriteria> {

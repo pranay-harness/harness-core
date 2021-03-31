@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.approval.ApprovalStageFilterJsonCreator;
 import io.harness.plancreator.approval.ApprovalStagePlanCreator;
-import io.harness.plancreator.execution.ExecutionPlanCreator;
+import io.harness.plancreator.execution.ExecutionPmsPlanCreator;
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
@@ -41,7 +41,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new ParallelPlanCreator());
     planCreators.add(new PMSStepPlanCreator());
     planCreators.add(new ApprovalStagePlanCreator());
-    planCreators.add(new ExecutionPlanCreator());
+    planCreators.add(new ExecutionPmsPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;

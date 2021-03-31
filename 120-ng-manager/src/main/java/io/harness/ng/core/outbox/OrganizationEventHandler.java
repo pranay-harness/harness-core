@@ -5,7 +5,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.audit.ActionConstants;
+import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
@@ -15,7 +15,9 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.AccountScope;
+import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.auditevent.OrganizationCreateEvent;
 import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
 import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
@@ -63,7 +65,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         case "OrganizationRestored":
           return handleOrganizationRestoreEvent(outboxEvent);
         default:
-          throw new IllegalArgumentException("Not supported event type {}".format(outboxEvent.getEventType()));
+          throw new InvalidArgumentsException(String.format("Not supported event type %s", outboxEvent.getEventType()));
       }
     } catch (IOException ioe) {
       return false;
@@ -72,15 +74,20 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-
-    boolean publishedToRedis =
-        publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
-            outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
+    String accountIdentifier;
+    // TODO {karan} remove this if condition in a few days
+    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
+      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    } else {
+      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    }
+    boolean publishedToRedis = publishOrganizationChangeEventToRedis(
+        accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
     OrganizationCreateEvent organizationCreateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), OrganizationCreateEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
-            .action(ActionConstants.CREATE_ACTION)
+            .action(Action.CREATE)
             .module(ModuleType.CORE)
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationCreateEvent.getOrganization()).build()))
@@ -94,14 +101,18 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-
-    boolean publishedToRedis =
-        publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
-            outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
+    String accountIdentifier;
+    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
+      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    } else {
+      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    }
+    boolean publishedToRedis = publishOrganizationChangeEventToRedis(
+        accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
     OrganizationUpdateEvent organizationUpdateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), OrganizationUpdateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
-                                .action(ActionConstants.UPDATE_ACTION)
+                                .action(Action.UPDATE)
                                 .module(ModuleType.CORE)
                                 .newYaml(organizationUpdateEvent.getNewOrganization().toString())
                                 .oldYaml(organizationUpdateEvent.getOldOrganization().toString())
@@ -116,15 +127,19 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationDeleteEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-
-    boolean publishedToRedis =
-        publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
-            outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.DELETE_ACTION);
+    String accountIdentifier;
+    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
+      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    } else {
+      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    }
+    boolean publishedToRedis = publishOrganizationChangeEventToRedis(
+        accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.DELETE_ACTION);
     OrganizationDeleteEvent organizationDeleteEvent =
         objectMapper.readValue(outboxEvent.getEventData(), OrganizationDeleteEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
-            .action(ActionConstants.DELETE_ACTION)
+            .action(Action.DELETE)
             .module(ModuleType.CORE)
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationDeleteEvent.getOrganization()).build()))
@@ -139,15 +154,19 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationRestoreEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-
-    boolean publishedToRedis =
-        publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
-            outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    String accountIdentifier;
+    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
+      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    } else {
+      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    }
+    boolean publishedToRedis = publishOrganizationChangeEventToRedis(
+        accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.RESTORE_ACTION);
     OrganizationRestoreEvent organizationRestoreEvent =
         objectMapper.readValue(outboxEvent.getEventData(), OrganizationRestoreEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
-            .action(ActionConstants.RESTORE_ACTION)
+            .action(Action.RESTORE)
             .module(ModuleType.CORE)
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationRestoreEvent.getOrganization()).build()))

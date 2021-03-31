@@ -1,9 +1,12 @@
 package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.delegate.beans.Delegate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
@@ -26,6 +29,7 @@ import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class KubernetesClusterHandler implements DelegateObserver {
   @Inject SettingsService settingsService;
   @Inject SegmentHelper segmentHelper;

@@ -1,5 +1,6 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.FAILURE_STRATEGIES;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
@@ -9,9 +10,11 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
@@ -30,6 +33,7 @@ import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdvi
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviserParameters;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
+import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.rollback.RollbackNodeType;
@@ -79,6 +83,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PIPELINE)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   private static final String DEFAULT_TIMEOUT = "10m";
   @Inject private KryoSerializer kryoSerializer;
@@ -103,6 +108,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
     StepParameters stepParameters = stepElement.getStepSpecType().getStepParameters();
     RollbackInfoBuilder rollbackInfoBuilder = RollbackInfo.builder();
+
+    boolean isStepInsideRollback = false;
+    if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
+      isStepInsideRollback = true;
+    }
+
     List<AdviserObtainment> adviserObtainmentFromMetaData =
         getAdviserObtainmentFromMetaData(ctx.getCurrentField(), rollbackInfoBuilder);
 
@@ -158,7 +169,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                        .build())
             .adviserObtainments(adviserObtainmentFromMetaData)
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
-            .whenCondition(RunInfoUtils.getRunCondition(stepElement.getWhen()))
+            .whenCondition(isStepInsideRollback ? RunInfoUtils.getRunConditionForRollback(stepElement.getWhen())
+                                                : RunInfoUtils.getRunCondition(stepElement.getWhen(), false))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
@@ -204,22 +216,27 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(
       YamlField currentField, RollbackInfoBuilder rollbackInfoBuilder) {
     List<AdviserObtainment> adviserObtainmentList = new ArrayList<>();
-    AdviserObtainment onSuccessAdviserObtainment = getOnSuccessAdviserObtainment(currentField);
-    if (onSuccessAdviserObtainment != null) {
-      adviserObtainmentList.add(onSuccessAdviserObtainment);
+
+    boolean isStepInsideRollback = false;
+    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+      isStepInsideRollback = true;
     }
 
     List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(currentField, STAGE);
     List<FailureStrategyConfig> stepGroupFailureStrategies = getFieldFailureStrategies(currentField, STEP_GROUP);
     List<FailureStrategyConfig> stepFailureStrategies = getFailureStrategies(currentField.getNode());
 
-    Map<FailureStrategyActionConfig, Collection<FailureType>> actionMap =
-        FailureStrategiesUtils.priorityMergeFailureStrategies(
-            stepFailureStrategies, stepGroupFailureStrategies, stageFailureStrategies);
+    Map<FailureStrategyActionConfig, Collection<FailureType>> actionMap;
+    FailureStrategiesUtils.priorityMergeFailureStrategies(
+        stepFailureStrategies, stepGroupFailureStrategies, stageFailureStrategies);
 
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+    if (isStepInsideRollback) {
       actionMap = FailureStrategiesUtils.priorityMergeFailureStrategies(
           stepFailureStrategies, stepGroupFailureStrategies, null);
+    } // This path flow is for normal steps inside execution.
+    else {
+      actionMap = FailureStrategiesUtils.priorityMergeFailureStrategies(
+          stepFailureStrategies, stepGroupFailureStrategies, stageFailureStrategies);
     }
 
     for (Map.Entry<FailureStrategyActionConfig, Collection<FailureType>> entry : actionMap.entrySet()) {
@@ -239,7 +256,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (rollbackInfoBuilder != null) {
         getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
       }
-      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+      if (isStepInsideRollback) {
         if (actionType == NGFailureActionType.STAGE_ROLLBACK || actionType == NGFailureActionType.STEP_GROUP_ROLLBACK) {
           throw new InvalidRequestException("Step inside rollback section cannot have Rollback as failure strategy.");
         }
@@ -354,6 +371,23 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
     }
 
+    /*
+     * Adding OnSuccess adviser if step is inside rollback section else adding NextStep adviser for when condition to
+     * work.
+     */
+    if (isStepInsideRollback) {
+      AdviserObtainment onSuccessAdviserObtainment = getOnSuccessAdviserObtainment(currentField);
+      if (onSuccessAdviserObtainment != null) {
+        adviserObtainmentList.add(onSuccessAdviserObtainment);
+      }
+    } else {
+      // Always add nextStep adviser at last, as its priority is less than, Do not change the order.
+      AdviserObtainment nextStepAdviserObtainment = getNextStepAdviserObtainment(currentField);
+      if (nextStepAdviserObtainment != null) {
+        adviserObtainmentList.add(nextStepAdviserObtainment);
+      }
+    }
+
     return adviserObtainmentList;
   }
 
@@ -387,6 +421,24 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return null;
   }
 
+  private AdviserObtainment getNextStepAdviserObtainment(YamlField currentField) {
+    if (currentField != null && currentField.getNode() != null) {
+      if (checkIfStepIsInParallelSection(currentField)) {
+        return null;
+      }
+      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+          currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
+      if (siblingField != null && siblingField.getNode().getUuid() != null) {
+        return AdviserObtainment.newBuilder()
+            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
+            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+            .build();
+      }
+    }
+    return null;
+  }
+
   private void getBasicRollbackInfo(
       YamlField currentField, Set<FailureType> failureTypes, RollbackInfoBuilder rollbackInfoBuilder) {
     rollbackInfoBuilder.failureTypes(failureTypes);
@@ -394,14 +446,16 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     rollbackInfoBuilder.group(RollbackNodeType.STEP.name());
     String rollbackStepsNodeId = getStageRollbackStepsNodeId(currentField);
     String executionStepsNodeId = getExecutionStepsNodeId(currentField);
-    rollbackInfoBuilder.nodeTypeToUuid(
-        RollbackNodeType.STAGE.name(), rollbackStepsNodeId == null ? null : rollbackStepsNodeId + "_executionrollback");
+    rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STAGE.name(),
+        rollbackStepsNodeId == null ? null : rollbackStepsNodeId + PlanCreationConstants.ROLLBACK_STEPS_NODE_ID_PREFIX);
 
     // Check if stepGroupsRollback is there or not.
     YamlNode executionField = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
     if (PlanCreatorUtils.checkIfAnyStepGroupRollback(executionField)) {
       rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(),
-          executionStepsNodeId == null ? null : executionStepsNodeId + "_stepGrouprollback");
+          executionStepsNodeId == null
+              ? null
+              : executionStepsNodeId + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX);
     } else {
       rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(), null);
     }

@@ -1,8 +1,11 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -38,6 +41,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.reflections.Reflections;
 
+@OwnedBy(PIPELINE)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -60,6 +64,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("enableAuth") private boolean enableAuth;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
 
   private String managerServiceSecret;
   private String managerTarget;

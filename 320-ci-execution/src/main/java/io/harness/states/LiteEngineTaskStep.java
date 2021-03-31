@@ -1,11 +1,13 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
@@ -42,7 +44,6 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,7 +61,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo> {
+@OwnedBy(CI)
+public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo, K8sTaskExecutionResponse> {
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -98,9 +101,8 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, Map<String, ResponseData> responseDataMap) {
-    K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
+      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, Supplier<K8sTaskExecutionResponse> responseSupplier) {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
     DependencyOutcome dependencyOutcome =
         getDependencyOutcome(ambiance, stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());

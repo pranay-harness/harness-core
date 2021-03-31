@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -14,8 +15,10 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -53,6 +56,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDC)
 public class HarnessTagServiceTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
 
@@ -791,5 +795,70 @@ public class HarnessTagServiceTest extends WingsBaseTest {
     Method method = HarnessTagResource.class.getDeclaredMethod("delete", String.class, String.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
     assertThat(annotation.permissionType()).isEqualTo(MANAGE_TAGS);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void failAttachExpressionAsTagKeyToEntitiesOtherThanWorkflowPipeline() {
+    assertThatThrownBy(()
+                           -> harnessTagService.attachTag(HarnessTagLink.builder()
+                                                              .accountId(TEST_ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .entityId("id")
+                                                              .entityType(SERVICE)
+                                                              .key("env")
+                                                              .value("${pipeline.name}")
+                                                              .build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(
+            "Tag name/value can contain only abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_ /");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void failAttachTagWithUnsupportedEntityType() {
+    assertThatThrownBy(()
+                           -> harnessTagService.attachTag(HarnessTagLink.builder()
+                                                              .accountId(TEST_ACCOUNT_ID)
+                                                              .appId(APP_ID)
+                                                              .entityId("id")
+                                                              .entityType(EntityType.ARTIFACT)
+                                                              .key("env")
+                                                              .value("${pipeline.name}")
+                                                              .build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Unsupported entityType specified. ARTIFACT");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void attachTagWithExistingTagLink() {
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("tagKey")
+                                    .value("tagValue")
+                                    .build());
+
+    harnessTagService.attachTag(HarnessTagLink.builder()
+                                    .accountId(TEST_ACCOUNT_ID)
+                                    .appId(APP_ID)
+                                    .entityId("id")
+                                    .entityType(WORKFLOW)
+                                    .key("tagKey")
+                                    .value("changedValue")
+                                    .build());
+
+    HarnessTag savedTag = harnessTagService.getTagWithInUseValues(TEST_ACCOUNT_ID, "tagKey");
+    assertThat(savedTag).isNotNull();
+    assertThat(savedTag.getUuid()).isNotEmpty();
+    assertThat(savedTag).hasFieldOrPropertyWithValue("key", "tagKey");
+    // inUseValues are still one
+    assertThat(savedTag.getInUseValues().size()).isEqualTo(1);
   }
 }

@@ -117,7 +117,7 @@ public class EntityHelper {
     String entityName = EMPTY;
     String entityId = entity.getUuid();
     String entityType = EMPTY;
-    String appId = EMPTY;
+    String appId = "__GLOBAL_APP_ID__";
     String appName = EMPTY;
     String affectedResourceId = EMPTY;
     String affectedResourceName = EMPTY;
