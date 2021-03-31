@@ -1,9 +1,9 @@
 package io.harness.migrations.all;
 
-import static io.harness.interrupts.ExecutionInterruptType.ABORT;
-import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
-import static io.harness.interrupts.RepairActionCode.IGNORE;
-import static io.harness.interrupts.RepairActionCode.MANUAL_INTERVENTION;
+import static io.harness.beans.ExecutionInterruptType.ABORT;
+import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.beans.RepairActionCode.IGNORE;
+import static io.harness.beans.RepairActionCode.MANUAL_INTERVENTION;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static org.assertj.core.api.Assertions.assertThat;

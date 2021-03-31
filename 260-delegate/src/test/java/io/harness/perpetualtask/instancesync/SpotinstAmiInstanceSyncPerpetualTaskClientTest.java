@@ -18,13 +18,13 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping.Builder;

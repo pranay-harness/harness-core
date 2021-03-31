@@ -2,7 +2,6 @@ package io.harness.engine.interrupts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.planLevelInterrupts;
 import static io.harness.interrupts.Interrupt.State;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.interrupts.Interrupt.State.REGISTERED;
@@ -18,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
@@ -88,8 +88,8 @@ public class InterruptServiceImpl implements InterruptService {
 
   @Override
   public List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId) {
-    return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(
-        planExecutionId, EnumSet.of(REGISTERED, PROCESSING), planLevelInterrupts());
+    return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(planExecutionId,
+        EnumSet.of(REGISTERED, PROCESSING), EnumSet.of(InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL));
   }
 
   @Override

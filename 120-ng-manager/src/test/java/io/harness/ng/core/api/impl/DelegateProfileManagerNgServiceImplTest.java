@@ -1,7 +1,7 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.beans.Cd1SetupFields.ENV_ID_FIELD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
 
 import static software.wings.beans.Variable.ENV_ID;
 
@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -33,7 +34,6 @@ import io.harness.paging.PageRequestGrpc;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Environment;
 

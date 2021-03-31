@@ -11,6 +11,7 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -22,7 +23,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitRepositoryInfo;

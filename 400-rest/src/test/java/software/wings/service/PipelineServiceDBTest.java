@@ -14,9 +14,9 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

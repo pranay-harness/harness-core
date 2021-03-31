@@ -15,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -32,7 +33,6 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;

@@ -1,9 +1,9 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
