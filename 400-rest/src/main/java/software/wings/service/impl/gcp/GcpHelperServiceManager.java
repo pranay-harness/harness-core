@@ -8,6 +8,7 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 
 import static java.lang.String.format;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -24,7 +25,6 @@ import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;

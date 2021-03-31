@@ -1,11 +1,11 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
-import static io.harness.interrupts.ExecutionInterruptType.IGNORE;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
-import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
-import static io.harness.interrupts.RepairActionCode.MANUAL_INTERVENTION;
+import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.beans.ExecutionInterruptType.IGNORE;
+import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
+import static io.harness.beans.RepairActionCode.MANUAL_INTERVENTION;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static software.wings.beans.yaml.ChangeContext.Builder;
@@ -15,10 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 
 import software.wings.beans.FailureStrategy;

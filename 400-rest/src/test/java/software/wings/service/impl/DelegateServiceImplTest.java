@@ -30,6 +30,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -63,7 +64,6 @@ import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;

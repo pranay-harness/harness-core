@@ -13,13 +13,13 @@ import static software.wings.metrics.MetricType.ERROR;
 import static software.wings.metrics.MetricType.RESP_TIME;
 import static software.wings.metrics.MetricType.THROUGHPUT;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;

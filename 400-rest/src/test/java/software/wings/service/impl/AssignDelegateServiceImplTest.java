@@ -54,6 +54,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
@@ -77,7 +78,6 @@ import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.Cd2SetupFields;
 
 import software.wings.WingsBaseTest;

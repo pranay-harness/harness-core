@@ -19,6 +19,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.harness.azure.model.AzureConstants;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -31,7 +32,6 @@ import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElement;
