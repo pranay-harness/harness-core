@@ -7,6 +7,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
@@ -25,6 +26,7 @@ public class CgOrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTask.class, 5003);
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
+    kryo.register(SweepingOutput.class, 3101);
 
     // Put promoted classes here and do not change the id
   }

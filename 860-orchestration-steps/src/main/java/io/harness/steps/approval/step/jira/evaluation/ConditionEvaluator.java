@@ -1,61 +1,86 @@
 package io.harness.steps.approval.step.jira.evaluation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.exception.WingsException.USER_SRE;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.jira.JiraIssueUtils;
 import io.harness.steps.approval.step.jira.beans.Operator;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
 public class ConditionEvaluator {
-  static Map<Operator, OperationEvaluator> evaluatorMap = new HashMap<>();
+  static Map<Operator, OperatorEvaluator> evaluatorMap = new HashMap<>();
   static {
     evaluatorMap.put(Operator.EQ, new EqualsOperatorEvaluator());
-    evaluatorMap.put(Operator.NOT_EQ, new NotEqualsOperatorEvaluator());
+    evaluatorMap.put(Operator.NOT_EQ, new NegateOperatorEvaluator(new EqualsOperatorEvaluator()));
+    evaluatorMap.put(Operator.IN, new InOperatorEvaluator());
+    evaluatorMap.put(Operator.NOT_IN, new NegateOperatorEvaluator(new InOperatorEvaluator()));
   }
 
-  public boolean evaluate(String input, String standard, Operator operator) {
-    if (isBlank(input) && isBlank(standard)) {
-      return true;
+  public boolean evaluate(Object input, String standard, Operator operator) {
+    // Only string and option type fields are supported right now.
+    if (operator == null) {
+      throw new InvalidArgumentsException("Operator is null");
     }
-    OperationEvaluator operationEvaluator = evaluatorMap.get(operator);
-    if (operationEvaluator == null) {
+
+    OperatorEvaluator operatorEvaluator = evaluatorMap.get(operator);
+    if (operatorEvaluator == null) {
       throw new InvalidArgumentsException(
-          String.format("Operator [%s] is not supported. Please user valid one", operator), USER_SRE);
+          String.format("Operator [%s] is not supported. Please use a valid one", operator));
     }
 
-    return operationEvaluator.evaluate(input, standard);
+    return operatorEvaluator.evaluate(input, standard);
   }
 
-  static class EqualsOperatorEvaluator implements OperationEvaluator {
+  @VisibleForTesting
+  public static class EqualsOperatorEvaluator implements OperatorEvaluator {
     @Override
-    public boolean evaluate(String input, String standard) {
+    public boolean evaluate(Object input, String standard) {
+      checkInputType(input);
       if (isBlank(standard)) {
-        return isBlank(input);
+        return isBlank((String) input);
       }
-
       return standard.equals(input);
     }
   }
 
-  static class NotEqualsOperatorEvaluator implements OperationEvaluator {
+  @VisibleForTesting
+  public static class InOperatorEvaluator implements OperatorEvaluator {
     @Override
-    public boolean evaluate(String input, String standard) {
-      // standard is missing, evaluation cant happen
-      if (isBlank(standard)) {
-        return isNotBlank(input);
-      }
+    public boolean evaluate(Object input, String standard) {
+      checkInputType(input);
+      List<String> values = JiraIssueUtils.splitByComma(standard);
+      return values.contains(input);
+    }
+  }
 
-      return !standard.equals(input);
+  @VisibleForTesting
+  public static class NegateOperatorEvaluator implements OperatorEvaluator {
+    private final OperatorEvaluator evaluator;
+
+    public NegateOperatorEvaluator(OperatorEvaluator evaluator) {
+      this.evaluator = evaluator;
+    }
+
+    @Override
+    public boolean evaluate(Object input, String standard) {
+      return !evaluator.evaluate(input, standard);
+    }
+  }
+
+  private static void checkInputType(Object input) {
+    if (!(input instanceof String)) {
+      throw new InvalidRequestException("Only string and option type jira fields are supported");
     }
   }
 }

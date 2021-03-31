@@ -15,12 +15,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.deployment.InstanceDetails;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

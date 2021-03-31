@@ -205,8 +205,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
 
     doReturn(azureMachineImageArtifact)
         .when(azureVMSSSetupTaskHandler)
-        .getAzureMachineImageArtifact(any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"),
-            any(AzureMachineImageArtifactDTO.class), any());
+        .getAzureMachineImageArtifact(any(AzureConfig.class), any(AzureMachineImageArtifactDTO.class), any());
 
     AzureVMSSTaskExecutionResponse response =
         azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSSetupTaskParameters, azureConfig);
@@ -260,8 +259,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .when(mockAzureComputeClient)
         .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
 
-    AzureMachineImageArtifact azureMachineImageArtifact = azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
-        azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback);
+    AzureMachineImageArtifact azureMachineImageArtifact =
+        azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(azureConfig, artifactDTO, executionLogCallback);
 
     assertThat(azureMachineImageArtifact).isNotNull();
     assertThat(azureMachineImageArtifact)
@@ -296,9 +295,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .when(mockAzureComputeClient)
         .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
 
-    assertThatThrownBy(()
-                           -> azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
-                               azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback))
+    assertThatThrownBy(
+        () -> azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(azureConfig, artifactDTO, executionLogCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Image reference cannot be found, galleryImageId: galleryName, imageDefinitionName: definitionName, "
@@ -407,6 +405,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     return AzureMachineImageArtifactDTO.builder()
         .imageType(AzureMachineImageArtifactDTO.ImageType.IMAGE_GALLERY)
         .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .subscriptionId("subscriptionId")
+                             .resourceGroupName("resourceGroupName")
                              .definitionName("definitionName")
                              .galleryName("galleryName")
                              .version("version")

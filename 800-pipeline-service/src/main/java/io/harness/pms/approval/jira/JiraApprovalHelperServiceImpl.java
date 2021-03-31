@@ -49,7 +49,7 @@ import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance.JiraApprovalInstanceKeys;
-import io.harness.steps.approval.step.jira.evaluation.ConditionEvaluationHelper;
+import io.harness.steps.approval.step.jira.evaluation.CriteriaEvaluator;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -131,7 +131,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
         throw new InvalidRequestException("Approval criteria can't be missing");
       }
       CriteriaSpecDTO approvalCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
-      boolean approvalEvaluationResult = ConditionEvaluationHelper.evaluateCondition(issue, approvalCriteriaSpec);
+      boolean approvalEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, approvalCriteriaSpec);
       if (approvalEvaluationResult) {
         log.info("Approval Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
         updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.APPROVED);
@@ -143,7 +143,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
       if (!isNull(jiraApprovalInstance.getApprovalCriteria())
           && !isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
         CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
-        boolean rejectionEvaluationResult = ConditionEvaluationHelper.evaluateCondition(issue, rejectionCriteriaSpec);
+        boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
         if (rejectionEvaluationResult) {
           log.info("Rejection Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
           updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);

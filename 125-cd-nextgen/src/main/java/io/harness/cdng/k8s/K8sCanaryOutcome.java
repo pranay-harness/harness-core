@@ -3,8 +3,8 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -17,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDP)
 @TypeAlias("k8sCanaryOutcome")
 @JsonTypeName("k8sCanaryOutcome")
-public class K8sCanaryOutcome implements Outcome, SweepingOutput {
+public class K8sCanaryOutcome implements Outcome, ExecutionSweepingOutput {
   String releaseName;
   Integer targetInstances;
   Integer releaseNumber;

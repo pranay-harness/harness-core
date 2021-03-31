@@ -436,6 +436,7 @@ logDataRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 logDataRecords {"name": "cvBumpIdx", "background": true} {"cvConfigId": 1, "logCollectionMinute": 1, "host": 1, "createdAt": -1}
 logDataRecords {"name": "cvRawRecordIdx", "background": true} {"cvConfigId": 1, "logCollectionMinute": 1, "clusterLevel": 1}
 logDataRecords {"name": "cv_config_created_at_idx", "background": true} {"cvConfigId": 1, "createdAt": -1}
+logDataRecords {"name": "cv_raw_record_index", "background": true} {"cvConfigId": 1, "clusterLevel": 1, "logCollectionMinute": 1}
 logDataRecords {"name": "stateBumpIndex", "background": true} {"stateExecutionId": 1, "clusterLevel": 1, "logCollectionMinute": 1, "host": 1}
 logDataRecords {"name": "stateHostIdx", "background": true} {"stateExecutionId": 1, "logCollectionMinute": 1}
 logDataRecords {"name": "state_Prev_Ex_Idx", "background": true} {"workflowExecutionId": 1, "clusterLevel": 1, "stateType": 1}

@@ -26,7 +26,9 @@ public enum CEError {
 
   K8S_PERMISSIONS_MISSING("This service account does not have all the permissions to collect data."),
 
-  METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s."),
+  NODES_IS_FORBIDDEN("Nodes is forbidden, cannot list nodes"),
+
+  METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s. 404 page not found"),
 
   AWS_ECS_CLUSTER_NOT_FOUND("The ECS cluster %s received error code ClusterNotFoundException from Amazon ECS service."),
 
