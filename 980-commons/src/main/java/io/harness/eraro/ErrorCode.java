@@ -12,11 +12,15 @@ import static io.harness.eraro.Status.UNAUTHORIZED;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.base.Splitter;
 
 /**
  * The enum Error codes.
  */
+@OwnedBy(HarnessTeam.DX)
 public enum ErrorCode {
   DEFAULT_ERROR_CODE,
 
