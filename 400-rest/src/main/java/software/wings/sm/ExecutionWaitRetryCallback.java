@@ -7,7 +7,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
-public class ExecutionWaitRetryCallback implements NotifyCallback {
+public class ExecutionWaitRetryCallback implements OldNotifyCallback {
   @Inject private ExecutionInterruptManager executionInterruptManager;
 
   private String appId;
