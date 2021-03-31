@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
@@ -26,6 +29,7 @@ import com.google.inject.Inject;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@OwnedBy(PIPELINE)
 public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
