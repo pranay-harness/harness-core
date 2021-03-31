@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/kamva/mgm/v3"
+	"github.com/mattn/go-zglob"
+	"github.com/pkg/errors"
+	"github.com/wings-software/portal/product/ci/addon/ti"
 	"time"
 
-	"github.com/mattn/go-zglob"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -35,8 +37,11 @@ type Relation struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Source int   `json:"source" bson:"source"`
-	Tests  []int `json:"tests" bson:"tests"`
+	Source   int    `json:"source" bson:"source"`
+	Tests    []int  `json:"tests" bson:"tests"`
+	Repo     string `json:"repo" bson:"repo"`
+	Branch   string `json:"branch" bson:"branch"`
+	CommitId string `json:"commit_id" bson:"commit_id"`
 }
 
 type Node struct {
@@ -45,29 +50,36 @@ type Node struct {
 
 	Package  string `json:"package" bson:"package"`
 	Method   string `json:"method" bson:"method"`
-	Id       int    `json:"id" bson:"id"`
+	Hash     int    `json:"hash" bson:"hash"`
 	Params   string `json:"params" bson:"params"`
 	Class    string `json:"class" bson:"class"`
 	Type     string `json:"type" bson:"type"`
 	Repo     string `json:"repo" bson:"repo"`
+	Branch   string `json:"branch" bson:"branch"`
 	CommitId string `json:"commit_id" bson:"commit_id"`
 }
 
-func NewNode(id int, pkg, method, params, class, typ string) *Node {
+func NewNode(hash int, pkg, method, params, class, typ, repo, branch, commitId string) *Node {
 	return &Node{
-		Id:      id,
-		Package: pkg,
-		Method:  method,
-		Params:  params,
-		Class:   class,
-		Type:    typ,
+		Hash:     hash,
+		Package:  pkg,
+		Method:   method,
+		Params:   params,
+		Class:    class,
+		Type:     typ,
+		Repo:     repo,
+		Branch:   branch,
+		CommitId: commitId,
 	}
 }
 
-func NewRelation(source int, tests []int) *Relation {
+func NewRelation(source int, tests []int, repo, branch, commitId string) *Relation {
 	return &Relation{
-		Source: source,
-		Tests:  tests,
+		Source:   source,
+		Tests:    tests,
+		Repo:     repo,
+		Branch:   branch,
+		CommitId: commitId,
 	}
 }
 
@@ -101,7 +113,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 	}
 
 	log.Infow("successfully pinged mongo server")
-	return &MongoDb{Client: nil, Database: nil, Log: log}, nil
+	return &MongoDb{Client: client, Database: nil, Log: log}, nil
 }
 
 // queryHelper gets the tests that need to be run corresponding to the packages and classes
@@ -134,7 +146,7 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, e
 
 	nids := []int{}
 	for _, n := range nodes {
-		nids = append(nids, n.Id)
+		nids = append(nids, n.Hash)
 	}
 
 	// Query 2
@@ -300,4 +312,33 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 		SrcCodeTests:  len(l) - new - updated,
 		Tests:         l,
 	}, nil
+}
+
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, repo, branch, sha string) error {
+	nodes := make([]interface{}, len(cg.Nodes))
+	rels := make([]interface{}, len(cg.Relations))
+	for i, node := range cg.Nodes {
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, repo, branch, sha)
+	}
+	for i, rel := range cg.Relations {
+		rels[i] = *NewRelation(rel.Source, rel.Tests, repo, branch, sha)
+	}
+
+	// query for partial callgraph for the repo and branch and delete them.
+	// this will delete all the nodes create by older commits for repo + branch.
+	r1, err := mdb.Client.Database("test-ti").Collection("nodes").DeleteMany(context.TODO(), bson.M{"repo": repo, "branch": branch}, &options.DeleteOptions{})
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
+	}
+	// this will delete all the relations	 create by older commits for repo + branch.
+	r2, err := mdb.Client.Database("test-ti").Collection("relations").DeleteMany(context.TODO(), bson.M{"repo": repo, "branch": branch}, &options.DeleteOptions{})
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
+	}
+	mdb.Log.Infow(fmt.Sprintf("deleted %d recorde from nodes collection and %d records from relns collection", r1.DeletedCount, r2.DeletedCount))
+	// write new relations and nodes to db
+	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection", len(nodes), len(rels)))
+	mdb.Client.Database("test-ti").Collection("nodes").InsertMany(context.TODO(), nodes)
+	mdb.Client.Database("test-ti").Collection("relations").InsertMany(context.TODO(), rels)
+	return nil
 }

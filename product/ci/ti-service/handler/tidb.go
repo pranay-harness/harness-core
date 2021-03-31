@@ -122,7 +122,7 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 	}
 }
 
-func HandleUploadCg(log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data []byte
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -148,12 +148,10 @@ func HandleUploadCg(log *zap.SugaredLogger) http.HandlerFunc {
 			WriteInternalError(w, err)
 			return
 		}
-		writeCg(cg)
+		repo := r.FormValue(repoParam)
+		branch := r.FormValue(branchParam)
+		sha := r.FormValue(shaParam)
+		tidb.UploadPartialCg(r.Context(), cg, repo, branch, sha)
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-//writeCg writes callgraph to db
-func writeCg(cg *ti.Callgraph) {
-	return
 }
