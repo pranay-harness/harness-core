@@ -1,7 +1,9 @@
 package io.harness.scm;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.product.ci.scm.proto.SCMGrpc.newBlockingStub;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 
@@ -11,6 +13,7 @@ import io.grpc.Channel;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import javax.net.ssl.SSLException;
 
+@OwnedBy(DX)
 public class SCMGrpcClientModule extends ProviderModule {
   io.harness.scm.ScmConnectionConfig scmConnectionConfig;
 

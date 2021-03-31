@@ -1,6 +1,9 @@
 package io.harness.gitsync.gittoharness;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 import io.harness.ng.core.event.EventProtoToEntityHelper;
 
@@ -10,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @Singleton
+@OwnedBy(DX)
 public class ChangeSetSortComparator implements Comparator<ChangeSet>, Serializable {
   private final List<EntityType> sortOrder;
 

@@ -1,5 +1,8 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.events.GitSyncEventConsumerService;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncSdkInitHelper {
   public static void initGitSyncSdk(Injector injector, Environment environment, GitSyncSdkConfiguration config) {
     String serviceName = config.getMicroservice().name();
