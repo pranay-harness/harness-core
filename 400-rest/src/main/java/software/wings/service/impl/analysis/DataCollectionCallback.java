@@ -8,7 +8,7 @@ import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.alert.AlertType;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Builder
 @Slf4j
-public class DataCollectionCallback implements NotifyCallback {
+public class DataCollectionCallback implements OldNotifyCallback {
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
   @Inject private transient WingsPersistence wingsPersistence;
   @Inject private transient AlertService alertService;
