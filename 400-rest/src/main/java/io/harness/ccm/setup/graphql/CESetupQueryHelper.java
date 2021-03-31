@@ -1,6 +1,9 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
@@ -15,6 +18,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Singleton
+@OwnedBy(CE)
 public class CESetupQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

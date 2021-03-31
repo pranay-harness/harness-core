@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -16,6 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "BillingDataTableKeys")
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class BillingDataTableSchema {
   /**
    *  EXECUTIONID TEXT NOT NULL,

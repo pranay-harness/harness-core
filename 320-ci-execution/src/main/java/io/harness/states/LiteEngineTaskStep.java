@@ -1,11 +1,13 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
@@ -59,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
+@OwnedBy(CI)
 public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo, K8sTaskExecutionResponse> {
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";

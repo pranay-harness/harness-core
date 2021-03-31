@@ -7,19 +7,24 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
+import static software.wings.security.authentication.AuthenticationMechanism.SAML;
 import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static java.util.Arrays.asList;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
@@ -83,6 +88,8 @@ public class SSOServiceImpl implements SSOService {
   @Inject private AuthHandler authHandler;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
   @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -155,6 +162,34 @@ public class SSOServiceImpl implements SSOService {
     return setAuthenticationMechanism(accountId, USER_PASSWORD);
   }
 
+  private void auditSSOActivity(
+      String accountId, AuthenticationMechanism mechanism, AuthenticationMechanism currentAuthMechanism) {
+    boolean createAudit = false;
+    boolean enableFlag = false;
+    SSOSettings ssoSettings = null;
+    if (mechanism == SAML && currentAuthMechanism == USER_PASSWORD) {
+      createAudit = true;
+      enableFlag = true;
+      ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    } else if (currentAuthMechanism == SAML && mechanism == USER_PASSWORD) {
+      createAudit = true;
+      ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    } else if (currentAuthMechanism == USER_PASSWORD && mechanism == LDAP) {
+      createAudit = true;
+      ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+      enableFlag = true;
+    } else if (currentAuthMechanism == LDAP && mechanism == USER_PASSWORD) {
+      createAudit = true;
+      ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+    }
+    if (createAudit) {
+      if (enableFlag) {
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
+      } else {
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+      }
+    }
+  }
   @Override
   public SSOConfig setAuthenticationMechanism(String accountId, AuthenticationMechanism mechanism) {
     checkIfOperationIsAllowed(accountId, mechanism);
@@ -183,6 +218,9 @@ public class SSOServiceImpl implements SSOService {
     }
     account.setOauthEnabled(shouldEnableOauth);
     if (shouldUpdateAuthMechanism) {
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        auditSSOActivity(accountId, mechanism, currentAuthMechanism);
+      }
       account.setAuthenticationMechanism(mechanism);
     }
     accountService.update(account);

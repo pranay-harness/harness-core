@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.AKRITI;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
@@ -101,6 +103,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class AuthRuleFilterTest extends WingsBaseTest {
   private ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock HttpServletRequest httpServletRequest;

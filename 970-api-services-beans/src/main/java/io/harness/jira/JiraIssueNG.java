@@ -14,31 +14,43 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDC)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
+  @NotNull String url;
   @NotNull String id;
   @NotNull String key;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
   public JiraIssueNG(JsonNode node) {
+    this.url = JsonNodeUtils.mustGetString(node, "self");
     this.id = JsonNodeUtils.mustGetString(node, "id");
     this.key = JsonNodeUtils.mustGetString(node, "key");
+    this.fields.put("url", this.url);
+    this.fields.put("id", this.id);
+    this.fields.put("key", this.key);
+
     Map<String, JsonNode> names = JsonNodeUtils.getMap(node, "names");
     Map<String, JsonNode> schema = JsonNodeUtils.getMap(node, "schema");
     Map<String, JsonNode> fieldValues = JsonNodeUtils.getMap(node, "fields");
@@ -108,21 +120,21 @@ public class JiraIssueNG {
     fields.put(name + " Key", projectKey);
     String projectName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name + " Name", projectName);
-    fields.put(JiraConstantsNG.PROJECT_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.PROJECT_INTERNAL_NAME, JsonUtils.treeToValue(valueNode, Object.class));
   }
 
   private void addIssueTypeFields(String name, JsonNode valueNode) {
     // Returns 2 fields - "Issue Type", "__issuetype" (whole object for internal use)
     String issueTypeName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name, issueTypeName);
-    fields.put(JiraConstantsNG.ISSUE_TYPE_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.ISSUE_TYPE_INTERNAL_NAME, JsonUtils.treeToValue(valueNode, Object.class));
   }
 
   private void addStatusFields(String name, JsonNode valueNode) {
     // Returns 2 fields - "Status", "__status" (whole object for internal use)
     String statusName = JsonNodeUtils.mustGetString(valueNode, "name");
     fields.put(name, statusName);
-    fields.put(JiraConstantsNG.STATUS_INTERNAL_NAME, valueNode);
+    fields.put(JiraConstantsNG.STATUS_INTERNAL_NAME, JsonUtils.treeToValue(valueNode, Object.class));
   }
 
   private static Object convertToFinalValue(JiraFieldTypeNG type, JsonNode valueNode) {
@@ -136,9 +148,10 @@ public class JiraIssueNG {
       case NUMBER:
         return valueNode.doubleValue();
       case DATE:
-        return LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER);
+        return Date.from(
+            Instant.from(LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER).atStartOfDay()));
       case DATETIME:
-        return ZonedDateTime.parse(valueNode.textValue(), JiraConstantsNG.DATETIME_FORMATTER);
+        return Date.from(ZonedDateTime.parse(valueNode.textValue(), JiraConstantsNG.DATETIME_FORMATTER).toInstant());
       case OPTION:
         return convertOptionToFinalValue(type, valueNode);
       case TIME_TRACKING:

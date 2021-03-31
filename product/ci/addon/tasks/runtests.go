@@ -104,12 +104,13 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 // Execute commands with timeout and retry handling
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	var err, errCg error
+	cgDir := fmt.Sprintf(outDir, r.tmpFilePath)
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
 			st := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails.
-			errCg = collectCg(ctx, r.id, outDir, r.log)
+			errCg = collectCg(ctx, r.id, cgDir, r.log)
 			err = collectTestReports(ctx, r.reports, r.id, r.log)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
@@ -135,7 +136,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCg(ctx, r.id, outDir, r.log)
+		errCg = collectCg(ctx, r.id, cgDir, r.log)
 		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))

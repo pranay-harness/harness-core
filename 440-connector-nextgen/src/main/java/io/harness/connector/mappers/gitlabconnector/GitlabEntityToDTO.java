@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.gitlabconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuth;
@@ -28,10 +30,12 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
 
+@OwnedBy(HarnessTeam.DX)
 public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
   public GitlabConnectorDTO createConnectorDTO(GitlabConnector connector) {
-    GitlabAuthenticationDTO gitlabAuthenticationDTO = buildGitlabAuthentication(connector);
+    GitlabAuthenticationDTO gitlabAuthenticationDTO =
+        buildGitlabAuthentication(connector.getAuthType(), connector.getAuthenticationDetails());
     GitlabApiAccessDTO gitlabApiAccess = null;
     if (connector.isHasApiAccess()) {
       gitlabApiAccess = buildApiAccess(connector);
@@ -44,9 +48,8 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
         .build();
   }
 
-  private GitlabAuthenticationDTO buildGitlabAuthentication(GitlabConnector connector) {
-    final GitAuthType authType = connector.getAuthType();
-    final GitlabAuthentication authenticationDetails = connector.getAuthenticationDetails();
+  public static GitlabAuthenticationDTO buildGitlabAuthentication(
+      GitAuthType authType, GitlabAuthentication authenticationDetails) {
     GitlabCredentialsDTO gitlabCredentialsDTO = null;
     switch (authType) {
       case SSH:
@@ -69,7 +72,8 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
     return GitlabAuthenticationDTO.builder().authType(authType).credentials(gitlabCredentialsDTO).build();
   }
 
-  private GitlabHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(GitlabHttpAuthenticationType type, Object auth) {
+  private static GitlabHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(
+      GitlabHttpAuthenticationType type, Object auth) {
     GitlabHttpCredentialsSpecDTO gitlabHttpCredentialsSpecDTO = null;
     switch (type) {
       case USERNAME_AND_TOKEN:

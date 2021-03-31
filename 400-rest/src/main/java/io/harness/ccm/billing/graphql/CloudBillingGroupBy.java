@@ -1,11 +1,15 @@
 package io.harness.ccm.billing.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
 import lombok.Data;
 
 @Data
+@OwnedBy(CE)
 public class CloudBillingGroupBy {
   private CloudEntityGroupBy entityGroupBy;
   private TimeTruncGroupby timeTruncGroupby;

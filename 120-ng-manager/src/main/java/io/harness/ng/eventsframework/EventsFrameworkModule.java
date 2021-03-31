@@ -63,8 +63,8 @@ public class EventsFrameworkModule extends AbstractModule {
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-          .toInstance(RedisProducer.of(
-              EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig,
@@ -77,8 +77,8 @@ public class EventsFrameworkModule extends AbstractModule {
               EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisProducer.of(
-              EventsFrameworkConstants.SETUP_USAGE, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.SETUP_USAGE, NG_MANAGER.getServiceId(), redisConfig,
@@ -87,7 +87,7 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-              EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+              EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, NG_MANAGER.getServiceId(), redisConfig,
@@ -96,7 +96,7 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, redisConfig,
-              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE));
+              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, NG_MANAGER.getServiceId(),
@@ -106,7 +106,7 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM, redisConfig,
-              EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE));
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
     }
   }
 }

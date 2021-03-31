@@ -1,7 +1,9 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * This is not used currently because clean up is implemented via event handler
  */
 
+@OwnedBy(CI)
 @Slf4j
 public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecutionResponse> {
   public static final StepType STEP_TYPE = CleanupStepInfo.STEP_TYPE;

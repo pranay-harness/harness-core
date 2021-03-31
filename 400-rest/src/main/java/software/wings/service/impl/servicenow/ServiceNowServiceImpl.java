@@ -1,5 +1,6 @@
 package software.wings.service.impl.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -7,7 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.ApprovalUtils.checkApproval;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
@@ -45,6 +48,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 
 @Singleton
+@OwnedBy(CDC)
 @Slf4j
 public class ServiceNowServiceImpl implements ServiceNowService {
   @Inject @Transient private transient SecretManager secretManager;
@@ -93,7 +97,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   public void validateCredential(SettingAttribute settingAttribute) {
     SyncTaskContext snowTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
+                                          .appId(SCOPE_WILDCARD)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
 

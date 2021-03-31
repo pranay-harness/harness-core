@@ -47,6 +47,7 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
   @Attributes(title = "Secret Engine Name") public String secretEngineName;
   @Attributes(title = "Token Renewal Interval in minutes", required = true) private long renewalInterval;
   @Attributes(title = "Is Secret Engine Manually Entered") private boolean engineManuallyEntered;
+  @Attributes(title = "Namespace") private String namespace;
   @JsonIgnore @SchemaIgnore boolean isCertValidationRequired;
   private long renewedAt;
 

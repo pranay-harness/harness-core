@@ -1,9 +1,11 @@
 package io.harness.notification.channeldetails;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -14,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -22,9 +25,9 @@ public class PagerDutyChannel extends NotificationChannel {
   List<String> integrationKeys;
 
   @Builder
-  public PagerDutyChannel(String accountId, List<String> userGroupIds, String templateId,
-      Map<String, String> templateData, Team team, List<String> integrationKeys) {
-    super(accountId, userGroupIds, templateId, templateData, team);
+  public PagerDutyChannel(String accountId, List<String> userGroupIds, List<NotificationRequest.UserGroup> userGroups,
+      String templateId, Map<String, String> templateData, Team team, List<String> integrationKeys) {
+    super(accountId, userGroupIds, userGroups, templateId, templateData, team);
     this.integrationKeys = integrationKeys;
   }
 
@@ -39,7 +42,8 @@ public class PagerDutyChannel extends NotificationChannel {
                           .addAllPagerDutyIntegrationKeys(integrationKeys)
                           .setTemplateId(templateId)
                           .putAllTemplateData(templateData)
-                          .addAllUserGroupIds(userGroupIds))
+                          .addAllUserGroupIds(userGroupIds)
+                          .addAllUserGroup(userGroups))
         .build();
   }
 }

@@ -103,8 +103,8 @@ public class JiraResourceServiceTest extends CategoryTest {
     JiraIssueCreateMetadataNG createMetadata = new JiraIssueCreateMetadataNG();
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(JiraTaskNGResponse.builder().issueCreateMetadata(createMetadata).build());
-    assertThat(
-        jiraResourceService.getIssueCreateMetadata(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, null, null, null))
+    assertThat(jiraResourceService.getIssueCreateMetadata(
+                   identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, null, null, null, false))
         .isEqualTo(createMetadata);
   }
 

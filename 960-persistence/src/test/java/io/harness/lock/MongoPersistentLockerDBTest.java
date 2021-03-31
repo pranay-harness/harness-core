@@ -1,5 +1,6 @@
 package io.harness.lock;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.PersistenceTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.lock.mongo.MongoPersistentLocker;
@@ -29,6 +31,7 @@ import org.junit.experimental.categories.Category;
 /**
  * The Class PersistentLockerTest.
  */
+@OwnedBy(PL)
 @Slf4j
 public class MongoPersistentLockerDBTest extends PersistenceTestBase {
   @Inject private MongoPersistentLocker mongoPersistentLocker;

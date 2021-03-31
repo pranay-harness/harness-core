@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
@@ -116,6 +118,7 @@ import org.junit.experimental.categories.Category;
  * Created by anubhaw on 8/31/16.
  */
 @Slf4j
+@OwnedBy(PL)
 public class SecureResourceTest extends CategoryTest {
   /**
    * The constant TOKEN_EXPIRY_IN_MILLIS.

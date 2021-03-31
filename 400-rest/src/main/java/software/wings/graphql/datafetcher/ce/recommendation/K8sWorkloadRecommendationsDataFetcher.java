@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.ce.recommendation;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -59,6 +61,7 @@ import org.yaml.snakeyaml.Yaml;
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2DataFetcher<QLK8sWorkloadFilter,
     QLNoOpSortCriteria, QLK8SWorkloadRecommendationConnection> {
   private final LoadingCache<String, String> clusterNameCache;

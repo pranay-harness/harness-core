@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -12,6 +13,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureBlueprintClient;
 import io.harness.azure.client.AzureManagementClient;
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class ARMDeploymentSteadyStateChecker {
   @Inject protected TimeLimiter timeLimiter;
 

@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PHOENIKX;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
@@ -69,6 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class AuthenticationFilterTest extends CategoryTest {
   @Mock ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock MainConfiguration configuration = mock(MainConfiguration.class);

@@ -359,7 +359,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;
@@ -828,6 +828,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void setWaitingForInputFlag(
       StateExecutionInstance stateExecutionInstance, PipelineStageExecution stageExecution) {
     stageExecution.setWaitingForInputs(stateExecutionInstance.isWaitingForInputs());
+    stageExecution.setNeedsInputButNotReceivedYet(
+        stateExecutionInstance.isWaitingForInputs() && !stateExecutionInstance.isContinued());
     if (stateExecutionInstance.getStatus() != PAUSED) {
       stageExecution.setWaitingForInputs(false);
     }
@@ -4605,7 +4607,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (isNotEmpty(infraMappingList)) {
-      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, infraMappingList);
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, new HashSet<>(infraMappingList));
     }
 
     addressInefficientQueries(workflowExecutionQuery);

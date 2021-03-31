@@ -11,19 +11,11 @@ import io.harness.annotations.dev.OwnedBy;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 public interface ACLService {
   AccessCheckResponseDTO checkAccess(
       @NotNull @Valid Principal principal, List<PermissionCheckDTO> permissionCheckDTOList);
-
-  AccessCheckResponseDTO checkAccess(@NotNull String principalType, @NotEmpty String principalIdentifier,
-      List<PermissionCheckDTO> permissionCheckDTOList);
-
-  List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired);
-
-  ACL save(ACL acl);
 
   long insertAllIgnoringDuplicates(List<ACL> acls);
 

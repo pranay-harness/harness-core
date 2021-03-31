@@ -74,10 +74,11 @@ public class JiraResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("projectKey") String projectKey,
-      @QueryParam("issueKey") String issueKey, @QueryParam("expand") String expand) {
+      @QueryParam("issueType") String issueType, @QueryParam("expand") String expand,
+      @QueryParam("fetchStatus") boolean fetchStatus) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
-    JiraIssueCreateMetadataNG createMetadata =
-        jiraResourceService.getIssueCreateMetadata(connectorRef, orgId, projectId, projectKey, issueKey, expand);
+    JiraIssueCreateMetadataNG createMetadata = jiraResourceService.getIssueCreateMetadata(
+        connectorRef, orgId, projectId, projectKey, issueType, expand, fetchStatus);
     return ResponseDTO.newResponse(createMetadata);
   }
 }

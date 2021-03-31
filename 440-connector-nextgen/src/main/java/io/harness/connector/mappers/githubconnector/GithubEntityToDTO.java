@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.githubconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
 import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
@@ -29,10 +31,12 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
 
+@OwnedBy(HarnessTeam.DX)
 public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
-    GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);
+    GithubAuthenticationDTO githubAuthenticationDTO =
+        buildGithubAuthentication(connector.getAuthType(), connector.getAuthenticationDetails());
     GithubApiAccessDTO githubApiAccess = null;
     if (connector.isHasApiAccess()) {
       githubApiAccess = buildApiAccess(connector);
@@ -45,9 +49,8 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         .build();
   }
 
-  private GithubAuthenticationDTO buildGithubAuthentication(GithubConnector connector) {
-    final GitAuthType authType = connector.getAuthType();
-    final GithubAuthentication authenticationDetails = connector.getAuthenticationDetails();
+  public static GithubAuthenticationDTO buildGithubAuthentication(
+      GitAuthType authType, GithubAuthentication authenticationDetails) {
     GithubCredentialsDTO githubCredentialsDTO = null;
     switch (authType) {
       case SSH:
@@ -70,7 +73,8 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
     return GithubAuthenticationDTO.builder().authType(authType).credentials(githubCredentialsDTO).build();
   }
 
-  private GithubHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(GithubHttpAuthenticationType type, Object auth) {
+  private static GithubHttpCredentialsSpecDTO getHttpCredentialsSpecDTO(
+      GithubHttpAuthenticationType type, Object auth) {
     GithubHttpCredentialsSpecDTO githubHttpCredentialsSpecDTO = null;
     switch (type) {
       case USERNAME_AND_TOKEN:

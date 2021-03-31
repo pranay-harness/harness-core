@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -14,6 +15,7 @@ import static software.wings.graphql.utils.GraphQLConstants.UPDATE_USERGROUP_PER
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -66,6 +68,7 @@ import org.dataloader.DataLoader;
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(DX)
 public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private static final Set<String> apisToEvictUserPermissionRestrictionCache =
       ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API, CREATE_USERGROUP_API, DELETE_USERGROUP_API,

@@ -494,6 +494,7 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE:
         case ADD:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
@@ -532,6 +533,7 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case NON_WHITELISTED:
         case INVOKED:
@@ -623,6 +625,7 @@ public class AuditServiceImpl implements AuditService {
         auditPreference.setOperationTypes(Arrays.stream(Type.values())
                                               .filter(type -> type != Type.LOGIN)
                                               .filter(type -> type != Type.LOGIN_2FA)
+                                              .filter(type -> type != Type.UNSUCCESSFUL_LOGIN)
                                               .map(Type::name)
                                               .collect(Collectors.toList()));
       }

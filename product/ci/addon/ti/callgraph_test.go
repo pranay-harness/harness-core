@@ -10,7 +10,7 @@ import (
 func TestCallgraph_ToStringMap(t *testing.T) {
 	cg := Callgraph{
 		Nodes: []Node{
-			Node{
+			{
 				Package: "package1",
 				Method:  "m1",
 				ID:      1,
@@ -18,7 +18,7 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				Class:   "class1",
 				Type:    "source",
 			},
-			Node{
+			{
 				Package: "package2",
 				Method:  "m2",
 				ID:      1,
@@ -28,11 +28,11 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 			},
 		},
 		Relations: []Relation{
-			Relation{
+			{
 				Source: 0,
 				Tests:  []int{1, 2, 3, 4, 5},
 			},
-			Relation{
+			{
 				Source: 1,
 				Tests:  []int{11, 12, 13, 14, 15},
 			},

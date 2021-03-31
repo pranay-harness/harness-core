@@ -28,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("criteriaSpecWrapperDTO")
 public class CriteriaSpecWrapperDTO {
   @NotNull @JsonProperty("type") CriteriaSpecType type;
+
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   @NotNull

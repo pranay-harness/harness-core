@@ -5,11 +5,15 @@ import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_T
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
@@ -35,6 +39,7 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +49,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class PodWatcher implements ResourceEventHandler<V1Pod> {
@@ -64,6 +70,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
   private static final String POD_EVENT_MSG = "Pod: {}, action: {}";
   private static final String FAILED_PUBLISH_MSG = "Error publishing V1Pod.{} event.";
+  private static final String MESSAGE_PROCESSOR_TYPE_EXCEPTION = "EXCEPTION";
 
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -208,13 +215,21 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
         try {
           if (volume.getPersistentVolumeClaim() != null) {
             String claimName = volume.getPersistentVolumeClaim().getClaimName();
-            V1PersistentVolumeClaim fetchedPvc = pvcFetcher.getPvcByKey(namespace, claimName);
+            try {
+              V1PersistentVolumeClaim fetchedPvc = pvcFetcher.getPvcByKey(namespace, claimName);
 
-            volumesList.add(io.harness.perpetualtask.k8s.watch.Volume.newBuilder()
-                                .setId(claimName)
-                                .setType(VOLUME_TYPE_PVC)
-                                .setRequest(K8sResourceUtils.getStorageRequest(fetchedPvc.getSpec().getResources()))
-                                .build());
+              volumesList.add(io.harness.perpetualtask.k8s.watch.Volume.newBuilder()
+                                  .setId(claimName)
+                                  .setType(VOLUME_TYPE_PVC)
+                                  .setRequest(K8sResourceUtils.getStorageRequest(fetchedPvc.getSpec().getResources()))
+                                  .build());
+            } catch (ApiException ex) {
+              publishError(CeExceptionMessage.newBuilder()
+                               .setClusterId(clusterId)
+                               .setMessage(format("code=[%s] message=[%s] body=[%s]", ex.getCode(), ex.getMessage(),
+                                   ex.getResponseBody()))
+                               .build());
+            }
           }
           // add other volumes here e.g., getAzureDisk, getAwsElasticBlockStore, getGcePersistentDisk
         } catch (Exception ex) {
@@ -223,6 +238,15 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
       }
     }
     return volumesList;
+  }
+
+  private void publishError(CeExceptionMessage ceExceptionMessage) {
+    try {
+      eventPublisher.publishMessage(ceExceptionMessage, HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(),
+          MESSAGE_PROCESSOR_TYPE_EXCEPTION);
+    } catch (Exception ex) {
+      log.error("Failed to publish failure from PodWatcher to the Event Server.", ex);
+    }
   }
 
   private boolean isPodDeleted(V1Pod pod) {
