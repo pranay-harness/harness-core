@@ -5,15 +5,19 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
+import io.harness.ng.authenticationsettings.dtos.mechanisms.LDAPSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.NGAuthSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
+import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
+import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 
@@ -31,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 public class AuthenticationSettingsServiceImpl implements AuthenticationSettingsService {
   private AuthSettingsManagerClient managerClient;
+
   @Override
   public AuthenticationSettingsResponse getAuthenticationSettings(String accountId) {
     Set<String> whitelistedDomains = getResponse(managerClient.getWhitelistedDomains(accountId));
@@ -52,29 +57,46 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   private List<NGAuthSettings> buildAuthSettingsList(SSOConfig ssoConfig, String accountId) {
     List<NGAuthSettings> settingsList = new ArrayList<>();
     AuthenticationMechanism authenticationMechanism = ssoConfig.getAuthenticationMechanism();
-    if (authenticationMechanism == AuthenticationMechanism.USER_PASSWORD
-        || authenticationMechanism == AuthenticationMechanism.OAUTH) {
+    if (authenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
       LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountId));
       settingsList.add(UsernamePasswordSettings.builder()
                            .passwordExpirationPolicy(loginSettings.getPasswordExpirationPolicy())
                            .userLockoutPolicy(loginSettings.getUserLockoutPolicy())
                            .passwordStrengthPolicy(loginSettings.getPasswordStrengthPolicy())
                            .build());
-      if (!ssoConfig.getSsoSettings().isEmpty()) {
-        SSOSettings ssoSettings = ssoConfig.getSsoSettings().get(0);
-        if (ssoSettings.getType() == SSOType.OAUTH) {
-          OauthSettings oAuthSettings = (OauthSettings) ssoSettings;
-          settingsList.add(OAuthSettings.builder()
-                               .allowedProviders(oAuthSettings.getAllowedProviders())
-                               .filter(oAuthSettings.getFilter())
-                               .build());
-        }
+      if (isOauthEnabled(ssoConfig)) {
+        OauthSettings oAuthSettings = (OauthSettings) (ssoConfig.getSsoSettings().get(0));
+        settingsList.add(OAuthSettings.builder()
+                             .allowedProviders(oAuthSettings.getAllowedProviders())
+                             .filter(oAuthSettings.getFilter())
+                             .build());
       }
+    } else if (authenticationMechanism == AuthenticationMechanism.OAUTH) {
+      OauthSettings oAuthSettings = (OauthSettings) (ssoConfig.getSsoSettings().get(0));
+      settingsList.add(OAuthSettings.builder()
+                           .allowedProviders(oAuthSettings.getAllowedProviders())
+                           .filter(oAuthSettings.getFilter())
+                           .build());
     } else if (authenticationMechanism == AuthenticationMechanism.LDAP) {
-      //      settingsList.add();
+      LdapSettings ldapSettings = (LdapSettings) (ssoConfig.getSsoSettings().get(0));
+      settingsList.add(LDAPSettings.builder()
+                           .connectionSettings(ldapSettings.getConnectionSettings())
+                           .userSettingsList(ldapSettings.getUserSettingsList())
+                           .groupSettingsList(ldapSettings.getGroupSettingsList())
+                           .build());
     } else if (authenticationMechanism == AuthenticationMechanism.SAML) {
-      //      settingsList.add();
+      SamlSettings samlSettings = (SamlSettings) (ssoConfig.getSsoSettings().get(0));
+      settingsList.add(SAMLSettings.builder()
+                           .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                           .logoutUrl(samlSettings.getLogoutUrl())
+                           .origin(samlSettings.getOrigin())
+                           .build());
     }
     return settingsList;
+  }
+
+  private boolean isOauthEnabled(SSOConfig ssoConfig) {
+    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
+    return !ssoSettings.isEmpty() && ssoSettings.get(0).getType().equals(SSOType.OAUTH);
   }
 }
