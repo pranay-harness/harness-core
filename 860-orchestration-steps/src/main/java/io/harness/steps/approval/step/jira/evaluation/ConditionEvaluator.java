@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.jira.JiraIssueUtils;
+import io.harness.jira.JiraIssueUtilsNG;
 import io.harness.steps.approval.step.jira.beans.Operator;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -59,7 +59,7 @@ public class ConditionEvaluator {
     @Override
     public boolean evaluate(Object input, String standard) {
       checkInputType(input);
-      List<String> values = JiraIssueUtils.splitByComma(standard);
+      List<String> values = JiraIssueUtilsNG.splitByComma(standard);
       return values.contains(input);
     }
   }
