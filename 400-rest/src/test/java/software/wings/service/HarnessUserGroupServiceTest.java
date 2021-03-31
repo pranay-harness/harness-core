@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +52,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   private String harnessUserGroupName2 = "harnessUserGroupName2";
   private String description1 = "harnessUserGroup 1";
   private String description2 = "harnessUserGroup 2";
+  private String groupType1 = "RESTRICTED";
 
   /**
    * Sets mocks.
@@ -82,6 +84,30 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
 
     harnessUserGroupFromGet = harnessUserGroupService.get(harnessUserGroupId1);
     compare(savedHarnessUserGroup, harnessUserGroupFromGet);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_createHarnessUserGroup() {
+    HarnessUserGroup harnessUserGroup = harnessUserGroupService.createHarnessUserGroup(
+        harnessUserGroupName1, description1, Sets.newHashSet(memberId1), Sets.newHashSet(accountId1), groupType1);
+    List<HarnessUserGroup> harnessUserGroupList = harnessUserGroupService.listHarnessUserGroupForAccount(accountId1);
+    assertThat(harnessUserGroupList.size() == 1).isTrue();
+    assertThat(harnessUserGroupList.get(0).getUuid()).isEqualTo(harnessUserGroup.getUuid());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_listHarnessUserGroupForAccount() {
+    HarnessUserGroup harnessUserGroup1 = harnessUserGroupService.createHarnessUserGroup(
+        harnessUserGroupName1, description1, Sets.newHashSet(memberId1), Sets.newHashSet(accountId1), groupType1);
+    HarnessUserGroup harnessUserGroup2 = harnessUserGroupService.createHarnessUserGroup(
+        harnessUserGroupName2, description2, Sets.newHashSet(memberId2), Sets.newHashSet(accountId2), groupType1);
+    List<HarnessUserGroup> harnessUserGroupList = harnessUserGroupService.listHarnessUserGroupForAccount(accountId2);
+    assertThat(harnessUserGroupList.size() == 1).isTrue();
+    assertThat(harnessUserGroupList.get(0).getUuid()).isEqualTo(harnessUserGroup2.getUuid());
   }
 
   @Test
