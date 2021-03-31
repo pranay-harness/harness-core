@@ -1,5 +1,7 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -22,6 +24,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.HIterator;
@@ -60,6 +64,8 @@ import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final String COMMAND_UNITS = "commandUnits";
   private static final String REFERENCED_TEMPLATE_LIST = "referencedTemplateList";
@@ -290,7 +296,6 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private void setCommandFromTemplate(Template template, ServiceCommand serviceCommand) {
     Command command = (Command) transform(template, EntityType.COMMAND);
     serviceCommand.setCommand(command);
-    serviceCommand.setName(command.getName());
     serviceCommand.setTemplateMetadata(template.getTemplateMetadata());
     serviceCommand.setImportedTemplateDetails(
         TemplateHelper.getImportedTemplateDetails(template, serviceCommand.getTemplateVersion()));
