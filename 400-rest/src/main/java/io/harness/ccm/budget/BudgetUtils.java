@@ -50,6 +50,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import com.google.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -63,6 +64,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
@@ -186,7 +188,7 @@ public class BudgetUtils {
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_TEMPLATE);
         Date date = new Date(alert.getCrossedAt());
         notifications.add(String.format(NOTIFICATION_TEMPLATE, formatter.format(date), costType,
-            alert.getPercentage() + "%", alert.getBudgetedAmount()));
+            getFormattedNumber(alert.getPercentage()) + "%", getFormattedNumber(alert.getBudgetedAmount())));
       });
     }
     return notifications;
@@ -520,5 +522,14 @@ public class BudgetUtils {
     }
     alerts.sort(Comparator.comparing(AlertThreshold::getPercentage).reversed());
     return alerts.toArray(new AlertThreshold[0]);
+  }
+
+  private boolean isInteger(double num) {
+    return num == Math.floor(num);
+  }
+
+  private String getFormattedNumber(double num) {
+    NumberFormat formatter = NumberFormat.getInstance(Locale.US);
+    return isInteger(num) ? formatter.format(Math.round(num)) : formatter.format(num);
   }
 }
