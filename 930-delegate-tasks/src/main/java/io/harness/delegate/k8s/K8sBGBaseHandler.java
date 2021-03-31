@@ -1,7 +1,6 @@
 package io.harness.delegate.k8s;
 
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.Blue;
 import static software.wings.beans.LogColor.Green;
@@ -22,7 +21,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
 import software.wings.beans.LogColor;
@@ -91,8 +89,6 @@ public class K8sBGBaseHandler {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
-
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
   public String getPrimaryColor(

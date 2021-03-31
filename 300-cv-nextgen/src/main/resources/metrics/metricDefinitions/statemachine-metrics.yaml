@@ -1,0 +1,8 @@
+name: Analysis Statemachine Metrics
+identifier: analysis_state_machine
+metricGroup: verification_configuration
+metrics:
+  - metricName: orchestrator_queue_size
+    metricDefinition: queueSize of the orchestrator
+    type: LastValue
+    unit: count

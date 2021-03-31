@@ -367,8 +367,10 @@
           "required": [
             "approvalCriteria",
             "approvalMessage",
+            "connectorRef",
             "includePipelineExecutionHistory",
-            "issueId",
+            "issueKey",
+            "projectKey",
             "rejectionCriteria"
           ],
           "properties": {
@@ -384,7 +386,7 @@
             "includePipelineExecutionHistory": {
               "type": "boolean"
             },
-            "issueId": {
+            "issueKey": {
               "type": "string"
             },
             "projectKey": {

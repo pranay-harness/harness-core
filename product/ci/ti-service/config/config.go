@@ -39,6 +39,10 @@ type Config struct {
 		Host     string `envconfig:"TI_SERVICE_MONGODB_HOST"`
 		Port     string `envconfig:"TI_SERVICE_MONGODB_PORT"`
 		DbName   string `envconfig:"TI_SERVICE_MONGODB_DB_NAME"`
+		// Set this if you want to connect to mongoDB using a connection string directly
+		// If this is not set, TI service will create a connStr using the host/port and
+		// will try to create a direct connection to mongodb.
+		ConnStr string `envconfig:"TI_SERVICE_MONGODB_CONN_STR"`
 	}
 }
 

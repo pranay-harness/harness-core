@@ -1,9 +1,14 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
+import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -13,12 +18,23 @@ import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.pms.yaml.YamlUtils;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
+import io.harness.utils.IdentifierRefHelper;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +47,66 @@ import lombok.extern.slf4j.Slf4j;
 public class PipelineSetupUsageHelper implements PipelineActionObserver {
   @Inject @Named(EventsFrameworkConstants.SETUP_USAGE) private Producer eventProducer;
   @Inject private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+  @Inject private EntitySetupUsageClient entitySetupUsageClient;
+  private static final int PAGE = 0;
+  private static final int SIZE = 100;
+
+  /**
+   * Performs the following:
+   * - queries the entitySetupUsage framework to get all entities referenced in the given pipeline yaml. (static, inputs
+   * and runtimeExpression)
+   * - extracts the value of a runtime input using fqn from the given pipeline yaml
+   * - does not resolve runtimeExpressions as they can only be resolved during execution.
+   * - can filter out resources of given entityType too. If entityType is null, it gives all resources.
+   *
+   * @param accountIdentifier - accountIdentifier of the pipeline
+   * @param orgIdentifier -  orgIdentifier of the pipeline
+   * @param projectIdentifier - projectIdentifier of the pipeline
+   * @param pipelineId - pipelineIdentifier
+   * @param pipelineYaml - merged pipeline yaml.
+   * @param entityType - returns response of given entity type referred in the pipeline.
+   * @return
+   */
+  public List<EntityDetail> getReferrencesOfPipeline(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String pipelineId, String pipelineYaml, EntityType entityType) {
+    Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
+    try {
+      Map<FQN, Object> fqnObjectMap =
+          FQNUtils.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
+      fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
+    } catch (IOException e) {
+      throw new InvalidRequestException("Invalid merged pipeline yaml");
+    }
+
+    List<EntitySetupUsageDTO> allReferredUsages =
+        execute(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
+            FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
+            entityType, null));
+    List<EntityDetail> entityDetails = new ArrayList<>();
+    for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
+      IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
+      Map<String, String> metadata = ref.getMetadata();
+      String fqn = metadata.get(PreFlightCheckMetadata.FQN);
+
+      if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {
+        entityDetails.add(referredUsage.getReferredEntity());
+      } else if (fqnToObjectMapMergedYaml.containsKey(fqn)) {
+        String finalValue = ((TextNode) fqnToObjectMapMergedYaml.get(fqn)).asText();
+        if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
+          continue;
+        }
+        IdentifierRef identifierRef =
+            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, accountIdentifier, projectIdentifier);
+        entityDetails.add(EntityDetail.builder()
+                              .name(referredUsage.getReferredEntity().getName())
+                              .type(referredUsage.getReferredEntity().getType())
+                              .entityRef(identifierRef)
+                              .build());
+      }
+    }
+    return entityDetails;
+  }
 
   public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities)
       throws ProducerShutdownException {

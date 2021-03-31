@@ -427,7 +427,7 @@ net.sf.json-lib:json-lib:jar:jdk15:2.4
 net.sf.opencsv:opencsv:jar:2.3
 net.shibboleth.utilities:java-support:jar:7.5.0
 net.sourceforge.argparse4j:argparse4j:jar:0.8.1
-org.antlr:antlr4-runtime:jar:4.7.1
+org.antlr:antlr4-runtime:jar:4.7.2
 org.apache.commons:commons-collections4:jar:4.1
 org.apache.commons:commons-compress:jar:1.10
 org.apache.commons:commons-csv:jar:1.5

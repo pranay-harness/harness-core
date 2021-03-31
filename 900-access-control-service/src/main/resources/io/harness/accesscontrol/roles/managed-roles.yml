@@ -14,10 +14,22 @@ roles:
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
+        - core_connector_runtimeAccess
         - core_pipeline_view
+        - core_pipeline_create
         - core_pipeline_edit
         - core_pipeline_delete
         - core_pipeline_execute
+        - core_service_view
+        - core_service_create
+        - core_service_edit
+        - core_service_delete
+        - core_service_runtimeAccess
+        - core_environment_view
+        - core_environment_create
+        - core_environment_edit
+        - core_environment_delete
+        - core_environment_runtimeAccess
       allowedScopeLevels:
         - project
       managed: true
@@ -29,6 +41,8 @@ roles:
         - core_secret_view
         - core_connector_view
         - core_pipeline_view
+        - core_service_view
+        - core_environment_view
       allowedScopeLevels:
         - project
       managed: true
@@ -48,6 +62,17 @@ roles:
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
+        - core_connector_runtimeAccess
+        - core_service_view
+        - core_service_create
+        - core_service_edit
+        - core_service_delete
+        - core_service_runtimeAccess
+        - core_environment_view
+        - core_environment_create
+        - core_environment_edit
+        - core_environment_delete
+        - core_environment_runtimeAccess
       allowedScopeLevels:
         - organization
       managed: true
@@ -58,6 +83,8 @@ roles:
         - core_organization_view
         - core_secret_view
         - core_connector_view
+        - core_service_view
+        - core_environment_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -76,6 +103,17 @@ roles:
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
+        - core_connector_runtimeAccess
+        - core_service_view
+        - core_service_create
+        - core_service_edit
+        - core_service_delete
+        - core_service_runtimeAccess
+        - core_environment_view
+        - core_environment_create
+        - core_environment_edit
+        - core_environment_delete
+        - core_environment_runtimeAccess
       allowedScopeLevels:
         - account
       managed: true
@@ -85,6 +123,8 @@ roles:
       permissions:
         - core_secret_view
         - core_connector_view
+        - core_service_view
+        - core_environment_view
       allowedScopeLevels:
         - account
       managed: true
@@ -94,8 +134,13 @@ roles:
       permissions:
         - core_secret_view
         - core_connector_view
+        - core_connector_runtimeAccess
         - core_pipeline_view
         - core_pipeline_execute
+        - core_service_view
+        - core_service_runtimeAccess
+        - core_environment_view
+        - core_environment_runtimeAccess
       allowedScopeLevels:
         - project
       managed: true

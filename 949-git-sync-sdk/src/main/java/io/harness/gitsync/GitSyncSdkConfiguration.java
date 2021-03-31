@@ -9,6 +9,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.scm.ScmConnectionConfig;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import lombok.Builder;
 import lombok.Value;
@@ -30,6 +31,6 @@ public class GitSyncSdkConfiguration {
   DeployMode deployMode;
   ScmConnectionConfig scmConnectionConfig;
   AuthorizationServiceHeader serviceHeader;
-
+  Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfiguration;
   public enum DeployMode { REMOTE, IN_PROCESS }
 }

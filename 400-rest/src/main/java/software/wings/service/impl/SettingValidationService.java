@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.beans.FeatureName.IRSA_FOR_EKS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -11,10 +12,12 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
@@ -129,6 +132,7 @@ import org.mongodb.morphia.mapping.Mapper;
  * Created by anubhaw on 5/1/17.
  */
 @Singleton
+@OwnedBy(CDC)
 @Slf4j
 public class SettingValidationService {
   @Inject private AppService appService;
@@ -605,7 +609,7 @@ public class SettingValidationService {
 
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(settingAttribute.getAccountId())
-                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, settingAttribute.getAppId())
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
                                       .data(TaskData.builder()
                                                 .async(false)
                                                 .taskType(TaskType.HELM_REPO_CONFIG_VALIDATION.name())

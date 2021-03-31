@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.clients;
 
-import io.harness.scope.ResourceScope;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "AccessControl")
 @JsonTypeName("AccessControl")
+@OwnedBy(HarnessTeam.PL)
 public class AccessControlDTO {
   String permission;
   ResourceScope resourceScope;

@@ -85,6 +85,7 @@ import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
+import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
@@ -374,6 +375,7 @@ public class NextGenModule extends AbstractModule {
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
   }
