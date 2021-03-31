@@ -90,8 +90,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	} else {
 		log.Errorw("mongo DB not configured properly")
-		// TODO: remove this comment once we have test intelligence dependencies running in environments.
-		// return errors.New("mongo db info not configured")
+		return errors.New("mongo db info not configured")
 	}
 
 	// create the http server.
