@@ -1,11 +1,13 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.config.CESetUpConfig;
 
 import software.wings.app.MainConfiguration;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
   public static final String CE_GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   private Iam iamService;

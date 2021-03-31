@@ -1,7 +1,12 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Getter;
 
+@OwnedBy(CE)
 public enum CEError {
   NO_CLUSTERS_TRACKED_BY_HARNESS_CE("No ECS cluster tracked by Harness for this AWS cloud provider %s."),
 

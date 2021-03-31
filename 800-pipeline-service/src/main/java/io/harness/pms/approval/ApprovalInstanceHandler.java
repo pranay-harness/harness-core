@@ -14,6 +14,7 @@ import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.entities.ApprovalInstance.ApprovalInstanceKeys;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 
 import com.google.inject.Inject;
@@ -24,14 +25,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(CDC)
 @Slf4j
 public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler<ApprovalInstance> {
-  private final JiraApprovalHelper jiraApprovalHelper;
+  private final JiraApprovalHelperService jiraApprovalHelperService;
   private final MongoTemplate mongoTemplate;
   private final PersistenceIteratorFactory persistenceIteratorFactory;
 
   @Inject
-  public ApprovalInstanceHandler(JiraApprovalHelper jiraApprovalHelper, MongoTemplate mongoTemplate,
+  public ApprovalInstanceHandler(JiraApprovalHelperService jiraApprovalHelperService, MongoTemplate mongoTemplate,
       PersistenceIteratorFactory persistenceIteratorFactory) {
-    this.jiraApprovalHelper = jiraApprovalHelper;
+    this.jiraApprovalHelperService = jiraApprovalHelperService;
     this.mongoTemplate = mongoTemplate;
     this.persistenceIteratorFactory = persistenceIteratorFactory;
   }
@@ -49,7 +50,7 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
             .fieldName(ApprovalInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
-            .handler(this::handle)
+            .handler(this)
             .filterExpander(query
                 -> query.addCriteria(Criteria.where(ApprovalInstanceKeys.status)
                                          .is(ApprovalStatus.WAITING)
@@ -65,7 +66,7 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
     switch (entity.getType()) {
       case JIRA_APPROVAL:
         JiraApprovalInstance jiraApprovalInstance = (JiraApprovalInstance) entity;
-        jiraApprovalHelper.handlePollingEvent(jiraApprovalInstance);
+        jiraApprovalHelperService.handlePollingEvent(jiraApprovalInstance);
         break;
       default:
         log.warn("ApprovalInstance without registered handler encountered. Id: {}", entity.getId());

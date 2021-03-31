@@ -17,6 +17,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
+import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
@@ -78,7 +79,10 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).containsExactly("foo");
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TaskData.DEFAULT_SYNC_CALL_TIMEOUT);
     assertThat(delegateTask.getData().getParameters()[0])
-        .isEqualTo(GcpValidationRequest.builder().delegateSelectors(Collections.singleton("foo")).build());
+        .isEqualTo(GcpValidationRequest.builder()
+                       .delegateSelectors(Collections.singleton("foo"))
+                       .requestType(RequestType.VALIDATE)
+                       .build());
   }
 
   @Test

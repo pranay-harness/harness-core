@@ -1,5 +1,9 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -13,6 +17,7 @@ import java.util.List;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(CE)
 public class LinkedAccountStatsDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLCESetupSortCriteria, QLLinkedAccountData> {
   @Inject CESetupQueryHelper ceSetupQueryHelper;

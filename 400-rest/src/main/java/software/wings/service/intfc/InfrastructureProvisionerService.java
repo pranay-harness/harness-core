@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -28,6 +33,8 @@ import javax.ws.rs.core.StreamingOutput;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InfrastructureProvisionerService extends OwnedByApplication {
   PageResponse<InfrastructureProvisioner> list(PageRequest<InfrastructureProvisioner> pageRequest);
 
@@ -81,7 +88,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   Map<String, String> extractUnresolvedTextVariables(List<NameValuePair> variables);
 
-  Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId);
+  Map<String, EncryptedDataDetail> extractEncryptedTextVariables(
+      List<NameValuePair> variables, String appId, String workflowExecutionId);
 
   String getEntityId(String provisionerId, String envId);
 

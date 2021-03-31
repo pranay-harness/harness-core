@@ -10,6 +10,8 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
+import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
+import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
@@ -67,6 +69,8 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
             MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
+        sourceCodeManagerMapBinder.addBinding(SCMType.GITLAB).to(GitlabSCMMapper.class);
+        sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
       }
     });
     modules.add(mongoTypeModule(annotations));

@@ -153,30 +153,40 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
+    LogCallback wrapUpLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
+    try {
+      k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams, wrapUpLogCallback, client);
+      final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
+          timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
 
-    final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
-        timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
+      currentRelease.setManagedWorkloadRevision(
+          k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+      releaseHistory.setReleaseStatus(Status.Succeeded);
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
-    currentRelease.setManagedWorkloadRevision(
-        k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
-    releaseHistory.setReleaseStatus(Status.Succeeded);
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
-        kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
+      K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder()
+                                                    .releaseNumber(currentRelease.getNumber())
+                                                    .k8sPodList(podList)
+                                                    .primaryServiceName(primaryService.getResourceId().getName())
+                                                    .stageServiceName(stageService.getResourceId().getName())
+                                                    .stageColor(stageColor)
+                                                    .primaryColor(primaryColor)
+                                                    .build();
 
-    K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder()
-                                                  .releaseNumber(currentRelease.getNumber())
-                                                  .k8sPodList(podList)
-                                                  .primaryServiceName(primaryService.getResourceId().getName())
-                                                  .stageServiceName(stageService.getResourceId().getName())
-                                                  .stageColor(stageColor)
-                                                  .primaryColor(primaryColor)
-                                                  .build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sNGTaskResponse(k8sBGDeployResponse)
-        .build();
+      wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return K8sDeployResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sNGTaskResponse(k8sBGDeployResponse)
+          .build();
+    } catch (Exception e) {
+      wrapUpLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      releaseHistory.setReleaseStatus(Status.Failed);
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
+      throw e;
+    }
   }
 
   private K8sDeployResponse getFailureResponse() {

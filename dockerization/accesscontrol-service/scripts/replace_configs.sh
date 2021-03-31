@@ -42,6 +42,10 @@ if [[ "" != "$EVENTS_CONFIG_REDIS_SENTINELS" ]]; then
 fi
 
 if [[ "" != "$ALLOWED_ORIGINS" ]]; then
-  yq delete -i $CONFIG_FILE allowedOrigins
-  yq write -i $CONFIG_FILE allowedOrigins "$ALLOWED_ORIGINS"
+  IFS=',' read -ra ALLOWED_ORIGINS <<< "$ALLOWED_ORIGINS"
+  INDEX=0
+  for ALLOWED_URL in "${ALLOWED_ORIGINS[@]}"; do
+    yq write -i $CONFIG_FILE allowedOrigins.[$INDEX] "${ALLOWED_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
 fi

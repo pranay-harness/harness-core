@@ -1,5 +1,6 @@
 package io.harness.ccm.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
 import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
 import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
@@ -8,6 +9,9 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.budget.dao.BudgetDao;
@@ -65,6 +69,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetUtils {
   @Inject WingsPersistence wingsPersistence;
   @Inject BudgetTimescaleQueryHelper budgetTimescaleQueryHelper;

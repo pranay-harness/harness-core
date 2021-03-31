@@ -812,8 +812,6 @@ public class SettingsServiceImpl implements SettingsService {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
-      ceMetadataRecordDao.upsert(
-          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
     settingValidationService.validate(settingAttribute);
@@ -1107,11 +1105,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
-      ceMetadataRecordDao.upsert(
-          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
-
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());

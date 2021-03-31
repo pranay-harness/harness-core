@@ -108,6 +108,7 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 		Branch: branch,
 		CgDir:  cgDir,
 	}
+	log.Infow("sending cgRequaet %s to lite engine", *req)
 	_, err = client.Client().UploadCg(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed to upload cg to ti server")

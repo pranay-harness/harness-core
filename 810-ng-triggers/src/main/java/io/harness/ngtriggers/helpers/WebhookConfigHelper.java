@@ -1,5 +1,8 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
@@ -12,6 +15,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class WebhookConfigHelper {
   public Map<WebhookSourceRepo, List<WebhookEvent>> getSourceRepoToEvent() {
     Map<WebhookSourceRepo, List<WebhookEvent>> map = new HashMap<>();

@@ -2,6 +2,7 @@ package io.harness.ff;
 
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
+import static io.harness.beans.FeatureName.NG_RBAC_ENABLED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -63,8 +64,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
   private Producer eventProducer;
 
-  private final List<FeatureName> featureFlagToSendEvent =
-      Lists.newArrayList(ImmutableList.of(NG_ACCESS_CONTROL_MIGRATION, NEXT_GEN_ENABLED));
+  private final List<FeatureName> featureFlagsToSendEvent =
+      Lists.newArrayList(ImmutableList.of(NG_ACCESS_CONTROL_MIGRATION, NG_RBAC_ENABLED, NEXT_GEN_ENABLED));
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
 
@@ -88,7 +89,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                                          .setOnInsert(FeatureFlagKeys.obsolete, false)
                                                          .setOnInsert(FeatureFlagKeys.enabled, false);
     FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    if (featureFlagToSendEvent.contains(featureName)) {
+    if (featureFlagsToSendEvent.contains(featureName)) {
       publishEvent(accountId, featureName, true);
     }
     synchronized (cache) {
@@ -130,8 +131,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       featureFlag.getAccountIds().remove(accountId);
     }
     persistence.save(featureFlag);
-    if (enabled && featureFlagToSendEvent.contains(featureName)) {
-      publishEvent(accountId, FeatureName.valueOf(featureName), true);
+    if (featureFlagsToSendEvent.contains(FeatureName.valueOf(featureName))) {
+      publishEvent(accountId, FeatureName.valueOf(featureName), enabled);
     }
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
@@ -332,16 +333,19 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return Optional.empty();
     }
     persistence.save(featureFlag);
-    if (featureFlagToSendEvent.contains(FeatureName.valueOf(featureFlagName))) {
+    if (featureFlagsToSendEvent.contains(FeatureName.valueOf(featureFlagName))) {
       FeatureFlag existingFeatureFlag = featureFlagOptional.get();
       Set<String> existingAccounts =
           existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
-      Set<String> updatedAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
-      updatedAccounts.forEach(account -> {
-        if (!existingAccounts.contains(account)) {
-          publishEvent(account, FeatureName.valueOf(featureFlagName), true);
-        }
-      });
+      Set<String> newAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
+      Set<String> accountsAdded = Sets.difference(newAccounts, existingAccounts);
+      Set<String> accountsRemoved = Sets.difference(existingAccounts, newAccounts);
+
+      // for accounts which have been added, send enabled event
+      accountsAdded.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), true));
+
+      // for accounts which have been removed, send disabled event
+      accountsRemoved.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), false));
     }
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);

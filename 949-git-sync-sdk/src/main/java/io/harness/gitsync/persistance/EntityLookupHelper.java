@@ -1,8 +1,5 @@
 package io.harness.gitsync.persistance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
-import io.harness.common.EntityReference;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.IsGitSyncEnabled;
@@ -11,7 +8,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.protobuf.StringValue;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -34,30 +30,15 @@ public class EntityLookupHelper implements EntityKeySource {
   }
 
   @Override
-  public boolean fetchKey(EntityReference entityReference) {
-    return (boolean) keyCache.get(entityReference,
-        ref
-        -> harnessToGitPushInfoServiceBlockingStub
-               .isGitSyncEnabledForScope(getEntityScopeFromEntityReference(entityReference))
-               .getEnabled());
+  public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
+    return (boolean) keyCache.get(entityScopeInfo,
+        ref -> harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled());
   }
 
   @Override
-  public void updateKey(EntityReference entityReference) {
-    final IsGitSyncEnabled gitSyncEnabledForScope = harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(
-        getEntityScopeFromEntityReference(entityReference));
-    keyCache.put(entityReference, gitSyncEnabledForScope.getEnabled());
-  }
-
-  private EntityScopeInfo getEntityScopeFromEntityReference(EntityReference entityReference) {
-    final EntityScopeInfo.Builder entityScopeBuilder =
-        EntityScopeInfo.newBuilder().setAccountId(entityReference.getAccountIdentifier());
-    if (!isEmpty(entityReference.getOrgIdentifier())) {
-      entityScopeBuilder.setOrgId(StringValue.of(entityReference.getOrgIdentifier()));
-    }
-    if (!isEmpty(entityReference.getProjectIdentifier())) {
-      entityScopeBuilder.setProjectId(StringValue.of(entityReference.getProjectIdentifier()));
-    }
-    return entityScopeBuilder.build();
+  public void updateKey(EntityScopeInfo entityScopeInfo) {
+    final IsGitSyncEnabled gitSyncEnabledForScope =
+        harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo);
+    keyCache.put(entityScopeInfo, gitSyncEnabledForScope.getEnabled());
   }
 }
