@@ -2,10 +2,11 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
-import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
@@ -15,12 +16,14 @@ import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.preflight.handler.AsyncPreFlightHandler;
 import io.harness.pms.preflight.mapper.PreFlightMapper;
+import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.repositories.preflight.PreFlightRepository;
 
 import com.google.common.collect.ImmutableMap;
@@ -36,18 +39,21 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class PipelineExecuteHelper {
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
+
   private final PMSPipelineService pmsPipelineService;
   private final OrchestrationService orchestrationService;
   private final PlanCreatorMergeService planCreatorMergeService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
-  private final PreFlightRepository preFlightRepository;
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
-  private final EntitySetupUsageClient entitySetupUsageClient;
   private final ConnectorResourceClient connectorResourceClient;
+  private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  private final PipelineRbacService pipelineRbacServiceImpl;
+  private final PreFlightRepository preFlightRepository;
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
@@ -70,6 +76,8 @@ public class PipelineExecuteHelper {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
+    pipelineRbacServiceImpl.validateStaticallyReferredEntitiesInYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setYaml(pipelineYaml);
 
@@ -93,6 +101,9 @@ public class PipelineExecuteHelper {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
+    pipelineRbacServiceImpl.validateStaticallyReferredEntitiesInYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
     executionMetadataBuilder.setYaml(pipelineYaml);
@@ -148,7 +159,7 @@ public class PipelineExecuteHelper {
     executorService.submit(AsyncPreFlightHandler.builder()
                                .entity(entity)
                                .preFlightRepository(preFlightRepository)
-                               .entitySetupUsageClient(entitySetupUsageClient)
+                               .pipelineSetupUsageHelper(pipelineSetupUsageHelper)
                                .connectorResourceClient(connectorResourceClient)
                                .build());
   }
