@@ -3,12 +3,14 @@ package io.harness.ng;
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
@@ -33,6 +35,7 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.services.api.impl.UserMembershipMigrationService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventIteratorHandler;
 import io.harness.persistence.HPersistence;
@@ -50,6 +53,7 @@ import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
+import io.harness.resourcegroup.framework.migration.DefaultResourceGroupCreationService;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.scm.SCMGrpcClientModule;
@@ -117,6 +121,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
+@OwnedBy(PL)
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
@@ -287,6 +292,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
+    environment.lifecycle().manage(injector.getInstance(DefaultResourceGroupCreationService.class));
+    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

@@ -2,7 +2,6 @@ package io.harness.ng.core.invites.remote;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
-import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
@@ -19,15 +18,14 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
-import io.harness.ng.core.invites.api.InvitesService;
-import io.harness.ng.core.invites.dto.CreateInviteListDTO;
+import io.harness.ng.core.invites.api.InviteService;
+import io.harness.ng.core.invites.dto.CreateInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -51,7 +49,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Api("/invites")
@@ -66,13 +63,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private final InvitesService invitesService;
-  private final NgUserService ngUserService;
+  private final InviteService inviteService;
 
   @Inject
-  InviteResource(InvitesService invitesService, NgUserService ngUserService) {
-    this.invitesService = invitesService;
-    this.ngUserService = ngUserService;
+  InviteResource(InviteService inviteService, NgUserService ngUserService) {
+    this.inviteService = inviteService;
   }
 
   @GET
@@ -80,15 +75,14 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(InviteKeys.createdAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-
     Criteria criteria = Criteria.where(InviteKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(InviteKeys.orgIdentifier)
@@ -99,9 +93,8 @@ public class InviteResource {
                             .is(Boolean.FALSE)
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
-    Page<InviteDTO> invites =
-        invitesService.list(criteria, PageUtils.getPageRequest(pageRequest)).map(InviteMapper::writeDTO);
-    return ResponseDTO.newResponse(getNGPageResponse(invites));
+    PageResponse<InviteDTO> invites = inviteService.getInvites(criteria, pageRequest).map(InviteMapper::writeDTO);
+    return ResponseDTO.newResponse(invites);
   }
 
   @POST
@@ -109,31 +102,15 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Valid CreateInviteListDTO createInviteListDTO) {
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
-    NGAccess ngAccess = BaseNGAccess.builder()
-                            .accountIdentifier(accountIdentifier)
-                            .orgIdentifier(orgIdentifier)
-                            .projectIdentifier(projectIdentifier)
-                            .build();
-
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-    List<String> usernames = ngUserService.getUsernameFromEmail(accountIdentifier, createInviteListDTO.getUsers());
-    List<String> userMails = createInviteListDTO.getUsers();
-    for (int i = 0; i < usernames.size(); i++) {
-      if (usernames.get(i) == null) {
-        String defaultName = userMails.get(i).split("@", 2)[0];
-        usernames.set(i, defaultName);
-      }
-    }
-    List<Invite> invites = toInviteList(createInviteListDTO, usernames, ngAccess);
-
+    List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
     for (Invite invite : invites) {
       try {
-        InviteOperationResponse response = invitesService.create(invite);
+        InviteOperationResponse response = inviteService.create(invite);
         inviteOperationResponses.add(response);
       } catch (DuplicateFieldException ex) {
         log.error("error: ", ex);
@@ -147,7 +124,7 @@ public class InviteResource {
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite")
   @InternalApi
   public ResponseDTO<InviteAcceptResponse> accept(@QueryParam("token") @NotNull String jwtToken) {
-    return ResponseDTO.newResponse(invitesService.acceptInvite(jwtToken));
+    return ResponseDTO.newResponse(inviteService.acceptInvite(jwtToken));
   }
 
   @GET
@@ -155,7 +132,7 @@ public class InviteResource {
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite")
   @NextGenManagerAuth
   public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
-    return ResponseDTO.newResponse(invitesService.completeInvite(token));
+    return ResponseDTO.newResponse(inviteService.completeInvite(token));
   }
 
   @PUT
@@ -167,7 +144,7 @@ public class InviteResource {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
-    Optional<Invite> inviteOptional = invitesService.updateInvite(invite);
+    Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
     return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 
@@ -177,7 +154,7 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<Optional<InviteDTO>> delete(
       @PathParam("inviteId") @NotNull String inviteId, @QueryParam("accountIdentifier") String accountIdentifier) {
-    Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);
+    Optional<Invite> inviteOptional = inviteService.deleteInvite(inviteId);
     return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 }

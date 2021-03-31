@@ -14,6 +14,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -39,8 +40,8 @@ import lombok.AllArgsConstructor;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
-@Produces({"application/json"})
-@Consumes({"application/json"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -85,6 +86,18 @@ public class HarnessResourceGroupResource {
       @Valid ResourceGroupRequest resourceGroupRequest) {
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponse);
+  }
+
+  @GET
+  @Path("/ensure")
+  @InternalApi
+  @ApiOperation(value = "ensure default resource group", nickname = "ensureDefaultResourceGroup", hidden = true)
+  public ResponseDTO<Boolean> ensureDefault(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    resourceGroupService.ensureDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
+    return ResponseDTO.newResponse(true);
   }
 
   @PUT

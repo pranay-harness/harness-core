@@ -90,7 +90,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
         });
 
     Map<String, UserSearchDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers))
+        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
             .stream()
             .map(UserSearchMapper::writeDTO)
             .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));

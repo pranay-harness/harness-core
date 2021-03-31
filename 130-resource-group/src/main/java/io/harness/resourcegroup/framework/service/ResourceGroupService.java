@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.framework.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
@@ -8,8 +11,11 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(PL)
 public interface ResourceGroupService {
   ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO);
+
+  void ensureDefaultResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PageRequest pageRequest, String searchTerm);

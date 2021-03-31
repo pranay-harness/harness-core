@@ -48,8 +48,7 @@ public class UserValidator implements PrincipalValidator {
   public ValidationResult validatePrincipal(Principal principal, String scopeIdentifier) {
     String userId = principal.getPrincipalIdentifier();
     return Failsafe.with(retryPolicy).get(() -> {
-      Optional<UserInfo> userOptional =
-          RestClientUtils.getResponse(userClient.getUsersByIds(Lists.newArrayList(userId))).stream().findFirst();
+      Optional<UserInfo> userOptional = RestClientUtils.getResponse(userClient.getUserById(userId));
       if (!userOptional.isPresent()) {
         return ValidationResult.builder()
             .valid(false)

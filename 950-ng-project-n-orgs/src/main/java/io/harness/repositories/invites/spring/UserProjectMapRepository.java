@@ -18,4 +18,6 @@ public interface UserProjectMapRepository
       String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   Optional<UserProjectMap> findFirstByUserIdAndAccountIdentifier(String userId, String accountIdentifier);
+
+  Optional<UserProjectMap> findByMigratedExists(boolean exists);
 }

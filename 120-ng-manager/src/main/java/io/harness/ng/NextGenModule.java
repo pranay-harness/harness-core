@@ -15,6 +15,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -53,6 +54,8 @@ import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.acl.mockserver.MockRoleAssignmentModule;
+import io.harness.ng.core.acl.user.ACLUserModule;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -90,6 +93,7 @@ import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
+import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -280,6 +284,8 @@ public class NextGenModule extends AbstractModule {
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
+    install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
+
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -338,13 +344,12 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
-    install(new AccessControlAdminClientModule(appConfig.getAccessControlAdminClientConfiguration(), "NextGenManager"));
     install(new ResourceGroupModule(
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule());
-    install(new ResourceGroupClientModule(
-        appConfig.getResourceGroupClientConfig(), appConfig.getResourceGroupClientSecret(), NG_MANAGER.getServiceId()));
+    install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
+        appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
@@ -367,7 +372,19 @@ public class NextGenModule extends AbstractModule {
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
-
+    install(new ACLUserModule());
+    install(new MockRoleAssignmentModule());
+    if (appConfig.isMockAccessControlService()) {
+      AccessControlAdminClientConfiguration accessControlAdminClientConfiguration =
+          AccessControlAdminClientConfiguration.builder()
+              .accessControlServiceConfig(appConfig.getNgManagerClientConfig())
+              .accessControlServiceSecret(appConfig.getNextGenConfig().getNgManagerServiceSecret())
+              .build();
+      install(new AccessControlAdminClientModule(accessControlAdminClientConfiguration, NG_MANAGER.getServiceId()));
+    } else {
+      install(new AccessControlAdminClientModule(
+          appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
+    }
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 

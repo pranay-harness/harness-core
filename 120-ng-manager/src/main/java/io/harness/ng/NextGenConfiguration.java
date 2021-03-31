@@ -14,11 +14,13 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
+import io.harness.notification.NotificationClientConfiguration;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupConfig;
+import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.scm.ScmConnectionConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,6 +49,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String YAML_PACKAGE = "io.harness.yaml";
   public static final String FILTER_PACKAGE = "io.harness.filter";
   public static final String SIGNUP_PACKAGE = "io.harness.signup";
+  public static final String MOCKSERVER_PACKAGE = "io.harness.ng.core.acl.mockserver";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -78,12 +81,13 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
   @JsonProperty("gitGrpcClientConfigs") private Map<Microservice, GrpcClientConfig> gitGrpcClientConfigs;
   @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
+  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("resourceGroupClientConfig") private ResourceGroupClientConfig resourceGroupClientConfig;
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
   @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
-  @JsonProperty("resourceGroupClientConfig") private ServiceHttpClientConfig resourceGroupClientConfig;
-  @JsonProperty("resourceGroupClientSecret") private String resourceGroupClientSecret;
+  @JsonProperty("mockAccessControlService") private boolean mockAccessControlService;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -104,7 +108,8 @@ public class NextGenConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, RESOURCEGROUP_PACKAGE, SIGNUP_PACKAGE);
+        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, RESOURCEGROUP_PACKAGE, SIGNUP_PACKAGE,
+        MOCKSERVER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

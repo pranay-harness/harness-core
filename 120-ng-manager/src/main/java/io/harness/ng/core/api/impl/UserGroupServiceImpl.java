@@ -32,6 +32,7 @@ import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
+import io.harness.ng.core.user.remote.UserSearchFilter;
 import io.harness.notification.NotificationChannelType;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
@@ -212,7 +213,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       validateNotificationSettings(userGroup.getNotificationConfigs());
     }
     if (userGroup.getUsers() != null) {
-      validateUsers(userGroup.getUsers());
+      validateUsers(userGroup.getUsers(), userGroup.getAccountIdentifier());
     }
   }
 
@@ -252,12 +253,15 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void validateUsers(Set<String> usersIds) {
+  private void validateUsers(Set<String> usersIds, String accountId) {
     Failsafe.with(retryPolicy).run(() -> {
-      Set<String> returnedUsersIds = RestClientUtils.getResponse(userClient.getUsersByIds(new ArrayList<>(usersIds)))
-                                         .stream()
-                                         .map(UserInfo::getUuid)
-                                         .collect(Collectors.toSet());
+      Set<String> returnedUsersIds =
+          RestClientUtils
+              .getResponse(userClient.listUsers(
+                  UserSearchFilter.builder().userIds(new ArrayList<>(usersIds)).build(), accountId))
+              .stream()
+              .map(UserInfo::getUuid)
+              .collect(Collectors.toSet());
       Set<String> invalidUserIds = Sets.difference(usersIds, returnedUsersIds);
       if (!invalidUserIds.isEmpty()) {
         throw new InvalidArgumentsException(

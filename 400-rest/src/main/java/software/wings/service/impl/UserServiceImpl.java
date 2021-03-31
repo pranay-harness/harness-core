@@ -667,6 +667,14 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public List<User> getUsersByEmail(List<String> emailIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field(UserKeys.email).in(emailIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
+  }
+
+  @Override
   public User getUserByEmail(String email, String accountId) {
     User user = null;
     if (isNotEmpty(email)) {
@@ -2323,8 +2331,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<User> getUsers(List<String> userIds) {
-    return wingsPersistence.createQuery(User.class).field("uuid").in(userIds).asList();
+  public List<User> getUsers(List<String> userIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   private void loadSupportAccounts(User user) {

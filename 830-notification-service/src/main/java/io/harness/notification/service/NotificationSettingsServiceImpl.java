@@ -11,6 +11,7 @@ import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.notification.NotificationSettingConfigDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
+import io.harness.ng.core.user.remote.UserSearchFilter;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.NotificationSetting;
@@ -34,9 +35,9 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class NotificationSettingsServiceImpl implements NotificationSettingsService {
   private final UserGroupClient userGroupClient;
   private final UserClient userClient;
@@ -85,13 +86,14 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     return userGroupDTOS;
   }
 
-  private List<String> getEmailsForUserIds(List<String> userIds) {
+  private List<String> getEmailsForUserIds(List<String> userIds, String accountId) {
     if (isEmpty(userIds)) {
       return new ArrayList<>();
     }
     List<UserInfo> users = new ArrayList<>();
     try {
-      users = RestClientUtils.getResponse(userClient.getUsersByIds(userIds));
+      users = RestClientUtils.getResponse(
+          userClient.listUsers(UserSearchFilter.builder().userIds(userIds).build(), accountId));
     } catch (Exception exception) {
       log.error("Failure while fetching emails of users from userIds", exception);
     }
@@ -102,7 +104,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
   public List<String> getNotificationRequestForUserGroups(List<NotificationRequest.UserGroup> notificationUserGroups,
       NotificationChannelType notificationChannelType, String accountId) {
     List<UserGroupDTO> userGroups = getUserGroups(notificationUserGroups, accountId);
-    return getNotificationSettings(notificationChannelType, userGroups);
+    return getNotificationSettings(notificationChannelType, userGroups, accountId);
   }
 
   @Override
@@ -110,11 +112,11 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
       List<String> userGroupIds, NotificationChannelType notificationChannelType, String accountId) {
     // get user groups by ids
     List<UserGroupDTO> userGroups = getUserGroups(userGroupIds);
-    return getNotificationSettings(notificationChannelType, userGroups);
+    return getNotificationSettings(notificationChannelType, userGroups, accountId);
   }
 
   private List<String> getNotificationSettings(
-      NotificationChannelType notificationChannelType, List<UserGroupDTO> userGroups) {
+      NotificationChannelType notificationChannelType, List<UserGroupDTO> userGroups, String accountId) {
     Set<String> notificationSettings = new HashSet<>();
     for (UserGroupDTO userGroupDTO : userGroups) {
       for (NotificationSettingConfigDTO notificationSettingConfigDTO : userGroupDTO.getNotificationConfigs()) {
@@ -122,7 +124,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
             && notificationSettingConfigDTO.getSetting().isPresent()) {
           notificationSettings.add(notificationSettingConfigDTO.getSetting().get());
         } else if (notificationChannelType == NotificationChannelType.EMAIL) {
-          notificationSettings.addAll(getEmailsForUserIds(userGroupDTO.getUsers()));
+          notificationSettings.addAll(getEmailsForUserIds(userGroupDTO.getUsers(), accountId));
         }
       }
     }

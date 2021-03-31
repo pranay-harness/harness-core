@@ -49,6 +49,7 @@ public class UserProjectMap implements PersistentEntity {
                  .field(UserProjectMapKeys.orgIdentifier)
                  .field(UserProjectMapKeys.projectIdentifier)
                  .build())
+        .add(CompoundMongoIndex.builder().name("userProjectMapMigrationIdx").field(UserProjectMapKeys.migrated).build())
         .build();
   }
 
@@ -58,5 +59,6 @@ public class UserProjectMap implements PersistentEntity {
   @Trimmed @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
   @Trimmed @NotEmpty List<Role> roles;
+  boolean migrated;
   @Wither @Version Long version;
 }

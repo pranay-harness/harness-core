@@ -1,12 +1,14 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.remote.UserSearchFilter;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -33,8 +35,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api(value = "/ng/users", hidden = true)
-@Path("/ng/users")
+@Api(value = "/ng/user", hidden = true)
+@Path("/ng/user")
 @Produces("application/json")
 @Consumes("application/json")
 @NextGenManagerAuth
@@ -65,32 +67,25 @@ public class UserResourceNG {
     return new RestResponse<>(pageResponse);
   }
 
+  @GET
+  @Path("/{userId}")
+  public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
+    User user = userService.get(userId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
   @POST
   @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsersByIds(List<String> userIds) {
-    return new RestResponse<>(convertUserToNgUser(userService.getUsers(userIds)));
-  }
-
-  @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
+  public RestResponse<List<UserInfo>> listUsersByIds(
+      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+    List<User> users = new ArrayList<>();
+    if (!isEmpty(userSearchFilter.getUserIds())) {
+      users.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
     }
-    return new RestResponse<>(usernames);
-  }
-
-  @GET
-  public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
-    User user = userService.getUserByEmail(emailId);
-    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+    if (!isEmpty(userSearchFilter.getEmailIds())) {
+      users.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    }
+    return new RestResponse<>(convertUserToNgUser(users));
   }
 
   @GET
@@ -133,13 +128,7 @@ public class UserResourceNG {
 
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
-        .map(user
-            -> UserInfo.builder()
-                   .email(user.getEmail())
-                   .name(user.getName())
-                   .uuid(user.getUuid())
-                   .accountIds(user.getAccountIds())
-                   .build())
+        .map(user -> UserInfo.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build())
         .collect(Collectors.toList());
   }
 
@@ -156,7 +145,6 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
-        .accountIds(user.getAccountIds())
         .build();
   }
 }

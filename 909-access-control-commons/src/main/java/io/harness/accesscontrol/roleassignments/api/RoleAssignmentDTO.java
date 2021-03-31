@@ -12,10 +12,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 
 @Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "RoleAssignmentDTOKey")
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode

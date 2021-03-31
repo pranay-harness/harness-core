@@ -34,11 +34,16 @@ public class FeatureFlagStreamConsumer implements Runnable {
       @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
       @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener,
       @Named("access_control_migration"
-          + FEATURE_FLAG_STREAM) MessageListener accessControlMigrationFeatureFlagStreamListener) {
+          + FEATURE_FLAG_STREAM) MessageListener accessControlMigrationFeatureFlagStreamListener,
+      @Named("resource_group" + FEATURE_FLAG_STREAM) MessageListener resourceGroupCreationFeatureFlagStreamListener) {
     this.eventConsumer = eventConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationFeatureFlagStreamListener);
     messageListenersList.add(connectorFeatureFlagStreamListener);
+    //    Relative order of resourceGroupCreationFeatureFlagStreamListener and
+    //    accessControlMigrationFeatureFlagStreamListener has significance because later depends on the entities created
+    //    by the former
+    messageListenersList.add(resourceGroupCreationFeatureFlagStreamListener);
     messageListenersList.add(accessControlMigrationFeatureFlagStreamListener);
   }
 

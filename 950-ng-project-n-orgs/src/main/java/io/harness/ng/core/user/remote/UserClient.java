@@ -20,24 +20,21 @@ import retrofit2.http.Query;
 @OwnedBy(PL)
 public interface UserClient {
   String SEARCH_TERM_KEY = "searchTerm";
-  String USERS_SEARCH_API = "ng/users/search";
-  String USERS_API = "ng/users";
-  String USERNAME_API = "ng/users/usernames";
-  String USER_BATCH_LIST_API = "ng/users/batch";
-  String USER_IN_ACCOUNT_VERIFICATION = "ng/users/user-account";
-  String USER_SAFE_DELETE = "ng/users/safeDelete/{userId}";
+  String USERS_SEARCH_API = "ng/user/search";
+  String USERS_API = "ng/user";
+  String USER_BATCH_LIST_API = "ng/user/batch";
+  String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
+  String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
       @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm);
 
-  @GET(USERNAME_API)
-  Call<RestResponse<List<String>>> getUsernameFromEmail(
-      @Query(value = "accountId") String accountId, @Query(value = "emailList") List<String> emailList);
+  @GET(USERS_API + "/{userId}") Call<RestResponse<Optional<UserInfo>>> getUserById(@Path("userId") String userId);
 
-  @GET(USERS_API) Call<RestResponse<Optional<UserInfo>>> getUserFromEmail(@Query(value = "emailId") String email);
-
-  @POST(USER_BATCH_LIST_API) Call<RestResponse<List<UserInfo>>> getUsersByIds(@Body List<String> userIds);
+  @POST(USER_BATCH_LIST_API)
+  Call<RestResponse<List<UserInfo>>> listUsers(
+      @Body UserSearchFilter userSearchFilter, @Query("accountId") String accountId);
 
   @GET(USER_IN_ACCOUNT_VERIFICATION)
   Call<RestResponse<Boolean>> isUserInAccount(
