@@ -8,7 +8,11 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+<<<<<<< HEAD
 import static java.lang.Boolean.TRUE;
+=======
+
+>>>>>>> [CDNG-5669]: added delegateSelector in git builder vaariants
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -104,7 +108,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
-import io.harness.remote.CEAwsSetupConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -205,9 +208,9 @@ public class NextGenModule extends AbstractModule {
     final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
         DelegateCallback.newBuilder()
             .setMongoDatabase(MongoDatabase.newBuilder()
-                                  .setCollectionNamePrefix("ngManager")
-                                  .setConnection(appConfig.getMongoConfig().getUri())
-                                  .build())
+                .setCollectionNamePrefix("ngManager")
+                .setConnection(appConfig.getMongoConfig().getUri())
+                .build())
             .build());
     log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
     return delegateCallbackToken;
@@ -228,18 +231,6 @@ public class NextGenModule extends AbstractModule {
     return appConfig.getOutboxPollConfig();
   }
 
-  @Provides
-  @Singleton
-  public AccessControlClientConfiguration getAccessControlClientConfiguration() {
-    return appConfig.getAccessControlClientConfiguration();
-  }
-
-  @Provides
-  @Singleton
-  public CEAwsSetupConfig getCeAwsSetupConfig() {
-    return appConfig.getCeAwsSetupConfig();
-  }
-
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
@@ -257,7 +248,6 @@ public class NextGenModule extends AbstractModule {
 
     /*
     [secondary-db]: To use another DB, uncomment this and add @Named("primaryMongoConfig") to the above one
-
     install(new ProviderModule() {
        @Provides
        @Singleton
@@ -279,7 +269,7 @@ public class NextGenModule extends AbstractModule {
     install(AccessControlMigrationModule.getInstance());
     install(new InviteModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(ConnectorModule.getInstance(this.getCeAwsSetupConfig(), this.getAccessControlClientConfiguration()));
+    install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());

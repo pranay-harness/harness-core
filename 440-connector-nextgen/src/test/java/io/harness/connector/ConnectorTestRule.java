@@ -2,6 +2,7 @@ package io.harness.connector;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
@@ -79,6 +80,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
+        bind(AccessControlClientConfiguration.class).toInstance(mock(AccessControlClientConfiguration.class));
         bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
@@ -97,7 +99,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(new ConnectorModule());
+    modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(

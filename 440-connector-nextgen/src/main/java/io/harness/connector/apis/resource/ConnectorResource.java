@@ -1,6 +1,7 @@
 package io.harness.connector.apis.resource;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
@@ -187,7 +188,7 @@ public class ConnectorResource {
 
   @DELETE
   @Path("{identifier}")
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
+  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
   public ResponseDTO<Boolean> delete(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull String accountIdentifier,

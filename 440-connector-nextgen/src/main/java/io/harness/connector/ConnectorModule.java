@@ -1,9 +1,5 @@
 package io.harness.connector;
 
-import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-
-import io.harness.AccessControlClientConfiguration;
-import io.harness.AccessControlClientModule;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsClientImpl;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
@@ -29,34 +25,20 @@ import io.harness.remote.CEAwsSetupConfig;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
-  private static final AtomicReference<ConnectorModule> instanceRef = new AtomicReference<>();
 
-  CEAwsSetupConfig ceAwsSetupConfig;
-  AccessControlClientConfiguration accessControlClientConfiguration;
+  private final CEAwsSetupConfig ceAwsSetupConfig;
 
-  public ConnectorModule(
-      CEAwsSetupConfig ceAwsSetupConfig, AccessControlClientConfiguration accessControlClientConfiguration) {
+  public ConnectorModule(CEAwsSetupConfig ceAwsSetupConfig) {
     this.ceAwsSetupConfig = ceAwsSetupConfig;
-    this.accessControlClientConfiguration = accessControlClientConfiguration;
-  }
-
-  public static ConnectorModule getInstance(
-      CEAwsSetupConfig ceAwsSetupConfig, AccessControlClientConfiguration accessControlClientConfiguration) {
-    if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new ConnectorModule(ceAwsSetupConfig, accessControlClientConfiguration));
-    }
-    return instanceRef.get();
   }
 
   @Override
   protected void configure() {
     registerRequiredBindings();
     install(FiltersModule.getInstance());
-    install(AccessControlClientModule.getInstance(accessControlClientConfiguration, NG_MANAGER.getServiceId()));
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -85,6 +67,7 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorFilterService.class).to(ConnectorFilterServiceImpl.class);
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
+    bind(CEAwsSetupConfig.class).toInstance(this.ceAwsSetupConfig);
 
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
