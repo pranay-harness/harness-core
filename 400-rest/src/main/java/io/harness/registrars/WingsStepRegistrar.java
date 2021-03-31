@@ -2,7 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.redesign.states.email.EmailStep;
@@ -16,6 +18,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(HarnessModule._360_CG_MANGER)
 public class WingsStepRegistrar {
   public Map<StepType, Class<? extends Step>> getEngineSteps() {
     Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
@@ -26,7 +29,7 @@ public class WingsStepRegistrar {
     engineSteps.put(EmailStep.STEP_TYPE, EmailStep.class);
     engineSteps.put(BasicHttpChainStep.STEP_TYPE, BasicHttpChainStep.class);
 
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
+    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps(false));
     return engineSteps;
   }
 }

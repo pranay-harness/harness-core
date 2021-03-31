@@ -15,19 +15,19 @@ import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.codehaus.jackson.annotate.JsonTypeName;
 
 @OwnedBy(CDC)
 @Data
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("JiraCreateMeta")
 @JsonDeserialize(using = JiraCreateMetadataDeserializer.class)
 public class JiraIssueCreateMetadataNG {
   Map<String, JiraProjectNG> projects = new HashMap<>();
-
-  public JiraIssueCreateMetadataNG() {}
 
   public JiraIssueCreateMetadataNG(JsonNode node) {
     addProjects(node.get("projects"));

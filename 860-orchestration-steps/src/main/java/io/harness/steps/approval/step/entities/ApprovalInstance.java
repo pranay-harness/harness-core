@@ -80,6 +80,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+
   long nextIteration;
 
   public AutoLogContext autoLogContext() {
