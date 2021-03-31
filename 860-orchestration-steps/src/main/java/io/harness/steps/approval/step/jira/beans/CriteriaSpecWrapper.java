@@ -26,10 +26,10 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("criteriaSpecWrapper")
 public class CriteriaSpecWrapper {
-  @NotNull @JsonProperty("type") CriteriaSpecType type;
+  @NotNull CriteriaSpecType type;
 
-  @JsonProperty("spec")
   @NotNull
+  @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   CriteriaSpec criteriaSpec;
 }

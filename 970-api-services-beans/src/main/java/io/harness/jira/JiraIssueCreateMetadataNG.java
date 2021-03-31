@@ -58,7 +58,7 @@ public class JiraIssueCreateMetadataNG {
     }
     this.projects.values()
         .stream()
-        .filter(p -> p.getId().equals(projectKey))
+        .filter(p -> p.getKey().equals(projectKey))
         .forEach(p -> p.updateProjectStatuses(projectStatuses));
   }
 

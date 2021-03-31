@@ -1,6 +1,9 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema.defaultTableName;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
@@ -11,6 +14,7 @@ import lombok.experimental.UtilityClass;
 
 @Value
 @UtilityClass
+@OwnedBy(CE)
 public class RawBillingTableSchema {
   public static final DbSpec spec;
   public static final DbSchema schema;

@@ -1,7 +1,9 @@
 package io.harness.cdng.pipeline.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -19,6 +21,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PipelineSetupStep
     implements SyncExecutable<CDPipelineSetupParameters>, ChildExecutable<CDPipelineSetupParameters> {
   public static final StepType STEP_TYPE =

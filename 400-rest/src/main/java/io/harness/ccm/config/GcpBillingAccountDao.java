@@ -1,10 +1,12 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
 
@@ -14,6 +16,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(CE)
 public class GcpBillingAccountDao {
   @Inject private HPersistence persistence;
 

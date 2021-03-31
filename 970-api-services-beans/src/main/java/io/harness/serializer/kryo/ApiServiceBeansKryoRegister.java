@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
@@ -34,6 +37,7 @@ import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraActionNG;
+import io.harness.jira.JiraCreateIssueRequestNG;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.jira.JiraField;
@@ -41,14 +45,18 @@ import io.harness.jira.JiraFieldAllowedValueNG;
 import io.harness.jira.JiraFieldNG;
 import io.harness.jira.JiraFieldSchemaNG;
 import io.harness.jira.JiraFieldTypeNG;
+import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraIssueTypeNG;
+import io.harness.jira.JiraProjectBasicNG;
 import io.harness.jira.JiraProjectData;
+import io.harness.jira.JiraProjectNG;
 import io.harness.jira.JiraStatus;
 import io.harness.jira.JiraStatusCategory;
 import io.harness.jira.JiraStatusCategoryNG;
 import io.harness.jira.JiraStatusNG;
+import io.harness.jira.JiraTimeTrackingFieldNG;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -132,6 +140,7 @@ import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.json.JSONException;
 
+@OwnedBy(DEL)
 public class ApiServiceBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -245,15 +254,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JiraIssueType.class, 7199);
     kryo.register(JiraField.class, 7200);
     kryo.register(JiraCreateMetaResponse.class, 7201);
-    kryo.register(JiraActionNG.class, 7217);
-    kryo.register(JiraIssueNG.class, 7218);
-    kryo.register(JiraFieldNG.class, 7324);
-    kryo.register(JiraFieldTypeNG.class, 7330);
-    kryo.register(JiraIssueTypeNG.class, 7359);
-    kryo.register(JiraStatusNG.class, 7302);
-    kryo.register(JiraStatusCategoryNG.class, 7329);
-    kryo.register(JiraFieldAllowedValueNG.class, 7333);
-    kryo.register(JiraFieldSchemaNG.class, 7337);
 
     kryo.register(AwsConfig.class, 1428);
     kryo.register(CrossAccountAccess.class, 1429);
@@ -286,5 +286,20 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(AdditionalMetadata.class, 72101);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
+
+    kryo.register(JiraActionNG.class, 97001);
+    kryo.register(JiraCreateIssueRequestNG.class, 97002);
+    kryo.register(JiraFieldAllowedValueNG.class, 97003);
+    kryo.register(JiraFieldNG.class, 97004);
+    kryo.register(JiraFieldSchemaNG.class, 97005);
+    kryo.register(JiraFieldTypeNG.class, 97006);
+    kryo.register(JiraIssueCreateMetadataNG.class, 97007);
+    kryo.register(JiraIssueNG.class, 97008);
+    kryo.register(JiraIssueTypeNG.class, 9709);
+    kryo.register(JiraProjectBasicNG.class, 97010);
+    kryo.register(JiraProjectNG.class, 97011);
+    kryo.register(JiraStatusCategoryNG.class, 97012);
+    kryo.register(JiraStatusNG.class, 97013);
+    kryo.register(JiraTimeTrackingFieldNG.class, 97014);
   }
 }

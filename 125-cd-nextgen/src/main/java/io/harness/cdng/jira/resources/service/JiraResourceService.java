@@ -14,5 +14,5 @@ public interface JiraResourceService {
   boolean validateCredentials(IdentifierRef jiraConnectorRef, String orgId, String projectId);
   List<JiraProjectBasicNG> getProjects(IdentifierRef jiraConnectorRef, String orgId, String projectId);
   JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId, String projectId,
-      String projectKey, String issueType, String expand);
+      String projectKey, String issueType, String expand, boolean fetchStatus);
 }

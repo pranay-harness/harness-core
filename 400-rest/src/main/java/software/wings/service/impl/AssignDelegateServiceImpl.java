@@ -352,7 +352,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     boolean includeMatched = includeScopes.isEmpty();
     for (DelegateScope scope : includeScopes) {
-      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+      if (isDelegateAllowedForScope(
+              scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))) {
         includeMatched = true;
         break;
       }
@@ -369,7 +370,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     for (DelegateScope scope : excludeScopes) {
-      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+      if (ScopeMatchResult.SCOPE_MATCHED
+          == scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
         delegateSelectionLogsService.logExcludeScopeMatched(
             batch, delegate.getAccountId(), delegate.getUuid(), scope.getName());
         return false;
@@ -418,66 +420,98 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     return canAssignSelector;
   }
 
-  private boolean scopeMatch(
+  private ScopeMatchResult scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
     if (!scope.isValid()) {
       log.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
-    boolean match = true;
+    ScopeMatchResult scopeMatchResult = ScopeMatchResult.SCOPE_MATCHED;
 
-    if (isNotEmpty(scope.getEnvironmentTypes()) && !shouldFollowWildcardScope(appId, accountId)
-        && !shouldFollowWildcardScope(envId, accountId)) {
-      if (isNotBlank(appId) && isNotBlank(envId)) {
-        Environment environment = environmentService.get(appId, envId, false);
-        if (environment == null) {
-          log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
-        }
-        match = environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType());
+    if (isNotEmpty(scope.getEnvironmentTypes())) {
+      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(envId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
-        match = false;
+        if (isNotBlank(appId) && isNotBlank(envId)) {
+          Environment environment = environmentService.get(appId, envId, false);
+          if (environment == null) {
+            log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+          }
+          scopeMatchResult =
+              environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
+              ? ScopeMatchResult.SCOPE_MATCHED
+              : ScopeMatchResult.SCOPE_NOT_MATCHED;
+        } else {
+          scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
+        }
       }
     }
-    if (match && isNotEmpty(scope.getTaskTypes())) {
-      match = scope.getTaskTypes().contains(taskGroup);
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getTaskTypes())) {
+      scopeMatchResult = scope.getTaskTypes().contains(taskGroup) ? ScopeMatchResult.SCOPE_MATCHED
+                                                                  : ScopeMatchResult.SCOPE_NOT_MATCHED;
     }
-    if (match && isNotEmpty(scope.getApplications())) {
-      match =
-          shouldFollowWildcardScope(appId, accountId) || (isNotBlank(appId) && scope.getApplications().contains(appId));
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getApplications())) {
+      if (shouldFollowWildcardScope(appId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
+      } else {
+        scopeMatchResult = (isNotBlank(appId) && scope.getApplications().contains(appId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
+      }
     }
-    if (match && isNotEmpty(scope.getEnvironments())) {
-      match =
-          shouldFollowWildcardScope(envId, accountId) || (isNotBlank(envId) && scope.getEnvironments().contains(envId));
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getEnvironments())) {
+      if (shouldFollowWildcardScope(envId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
+      } else {
+        scopeMatchResult = (isNotBlank(envId) && scope.getEnvironments().contains(envId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
+      }
     }
 
     if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
-      if (!shouldFollowWildcardScope(appId, accountId) && !shouldFollowWildcardScope(infraMappingId, accountId)) {
+      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(infraMappingId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
+      } else {
         InfrastructureMapping infrastructureMapping =
             isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
         if (infrastructureMapping != null) {
-          if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
-            match =
-                scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+          if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getInfrastructureDefinitions())) {
+            scopeMatchResult =
+                scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
           }
-          if (match && isNotEmpty(scope.getServices())) {
-            match = scope.getServices().contains(infrastructureMapping.getServiceId());
+          if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getServices())) {
+            scopeMatchResult = scope.getServices().contains(infrastructureMapping.getServiceId())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
           }
         } else {
-          match = false;
+          scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
         }
       }
     } else {
-      if (match && isNotEmpty(scope.getServiceInfrastructures())) {
-        match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
+      if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getServiceInfrastructures())) {
+        scopeMatchResult = (isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
       }
     }
 
-    return match;
+    return scopeMatchResult;
   }
 
   private boolean shouldFollowWildcardScope(String entityId, String accountId) {
     return isNotBlank(accountId) && featureFlagService.isEnabled(FeatureName.DELEGATE_ADD_WILDCARD_SCOPING, accountId)
         && StringUtils.equals(entityId, SCOPE_WILDCARD);
+  }
+
+  private boolean isDelegateAllowedForScope(ScopeMatchResult scopeMatchResult) {
+    return scopeMatchResult == ScopeMatchResult.SCOPE_MATCHED || scopeMatchResult == ScopeMatchResult.ALLOWED_WILDCARD;
   }
 
   @Override
@@ -893,4 +927,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public void onTaskResponseProcessed(DelegateTask delegateTask, String delegateId) {
     this.refreshWhitelist(delegateTask, delegateId);
   }
+
+  private enum ScopeMatchResult { SCOPE_MATCHED, ALLOWED_WILDCARD, SCOPE_NOT_MATCHED }
 }

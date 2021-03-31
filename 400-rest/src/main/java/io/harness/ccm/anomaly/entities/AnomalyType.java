@@ -1,3 +1,6 @@
 package io.harness.ccm.anomaly.entities;
 
-public enum AnomalyType { SPIKE, DROP }
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(CE) public enum AnomalyType { SPIKE, DROP }

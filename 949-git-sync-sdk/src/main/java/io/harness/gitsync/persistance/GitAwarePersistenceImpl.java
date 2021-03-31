@@ -1,7 +1,11 @@
 package io.harness.gitsync.persistance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.EntityType;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
@@ -9,7 +13,10 @@ import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.PushInfo;
+import io.harness.gitsync.beans.NGDTO;
+import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.common.beans.InfoForGitPush;
+import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.interceptor.GitBranchInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
 import io.harness.ng.core.EntityDetail;
@@ -20,99 +27,86 @@ import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.StringValue;
 import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class GitAwarePersistenceImpl implements GitAwarePersistence {
-  private final MongoTemplate mongoTemplate;
-  private final SCMHelper scmHelper;
-  private final HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
-  private final EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  private final KryoSerializer kryoSerializer;
-  private final ScmClient scmClient;
-  private final EntityKeySource entityKeySource;
-  // todo(abhinav): Add branching logic for find.
+public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends NGDTO>
+    implements GitAwarePersistence<B, Y> {
+  Class<B> entityClass;
+  Class<Y> yamlClass;
+  @Inject private MongoTemplate mongoTemplate;
+  @Inject private HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
+  @Inject private EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private ScmClient scmClient;
+  @Inject private EntityKeySource entityKeySource;
+  @Inject private GitBranchingHelper gitBranchingHelper;
+  @Inject private Map<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMap;
 
-  @Override
-  public <B> B findAndModify(@NotNull Query query, @NotNull Update update, @NotNull Class<B> entityClass) {
-    getAndSetBranchInfo(query, entityClass);
-    return mongoTemplate.findAndModify(query, update, entityClass);
+  public GitAwarePersistenceImpl(Class<B> entityClass, Class<Y> yamlClass) {
+    this.entityClass = entityClass;
+    this.yamlClass = yamlClass;
   }
 
   @Override
-  public <B> B findOne(@NotNull Query query, @NotNull Class<B> entityClass) {
-    getAndSetBranchInfo(query, entityClass);
-    return mongoTemplate.findOne(query, entityClass);
-  }
+  public List<B> find(@NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId) {
+    if (entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountId))) {
+      //
+      final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
+      final List<String> objectId;
+      if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null) {
+        objectId = gitBranchingHelper.getObjectIdForDefaultBranchAndScope(
+            projectIdentifier, orgIdentifier, accountId, getEntityType());
+      } else {
+        objectId = gitBranchingHelper.getObjectIdForYamlGitConfigBranchAndScope(gitBranchInfo.getYamlGitConfigId(),
+            gitBranchInfo.getBranch(), projectIdentifier, orgIdentifier, accountId, getEntityType());
+      }
 
-  @Override
-  public <B> List<B> find(@NotNull Query query, @NotNull Class<B> entityClass) {
-    getAndSetBranchInfo(query, entityClass);
+      // todo(abhinav): find way to not hardcode objectId;
+      query.addCriteria(Criteria.where("objectId").in(objectId));
+      return mongoTemplate.find(query, entityClass);
+    }
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
     return mongoTemplate.find(query, entityClass);
   }
 
   @Override
-  public <B> List<B> findDistinct(
-      @NotNull Query query, @NotNull String field, @NotNull Class<?> entityClass, @NotNull Class<B> resultClass) {
-    getAndSetBranchInfo(query, entityClass);
-    return mongoTemplate.findDistinct(query, field, entityClass, resultClass);
-  }
-
-  @Override
-  public <Y> UpdateResult upsert(@NotNull Query query, @NotNull Update update, @NotNull Class<?> entityClass, Y yaml) {
-    getAndSetBranchInfo(query, entityClass);
-    // todo: handle changetype upsert.
-    return mongoTemplate.upsert(query, update, entityClass);
-  }
-
-  @Override
-  public <Y> UpdateResult updateFirst(
-      @NotNull Query query, @NotNull Update update, @NotNull Class<?> entityClass, Y yaml) {
-    getAndSetBranchInfo(query, entityClass);
-    //    scmHelper.pushToGit(yaml, ChangeType.MODIFY);
-    return mongoTemplate.updateFirst(query, update, entityClass);
-  }
-
-  @Override
-  public <Y> DeleteResult remove(@NotNull GitSyncableEntity object, @NotNull String collectionName, Y yaml) {
-    getAndSetBranchInfo(object);
-    //    scmHelper.pushToGit(yaml, ChangeType.DELETE);
-    return mongoTemplate.remove(object, collectionName);
-  }
-
-  @Override
-  public <Y> DeleteResult remove(@NotNull Object object, Y yaml) {
-    getAndSetBranchInfo(object);
+  public DeleteResult remove(@NotNull B object, Y yaml) {
     //    scmHelper.pushToGit(yaml, ChangeType.DELETE);
     return mongoTemplate.remove(object);
   }
 
   @Override
-  public <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml, ChangeType changeType) {
-    getAndSetBranchInfo(objectToSave);
+  public B save(B objectToSave, Y yaml, ChangeType changeType) {
     final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
-    final EntityDetail entityDetail = objectToSave.getEntityDetail();
-    T savedObject;
-    if (entityKeySource.fetchKey(entityDetail.getEntityRef())) {
+    final EntityDetail entityDetail =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityDetail(objectToSave);
+    B savedObject;
+    if (entityKeySource.fetchKey(buildEntityScopeInfo(entityDetail.getEntityRef().getProjectIdentifier(),
+            entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier()))) {
       final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
-      doScmPush(yaml, gitBranchInfo, infoForPush);
+      final CreateFileResponse createFileResponse = doScmPush(yaml, gitBranchInfo, infoForPush);
       savedObject = mongoTemplate.save(objectToSave);
+      // todo(abhinav): createFileResponse get object id and other things and save in EntityBranchMetadata here.
       postPushInformationToGitMsvc(gitBranchInfo, entityDetail, infoForPush);
     } else {
       savedObject = mongoTemplate.save(objectToSave);
     }
     return savedObject;
+  }
+
+  @Override
+  public B save(B objectToSave, Y yaml) {
+    return save(objectToSave, yaml, ChangeType.ADD);
   }
 
   private void postPushInformationToGitMsvc(
@@ -127,7 +121,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
             .build());
   }
 
-  private <Y> CreateFileResponse doScmPush(Y yaml, GitBranchInfo gitBranchInfo, InfoForGitPush infoForPush) {
+  private CreateFileResponse doScmPush(Y yaml, GitBranchInfo gitBranchInfo, InfoForGitPush infoForPush) {
     final GitFileDetails gitFileDetails = GitFileDetails.builder()
                                               .branch(gitBranchInfo.getBranch())
                                               .commitMessage("test")
@@ -135,11 +129,6 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
                                               .filePath(gitBranchInfo.getFilePath())
                                               .build();
     return scmClient.createFile(infoForPush.getScmConnector(), gitFileDetails);
-  }
-
-  @Override
-  public <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml) {
-    return save(objectToSave, yaml, ChangeType.ADD);
   }
 
   private InfoForGitPush getInfoForPush(GitBranchInfo gitBranchInfo, EntityDetail entityDetail) {
@@ -162,33 +151,18 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     return InfoForGitPush.builder().filePath(pushInfo.getFilePath().getValue()).scmConnector(scmConnector).build();
   }
 
-  @Override
-  public <T extends GitSyncableEntity, Y> T insert(T objectToSave, Y yaml) {
-    getAndSetBranchInfo(objectToSave);
-    //    scmHelper.pushToGit(yaml, ChangeType.ADD);
-    return mongoTemplate.insert(objectToSave);
-  }
-
-  @Override
-  public <T extends GitSyncableEntity, Y> T insert(T objectToSave, String collectionName, Y yaml) {
-    getAndSetBranchInfo(objectToSave);
-    //    scmHelper.pushToGit(yaml, ChangeType.ADD);
-    return mongoTemplate.insert(objectToSave, collectionName);
-  }
-
-  private <T> void getAndSetBranchInfo(T objectToSave) {
-    if (objectToSave instanceof GitSyncableEntity) {
-      final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
-      final String branch = gitBranchInfo.getBranch();
-      ((GitSyncableEntity) objectToSave).setBranch(branch);
+  EntityScopeInfo buildEntityScopeInfo(String projectIdentifier, String orgIdentifier, String accountId) {
+    final EntityScopeInfo.Builder entityScopeInfoBuilder = EntityScopeInfo.newBuilder().setAccountId(accountId);
+    if (!isEmpty(projectIdentifier)) {
+      entityScopeInfoBuilder.setProjectId(StringValue.of(projectIdentifier));
     }
+    if (!isEmpty(projectIdentifier)) {
+      entityScopeInfoBuilder.setOrgId(StringValue.of(orgIdentifier));
+    }
+    return entityScopeInfoBuilder.build();
   }
 
-  private <T> void getAndSetBranchInfo(Query q, Class<T> entityClass) {
-    if (GitSyncableEntity.class.isAssignableFrom(entityClass)) {
-      final GitBranchInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
-      final String branch = gitBranchInfo.getBranch();
-      q.addCriteria(Criteria.where("branch").is(branch));
-    }
+  private EntityType getEntityType() {
+    return gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityType();
   }
 }

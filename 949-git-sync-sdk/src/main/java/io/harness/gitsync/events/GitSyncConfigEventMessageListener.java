@@ -2,7 +2,6 @@ package io.harness.gitsync.events;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import io.harness.beans.IdentifierRef;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
@@ -29,11 +28,7 @@ public class GitSyncConfigEventMessageListener implements MessageListener {
     try (AutoLogContext ignore1 = new NgEventLogContext(messageId, OVERRIDE_ERROR)) {
       try {
         final EntityScopeInfo entityScopeInfo = EntityScopeInfo.parseFrom(message.getMessage().getData());
-        entityKeySource.updateKey(IdentifierRef.builder()
-                                      .accountIdentifier(entityScopeInfo.getAccountId())
-                                      .orgIdentifier(entityScopeInfo.getOrgId().getValue())
-                                      .projectIdentifier(entityScopeInfo.getProjectId().getValue())
-                                      .build());
+        entityKeySource.updateKey(entityScopeInfo);
         return true;
       } catch (InvalidProtocolBufferException e) {
         log.error("Invalid message on GIT CONFIG stream");
