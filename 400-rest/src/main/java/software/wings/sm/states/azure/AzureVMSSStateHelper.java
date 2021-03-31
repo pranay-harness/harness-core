@@ -124,6 +124,8 @@ public class AzureVMSSStateHelper {
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactStream.fetchArtifactStreamAttributes(featureFlagService);
 
+    String subscriptionId = artifactStreamAttributes.getSubscriptionId();
+    String resourceGroupName = artifactStreamAttributes.getAzureResourceGroup();
     String osType = artifactStreamAttributes.getOsType();
     String imageType = artifactStreamAttributes.getImageType();
     String galleryName = artifactStreamAttributes.getAzureImageGalleryName();
@@ -134,6 +136,8 @@ public class AzureVMSSStateHelper {
         .imageOSType(AzureMachineImageArtifactDTO.OSType.valueOf(osType))
         .imageType(AzureMachineImageArtifactDTO.ImageType.valueOf(imageType))
         .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .subscriptionId(subscriptionId)
+                             .resourceGroupName(resourceGroupName)
                              .definitionName(imageDefinitionName)
                              .galleryName(galleryName)
                              .version(imageVersion)
