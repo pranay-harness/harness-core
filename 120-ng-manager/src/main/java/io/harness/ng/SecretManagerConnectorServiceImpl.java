@@ -147,7 +147,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     Optional<ConnectorResponseDTO> currentConfigOfSecretManager = get(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     boolean alreadyDefaultSM = false;
-    if (Optional.ofNullable(currentConfigOfSecretManager).isPresent()) {
+    if (currentConfigOfSecretManager.isPresent()) {
       alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
     } else {
       throw new InvalidRequestException(
