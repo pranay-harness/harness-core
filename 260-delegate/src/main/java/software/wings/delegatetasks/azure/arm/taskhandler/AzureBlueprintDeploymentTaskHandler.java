@@ -31,7 +31,7 @@ import software.wings.delegatetasks.azure.arm.deployment.validator.ArtifactsJson
 import software.wings.delegatetasks.azure.arm.deployment.validator.AssignmentJsonValidator;
 import software.wings.delegatetasks.azure.arm.deployment.validator.BlueprintJsonValidator;
 import software.wings.delegatetasks.azure.arm.deployment.validator.DeploymentBlueprintContextValidator;
-import software.wings.delegatetasks.azure.arm.deployment.validator.Validators;
+import software.wings.delegatetasks.azure.common.validator.Validators;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

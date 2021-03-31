@@ -15,6 +15,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
+import software.wings.delegatetasks.azure.common.validator.Validator;
+
 public class BlueprintJsonValidator implements Validator<String> {
   @Override
   public void validate(String blueprintJson) {

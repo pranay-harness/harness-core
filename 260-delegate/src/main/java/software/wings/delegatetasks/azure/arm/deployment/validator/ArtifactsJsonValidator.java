@@ -13,6 +13,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
+import software.wings.delegatetasks.azure.common.validator.Validator;
+
 import java.util.Map;
 
 public class ArtifactsJsonValidator implements Validator<Map<String, String>> {

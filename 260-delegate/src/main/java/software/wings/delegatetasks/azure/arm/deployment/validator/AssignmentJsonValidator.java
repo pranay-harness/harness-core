@@ -22,6 +22,8 @@ import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
 
+import software.wings.delegatetasks.azure.common.validator.Validator;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class AssignmentJsonValidator implements Validator<String> {

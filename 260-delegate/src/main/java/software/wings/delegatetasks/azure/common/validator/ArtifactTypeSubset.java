@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.arm.deployment.validator;
+package software.wings.delegatetasks.azure.common.validator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
@@ -24,7 +24,7 @@ import javax.validation.ReportAsSingleViolation;
 public @interface ArtifactTypeSubset {
   ArtifactType[] anyOf();
 
-  String message() default "{software.wings.delegatetasks.azure.arm.deployment.validator.ArtifactTypeSubset.message}";
+  String message() default "{software.wings.delegatetasks.azure.common.validator.ArtifactTypeSubset.message}";
 
   Class<?>[] groups() default {};
 
