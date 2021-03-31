@@ -138,6 +138,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
 
     AnalysisStatus stateMachineStatus = null;
+
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
