@@ -182,16 +182,20 @@ public class SettingValidationService {
                                                           .settingAttribute(settingAttribute)
                                                           .sshVaultConfig(sshVaultConfig)
                                                           .build();
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .accountId(settingAttribute.getAccountId())
-                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, settingAttribute.getAppId())
-                                      .data(TaskData.builder()
-                                                .async(false)
-                                                .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
-                                                .parameters(new Object[] {request})
-                                                .timeout(TimeUnit.MINUTES.toMillis(2))
-                                                .build())
-                                      .build();
+      DelegateTask delegateTask =
+          DelegateTask.builder()
+              .accountId(settingAttribute.getAccountId())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD,
+                  isBlank(settingAttribute.getAppId()) || settingAttribute.getAppId().equals(GLOBAL_APP_ID)
+                      ? SCOPE_WILDCARD
+                      : settingAttribute.getAppId())
+              .data(TaskData.builder()
+                        .async(false)
+                        .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
+                        .parameters(new Object[] {request})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
+                        .build())
+              .build();
       try {
         DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -398,8 +402,11 @@ public class SettingValidationService {
     SettingValue settingValue = settingAttribute.getValue();
     Preconditions.checkArgument(((KubernetesClusterConfig) settingValue).isSkipValidation() == false);
 
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .appId(SCOPE_WILDCARD)
+                                          .build();
     ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
 
     String namespace = "default";

@@ -9,6 +9,7 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 
@@ -69,7 +70,7 @@ public class PcfHelperService {
       notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
               .data(
                   TaskData.builder()
                       .async(false)
