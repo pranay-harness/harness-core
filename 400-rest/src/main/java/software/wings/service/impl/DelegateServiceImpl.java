@@ -721,27 +721,28 @@ public class DelegateServiceImpl implements DelegateService {
 
       DelegateGroup delegateGroup = upsertDelegateGroup(delegateSetupDetails.getName(), accountId);
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                             .accountId(accountId)
-                                             .version(version)
-                                             .managerHost(managerHost)
-                                             .verificationHost(verificationServiceUrl)
-                                             .delegateName(delegateSetupDetails.getName())
-                                             .delegateProfile(delegateSetupDetails.getDelegateConfigurationId() == null
-                                                     ? ""
-                                                     : delegateSetupDetails.getDelegateConfigurationId())
-                                             .delegateType(KUBERNETES)
-                                             .ciEnabled(isCiEnabled)
-                                             .delegateSessionIdentifier(delegateSetupDetails.getSessionIdentifier())
-                                             .delegateDescription(delegateSetupDetails.getDescription())
-                                             .delegateSize(sizeDetails.getSize().name())
-                                             .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
-                                             .delegateReplicas(sizeDetails.getReplicas())
-                                             .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
-                                             .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
-                                             .delegateGroupId(delegateGroup.getUuid())
-                                             .build());
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationServiceUrl)
+              .delegateName(delegateSetupDetails.getName())
+              .delegateProfile(delegateSetupDetails.getDelegateConfigurationId() == null
+                      ? ""
+                      : delegateSetupDetails.getDelegateConfigurationId())
+              .delegateType(KUBERNETES)
+              .ciEnabled(isCiEnabled)
+              .delegateSessionIdentifier(delegateSetupDetails.getSessionIdentifier())
+              .delegateDescription(delegateSetupDetails.getDescription())
+              .delegateSize(sizeDetails.getSize().name())
+              .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
+              .delegateReplicas(sizeDetails.getReplicas())
+              .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
+              .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
+              .delegateGroupId(delegateGroup.getUuid())
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + "-ng.yaml.ftl");
@@ -1711,15 +1712,17 @@ public class DelegateServiceImpl implements DelegateService {
         delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                                                                     .accountId(accountId)
-                                                                                     .version(version)
-                                                                                     .managerHost(managerHost)
-                                                                                     .verificationHost(verificationUrl)
-                                                                                     .delegateName(delegateName)
-                                                                                     .delegateProfile(delegateProfile)
-                                                                                     .delegateType(DOCKER)
-                                                                                     .build());
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationUrl)
+              .delegateName(delegateName)
+              .delegateProfile(delegateProfile)
+              .delegateType(DOCKER)
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1781,17 +1784,18 @@ public class DelegateServiceImpl implements DelegateService {
         version = EMPTY_VERSION;
       }
       boolean isCiEnabled = featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId);
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                             .accountId(accountId)
-                                             .version(version)
-                                             .managerHost(managerHost)
-                                             .verificationHost(verificationUrl)
-                                             .delegateName(delegateName)
-                                             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
-                                             .delegateType(KUBERNETES)
-                                             .ciEnabled(isCiEnabled)
-                                             .build());
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationUrl)
+              .delegateName(delegateName)
+              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+              .delegateType(KUBERNETES)
+              .ciEnabled(isCiEnabled)
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
@@ -1827,17 +1831,18 @@ public class DelegateServiceImpl implements DelegateService {
       version = EMPTY_VERSION;
     }
 
-    ImmutableMap<String, String> scriptParams =
-        getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                           .accountId(accountId)
-                                           .version(version)
-                                           .managerHost(managerHost)
-                                           .verificationHost(verificationUrl)
-                                           .delegateName(delegateName)
-                                           .delegateProfile(delegateProfile == null ? "" : delegateProfile)
-                                           .delegateType(CE_KUBERNETES)
-                                           .ceEnabled(true)
-                                           .build());
+    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+        ScriptRuntimeParamMapInquiry.builder()
+            .accountId(accountId)
+            .version(version)
+            .managerHost(managerHost)
+            .verificationHost(verificationUrl)
+            .delegateName(delegateName)
+            .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+            .delegateType(CE_KUBERNETES)
+            .ceEnabled(true)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
     saveProcessedTemplate(scriptParams, yaml,
@@ -1870,16 +1875,17 @@ public class DelegateServiceImpl implements DelegateService {
       version = EMPTY_VERSION;
     }
 
-    ImmutableMap<String, String> params =
-        getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                           .accountId(accountId)
-                                           .version(version)
-                                           .managerHost(managerHost)
-                                           .verificationHost(verificationUrl)
-                                           .delegateName(delegateName)
-                                           .delegateProfile(delegateProfile == null ? "" : delegateProfile)
-                                           .delegateType(HELM_DELEGATE)
-                                           .build());
+    ImmutableMap<String, String> params = getJarAndScriptRunTimeParamMap(
+        ScriptRuntimeParamMapInquiry.builder()
+            .accountId(accountId)
+            .version(version)
+            .managerHost(managerHost)
+            .verificationHost(verificationUrl)
+            .delegateName(delegateName)
+            .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+            .delegateType(HELM_DELEGATE)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
@@ -1906,17 +1912,18 @@ public class DelegateServiceImpl implements DelegateService {
 
       DelegateGroup delegateGroup = upsertDelegateGroup(delegateGroupName, accountId);
 
-      ImmutableMap<String, String> scriptParams =
-          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
-                                             .accountId(accountId)
-                                             .version(version)
-                                             .managerHost(managerHost)
-                                             .verificationHost(verificationUrl)
-                                             .delegateName(StringUtils.EMPTY)
-                                             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
-                                             .delegateType(ECS)
-                                             .delegateGroupId(delegateGroup.getUuid())
-                                             .build());
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationUrl)
+              .delegateName(StringUtils.EMPTY)
+              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+              .delegateType(ECS)
+              .delegateGroupId(delegateGroup.getUuid())
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .build());
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
