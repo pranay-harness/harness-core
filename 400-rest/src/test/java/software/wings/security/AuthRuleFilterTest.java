@@ -1,12 +1,15 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.AKRITI;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
 
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
@@ -43,6 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
@@ -63,6 +67,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -98,6 +103,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class AuthRuleFilterTest extends WingsBaseTest {
   private ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock HttpServletRequest httpServletRequest;
@@ -114,6 +120,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private FeatureFlagService mockFeatureFlagService;
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @Mock ApiKeyService apiKeyService;
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
 
@@ -122,6 +129,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   private static final String PATH = "PATH";
   private static final String USER_ID = "USER_ID";
   private static final String USERNAME = "USERNAME";
+  private static final String API_KEY = "API_KEY";
 
   @Before
   public void setUp() throws IOException {
@@ -382,6 +390,57 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     assertThat(requestContext.getMethod()).isEqualTo("GET");
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAnnotation_withoutApiKey() {
+    UserThreadLocal.set(null);
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithApiKeyAuthorizedAnnotation());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
+
+    authRuleFilter.filter(requestContext);
+    verify(requestContext).getHeaderString(API_KEY_HEADER);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAnnotation_withApiKey() {
+    UserThreadLocal.set(null);
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithApiKeyAuthorizedAnnotation());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+    when(requestContext.getHeaderString(API_KEY_HEADER)).thenReturn(API_KEY);
+
+    ApiKeyEntry apiKeyEntry = ApiKeyEntry.builder().build();
+    UserPermissionInfo userPermissionInfo = mockUserPermissionInfo();
+    UserRestrictionInfo userRestrictionInfo = UserRestrictionInfo.builder().build();
+    when(apiKeyService.getByKey(API_KEY, ACCOUNT_ID, true)).thenReturn(apiKeyEntry);
+    when(apiKeyService.getApiKeyPermissions(apiKeyEntry, ACCOUNT_ID)).thenReturn(userPermissionInfo);
+    when(apiKeyService.getApiKeyRestrictions(apiKeyEntry, userPermissionInfo, ACCOUNT_ID))
+        .thenReturn(userRestrictionInfo);
+
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
+
+    authRuleFilter.filter(requestContext);
+    assertThat(requestContext.getMethod()).isEqualTo("GET");
+    verify(requestContext, times(2)).getHeaderString(API_KEY_HEADER);
+    verify(whitelistService).checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class));
+    User user = UserThreadLocal.get();
+    assertThat(user).isNotNull();
+  }
+
   private void testHarnessUserMethod(String url, String method, boolean exception) {
     Set<Action> actions = new HashSet<>();
     actions.add(Action.READ);
@@ -435,6 +494,15 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     Class mockClass = DummyTestResource.class;
     try {
       return mockClass.getMethod("testMultipleClassAnnotations");
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Method getResourceMethodWithApiKeyAuthorizedAnnotation() {
+    Class mockClass = DummyTestResource.class;
+    try {
+      return mockClass.getMethod("testApiKeyAuthorizationAnnotation");
     } catch (NoSuchMethodException e) {
       return null;
     }
