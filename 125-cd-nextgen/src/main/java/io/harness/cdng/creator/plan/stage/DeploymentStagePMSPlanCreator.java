@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -98,10 +99,8 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     if (executionField == null) {
       throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
     }
-    dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
-
-    planCreationResponseMap.put(
-        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
+    PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
+    planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
     return planCreationResponseMap;
   }
 

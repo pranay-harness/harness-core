@@ -1,11 +1,12 @@
-package io.harness.ci.plan.creator.execution;
+package io.harness.plancreator.execution;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
-import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -29,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class CIExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
+public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, ExecutionElementConfig config) {
@@ -41,20 +42,13 @@ public class CIExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElem
       responseMap.put(
           stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
+
     // Add Steps Node
     if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
       PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
-    }
-
-    YamlField rollbackStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
-    if (rollbackStepsField != null) {
-      Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
-      rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
-      responseMap.put(rollbackStepsField.getNode().getUuid(),
-          PlanCreationResponse.builder().dependencies(rollbackDependencyMap).build());
     }
     return responseMap;
   }
@@ -76,6 +70,7 @@ public class CIExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElem
         .name(PlanCreationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
         .skipExpressionChain(false)
         .build();
   }

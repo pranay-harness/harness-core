@@ -3,7 +3,6 @@ package io.harness.cdng.creator;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
-import io.harness.cdng.creator.plan.rollback.RollbackPMSPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
@@ -13,6 +12,7 @@ import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
@@ -32,7 +32,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
-    planCreators.add(new RollbackPMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
@@ -51,6 +50,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<VariableCreator> getVariableCreators() {
     List<VariableCreator> variableCreators = new ArrayList<>();
     variableCreators.add(new DeploymentStageVariableCreator());
+    variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
