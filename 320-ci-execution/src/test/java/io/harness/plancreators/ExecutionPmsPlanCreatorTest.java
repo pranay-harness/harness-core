@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class ExecutionPlanCreatorTest extends CIExecutionTestBase {
+public class ExecutionPmsPlanCreatorTest extends CIExecutionTestBase {
   @Inject private ExecutionPlanCreator executionPlanCreator;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
