@@ -38,9 +38,9 @@ import org.hibernate.validator.constraints.NotBlank;
  */
 @OwnedBy(PL)
 @Data
-@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
@@ -113,6 +113,11 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   @Override
   public SSOSettings getPublicSSOSettings() {
     return this;
+  }
+
+  @Override
+  public SSOType getType() {
+    return SSOType.LDAP;
   }
 
   @Override

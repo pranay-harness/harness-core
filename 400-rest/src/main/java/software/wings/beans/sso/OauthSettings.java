@@ -8,9 +8,12 @@ import io.harness.annotations.dev.OwnedBy;
 import software.wings.security.authentication.OauthProviderType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +21,8 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Data
-@EqualsAndHashCode(callSuper = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(callSuper = true)
 public class OauthSettings extends SSOSettings {
   @NotBlank private String accountId;
   private String filter;
@@ -36,6 +40,11 @@ public class OauthSettings extends SSOSettings {
       this.displayName = displayName;
     }
     this.allowedProviders = allowedProviders;
+  }
+
+  @Override
+  public SSOType getType() {
+    return SSOType.OAUTH;
   }
 
   @Override
