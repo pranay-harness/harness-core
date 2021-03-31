@@ -10,12 +10,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 
-public class DelegateExceptionModuleTest extends AbstractModule {
-  private static volatile DelegateExceptionModuleTest instance;
+public class TestingExceptionModule extends AbstractModule {
+  private static volatile TestingExceptionModule instance;
 
-  public static DelegateExceptionModuleTest getInstance() {
+  public static TestingExceptionModule getInstance() {
     if (instance == null) {
-      instance = new DelegateExceptionModuleTest();
+      instance = new TestingExceptionModule();
     }
     return instance;
   }

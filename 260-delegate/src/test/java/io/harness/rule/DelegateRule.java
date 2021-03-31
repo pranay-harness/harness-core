@@ -1,6 +1,6 @@
 package io.harness.rule;
 
-import io.harness.delegate.exceptionhandler.DelegateExceptionModuleTest;
+import io.harness.delegate.exceptionhandler.TestingExceptionModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -93,7 +93,7 @@ public class DelegateRule implements MethodRule, InjectorRuleMixin {
     });
 
     modules.add(TestMongoModule.getInstance());
-    modules.add(DelegateExceptionModuleTest.getInstance());
+    modules.add(TestingExceptionModule.getInstance());
 
     //    modules.add(new ProviderModule() {
     //      @Provides
