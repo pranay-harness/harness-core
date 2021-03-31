@@ -10,7 +10,7 @@ import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
-import software.wings.delegatetasks.azure.arm.deployment.validator.ArtifactTypeSubset;
+import software.wings.delegatetasks.azure.common.validator.ArtifactTypeSubset;
 import software.wings.utils.ArtifactType;
 
 import java.io.File;

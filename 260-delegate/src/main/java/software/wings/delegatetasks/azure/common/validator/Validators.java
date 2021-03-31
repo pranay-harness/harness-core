@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.arm.deployment.validator;
+package software.wings.delegatetasks.azure.common.validator;
 
 import java.util.Set;
 import java.util.function.Function;
@@ -9,12 +9,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.HibernateValidator;
 
 public class Validators {
-  private static final javax.validation.Validator validator = Validation.byProvider(HibernateValidator.class)
-                                                                  .configure()
-                                                                  .addProperty("hibernate.validator.fail_fast", "true")
-                                                                  .buildValidatorFactory()
-                                                                  .usingContext()
-                                                                  .getValidator();
+  private static final javax.validation.Validator jsr380Validator =
+      Validation.byProvider(HibernateValidator.class)
+          .configure()
+          .addProperty("hibernate.validator.fail_fast", "true")
+          .buildValidatorFactory()
+          .usingContext()
+          .getValidator();
   private Validators() {}
 
   public static <T> void validate(T t, Validator<T> validator) {
@@ -23,7 +24,7 @@ public class Validators {
 
   public static <X extends Throwable> void validateJsr380FailFast(
       Object obj, Function<String, ? extends X> exceptionFunction) throws X {
-    Set<ConstraintViolation<Object>> violations = validator.validate(obj);
+    Set<ConstraintViolation<Object>> violations = jsr380Validator.validate(obj);
     if (!violations.isEmpty()) {
       throw exceptionFunction.apply(toString(violations));
     }

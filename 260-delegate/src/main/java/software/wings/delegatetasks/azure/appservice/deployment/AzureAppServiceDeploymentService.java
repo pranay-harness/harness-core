@@ -42,7 +42,7 @@ import software.wings.delegatetasks.azure.appservice.deployment.context.AzureApp
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
-import software.wings.delegatetasks.azure.arm.deployment.validator.Validators;
+import software.wings.delegatetasks.azure.common.validator.Validators;
 import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;

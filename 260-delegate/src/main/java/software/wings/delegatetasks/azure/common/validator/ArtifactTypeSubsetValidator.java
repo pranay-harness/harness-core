@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.arm.deployment.validator;
+package software.wings.delegatetasks.azure.common.validator;
 
 import software.wings.utils.ArtifactType;
 
