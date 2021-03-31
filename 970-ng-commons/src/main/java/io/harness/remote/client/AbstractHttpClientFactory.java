@@ -20,6 +20,7 @@ import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
+import okhttp3.logging.HttpLoggingInterceptor;
 import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,6 +120,8 @@ public abstract class AbstractHttpClientFactory {
 
   protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode) {
     try {
+      HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+      loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
       return Http
           .getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
               serviceHttpClientConfig.getReadTimeOutSeconds())
@@ -127,6 +130,7 @@ public abstract class AbstractHttpClientFactory {
           .addInterceptor(getAuthorizationInterceptor(clientMode))
           .addInterceptor(getCorrelationIdInterceptor())
           .addInterceptor(getRequestContextInterceptor())
+              .addInterceptor(loggingInterceptor)
           .addInterceptor(chain -> {
             Request original = chain.request();
 
