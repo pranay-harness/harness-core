@@ -69,7 +69,7 @@ public class NewRelicMetricPackValidationRequest extends DataCollectionRequest<N
       Map<String, String> returnMap = new HashMap<>();
       metricPackDTOSet.forEach(metricPackDTO -> {
         metricPackDTO.getMetrics().forEach(metricDefinitionDTO -> {
-          returnMap.put(metricDefinitionDTO.getValidationPath(), metricDefinitionDTO.getResponseJsonPath());
+          returnMap.put(metricDefinitionDTO.getValidationPath(), metricDefinitionDTO.getValidationResponseJsonPath());
         });
       });
       return returnMap;
