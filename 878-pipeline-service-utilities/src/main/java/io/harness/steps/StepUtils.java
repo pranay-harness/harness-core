@@ -1,5 +1,6 @@
 package io.harness.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,6 +8,7 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
@@ -54,6 +56,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.MapUtils;
 
+@OwnedBy(PIPELINE)
 public class StepUtils {
   private StepUtils() {}
 
@@ -181,6 +184,12 @@ public class StepUtils {
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
         Collections.emptyList(), true, null, selectors);
+  }
+
+  public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
+      KryoSerializer kryoSerializer, String taskName, List<TaskSelector> selectors) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
+        Collections.emptyList(), true, taskName, selectors);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,

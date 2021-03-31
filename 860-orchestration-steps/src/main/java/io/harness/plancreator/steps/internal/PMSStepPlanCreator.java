@@ -14,6 +14,6 @@ public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet(StepSpecTypeConstants.BARRIER, StepSpecTypeConstants.HTTP,
-        StepSpecTypeConstants.HARNESS_APPROVAL, StepSpecTypeConstants.JIRA_APPROVAL);
+        StepSpecTypeConstants.HARNESS_APPROVAL, StepSpecTypeConstants.JIRA_APPROVAL, StepSpecTypeConstants.JIRA_CREATE);
   }
 }
