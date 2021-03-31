@@ -42,6 +42,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -321,7 +322,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     ConnectorValidationResult connectorValidationResult = null;
-    WingsException invalidRequestException = null;
     try (AutoLogContext ignore1 =
              new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
@@ -335,17 +335,16 @@ public class ConnectorServiceImpl implements ConnectorService {
                 .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
         return connectorValidationResult;
       } else {
-        invalidRequestException =
-            new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
-                USER);
+        throw new ConnectorNotFoundException(
+            connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+            USER);
       }
+    } catch (ConnectorNotFoundException connectorNotFoundException) {
+      // No handling required for this exception
+      throw connectorNotFoundException;
     } catch (WingsException wingsException) {
       // Special case handling for flows registered with error handling framework
-      if (wingsException.equals(invalidRequestException)) {
-        // hack to handle case if invalid request exception thrown by same method
-        throw wingsException;
-      }
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = wingsException.getMessage();
