@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.HibernateValidator;
 
 public class Validators {
+  private Validators() {}
+
   private static final javax.validation.Validator jsr380Validator =
       Validation.byProvider(HibernateValidator.class)
           .configure()
@@ -16,7 +18,6 @@ public class Validators {
           .buildValidatorFactory()
           .usingContext()
           .getValidator();
-  private Validators() {}
 
   public static <T> void validate(T t, Validator<T> validator) {
     validator.validate(t);
