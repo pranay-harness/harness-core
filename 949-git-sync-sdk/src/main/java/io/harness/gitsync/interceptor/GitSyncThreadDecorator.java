@@ -1,9 +1,11 @@
 package io.harness.gitsync.interceptor;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
 
 import static javax.ws.rs.Priorities.HEADER_DECORATOR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.interceptor.GitBranchInfo.GitBranchInfoKeys;
 
 import com.google.inject.Singleton;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Priority(HEADER_DECORATOR)
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncThreadDecorator implements ContainerRequestFilter {
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
