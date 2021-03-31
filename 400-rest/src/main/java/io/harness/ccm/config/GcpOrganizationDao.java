@@ -1,7 +1,9 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.persistence.HPersistence;
 
@@ -11,6 +13,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(CE)
 public class GcpOrganizationDao {
   @Inject private HPersistence persistence;
 

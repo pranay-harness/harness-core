@@ -1,5 +1,8 @@
 package io.harness.ccm.cluster.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.persistence.HPersistence;
@@ -11,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class K8sYamlDao {
   private final HPersistence hPersistence;
 
