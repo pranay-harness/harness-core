@@ -71,9 +71,13 @@ public class JiraResourceServiceImpl implements JiraResourceService {
 
   @Override
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId,
-      String projectId, String projectKey, String issueType, String expand) {
-    JiraTaskNGParametersBuilder paramsBuilder =
-        JiraTaskNGParameters.builder().action(JiraActionNG.GET_ISSUE_CREATE_METADATA);
+      String projectId, String projectKey, String issueType, String expand, boolean fetchStatus) {
+    JiraTaskNGParametersBuilder paramsBuilder = JiraTaskNGParameters.builder()
+                                                    .action(JiraActionNG.GET_ISSUE_CREATE_METADATA)
+                                                    .projectKey(projectKey)
+                                                    .issueType(issueType)
+                                                    .expand(expand)
+                                                    .fetchStatus(fetchStatus);
     JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
     return jiraTaskResponse.getIssueCreateMetadata();
   }
@@ -131,6 +135,7 @@ public class JiraResourceServiceImpl implements JiraResourceService {
         .accountId(baseNGAccess.getAccountIdentifier())
         .taskType(NGTaskType.JIRA_TASK_NG.name())
         .taskParameters(taskNGParameters)
+        .taskSelectors(taskNGParameters.getDelegateSelectors())
         .executionTimeout(TIMEOUT)
         .taskSetupAbstraction(SetupAbstractionKeys.orgIdentifier, baseNGAccess.getOrgIdentifier())
         .taskSetupAbstraction(SetupAbstractionKeys.projectIdentifier, baseNGAccess.getProjectIdentifier())
