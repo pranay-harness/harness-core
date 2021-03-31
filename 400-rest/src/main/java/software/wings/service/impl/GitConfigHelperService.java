@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
@@ -119,7 +120,7 @@ public class GitConfigHelperService {
       DelegateResponseData notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(gitConfig.getAccountId())
-              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.GIT_COMMAND.name())

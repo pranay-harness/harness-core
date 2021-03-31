@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSyncSpotinstTimeoutMin;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -93,18 +94,18 @@ public class SpotinstHelperServiceManager {
                                          .spotinstEncryptionDetails(spotinstEncryptionDetails)
                                          .spotInstTaskParameters(parameters)
                                          .build();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .tags(tagList)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.SPOTINST_COMMAND_TASK.name())
-                      .parameters(new Object[] {request})
-                      .timeout(TimeUnit.MINUTES.toMillis(defaultSyncSpotinstTimeoutMin))
-                      .build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD,
+                                        isNotEmpty(appId) && !appId.equals(GLOBAL_APP_ID) ? appId : SCOPE_WILDCARD)
+                                    .tags(tagList)
+                                    .data(TaskData.builder()
+                                              .async(false)
+                                              .taskType(TaskType.SPOTINST_COMMAND_TASK.name())
+                                              .parameters(new Object[] {request})
+                                              .timeout(TimeUnit.MINUTES.toMillis(defaultSyncSpotinstTimeoutMin))
+                                              .build())
+                                    .build();
     try {
       DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {

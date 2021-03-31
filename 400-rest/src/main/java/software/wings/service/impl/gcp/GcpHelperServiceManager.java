@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 
@@ -86,7 +86,7 @@ public class GcpHelperServiceManager {
                                                                    : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
                                     .tags(tags)
                                     .data(TaskData.builder()
                                               .async(false)
