@@ -85,19 +85,6 @@ public class AzureAppServiceService {
     }
   }
 
-  private void validateSlotStatus(
-      AzureWebClientContext azureWebClientContext, String slotName, String targetSlotName, LogCallback logCallback) {
-    if (isBlank(slotName)) {
-      throw new InvalidRequestException(SLOT_NAME_BLANK_ERROR_MSG);
-    }
-    String slotState = azureWebClient.getSlotState(azureWebClientContext, targetSlotName);
-    if (STOPPED.name().equalsIgnoreCase(slotState)) {
-      throw new InvalidRequestException(
-          String.format("Pre validation failed. " + TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE, targetSlotName));
-    }
-    logCallback.saveExecutionLog("Pre validation was success");
-  }
-
   public AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder getDefaultPreDeploymentDataBuilder(
       String appName, String slotName) {
     return AzureAppServicePreDeploymentData.builder()
@@ -109,6 +96,53 @@ public class AzureAppServiceService {
         .connStringsToAdd(Collections.emptyMap())
         .connStringsToRemove(Collections.emptyMap())
         .dockerSettingsToAdd(Collections.emptyMap());
+  }
+
+  public List<AzureAppDeploymentData> fetchDeploymentData(
+      AzureWebClientContext azureWebClientContext, String slotName) {
+    log.info("Start fetching deployment data for app name: {}, slot: {}", azureWebClientContext.getAppName(), slotName);
+    Optional<DeploymentSlot> deploymentSlotName =
+        azureWebClient.getDeploymentSlotByName(azureWebClientContext, slotName);
+
+    if (!deploymentSlotName.isPresent()) {
+      throw new InvalidRequestException(
+          format("Deployment slot - [%s] not found for Web App - [%s]", slotName, azureWebClientContext.getAppName()));
+    }
+
+    DeploymentSlot deploymentSlot = deploymentSlotName.get();
+
+    List<SiteInstanceInner> siteInstanceInners =
+        azureWebClient.listInstanceIdentifiersSlot(azureWebClientContext, slotName);
+
+    return siteInstanceInners.stream()
+        .map(siteInstanceInner
+            -> AzureAppDeploymentData.builder()
+                   .subscriptionId(azureWebClientContext.getSubscriptionId())
+                   .resourceGroup(azureWebClientContext.getResourceGroupName())
+                   .appName(azureWebClientContext.getAppName())
+                   .deploySlot(slotName)
+                   .deploySlotId(deploymentSlot.id())
+                   .appServicePlanId(deploymentSlot.appServicePlanId())
+                   .hostName(deploymentSlot.defaultHostName())
+                   .instanceId(siteInstanceInner.id())
+                   .instanceName(siteInstanceInner.name())
+                   .instanceType(siteInstanceInner.type())
+                   .instanceState(WEB_APP_INSTANCE_STATUS_RUNNING)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private void validateSlotStatus(
+      AzureWebClientContext azureWebClientContext, String slotName, String targetSlotName, LogCallback logCallback) {
+    if (isBlank(slotName)) {
+      throw new InvalidRequestException(SLOT_NAME_BLANK_ERROR_MSG);
+    }
+    String slotState = azureWebClient.getSlotState(azureWebClientContext, targetSlotName);
+    if (STOPPED.name().equalsIgnoreCase(slotState)) {
+      throw new InvalidRequestException(
+          String.format("Pre validation failed. " + TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE, targetSlotName));
+    }
+    logCallback.saveExecutionLog("Pre validation was success");
   }
 
   private void saveApplicationSettings(AzureWebClientContext azureWebClientContext, String slotName,
@@ -226,39 +260,5 @@ public class AzureAppServiceService {
         .stream()
         .filter(entry -> commonAppSettingsNeedBeUpdatedInSlotSetup.contains(entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  }
-
-  public List<AzureAppDeploymentData> fetchDeploymentData(
-      AzureWebClientContext azureWebClientContext, String slotName) {
-    log.info("Start fetching deployment data for app name: {}, slot: {}", azureWebClientContext.getAppName(), slotName);
-    Optional<DeploymentSlot> deploymentSlotName =
-        azureWebClient.getDeploymentSlotByName(azureWebClientContext, slotName);
-
-    if (!deploymentSlotName.isPresent()) {
-      throw new InvalidRequestException(
-          format("Deployment slot - [%s] not found for Web App - [%s]", slotName, azureWebClientContext.getAppName()));
-    }
-
-    DeploymentSlot deploymentSlot = deploymentSlotName.get();
-
-    List<SiteInstanceInner> siteInstanceInners =
-        azureWebClient.listInstanceIdentifiersSlot(azureWebClientContext, slotName);
-
-    return siteInstanceInners.stream()
-        .map(siteInstanceInner
-            -> AzureAppDeploymentData.builder()
-                   .subscriptionId(azureWebClientContext.getSubscriptionId())
-                   .resourceGroup(azureWebClientContext.getResourceGroupName())
-                   .appName(azureWebClientContext.getAppName())
-                   .deploySlot(slotName)
-                   .deploySlotId(deploymentSlot.id())
-                   .appServicePlanId(deploymentSlot.appServicePlanId())
-                   .hostName(deploymentSlot.defaultHostName())
-                   .instanceId(siteInstanceInner.id())
-                   .instanceName(siteInstanceInner.name())
-                   .instanceType(siteInstanceInner.type())
-                   .instanceState(WEB_APP_INSTANCE_STATUS_RUNNING)
-                   .build())
-        .collect(Collectors.toList());
   }
 }
