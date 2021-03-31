@@ -134,7 +134,8 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
                                             .accountIds(accountIds)
                                             .groupType(groupType)
                                             .build();
-    return harnessUserGroup;
+
+    return save(harnessUserGroup);
   }
 
   @Override
@@ -143,7 +144,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     notNullCheck("Invalid account with id: " + accountId, account);
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("accountIds", accountId);
-    HarnessUserGroup harnessUserGroup = query.get();
-    return (List<HarnessUserGroup>) harnessUserGroup;
+    List<HarnessUserGroup> harnessUserGroups = query.asList();
+    return harnessUserGroups;
   }
 }
