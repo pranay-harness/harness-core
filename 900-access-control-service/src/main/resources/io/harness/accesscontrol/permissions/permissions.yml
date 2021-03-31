@@ -1,56 +1,42 @@
 permissions:
-  - identifier: core_account_edit
-    name: Edit Account Settings
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-  - identifier: core_account_delete
-    name: Delete Account
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-  - identifier: core_project_create
-    name: Create Project
-    status: ACTIVE
-    allowedScopeLevels:
-      - organization
-  - identifier: core_project_view
-    name: View Project
-    status: ACTIVE
-    allowedScopeLevels:
-      - project
-  - identifier: core_project_edit
-    name: Edit Project
-    status: ACTIVE
-    allowedScopeLevels:
-      - project
   - identifier: core_project_delete
     name: Delete Project
     status: ACTIVE
     allowedScopeLevels:
+      - organization
       - project
-  - identifier: core_organization_create
-    name: Create Organization
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-  - identifier: core_organization_view
-    name: View Organization
+  - identifier: core_project_view
+    name: View Project
     status: ACTIVE
     allowedScopeLevels:
       - organization
-  - identifier: core_organization_edit
-    name: Edit Organization
+      - project
+  - identifier: core_project_edit
+    name: Create or Edit a Project
     status: ACTIVE
     allowedScopeLevels:
       - organization
+      - project
   - identifier: core_organization_delete
     name: Delete Organization
     status: ACTIVE
     allowedScopeLevels:
+      - account
       - organization
-  - identifier: core_secret_create
-    name: Create Secret
+  - identifier: core_organization_view
+    name: View Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core_organization_edit
+    name: Create or Edit an Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core_secret_delete
+    name: Delete Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -64,14 +50,7 @@ permissions:
       - organization
       - project
   - identifier: core_secret_edit
-    name: Edit Secret
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-      - organization
-      - project
-  - identifier: core_secret_delete
-    name: Delete Secret
+    name: Create or Edit a Secret
     status: ACTIVE
     allowedScopeLevels:
       - account
