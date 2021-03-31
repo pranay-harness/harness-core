@@ -17,6 +17,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
@@ -52,6 +53,7 @@ public class GcpHelperServiceManager {
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
           GcpValidationRequest.builder()
               .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+              .requestType(RequestType.VALIDATE)
               .build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();

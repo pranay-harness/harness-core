@@ -30,6 +30,7 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import org.junit.Before;
@@ -65,12 +66,13 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteTaskInternal() {
     AzureWebAppSlotShiftTrafficParameters azureAppServiceTaskParameters = buildAzureWebAppSlotShiftTrafficParameters();
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(true);
     AzureConfig azureConfig = buildAzureConfig();
     mockRerouteProductionSlotTraffic();
     ArgumentCaptor<Double> trafficCaptor = ArgumentCaptor.forClass(Double.class);
 
-    AzureTaskExecutionResponse azureTaskExecutionResponse =
-        slotShiftTrafficTaskHandler.executeTask(azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient);
+    AzureTaskExecutionResponse azureTaskExecutionResponse = slotShiftTrafficTaskHandler.executeTask(
+        azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
     verify(azureAppServiceDeploymentService)
         .rerouteProductionSlotTraffic(any(), eq(SHIFT_TRAFFIC_SLOT_NAME), trafficCaptor.capture(), any());
     assertThat(trafficCaptor.getValue()).isEqualTo(TRAFFIC_WEIGHT_IN_PERCENTAGE);
@@ -150,5 +152,9 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
 
   private AzureConfig buildAzureConfig() {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
+  }
+
+  private ArtifactStreamAttributes buildArtifactStreamAttributes(boolean isDockerArtifactType) {
+    return isDockerArtifactType ? null : ArtifactStreamAttributes.builder().build();
   }
 }

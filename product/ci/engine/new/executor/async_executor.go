@@ -22,7 +22,7 @@ func ExecuteStepInAsync(ctx context.Context, in *pb.ExecuteStepRequest,
 		s := state.ExecutionState()
 		executionID := in.GetExecutionId()
 		if s.CanRun(executionID) {
-			executeStep(ctx, in, log)
+			executeStep(in, log)
 		} else {
 			log.Infow("Job is already running with same execution ID",
 				"id", executionID, "arg", in)
@@ -31,8 +31,8 @@ func ExecuteStepInAsync(ctx context.Context, in *pb.ExecuteStepRequest,
 }
 
 // Execute a step
-func executeStep(ctx context.Context, in *pb.ExecuteStepRequest,
-	log *zap.SugaredLogger) {
+func executeStep(in *pb.ExecuteStepRequest, log *zap.SugaredLogger) {
+	ctx := context.Background()
 	e := newStepExecutor(in.GetTmpFilePath(), log)
 	err := e.Run(ctx, in.GetStep())
 	if err != nil {

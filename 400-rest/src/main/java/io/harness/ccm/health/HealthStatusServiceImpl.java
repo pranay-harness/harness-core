@@ -1,5 +1,6 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
@@ -28,6 +29,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -59,6 +61,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class HealthStatusServiceImpl implements HealthStatusService {
   private static final String SUCCEEDED = "SUCCEEDED";
   @Inject SettingsService settingsService;

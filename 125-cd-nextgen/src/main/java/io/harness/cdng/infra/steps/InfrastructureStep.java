@@ -1,5 +1,8 @@
 package io.harness.cdng.infra.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
@@ -21,18 +24,19 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.executable.SyncExecutableWithRbac;
 
 import com.google.inject.Inject;
 import java.util.Collections;
 
-public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
+@OwnedBy(PIPELINE)
+public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
   private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
@@ -51,7 +55,7 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
   }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, InfraStepParameters infraStepParameters,
+  public StepResponse executeSyncAfterRbac(Ambiance ambiance, InfraStepParameters infraStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     long startTime = System.currentTimeMillis();
     NGManagerLogCallback ngManagerLogCallback =
@@ -94,4 +98,7 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
                                                         .build()))
         .build();
   }
+
+  @Override
+  public void validateResources(Ambiance ambiance, InfraStepParameters stepParameters) {}
 }

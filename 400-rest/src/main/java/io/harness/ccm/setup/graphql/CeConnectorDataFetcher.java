@@ -1,7 +1,10 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusServiceImpl;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CE)
 public class CeConnectorDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLNoOpSortCriteria, QLCEConnectorData> {
   @Inject private CESetupQueryHelper ceSetupQueryHelper;

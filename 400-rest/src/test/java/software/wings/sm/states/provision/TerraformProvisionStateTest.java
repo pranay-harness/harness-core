@@ -55,7 +55,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -142,6 +144,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private DelegateService delegateService;
@@ -186,7 +189,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         .extractUnresolvedTextVariables(anyListOf(NameValuePair.class));
     doAnswer(doExtractEncryptedVariables)
         .when(infrastructureProvisionerService)
-        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString());
+        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString(), anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString(), any(StateExecutionContext.class));
     doReturn(APP_ID).when(executionContext).getAppId();
@@ -534,7 +537,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(gitUtilsManager, times(1)).getGitConfig(anyString());
     verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
     // once for environment variables, once for variables, once for backend configs
-    verify(infrastructureProvisionerService, times(3)).extractEncryptedTextVariables(anyList(), eq(APP_ID));
+    verify(infrastructureProvisionerService, times(3))
+        .extractEncryptedTextVariables(anyList(), eq(APP_ID), anyString());
     // once for environment variables, once for variables
     verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
     verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());

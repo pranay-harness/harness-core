@@ -2,6 +2,7 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  110-change-data-capture
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -24,6 +25,7 @@ directories:
   350-event-server
   360-cg-manager
   370-users-syncbridge
+  375-ce-graphql
   380-cg-graphql
   390-db-migration
   400-rest
@@ -125,6 +127,7 @@ import_run_configurations:
   run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml

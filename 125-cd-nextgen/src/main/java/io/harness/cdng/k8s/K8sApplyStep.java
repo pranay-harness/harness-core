@@ -1,5 +1,7 @@
 package io.harness.cdng.k8s;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -13,6 +15,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -24,8 +27,9 @@ import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_APPLY.getYamlType()).build();
@@ -46,8 +50,8 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    return k8sStepHelper.executeNextLink(this, ambiance, k8sApplyStepParameters, passThroughData, responseDataMap);
+      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
+    return k8sStepHelper.executeNextLink(this, ambiance, k8sApplyStepParameters, passThroughData, responseSupplier);
   }
 
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
@@ -80,28 +84,27 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
 
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper
+            .getFailureResponseBuilder(k8sApplyStepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+            .build();
+      }
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (ErrorDataException ex) {
       return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(k8sApplyStepParameters, (ErrorNotifyResponseData) responseData)
+          .getDelegateErrorFailureResponseBuilder(
+              k8sApplyStepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
           .build();
     }
-
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper
-          .getFailureResponseBuilder(k8sApplyStepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
-          .build();
-    }
-
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 }

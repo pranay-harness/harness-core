@@ -6,6 +6,7 @@ import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.preference.AccessControlPreferenceConfiguration;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
@@ -54,6 +55,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
+  @JsonProperty("accessControlPreferenceConfig")
+  private AccessControlPreferenceConfiguration accessControlPreferenceConfiguration;
   @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;

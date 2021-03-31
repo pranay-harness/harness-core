@@ -1,8 +1,10 @@
 package io.harness.steps.common;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 import static io.harness.steps.StepUtils.getFailedChildRollbackOutcome;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
@@ -20,6 +22,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NGSectionStep implements ChildExecutable<NGSectionStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.NG_SECTION).build();
   @Inject private OutcomeService outcomeService;

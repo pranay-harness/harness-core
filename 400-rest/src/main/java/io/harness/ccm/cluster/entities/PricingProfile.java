@@ -1,6 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,6 +24,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("harness")
 @FieldNameConstants(innerTypeName = "PricingProfileKeys")
+@OwnedBy(CE)
 public class PricingProfile implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
