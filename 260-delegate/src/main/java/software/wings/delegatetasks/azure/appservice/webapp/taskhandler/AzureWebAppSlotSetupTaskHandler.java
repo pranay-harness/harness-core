@@ -39,6 +39,7 @@ import software.wings.delegatetasks.azure.common.AutoCloseableWorkingDirectory;
 import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 import software.wings.delegatetasks.azure.common.AzureContainerRegistryService;
 import software.wings.delegatetasks.azure.common.context.ArtifactDownloaderContext;
+import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -118,8 +119,9 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
 
       AzureWebClientContext azureWebClientContext =
           buildAzureWebClientContext(azureWebAppSlotSetupParameters, azureConfig);
-      AzureAppServicePackageDeploymentContext packageDeploymentContext = toAzureAppServicePackageDeploymentContext(
-          azureWebAppSlotSetupParameters, azureWebClientContext, artifactFile, logStreamingTaskClient);
+      AzureAppServicePackageDeploymentContext packageDeploymentContext =
+          toAzureAppServicePackageDeploymentContext(azureWebAppSlotSetupParameters, azureWebClientContext, artifactFile,
+              streamAttributes.getArtifactType(), logStreamingTaskClient);
 
       azureAppServiceDeploymentService.deployPackage(packageDeploymentContext, null);
 
@@ -130,15 +132,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
       return AzureWebAppSlotSetupResponse.builder().errorMsg(message).preDeploymentData(null).build();
     }
-  }
-
-  private File getArtifactFile(AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters,
-      ArtifactStreamAttributes streamAttributes, AutoCloseableWorkingDirectory autoCloseableWorkingDirectory,
-      ILogStreamingTaskClient logStreamingTaskClient) {
-    ArtifactDownloaderContext artifactDownloaderContext =
-        toArtifactDownloaderContext(azureWebAppSlotSetupParameters, streamAttributes, autoCloseableWorkingDirectory);
-    return artifactDownloaderLogService.fetchArtifactFileForDeploymentAndLog(
-        artifactDownloaderContext, logStreamingTaskClient);
   }
 
   private AzureAppServiceDockerDeploymentContext toAzureAppServiceDockerDeploymentContext(
@@ -167,6 +160,18 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .build();
   }
 
+  private Map<String, AzureAppServiceApplicationSetting> getAppSettingsToAdd(
+      List<AzureAppServiceApplicationSetting> applicationSettings) {
+    return applicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
+  }
+
+  private Map<String, AzureAppServiceConnectionString> getConnSettingsToAdd(
+      List<AzureAppServiceConnectionString> connectionStrings) {
+    return connectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+  }
+
   private Map<String, AzureAppServiceApplicationSetting> getDockerSettings(
       ConnectorConfigDTO connectorConfigDTO, AzureRegistryType azureRegistryType, AzureConfig azureConfig) {
     AzureRegistry azureRegistry = AzureRegistryFactory.getAzureRegistry(azureRegistryType);
@@ -192,9 +197,31 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         userAddedAppSettings, userAddedConnSettings, dockerDeploymentContext.getLogStreamingTaskClient());
   }
 
+  private File getArtifactFile(AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters,
+      ArtifactStreamAttributes streamAttributes, AutoCloseableWorkingDirectory autoCloseableWorkingDirectory,
+      ILogStreamingTaskClient logStreamingTaskClient) {
+    ArtifactDownloaderContext artifactDownloaderContext =
+        toArtifactDownloaderContext(azureWebAppSlotSetupParameters, streamAttributes, autoCloseableWorkingDirectory);
+    return artifactDownloaderLogService.fetchArtifactFileForDeploymentAndLog(
+        artifactDownloaderContext, logStreamingTaskClient);
+  }
+
+  public ArtifactDownloaderContext toArtifactDownloaderContext(
+      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, ArtifactStreamAttributes streamAttributes,
+      AutoCloseableWorkingDirectory autoCloseableWorkingDirectory) {
+    return ArtifactDownloaderContext.builder()
+        .accountId(azureWebAppSlotSetupParameters.getAccountId())
+        .activityId(azureWebAppSlotSetupParameters.getActivityId())
+        .appId(azureWebAppSlotSetupParameters.getAppId())
+        .commandName(azureWebAppSlotSetupParameters.getCommandName())
+        .artifactStreamAttributes(streamAttributes)
+        .workingDirectory(autoCloseableWorkingDirectory.workingDir())
+        .build();
+  }
+
   private AzureAppServicePackageDeploymentContext toAzureAppServicePackageDeploymentContext(
       AzureWebAppSlotSetupParameters slotSetupParameters, AzureWebClientContext azureWebClientContext,
-      File artifactFile, ILogStreamingTaskClient logStreamingTaskClient) {
+      File artifactFile, ArtifactType artifactType, ILogStreamingTaskClient logStreamingTaskClient) {
     Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd =
         getAppSettingsToAdd(slotSetupParameters.getApplicationSettings());
     Map<String, AzureAppServiceConnectionString> connSettingsToAdd =
@@ -209,32 +236,8 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .azureWebClientContext(azureWebClientContext)
         .startupCommand(slotSetupParameters.getStartupCommand())
         .artifactFile(artifactFile)
+        .artifactType(artifactType)
         .steadyStateTimeoutInMin(slotSetupParameters.getTimeoutIntervalInMin())
-        .build();
-  }
-
-  private Map<String, AzureAppServiceApplicationSetting> getAppSettingsToAdd(
-      List<AzureAppServiceApplicationSetting> applicationSettings) {
-    return applicationSettings.stream().collect(
-        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
-  }
-
-  private Map<String, AzureAppServiceConnectionString> getConnSettingsToAdd(
-      List<AzureAppServiceConnectionString> connectionStrings) {
-    return connectionStrings.stream().collect(
-        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
-  }
-
-  public ArtifactDownloaderContext toArtifactDownloaderContext(
-      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, ArtifactStreamAttributes streamAttributes,
-      AutoCloseableWorkingDirectory autoCloseableWorkingDirectory) {
-    return ArtifactDownloaderContext.builder()
-        .accountId(azureWebAppSlotSetupParameters.getAccountId())
-        .activityId(azureWebAppSlotSetupParameters.getActivityId())
-        .appId(azureWebAppSlotSetupParameters.getAppId())
-        .commandName(azureWebAppSlotSetupParameters.getCommandName())
-        .artifactStreamAttributes(streamAttributes)
-        .workingDirectory(autoCloseableWorkingDirectory.workingDir())
         .build();
   }
 }
