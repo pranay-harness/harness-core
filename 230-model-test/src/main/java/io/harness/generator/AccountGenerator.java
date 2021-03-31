@@ -31,6 +31,7 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.beans.security.HarnessUserGroupType;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -311,7 +312,7 @@ public class AccountGenerator {
                                             .memberIds(Sets.newHashSet(user.getUuid()))
                                             .accountIds(Sets.newHashSet(accountId))
                                             .name("harnessUserGroup")
-                                            .groupType("DEFAULT")
+                                            .groupType(HarnessUserGroupType.DEFAULT)
                                             .build();
     harnessUserGroupService.save(harnessUserGroup);
   }
