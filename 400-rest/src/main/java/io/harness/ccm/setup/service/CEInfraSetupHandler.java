@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.CECloudAccountDao;
 
 import software.wings.beans.SettingAttribute;
@@ -15,6 +18,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public abstract class CEInfraSetupHandler {
   @Inject protected CECloudAccountDao ceCloudAccountDao;
 

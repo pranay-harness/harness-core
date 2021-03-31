@@ -50,7 +50,6 @@ import io.harness.migrations.all.AuditViewerPermissionMigration;
 import io.harness.migrations.all.AuthTokenTtlMigration;
 import io.harness.migrations.all.AwsAmiAsgDesiredInstancesMigration;
 import io.harness.migrations.all.AwsConfigEc2IamRoleMigration;
-import io.harness.migrations.all.BudgetsMigration;
 import io.harness.migrations.all.CECloudAccountMigration;
 import io.harness.migrations.all.CVCollectionCronFrequencyMigration;
 import io.harness.migrations.all.CleanUpDatadogCallLogMigration;
@@ -417,7 +416,7 @@ public class MigrationList {
         .add(Pair.of(352, AwsConfigEc2IamRoleMigration.class))
         .add(Pair.of(353, ChangeApiKeyHashFunction.class))
         .add(Pair.of(354, BaseMigration.class))
-        .add(Pair.of(355, BudgetsMigration.class))
+        .add(Pair.of(355, BaseMigration.class))
         .add(Pair.of(356, CECloudAccountMigration.class))
         .build();
   }

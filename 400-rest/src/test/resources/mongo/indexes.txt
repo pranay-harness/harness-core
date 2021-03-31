@@ -92,8 +92,6 @@ barrierInstances {"name": "next", "background": true} {"state": 1, "nextIteratio
 barrierInstances {"name": "search2", "unique": true} {"name": 1, "pipeline.executionId": 1, "pipeline.parallelIndex": 1}
 barrierInstances {"name": "state_1", "background": true} {"state": 1}
 barrierInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-budgets {"name": "accountId_1", "background": true} {"accountId": 1}
-budgets {"name": "alertIteration_1", "background": true} {"alertIteration": 1}
 cache {"name": "accountId_1", "background": true} {"accountId": 1}
 cache {"name": "unique_commutative", "unique": true} {"_id": 1, "contextValue": 1}
 cache {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

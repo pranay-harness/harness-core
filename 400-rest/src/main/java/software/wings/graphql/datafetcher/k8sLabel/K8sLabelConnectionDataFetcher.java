@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.k8sLabel;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
@@ -28,6 +31,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class K8sLabelConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLK8sLabelFilter, QLNoOpSortCriteria, QLK8sLabelConnection> {
   @Inject K8sLabelQueryHelper k8sLabelQueryHelper;
