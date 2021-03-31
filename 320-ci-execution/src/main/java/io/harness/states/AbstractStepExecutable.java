@@ -1,8 +1,10 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
@@ -31,6 +33,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepInfo> {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
 

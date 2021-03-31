@@ -1,7 +1,10 @@
 package io.harness.notification.channeldetails;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class NotificationChannel {
   String accountId;
   List<String> userGroupIds;
+  List<NotificationRequest.UserGroup> userGroups;
   String templateId;
   Map<String, String> templateData;
   Team team;

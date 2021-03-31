@@ -5,6 +5,7 @@ package io.harness.pms.contracts.plan;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/trigger_info.proto";
+import "io/harness/pms/contracts/plan/principal_info.proto";
 import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 
 message ExecutionMetadata {
@@ -15,4 +16,5 @@ message ExecutionMetadata {
   string inputSetYaml = 5;
   string executionUuid = 6;
   string yaml = 7;
+  ExecutionPrincipalInfo principalInfo = 8;
 }

@@ -1,6 +1,6 @@
 package software.wings.features;
 
-import io.harness.ccm.budget.BudgetService;
+import io.harness.ccm.budget.dao.BudgetDao;
 
 import software.wings.features.api.AbstractUsageLimitedCeFeature;
 import software.wings.features.api.ComplianceByLimitingUsage;
@@ -12,13 +12,12 @@ import java.util.Map;
 
 public class CeBudgetFeature extends AbstractUsageLimitedCeFeature implements ComplianceByLimitingUsage {
   public static final String FEATURE_NAME = "CE_BUDGETS";
-  private final BudgetService budgetService;
+  private final BudgetDao budgetDao;
 
   @Inject
-  public CeBudgetFeature(
-      AccountService accountService, FeatureRestrictions featureRestrictions, BudgetService budgetService) {
+  public CeBudgetFeature(AccountService accountService, FeatureRestrictions featureRestrictions, BudgetDao budgetDao) {
     super(accountService, featureRestrictions);
-    this.budgetService = budgetService;
+    this.budgetDao = budgetDao;
   }
 
   @Override
@@ -39,6 +38,6 @@ public class CeBudgetFeature extends AbstractUsageLimitedCeFeature implements Co
 
   @Override
   public int getUsage(String accountId) {
-    return budgetService.getBudgetCount(accountId);
+    return budgetDao.list(accountId).size();
   }
 }

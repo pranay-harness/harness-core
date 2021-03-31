@@ -6,6 +6,8 @@ import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
@@ -19,6 +21,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -31,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class TriggerExecutionHelper {
   private final PMSPipelineService pmsPipelineService;
   private final PipelineExecuteHelper pipelineExecuteHelper;
@@ -82,6 +86,7 @@ public class TriggerExecutionHelper {
         }
       }
       executionMetaDataBuilder.setYaml(pipelineYaml);
+      executionMetaDataBuilder.setPrincipalInfo(PrincipalInfoHelper.getPrincipalInfoFromSecurityContext());
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());

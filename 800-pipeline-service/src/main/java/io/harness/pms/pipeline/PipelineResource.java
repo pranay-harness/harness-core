@@ -1,5 +1,7 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
@@ -7,6 +9,12 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -64,6 +72,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PIPELINE)
 @Api("pipelines")
 @Path("pipelines")
 @Produces({"application/json", "application/yaml"})
@@ -114,11 +123,12 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core.pipeline.view")
   public ResponseDTO<PMSPipelineResponseDTO> getPipelineByIdentifier(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId) {
     log.info("Get pipeline");
 
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);

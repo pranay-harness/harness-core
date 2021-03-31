@@ -33,5 +33,4 @@ public class YAMLFieldNameConstants {
   public final String OUTPUT = "output";
   public final String ENVIRONMENT = "environment";
   public final String PROVISIONER = "provisioner";
-  public final String PIPELINE_INFRASTRUCTURE = "infrastructure";
 }

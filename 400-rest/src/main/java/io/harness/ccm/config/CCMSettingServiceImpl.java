@@ -1,9 +1,12 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 
 import static java.util.Objects.isNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.persistence.HIterator;
 
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class CCMSettingServiceImpl implements CCMSettingService {
   private AccountService accountService;
   private SettingsService settingsService;

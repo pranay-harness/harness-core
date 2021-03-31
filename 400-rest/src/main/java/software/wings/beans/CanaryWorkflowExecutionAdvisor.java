@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.STARTING;
@@ -28,6 +29,9 @@ import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPA
 import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -76,7 +80,9 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rishi on 1/24/17.
  */
+@OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
@@ -833,6 +839,19 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
+    if (isTimeoutFailure(level, failureTypes)) {
+      Optional<FailureStrategy> timeoutStrategy =
+          filteredFailureStrategies.stream()
+              .filter(failureStrategy -> isNotEmpty(failureStrategy.getFailureTypes()))
+              .filter(failureStrategy -> failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR))
+              .findFirst();
+      if (timeoutStrategy.isPresent()) {
+        return timeoutStrategy.get();
+      }
+    } else {
+      filteredFailureStrategies = filterOutExplicitTimeoutStrategies(filteredFailureStrategies);
+    }
+
     Optional<FailureStrategy> rollbackStrategy =
         filteredFailureStrategies.stream()
             .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
@@ -855,6 +874,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     } else {
       return filteredFailureStrategies.get(0);
     }
+  }
+
+  private static List<FailureStrategy> filterOutExplicitTimeoutStrategies(
+      List<FailureStrategy> filteredFailureStrategies) {
+    return filteredFailureStrategies.stream()
+        .filter(failureStrategy
+            -> !(isNotEmpty(failureStrategy.getFailureTypes()) && failureStrategy.getFailureTypes().size() == 1
+                && failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR)))
+        .collect(toList());
+  }
+
+  private static boolean isTimeoutFailure(FailureStrategyLevel level, EnumSet<FailureType> failureTypes) {
+    return level == FailureStrategyLevel.STEP && isNotEmpty(failureTypes)
+        && failureTypes.contains(FailureType.TIMEOUT_ERROR);
   }
 
   private static FailureStrategy getResolveWorkflowLevelFailureStrategy(
