@@ -1,12 +1,9 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.ACR_ACCESS_KEYS_BLANK_VALIDATION_MSG;
-import static io.harness.azure.model.AzureConstants.ACR_USERNAME_BLANK_VALIDATION_MSG;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -34,7 +31,6 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -211,36 +207,6 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
 
     assertThat(slotSetupResponse.getPreDeploymentData()).isNotNull();
     assertThat(slotSetupResponse.getPreDeploymentData()).isEqualToComparingFieldByField(appServicePreDeploymentData);
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
-  public void testExecuteTaskInternalACRFailure() {
-    AzureConfig azureConfig = buildAzureConfig();
-    AzureAppServiceTaskParameters setupParameters = buildAzureAppServiceTaskParameters(true);
-    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(true);
-
-    RegistryCredentials registryCredentials = Mockito.mock(RegistryCredentials.class);
-    doReturn(registryCredentials)
-        .when(azureContainerRegistryService)
-        .getContainerRegistryCredentials(Mockito.eq(azureConfig), any());
-    doReturn("").when(registryCredentials).username();
-
-    assertThatThrownBy(()
-                           -> azureWebAppSlotSetupTaskHandler.executeTaskInternal(
-                               setupParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .matches(ex -> ex.getMessage().equals(ACR_USERNAME_BLANK_VALIDATION_MSG));
-
-    doReturn("testUser").when(registryCredentials).username();
-    Map<AccessKeyType, String> accessKeyTypeStringMap = new HashMap<>();
-    doReturn(accessKeyTypeStringMap).when(registryCredentials).accessKeys();
-    assertThatThrownBy(()
-                           -> azureWebAppSlotSetupTaskHandler.executeTaskInternal(
-                               setupParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .matches(ex -> ex.getMessage().equals(ACR_ACCESS_KEYS_BLANK_VALIDATION_MSG));
   }
 
   private AzureAppServicePreDeploymentData buildAzureAppServicePreDeploymentData() {
