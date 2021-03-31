@@ -5,7 +5,6 @@ import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
-import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toResponseDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static java.util.stream.Collectors.toList;
@@ -80,6 +79,8 @@ public class RoleAssignmentResource {
   ScopeService scopeService;
   RoleService roleService;
   ResourceGroupService resourceGroupService;
+  RoleAssignmentDTOMapper roleAssignmentDTOMapper;
+  RoleDTOMapper roleDTOMapper;
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")
@@ -88,7 +89,7 @@ public class RoleAssignmentResource {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     PageResponse<RoleAssignment> pageResponse =
         roleAssignmentService.list(pageRequest, RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier).build());
-    return ResponseDTO.newResponse(pageResponse.map(RoleAssignmentDTOMapper::toResponseDTO));
+    return ResponseDTO.newResponse(pageResponse.map(roleAssignmentDTOMapper::toResponseDTO));
   }
 
   @POST
@@ -99,7 +100,7 @@ public class RoleAssignmentResource {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     PageResponse<RoleAssignment> pageResponse =
         roleAssignmentService.list(pageRequest, fromDTO(scopeIdentifier, roleAssignmentFilter));
-    return ResponseDTO.newResponse(pageResponse.map(RoleAssignmentDTOMapper::toResponseDTO));
+    return ResponseDTO.newResponse(pageResponse.map(roleAssignmentDTOMapper::toResponseDTO));
   }
 
   @POST
@@ -107,32 +108,32 @@ public class RoleAssignmentResource {
   @ApiOperation(value = "Get Role Assignments Aggregate", nickname = "getRoleAssignmentsAggregate")
   public ResponseDTO<RoleAssignmentAggregateResponseDTO> getAggregated(
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     PageRequest pageRequest = PageRequest.builder().pageSize(1000).build();
     List<RoleAssignment> roleAssignments =
-        roleAssignmentService.list(pageRequest, fromDTO(scopeIdentifier, roleAssignmentFilter)).getContent();
+        roleAssignmentService.list(pageRequest, fromDTO(scope.toString(), roleAssignmentFilter)).getContent();
     List<String> roleIdentifiers =
         roleAssignments.stream().map(RoleAssignment::getRoleIdentifier).distinct().collect(toList());
     RoleFilter roleFilter = RoleFilter.builder()
                                 .identifierFilter(new HashSet<>(roleIdentifiers))
-                                .scopeIdentifier(scopeIdentifier)
+                                .scopeIdentifier(scope.toString())
                                 .managedFilter(NO_FILTER)
                                 .build();
     List<RoleResponseDTO> roleResponseDTOs = roleService.list(pageRequest, roleFilter)
                                                  .getContent()
                                                  .stream()
-                                                 .map(RoleDTOMapper::toResponseDTO)
+                                                 .map(roleDTOMapper::toResponseDTO)
                                                  .collect(toList());
     List<String> resourceGroupIdentifiers =
         roleAssignments.stream().map(RoleAssignment::getResourceGroupIdentifier).distinct().collect(toList());
-    List<ResourceGroupDTO> resourceGroupDTOs = resourceGroupService.list(resourceGroupIdentifiers, scopeIdentifier)
+    List<ResourceGroupDTO> resourceGroupDTOs = resourceGroupService.list(resourceGroupIdentifiers, scope.toString())
                                                    .stream()
                                                    .map(ResourceGroupDTOMapper::toDTO)
                                                    .collect(toList());
     List<RoleAssignmentDTO> roleAssignmentDTOs =
         roleAssignments.stream().map(RoleAssignmentDTOMapper::toDTO).collect(toList());
-    return ResponseDTO.newResponse(RoleAssignmentAggregateResponseDTOMapper.toDTO(
-        roleAssignmentDTOs, scopeIdentifier, roleResponseDTOs, resourceGroupDTOs));
+    return ResponseDTO.newResponse(
+        RoleAssignmentAggregateResponseDTOMapper.toDTO(roleAssignmentDTOs, scope, roleResponseDTOs, resourceGroupDTOs));
   }
 
   @POST
@@ -145,7 +146,7 @@ public class RoleAssignmentResource {
       harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
     }
     RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(toResponseDTO(createdRoleAssignment));
+    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(createdRoleAssignment));
   }
 
   @PUT
@@ -158,7 +159,7 @@ public class RoleAssignmentResource {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
     RoleAssignment updatedRoleAssignment = roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(toResponseDTO(updatedRoleAssignment));
+    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(updatedRoleAssignment));
   }
 
   /**
@@ -190,7 +191,7 @@ public class RoleAssignmentResource {
     }
     return ResponseDTO.newResponse(roleAssignmentService.createMulti(filteredRoleAssignments)
                                        .stream()
-                                       .map(RoleAssignmentDTOMapper::toResponseDTO)
+                                       .map(roleAssignmentDTOMapper::toResponseDTO)
                                        .collect(toList()));
   }
 
@@ -214,6 +215,6 @@ public class RoleAssignmentResource {
         roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role Assignment not found with the given scope and identifier");
         });
-    return ResponseDTO.newResponse(toResponseDTO(deletedRoleAssignment));
+    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment));
   }
 }
