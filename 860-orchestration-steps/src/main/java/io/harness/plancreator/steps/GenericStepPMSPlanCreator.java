@@ -463,7 +463,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     rollbackInfoBuilder.nodeTypeToUuid(
         RollbackNodeType.STEP_GROUP.name(), getStepGroupRollbackStepsNodeId(currentField));
     if (PlanCreatorUtils.checkIfStageRollbackStepsPresent(executionField)) {
-      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(), rollbackStepsNodeId);
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
+          executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
     } else {
       rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(), null);
     }
