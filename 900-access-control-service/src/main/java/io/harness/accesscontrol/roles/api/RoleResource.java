@@ -3,7 +3,7 @@ package io.harness.accesscontrol.roles.api;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
-import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
@@ -12,6 +12,7 @@ import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -39,6 +40,7 @@ import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
+@OwnedBy(PL)
 @Api("/roles")
 @Path("/roles")
 @Produces({"application/json", "application/yaml"})
@@ -51,11 +53,13 @@ import retrofit2.http.Body;
 public class RoleResource {
   private final RoleService roleService;
   private final ScopeService scopeService;
+  private final RoleDTOMapper roleDTOMapper;
 
   @Inject
-  public RoleResource(RoleService roleService, ScopeService scopeService) {
+  public RoleResource(RoleService roleService, ScopeService scopeService, RoleDTOMapper roleDTOMapper) {
     this.roleService = roleService;
     this.scopeService = scopeService;
+    this.roleDTOMapper = roleDTOMapper;
   }
 
   @GET
@@ -65,7 +69,7 @@ public class RoleResource {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     RoleFilter roleFilter = RoleFilter.builder().scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
     PageResponse<Role> pageResponse = roleService.list(pageRequest, roleFilter);
-    return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toResponseDTO));
+    return ResponseDTO.newResponse(pageResponse.map(roleDTOMapper::toResponseDTO));
   }
 
   @GET
@@ -74,7 +78,7 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toResponseDTO(
+    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(
         roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
           throw new InvalidRequestException("Role not found with the given scope and identifier");
         })));
@@ -89,7 +93,7 @@ public class RoleResource {
     if (!identifier.equals(roleDTO.getIdentifier())) {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
     }
-    return ResponseDTO.newResponse(toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
+    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 
   @POST
@@ -99,7 +103,7 @@ public class RoleResource {
     if (isEmpty(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
     }
-    return ResponseDTO.newResponse(toResponseDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));
+    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));
   }
 
   @DELETE
@@ -108,6 +112,6 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> delete(
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toResponseDTO(roleService.delete(identifier, scopeIdentifier)));
+    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleService.delete(identifier, scopeIdentifier)));
   }
 }
