@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AmazonServiceExceptionHandler implements ExceptionHandler {
   @Override
   public WingsException handleException(Exception exception) {
-    // TODO his is just a sample of handler, doesn't cover exhaustive list of AWS service exceptions
+    // TODO this is just a sample handler, doesn't cover exhaustive list of AWS exceptions
 
     AmazonServiceException amazonServiceException = (AmazonServiceException) exception;
     if (amazonServiceException instanceof AmazonCodeDeployException) {

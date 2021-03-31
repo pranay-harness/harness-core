@@ -15,6 +15,8 @@ import com.amazonaws.AmazonClientException;
 public class AmazonClientExceptionHandler implements ExceptionHandler {
   @Override
   public WingsException handleException(Exception exception) {
+    // TODO this is just a sample handler, doesn't cover exhaustive list of AWS exceptions
+
     AmazonClientException amazonClientException = (AmazonClientException) exception;
     //        log.error("AWS API Client call exception: {}", amazonClientException.getMessage());
     String errorMessage = amazonClientException.getMessage();
