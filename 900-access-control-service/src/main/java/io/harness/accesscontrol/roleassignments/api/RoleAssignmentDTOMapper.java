@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.accesscontrol.common.filter.ManagedFilter.buildFromSet;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.common.filter.ManagedFilter;
@@ -11,16 +12,30 @@ import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.harness.ScopeDTOMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.utils.CryptoUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
+@OwnedBy(PL)
+@Singleton
 public class RoleAssignmentDTOMapper {
-  public static RoleAssignmentResponseDTO toResponseDTO(RoleAssignment object) {
+  private final ScopeService scopeService;
+
+  @Inject
+  public RoleAssignmentDTOMapper(ScopeService scopeService) {
+    this.scopeService = scopeService;
+  }
+
+  public RoleAssignmentResponseDTO toResponseDTO(RoleAssignment object) {
+    Scope scope = scopeService.buildScopeFromScopeIdentifier(object.getScopeIdentifier());
     return RoleAssignmentResponseDTO.builder()
         .roleAssignment(RoleAssignmentDTO.builder()
                             .identifier(object.getIdentifier())
@@ -32,7 +47,7 @@ public class RoleAssignmentDTOMapper {
                             .roleIdentifier(object.getRoleIdentifier())
                             .disabled(object.isDisabled())
                             .build())
-        .scope(object.getScopeIdentifier())
+        .scope(ScopeDTOMapper.toDTO(scope))
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())

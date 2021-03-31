@@ -1,6 +1,8 @@
 package io.harness.pms.notification;
 
 import io.harness.PipelineServiceConfiguration;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
@@ -30,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NotificationHelper {
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
@@ -60,7 +63,8 @@ public class NotificationHelper {
       NodeExecutionProto nodeExecutionProto) {
     String identifier = nodeExecutionProto != null ? nodeExecutionProto.getNode().getIdentifier() : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
-
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     String yaml = ambiance.getMetadata().getYaml();
     if (EmptyPredicate.isEmpty(yaml)) {
       log.error("Empty yaml found in executionMetaData");
@@ -78,12 +82,13 @@ public class NotificationHelper {
     }
 
     sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecutionProto, identifier));
+        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecutionProto, identifier), orgIdentifier,
+        projectIdentifier);
   }
 
   private void sendNotificationInternal(List<NotificationRules> notificationRulesList,
       io.harness.notification.PipelineEventType pipelineEventType, String identifier, String accountIdentifier,
-      String notificationContent) {
+      String notificationContent, String orgIdentifier, String projectIdentifier) {
     for (NotificationRules notificationRules : notificationRulesList) {
       if (!notificationRules.isEnabled()) {
         continue;
@@ -94,7 +99,8 @@ public class NotificationHelper {
         NotificationChannelWrapper wrapper = notificationRules.getNotificationChannelWrapper();
         String templateId = getNotificationTemplate(pipelineEventType.getLevel(), wrapper.getType());
         NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(accountIdentifier,
-            templateId, ImmutableMap.of("message", notificationContent, "event_name", pipelineEventType.toString()));
+            orgIdentifier, projectIdentifier, templateId,
+            ImmutableMap.of("message", notificationContent, "event_name", pipelineEventType.toString()));
         notificationClient.sendNotificationAsync(channel);
       }
     }

@@ -1,7 +1,7 @@
 package io.harness.cdng.k8s;
 
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("k8sBlueGreenOutcome")
 @JsonTypeName("k8sBlueGreenOutcome")
-public class K8sBlueGreenOutcome implements Outcome, SweepingOutput {
+public class K8sBlueGreenOutcome implements Outcome, ExecutionSweepingOutput {
   private int releaseNumber;
   private String releaseName;
   private String primaryServiceName;

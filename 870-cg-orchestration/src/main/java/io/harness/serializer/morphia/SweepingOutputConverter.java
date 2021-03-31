@@ -1,6 +1,6 @@
-package io.harness.serializer.morphia.converters;
+package io.harness.serializer.morphia;
 
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.beans.SweepingOutput;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;

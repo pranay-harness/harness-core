@@ -7,9 +7,9 @@ import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;

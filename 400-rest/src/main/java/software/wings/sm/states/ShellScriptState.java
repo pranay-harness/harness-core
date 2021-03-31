@@ -17,6 +17,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -44,7 +45,6 @@ import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.KerberosConfig;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;

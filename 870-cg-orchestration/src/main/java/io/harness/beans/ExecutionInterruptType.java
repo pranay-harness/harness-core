@@ -1,6 +1,4 @@
-package io.harness.interrupts;
-
-import java.util.EnumSet;
+package io.harness.beans;
 
 /**
  * Describes different possible events for state.
@@ -85,13 +83,5 @@ public enum ExecutionInterruptType {
    */
   public String getDescription() {
     return description;
-  }
-
-  // Not considering ABORT_ALL as its handled straight away
-  private static final EnumSet<ExecutionInterruptType> PLAN_LEVEL_INTERRUPTS =
-      EnumSet.of(PAUSE_ALL, RESUME_ALL, ROLLBACK);
-
-  public static EnumSet<ExecutionInterruptType> planLevelInterrupts() {
-    return PLAN_LEVEL_INTERRUPTS;
   }
 }

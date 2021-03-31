@@ -229,6 +229,7 @@
     "Condition": {
       "type": "object",
       "required": [
+        "key",
         "op",
         "value"
       ],
@@ -241,7 +242,6 @@
           "enum": [
             "equals",
             "not equals",
-            "contains",
             "in",
             "not in"
           ]
@@ -1304,6 +1304,7 @@
       "type": "object",
       "required": [
         "identifier",
+        "name",
         "type"
       ],
       "properties": {

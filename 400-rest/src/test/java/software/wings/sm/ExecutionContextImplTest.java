@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.FeatureName;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
@@ -56,7 +57,6 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

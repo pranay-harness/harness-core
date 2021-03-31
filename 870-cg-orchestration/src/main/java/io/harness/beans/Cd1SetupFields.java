@@ -1,4 +1,4 @@
-package io.harness.tasks;
+package io.harness.beans;
 
 import lombok.experimental.UtilityClass;
 

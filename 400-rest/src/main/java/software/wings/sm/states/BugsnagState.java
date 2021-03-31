@@ -7,10 +7,10 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;

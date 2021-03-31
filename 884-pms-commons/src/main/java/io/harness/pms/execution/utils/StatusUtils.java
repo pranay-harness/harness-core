@@ -19,6 +19,8 @@ import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
 import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.Status;
 
 import java.util.Collections;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StatusUtils {
   // Status Groups
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
@@ -44,8 +47,14 @@ public class StatusUtils {
   private final EnumSet<Status> FLOWING_STATUSES =
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
+  private final EnumSet<Status> ACTIVE_STATUSES = EnumSet.of(
+      RUNNING, INTERVENTION_WAITING, APPROVAL_WAITING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
+
+  private final EnumSet<Status> UNPAUSABLE_CHILD_STATUSES = EnumSet.of(
+      RUNNING, INTERVENTION_WAITING, APPROVAL_WAITING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
+
   private final EnumSet<Status> FINAL_STATUSES =
-      EnumSet.of(SKIPPED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED);
+      EnumSet.of(SKIPPED, IGNORE_FAILED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED);
 
   private final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED);
 
@@ -75,6 +84,14 @@ public class StatusUtils {
 
   public EnumSet<Status> finalStatuses() {
     return FINAL_STATUSES;
+  }
+
+  public EnumSet<Status> unpausableChildStatuses() {
+    return UNPAUSABLE_CHILD_STATUSES;
+  }
+
+  public EnumSet<Status> activeStatuses() {
+    return ACTIVE_STATUSES;
   }
 
   public EnumSet<Status> nodeAllowedStartSet(Status status) {

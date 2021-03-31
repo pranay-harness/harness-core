@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
+import static io.harness.beans.ExecutionInterruptType.RETRY;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 

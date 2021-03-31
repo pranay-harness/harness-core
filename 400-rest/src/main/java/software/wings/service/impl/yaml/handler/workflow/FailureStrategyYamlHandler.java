@@ -1,22 +1,22 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
-import static io.harness.interrupts.ExecutionInterruptType.IGNORE;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
-import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
+import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.beans.ExecutionInterruptType.IGNORE;
+import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionInterruptType;
+import io.harness.beans.RepairActionCode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.FailureType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
 
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;

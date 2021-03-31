@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
@@ -34,7 +35,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.HttpStateExecutionData;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
