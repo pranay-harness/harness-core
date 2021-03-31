@@ -21,7 +21,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
@@ -32,21 +31,21 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.JIRA_APPROVAL)
 @TypeAlias("jiraApprovalStepInfo")
 public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueId;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
   @NotNull CriteriaSpecWrapper rejectionCriteria;
 
   @Builder(builderMethodName = "infoBuilder")
   public JiraApprovalStepInfo(String name, String identifier, ParameterField<String> approvalMessage,
       ParameterField<Boolean> includePipelineExecutionHistory, ParameterField<String> connectorRef,
-      ParameterField<String> projectKey, ParameterField<String> issueId, CriteriaSpecWrapper approvalCriteria,
+      ParameterField<String> projectKey, ParameterField<String> issueKey, CriteriaSpecWrapper approvalCriteria,
       CriteriaSpecWrapper rejectionCriteria) {
     super(name, identifier, approvalMessage, includePipelineExecutionHistory);
     this.connectorRef = connectorRef;
     this.projectKey = projectKey;
-    this.issueId = issueId;
+    this.issueKey = issueKey;
     this.approvalCriteria = approvalCriteria;
     this.rejectionCriteria = rejectionCriteria;
   }
@@ -66,7 +65,7 @@ public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
     return JiraApprovalStepParameters.infoBuilder()
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
-        .issueId(issueId)
+        .issueKey(issueKey)
         .name(getName())
         .connectorRef(connectorRef)
         .approvalMessage(getApprovalMessage())

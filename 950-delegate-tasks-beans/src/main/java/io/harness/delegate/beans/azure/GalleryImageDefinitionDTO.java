@@ -12,6 +12,8 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ImageDefinition")
 public class GalleryImageDefinitionDTO {
+  private String subscriptionId;
+  private String resourceGroupName;
   private String galleryName;
   private String definitionName;
   private String version;

@@ -10,16 +10,11 @@ import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
 import io.harness.gitsync.gittoharness.NoOpChangeSetInterceptorServiceImpl;
 import io.harness.gitsync.persistance.EntityKeySource;
 import io.harness.gitsync.persistance.EntityLookupHelper;
-import io.harness.gitsync.persistance.GitAwarePersistence;
-import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
-import io.harness.gitsync.persistance.GitAwareRepository;
-import io.harness.gitsync.persistance.GitAwareRepositoryImpl;
 import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
 import io.harness.gitsync.sdk.GitSyncSdkGrpcServerModule;
 import io.harness.ng.core.event.MessageListener;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class GitSyncSdkModule extends AbstractModule {
@@ -37,8 +32,8 @@ public class GitSyncSdkModule extends AbstractModule {
     install(GitSyncGrpcClientModule.getInstance());
     install(GitSyncSdkGrpcServerModule.getInstance());
     install(SCMJavaClientModule.getInstance());
-    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
-    bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>() {});
+    //    bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>()
+    //    {});
     bind(GitToHarnessProcessor.class).to(GitToHarnessProcessorImpl.class);
     bind(ChangeSetInterceptorService.class).to(NoOpChangeSetInterceptorServiceImpl.class);
     bind(EntityKeySource.class).to(EntityLookupHelper.class);

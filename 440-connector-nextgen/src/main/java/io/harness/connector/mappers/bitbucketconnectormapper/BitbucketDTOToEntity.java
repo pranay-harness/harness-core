@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.bitbucketconnectormapper;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuth;
@@ -24,12 +26,13 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
+@OwnedBy(HarnessTeam.DX)
 public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
     BitbucketAuthentication bitbucketAuthentication =
-        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType);
+        buildAuthenticationDetails(gitAuthType, configDTO.getAuthentication().getCredentials());
     boolean hasApiAccess = hasApiAccess(configDTO.getApiAccess());
     BitbucketApiAccessType apiAccessType = null;
     BitbucketUsernamePasswordApiAccess bitbucketApiAccess = null;
@@ -47,8 +50,8 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
         .build();
   }
 
-  private BitbucketAuthentication buildAuthenticationDetails(
-      BitbucketCredentialsDTO credentialsDTO, GitAuthType gitAuthType) {
+  public static BitbucketAuthentication buildAuthenticationDetails(
+      GitAuthType gitAuthType, BitbucketCredentialsDTO credentialsDTO) {
     switch (gitAuthType) {
       case SSH:
         final BitbucketSshCredentialsDTO sshCredentialsDTO = (BitbucketSshCredentialsDTO) credentialsDTO;
@@ -64,7 +67,7 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
     }
   }
 
-  private BitbucketHttpAuth getHttpAuth(
+  private static BitbucketHttpAuth getHttpAuth(
       BitbucketHttpAuthenticationType type, BitbucketHttpCredentialsDTO httpCredentialsDTO) {
     switch (type) {
       case USERNAME_AND_PASSWORD:
@@ -80,7 +83,7 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
         throw new UnknownEnumTypeException("Bitbucket Http Auth Type", String.valueOf(type.getDisplayName()));
     }
   }
-  private String getStringSecretForNullableSecret(SecretRefData secretRefData) {
+  private static String getStringSecretForNullableSecret(SecretRefData secretRefData) {
     return SecretRefHelper.getSecretConfigString(secretRefData);
   }
 

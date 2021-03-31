@@ -18,7 +18,8 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
-import io.harness.accesscontrol.commons.events.EventListenerService;
+import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
+import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.annotations.dev.OwnedBy;
@@ -36,7 +37,6 @@ import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -96,8 +96,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-
-    bootstrap.getObjectMapper().configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
   }
 
   @Override
@@ -151,8 +149,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   private void registerManagedBeans(
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.getEventsConfig().isEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(EventListenerService.class));
+      environment.lifecycle().manage(injector.getInstance(EntityCrudEventListenerService.class));
     }
+    environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {

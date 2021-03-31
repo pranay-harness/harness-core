@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.cloudProvider;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.labelsKey;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.labelsValue;
@@ -9,6 +10,7 @@ import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.tagsValue;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
@@ -40,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class CloudBillingHelper {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BillingDataPipelineRecordDao billingDataPipelineRecordDao;

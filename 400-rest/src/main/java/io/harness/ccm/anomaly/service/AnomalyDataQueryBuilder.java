@@ -1,6 +1,9 @@
 package io.harness.ccm.anomaly.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesFilter;
@@ -46,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class AnomalyDataQueryBuilder {
   private static void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));

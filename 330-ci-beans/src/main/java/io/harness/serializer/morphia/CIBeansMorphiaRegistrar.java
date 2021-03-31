@@ -1,5 +1,7 @@
 package io.harness.serializer.morphia;
 
+import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
+import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
@@ -24,6 +26,8 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GitVariables.class);
     set.add(ContextElement.class);
     set.add(PodCleanupDetails.class);
+    set.add(ContainerPortDetails.class);
+    set.add(LiteEnginePodDetailsOutcome.class);
   }
 
   @Override

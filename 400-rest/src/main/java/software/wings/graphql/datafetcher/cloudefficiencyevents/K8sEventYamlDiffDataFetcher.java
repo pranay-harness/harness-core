@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sYaml;
@@ -17,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class K8sEventYamlDiffDataFetcher
     extends AbstractObjectDataFetcher<QLK8sEventYamlDiff, QLK8sEventYamlDiffQueryParameters> {
   @Inject private K8sYamlDao k8sYamlDao;

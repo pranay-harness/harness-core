@@ -9,6 +9,8 @@ import (
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -27,7 +29,6 @@ var (
 
 const (
 	cgSchemaPath = "callgraph.avsc"
-	cgFile = "callgraph.json"
 )
 
 // handler is used to implement EngineServer
@@ -191,10 +192,14 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if cgDir == "" {
 		return res, fmt.Errorf("cgDir not present in request")
 	}
-	cgPath := cgDir + cgFile
+	files, err := getCgFiles(cgDir)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to fetch files inside the directory")
+	}
 	fs := fs.NewOSFileSystem(h.log)
 	parser := ti.NewCallGraphParser(h.log, fs)
-	cg, err := parser.Parse(cgPath)
+	cg, err := parser.Parse(cgDir, files)
+	h.log.Infow(fmt.Sprintf("size of nodes parsed is:%d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
 	if err != nil {
 		return res, errors.Wrap(err, "failed to parse callgraph directory")
 	}
@@ -236,4 +241,24 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
 	return res, nil
+}
+
+// getCgFiles return list of cg files in given directory
+func getCgFiles(dir string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir+"/", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// ignore any other file apart from json extension
+		if filepath.Ext(info.Name()) != ".json" {
+			return nil
+		}
+		files = append(files, info.Name())
+		return nil
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	return files, nil
 }

@@ -6,6 +6,8 @@ import static java.lang.System.currentTimeMillis;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
 import io.harness.exception.FailureType;
@@ -31,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
   @Inject private MongoTemplate persistence;
   @Inject private KryoSerializer kryoSerializer;
@@ -59,7 +62,8 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
             BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build());
 
-        if (lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+        if (lockedAsyncTaskResponse.getHoldUntil() == null
+            || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
           responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
           if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
             deleteProcessedResponses(responsesToBeDeleted);

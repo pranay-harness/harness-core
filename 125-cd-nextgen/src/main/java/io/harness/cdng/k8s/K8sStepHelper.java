@@ -13,6 +13,8 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -121,10 +123,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(HarnessTeam.CDP)
 @Singleton
 public class K8sStepHelper {
   private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
@@ -684,8 +688,9 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
-      K8sStepParameters k8sStepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
+      K8sStepParameters k8sStepParameters, PassThroughData passThroughData,
+      Supplier<ResponseData> responseDataSupplier) {
+    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataSupplier.get();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
       GitFetchResponsePassThroughData gitFetchResponsePassThroughData =

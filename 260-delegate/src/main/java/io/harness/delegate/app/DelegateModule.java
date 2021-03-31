@@ -1,6 +1,9 @@
 package io.harness.delegate.app;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
@@ -122,6 +125,7 @@ import io.harness.delegate.task.gitapi.GitApiTask;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
+import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
@@ -525,6 +529,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(DEL)
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
@@ -1320,6 +1325,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NG_SSH_VALIDATION).toInstance(SSHConfigValidationDelegateTask.class);
     mapBinder.addBinding(TaskType.DOCKER_CONNECTIVITY_TEST_TASK).toInstance(DockerTestConnectionDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_AWS_TASK).toInstance(AwsDelegateTask.class);
+    mapBinder.addBinding(TaskType.JIRA_CONNECTIVITY_TASK_NG).toInstance(JiraTestConnectionTaskNG.class);
     mapBinder.addBinding(TaskType.JIRA_TASK_NG).toInstance(JiraTaskNG.class);
     mapBinder.addBinding(TaskType.BUILD_STATUS).toInstance(CIBuildStatusPushTask.class);
     mapBinder.addBinding(TaskType.GIT_API_TASK).toInstance(GitApiTask.class);

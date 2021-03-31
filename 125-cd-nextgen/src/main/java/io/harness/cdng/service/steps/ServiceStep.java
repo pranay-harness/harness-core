@@ -11,6 +11,8 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -80,6 +82,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
@@ -87,6 +90,7 @@ import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDP)
 @Slf4j
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
@@ -155,10 +159,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, ServiceStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
     NGManagerLogCallback ngManagerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
-    DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
+    DelegateResponseData notifyResponseData = (DelegateResponseData) responseSupplier.get();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     int currentIndex = serviceStepPassThroughData.getCurrentIndex();
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
@@ -192,14 +196,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @SneakyThrows
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
     long startTime = System.currentTimeMillis();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     NGManagerLogCallback managerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
-    if (!isEmpty(responseDataMap)) {
+    ResponseData data = responseDataSupplier.get();
+    if (data != null) {
       // Artifact task executed
-      DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
+      DelegateResponseData notifyResponseData = (DelegateResponseData) data;
       int currentIndex = serviceStepPassThroughData.getCurrentIndex();
       List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
           serviceStepPassThroughData.getArtifactsWithCorrespondingOverrides();

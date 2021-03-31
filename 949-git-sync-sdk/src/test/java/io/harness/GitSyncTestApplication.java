@@ -3,10 +3,13 @@ package io.harness;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
+import io.harness.beans.SampleBean;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration.DeployMode;
 import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.SampleBeanEntityGitPersistenceHelperServiceImpl;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.maintenance.MaintenanceController;
 
@@ -22,6 +25,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -64,6 +68,17 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     List<Module> modules = new ArrayList<>();
     modules.add(new GitSyncTestModule(config));
     final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+    Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(SampleBean.class)
+                                          .entityClass(SampleBean.class)
+                                          .entityHelperClass(SampleBeanEntityGitPersistenceHelperServiceImpl.class)
+                                          .build());
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(SampleBean.class)
+                                          .entityClass(SampleBean.class)
+                                          .entityHelperClass(SampleBeanEntityGitPersistenceHelperServiceImpl.class)
+                                          .build());
     final GitSyncSdkConfiguration gitSyncSdkConfiguration =
         GitSyncSdkConfiguration.builder()
             .gitSyncSortOrder(sortOrder)
@@ -74,7 +89,9 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
             .scmConnectionConfig(config.getScmConnectionConfig())
             .eventsRedisConfig(config.getRedisConfig())
             .serviceHeader(AuthorizationServiceHeader.PIPELINE_SERVICE)
+            .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
             .build();
+
     modules.add(new AbstractGitSyncSdkModule() {
       @Override
       public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {

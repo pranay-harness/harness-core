@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class EventsDataQueryBuilder {
   private CEEventsTableSchema schema = new CEEventsTableSchema();
   private static final String absoluteTemplate = "ABS(%s)";

@@ -37,9 +37,11 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
+import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
+import io.harness.pms.jira.JiraTaskHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
@@ -52,6 +54,8 @@ import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.pms.rbac.validator.PipelineRbacService;
+import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -63,6 +67,8 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
+import io.harness.steps.jira.JiraTaskHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.yaml.YamlSdkModule;
@@ -179,6 +185,7 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PipelineRbacService.class).to(PipelineRbacServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
@@ -201,6 +208,8 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
+    bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
+    bind(JiraTaskHelperService.class).to(JiraTaskHelperServiceImpl.class);
   }
 
   @Provides
