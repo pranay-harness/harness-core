@@ -12,17 +12,18 @@ import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -33,16 +34,27 @@ public class ACLServiceImpl implements ACLService {
   private final AccessControlPreferenceService accessControlPreferenceService;
 
   private String validateAndGetAccountIdentifierOrThrow(List<PermissionCheckDTO> permissionCheckDTOList) {
-    Map<String, List<ResourceScope>> accountToPermissionsMap =
+    Set<String> accountIdentifiersWithoutResourceScope =
+        permissionCheckDTOList.stream()
+            .filter(
+                x -> x.getResourceScope() == null || StringUtils.isEmpty(x.getResourceScope().getAccountIdentifier()))
+            .map(PermissionCheckDTO::getResourceIdentifier)
+            .collect(Collectors.toSet());
+
+    Set<String> accountIdentifiersWithResourceScope =
         permissionCheckDTOList.stream()
             .map(PermissionCheckDTO::getResourceScope)
-            .collect(Collectors.groupingBy(ResourceScope::getAccountIdentifier));
-    Set<String> accountIdentifiers = accountToPermissionsMap.keySet();
-    if (accountIdentifiers.size() > 1) {
-      throw new AccessDeniedException(
-          "Checking permissions for multiple accounts in a single API call is not allowed", USER);
+            .filter(x -> x != null && !StringUtils.isEmpty(x.getAccountIdentifier()))
+            .collect(Collectors.groupingBy(ResourceScope::getAccountIdentifier))
+            .keySet();
+
+    Set<String> union = Sets.union(accountIdentifiersWithResourceScope, accountIdentifiersWithoutResourceScope);
+
+    if (union.size() != 1) {
+      throw new InvalidRequestException(
+          "Checking permissions for multiple/zero account(s) in an API call is not allowed", USER);
     }
-    return accountIdentifiers.iterator().next();
+    return union.iterator().next();
   }
 
   private AccessControlDTO getAccessControlDTO(PermissionCheckDTO permissionCheckDTO, boolean permitted) {

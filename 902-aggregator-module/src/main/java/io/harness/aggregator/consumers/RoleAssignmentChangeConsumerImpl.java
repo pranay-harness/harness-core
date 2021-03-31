@@ -42,7 +42,8 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   @Inject private ScopeService scopeService;
   private static final String DELIMITER = "/";
 
-  private List<ACL> getACLs(RoleAssignmentDBO roleAssignmentDBO, String permission, String resourceSelector) {
+  private List<ACL> getACLs(
+      RoleAssignmentDBO roleAssignmentDBO, String permission, String resourceSelector, String scopeIdentifier) {
     String userGroupIdentifier = null;
     Set<String> principals = new HashSet<>();
     if (USER_GROUP.equals(roleAssignmentDBO.getPrincipalType())) {
@@ -70,8 +71,8 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
                    .resourceSelector(resourceSelector)
                    .principalType(principalType)
                    .principalIdentifier(principal)
-                   .aclQueryString(ACL.getAclQueryString(
-                       roleAssignmentDBO.getScopeIdentifier(), resourceSelector, principalType, principal, permission))
+                   .aclQueryString(
+                       ACL.getAclQueryString(scopeIdentifier, resourceSelector, principalType, principal, permission))
                    .enabled(!roleAssignmentDBO.isDisabled())
                    .build())
         .collect(Collectors.toList());
@@ -128,10 +129,12 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       if (resourceGroup.isFullScopeSelected()) {
         Scope scope = scopeService.buildScopeFromScopeIdentifier(resourceGroup.getScopeIdentifier());
         acls.addAll(getACLs(roleAssignmentDBO, permission,
-            getResourceSelector(scope.getLevel().getResourceType(), scope.getInstanceId())));
+            getResourceSelector(scope.getLevel().getResourceType(), scope.getInstanceId()),
+            Optional.ofNullable(scope.getParentScope()).map(Scope::toString).orElse("")));
       } else {
-        resourceGroup.getResourceSelectors().forEach(
-            resourceSelector -> acls.addAll(getACLs(roleAssignmentDBO, permission, resourceSelector)));
+        resourceGroup.getResourceSelectors().forEach(resourceSelector
+            -> acls.addAll(
+                getACLs(roleAssignmentDBO, permission, resourceSelector, roleAssignmentDBO.getScopeIdentifier())));
       }
     });
 
