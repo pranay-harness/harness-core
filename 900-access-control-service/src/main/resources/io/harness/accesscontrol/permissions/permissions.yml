@@ -84,7 +84,14 @@ permissions:
       - organization
       - project
   - identifier: core_connector_edit
-    name: Edit or Delete a Connector
+    name: Edit a Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_delete
+    name: Delete a Connector
     status: ACTIVE
     allowedScopeLevels:
       - account

@@ -208,9 +208,9 @@ public class NextGenModule extends AbstractModule {
     final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
         DelegateCallback.newBuilder()
             .setMongoDatabase(MongoDatabase.newBuilder()
-                .setCollectionNamePrefix("ngManager")
-                .setConnection(appConfig.getMongoConfig().getUri())
-                .build())
+                                  .setCollectionNamePrefix("ngManager")
+                                  .setConnection(appConfig.getMongoConfig().getUri())
+                                  .build())
             .build());
     log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
     return delegateCallbackToken;
