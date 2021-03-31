@@ -2,11 +2,12 @@ package software.wings.graphql.datafetcher.budget;
 
 import static software.wings.graphql.datafetcher.budget.BudgetAlertsQueryMetadata.BudgetAlertsMetaDataFields.ALERTBASEDON;
 import static software.wings.graphql.datafetcher.budget.BudgetAlertsQueryMetadata.BudgetAlertsMetaDataFields.ALERTTHRESHOLD;
+import static software.wings.graphql.datafetcher.budget.BudgetAlertsQueryMetadata.BudgetAlertsMetaDataFields.BUDGETEDCOST;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.budget.AlertThreshold;
-import io.harness.ccm.budget.AlertThreshold.AlertThresholdBuilder;
+import io.harness.ccm.budget.Alert;
+import io.harness.ccm.budget.Alert.AlertBuilder;
 import io.harness.ccm.budget.AlertThresholdBase;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.commons.utils.DataUtils;
@@ -151,7 +152,7 @@ public class BudgetTimescaleQueryHelper {
     }
   }
 
-  public List<AlertThreshold> getLatestAlertsSend(String budgetId, String accountId) {
+  public List<Alert> getLatestAlertsSend(String budgetId, String accountId) {
     try {
       if (timeScaleDBService.isValid()) {
         String query = formLatestBudgetAlertsSendQuery(budgetId, accountId);
@@ -262,14 +263,15 @@ public class BudgetTimescaleQueryHelper {
     return totalCostData;
   }
 
-  private List<AlertThreshold> fetchLatestAlerts(ResultSet resultSet) throws SQLException {
-    List<AlertThreshold> alertsSend = new ArrayList<>();
+  private List<Alert> fetchLatestAlerts(ResultSet resultSet) throws SQLException {
+    List<Alert> alertsSend = new ArrayList<>();
     while (null != resultSet && resultSet.next()) {
-      AlertThresholdBuilder builder = AlertThreshold.builder();
+      AlertBuilder builder = Alert.builder();
       builder.crossedAt(
           resultSet.getTimestamp(schema.getAlertTime().getColumnNameSQL(), utils.getDefaultCalendar()).getTime());
       builder.basedOn(AlertThresholdBase.valueOf(resultSet.getString(ALERTBASEDON.getFieldName())));
       builder.percentage(resultSet.getDouble(ALERTTHRESHOLD.getFieldName()));
+      builder.budgetedAmount(resultSet.getDouble(BUDGETEDCOST.getFieldName()));
       alertsSend.add(builder.build());
     }
     return alertsSend;
@@ -339,6 +341,7 @@ public class BudgetTimescaleQueryHelper {
     selectQuery.addColumns(schema.getAlertTime());
     selectQuery.addColumns(schema.getAlertThreshold());
     selectQuery.addColumns(schema.getAlertBasedOn());
+    selectQuery.addColumns(schema.getBudgetedCost());
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getBudgetId(), budgetId));
     selectQuery.addCustomOrdering(schema.getAlertTime(), OrderObject.Dir.DESCENDING);
 

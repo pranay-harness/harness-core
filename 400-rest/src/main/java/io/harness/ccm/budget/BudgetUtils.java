@@ -172,8 +172,7 @@ public class BudgetUtils {
   }
 
   public List<String> getLatestAlertsSend(Budget budget) {
-    List<AlertThreshold> alerts =
-        budgetTimescaleQueryHelper.getLatestAlertsSend(budget.getUuid(), budget.getAccountId());
+    List<Alert> alerts = budgetTimescaleQueryHelper.getLatestAlertsSend(budget.getUuid(), budget.getAccountId());
     List<String> notifications = new ArrayList<>();
     if (alerts != null) {
       alerts.forEach(alert -> {
@@ -181,7 +180,7 @@ public class BudgetUtils {
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_TEMPLATE);
         Date date = new Date(alert.getCrossedAt());
         notifications.add(String.format(NOTIFICATION_TEMPLATE, formatter.format(date), costType,
-            alert.getPercentage() + "%", budget.getBudgetAmount()));
+            alert.getPercentage() + "%", alert.getBudgetedAmount()));
       });
     }
     return notifications;

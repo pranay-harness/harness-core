@@ -244,6 +244,11 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public QLBudgetTableData getBudgetDetails(Budget budget) {
     List<Double> alertAt = new ArrayList<>();
+    if (budget.getAlertThresholds() != null) {
+      for (AlertThreshold alert : budget.getAlertThresholds()) {
+        alertAt.add(alert.getPercentage());
+      }
+    }
     List<String> notificationMessages = budgetUtils.getLatestAlertsSend(budget);
     BudgetScope scope = budget.getScope();
 
