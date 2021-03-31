@@ -1,8 +1,6 @@
 package io.harness.connector.apis.resource;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.CREATE_CONNECTOR_PERMISSION;
-import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
@@ -160,13 +158,6 @@ public class ConnectorResource {
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return createConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
-        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
-  }
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = CREATE_CONNECTOR_PERMISSION)
-  private ResponseDTO<ConnectorResponseDTO> createConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
-      @AccountIdentifier String accountIdentifier, @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
-      @io.harness.accesscontrol.OrgIdentifier String orgIdentifier, @ResourceIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -196,7 +187,7 @@ public class ConnectorResource {
 
   @DELETE
   @Path("{identifier}")
-  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
+  @NGAccessControlCheck(resourceType = NGResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
   public ResponseDTO<Boolean> delete(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull String accountIdentifier,

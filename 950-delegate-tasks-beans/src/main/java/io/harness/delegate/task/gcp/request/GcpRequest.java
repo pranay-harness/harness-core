@@ -21,7 +21,10 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
+<<<<<<< HEAD
 @OwnedBy(CDP)
+=======
+>>>>>>> [CDNG-5543)]: removed delete permission
 public abstract class GcpRequest extends ConnectorTaskParams implements ExecutionCapabilityDemander {
   // Below 2 are NG specific.
   private List<EncryptedDataDetail> encryptionDetails;

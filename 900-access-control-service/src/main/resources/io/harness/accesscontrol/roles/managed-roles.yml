@@ -13,7 +13,6 @@ roles:
         - core_connector_create
         - core_connector_view
         - core_connector_edit
-        - core_connector_delete
         - core_connector_runtimeAccess
         - core_pipeline_view
         - core_pipeline_edit
