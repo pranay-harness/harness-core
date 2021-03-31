@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
-@OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineExecuteHelper {
   private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
 
