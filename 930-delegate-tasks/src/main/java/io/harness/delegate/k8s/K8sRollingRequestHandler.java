@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
@@ -24,6 +25,7 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -61,6 +63,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sRollingRequestHandler extends K8sRequestHandler {
@@ -92,10 +95,13 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
+    List<String> manifestHelperFiles = isEmpty(k8sRollingDeployRequest.getValuesYamlList())
+        ? k8sRollingDeployRequest.getOpenshiftParamList()
+        : k8sRollingDeployRequest.getValuesYamlList();
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            CollectionUtils.isEmpty(k8sRollingDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(manifestHelperFiles), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
