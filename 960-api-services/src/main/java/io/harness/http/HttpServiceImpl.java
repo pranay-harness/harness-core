@@ -1,10 +1,12 @@
 package io.harness.http;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.KeyValuePair;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -17,6 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -37,6 +40,8 @@ import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -47,6 +52,7 @@ import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class HttpServiceImpl implements HttpService {
@@ -128,15 +134,22 @@ public class HttpServiceImpl implements HttpService {
       HttpEntity entity = httpResponse.getEntity();
       httpInternalResponse.setHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "");
+    } catch (SocketTimeoutException | ConnectTimeoutException | HttpHostConnectException e) {
+      handleException(httpInternalResponse, e, true);
     } catch (IOException e) {
-      log.error("Exception occurred during HTTP task execution", e);
-      httpInternalResponse.setHttpResponseCode(500);
-      httpInternalResponse.setHttpResponseBody(getMessage(e));
-      httpInternalResponse.setErrorMessage(getMessage(e));
-      httpInternalResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      handleException(httpInternalResponse, e, false);
     }
 
     return httpInternalResponse;
+  }
+
+  private void handleException(HttpInternalResponse httpInternalResponse, IOException e, boolean timedOut) {
+    log.error("Exception occurred during HTTP task execution", e);
+    httpInternalResponse.setHttpResponseCode(500);
+    httpInternalResponse.setHttpResponseBody(getMessage(e));
+    httpInternalResponse.setErrorMessage(getMessage(e));
+    httpInternalResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    httpInternalResponse.setTimedOut(timedOut);
   }
 
   @VisibleForTesting
