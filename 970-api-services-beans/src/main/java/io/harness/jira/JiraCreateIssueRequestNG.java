@@ -10,12 +10,10 @@ import io.harness.jira.deserializer.JiraIssueTypeDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,15 +90,7 @@ public class JiraCreateIssueRequestNG {
       }
     }
 
-    List<String> values = new ArrayList<>();
-    for (String s : Splitter.on(JiraConstantsNG.COMMA_SPLIT_PATTERN).trimResults().split(value)) {
-      if (s.startsWith("\"") && s.endsWith("\"") && s.length() > 1) {
-        String str = s.substring(1, s.length() - 1).trim();
-        values.add(str.replaceAll("\"\"", "\""));
-      } else {
-        values.add(s);
-      }
-    }
+    List<String> values = JiraIssueUtils.splitByComma(value);
     fields.put(field.getKey(),
         values.stream().map(v -> convertToFinalValue(field, v)).filter(Objects::nonNull).collect(Collectors.toList()));
   }

@@ -96,6 +96,7 @@
     "Condition": {
       "type": "object",
       "required": [
+        "key",
         "op",
         "value"
       ],
@@ -108,7 +109,6 @@
           "enum": [
             "equals",
             "not equals",
-            "contains",
             "in",
             "not in"
           ]
