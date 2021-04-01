@@ -76,7 +76,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .commandName(K8S_BG_SWAP_SERVICES_COMMAND_NAME)
             .taskType(K8sTaskType.SWAP_SERVICE_SELECTORS)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
