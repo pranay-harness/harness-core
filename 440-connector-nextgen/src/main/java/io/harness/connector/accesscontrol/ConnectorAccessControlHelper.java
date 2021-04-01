@@ -7,12 +7,14 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
 
 import com.google.inject.Inject;
+
+import lombok.AllArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ConnectorAccessControlHelper {
-  @Inject private AccessControlClient accessControlClient;
-  public static boolean checkForCreateAccess(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+//  @Inject private AccessControlClient accessControlClient;
+  public static boolean checkForCreateAccess(AccessControlClient accessControlClient,String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Scope scope = ScopeHelper.getScope(accountIdentifier, orgIdentifier, projectIdentifier);
     String resourceType = getResourceTypeFromScope(scope);
     String resourceIdentifier =

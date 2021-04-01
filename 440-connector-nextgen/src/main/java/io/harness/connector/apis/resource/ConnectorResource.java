@@ -164,7 +164,7 @@ public class ConnectorResource {
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    boolean hasAccess = ConnectorAccessControlHelper.checkForCreateAccess(accountIdentifier,
+    boolean hasAccess = ConnectorAccessControlHelper.checkForCreateAccess(accessControlClient,accountIdentifier,
         connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
 
     if (hasAccess) {
