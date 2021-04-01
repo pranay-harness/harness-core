@@ -1,7 +1,9 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Slf4j
 public abstract class K8sRequestHandler {
   public K8sDeployResponse executeTask(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams,

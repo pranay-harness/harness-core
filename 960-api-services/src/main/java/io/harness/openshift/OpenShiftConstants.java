@@ -1,7 +1,12 @@
 package io.harness.openshift;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDP)
 public final class OpenShiftConstants {
   private OpenShiftConstants() {}
 

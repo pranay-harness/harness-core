@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.beans.LogColor.Blue;
@@ -9,6 +10,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -34,6 +36,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class K8sBGBaseHandler {
