@@ -121,7 +121,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	}()
 
-	log.Info(fmt.Sprint("server listening at %s", config.Server.Bind))
+	log.Info(fmt.Sprintf("server listening at %s", config.Server.Bind))
 
 	// starts the http server.
 	err = server.ListenAndServe(ctx)
