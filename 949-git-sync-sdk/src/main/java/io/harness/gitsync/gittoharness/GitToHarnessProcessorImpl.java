@@ -1,8 +1,10 @@
 package io.harness.gitsync.gittoharness;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.FileProcessingResponse;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
   ChangeSetInterceptorService changeSetInterceptorService;
   ChangeSetHelperService changeSetHelperService;

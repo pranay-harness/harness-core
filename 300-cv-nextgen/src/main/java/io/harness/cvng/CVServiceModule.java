@@ -91,6 +91,7 @@ import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
+import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
@@ -247,6 +248,9 @@ public class CVServiceModule extends AbstractModule {
       bind(DataCollectionInfoMapper.class)
           .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
           .to(StackdriverDataCollectionInfoMapper.class);
+      bind(DataCollectionInfoMapper.class)
+          .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+          .to(NewRelicDataCollectionInfoMapper.class);
 
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -302,6 +306,7 @@ public class CVServiceModule extends AbstractModule {
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
       bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
+
       bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
 
       MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =

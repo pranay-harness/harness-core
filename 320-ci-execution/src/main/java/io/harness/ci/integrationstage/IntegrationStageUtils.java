@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStageUtils {
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
     if (stageElementConfig.getType().equals("CI")) {

@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.userprofile.entities.BitbucketSCM;
+import io.harness.ng.userprofile.entities.GithubSCM;
+import io.harness.ng.userprofile.entities.GitlabSCM;
 import io.harness.ng.userprofile.entities.SourceCodeManager;
 
 import java.util.Set;
@@ -16,6 +18,8 @@ public class UserProfileMorphiaRegistrars implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(SourceCodeManager.class);
     set.add(BitbucketSCM.class);
+    set.add(GithubSCM.class);
+    set.add(GitlabSCM.class);
   }
 
   @Override

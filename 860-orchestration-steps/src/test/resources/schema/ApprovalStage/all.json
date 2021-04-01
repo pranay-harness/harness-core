@@ -96,6 +96,7 @@
     "Condition": {
       "type": "object",
       "required": [
+        "key",
         "op",
         "value"
       ],
@@ -108,7 +109,6 @@
           "enum": [
             "equals",
             "not equals",
-            "contains",
             "in",
             "not in"
           ]
@@ -367,8 +367,10 @@
           "required": [
             "approvalCriteria",
             "approvalMessage",
+            "connectorRef",
             "includePipelineExecutionHistory",
-            "issueId",
+            "issueKey",
+            "projectKey",
             "rejectionCriteria"
           ],
           "properties": {
@@ -384,7 +386,7 @@
             "includePipelineExecutionHistory": {
               "type": "boolean"
             },
-            "issueId": {
+            "issueKey": {
               "type": "string"
             },
             "projectKey": {
@@ -396,6 +398,55 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraCreateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "issueType": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "projectKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraField": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "KeyValuesCriteriaSpec": {

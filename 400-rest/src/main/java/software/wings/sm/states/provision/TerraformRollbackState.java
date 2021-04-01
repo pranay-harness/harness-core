@@ -12,7 +12,9 @@ import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEO
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.persistence.HIterator;
@@ -55,6 +57,7 @@ import org.mongodb.morphia.query.Sort;
 @Setter
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackState extends TerraformProvisionState {
   private TerraformCommand rollbackCommand;
 
@@ -155,8 +158,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
       Map<String, EncryptedDataDetail> encryptedTextVariables = null;
       if (allVariables != null) {
         textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
-        encryptedTextVariables =
-            infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+        encryptedTextVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+            allVariables, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
@@ -164,8 +167,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
       Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
       if (allBackendConfigs != null) {
         backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
-        encryptedBackendConfigs =
-            infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
+        encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+            allBackendConfigs, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       List<NameValuePair> allEnvironmentVariables = configParameter.getEnvironmentVariables();
@@ -173,8 +176,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
       Map<String, EncryptedDataDetail> encryptedEnvVars = null;
       if (allEnvironmentVariables != null) {
         envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvironmentVariables);
-        encryptedEnvVars =
-            infrastructureProvisionerService.extractEncryptedTextVariables(allEnvironmentVariables, context.getAppId());
+        encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(
+            allEnvironmentVariables, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       List<String> targets = configParameter.getTargets();

@@ -7,11 +7,19 @@ import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_GROUP_NAME;
+import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_TOPIC_NAME;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
+import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.user.UserValidator;
@@ -27,7 +35,6 @@ import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
@@ -41,6 +48,8 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import java.time.Duration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -63,14 +72,25 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
-  @Named(EventsFrameworkConstants.ENTITY_CRUD)
-  public Consumer getConsumer() {
+  @Named(ENTITY_CRUD)
+  public Consumer getEntityCrudConsumer() {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
     if (!config.getEventsConfig().isEnabled()) {
-      return NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME);
+      return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
-        EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME, EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE);
+    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
+        ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE);
+  }
+
+  @Provides
+  @Named(FEATURE_FLAG_STREAM)
+  public Consumer getFeatureFlagConsumer() {
+    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+    if (!config.getEventsConfig().isEnabled()) {
+      return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
+    }
+    return RedisConsumer.of(
+        FEATURE_FLAG_STREAM, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
   }
 
   @Provides
@@ -104,6 +124,8 @@ public class AccessControlModule extends AbstractModule {
     install(new UserClientModule(config.getUserClientConfiguration().getUserServiceConfig(),
         config.getUserClientConfiguration().getUserServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
 
+    install(AccessControlPreferenceModule.getInstance(config.getAccessControlPreferenceConfiguration()));
+
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
     scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
@@ -118,9 +140,14 @@ public class AccessControlModule extends AbstractModule {
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
     validatorByPrincipalType.addBinding(USER_GROUP).to(UserGroupValidator.class);
 
-    Multibinder<EventConsumer> eventConsumers = Multibinder.newSetBinder(binder(), EventConsumer.class);
-    eventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
-    eventConsumers.addBinding().to(UserGroupEventConsumer.class);
+    Multibinder<EventConsumer> entityCrudEventConsumers =
+        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
+    entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
+
+    Multibinder<EventConsumer> featureFlagEventConsumers =
+        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
+    featureFlagEventConsumers.addBinding().to(NGRBACEnabledFeatureFlagEventConsumer.class);
 
     registerRequiredBindings();
   }

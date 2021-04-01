@@ -42,6 +42,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -58,7 +59,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 

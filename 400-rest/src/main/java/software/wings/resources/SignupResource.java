@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -7,6 +9,8 @@ import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
 import static software.wings.signup.BugsnagConstants.FREEMIUM;
 import static software.wings.signup.BugsnagConstants.ONBOARDING;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
@@ -49,7 +53,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = LOGGED_IN)
+@OwnedBy(GTM)
 @Slf4j
+@TargetModule(_950_NG_SIGNUP)
 public class SignupResource {
   @Inject SignupService signupService;
   @Inject AzureMarketplaceIntegrationService azureMarketplaceIntegrationService;
@@ -105,7 +111,7 @@ public class SignupResource {
   public RestResponse<User> completeSignup(
       UpdatePasswordRequest passwordRequest, @NotEmpty @PathParam("token") String secretToken) {
     try {
-      return new RestResponse<>(signupService.completeSignup(passwordRequest, secretToken));
+      return new RestResponse<>(signupService.completeSignup(secretToken));
     } catch (SignupException ex) {
       bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw ex;

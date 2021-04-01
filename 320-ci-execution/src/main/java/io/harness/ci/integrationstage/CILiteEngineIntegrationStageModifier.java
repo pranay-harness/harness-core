@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.ci.beans.entities.BuildNumberDetails;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class CILiteEngineIntegrationStageModifier implements StageExecutionModifier {
   @Inject private CILiteEngineStepGroupUtils ciLiteEngineStepGroupUtils;
 

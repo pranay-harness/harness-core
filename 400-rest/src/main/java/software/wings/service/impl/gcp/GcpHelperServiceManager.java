@@ -4,10 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -17,13 +18,13 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
@@ -52,6 +53,7 @@ public class GcpHelperServiceManager {
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
           GcpValidationRequest.builder()
               .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+              .requestType(RequestType.VALIDATE)
               .build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
@@ -84,7 +86,7 @@ public class GcpHelperServiceManager {
                                                                    : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
                                     .tags(tags)
                                     .data(TaskData.builder()
                                               .async(false)

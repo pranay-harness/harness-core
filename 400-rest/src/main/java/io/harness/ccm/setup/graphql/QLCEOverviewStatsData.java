@@ -1,5 +1,9 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -12,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CE)
 public class QLCEOverviewStatsData {
   Boolean ceEnabledClusterPresent;
   Boolean cloudConnectorsPresent;

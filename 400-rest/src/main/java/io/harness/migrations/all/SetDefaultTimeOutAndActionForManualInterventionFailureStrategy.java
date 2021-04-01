@@ -6,9 +6,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
+import io.harness.beans.RepairActionCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.Account;

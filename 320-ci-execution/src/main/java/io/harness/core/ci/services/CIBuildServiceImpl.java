@@ -1,5 +1,7 @@
 package io.harness.core.ci.services;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.repositories.CIBuildRepository;
 
@@ -13,6 +15,7 @@ import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(HarnessTeam.CI)
 public class CIBuildServiceImpl implements CIBuildService {
   private final CIBuildRepository ciBuildRepository;
 

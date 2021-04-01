@@ -8,10 +8,10 @@ import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
 import static java.util.Arrays.asList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.beans.NewRelicConfig;

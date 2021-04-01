@@ -5,6 +5,8 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PROPERTIES;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.plan.creator.filter.CIFilter.CIFilterBuilder;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -29,6 +31,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Inject ConnectorUtils connectorUtils;
 

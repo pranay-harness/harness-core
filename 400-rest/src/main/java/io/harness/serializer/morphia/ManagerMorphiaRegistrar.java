@@ -2,7 +2,6 @@ package io.harness.serializer.morphia;
 
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -861,7 +860,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BatchJobInterval.class);
     set.add(BatchJobScheduledData.class);
     set.add(BillingDataPipelineRecord.class);
-    set.add(Budget.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CECloudAccount.class);
     set.add(CECloudAccountOld.class);

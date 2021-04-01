@@ -1,5 +1,8 @@
 package io.harness.gitsync.interceptor;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.SecretReference;
 
 import lombok.Builder;
@@ -9,6 +12,7 @@ import lombok.experimental.FieldNameConstants;
 @Getter
 @Builder
 @FieldNameConstants(innerTypeName = "GitBranchInfoKeys")
+@OwnedBy(DX)
 public class GitBranchInfo {
   String branch;
   String yamlGitConfigId;

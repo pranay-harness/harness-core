@@ -1,14 +1,11 @@
 package io.harness.gitsync.persistance;
 
-import io.harness.EntityType;
-import io.harness.ng.core.EntityDetail;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
-public interface GitSyncableEntity {
-  String getBranch();
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.NGAccess;
 
-  void setBranch(String branch);
-
-  EntityType getEntityType();
-
-  EntityDetail getEntityDetail();
+@OwnedBy(DX)
+public interface GitSyncableEntity extends NGAccess {
+  String getObjectId();
 }

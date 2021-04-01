@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -8,6 +9,7 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.LT;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.ccm.cluster.entities.K8sLabelFilter;
 import io.harness.ccm.cluster.entities.K8sWorkload;
@@ -31,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class K8sWorkloadDao {
   private static final String LABEL_FIELD = K8sWorkloadKeys.labels + ".";
   @Inject private HPersistence persistence;

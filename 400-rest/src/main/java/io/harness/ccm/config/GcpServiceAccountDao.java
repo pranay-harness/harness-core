@@ -1,11 +1,15 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.GcpServiceAccount.GcpServiceAccountKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CE)
 public class GcpServiceAccountDao {
   @Inject private HPersistence persistence;
 

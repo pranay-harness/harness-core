@@ -3,8 +3,9 @@ package io.harness.pms.preflight.handler;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.common.NGExpressionUtils;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
@@ -12,12 +13,12 @@ import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
-import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.EntityDetail;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.preflight.PreFlightCause;
 import io.harness.pms.preflight.PreFlightEntityErrorInfo;
 import io.harness.pms.preflight.PreFlightResolution;
@@ -29,10 +30,9 @@ import io.harness.pms.preflight.entity.PreFlightEntity.PreFlightEntityKeys;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.preflight.PreFlightRepository;
-import io.harness.utils.FullyQualifiedIdentifierHelper;
-import io.harness.utils.IdentifierRefHelper;
 
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.api.client.util.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,13 +42,14 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Builder
 @Slf4j
 public class AsyncPreFlightHandler implements Runnable {
   private final PreFlightEntity entity;
   private final PreFlightRepository preFlightRepository;
-  private final EntitySetupUsageClient entitySetupUsageClient;
   private final ConnectorResourceClient connectorResourceClient;
+  private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
   private final Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
 
   private static final int PAGE = 0;
@@ -66,84 +67,58 @@ public class AsyncPreFlightHandler implements Runnable {
       throw new InvalidRequestException("Invalid merged pipeline yaml");
     }
 
-    List<EntitySetupUsageDTO> allReferredUsages =
-        execute(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, entity.getAccountIdentifier(),
-            FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(entity.getAccountIdentifier(),
-                entity.getOrgIdentifier(), entity.getProjectIdentifier(), entity.getPipelineIdentifier()),
-            EntityType.CONNECTORS, null));
-
-    List<String> accountLevelConnectors = new ArrayList<>();
-    List<String> orgLevelConnectors = new ArrayList<>();
-    List<String> projectLevelConnectors = new ArrayList<>();
+    List<EntityDetail> allReferredUsages = pipelineSetupUsageHelper.getReferrencesOfPipeline(
+        entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier(),
+        entity.getPipelineIdentifier(), entity.getPipelineYaml(), EntityType.CONNECTORS);
+    Map<Scope, List<String>> scopeToConnectorIdentifiers = new HashMap<>();
     Map<String, String> connectorIdentifierToFqn = new HashMap<>();
-    for (EntitySetupUsageDTO connector : allReferredUsages) {
-      IdentifierRef ref = (IdentifierRef) connector.getReferredEntity().getEntityRef();
+    for (EntityDetail connector : allReferredUsages) {
+      IdentifierRef ref = (IdentifierRef) connector.getEntityRef();
       Scope refScope = ref.getScope();
       String refIdentifier = ref.getIdentifier();
       Map<String, String> metadata = ref.getMetadata();
       String fqn = metadata.get(PreFlightCheckMetadata.FQN);
+      connectorIdentifierToFqn.put(refIdentifier, fqn);
 
-      if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {
-        connectorIdentifierToFqn.put(refIdentifier, fqn);
-      } else if (fqnToObjectMapMergedYaml.containsKey(fqn)) {
-        String finalValue = ((TextNode) fqnToObjectMapMergedYaml.get(fqn)).asText();
-        if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
-          continue;
-        }
-        IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-            finalValue, entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier());
-        refScope = identifierRef.getScope();
-        refIdentifier = identifierRef.getIdentifier();
-        connectorIdentifierToFqn.put(refIdentifier, fqn);
+      if (refScope == Scope.UNKNOWN) {
+        throw new InvalidRequestException("UNKNOWN scope not supported");
       }
-
-      switch (refScope) {
-        case ACCOUNT:
-          if (!accountLevelConnectors.contains(refIdentifier)) {
-            accountLevelConnectors.add(refIdentifier);
-          }
-          break;
-        case ORG:
-          if (!orgLevelConnectors.contains(refIdentifier)) {
-            orgLevelConnectors.add(refIdentifier);
-          }
-          break;
-        case PROJECT:
-          if (!projectLevelConnectors.contains(refIdentifier)) {
-            projectLevelConnectors.add(refIdentifier);
-          }
-          break;
-        default:
-          throw new InvalidRequestException("UNKNOWN scope not supported");
-      }
+      List<String> existingIdentifiers = scopeToConnectorIdentifiers.getOrDefault(refScope, Lists.newArrayList());
+      existingIdentifiers.add(refIdentifier);
+      scopeToConnectorIdentifiers.put(refScope, existingIdentifiers);
     }
 
-    List<ConnectorResponseDTO> connectorResponses =
-        getConnectorResponses(accountLevelConnectors, orgLevelConnectors, projectLevelConnectors);
+    List<ConnectorResponseDTO> connectorResponses = getConnectorResponses(scopeToConnectorIdentifiers);
     List<ConnectorCheckResponse> connectorCheckResponses =
         getConnectorCheckResponse(connectorResponses, connectorIdentifierToFqn);
     updateEntityWithConnectorCheckResponses(connectorCheckResponses);
   }
 
-  private List<ConnectorResponseDTO> getConnectorResponses(
-      List<String> accountLevelConnectors, List<String> orgLevelConnectors, List<String> projectLevelConnectors) {
+  // Todo: Move connector logic into separate class
+  private List<ConnectorResponseDTO> getConnectorResponses(Map<Scope, List<String>> scopeToConnectorIdentifiers) {
     List<ConnectorResponseDTO> connectorResponses = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(accountLevelConnectors)) {
+    if (scopeToConnectorIdentifiers.containsKey(Scope.ACCOUNT)) {
       PageResponse<ConnectorResponseDTO> response =
           execute(connectorResourceClient.listConnectors(entity.getAccountIdentifier(), null, null, PAGE, SIZE,
-              ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(accountLevelConnectors).build()));
+              ConnectorFilterPropertiesDTO.builder()
+                  .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ACCOUNT))
+                  .build()));
       connectorResponses.addAll(response.getContent());
     }
-    if (EmptyPredicate.isNotEmpty(orgLevelConnectors)) {
-      PageResponse<ConnectorResponseDTO> response =
-          execute(connectorResourceClient.listConnectors(entity.getAccountIdentifier(), entity.getOrgIdentifier(), null,
-              PAGE, SIZE, ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(orgLevelConnectors).build()));
+    if (scopeToConnectorIdentifiers.containsKey(Scope.ORG)) {
+      PageResponse<ConnectorResponseDTO> response = execute(connectorResourceClient.listConnectors(
+          entity.getAccountIdentifier(), entity.getOrgIdentifier(), null, PAGE, SIZE,
+          ConnectorFilterPropertiesDTO.builder()
+              .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ORG))
+              .build()));
       connectorResponses.addAll(response.getContent());
     }
-    if (EmptyPredicate.isNotEmpty(projectLevelConnectors)) {
+    if (scopeToConnectorIdentifiers.containsKey(Scope.PROJECT)) {
       PageResponse<ConnectorResponseDTO> response = execute(connectorResourceClient.listConnectors(
           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier(), PAGE, SIZE,
-          ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(projectLevelConnectors).build()));
+          ConnectorFilterPropertiesDTO.builder()
+              .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.PROJECT))
+              .build()));
       connectorResponses.addAll(response.getContent());
     }
     return connectorResponses;

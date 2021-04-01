@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.k8sLabel;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class K8sLabelHelper {
   @Inject private K8sWorkloadDao k8sWorkloadDao;
 

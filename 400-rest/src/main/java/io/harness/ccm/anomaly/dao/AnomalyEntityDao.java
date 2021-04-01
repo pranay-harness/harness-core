@@ -1,5 +1,8 @@
 package io.harness.ccm.anomaly.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -34,6 +37,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@OwnedBy(CE)
 public class AnomalyEntityDao {
   static final int MAX_RETRY = 3;
   static final int BATCH_SIZE = 50;

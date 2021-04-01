@@ -19,15 +19,22 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractAzureAppServiceTaskHandler {
   public AzureTaskExecutionResponse executeTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
-      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
+      ArtifactStreamAttributes artifactStreamAttributes) {
     try {
       AzureAppServiceTaskResponse azureAppServiceTaskResponse =
-          executeTaskInternal(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
+          (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP
+              == azureAppServiceTaskParameters.getCommandType())
+          ? executeTaskInternal(
+              azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes)
+          : executeTaskInternal(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
       return handleAppServiceTaskResponse(azureAppServiceTaskResponse);
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
@@ -95,4 +102,8 @@ public abstract class AbstractAzureAppServiceTaskHandler {
   protected abstract AzureAppServiceTaskResponse executeTaskInternal(
       AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient);
+
+  protected abstract AzureAppServiceTaskResponse executeTaskInternal(
+      AzureAppServiceTaskParameters azureAppServiceTaskParameters, AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient, ArtifactStreamAttributes artifactStreamAttributes);
 }

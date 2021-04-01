@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
@@ -93,6 +94,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -109,7 +114,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.AccessType;
@@ -245,8 +249,10 @@ import org.mockito.Mock;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Listeners({OrchestrationNotifyEventListener.class, ExecutionEventListener.class})
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -2917,5 +2923,28 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
     assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
     assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectRollbackArtifactForDuplicateInfraMappingIds() {
+    List<String> infraMappingList = Collections.singletonList(INFRA_MAPPING_ID);
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .status(SUCCESS)
+            .workflowId(WORKFLOW_ID)
+            .uuid(WORKFLOW_EXECUTION_ID)
+            .infraMappingIds(infraMappingList)
+            .artifacts(Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    workflowExecutionService.populateRollbackArtifacts(
+        workflowExecution, asList(INFRA_MAPPING_ID, INFRA_MAPPING_ID), stdParams);
+    assertThat(stdParams.getRollbackArtifactIds()).containsExactly(ARTIFACT_ID);
+    assertThat(workflowExecution.getRollbackArtifacts()).hasSize(1);
   }
 }

@@ -122,6 +122,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @UtilityClass
   public static class NodeExecutionKeys {
+    public static final String id = "_id";
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 

@@ -327,4 +327,8 @@ unifiedTableTableSchema = [
             "name": "azureReservationName",
             "type": "STRING"
         },
+        {
+            "name": "azureResource",
+            "type": "STRING"
+        },
     ]

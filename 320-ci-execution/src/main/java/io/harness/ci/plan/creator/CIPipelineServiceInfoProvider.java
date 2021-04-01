@@ -1,7 +1,5 @@
 package io.harness.ci.plan.creator;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.creator.variables.CIStageVariableCreator;
 import io.harness.ci.creator.variables.CIStepVariableCreator;
 import io.harness.ci.plan.creator.filter.CIStageFilterJsonCreator;
@@ -22,7 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Singleton
-@OwnedBy(HarnessTeam.CI)
 public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
   @Inject InjectorUtils injectorUtils;
 
