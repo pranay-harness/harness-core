@@ -18,8 +18,6 @@ import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.section.SectionStepParameters;
@@ -33,8 +31,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(BarrierExecutionInstance.class);
-    set.add(ResourceRestraint.class);
-    set.add(ResourceConstraint.class);
     set.add(ResourceRestraintInstance.class);
     set.add(ApprovalInstance.class);
     set.add(HarnessApprovalInstance.class);

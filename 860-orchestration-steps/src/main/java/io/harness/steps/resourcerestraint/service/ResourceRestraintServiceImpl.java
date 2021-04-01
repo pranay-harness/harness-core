@@ -13,6 +13,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -27,7 +29,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.ResourceRestraintInstanceRepository;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 

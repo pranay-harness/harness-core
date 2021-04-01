@@ -104,6 +104,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
@@ -119,7 +120,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.shell.AccessType;
 import io.harness.state.inspection.StateInspection;
 import io.harness.state.inspection.StateInspectionService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.threading.Poller;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 

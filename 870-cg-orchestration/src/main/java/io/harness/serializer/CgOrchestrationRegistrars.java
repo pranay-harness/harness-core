@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
+import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.CgOrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.SweepingOutputConverter;
 
@@ -27,6 +28,7 @@ public class CgOrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
+          .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .add(CgOrchestrationMorphiaRegistrar.class)
           .build();
 
