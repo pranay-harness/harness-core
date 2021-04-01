@@ -1,5 +1,9 @@
 package io.harness.batch.processing.writer.constants;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CE)
 public class InstanceMetaDataConstants {
   public static final String ZONE = "zone";
   public static final String REGION = "region";
@@ -35,6 +39,8 @@ public class InstanceMetaDataConstants {
   public static final String STORAGE_CLASS = "storage_class";
   public static final String POD_CAPACITY = "pod_capacity";
   public static final String SLOW_ACCOUNT = "SFByhonVQvGJX0SbY82rjA";
+  public static final String AZURE_SUBSCRIPTION_ID = "vm_subscription_id";
+  public static final String AZURE_RESOURCEGROUP_NAME = "vm_resource_group_name";
 
   private InstanceMetaDataConstants() {}
 }
