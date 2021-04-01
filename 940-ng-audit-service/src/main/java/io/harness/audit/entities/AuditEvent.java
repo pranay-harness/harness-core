@@ -72,7 +72,7 @@ public class AuditEvent {
   YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
-  List<KeyValuePair> additionalInfo;
+  List<KeyValuePair> internalInfo;
 
   @CreatedDate Long createdAt;
 
