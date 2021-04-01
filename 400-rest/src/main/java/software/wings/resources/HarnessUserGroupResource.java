@@ -36,8 +36,8 @@ public class HarnessUserGroupResource {
   public RestResponse<HarnessUserGroup> createHarnessUserGroup(@QueryParam("accountId") String accountId,
       @QueryParam("name") String name, @QueryParam("description") String description,
       @QueryParam("memberIds") List<String> memberIds) {
-    HarnessUserGroup harnessUserGroup = harnessUserGroupService.createHarnessUserGroup(
-        name, description, Sets.newHashSet(memberIds), Sets.newHashSet(Arrays.asList(accountId)), "RESTRICTED");
+    HarnessUserGroup harnessUserGroup = harnessUserGroupService.createHarnessUserGroup(name, description,
+        Sets.newHashSet(memberIds), Sets.newHashSet(Arrays.asList(accountId)), HarnessUserGroup.GroupType.RESTRICTED);
     return new RestResponse<>(harnessUserGroup);
   }
 
