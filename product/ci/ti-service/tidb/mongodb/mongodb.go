@@ -60,12 +60,14 @@ const (
 	relnsColl = "relations"
 )
 
+// VCSInfo contains metadata corresponding to version control system details
 type VCSInfo struct {
 	Repo     string `json:"repo" bson:"repo"`
 	Branch   string `json:"branch" bson:"branch"`
 	CommitId string `json:"commit_id" bson:"commit_id"`
 }
 
+// NewNode creates Node object form given fields
 func NewNode(hash int, pkg, method, params, class, typ string, vcs VCSInfo) *Node {
 	return &Node{
 		Hash:    hash,
@@ -78,6 +80,7 @@ func NewNode(hash int, pkg, method, params, class, typ string, vcs VCSInfo) *Nod
 	}
 }
 
+// NewRelation creates Relation object form given fields
 func NewRelation(source int, tests []int, vcs VCSInfo) *Relation {
 	return &Relation{
 		Source:  source,
