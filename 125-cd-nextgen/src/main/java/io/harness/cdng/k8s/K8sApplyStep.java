@@ -70,7 +70,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))

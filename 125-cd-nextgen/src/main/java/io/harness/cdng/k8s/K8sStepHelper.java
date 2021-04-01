@@ -472,7 +472,7 @@ public class K8sStepHelper {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(getTimeout(k8sStepParameters))
+                            .timeout(getTimeoutInMillis(k8sStepParameters))
                             .async(true)
                             .build();
 
@@ -532,7 +532,7 @@ public class K8sStepHelper {
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .timeout(getTimeoutInMillis(k8sStepParameters))
                                   .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -769,12 +769,20 @@ public class K8sStepHelper {
     return HelmCommandFlag.builder().valueMap(commandsValueMap).build();
   }
 
-  public static int getTimeout(K8sStepParameters stepParameters) {
-    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+  public static int getTimeoutInMin(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
+  }
+
+  public static long getTimeoutInMillis(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeout);
+  }
+
+  public static String getTimeoutValue(K8sStepParameters stepParameters) {
+    return stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
         ? StepConstants.defaultTimeout
         : stepParameters.getTimeout().getValue();
-
-    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
   }
 
   public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {
