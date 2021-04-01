@@ -7,7 +7,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
@@ -100,13 +99,12 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   }
 
   public HarnessApprovalOutcome toHarnessApprovalOutcome() {
-    List<ApproverInput> approverInputs = getStatus() == ApprovalStatus.APPROVED
-        ? fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null)
-        : null;
+    List<ApproverInput> approverInputs =
+        fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null);
     return HarnessApprovalOutcome.builder()
         .approvalActivities(approvalActivities)
         .approverInputs(approverInputs == null
-                ? null
+                ? Collections.emptyMap()
                 : approverInputs.stream().collect(Collectors.toMap(ApproverInput::getName, ApproverInput::getValue)))
         .build();
   }

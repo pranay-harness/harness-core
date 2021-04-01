@@ -9,7 +9,6 @@ import io.harness.pms.helpers.CurrentUserHelper;
 import io.harness.steps.approval.step.ApprovalInstanceResponseMapper;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
-import io.harness.steps.approval.step.harness.beans.HarnessApprovalAction;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalInstanceAuthorizationDTO;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
@@ -47,9 +46,6 @@ public class ApprovalResourceServiceImpl implements ApprovalResourceService {
       throw new InvalidRequestException("User not authorized to approve/reject");
     }
 
-    if (request.getAction() == HarnessApprovalAction.REJECT) {
-      request.setApproverInputs(null);
-    }
     EmbeddedUser user = currentUserHelper.getFromSecurityContext();
     HarnessApprovalInstance instance =
         approvalInstanceService.addHarnessApprovalActivity(approvalInstanceId, user, request);
