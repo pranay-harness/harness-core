@@ -159,13 +159,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // Now kept for backward compatibility, but will be changed soon to validate for non-empty project and
     // orgIdentifier.
     if (isNotEmpty(projectIdentifier) && isNotEmpty(orgIdentifier)) {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
-          accountId, orgIdentifier, projectIdentifier, true);
-    } else if (isNotEmpty(orgIdentifier)) {
       enabledTriggerForProject =
-          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabled(accountId, orgIdentifier, true);
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabledAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, true, true);
+    } else if (isNotEmpty(orgIdentifier)) {
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabledAndDeletedNot(
+          accountId, orgIdentifier, true, true);
     } else {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabled(accountId, true);
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabledAndDeletedNot(accountId, true, true);
     }
 
     if (enabledTriggerForProject.isPresent()) {

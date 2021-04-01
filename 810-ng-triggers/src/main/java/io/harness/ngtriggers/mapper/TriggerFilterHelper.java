@@ -128,6 +128,7 @@ public class TriggerFilterHelper {
   public Update getUpdateOperationsForDelete() {
     Update update = new Update();
     update.set(NGTriggerEntityKeys.deleted, true);
+    update.set(NGTriggerEntityKeys.enabled, false);
     return update;
   }
 

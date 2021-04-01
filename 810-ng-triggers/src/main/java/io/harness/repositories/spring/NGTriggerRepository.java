@@ -14,9 +14,10 @@ public interface NGTriggerRepository
   Optional<NGTriggerEntity>
   findByAccountIdAndOrgIdentifierAndProjectIdentifierAndTargetIdentifierAndIdentifierAndDeletedNot(String accountId,
       String orgIdentifier, String projectIdentifier, String targetIdentifier, String identifier, boolean notDeleted);
-  Optional<List<NGTriggerEntity>> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
-      String accountId, String orgIdentifier, String projectIdentifier, boolean enabled);
-  Optional<List<NGTriggerEntity>> findByAccountIdAndOrgIdentifierAndEnabled(
-      String accountId, String orgIdentifier, boolean enabled);
-  Optional<List<NGTriggerEntity>> findByAccountIdAndEnabled(String accountId, boolean enabled);
+  Optional<List<NGTriggerEntity>> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabledAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, boolean enabled, boolean notDeleted);
+  Optional<List<NGTriggerEntity>> findByAccountIdAndOrgIdentifierAndEnabledAndDeletedNot(
+      String accountId, String orgIdentifier, boolean enabled, boolean notDeleted);
+  Optional<List<NGTriggerEntity>> findByAccountIdAndEnabledAndDeletedNot(
+      String accountId, boolean enabled, boolean notDeleted);
 }
