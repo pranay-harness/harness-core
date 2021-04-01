@@ -39,6 +39,8 @@ public class HarnessUserGroup extends Base {
   private Set<String> accountIds;
   private HarnessUserGroupType groupType;
 
+  public enum HarnessUserGroupType {DEFAULT, RESTRICTED}
+
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String name, String description, Set<String> memberIds,
