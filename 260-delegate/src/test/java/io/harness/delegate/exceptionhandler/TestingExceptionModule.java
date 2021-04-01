@@ -1,5 +1,7 @@
 package io.harness.delegate.exceptionhandler;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionHandler;
@@ -10,6 +12,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 
+@OwnedBy(HarnessTeam.DX)
 public class TestingExceptionModule extends AbstractModule {
   private static volatile TestingExceptionModule instance;
 

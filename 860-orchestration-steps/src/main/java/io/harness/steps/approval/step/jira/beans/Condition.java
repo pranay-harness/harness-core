@@ -17,5 +17,5 @@ import lombok.Value;
 public class Condition {
   @NotNull String key;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> value;
-  @NotNull Operator op;
+  @NotNull Operator operator;
 }

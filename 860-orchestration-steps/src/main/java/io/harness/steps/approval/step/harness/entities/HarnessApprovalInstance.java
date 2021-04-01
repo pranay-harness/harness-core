@@ -43,6 +43,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("harnessApprovalInstance")
 public class HarnessApprovalInstance extends ApprovalInstance {
+  @NotNull String approvalMessage;
+  boolean includePipelineExecutionHistory;
+
   @NotNull List<HarnessApprovalActivity> approvalActivities;
   @NotNull ApproversDTO approvers;
   List<ApproverInputInfoDTO> approverInputs;
@@ -114,16 +117,20 @@ public class HarnessApprovalInstance extends ApprovalInstance {
       return null;
     }
 
-    HarnessApprovalInstance instance = HarnessApprovalInstance.builder()
-                                           .approvalActivities(new ArrayList<>())
-                                           .approvers(ApproversDTO.fromApprovers(stepParameters.getApprovers()))
-                                           .approverInputs(stepParameters.getApproverInputs() == null
-                                                   ? null
-                                                   : stepParameters.getApproverInputs()
-                                                         .stream()
-                                                         .map(ApproverInputInfoDTO::fromApproverInputInfo)
-                                                         .collect(Collectors.toList()))
-                                           .build();
+    HarnessApprovalInstance instance =
+        HarnessApprovalInstance.builder()
+            .approvalMessage((String) stepParameters.getApprovalMessage().fetchFinalValue())
+            .includePipelineExecutionHistory(
+                (boolean) stepParameters.getIncludePipelineExecutionHistory().fetchFinalValue())
+            .approvalActivities(new ArrayList<>())
+            .approvers(ApproversDTO.fromApprovers(stepParameters.getApprovers()))
+            .approverInputs(stepParameters.getApproverInputs() == null
+                    ? null
+                    : stepParameters.getApproverInputs()
+                          .stream()
+                          .map(ApproverInputInfoDTO::fromApproverInputInfo)
+                          .collect(Collectors.toList()))
+            .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;
   }

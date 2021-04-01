@@ -3,6 +3,8 @@ package io.harness.delegate.exceptionhandler.handler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
@@ -12,6 +14,7 @@ import io.harness.exception.exceptionmanager.ExceptionHandler;
 
 import com.amazonaws.AmazonClientException;
 
+@OwnedBy(HarnessTeam.DX)
 public class AmazonClientExceptionHandler implements ExceptionHandler {
   @Override
   public WingsException handleException(Exception exception) {

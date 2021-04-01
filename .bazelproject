@@ -82,6 +82,7 @@ directories:
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  950-cg-ng-shared-orchestration-beans
   950-command-library-common
   950-log-client
   950-common-entities

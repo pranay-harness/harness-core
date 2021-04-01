@@ -1,5 +1,7 @@
 package io.harness.states;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.data.structure.EmptyPredicate;
@@ -14,6 +16,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIDelegateTaskExecutor {
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;

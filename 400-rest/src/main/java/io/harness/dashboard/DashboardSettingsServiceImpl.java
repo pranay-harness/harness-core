@@ -6,10 +6,10 @@ import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.steps.resourcerestraint.beans.ResourceConstraint.ACCOUNT_ID_KEY;
 
 import static java.util.Arrays.asList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -225,7 +225,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
 
   private void assertThatNameIsUnique(String accountId, String name) {
     DashboardSettings dashboardSettings = persistence.createQuery(DashboardSettings.class)
-                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                              .filter(Cd1SetupFields.ACCOUNT_ID_KEY, accountId)
                                               .filter(keys.name, name)
                                               .get();
     if (dashboardSettings == null) {

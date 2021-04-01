@@ -34,10 +34,9 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -77,20 +76,20 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private final OrganizationService orgService;
   private final AccessControlMigrationService accessControlMigrationService;
   private final NgUserService ngUserService;
-  private final ResourceGroupClient resourceGroupClient;
+  private final ResourceGroupService resourceGroupService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
 
   @Inject
   public AccessControlMigrationFeatureFlagEventListener(ProjectService projectService,
       OrganizationService organizationService, AccessControlMigrationService accessControlMigrationService,
-      NgUserService ngUserService, ResourceGroupClient resourceGroupClient,
+      NgUserService ngUserService, ResourceGroupService resourceGroupService,
       AccessControlAdminClient accessControlAdminClient, UserClient userClient) {
     this.projectService = projectService;
     this.orgService = organizationService;
     this.accessControlMigrationService = accessControlMigrationService;
     this.ngUserService = ngUserService;
-    this.resourceGroupClient = resourceGroupClient;
+    this.resourceGroupService = resourceGroupService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.userClient = userClient;
     levelToRolesMapping = new HashMap<>();
@@ -283,12 +282,9 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
                                             .tags(ImmutableMap.of("predefined", "true"))
                                             .build();
     try {
-      if (NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
-              resourceGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier))
-          == null) {
-        ResourceGroupResponse resourceGroupResponse =
-            NGRestUtils.getResponse(resourceGroupClient.create(accountIdentifier, orgIdentifier, projectIdentifier,
-                ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build()));
+      if (!resourceGroupService.find(resourceGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier)
+               .isPresent()) {
+        ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupDTO);
         log.info("Created resource group: {}", resourceGroupResponse);
       }
     } catch (DuplicateFieldException | DuplicateKeyException | InvalidRequestException exception) {

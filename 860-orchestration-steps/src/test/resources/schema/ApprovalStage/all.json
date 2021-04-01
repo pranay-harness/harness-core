@@ -97,14 +97,14 @@
       "type": "object",
       "required": [
         "key",
-        "op",
+        "operator",
         "value"
       ],
       "properties": {
         "key": {
           "type": "string"
         },
-        "op": {
+        "operator": {
           "type": "string",
           "enum": [
             "equals",
@@ -366,30 +366,18 @@
           "type": "object",
           "required": [
             "approvalCriteria",
-            "approvalMessage",
             "connectorRef",
-            "includePipelineExecutionHistory",
             "issueKey",
-            "projectKey",
             "rejectionCriteria"
           ],
           "properties": {
             "approvalCriteria": {
               "$ref": "#/definitions/CriteriaSpecWrapper"
             },
-            "approvalMessage": {
-              "type": "string"
-            },
             "connectorRef": {
               "type": "string"
             },
-            "includePipelineExecutionHistory": {
-              "type": "boolean"
-            },
             "issueKey": {
-              "type": "string"
-            },
-            "projectKey": {
               "type": "string"
             },
             "rejectionCriteria": {
@@ -457,8 +445,7 @@
         {
           "type": "object",
           "required": [
-            "conditions",
-            "matchAnyCondition"
+            "conditions"
           ],
           "properties": {
             "conditions": {

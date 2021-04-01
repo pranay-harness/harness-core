@@ -76,44 +76,49 @@ public class CriteriaEvaluatorTest {
                                    .build()))
         .isNotNull();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
-                   KeyValuesCriteriaSpecDTO.builder()
-                       .matchAnyCondition(true)
-                       .conditions(ImmutableList.of(ConditionDTO.builder().key("a").op(Operator.EQ).value("v1").build(),
-                           ConditionDTO.builder().key("b").op(Operator.IN).value("v2, v3").build()))
-                       .build()))
+    assertThat(
+        CriteriaEvaluator.evaluateCriteria(issue,
+            KeyValuesCriteriaSpecDTO.builder()
+                .matchAnyCondition(true)
+                .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
+                    ConditionDTO.builder().key("b").operator(Operator.IN).value("v2, v3").build()))
+                .build()))
         .isTrue();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
-                   KeyValuesCriteriaSpecDTO.builder()
-                       .matchAnyCondition(true)
-                       .conditions(ImmutableList.of(ConditionDTO.builder().key("a").op(Operator.EQ).value("v1").build(),
-                           ConditionDTO.builder().key("b").op(Operator.IN).value("v1").build()))
-                       .build()))
+    assertThat(
+        CriteriaEvaluator.evaluateCriteria(issue,
+            KeyValuesCriteriaSpecDTO.builder()
+                .matchAnyCondition(true)
+                .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
+                    ConditionDTO.builder().key("b").operator(Operator.IN).value("v1").build()))
+                .build()))
         .isTrue();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
-                   KeyValuesCriteriaSpecDTO.builder()
-                       .matchAnyCondition(true)
-                       .conditions(ImmutableList.of(ConditionDTO.builder().key("a").op(Operator.EQ).value("v2").build(),
-                           ConditionDTO.builder().key("b").op(Operator.IN).value("v1").build()))
-                       .build()))
+    assertThat(
+        CriteriaEvaluator.evaluateCriteria(issue,
+            KeyValuesCriteriaSpecDTO.builder()
+                .matchAnyCondition(true)
+                .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v2").build(),
+                    ConditionDTO.builder().key("b").operator(Operator.IN).value("v1").build()))
+                .build()))
         .isFalse();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
-                   KeyValuesCriteriaSpecDTO.builder()
-                       .matchAnyCondition(false)
-                       .conditions(ImmutableList.of(ConditionDTO.builder().key("a").op(Operator.EQ).value("v1").build(),
-                           ConditionDTO.builder().key("b").op(Operator.IN).value("v2, v3").build()))
-                       .build()))
+    assertThat(
+        CriteriaEvaluator.evaluateCriteria(issue,
+            KeyValuesCriteriaSpecDTO.builder()
+                .matchAnyCondition(false)
+                .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
+                    ConditionDTO.builder().key("b").operator(Operator.IN).value("v2, v3").build()))
+                .build()))
         .isTrue();
 
-    assertThat(CriteriaEvaluator.evaluateCriteria(issue,
-                   KeyValuesCriteriaSpecDTO.builder()
-                       .matchAnyCondition(false)
-                       .conditions(ImmutableList.of(ConditionDTO.builder().key("a").op(Operator.EQ).value("v1").build(),
-                           ConditionDTO.builder().key("b").op(Operator.IN).value("v1").build()))
-                       .build()))
+    assertThat(
+        CriteriaEvaluator.evaluateCriteria(issue,
+            KeyValuesCriteriaSpecDTO.builder()
+                .matchAnyCondition(false)
+                .conditions(ImmutableList.of(ConditionDTO.builder().key("a").operator(Operator.EQ).value("v1").build(),
+                    ConditionDTO.builder().key("b").operator(Operator.IN).value("v1").build()))
+                .build()))
         .isFalse();
   }
 

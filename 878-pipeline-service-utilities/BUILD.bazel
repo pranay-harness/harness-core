@@ -13,6 +13,7 @@ java_library(
         "@maven//:com_google_guava_guava",
     ] + [
         "//882-pms-sdk-core:module",
+        "//908-access-control-sdk:module",
         "//910-delegate-service-driver:module",
         "//930-delegate-tasks:module",
         "//950-timeout-engine:module",

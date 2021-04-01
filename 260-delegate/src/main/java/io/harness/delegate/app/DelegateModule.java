@@ -1,8 +1,7 @@
 package io.harness.delegate.app;
 
-import static io.harness.annotations.dev.HarnessTeam.DEL;
-
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
@@ -529,8 +528,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@OwnedBy(DEL)
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
 
