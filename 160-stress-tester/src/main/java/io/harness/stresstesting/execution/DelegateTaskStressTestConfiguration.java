@@ -1,4 +1,7 @@
-package io.harness.testing;
+package io.harness.stresstesting.execution;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,6 +10,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateTaskStressTestConfiguration extends Configuration {
   // where the setup location is made
   @JsonProperty("setupLocation") private String setupLocation;

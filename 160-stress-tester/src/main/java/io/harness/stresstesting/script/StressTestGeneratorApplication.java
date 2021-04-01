@@ -1,9 +1,12 @@
-package io.harness.testing;
+package io.harness.stresstesting.script;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
 import io.harness.serializer.DelegateServiceBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.DEL)
 public class StressTestGeneratorApplication {
   public static void main(String... args) {
     List<Module> modules = new ArrayList<>();
@@ -26,6 +30,7 @@ public class StressTestGeneratorApplication {
       Set<Class<? extends KryoRegistrar> > registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar> >builder()
             .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
+            .addAll(ManagerRegistrars.kryoRegistrars)
             .build();
       }
     });

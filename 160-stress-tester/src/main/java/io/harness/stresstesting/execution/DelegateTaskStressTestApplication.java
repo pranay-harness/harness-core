@@ -1,7 +1,9 @@
-package io.harness.testing;
+package io.harness.stresstesting.execution;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
@@ -9,6 +11,8 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.DelegateServiceDriverRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.testing.DelegateTaskStressTest;
+import io.harness.testing.DelegateTaskStressTestStage;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -35,6 +39,7 @@ import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateTaskStressTestApplication extends Application<DelegateTaskStressTestConfiguration> {
   DelegateServiceBlockingStub delegateServiceBlockingStub;
 
