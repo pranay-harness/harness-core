@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"net/http"
@@ -148,6 +149,7 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 			WriteInternalError(w, err)
 			return
 		}
+		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)))
 		repo := r.FormValue(repoParam)
 		branch := r.FormValue(branchParam)
 		sha := r.FormValue(shaParam)
