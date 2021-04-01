@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.security.authentication.AuthenticationMechanism;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.constraints.NotNull;

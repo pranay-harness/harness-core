@@ -11,7 +11,6 @@ import java.util.Set;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.PL)
