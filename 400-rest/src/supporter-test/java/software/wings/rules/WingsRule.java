@@ -6,7 +6,6 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -43,21 +42,10 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
-import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
-import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
-import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
@@ -74,7 +62,6 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -120,10 +107,8 @@ import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -241,7 +226,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(0, cacheModule);
-    addPMSSdkModule(modules);
     long start = currentTimeMillis();
     injector = Guice.createInjector(modules);
     long diff = currentTimeMillis() - start;
@@ -257,27 +241,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         }
       }
     }
-  }
-
-  public void addPMSSdkModule(List<Module> modules) {
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
-  }
-
-  private PmsSdkConfiguration getPmsSdkConfiguration() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
-        .serviceName("wings")
-        .engineSteps(WingsStepRegistrar.getEngineSteps())
-        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(engineEventHandlersMap)
-        .build();
   }
 
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
@@ -448,13 +411,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
               injector.getInstance(NotifyQueuePublisherRegister.class);
           notifyQueuePublisherRegister.register(
               ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
-        } else if (queueListenerClass.equals(NgOrchestrationNotifyEventListener.class)) {
-          final QueuePublisher<NotifyEvent> publisher =
-              injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
-          final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
-              injector.getInstance(NotifyQueuePublisherRegister.class);
-          notifyQueuePublisherRegister.register(
-              NG_ORCHESTRATION, payload -> publisher.send(asList(NG_ORCHESTRATION), payload));
         }
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }

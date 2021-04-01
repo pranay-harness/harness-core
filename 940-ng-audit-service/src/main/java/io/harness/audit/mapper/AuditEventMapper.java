@@ -1,17 +1,25 @@
 package io.harness.audit.mapper;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.entities.AuditEvent;
+import io.harness.ng.core.common.beans.KeyValuePair;
+import io.harness.ng.core.mapper.KeyValuePairMapper;
 
+import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(PL)
 @UtilityClass
 public class AuditEventMapper {
   public static AuditEvent fromDTO(AuditEventDTO dto) {
+    List<KeyValuePair> internalInfo = KeyValuePairMapper.convertToList(dto.getInternalInfo());
+    if (isEmpty(internalInfo)) {
+      internalInfo = null;
+    }
     return AuditEvent.builder()
         .insertId(dto.getInsertId())
         .resourceScope(dto.getResourceScope())
@@ -24,7 +32,7 @@ public class AuditEventMapper {
         .action(dto.getAction())
         .yamlDiff(dto.getYamlDiff())
         .auditEventData(dto.getAuditEventData())
-        .additionalInfo(dto.getAdditionalInfo())
+        .internalInfo(internalInfo)
         .build();
   }
 
@@ -41,7 +49,6 @@ public class AuditEventMapper {
         .action(auditEvent.getAction())
         .yamlDiff(auditEvent.getYamlDiff())
         .auditEventData(auditEvent.getAuditEventData())
-        .additionalInfo(auditEvent.getAdditionalInfo())
         .build();
   }
 }

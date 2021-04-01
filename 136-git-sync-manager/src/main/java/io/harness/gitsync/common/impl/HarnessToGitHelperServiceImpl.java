@@ -1,6 +1,9 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -24,6 +27,7 @@ import com.google.inject.name.Named;
 import java.util.Optional;
 
 @Singleton
+@OwnedBy(DX)
 public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService {
   private final ConnectorService connectorService;
   private final DecryptGitApiAccessHelper decryptScmApiAccess;

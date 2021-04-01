@@ -7,14 +7,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.interrupts.Interrupt;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
 import lombok.Builder;
 
 @OwnedBy(CDC)
-public class AbortAllInterruptCallback implements NotifyCallback {
+public class AbortAllInterruptCallback implements OldNotifyCallback {
   @Inject private InterruptService interruptService;
 
   Interrupt interrupt;

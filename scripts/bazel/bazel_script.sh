@@ -124,6 +124,7 @@ BAZEL_MODULES="\
   //945-ng-audit-client:module \
   //949-git-sync-sdk:module \
   //950-command-library-common:module \
+  //950-cg-ng-shared-orchestration-beans:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
@@ -398,6 +399,7 @@ build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 950-command-library-common
+build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api

@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
@@ -30,6 +33,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by brett on 11/18/17
  */
+@OwnedBy(CDP)
 @Slf4j
 @JsonTypeName("ECS_SETUP")
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {

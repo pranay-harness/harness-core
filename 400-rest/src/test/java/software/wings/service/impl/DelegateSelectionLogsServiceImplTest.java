@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -34,7 +35,6 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.selection.log.ProfileScopingRulesMetadata;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.threading.Concurrent;
 
 import software.wings.WingsBaseTest;

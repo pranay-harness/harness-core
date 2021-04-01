@@ -1,6 +1,6 @@
 package software.wings.api.k8s;
 
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.beans.SweepingOutput;
 
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 

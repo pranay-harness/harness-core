@@ -14,6 +14,7 @@ require (
 	github.com/apex/log v1.3.0 // indirect
 	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
 	github.com/bombsimon/wsl/v3 v3.1.0 // indirect
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-critic/go-critic v0.4.3 // indirect
 	github.com/go-toolsmith/typep v1.0.2 // indirect
 	github.com/golang/mock v1.4.4

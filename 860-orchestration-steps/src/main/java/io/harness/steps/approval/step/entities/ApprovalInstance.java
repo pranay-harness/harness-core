@@ -74,9 +74,8 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
 
   @NotNull ApprovalType type;
   @NotNull ApprovalStatus status;
-  String approvalMessage;
-  boolean includePipelineExecutionHistory;
   long deadline;
+
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
@@ -112,8 +111,6 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     setType(stepParameters.getApprovalType());
     setStatus(ApprovalStatus.WAITING);
-    setApprovalMessage((String) stepParameters.getApprovalMessage().fetchFinalValue());
-    setIncludePipelineExecutionHistory((boolean) stepParameters.getIncludePipelineExecutionHistory().fetchFinalValue());
     setDeadline(calculateDeadline(stepParameters.getTimeout()));
   }
 
