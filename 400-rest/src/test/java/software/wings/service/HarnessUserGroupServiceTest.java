@@ -18,7 +18,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
@@ -53,7 +52,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   private String harnessUserGroupName2 = "harnessUserGroupName2";
   private String description1 = "harnessUserGroup 1";
   private String description2 = "harnessUserGroup 2";
-  private HarnessUserGroupType groupType1 = HarnessUserGroupType.RESTRICTED;
+  private HarnessUserGroup.GroupType groupType1 = HarnessUserGroup.GroupType.RESTRICTED;
 
   /**
    * Sets mocks.

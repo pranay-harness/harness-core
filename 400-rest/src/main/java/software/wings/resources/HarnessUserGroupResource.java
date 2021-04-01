@@ -3,7 +3,6 @@ package software.wings.resources;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupType;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import com.google.inject.Inject;
@@ -37,8 +36,8 @@ public class HarnessUserGroupResource {
   public RestResponse<HarnessUserGroup> createHarnessUserGroup(@QueryParam("accountId") String accountId,
       @QueryParam("name") String name, @QueryParam("description") String description,
       @QueryParam("memberIds") List<String> memberIds) {
-    HarnessUserGroup harnessUserGroup = harnessUserGroupService.createHarnessUserGroup(
-        name, description, Sets.newHashSet(memberIds), Sets.newHashSet(Arrays.asList(accountId)), HarnessUserGroupType.DEFAULT);
+    HarnessUserGroup harnessUserGroup = harnessUserGroupService.createHarnessUserGroup(name, description,
+        Sets.newHashSet(memberIds), Sets.newHashSet(Arrays.asList(accountId)), HarnessUserGroup.GroupType.RESTRICTED);
     return new RestResponse<>(harnessUserGroup);
   }
 

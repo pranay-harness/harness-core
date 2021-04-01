@@ -28,7 +28,6 @@ import org.mongodb.morphia.annotations.Entity;
 @OwnedBy(PL)
 @JsonInclude(NON_EMPTY)
 @Data
-@Builder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "harnessUserGroups", noClassnameStored = true)
@@ -39,10 +38,7 @@ public class HarnessUserGroup extends Base {
   @FdIndex private Set<String> memberIds;
   private Set<String> accountIds;
   private GroupType groupType;
-
-  public enum GroupType {DEFAULT, RESTRICTED};
-
-  public enum HarnessUserGroupType {DEFAULT, RESTRICTED}
+  public enum GroupType {DEFAULT, RESTRICTED}
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

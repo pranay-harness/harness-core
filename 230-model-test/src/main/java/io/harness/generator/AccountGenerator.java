@@ -314,7 +314,7 @@ public class AccountGenerator {
                                             .memberIds(Sets.newHashSet(user.getUuid()))
                                             .accountIds(Sets.newHashSet(accountId))
                                             .name("harnessUserGroup")
-                                            .groupType(HarnessUserGroup.HarnessUserGroupType.DEFAULT)
+                                            .groupType(HarnessUserGroup.GroupType.DEFAULT)
                                             .build();
     harnessUserGroupService.save(harnessUserGroup);
   }

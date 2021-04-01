@@ -5,7 +5,6 @@ import io.harness.beans.PageResponse;
 
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupType;
 
 import java.util.List;
 import java.util.Set;
@@ -61,7 +60,7 @@ public interface HarnessUserGroupService {
 
   boolean isHarnessSupportEnabledForAccount(String accountId);
 
-  HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds, Set<String> accountIds, HarnessUserGroupType groupType);
+  HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds, Set<String> accountIds, HarnessUserGroup.GroupType groupType);
 
   List<HarnessUserGroup> listHarnessUserGroupForAccount(String accountId);
 }
