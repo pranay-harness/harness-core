@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -17,7 +17,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-public class EngineResumeCallback implements NotifyCallback {
+public class EngineResumeCallback implements OldNotifyCallback {
   @Inject OrchestrationEngine orchestrationEngine;
   @Inject ResponseDataMapper responseDataMapper;
 

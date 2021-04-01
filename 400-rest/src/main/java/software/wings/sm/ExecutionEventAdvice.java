@@ -3,8 +3,8 @@ package software.wings.sm;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
+import io.harness.beans.ExecutionInterruptType;
+import io.harness.beans.RepairActionCode;
 
 import java.util.List;
 import java.util.Map;

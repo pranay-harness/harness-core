@@ -1,5 +1,8 @@
 package io.harness.ccm.billing.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
@@ -11,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class BillingDataPipelineRecordDao {
   @Inject private HPersistence persistence;
 

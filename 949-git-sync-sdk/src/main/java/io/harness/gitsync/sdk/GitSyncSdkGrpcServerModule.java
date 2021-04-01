@@ -1,8 +1,10 @@
 package io.harness.gitsync.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.GitSyncSdkConfiguration.DeployMode.REMOTE;
 import static io.harness.gitsync.sdk.GitSyncGrpcConstants.GitSyncSdkInternalService;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.gittoharness.GitToHarnessGrpcService;
 import io.harness.grpc.server.GrpcInProcessServer;
@@ -23,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@OwnedBy(DX)
 public class GitSyncSdkGrpcServerModule extends AbstractModule {
   private static GitSyncSdkGrpcServerModule instance;
 

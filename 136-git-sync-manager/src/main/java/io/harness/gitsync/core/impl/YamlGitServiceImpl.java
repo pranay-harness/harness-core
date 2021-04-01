@@ -11,7 +11,6 @@ import static io.harness.gitsync.common.YamlProcessingLogContext.GIT_CONNECTOR_I
 import static io.harness.gitsync.common.YamlProcessingLogContext.REPO_NAME;
 import static io.harness.gitsync.common.YamlProcessingLogContext.WEBHOOK_TOKEN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 
@@ -39,7 +38,6 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
-import io.harness.gitsync.core.callback.GitCommandCallback;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
@@ -200,10 +198,10 @@ public class YamlGitServiceImpl implements YamlGitService {
     // TODO (abhinav) : Adopt this to use delegate 2.0 . Meanwhile replacing taskId with some dummy string
     // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
     String taskId = generateUuid();
-    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
-        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorRef(),
-            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
-        taskId);
+    //    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
+    //        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorRef(),
+    //            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
+    //        taskId);
 
     log.info(
         GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",

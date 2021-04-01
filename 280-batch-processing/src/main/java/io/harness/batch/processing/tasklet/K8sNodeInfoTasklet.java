@@ -2,6 +2,8 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -27,6 +29,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +43,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sNodeInfoTasklet implements Tasklet {
   private JobParameters parameters;
@@ -53,6 +57,15 @@ public class K8sNodeInfoTasklet implements Tasklet {
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
   private static final boolean UPDATE_OLD_NODE_DATA = false;
+
+  private static final int VM_INDEX = 2;
+  private static final String VM_INDEX_VALUE = "virtualMachines";
+  private static final int VMSS_INDEX = 4;
+  private static final String VMSS_INDEX_VALUE = "virtualMachineScaleSets";
+  private static final int SUBSCRIPTION_INDEX = 3;
+  private static final String SUBSCRIPTION_INDEX_VALUE = "subscriptions";
+  private static final int RESOURCE_GROUP_INDEX = 5;
+  private static final String RESOURCE_GROUP_INDEX_VALUE = "resourceGroups";
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -100,7 +113,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
     Map<String, String> metaData = new HashMap<>();
     CloudProvider k8SCloudProvider =
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
-    String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId());
+    String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId(), k8SCloudProvider);
     if (CloudProvider.UNKNOWN == k8SCloudProvider) {
       return InstanceInfo.builder().metaData(metaData).build();
     }
@@ -118,6 +131,28 @@ public class K8sNodeInfoTasklet implements Tasklet {
         String.valueOf(K8sResourceUtils.getPodCapacity(nodeInfo.getAllocatableResourceMap())));
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
       metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
+    }
+    if (k8SCloudProvider == CloudProvider.AZURE) {
+      // Insert subscriptionid, resourcegroup name too in metadata
+      String[] arrOfStr = nodeInfo.getProviderId().split("/");
+      log.info("Azure providerId after split: {}", Arrays.toString(arrOfStr));
+      try {
+        if (arrOfStr[SUBSCRIPTION_INDEX].equals(SUBSCRIPTION_INDEX_VALUE)) {
+          metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID, arrOfStr[SUBSCRIPTION_INDEX + 1]);
+        }
+      } catch (Exception e) {
+        log.error("Error while getting subscription id", e);
+        metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID, "");
+      }
+
+      try {
+        if (arrOfStr[RESOURCE_GROUP_INDEX].equals(RESOURCE_GROUP_INDEX_VALUE)) {
+          metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME, arrOfStr[RESOURCE_GROUP_INDEX + 1]);
+        }
+      } catch (Exception e) {
+        log.error("Error while getting resource group", e);
+        metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME, "");
+      }
     }
     InstanceMetaDataUtils.populateNodePoolNameFromLabel(labelsMap, metaData);
 
@@ -185,10 +220,30 @@ public class K8sNodeInfoTasklet implements Tasklet {
   }
 
   @VisibleForTesting
-  public String getCloudProviderInstanceId(String providerId) {
+  public String getCloudProviderInstanceId(String providerId, CloudProvider k8SCloudProvider) {
     if (null == providerId) {
       return "";
     }
-    return providerId.substring(providerId.lastIndexOf('/') + 1);
+    if (k8SCloudProvider == CloudProvider.AZURE) {
+      // ProviderID:
+      // azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_cetest1_eastus/providers/Microsoft.Compute/virtualMachines/aks-agentpool-41737416-1
+      // ProviderID:
+      // azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_ce-dev-cluster2_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-agentpool-14257926-vmss/virtualMachines/1
+      String[] arrOfStr = providerId.split("/");
+      try {
+        if (arrOfStr[arrOfStr.length - VM_INDEX].equals(VM_INDEX_VALUE)
+            && arrOfStr[arrOfStr.length - VMSS_INDEX].equals(VMSS_INDEX_VALUE)) {
+          providerId = arrOfStr[arrOfStr.length - 3] + "_" + arrOfStr[arrOfStr.length - 1];
+        } else if (arrOfStr[arrOfStr.length - VM_INDEX].equals(VM_INDEX_VALUE)) {
+          providerId = arrOfStr[arrOfStr.length - 1];
+        }
+        return providerId;
+      } catch (Exception e) {
+        log.error("Error while getting cloud provider id", e);
+        return "";
+      }
+    } else {
+      return providerId.substring(providerId.lastIndexOf('/') + 1);
+    }
   }
 }

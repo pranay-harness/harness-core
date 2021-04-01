@@ -1,5 +1,8 @@
 package io.harness.cdng.pipeline.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
@@ -20,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Map;
 
+@OwnedBy(PIPELINE)
 public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
 

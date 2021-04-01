@@ -1,7 +1,7 @@
 package io.harness.beans.sweepingoutputs;
 
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -17,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("podCleanupDetails")
 @JsonTypeName("podCleanupDetails")
-public class PodCleanupDetails implements SweepingOutput {
+public class PodCleanupDetails implements ExecutionSweepingOutput {
   List<String> cleanUpContainerNames;
   Infrastructure infrastructure;
   String podName;

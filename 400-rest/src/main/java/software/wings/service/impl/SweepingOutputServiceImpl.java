@@ -5,13 +5,13 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.InstanceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;

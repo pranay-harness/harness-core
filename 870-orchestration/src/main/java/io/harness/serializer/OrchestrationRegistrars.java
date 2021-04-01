@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
@@ -11,6 +14,7 @@ import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
 import io.harness.serializer.morphia.converters.ExecutableResponseMorphiaConverter;
 import io.harness.serializer.morphia.converters.ExecutionMetadataMorphiaConverter;
+import io.harness.serializer.morphia.converters.ExecutionPrincipalInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.ExecutionTriggerInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
@@ -61,6 +65,8 @@ import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadCo
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
+import io.harness.serializer.spring.converters.principal.ExecutionPrincipalInfoReadConverter;
+import io.harness.serializer.spring.converters.principal.ExecutionPrincipalInfoWriteConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectWriteConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
@@ -94,6 +100,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class OrchestrationRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -131,6 +138,8 @@ public class OrchestrationRegistrars {
           .add(FailureInfoMorphiaConverter.class)
           .add(ExecutableResponseMorphiaConverter.class)
           .add(ExecutionTriggerInfoMorphiaConverter.class)
+          .add(ExecutionPrincipalInfoMorphiaConverter.class)
+
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
@@ -160,5 +169,6 @@ public class OrchestrationRegistrars {
       AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class,
       InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
-      NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class);
+      NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
+      ExecutionPrincipalInfoWriteConverter.class);
 }

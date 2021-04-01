@@ -1,5 +1,7 @@
 package io.harness.ci.plan.creator.step;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -18,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Inject private KryoSerializer kryoSerializer;
 

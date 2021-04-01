@@ -1,9 +1,12 @@
 package io.harness.util;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 
 import com.google.common.collect.ImmutableMap;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIProjectAutoLogContext extends AutoLogContext {
   private static final String PIPELINE_IDENTIFIER = "pipelineId";
   private static final String PROJECT_IDENTIFIER = "projectIdentifier";

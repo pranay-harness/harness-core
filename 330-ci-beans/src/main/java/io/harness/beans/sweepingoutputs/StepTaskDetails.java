@@ -1,6 +1,6 @@
 package io.harness.beans.sweepingoutputs;
 
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -17,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("stepTaskDetails")
 @JsonTypeName("stepTaskDetails")
-public class StepTaskDetails implements SweepingOutput {
+public class StepTaskDetails implements ExecutionSweepingOutput {
   Map<String, String> taskIds;
   List<String> logKeys;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

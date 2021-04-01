@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
@@ -24,7 +25,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.k8s.K8sElement;
 import software.wings.beans.ContainerInfrastructureMapping;

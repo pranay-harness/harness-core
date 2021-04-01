@@ -55,6 +55,7 @@ import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
@@ -105,7 +106,6 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
 @Slf4j
 @OwnedBy(PIPELINE)
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {
@@ -187,6 +187,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
+    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();

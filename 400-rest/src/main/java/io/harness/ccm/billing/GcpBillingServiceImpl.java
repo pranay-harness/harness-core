@@ -1,5 +1,8 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.GcpBillingEntityDataPoints.GcpBillingEntityDataPointsBuilder;
 import io.harness.ccm.billing.bigquery.AliasExpression;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
@@ -45,6 +48,7 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class GcpBillingServiceImpl implements GcpBillingService {
   private BigQueryService bigQueryService;
 

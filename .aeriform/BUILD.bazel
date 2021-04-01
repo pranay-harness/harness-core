@@ -78,6 +78,10 @@ aeriform("//360-cg-manager:module")
 
 aeriform("//370-users-syncbridge:module")
 
+aeriform("//375-ce-graphql:module")
+
+aeriform("//375-ce-graphql:tests")
+
 aeriform("//380-cg-graphql:module")
 
 aeriform("//380-cg-graphql:tests")
@@ -263,6 +267,8 @@ aeriform("//945-ng-audit-client:module")
 aeriform("//949-git-sync-sdk:module")
 
 aeriform("//950-command-library-common:module")
+
+aeriform("//950-cg-ng-shared-orchestration-beans:module")
 
 aeriform("//950-common-entities:module")
 

@@ -96,19 +96,19 @@
     "Condition": {
       "type": "object",
       "required": [
-        "op",
+        "key",
+        "operator",
         "value"
       ],
       "properties": {
         "key": {
           "type": "string"
         },
-        "op": {
+        "operator": {
           "type": "string",
           "enum": [
             "equals",
             "not equals",
-            "contains",
             "in",
             "not in"
           ]
@@ -366,30 +366,18 @@
           "type": "object",
           "required": [
             "approvalCriteria",
-            "approvalMessage",
             "connectorRef",
-            "includePipelineExecutionHistory",
             "issueKey",
-            "projectKey",
             "rejectionCriteria"
           ],
           "properties": {
             "approvalCriteria": {
               "$ref": "#/definitions/CriteriaSpecWrapper"
             },
-            "approvalMessage": {
-              "type": "string"
-            },
             "connectorRef": {
               "type": "string"
             },
-            "includePipelineExecutionHistory": {
-              "type": "boolean"
-            },
             "issueKey": {
-              "type": "string"
-            },
-            "projectKey": {
               "type": "string"
             },
             "rejectionCriteria": {
@@ -400,6 +388,55 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "JiraCreateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "issueType": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "projectKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraField": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "KeyValuesCriteriaSpec": {
       "allOf": [
         {
@@ -408,8 +445,7 @@
         {
           "type": "object",
           "required": [
-            "conditions",
-            "matchAnyCondition"
+            "conditions"
           ],
           "properties": {
             "conditions": {

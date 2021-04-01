@@ -43,6 +43,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("harnessApprovalInstance")
 public class HarnessApprovalInstance extends ApprovalInstance {
+  @NotNull String approvalMessage;
+  boolean includePipelineExecutionHistory;
+
   @NotNull List<HarnessApprovalActivity> approvalActivities;
   @NotNull ApproversDTO approvers;
   List<ApproverInputInfoDTO> approverInputs;
@@ -97,11 +100,14 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   }
 
   public HarnessApprovalOutcome toHarnessApprovalOutcome() {
+    List<ApproverInput> approverInputs = getStatus() == ApprovalStatus.APPROVED
+        ? fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null)
+        : null;
     return HarnessApprovalOutcome.builder()
         .approvalActivities(approvalActivities)
-        .approverInputs(getStatus() == ApprovalStatus.APPROVED
-                ? fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null)
-                : null)
+        .approverInputs(approverInputs == null
+                ? null
+                : approverInputs.stream().collect(Collectors.toMap(ApproverInput::getName, ApproverInput::getValue)))
         .build();
   }
 
@@ -111,16 +117,20 @@ public class HarnessApprovalInstance extends ApprovalInstance {
       return null;
     }
 
-    HarnessApprovalInstance instance = HarnessApprovalInstance.builder()
-                                           .approvalActivities(new ArrayList<>())
-                                           .approvers(ApproversDTO.fromApprovers(stepParameters.getApprovers()))
-                                           .approverInputs(stepParameters.getApproverInputs() == null
-                                                   ? null
-                                                   : stepParameters.getApproverInputs()
-                                                         .stream()
-                                                         .map(ApproverInputInfoDTO::fromApproverInputInfo)
-                                                         .collect(Collectors.toList()))
-                                           .build();
+    HarnessApprovalInstance instance =
+        HarnessApprovalInstance.builder()
+            .approvalMessage((String) stepParameters.getApprovalMessage().fetchFinalValue())
+            .includePipelineExecutionHistory(
+                (boolean) stepParameters.getIncludePipelineExecutionHistory().fetchFinalValue())
+            .approvalActivities(new ArrayList<>())
+            .approvers(ApproversDTO.fromApprovers(stepParameters.getApprovers()))
+            .approverInputs(stepParameters.getApproverInputs() == null
+                    ? null
+                    : stepParameters.getApproverInputs()
+                          .stream()
+                          .map(ApproverInputInfoDTO::fromApproverInputInfo)
+                          .collect(Collectors.toList()))
+            .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;
   }

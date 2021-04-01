@@ -1,6 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Used for getting details of CRD workload types that we don't watch.
  */
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CrdWorkloadFetcher {

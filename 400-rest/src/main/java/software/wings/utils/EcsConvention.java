@@ -1,7 +1,10 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.lang3.StringUtils.trim;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.Misc;
 
 import java.util.regex.Pattern;
@@ -9,6 +12,7 @@ import java.util.regex.Pattern;
 /**
  * Created by rishi on 2/7/17.
  */
+@OwnedBy(CDP)
 public class EcsConvention {
   public static final String DELIMITER = "__";
   private static final String VOLUME_PREFIX = "vol_";

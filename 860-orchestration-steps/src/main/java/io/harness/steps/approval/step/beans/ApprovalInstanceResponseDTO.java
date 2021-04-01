@@ -24,8 +24,6 @@ public class ApprovalInstanceResponseDTO {
 
   @NotNull ApprovalType type;
   @NotNull ApprovalStatus status;
-  @NotNull String approvalMessage;
-  boolean includePipelineExecutionHistory;
   long deadline;
 
   @JsonTypeInfo(
