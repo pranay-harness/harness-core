@@ -15,4 +15,6 @@ public class GitFileDetails {
   private String branch;
   private String fileContent;
   private String commitMessage;
+  private String oldFileSha; // Needed only in case of update file.
+  private String userEmail;
 }
