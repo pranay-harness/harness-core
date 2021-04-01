@@ -17,6 +17,8 @@ import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
@@ -70,8 +72,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class BuildJobEnvInfoBuilder {
   private static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
   private static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";

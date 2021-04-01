@@ -13,6 +13,8 @@ import static java.lang.String.format;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
@@ -33,6 +35,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class PluginSettingUtils {
   public static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
   public static final String PLUGIN_REPO = "PLUGIN_REPO";

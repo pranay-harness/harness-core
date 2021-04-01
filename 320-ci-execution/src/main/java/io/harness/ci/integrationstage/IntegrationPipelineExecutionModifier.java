@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationPipelineExecutionModifier implements PipelineExecutionModifier {
   @Override
   public NgPipeline modifyExecutionPlan(NgPipeline ngPipeline, ExecutionPlanCreationContext context) {

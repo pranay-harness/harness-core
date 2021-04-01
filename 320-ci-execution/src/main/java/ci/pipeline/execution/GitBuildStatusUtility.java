@@ -8,6 +8,8 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
 import io.harness.PipelineUtils;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class GitBuildStatusUtility {
   private static final String UNSUPPORTED = "UNSUPPORTED";
   private static final String GITHUB_ERROR = "error";
