@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
@@ -17,7 +16,7 @@ import (
 // nodes and relations
 type Parser interface {
 	// Parse and read the file from
-	Parse(file string) (*Callgraph, error)
+	Parse(file []string) (*Callgraph, error)
 }
 
 // CallGraphParser struct definition
@@ -35,23 +34,19 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 }
 
 // iterate through all the cg files in the directory, parse each of them and return Callgraph object
-func (cg *CallGraphParser) Parse(cgDir string, files []string) (*Callgraph, error) {
+func (cg *CallGraphParser) Parse(files []string) (*Callgraph, error) {
 	var finalCg []string
-	if !strings.HasSuffix(cgDir, "/") {
-		cgDir = cgDir + "/"
-	}
 	for _, file := range files {
-		fName := cgDir + file
-		f, err := cg.fs.Open(fName)
+		f, err := cg.fs.Open(file)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", fName))
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
 		}
 		r := bufio.NewReader(f)
 		cgStr, err := rFile(r)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse file %s", fName))
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse file %s", file))
 		}
-		cg.log.Infow(fmt.Sprintf("successfully parsed cg file %s", fName))
+		cg.log.Infow(fmt.Sprintf("successfully parsed cg file %s", file))
 		finalCg = append(finalCg, cgStr...)
 	}
 	return parseInt(finalCg)
