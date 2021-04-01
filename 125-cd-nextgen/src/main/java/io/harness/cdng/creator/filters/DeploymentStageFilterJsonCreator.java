@@ -18,12 +18,15 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +57,7 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     DeploymentStageConfig deploymentStageConfig = (DeploymentStageConfig) yamlField.getStageType();
     Set<EntityDetailProtoDTO> referredEntities = getReferences(filterCreationContext.getSetupMetadata().getAccountId(),
         filterCreationContext.getSetupMetadata().getOrgId(), filterCreationContext.getSetupMetadata().getProjectId(),
-        deploymentStageConfig);
+        deploymentStageConfig, yamlField.getIdentifier());
     creationResponse.referredEntities(new ArrayList<>(referredEntities));
 
     if (deploymentStageConfig.getExecution() == null) {
@@ -62,6 +65,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
+    if (service == null
+        && (deploymentStageConfig.getServiceConfig().getServiceRef() == null
+            || deploymentStageConfig.getServiceConfig().getServiceRef().fetchFinalValue() == null)
+        && deploymentStageConfig.getServiceConfig().getUseFromStage() == null) {
+      throw new InvalidRequestException("One of service, serviceRef and useFromStage should be present");
+    }
     if (service != null && isNotEmpty(service.getName())) {
       cdFilter.serviceName(service.getName());
     }
@@ -72,12 +81,20 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
-    if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+    if (infrastructure == null) {
+      throw new InvalidRequestException("Infrastructure cannot be null");
+    }
+    if (infrastructure.getEnvironment() == null
+        && (infrastructure.getEnvironmentRef() == null || infrastructure.getEnvironmentRef().fetchFinalValue() == null)
+        && infrastructure.getUseFromStage() == null) {
+      throw new InvalidRequestException("One of environment, environment and useFromStage should be present");
+    }
+
+    if (infrastructure.getEnvironment() != null && isNotEmpty(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
     }
 
-    if (infrastructure != null && infrastructure.getInfrastructureDefinition() != null
+    if (infrastructure.getInfrastructureDefinition() != null
         && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
       cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }
@@ -87,9 +104,13 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
   }
 
   private Set<EntityDetailProtoDTO> getReferences(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, DeploymentStageConfig deploymentStageConfig) {
-    EntityReferenceExtractorVisitor visitor =
-        simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
+      String projectIdentifier, DeploymentStageConfig deploymentStageConfig, String stageIdentifier) {
+    List<LevelNode> levelNodes = new LinkedList<>();
+    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.PIPELINE).build());
+    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.STAGES).build());
+    levelNodes.add(LevelNode.builder().qualifierName(stageIdentifier).build());
+    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
+        accountIdentifier, orgIdentifier, projectIdentifier, levelNodes);
     visitor.walkElementTree(deploymentStageConfig);
     return visitor.getEntityReferenceSet();
   }

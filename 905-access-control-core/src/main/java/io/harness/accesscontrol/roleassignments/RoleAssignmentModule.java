@@ -1,9 +1,16 @@
 package io.harness.accesscontrol.roleassignments;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDaoImpl;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentMorphiaRegistrar;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidatorImpl;
+import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
@@ -11,6 +18,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@OwnedBy(PL)
 public class RoleAssignmentModule extends AbstractModule {
   private static RoleAssignmentModule instance;
 
@@ -28,12 +36,15 @@ public class RoleAssignmentModule extends AbstractModule {
     morphiaRegistrars.addBinding().toInstance(RoleAssignmentMorphiaRegistrar.class);
 
     bind(RoleAssignmentService.class).to(RoleAssignmentServiceImpl.class);
+    bind(RoleAssignmentValidator.class).to(RoleAssignmentValidatorImpl.class);
     bind(RoleAssignmentDao.class).to(RoleAssignmentDaoImpl.class);
     registerRequiredBindings();
   }
 
   private void registerRequiredBindings() {
     requireBinding(ScopeService.class);
+    requireBinding(RoleService.class);
+    requireBinding(ResourceGroupService.class);
     requireBinding(MongoTemplate.class);
   }
 }

@@ -1,8 +1,10 @@
 package io.harness.pms.serializer.recaster;
 
 import io.harness.core.Recast;
+import io.harness.core.Recaster;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
+import io.harness.serializer.recaster.ParameterFieldRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoEnumRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoRecastTransformer;
 
@@ -17,6 +19,7 @@ public class RecastOrchestrationUtils {
     recast.addTransformer(new JsonObjectRecastTransformer());
     recast.addTransformer(new ProtoRecastTransformer());
     recast.addTransformer(new ProtoEnumRecastTransformer());
+    recast.addTransformer(new ParameterFieldRecastTransformer());
   }
 
   public <T> Document toDocument(T entity) {
@@ -46,5 +49,13 @@ public class RecastOrchestrationUtils {
     }
 
     return fromDocument(Document.parse(json), entityClass);
+  }
+
+  public Object getEncodedValue(Document doc) {
+    return doc.get(Recaster.ENCODED_VALUE);
+  }
+
+  public Object setEncodedValue(Document doc, Object newValue) {
+    return doc.put(Recaster.ENCODED_VALUE, newValue);
   }
 }

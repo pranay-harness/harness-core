@@ -1,7 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -15,7 +16,8 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
@@ -64,9 +66,10 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-@TargetModule(Module._950_NG_CORE)
+@TargetModule(HarnessModule._950_NG_CORE)
 public class NGSecretServiceImpl implements NGSecretService {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
   private static final String ACCOUNT_IDENTIFIER_KEY =

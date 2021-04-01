@@ -1,12 +1,13 @@
 package software.wings.delegatetasks.azure.arm;
 
-import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
@@ -15,6 +16,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.exception.AzureClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -24,7 +26,8 @@ import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public abstract class AbstractAzureARMTaskHandler {
   AzureTaskExecutionResponse executeTask(AzureARMTaskParameters azureARMTaskParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient) {
@@ -41,7 +44,7 @@ public abstract class AbstractAzureARMTaskHandler {
         throw new InvalidRequestException(message, ex);
       }
 
-      logErrorMsg(azureARMTaskParameters, logStreamingTaskClient, ex, message);
+      logErrorMsg(azureARMTaskParameters, ex, message);
       return handleFailureARMTaskResponse(message);
     }
   }
@@ -69,29 +72,44 @@ public abstract class AbstractAzureARMTaskHandler {
 
   private AzureTaskExecutionResponse handleFailureARMTaskResponse(String message) {
     return AzureTaskExecutionResponse.builder()
+        .azureTaskResponse(AzureARMDeploymentResponse.builder().errorMsg(message).build())
         .errorMessage(message)
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
         .build();
   }
 
-  protected void logErrorMsg(AzureARMTaskParameters azureARMTaskParameters,
-      ILogStreamingTaskClient logStreamingTaskClient, Exception ex, String message) {
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(DEPLOYMENT_STATUS);
-    logCallback.saveExecutionLog(message, ERROR, FAILURE);
+  protected void logErrorMsg(AzureARMTaskParameters azureARMTaskParameters, Exception ex, String message) {
     log.error(format("Exception: [%s] while processing Azure ARM task: [%s].", message,
                   azureARMTaskParameters.getCommandType().name()),
         ex);
   }
 
-  protected void markDeploymentStatusAsSuccess(
-      AzureARMTaskParameters azureARMTaskParameters, ILogStreamingTaskClient logStreamingTaskClient) {
-    if (azureARMTaskParameters.isSyncTask()) {
+  protected void printDefaultFailureMsgForARMDeploymentUnits(
+      Exception ex, ILogStreamingTaskClient logStreamingTaskClient, final String runningCommandUnit) {
+    if ((ex instanceof InvalidRequestException) || isBlank(runningCommandUnit)) {
       return;
     }
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.DEPLOYMENT_STATUS);
-    logCallback.saveExecutionLog(String.format("The following task - [%s] completed successfully",
-                                     azureARMTaskParameters.getCommandType().name()),
-        LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+
+    if (AzureConstants.EXECUTE_ARM_DEPLOYMENT.equals(runningCommandUnit)) {
+      printErrorMsg(logStreamingTaskClient, runningCommandUnit, format("%nError while executing ARM deployment"));
+    }
+
+    if (AzureConstants.ARM_DEPLOYMENT_STEADY_STATE.equals(runningCommandUnit)) {
+      printErrorMsg(logStreamingTaskClient, runningCommandUnit, format("%nError during ARM deployment steady check"));
+    }
+
+    if (AzureConstants.ARM_DEPLOYMENT_OUTPUTS.equals(runningCommandUnit)) {
+      printErrorMsg(logStreamingTaskClient, runningCommandUnit, format("%nError while getting ARM deployment outputs"));
+    }
+  }
+
+  protected void printErrorMsg(
+      ILogStreamingTaskClient logStreamingTaskClient, final String runningCommandUnit, final String errorMsg) {
+    if (isBlank(runningCommandUnit)) {
+      return;
+    }
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(runningCommandUnit);
+    logCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
   }
 
   protected abstract AzureARMTaskResponse executeTaskInternal(AzureARMTaskParameters azureARMTaskParameters,

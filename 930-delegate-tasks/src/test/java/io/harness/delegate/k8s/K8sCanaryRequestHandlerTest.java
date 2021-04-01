@@ -1,5 +1,7 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.k8s.K8sTestHelper.deployment;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
@@ -60,6 +63,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class K8sCanaryRequestHandlerTest extends CategoryTest {
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private K8sCanaryBaseHandler k8sCanaryBaseHandler;
@@ -125,6 +129,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   public void testDryRun(boolean skipDryRun) throws Exception {
     String releaseName = "releaseName";
     List<String> valuesYamlList = emptyList();
+    List<String> openshiftParamList = emptyList();
     List<FileData> manifestFiles = emptyList();
     List<KubernetesResource> kubernetesResources = emptyList();
     K8sCanaryDeployRequest k8sCanaryDeployRequest = K8sCanaryDeployRequest.builder()
@@ -132,6 +137,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
                                                         .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
                                                         .manifestDelegateConfig(manifestDelegateConfig)
                                                         .valuesYamlList(valuesYamlList)
+                                                        .openshiftParamList(openshiftParamList)
                                                         .skipDryRun(skipDryRun)
                                                         .timeoutIntervalInMin(timeoutIntervalInMin)
                                                         .build();
@@ -277,12 +283,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     List<KubernetesResource> deployment = ManifestHelper.processYaml(K8sTestConstants.DEPLOYMENT_YAML);
     List<FileData> manifestFiles = emptyList();
     List<String> valuesYamlList = emptyList();
+    List<String> openshiftParamList = emptyList();
     K8sCanaryDeployRequest canaryDeployRequest = K8sCanaryDeployRequest.builder()
                                                      .timeoutIntervalInMin(timeoutIntervalInMin)
                                                      .releaseName(releaseName)
                                                      .manifestDelegateConfig(manifestDelegateConfig)
                                                      .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
                                                      .valuesYamlList(valuesYamlList)
+                                                     .openshiftParamList(openshiftParamList)
                                                      .build();
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
@@ -331,11 +339,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   public void testPrepareForCanaryCount() throws Exception {
     K8sCanaryHandlerConfig canaryHandlerConfig = k8sCanaryRequestHandler.getK8sCanaryHandlerConfig();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    K8sCanaryDeployRequest deployRequest =
-        K8sCanaryDeployRequest.builder().instanceUnitType(NGInstanceUnitType.COUNT).instances(4).build();
+    K8sCanaryDeployRequest deployRequest = K8sCanaryDeployRequest.builder()
+                                               .instanceUnitType(NGInstanceUnitType.COUNT)
+                                               .instances(4)
+                                               .skipResourceVersioning(true)
+                                               .build();
     doReturn(true)
         .when(k8sCanaryBaseHandler)
-        .prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback);
+        .prepareForCanary(canaryHandlerConfig, delegateTaskParams, true, logCallback);
     doReturn(1).when(k8sCanaryBaseHandler).getCurrentInstances(canaryHandlerConfig, delegateTaskParams, logCallback);
 
     k8sCanaryRequestHandler.prepareForCanary(deployRequest, delegateTaskParams, logCallback);
@@ -439,5 +450,69 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     K8sCanaryDeployRequest applyManifestFailRequest = deployRequestBase.releaseName("failApplyManifest").build();
     spyCanaryRequestHandler.executeTask(applyManifestFailRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(1)).failAndSaveKubernetesRelease(handlerConfig, "failApplyManifest");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCanaryWorkloadDeployedFlagPreApplyManifest() throws Exception {
+    final K8sCanaryRequestHandler spyCanaryRequestHandler = spy(k8sCanaryRequestHandler);
+    final K8sCanaryDeployRequest request = K8sCanaryDeployRequest.builder()
+                                               .valuesYamlList(emptyList())
+                                               .timeoutIntervalInMin(timeoutIntervalInMin)
+                                               .accountId(accountId)
+                                               .manifestDelegateConfig(manifestDelegateConfig)
+                                               .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
+                                               .releaseName("releaseName")
+                                               .build();
+    final K8sDelegateTaskParams delegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+
+    doReturn(true)
+        .when(spyCanaryRequestHandler)
+        .init(any(K8sCanaryDeployRequest.class), eq(delegateTaskParams), eq(logCallback));
+    doReturn(false)
+        .when(spyCanaryRequestHandler)
+        .prepareForCanary(any(K8sCanaryDeployRequest.class), eq(delegateTaskParams), eq(logCallback));
+
+    K8sDeployResponse response =
+        spyCanaryRequestHandler.executeTask(request, delegateTaskParams, iLogStreamingTaskClient, null);
+    K8sCanaryDeployResponse canaryResponse = (K8sCanaryDeployResponse) response.getK8sNGTaskResponse();
+    assertThat(canaryResponse.isCanaryWorkloadDeployed()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCanaryWorkloadDeployedFlagPostApplyManifest() throws Exception {
+    final K8sCanaryRequestHandler spyCanaryRequestHandler = spy(k8sCanaryRequestHandler);
+    final K8sCanaryDeployRequest request = K8sCanaryDeployRequest.builder()
+                                               .valuesYamlList(emptyList())
+                                               .timeoutIntervalInMin(timeoutIntervalInMin)
+                                               .accountId(accountId)
+                                               .manifestDelegateConfig(manifestDelegateConfig)
+                                               .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
+                                               .releaseName("releaseName")
+                                               .build();
+
+    spyCanaryRequestHandler.getK8sCanaryHandlerConfig().setCanaryWorkload(deployment());
+    final K8sDelegateTaskParams delegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+
+    doReturn(true)
+        .when(spyCanaryRequestHandler)
+        .init(any(K8sCanaryDeployRequest.class), eq(delegateTaskParams), eq(logCallback));
+    doReturn(true)
+        .when(spyCanaryRequestHandler)
+        .prepareForCanary(any(K8sCanaryDeployRequest.class), eq(delegateTaskParams), eq(logCallback));
+    doReturn(false)
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(any(Kubectl.class), eq(k8sCanaryHandlerConfig.getCanaryWorkload().getResourceId()),
+            eq(delegateTaskParams), eq(logCallback));
+
+    K8sDeployResponse response =
+        spyCanaryRequestHandler.executeTask(request, delegateTaskParams, iLogStreamingTaskClient, null);
+    K8sCanaryDeployResponse canaryResponse = (K8sCanaryDeployResponse) response.getK8sNGTaskResponse();
+    assertThat(canaryResponse.isCanaryWorkloadDeployed()).isTrue();
   }
 }

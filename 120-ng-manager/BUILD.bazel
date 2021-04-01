@@ -1,12 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -28,15 +24,19 @@ shared_dependencies = [
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
+    "//908-access-control-sdk:module",
+    "//908-access-control-admin-client:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
+    "//950-log-client:module",
     "//955-delegate-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
+    "//945-ng-audit-client:module",
     "//950-command-library-common:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
@@ -44,14 +44,17 @@ shared_dependencies = [
     "//950-events-api/src/main/proto:950_events_api_java_proto",
     "//950-events-api/src/main/proto:950_events_api_proto",
     "//950-events-framework:module",
+    "//950-ng-audit-commons:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
+    "//950-ng-signup:module",
     "//950-timeout-engine:module",
     "//950-wait-engine:module",
     "//954-connector-beans:module",
     "//960-api-services:module",
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
+    "//955-outbox-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
@@ -215,7 +218,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_lmax_disruptor",
     "@maven//:com_mashape_unirest_unirest_java",
@@ -676,7 +679,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven_harness//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
@@ -701,6 +704,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//120-ng-manager/src/test/resources:resource",
@@ -726,13 +730,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

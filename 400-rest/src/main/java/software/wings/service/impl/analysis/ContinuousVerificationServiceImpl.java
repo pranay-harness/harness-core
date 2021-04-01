@@ -42,6 +42,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -58,7 +59,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -130,6 +130,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -257,6 +258,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private MLServiceUtils mlServiceUtils;
   @Inject private DatadogService datadogService;
   @Inject private EnvironmentService environmentService;
+  @Inject private AccountService accountService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -2022,6 +2024,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
@@ -2082,6 +2085,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
@@ -2120,6 +2124,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),

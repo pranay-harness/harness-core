@@ -41,6 +41,9 @@ public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
 
+  static final List<String> NEWRELIC_METRICPACK_FILES =
+      Lists.newArrayList("/newrelic/metric-packs/performance-pack.yml");
+
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
           "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
@@ -58,16 +61,22 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL STACKDRIVER_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/stackdriver/dsl/metric-collection.datacollection");
   public static final String STACKDRIVER_DSL;
+
+  private static final URL NEW_RELIC_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/newrelic/dsl/performance-pack.datacollection");
+  public static final String NEW_RELIC_DSL;
   static {
     String appDPeformancePackDsl = null;
     String appDqualityPackDsl = null;
     String appDInfrastructurePackDsl = null;
     String stackDriverDsl = null;
+    String newrelicDsl = null;
     try {
       appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
       appDInfrastructurePackDsl = Resources.toString(APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
       stackDriverDsl = Resources.toString(STACKDRIVER_DSL_PATH, Charsets.UTF_8);
+      newrelicDsl = Resources.toString(NEW_RELIC_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
@@ -77,6 +86,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     APPDYNAMICS_QUALITY_PACK_DSL = appDqualityPackDsl;
     APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = appDInfrastructurePackDsl;
     STACKDRIVER_DSL = stackDriverDsl;
+    NEW_RELIC_DSL = newrelicDsl;
   }
 
   @Inject private HPersistence hPersistence;
@@ -118,7 +128,7 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   @Override
   public void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesThresholds();
+    List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesTypes();
 
     for (DataSourceType dataSourceType : dataSourceTypes) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
@@ -147,6 +157,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case STACKDRIVER:
         yamlFileNames.addAll(STACKDRIVER_METRICPACK_FILES);
+        break;
+      case NEW_RELIC:
+        yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
         break;
       default:
         unhandled(dataSourceType);
@@ -317,6 +330,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case STACKDRIVER:
         metricPack.setDataCollectionDsl(STACKDRIVER_DSL);
+        break;
+      case NEW_RELIC:
+        metricPack.setDataCollectionDsl(NEW_RELIC_DSL);
         break;
       default:
         throw new IllegalArgumentException("Invalid type " + dataSourceType);

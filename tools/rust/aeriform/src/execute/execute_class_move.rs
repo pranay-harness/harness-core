@@ -4,7 +4,6 @@ use std::io::{Result, Write};
 use std::path::Path;
 
 use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT};
-
 use crate::java_class::TARGET_MODULE_PATTERN;
 use crate::repo::GIT_REPO_ROOT_DIR;
 

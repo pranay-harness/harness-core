@@ -1,12 +1,9 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
+load("//:build-properties.bzl", "build_fullVersion")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -28,6 +25,9 @@ java_binary(
         "src/main/**/*.java",
     ]),
     data = ["//:resource"],
+    deploy_manifest_lines = [
+        "Application-Version: version=" + build_fullVersion,
+    ],
     main_class = "io.harness.watcher.app.WatcherApplication",
     resources = [
         "//250-watcher/src/main/resources:resource",
@@ -49,6 +49,7 @@ test_dependencies = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//250-watcher/src/test/resources:resource",
@@ -65,13 +66,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

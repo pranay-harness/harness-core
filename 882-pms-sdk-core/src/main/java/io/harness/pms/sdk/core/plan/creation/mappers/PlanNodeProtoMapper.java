@@ -33,11 +33,17 @@ public class PlanNodeProtoMapper {
             .setSkipType(node.getSkipGraphType())
             .setServiceName(serviceName)
             .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
+    if (node.getWhenCondition() != null) {
+      builder.setWhenCondition(node.getWhenCondition());
+    }
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepParameters() != null && node.getStepParameters().toViewJson() != null) {
+      builder.setStepInputs(node.getStepParameters().toViewJson());
     }
     return builder.build();
   }
@@ -60,11 +66,17 @@ public class PlanNodeProtoMapper {
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
             .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
+    if (node.getWhenCondition() != null) {
+      builder.setWhenCondition(node.getWhenCondition());
+    }
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepInputs() != null) {
+      builder.setStepInputs(node.getStepInputs());
     }
     return builder.build();
   }

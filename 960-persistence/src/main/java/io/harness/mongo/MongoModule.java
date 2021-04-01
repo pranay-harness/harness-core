@@ -32,7 +32,7 @@ import org.mongodb.morphia.ObjectFactory;
 public class MongoModule extends AbstractModule {
   private static volatile MongoModule instance;
 
-  public static MongoModule getInstance() {
+  static MongoModule getInstance() {
     if (instance == null) {
       instance = new MongoModule();
     }
@@ -104,7 +104,7 @@ public class MongoModule extends AbstractModule {
 
     Store store = null;
     if (Objects.nonNull(mongoConfig.getAliasDBName())) {
-      Store.builder().name(mongoConfig.getAliasDBName()).build();
+      store = Store.builder().name(mongoConfig.getAliasDBName()).build();
     }
 
     indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia, store);

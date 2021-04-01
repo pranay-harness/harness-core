@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -42,6 +43,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -60,7 +62,7 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joor.Reflect;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -567,30 +569,42 @@ public class NexusServiceTest extends WingsBaseTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8881);
-  @Rule public WireMockRule wireMockRule2 = new WireMockRule(8882);
-  @Rule public WireMockRule wireMockRule3 = new WireMockRule(8883);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  @Rule
+  public WireMockRule wireMockRule2 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  @Rule
+  public WireMockRule wireMockRule3 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
-  private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
+  private String DEFAULT_NEXUS_URL;
 
   @Inject @InjectMocks private NexusService nexusService;
 
-  private NexusConfig nexusConfig =
-      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("wings123!".toCharArray()).build();
-  private NexusConfig nexusThreeConfig = NexusConfig.builder()
-                                             .nexusUrl(DEFAULT_NEXUS_URL)
-                                             .version("3.x")
-                                             .username("admin")
-                                             .password("wings123!".toCharArray())
-                                             .build();
+  private NexusConfig nexusConfig;
+  private NexusConfig nexusThreeConfig;
 
   @Inject @InjectMocks DelegateFileManager delegateFileManager;
   @Mock private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
+  @Before
+  public void setup() {
+    DEFAULT_NEXUS_URL = String.format("http://localhost:%d/nexus/", wireMockRule.port());
+    nexusConfig =
+        NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("wings123!".toCharArray()).build();
+    nexusThreeConfig = NexusConfig.builder()
+                           .nexusUrl(DEFAULT_NEXUS_URL)
+                           .version("3.x")
+                           .username("admin")
+                           .password("wings123!".toCharArray())
+                           .build();
+  }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetRepositories() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories"))
@@ -622,7 +636,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactPaths() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/"))
@@ -657,7 +670,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactPathsByRepo() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
@@ -686,7 +698,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactPathsByRepoStartsWithUrl() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
@@ -715,7 +726,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetRepositoriesError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
                              .willReturn(aResponse()
@@ -729,7 +739,21 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
+  public void shouldGetRepositoriesError404() {
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl(String.format("http://localhost:%d/nexus3/", wireMockRule.port()))
+                             .version("2.x")
+                             .username("admin")
+                             .password("wings123!".toCharArray())
+                             .build();
+    assertThatThrownBy(() -> nexusService.getRepositories(config, null))
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesNexus2xError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
                              .willReturn(aResponse()
@@ -738,13 +762,12 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "application/xml")));
     assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, null, RepositoryFormat.docker.name()))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+        .hasMessageContaining(INVALID_ARTIFACT_SERVER.name());
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetNugetRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.nuget.name());
     assertThat(repoMap.size()).isEqualTo(1);
@@ -754,7 +777,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetNPMRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.npm.name());
     assertThat(repoMap.size()).isEqualTo(1);
@@ -764,7 +786,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetMavenRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.maven.name());
     assertThat(repoMap.size()).isEqualTo(1);
@@ -774,7 +795,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactPathsByRepoError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/"))
                              .willReturn(aResponse()
@@ -790,7 +810,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
                              .willReturn(aResponse()
@@ -806,7 +825,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetGroupIdPaths() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/"))
                              .willReturn(aResponse()
@@ -868,7 +886,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactNames() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/"))
@@ -957,7 +974,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersions() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
@@ -974,29 +990,29 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .containsExactly("http://localhost:" + wireMockRule.port()
+                + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
+            "http://localhost:" + wireMockRule.port()
+                + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.0.jar");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsWithExtensionAndClassifier() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
@@ -1013,21 +1029,20 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .contains("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsWithExtensionNotProvidedAndClassifierProvided() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
@@ -1044,21 +1059,20 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
+        .contains("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
   }
 
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadArtifactMavenNexus2x() {
     setPomModelWireMock();
 
@@ -1150,7 +1164,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLatestVersion() {
     setPomModelWireMock();
     BuildDetails buildDetails =
@@ -1161,7 +1174,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetDockerRepositories() {
     assertThat(nexusService.getRepositories(nexusThreeConfig, null, RepositoryFormat.docker.name()))
         .hasSize(3)
@@ -1171,7 +1183,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDockerImages() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group", RepositoryFormat.docker.name()))
         .hasSize(1)
@@ -1181,7 +1192,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDockerTags() {
     assertThat(nexusService.getBuilds(nexusThreeConfig, null,
                    ArtifactStreamAttributes.builder()
@@ -1218,7 +1228,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testExistsVersionWithExtensionNexus2x() {
     mockResponsesNexus2xForExistVersions();
     assertThat(nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", "jar", null))
@@ -1228,7 +1237,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = ArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testNoVersionsFoundWithInvalidClassifierNexus2x() {
     mockResponsesNexus2xForExistVersions();
     nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", null, "sources");
@@ -1237,7 +1245,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testVersionExistsWithValidClassifierExtensionNexus2x() {
     mockResponsesNexus2xForExistVersions();
     assertThat(nexusService.existsVersion(nexusConfig, null, "releases", "io.harness.test", "demo", "jar", "binary"))
@@ -1266,7 +1273,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testExistsVersionWithExtensionNexus3x() {
     assertThat(
         nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", "jar", "binary"))
@@ -1276,7 +1282,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = ArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testNoVersionsFoundWithInvalidClassifierNexus3x() {
     nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, "source");
   }
@@ -1284,7 +1289,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNPMNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "harness-npm", RepositoryFormat.npm.name()))
         .hasSize(1)
@@ -1294,7 +1298,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNugetNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "nuget-group", RepositoryFormat.nuget.name()))
         .hasSize(4)
@@ -1305,7 +1308,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetGroupIdsForMavenNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
         .hasSize(1)
@@ -1315,7 +1317,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactNamesForMavenNexus3x() {
     assertThat(nexusService.getArtifactNames(
                    nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
@@ -1326,7 +1327,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForMavenNexus3x() {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, null, false);
@@ -1342,7 +1342,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForMavenNexus3xForGroupRepos() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         nexusThreeConfig, null, "maven-internal-group", "mygroup", "myartifact", null, null, true);
@@ -1356,7 +1355,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForMavenNexus3xForGroupRepos2() {
     // This is to test if group repo name is a substring of member repo name
     List<BuildDetails> buildDetails = nexusService.getVersions(
@@ -1371,7 +1369,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNPMNexus3x() {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm", "npm-app1", false);
@@ -1387,7 +1384,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNPMNexus3xForGroupRepos() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm-group", "npm-app1", true);
@@ -1403,7 +1399,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNugetNexus3x() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-group", "NuGet.Sample.Package", false);
@@ -1425,7 +1420,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNugetNexus3xForGroupRepos() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-hosted-group-repo", "NuGet.Sample.Package", true);
@@ -1441,7 +1435,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNPMNexus2x() {
     assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "npmjs", RepositoryFormat.npm.name()))
         .hasSize(5)
@@ -1451,7 +1444,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNugetNexus2x() {
     assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "MyNuGet", RepositoryFormat.nuget.name()))
         .hasSize(1)
@@ -1461,7 +1453,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNugetNexus2x() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
         RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet", "NuGet.Sample.Package", false);
@@ -1478,7 +1469,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionsForNPMNexus2x() {
     List<BuildDetails> buildDetails =
         nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, null, "npmjs", "abbrev", false);
@@ -1506,7 +1496,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldNotDownloadArtifactNPMNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes =
         ArtifactStreamAttributes.builder().repositoryFormat(RepositoryFormat.npm.name()).build();
@@ -1523,7 +1512,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldNotDownloadArtifactMavenNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.maven.name())
@@ -1542,7 +1530,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldThrowExceptionDownloadArtifactNPMNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.npm.name())
@@ -1561,7 +1548,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldFileNotFoundDownloadArtifactNugetNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.nuget.name())
@@ -1579,10 +1565,9 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testNonMatchingServerAndVersionWithAuthentication() {
     NexusConfig config = NexusConfig.builder()
-                             .nexusUrl("http://localhost:8882/")
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule2.port()))
                              .version("3.x")
                              .username("admin")
                              .password("wings123!".toCharArray())
@@ -1593,7 +1578,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testValidConnection() throws IOException {
     assertThat(nexusService.isRunning(nexusThreeConfig, null)).isTrue();
     assertThat(nexusService.isRunning(nexusConfig, null)).isTrue();
@@ -1616,19 +1600,20 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test(expected = InvalidArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testNonMatchingServerAndVersionWithoutAuthentication() {
-    NexusConfig config = NexusConfig.builder().nexusUrl("http://localhost:8882/").version("3.x").build();
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule2.port()))
+                             .version("3.x")
+                             .build();
     nexusService.isRunning(config, null);
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testInvalidCredentials() {
     NexusConfig config = NexusConfig.builder()
-                             .nexusUrl("http://localhost:8883/")
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule3.port()))
                              .version("3.x")
                              .username("admin")
                              .password("wings123!".toCharArray())
@@ -1644,31 +1629,30 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void getArtifactFileSizeForNexus2xMavenArtifact() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4, 5})));
     long size = nexusService.getFileSize(nexusConfig, null, "myartifact-1.0.war",
-        "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+        "http://localhost:" + wireMockRule.port()
+            + "/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
     assertThat(size).isEqualTo(5);
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void getArtifactFileSizeForNexus3xMavenArtifact() {
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
                               .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     long size = nexusService.getFileSize(nexusThreeConfig, null, "myartifact-1.0.war",
-        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+        String.format("http://localhost:%d/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war",
+            wireMockRule3.port()));
     assertThat(size).isEqualTo(4);
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadNexus2xMavenArtifactByUrl() throws IOException {
     String content = "file content";
     String fileName = "rest-client-3.0.jar";
@@ -1677,7 +1661,9 @@ public class NexusServiceTest extends WingsBaseTest {
             "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources"))
                              .willReturn(aResponse().withBody(content.getBytes())));
     Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusConfig, null, fileName,
-        "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources");
+        String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources",
+            wireMockRule.port()));
     assertThat(pair).isNotNull();
     assertThat(pair.getKey()).isEqualTo(fileName);
     String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
@@ -1687,14 +1673,14 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadNexus3xMavenArtifactByUrl() throws IOException {
     String content = "file content";
     String fileName = "myartifact-1.0.jar";
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar"))
                               .willReturn(aResponse().withBody(content.getBytes())));
     Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusThreeConfig, null, fileName,
-        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar");
+        String.format("http://localhost:%d/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar",
+            wireMockRule3.port()));
     assertThat(pair).isNotNull();
     assertThat(pair.getKey()).isEqualTo(fileName);
     String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
@@ -1704,7 +1690,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadNexus3xNPMArtifact() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.npm.name())
@@ -1716,10 +1701,33 @@ public class NexusServiceTest extends WingsBaseTest {
     artifactMetadata.put(ArtifactMetadataKeys.nexusPackageName, "npm-app1");
     artifactMetadata.put(ArtifactMetadataKeys.repositoryName, "npm-test");
     String content = "file content";
-    String fileName = "npm-app1-1.0.0.tgz";
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("npm-app1-1.0.0.tgz").build();
     when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/rest/v1/search/assets?repository=npm-test&name=npm-app1&version=1.0.0"))
+            .willReturn(
+                aResponse()
+                    .withBody("{\n"
+                        + "  \"items\": [\n"
+                        + "    {\n"
+                        + "      \"downloadUrl\": \"http://localhost:" + wireMockRule3.port()
+                        + "/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz\",\n"
+                        + "      \"path\": \"npm-app1/-/npm-app1-1.0.0.tgz\",\n"
+                        + "      \"id\": \"bnBtLXRlc3Q6OTEyZDBmZTdiODE5MjM5MjY2MTI1MTBiOGYyMTQ0NGI\",\n"
+                        + "      \"repository\": \"npm-test\",\n"
+                        + "      \"format\": \"npm\",\n"
+                        + "      \"checksum\": {\n"
+                        + "        \"sha1\": \"1a65e4a52b3e8387bfc5e47cf0544d4d7360df31\",\n"
+                        + "        \"sha256\": \"392a08fb25d6d9ba75ef2ec104332dbc6fccee12ffa4d8da13b5070de85deea6\",\n"
+                        + "        \"sha512\": \"cb8b62a94d5d3675ea1edd9398df8ee4278b6972fcde9f117fc033c493faeb4b8e26872f6345fab34ff20ad7e926234f171e4997f4df7bfce2245846c0fc348c\",\n"
+                        + "        \"md5\": \"7fe206f8706959d8772c9c9c9cf23aba\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  ],\n"
+                        + "  \"continuationToken\": null\n"
+                        + "}")
+                    .withStatus(200)));
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz"))
                               .willReturn(aResponse().withBody(content.getBytes())));
     nexusService.downloadArtifacts(
@@ -1730,7 +1738,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionForNugetNexus2x() {
     List<BuildDetails> buildDetails = nexusService.getVersion(
         RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet2", "NuGet.Sample.Package", "1.0.0.8279");
@@ -1747,7 +1754,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionForNPMNexus2x() {
     List<BuildDetails> buildDetails =
         nexusService.getVersion(RepositoryFormat.npm.name(), nexusConfig, null, "npm-internal", "npm-app1", "1.0.0");
@@ -1763,7 +1769,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionNexus2xMaven() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
@@ -1779,28 +1784,30 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+        .containsExactly(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0.war");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionWithExtensionAndClassifier() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
@@ -1816,21 +1823,22 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .containsExactly(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionWithExtensionNotProvidedAndClassifierProvided() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
@@ -1846,21 +1854,22 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+        .contains(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetVersionWithExtensionProvidedAndClassifierNotProvided() {
     wireMockRule.stubFor(
         get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
@@ -1876,21 +1885,22 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
+        .contains(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip",
+            wireMockRule.port()));
   }
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetGroupIdsForMavenNexus3xUsingPrivateApis() {
     assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
                    nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
@@ -1901,7 +1911,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactNamesForMavenNexus3xUsingPrivateApis() {
     assertThat(nexusService.getArtifactNamesUsingPrivateApis(
                    nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
@@ -1912,7 +1921,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNugetNexus3xUsingPrivateApis() {
     assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
                    nexusThreeConfig, null, "nuget-hosted", RepositoryFormat.nuget.name()))
@@ -1923,7 +1931,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPackageNamesForNPMNexus3xUsingPrivateApis() {
     assertThat(
         nexusService.getGroupIdPathsUsingPrivateApis(nexusThreeConfig, null, "npm-hosted", RepositoryFormat.npm.name()))
@@ -1934,7 +1941,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldHandleExceptionsWhenGettingGroupsIdPathsUsingPrivateApis() throws Exception {
     wireMockRule.stubFor(
         post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
@@ -1955,7 +1961,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldHandleExceptionsWhenGetGroupIdPaths() {
     wireMockRule.stubFor(
         post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
@@ -1976,7 +1981,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnCorrectErrorMessagesForGetGroupIdPathsUsingPrivateApis() throws Exception {
     NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
     Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
@@ -2007,7 +2011,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnCorrectErrorMessagesForGetGroupIdPaths() throws Exception {
     NexusTwoServiceImpl nexusTwoService = Mockito.mock(NexusTwoServiceImpl.class);
     Reflect.on(nexusService).set("nexusTwoService", nexusTwoService);

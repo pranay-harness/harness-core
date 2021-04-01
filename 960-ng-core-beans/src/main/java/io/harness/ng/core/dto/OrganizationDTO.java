@@ -1,7 +1,10 @@
 package io.harness.ng.core.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
@@ -18,6 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
@@ -25,7 +29,6 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Organization")
 public class OrganizationDTO {
-  String accountIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
   @Size(max = 1024) String description;
@@ -34,9 +37,7 @@ public class OrganizationDTO {
   @JsonIgnore boolean harnessManaged;
 
   @Builder
-  public OrganizationDTO(
-      String accountIdentifier, String identifier, String name, String description, Map<String, String> tags) {
-    this.accountIdentifier = accountIdentifier;
+  public OrganizationDTO(String identifier, String name, String description, Map<String, String> tags) {
     this.identifier = identifier;
     this.name = name;
     this.description = description;

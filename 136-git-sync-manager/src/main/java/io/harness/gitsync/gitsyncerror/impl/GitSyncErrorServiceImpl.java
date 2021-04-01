@@ -1,12 +1,13 @@
 package io.harness.gitsync.gitsyncerror.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
 
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   public static final String EMPTY_STR = "";
   public static final Long DEFAULT_COMMIT_TIME = 0L;
@@ -51,25 +53,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public void upsertGitSyncErrors(GitFileChange failedChange, String errorMessage, boolean fullSyncPath,
-      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness) {
-    if (gitToHarness) {
-      upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
-    } else {
-      upsertHarnessToGitError(failedChange, errorMessage, fullSyncPath, yamlGitConfig);
-    }
-  }
-
-  private void upsertHarnessToGitError(
+  public void upsertGitSyncErrors(
       GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
-    log.info(String.format("Upsert haress to git issue for file: %s", failedChange.getFilePath()));
-
-    gitSyncErrorRepository.upsertGitError(failedChange.getAccountId(), failedChange.getFilePath(), HARNESS_TO_GIT,
-        errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info", fullSyncPath,
-        failedChange.getChangeType(), getHarnessToGitErrorDetails(failedChange, fullSyncPath),
-        yamlGitConfig.getGitConnectorId(), yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
-        GitFileLocationHelper.getRootPathSafely(failedChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectId(), yamlGitConfig.getOrganizationId());
+    upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
   }
 
   private void upsertGitToHarnessError(
@@ -82,10 +68,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
     gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
         GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",
-        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorId(),
+        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorRef(),
         yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
         GitFileLocationHelper.getRootPathSafely(failedGitFileChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectId(), yamlGitConfig.getOrganizationId());
+        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());
   }
 
   private void addPreviousCommitDetailsToErrorDetails(GitFileChange failedGitFileChange,

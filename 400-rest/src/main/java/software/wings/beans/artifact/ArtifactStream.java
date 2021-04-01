@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -148,7 +149,7 @@ public abstract class ArtifactStream
 
   public abstract String generateSourceName();
 
-  public abstract ArtifactStreamAttributes fetchArtifactStreamAttributes();
+  public abstract ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService);
 
   public void inferProperties(ArtifactStreamAttributes attributes) {}
 

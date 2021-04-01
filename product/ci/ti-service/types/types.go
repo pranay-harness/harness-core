@@ -1,6 +1,8 @@
 package types
 
 type Status string
+type FileStatus string
+type Selection string
 
 const (
 	// StatusPassed represents a passed test.
@@ -16,6 +18,29 @@ const (
 	// StatusError represents an unexpected violation of the test itself, such as
 	// an uncaught exception.
 	StatusError = "error"
+
+	// SelectSourceCode represents a selection corresponding to source code changes.
+	SelectSourceCode = "source_code"
+
+	// SelectNewTest represents a selection corresponding to a new test (eg a new test
+	// introduced in the PR).
+	SelectNewTest = "new_test"
+
+	// SelectUpdatedTest represents a selection corresponding to an updated test (eg an existing
+	// test which was modified).
+	SelectUpdatedTest = "updated_test"
+
+	// SelectFlakyTest represents a selection of a test because it's flaky.
+	SelectFlakyTest = "flaky_test"
+
+	// FileModified represents a modified file. Keeping it consistent with git syntax.
+	FileModified = "modified"
+
+	// FileAdded represents a file which was added in the PR.
+	FileAdded = "added"
+
+	// FileDeleted represents a file which was deleted in the PR.
+	FileDeleted = "deleted"
 )
 
 type Result struct {
@@ -75,9 +100,58 @@ type TestSuite struct {
 
 // Test Intelligence specific structs
 
-// Test contains information about a unit test
-type Test struct {
-	Pkg    string `json:"pkg"`
-	Class  string `json:"class"`
-	Method string `json:"method"`
+// RunnableTest contains information about a test to run it.
+// This is different from TestCase struct which contains information
+// about a test case run. RunnableTest is used to run a test.
+type RunnableTest struct {
+	Pkg       string    `json:"pkg"`
+	Class     string    `json:"class"`
+	Method    string    `json:"method"`
+	Selection Selection `json:"selection"` // information on why a test was selected
+}
+
+type SelectTestsResp struct {
+	TotalTests    int            `json:"total_tests"`
+	SelectedTests int            `json:"selected_tests"`
+	NewTests      int            `json:"new_tests"`
+	UpdatedTests  int            `json:"updated_tests"`
+	SrcCodeTests  int            `json:"src_code_tests"`
+	SelectAll     bool           `json:"select_all"` // We might choose to run all the tests
+	Tests         []RunnableTest `json:"tests"`
+}
+
+type SelectTestsReq struct {
+	Files    []File   `json:"files"`
+	TiConfig TiConfig `json:"ti_config"`
+}
+
+type SelectionDetails struct {
+	New int `json:"new_tests"`
+	Upd int `json:"updated_tests"`
+	Src int `json:"source_code_changes"`
+}
+
+type SelectionOverview struct {
+	Total       int              `json:"total_tests"`
+	Skipped     int              `json:"skipped_tests"`
+	TimeSavedMs int              `json:"time_saved_ms"`
+	Selected    SelectionDetails `json:"selected_tests"`
+}
+
+type File struct {
+	Name   string     `json:"name"`
+	Status FileStatus `json:"status"`
+}
+
+// This is a yaml file which may or may not exist in the root of the source code
+// as .ticonfig. The contents of the file get deserialized into this object.
+// Sample YAML:
+// config:
+//   ignore:
+//     - README.md
+//     - config.sh
+type TiConfig struct {
+	Config struct {
+		Ignore []string `json:"ignore"`
+	}
 }

@@ -1,7 +1,5 @@
 package io.harness.ccm.views.dao;
 
-import static io.harness.persistence.HQuery.excludeValidate;
-
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewCustomField.ViewCustomFieldKeys;
 import io.harness.persistence.HPersistence;
@@ -34,8 +32,9 @@ public class ViewCustomFieldDao {
     return hPersistence.createQuery(ViewCustomField.class).filter(ViewCustomFieldKeys.accountId, accountId).asList();
   }
 
-  public List<ViewCustomField> findByViewId(String viewId) {
-    return hPersistence.createQuery(ViewCustomField.class, excludeValidate)
+  public List<ViewCustomField> findByViewId(String viewId, String accountId) {
+    return hPersistence.createQuery(ViewCustomField.class)
+        .filter(ViewCustomFieldKeys.accountId, accountId)
         .filter(ViewCustomFieldKeys.viewId, viewId)
         .asList();
   }

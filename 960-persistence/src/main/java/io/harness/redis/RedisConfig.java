@@ -26,4 +26,6 @@ public class RedisConfig {
   private RedisReadMode readMode;
   private int nettyThreads;
   private boolean useScriptCache;
+  private String password;
+  private String userName;
 }

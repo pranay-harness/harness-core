@@ -16,7 +16,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
@@ -30,6 +30,7 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import org.junit.Before;
@@ -40,7 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
   public static final double TRAFFIC_WEIGHT_IN_PERCENTAGE = 50.0;
   public static final String SHIFT_TRAFFIC_SLOT_NAME = "slotName";
@@ -65,12 +66,13 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteTaskInternal() {
     AzureWebAppSlotShiftTrafficParameters azureAppServiceTaskParameters = buildAzureWebAppSlotShiftTrafficParameters();
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(true);
     AzureConfig azureConfig = buildAzureConfig();
     mockRerouteProductionSlotTraffic();
     ArgumentCaptor<Double> trafficCaptor = ArgumentCaptor.forClass(Double.class);
 
-    AzureTaskExecutionResponse azureTaskExecutionResponse =
-        slotShiftTrafficTaskHandler.executeTask(azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient);
+    AzureTaskExecutionResponse azureTaskExecutionResponse = slotShiftTrafficTaskHandler.executeTask(
+        azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
     verify(azureAppServiceDeploymentService)
         .rerouteProductionSlotTraffic(any(), eq(SHIFT_TRAFFIC_SLOT_NAME), trafficCaptor.capture(), any());
     assertThat(trafficCaptor.getValue()).isEqualTo(TRAFFIC_WEIGHT_IN_PERCENTAGE);
@@ -150,5 +152,9 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
 
   private AzureConfig buildAzureConfig() {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
+  }
+
+  private ArtifactStreamAttributes buildArtifactStreamAttributes(boolean isDockerArtifactType) {
+    return isDockerArtifactType ? null : ArtifactStreamAttributes.builder().build();
   }
 }

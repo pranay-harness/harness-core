@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.k8s.response;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.K8sPod;
 
@@ -10,7 +13,10 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class K8sInstanceSyncResponse implements K8sTaskResponse {
+  String releaseName;
+  String namespace;
   List<K8sPod> k8sPodInfoList;
 }

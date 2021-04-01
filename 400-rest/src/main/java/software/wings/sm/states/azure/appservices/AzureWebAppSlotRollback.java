@@ -37,6 +37,11 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   }
 
   @Override
+  protected boolean supportRemoteManifest() {
+    return false;
+  }
+
+  @Override
   protected AzureTaskExecutionRequest buildTaskExecutionRequest(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureWebAppRollbackParameters rollbackParameters =
@@ -122,7 +127,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits() {
+  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
     return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
         new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
         new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),

@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
@@ -13,12 +14,15 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -49,6 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CloudFormationRollbackStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Rollback Stack";
 
@@ -196,8 +202,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       Map<String, EncryptedDataDetail> encryptedTextVariables = null;
       if (isNotEmpty(allVariables)) {
         textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
-        encryptedTextVariables =
-            infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+        encryptedTextVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+            allVariables, context.getAppId(), executionContext.getWorkflowExecutionId());
       }
 
       /**

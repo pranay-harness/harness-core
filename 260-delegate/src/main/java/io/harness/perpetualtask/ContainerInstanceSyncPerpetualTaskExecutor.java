@@ -7,7 +7,7 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -21,6 +21,7 @@ import io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTa
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -31,6 +32,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -39,14 +41,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
-  @Inject private transient K8sTaskHelper k8sTaskHelper;
-  @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private transient ContainerService containerService;
-  @Inject private transient KryoSerializer kryoSerializer;
+  @Inject private K8sTaskHelper k8sTaskHelper;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private ContainerService containerService;
+  @Inject private KryoSerializer kryoSerializer;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject private AwsEcsHelperServiceDelegate awsEcsHelperServiceDelegate;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -98,11 +101,22 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
             .build();
 
     try {
+      boolean isEcs = settingAttribute.getValue() instanceof AwsConfig;
+      boolean ecsServiceExists = false;
+      if (isEcs) {
+        ecsServiceExists =
+            awsEcsHelperServiceDelegate.serviceExists(request.getSettingAttribute(), encryptedDataDetails,
+                containerServicePerpetualTaskParams.getRegion(), containerServicePerpetualTaskParams.getClusterName(),
+                containerServicePerpetualTaskParams.getContainerSvcName());
+      }
+
       List<ContainerInfo> containerInfos = containerService.getContainerInfos(request, true);
       return ContainerSyncResponse.builder()
           .containerInfoList(containerInfos)
           .commandExecutionStatus((containerInfos != null) ? SUCCESS : FAILURE)
           .controllerName(request.getContainerServiceName())
+          .isEcs(isEcs)
+          .ecsServiceExists(ecsServiceExists)
           .build();
     } catch (Exception exception) {
       log.error(String.format("Failed to fetch containers info for namespace: [%s] and svc:[%s] ",
@@ -146,7 +160,11 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
           k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()
-          .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())
+          .k8sTaskResponse(K8sInstanceSyncResponse.builder()
+                               .k8sPodInfoList(k8sPodList)
+                               .releaseName(releaseName)
+                               .namespace(namespace)
+                               .build())
           .commandExecutionStatus((k8sPodList != null) ? SUCCESS : FAILURE)
           .build();
 

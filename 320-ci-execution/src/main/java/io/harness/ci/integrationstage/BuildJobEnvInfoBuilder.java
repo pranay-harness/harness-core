@@ -28,10 +28,8 @@ import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
-import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
 import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
@@ -56,7 +54,6 @@ import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
-import io.harness.utils.IdentifierRefHelper;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
@@ -76,13 +73,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class BuildJobEnvInfoBuilder {
-  private static final String USERNAME_PREFIX = "USERNAME_";
-  private static final String PASSW_PREFIX = "PASSWORD_";
-  private static final String ENDPOINT_PREFIX = "ENDPOINT_";
-  private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
-  private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
-  private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
-
   private static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
   private static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";
   private static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
@@ -109,7 +99,6 @@ public class BuildJobEnvInfoBuilder {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
           .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
-          .publishArtifactStepIds(getPublishArtifactStepIds(stageElementConfig))
           .stepConnectorRefs(getStepConnectorRefs(stageElementConfig))
           .build();
     } else {
@@ -264,11 +253,12 @@ public class BuildJobEnvInfoBuilder {
       case UPLOAD_ARTIFACTORY:
       case UPLOAD_S3:
       case UPLOAD_GCS:
-        return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
-            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName(), stepElement.getType(), timeout);
+        return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, integrationStage,
+            ciExecutionArgs, portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName(),
+            stepElement.getType(), timeout);
       case PLUGIN:
-        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
-            stepElement.getIdentifier(), stepElement.getName());
+        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
+            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName());
       case RUN_TESTS:
         return createRunTestsStepContainerDefinition((RunTestsStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
             portFinder, stepIndex, stepElement.getIdentifier());
@@ -278,12 +268,13 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepName,
-      String stepType, long timeout) {
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier, String stepName, String stepType, long timeout) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
+    envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
 
@@ -292,6 +283,7 @@ public class BuildJobEnvInfoBuilder {
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
+        .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(
             ContainerImageDetails.builder()
                 .imageDetails(getImageInfo(resolveStringParameter("containerImage", stepInfo.getStepType().getType(),
@@ -349,7 +341,11 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      stepEnvVars.putAll(envvars);
+    }
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
@@ -368,11 +364,13 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private ContainerDefinitionInfo createPluginStepContainerDefinition(PluginStepInfo pluginStepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String name) {
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
+    envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> settings =
         resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
@@ -388,6 +386,7 @@ public class BuildJobEnvInfoBuilder {
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
         .stepIdentifier(identifier)
+        .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(getImageInfo(resolveStringParameter(
                                        "Image", "Plugin", identifier, pluginStepInfo.getImage(), true)))
@@ -421,38 +420,6 @@ public class BuildJobEnvInfoBuilder {
         .filter(variable -> variable.getType() == NGVariableType.SECRET)
         .map(customVariable -> (SecretNGVariable) customVariable)
         .collect(Collectors.toList());
-  }
-
-  private Set<String> getPublishArtifactStepIds(StageElementConfig stageElementConfig) {
-    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-
-    List<ExecutionWrapperConfig> executionWrappers = integrationStageConfig.getExecution().getSteps();
-    if (isEmpty(executionWrappers)) {
-      return Collections.emptySet();
-    }
-
-    Set<String> set = new HashSet<>();
-    for (ExecutionWrapperConfig executionWrapperConfig : executionWrappers) {
-      if (executionWrapperConfig.getParallel() != null && !executionWrapperConfig.getParallel().isNull()) {
-        ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapperConfig);
-
-        for (ExecutionWrapperConfig executionWrapper : parallelStepElementConfig.getSections()) {
-          if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
-            StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
-
-            if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
-              set.add(stageElementConfig.getIdentifier());
-            }
-          }
-        }
-      } else if (executionWrapperConfig.getStep() != null && !executionWrapperConfig.getStep().isNull()) {
-        StepElementConfig stepElementConfig = getStepElementConfig(executionWrapperConfig);
-        if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
-          set.add(stageElementConfig.getIdentifier());
-        }
-      }
-    }
-    return set;
   }
 
   private ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
@@ -499,53 +466,7 @@ public class BuildJobEnvInfoBuilder {
 
   private Map<String, ConnectorConversionInfo> getStepConnectorConversionInfo(StepElementConfig stepElement) {
     Map<String, ConnectorConversionInfo> map = new HashMap<>();
-    if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
-      List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
-      for (Artifact artifact : publishArtifacts) {
-        String connectorRef = resolveStringParameter("connectorRef", stepElement.getType(), stepElement.getIdentifier(),
-            artifact.getConnector().getConnectorRef(), true);
-        String connectorId = IdentifierRefHelper.getIdentifier(connectorRef);
-        String stepId = stepElement.getIdentifier();
-        switch (artifact.getConnector().getType()) {
-          case ECR:
-          case S3:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, ACCESS_KEY_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, SECRET_KEY_PREFIX + connectorId)
-                    .build());
-            break;
-          case GCR:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, SECRET_PATH_PREFIX + connectorId)
-                    .build());
-            break;
-          case ARTIFACTORY:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, ENDPOINT_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, USERNAME_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PASSW_PREFIX + connectorId)
-                    .build());
-            break;
-          case DOCKERHUB:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, ENDPOINT_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, USERNAME_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PASSW_PREFIX + connectorId)
-                    .build());
-            break;
-          default:
-            throw new IllegalStateException("Unexpected value: " + stepElement.getType());
-        }
-      }
-    } else if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
+    if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
       switch (stepElement.getType()) {
         case "BuildAndPushECR":

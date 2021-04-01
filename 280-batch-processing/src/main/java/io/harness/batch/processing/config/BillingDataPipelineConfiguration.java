@@ -40,11 +40,12 @@ public class BillingDataPipelineConfiguration {
   @Autowired
   @Qualifier(value = "billingDataPipelineJob")
   public Job billingDataPipelineJob(JobBuilderFactory jobBuilderFactory, Step awsBillingDataPipelineStep,
-      Step gcpBillingDataPipelineStep, Step deletePipelineForExpiredAccountsStep) {
+      Step gcpBillingDataPipelineStep, Step azureBillingDataPipelineStep, Step deletePipelineForExpiredAccountsStep) {
     return jobBuilderFactory.get(BatchJobType.BILLING_DATA_PIPELINE.name())
         .incrementer(new RunIdIncrementer())
         .start(awsBillingDataPipelineStep)
         .next(gcpBillingDataPipelineStep)
+        .next(azureBillingDataPipelineStep)
         .build();
   }
 

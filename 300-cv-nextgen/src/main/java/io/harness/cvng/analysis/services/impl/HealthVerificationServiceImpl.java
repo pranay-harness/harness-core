@@ -12,6 +12,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
@@ -81,7 +82,9 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
         VerificationJobInstance.AnalysisProgressLog.builder()
             .analysisStatus(status)
             .verificationTaskId(verificationTaskId)
-            .startTime(jobInstance.getPreActivityVerificationStartTime())
+            .startTime(((HealthVerificationJob) jobInstance.getResolvedJob())
+                           .getPreActivityVerificationStartTime(
+                               jobInstance.getStartTime(), jobInstance.getPreActivityVerificationStartTime()))
             .endTime(latestTimeOfAnalysis)
             .isFinalState(isFinalState)
             .log("Health verification completed until time " + latestTimeOfAnalysis)

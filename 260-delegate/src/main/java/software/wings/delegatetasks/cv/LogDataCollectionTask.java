@@ -2,7 +2,7 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -28,7 +28,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends AbstractDataCollectionTask<T> {
   private LogDataCollector<T> logDataCollector;
   private LogDataCollectionInfoV2 dataCollectionInfo;

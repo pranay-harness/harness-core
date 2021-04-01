@@ -2,9 +2,9 @@ package io.harness.cdng.artifact.bean.artifactsource;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,6 +12,8 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,7 +34,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@NgUniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @Document("artifactSourceNG")
@@ -40,6 +41,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 public abstract class ArtifactSource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder().name("uniqueHash").unique(true).field(ArtifactSourceKeys.uniqueHash).build())
+        .build();
+  }
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @NotNull private String accountId;
   /** It gives the artifact source type.*/

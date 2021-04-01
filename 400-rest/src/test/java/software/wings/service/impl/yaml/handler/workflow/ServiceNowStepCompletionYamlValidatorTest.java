@@ -2,11 +2,13 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
 
+import static software.wings.beans.servicenow.ServiceNowFields.CHANGE_REQUEST_NUMBER;
+import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_TASK;
 import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.INCIDENT;
 
 import static org.junit.runners.Parameterized.Parameters;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -30,7 +32,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 @RunWith(Parameterized.class)
 public class ServiceNowStepCompletionYamlValidatorTest {
   private final ChangeContext<StepYaml> changeContext;
@@ -96,6 +98,13 @@ public class ServiceNowStepCompletionYamlValidatorTest {
     importParamsWithoutJsonBody.setAction(ServiceNowAction.IMPORT_SET);
     importParamsWithoutJsonBody.setSnowConnectorId("connectorId");
     importParamsWithoutJsonBody.setImportSetTableName("tableName");
+
+    ServiceNowCreateUpdateParams updateParamsWithoutChangeRequestMultipleTrue = new ServiceNowCreateUpdateParams();
+    updateParamsWithoutChangeRequestMultipleTrue.setAction(ServiceNowAction.UPDATE);
+    updateParamsWithoutChangeRequestMultipleTrue.setSnowConnectorId("connectorId");
+    updateParamsWithoutChangeRequestMultipleTrue.setTicketType(CHANGE_TASK.getDisplayName());
+    updateParamsWithoutChangeRequestMultipleTrue.setFields(Collections.singletonMap(CHANGE_REQUEST_NUMBER, ""));
+    updateParamsWithoutChangeRequestMultipleTrue.setUpdateMultiple(true);
     return Arrays.asList(
         new Object[][] {{buildChangeContextWith(nullParams),
                             "\"serviceNowCreateUpdateParams\" could not be empty. Please provide the values.",
@@ -121,7 +130,9 @@ public class ServiceNowStepCompletionYamlValidatorTest {
             {buildChangeContextWith(importParamsWithoutTableName), "\"importSetTableName\" could not be empty or null.",
                 IncompleteStateException.class},
             {buildChangeContextWith(importParamsWithoutJsonBody), "\"jsonBody\" could not be empty or null.",
-                IncompleteStateException.class}});
+                IncompleteStateException.class},
+            {buildChangeContextWith(updateParamsWithoutChangeRequestMultipleTrue),
+                "\"CHANGE_REQUEST_NUMBER\" could not be empty or null.", IncompleteStateException.class}});
   }
 
   private static ChangeContext buildChangeContextWith(ServiceNowCreateUpdateParams serviceNowCreateUpdateParams) {

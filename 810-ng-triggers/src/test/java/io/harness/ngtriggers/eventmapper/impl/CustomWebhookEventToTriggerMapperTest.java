@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
-import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
+import static io.harness.constants.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,8 +8,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.HeaderConfig;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;

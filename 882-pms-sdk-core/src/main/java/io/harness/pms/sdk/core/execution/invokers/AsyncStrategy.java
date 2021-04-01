@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
@@ -21,7 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -64,14 +65,21 @@ public class AsyncStrategy implements ExecuteStrategy {
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
 
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     asyncWaitEngine.waitForAllOn(callback, response.getCallbackIdsList().toArray(new String[0]));
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.ASYNC_WAITING,
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }
 
   private AsyncExecutable extractAsyncExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (AsyncExecutable) stepRegistry.obtain(node.getStepType());
+  }
+
+  private Status extractStatus(AsyncExecutableResponse response) {
+    if (response.getMode() == AsyncExecutableMode.APPROVAL_WAITING_MODE) {
+      return Status.APPROVAL_WAITING;
+    }
+    return Status.ASYNC_WAITING;
   }
 }

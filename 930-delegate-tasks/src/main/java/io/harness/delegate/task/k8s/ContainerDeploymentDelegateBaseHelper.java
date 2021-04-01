@@ -7,10 +7,15 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +31,7 @@ import javax.validation.constraints.NotNull;
 public class ContainerDeploymentDelegateBaseHelper {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   @NotNull
   public List<Pod> getExistingPodsByLabels(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
@@ -81,6 +87,22 @@ public class ContainerDeploymentDelegateBaseHelper {
   }
 
   public String getKubeconfigFileContent(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
+    decryptK8sInfraDelegateConfig(k8sInfraDelegateConfig);
     return kubernetesContainerService.getConfigFileContent(createKubernetesConfig(k8sInfraDelegateConfig));
+  }
+
+  public void decryptK8sInfraDelegateConfig(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
+    if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
+      DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
+
+      KubernetesClusterConfigDTO clusterConfigDTO = directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO();
+      if (clusterConfigDTO.getCredential().getKubernetesCredentialType()
+          == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+        KubernetesClusterDetailsDTO clusterDetailsDTO =
+            (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
+        KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
+        secretDecryptionService.decrypt(authCredentialDTO, directK8sInfraDelegateConfig.getEncryptionDataDetails());
+      }
+    }
   }
 }

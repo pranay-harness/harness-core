@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
@@ -27,14 +28,13 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
-import io.harness.tasks.ResponseData;
 
 import software.wings.api.HttpStateExecutionData;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
@@ -44,14 +44,14 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 
 @OwnedBy(CDC)
 @Slf4j
-public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
+public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters, HttpStateExecutionResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("BASIC_HTTP").build();
   private static final int socketTimeoutMillis = 10000;
 
@@ -118,21 +118,10 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, BasicHttpStepParameters stepParameters, Supplier<HttpStateExecutionResponse> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
-    if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
-      responseBuilder.status(Status.FAILED);
-      responseBuilder
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                           .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                               errorNotifyResponseData.getFailureTypes()))
-                           .build())
-          .build();
-    } else {
-      HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
+    try {
+      HttpStateExecutionResponse httpStateExecutionResponse = responseDataMap.get();
       HttpStateExecutionData executionData = HttpStateExecutionData.builder()
                                                  .httpUrl(stepParameters.getUrl())
                                                  .httpMethod(stepParameters.getMethod())
@@ -148,7 +137,17 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
         responseBuilder.status(Status.SUCCEEDED);
       }
       responseBuilder.stepOutcome(StepOutcome.builder().name("http").outcome(executionData).build());
+      return responseBuilder.build();
+    } catch (ErrorDataException ex) {
+      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) ex.getErrorResponseData();
+      responseBuilder.status(Status.FAILED);
+      return responseBuilder
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                           .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                               errorNotifyResponseData.getFailureTypes()))
+                           .build())
+          .build();
     }
-    return responseBuilder.build();
   }
 }

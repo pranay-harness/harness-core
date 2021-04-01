@@ -1,5 +1,9 @@
 package io.harness.ccm.billing.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(CE)
 public enum CloudSortType {
   Time,
   gcpCost,
@@ -10,5 +14,7 @@ public enum CloudSortType {
   awsUnblendedCost,
   awsBlendedCost,
   awsService,
-  awsLinkedAccount;
+  awsLinkedAccount,
+  awsUsageType,
+  awsInstanceType;
 }

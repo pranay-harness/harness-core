@@ -2,12 +2,13 @@ package io.harness.cvng;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -21,6 +22,7 @@ import com.google.inject.Inject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1EventList;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8InfoDataServiceImpl implements K8InfoDataService {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
@@ -43,11 +45,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   public List<String> getNameSpaces(
       DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails, String filter) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
@@ -73,11 +71,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   public List<String> getWorkloads(String namespace, DataCollectionConnectorBundle bundle,
       List<EncryptedDataDetail> encryptedDataDetails, String filter) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
@@ -108,5 +102,37 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       log.error("failed to fetch pods", apiException);
       throw new DataCollectionException(apiException.getResponseBody());
     }
+  }
+
+  @Override
+  public List<String> checkCapabilityToGetEvents(
+      DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails) {
+    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
+    ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+    CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+    try {
+      V1EventList v1EventList =
+          coreV1Api.listEventForAllNamespaces(Boolean.TRUE, null, null, null, 10, null, null, 60, Boolean.FALSE);
+      List<String> rv = new ArrayList<>();
+      v1EventList.getItems().forEach(v1Event -> { rv.add(v1Event.getMessage()); });
+      return rv;
+    } catch (ApiException apiException) {
+      log.error("failed to fetch events", apiException);
+      throw new DataCollectionException(apiException.getResponseBody());
+    }
+  }
+
+  @Override
+  public KubernetesConfig getDecryptedKubernetesConfig(
+      KubernetesClusterConfigDTO kubernetesClusterConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    KubernetesCredentialDTO credential = kubernetesClusterConfig.getCredential();
+    if (credential.getKubernetesCredentialType().isDecryptable()) {
+      KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+          ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials();
+      secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
+    }
+
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
   }
 }

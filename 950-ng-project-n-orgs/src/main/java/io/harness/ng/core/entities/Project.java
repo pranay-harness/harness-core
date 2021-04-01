@@ -1,19 +1,21 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
-import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -34,11 +36,10 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
-@RsqlQueryable(fields = { @Field(ProjectKeys.modules)
-                          , @Field(ProjectKeys.orgIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
@@ -52,16 +53,31 @@ public class Project implements PersistentEntity, NGAccountAccess {
                  .field(ProjectKeys.orgIdentifier)
                  .field(ProjectKeys.identifier)
                  .unique(true)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedModulesLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .field(ProjectKeys.modules)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("acctModulesOrgIdx")
+                 .name("accountDeletedOrgIdentifierLastModifiedAtIdx")
                  .field(ProjectKeys.accountIdentifier)
-                 .field(ProjectKeys.modules)
+                 .field(ProjectKeys.deleted)
                  .field(ProjectKeys.orgIdentifier)
+                 .field(ProjectKeys.identifier)
+                 .field(ProjectKeys.lastModifiedAt)
                  .unique(false)
                  .build())
         .build();

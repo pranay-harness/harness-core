@@ -15,10 +15,12 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.encryption.Scope;
@@ -52,6 +54,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private NextGenService nextGenService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService eventService;
+  @Inject private Map<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -99,8 +102,12 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public void update(CVConfig cvConfig) {
     checkNotNull(cvConfig.getUuid(), "Trying to update a CVConfig with empty UUID.");
+    Preconditions.checkNotNull(dataSourceTypeCVConfigMapBinder.containsKey(cvConfig.getType()));
     cvConfig.validate();
-    hPersistence.save(cvConfig);
+    UpdateOperations<CVConfig> updateOperations = hPersistence.createUpdateOperations(CVConfig.class);
+    UpdatableEntity<CVConfig, CVConfig> updatableEntity = dataSourceTypeCVConfigMapBinder.get(cvConfig.getType());
+    updatableEntity.setUpdateOperations(updateOperations, cvConfig);
+    hPersistence.update(get(cvConfig.getUuid()), updateOperations);
   }
 
   @Override
@@ -453,15 +460,16 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
-        .filter(CVConfigKeys.accountId, accountId)
-        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-        .field(CVConfigKeys.identifier)
-        .notEqual(identifier)
-        .asList();
+  public List<CVConfig> getExistingMappedConfigs(String accountId, String orgIdentifier, String projectIdentifier,
+      String identifier, DataSourceType dataSourceType) {
+    List<CVConfig> cvConfigList = hPersistence.createQuery(CVConfig.class, excludeAuthority)
+                                      .filter(CVConfigKeys.accountId, accountId)
+                                      .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                      .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                      .field(CVConfigKeys.identifier)
+                                      .notEqual(identifier)
+                                      .asList();
+    return cvConfigList.stream().filter(config -> config.getType().equals(dataSourceType)).collect(Collectors.toList());
   }
 
   @Override

@@ -9,7 +9,7 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
@@ -46,7 +46,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @Slf4j
-public class PerpetualTaskWorkerTest extends DelegateTest {
+public class PerpetualTaskWorkerTest extends DelegateTestBase {
   String accountId = "ACCOUNT_ID";
   String cloudProviderId = "CLOUD_PROVIDER_ID";
 

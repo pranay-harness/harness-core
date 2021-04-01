@@ -1,6 +1,17 @@
 package io.harness.accesscontrol;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
+import io.harness.accesscontrol.commons.events.EventsConfig;
+import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.preference.AccessControlPreferenceConfiguration;
+import io.harness.accesscontrol.principals.user.UserClientConfiguration;
+import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
+import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
+import io.harness.aggregator.AggregatorConfiguration;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -17,10 +28,12 @@ import io.dropwizard.server.DefaultServerFactory;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Path;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.reflections.Reflections;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,10 +42,29 @@ public class AccessControlConfiguration extends Configuration {
   public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions";
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
+  public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
+  public static final String ACL_TEST_PACKAGE = "io.harness.accesscontrol.test";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
+  @JsonProperty("eventsConfig") private EventsConfig eventsConfig;
+  @JsonProperty("iteratorsConfig") private AccessControlIteratorsConfig iteratorsConfig;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
+  @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
+  @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
+  @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
+  @JsonProperty("accessControlPreferenceConfig")
+  private AccessControlPreferenceConfiguration accessControlPreferenceConfiguration;
+  @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
+  @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
+  @JsonProperty("identityServiceSecret") private String identityServiceSecret;
+
+  public boolean isAuthEnabled() {
+    return this.enableAuth;
+  }
 
   public AccessControlConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
@@ -42,7 +74,8 @@ public class AccessControlConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE);
+    Reflections reflections =
+        new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE, ACL_TEST_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

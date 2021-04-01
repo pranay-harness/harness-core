@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
@@ -7,9 +8,9 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.RUNNING;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.SKIPPED;
 
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
@@ -19,14 +20,12 @@ import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 import io.harness.gitsync.core.beans.GitSyncMetadata;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
-import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.logging.ExceptionLogger;
 import io.harness.repositories.yamlChangeSet.YamlChangeSetRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -44,9 +43,9 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(DX)
 public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private YamlGitService yamlGitService;
-  @Inject private YamlSuccessfulChangeService yamlSuccessfulChangeService;
   @Inject private YamlChangeSetRepository yamlChangeSetRepository;
 
   private static final Integer MAX_RETRY_COUNT = 3;
@@ -54,19 +53,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public YamlChangeSet save(YamlChangeSet yamlChangeSet) {
     populateGitSyncMetadata(yamlChangeSet);
-    final YamlChangeSet savedYamlChangeSet = yamlChangeSetRepository.save(yamlChangeSet);
-    onYamlChangeSetSave(savedYamlChangeSet);
-    return savedYamlChangeSet;
-  }
-
-  private void onYamlChangeSetSave(YamlChangeSet savedYamlChangeSet) {
-    try {
-      if (isGitSyncConfiguredForChangeSet(savedYamlChangeSet)) {
-        yamlSuccessfulChangeService.updateOnHarnessChangeSet(savedYamlChangeSet);
-      }
-    } catch (Exception e) {
-      log.error("error while processing onYamlChangeSetSave event", e);
-    }
+    return yamlChangeSetRepository.save(yamlChangeSet);
   }
 
   @Override
@@ -86,7 +73,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   private GitSyncMetadata buildGitSyncMetadata(YamlGitConfigDTO yamlGitConfig) {
     return GitSyncMetadata.builder()
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .branchName(yamlGitConfig.getBranch())
         .repoName(yamlGitConfig.getRepo())
         .yamlGitConfigId(yamlGitConfig.getIdentifier())
@@ -95,28 +82,12 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @NotNull
   private List<YamlGitConfigDTO> getYamlGitConfig(YamlChangeSet yamlChangeSet) {
-    return yamlChangeSet.isGitToHarness() ? getYamlGitConfigForGitToHarness(yamlChangeSet)
-                                          : Collections.singletonList(getYamlGitConfigForHarnessToGit(yamlChangeSet));
+    return getYamlGitConfigForGitToHarness(yamlChangeSet);
   }
 
   private String buildQueueKey(YamlGitConfigDTO yamlGitConfig) {
-    return format(
-        "%s:%s:%s", yamlGitConfig.getAccountId(), yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranch());
-  }
-
-  @NotNull
-  private YamlGitConfigDTO getYamlGitConfigForHarnessToGit(YamlChangeSet yamlChangeSet) {
-    // TODO(abhinav): expecting single file in git to harness
-    final YamlGitConfigDTO yamlGitConfig = yamlGitService.getYamlGitConfigForHarnessToGitChangeSet(
-        yamlChangeSet.getGitFileChanges().get(0), yamlChangeSet);
-    if (yamlGitConfig == null) {
-      throw NoResultFoundException.newBuilder()
-          .message(format(
-              "Unable to find yamlGitConfig for harness to git changeset for account =[%s], orgId=[%s]. projectId = [%s]Git Sync might not have been configured",
-              yamlChangeSet.getAccountId(), yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId()))
-          .build();
-    }
-    return yamlGitConfig;
+    return format("%s:%s:%s", yamlGitConfig.getAccountIdentifier(), yamlGitConfig.getGitConnectorRef(),
+        yamlGitConfig.getBranch());
   }
 
   @NotNull
@@ -218,8 +189,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private Optional<YamlChangeSet> getOldestGitToHarnessChangeSet(String accountId, String queueKey) {
-    return yamlChangeSetRepository.findFirstAccountIdAndQueueKeyAndStatusAndGitToHarnessOrderByCreatedAt(
-        accountId, queueKey, QUEUED, TRUE);
+    return yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
+        accountId, queueKey, QUEUED);
   }
 
   private boolean anyChangeSetRunningFoQueueKey(String accountId, String queueKey) {

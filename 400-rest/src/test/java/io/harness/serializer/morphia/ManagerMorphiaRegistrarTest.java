@@ -10,7 +10,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.rule.Owner;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentInfo;
@@ -70,7 +70,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(StepExecutionSummary.class)
                                                            .add(InfraMappingInfrastructureProvider.class)
                                                            .add(LogDataCollectionInfoV2.class)
-                                                           .add(NotifyCallback.class)
+                                                           .add(OldNotifyCallback.class)
                                                            .add(CVConfiguration.class)
                                                            .add(InstanceInfo.class)
                                                            .add(Cluster.class)

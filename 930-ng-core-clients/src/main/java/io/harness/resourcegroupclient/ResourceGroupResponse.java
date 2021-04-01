@@ -13,11 +13,14 @@ public class ResourceGroupResponse {
   @NotNull private ResourceGroupDTO resourceGroup;
   private Long createdAt;
   private Long lastModifiedAt;
+  private boolean harnessManaged;
 
   @Builder
-  public ResourceGroupResponse(ResourceGroupDTO resourceGroup, Long createdAt, Long lastModifiedAt) {
+  public ResourceGroupResponse(
+      ResourceGroupDTO resourceGroup, Long createdAt, Long lastModifiedAt, boolean harnessManaged) {
     this.resourceGroup = resourceGroup;
     this.createdAt = createdAt;
     this.lastModifiedAt = lastModifiedAt;
+    this.harnessManaged = harnessManaged;
   }
 }

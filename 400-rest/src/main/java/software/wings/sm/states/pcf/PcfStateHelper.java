@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -32,6 +33,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -52,7 +55,6 @@ import io.harness.logging.Misc;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -75,6 +77,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Log;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
@@ -91,13 +94,17 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -130,11 +137,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
+@Slf4j
+@OwnedBy(CDP)
 public class PcfStateHelper {
   public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
   public static final String CURRENT_USER = "currentUser";
@@ -152,6 +162,8 @@ public class PcfStateHelper {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private LogService logService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private SettingsService settingsService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -174,7 +186,13 @@ public class PcfStateHelper {
   }
 
   public Integer getStateTimeoutMillis(ExecutionContext context, Integer defaultValue, boolean isRollback) {
-    SetupSweepingOutputPcf setupSweepingOutputPcf = findSetupSweepingOutputPcf(context, isRollback);
+    SetupSweepingOutputPcf setupSweepingOutputPcf = null;
+    try {
+      setupSweepingOutputPcf = findSetupSweepingOutputPcf(context, isRollback);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+    }
+
     if (setupSweepingOutputPcf != null && setupSweepingOutputPcf.getTimeoutIntervalInMinutes() != null) {
       return Ints.checkedCast(TimeUnit.MINUTES.toMillis(setupSweepingOutputPcf.getTimeoutIntervalInMinutes()));
     }
@@ -687,7 +705,7 @@ public class PcfStateHelper {
   SetupSweepingOutputPcf findSetupSweepingOutputPcf(ExecutionContext context, boolean isRollback) {
     SweepingOutputInquiry sweepingOutputInquiry =
         context.prepareSweepingOutputInquiryBuilder().name(obtainSetupSweepingOutputName(context, isRollback)).build();
-    return findSetupSweepingOutput(sweepingOutputInquiry);
+    return findSetupSweepingOutput(context, sweepingOutputInquiry);
   }
 
   public void updateInfoVariables(ExecutionContext context, PcfRouteUpdateStateExecutionData stateExecutionData) {
@@ -705,7 +723,8 @@ public class PcfStateHelper {
     }
   }
 
-  private SetupSweepingOutputPcf findSetupSweepingOutput(SweepingOutputInquiry sweepingOutputInquiry) {
+  private SetupSweepingOutputPcf findSetupSweepingOutput(
+      ExecutionContext context, SweepingOutputInquiry sweepingOutputInquiry) {
     SetupSweepingOutputPcf setupSweepingOutputPcf = sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
     if (setupSweepingOutputPcf == null) {
       StateExecutionInstance previousPhaseStateExecutionInstance =
@@ -714,7 +733,7 @@ public class PcfStateHelper {
       if (previousPhaseStateExecutionInstance == null) {
         return SetupSweepingOutputPcf.builder().build();
       } else {
-        if (checkSameServiceAndInfra(sweepingOutputInquiry, previousPhaseStateExecutionInstance)) {
+        if (checkSameServiceAndInfra(context, sweepingOutputInquiry, previousPhaseStateExecutionInstance)) {
           String phaseName = getPhaseNameForQuery(sweepingOutputInquiry.getAppId(),
               sweepingOutputInquiry.getWorkflowExecutionId(), previousPhaseStateExecutionInstance.getStateName());
           SweepingOutputInquiry newSweepingOutputInquiry =
@@ -724,9 +743,9 @@ public class PcfStateHelper {
                   .stateExecutionId(previousPhaseStateExecutionInstance.getUuid())
                   .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseName)
                   .build();
-          return findSetupSweepingOutput(newSweepingOutputInquiry);
+          return findSetupSweepingOutput(context, newSweepingOutputInquiry);
         } else {
-          return SetupSweepingOutputPcf.builder().build();
+          throw new InvalidArgumentsException("Different Infrastructure or Service on worklflow phases");
         }
       }
     } else {
@@ -734,8 +753,8 @@ public class PcfStateHelper {
     }
   }
 
-  private boolean checkSameServiceAndInfra(
-      SweepingOutputInquiry sweepingOutputInquiry, StateExecutionInstance previousPhaseStateExecutionInstance) {
+  private boolean checkSameServiceAndInfra(ExecutionContext context, SweepingOutputInquiry sweepingOutputInquiry,
+      StateExecutionInstance previousPhaseStateExecutionInstance) {
     StateExecutionInstance stateExecutionInstance =
         stateExecutionService.fetchCurrentPhaseStateExecutionInstance(sweepingOutputInquiry.getAppId(),
             sweepingOutputInquiry.getWorkflowExecutionId(), sweepingOutputInquiry.getStateExecutionId());
@@ -745,8 +764,40 @@ public class PcfStateHelper {
     PhaseExecutionData previousPhaseExecutionData =
         stateExecutionService.fetchPhaseExecutionDataSweepingOutput(previousPhaseStateExecutionInstance);
 
-    return previousPhaseExecutionData.getInfraDefinitionId().equals(currentPhaseExecutionData.getInfraDefinitionId())
+    List<InfrastructureDefinition> prevInfraDefinitions =
+        infrastructureDefinitionService.getInfraStructureDefinitionByUuids(
+            previousPhaseStateExecutionInstance.getAppId(),
+            Collections.singletonList(previousPhaseExecutionData.getInfraDefinitionId()));
+
+    List<InfrastructureDefinition> currentInfraDefinitions =
+        infrastructureDefinitionService.getInfraStructureDefinitionByUuids(stateExecutionInstance.getAppId(),
+            Collections.singletonList(currentPhaseExecutionData.getInfraDefinitionId()));
+
+    return isTheSameInfrastructure(context, prevInfraDefinitions, currentInfraDefinitions)
         && previousPhaseExecutionData.getServiceId().equals(currentPhaseExecutionData.getServiceId());
+  }
+
+  private boolean isTheSameInfrastructure(ExecutionContext context, List<InfrastructureDefinition> prevInfraDefinitions,
+      List<InfrastructureDefinition> currentInfraDefinitions) {
+    if (!prevInfraDefinitions.isEmpty() && !currentInfraDefinitions.isEmpty()) {
+      PcfInfraStructure prevPcfInfraDefinition = (PcfInfraStructure) prevInfraDefinitions.get(0).getInfrastructure();
+      PcfInfraStructure currentPcfInfraDefinition =
+          (PcfInfraStructure) currentInfraDefinitions.get(0).getInfrastructure();
+
+      if (prevPcfInfraDefinition != null && currentPcfInfraDefinition != null) {
+        PcfConfig previousPcfConfig =
+            (PcfConfig) settingsService.get(prevPcfInfraDefinition.getCloudProviderId()).getValue();
+        PcfConfig currentPcfConfig =
+            (PcfConfig) settingsService.get(currentPcfInfraDefinition.getCloudProviderId()).getValue();
+
+        return previousPcfConfig.getEndpointUrl().equals(currentPcfConfig.getEndpointUrl())
+            && context.renderExpression(prevPcfInfraDefinition.getOrganization())
+                   .equals(context.renderExpression(currentPcfInfraDefinition.getOrganization()))
+            && context.renderExpression(prevPcfInfraDefinition.getSpace())
+                   .equals(context.renderExpression(currentPcfInfraDefinition.getSpace()));
+      }
+    }
+    return false;
   }
 
   void populatePcfVariables(ExecutionContext context, SetupSweepingOutputPcf setupSweepingOutputPcf) {

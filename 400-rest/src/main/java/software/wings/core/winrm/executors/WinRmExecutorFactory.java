@@ -1,5 +1,11 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -9,6 +15,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(CDP)
 public class WinRmExecutorFactory {
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
@@ -24,9 +32,10 @@ public class WinRmExecutorFactory {
         getExecutionLogCallback(config), delegateFileManager, shouldSaveExecutionLogs, config, disableCommandEncoding);
   }
 
-  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(WinRmSessionConfig config, boolean disableCommandEncoding) {
-    return new FileBasedWinRmExecutor(
-        getExecutionLogCallback(config), delegateFileManager, true, config, disableCommandEncoding);
+  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(
+      WinRmSessionConfig config, boolean disableCommandEncoding, boolean winrmCopyConfigOptimize) {
+    return new FileBasedWinRmExecutor(getExecutionLogCallback(config), delegateFileManager, true, config,
+        disableCommandEncoding, winrmCopyConfigOptimize);
   }
 
   ExecutionLogCallback getExecutionLogCallback(WinRmSessionConfig config) {

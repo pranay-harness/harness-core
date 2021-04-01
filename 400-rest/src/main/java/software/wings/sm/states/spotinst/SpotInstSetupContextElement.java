@@ -1,9 +1,12 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.spotinst.model.ElastiGroup;
 
 import software.wings.beans.ResizeStrategy;
@@ -26,6 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("spotInstSetupContextElement")
+@OwnedBy(CDP)
 public class SpotInstSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;

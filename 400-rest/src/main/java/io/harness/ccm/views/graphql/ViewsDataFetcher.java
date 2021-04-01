@@ -1,5 +1,8 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.service.CEViewService;
 
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -9,12 +12,13 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
+@OwnedBy(CE)
 public class ViewsDataFetcher extends AbstractObjectDataFetcher<QLCEViewsData, QLNoOpQueryParameters> {
   @Inject private CEViewService viewService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLCEViewsData fetch(QLNoOpQueryParameters parameters, String accountId) {
-    return QLCEViewsData.builder().customerViews(viewService.getAllViews(accountId)).build();
+    return QLCEViewsData.builder().customerViews(viewService.getAllViews(accountId, false)).build();
   }
 }

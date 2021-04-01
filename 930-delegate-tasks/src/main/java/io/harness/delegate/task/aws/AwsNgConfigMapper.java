@@ -1,5 +1,6 @@
 package io.harness.delegate.task.aws;
 
+import static io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import io.harness.aws.AwsAccessKeyCredential;
@@ -9,6 +10,10 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.govern.Switch;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -58,6 +63,33 @@ public class AwsNgConfigMapper {
         break;
       default:
         Switch.unhandled(awsCredentialType);
+    }
+    return awsConfig;
+  }
+
+  public AwsConfig mapAwsCodeCommit(
+      AwsCodeCommitAuthenticationDTO authentication, List<EncryptedDataDetail> encryptionDetails) {
+    AwsConfig awsConfig = null;
+
+    if (authentication.getAuthType() == AwsCodeCommitAuthType.HTTPS) {
+      final AwsCodeCommitHttpsCredentialsDTO credentials =
+          (AwsCodeCommitHttpsCredentialsDTO) authentication.getCredentials();
+      if (credentials.getType() == ACCESS_KEY_AND_SECRET_KEY) {
+        AwsCodeCommitSecretKeyAccessKeyDTO secretKeyAccessKeyDTO =
+            (AwsCodeCommitSecretKeyAccessKeyDTO) credentials.getHttpCredentialsSpec();
+
+        secretDecryptionService.decrypt(secretKeyAccessKeyDTO, encryptionDetails);
+        final SecretRefData secretKeyRef = secretKeyAccessKeyDTO.getSecretKeyRef();
+        String accessKey = secretKeyAccessKeyDTO.getAccessKey();
+        SecretRefData accessKeyRef = secretKeyAccessKeyDTO.getAccessKeyRef();
+        awsConfig = AwsConfig.builder()
+                        .awsAccessKeyCredential(
+                            AwsAccessKeyCredential.builder()
+                                .accessKey(getSecretAsStringFromPlainTextOrSecretRef(accessKey, accessKeyRef))
+                                .secretKey(getDecryptedValueWithNullCheck(secretKeyRef))
+                                .build())
+                        .build();
+      }
     }
     return awsConfig;
   }

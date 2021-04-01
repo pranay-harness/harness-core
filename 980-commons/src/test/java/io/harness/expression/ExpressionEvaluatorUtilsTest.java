@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +75,7 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     String updated = "updated";
     List<Pair<String, String>> pairs =
         asList(ImmutablePair.of(original, original), ImmutablePair.of(original, original));
-    Map<String, Object> map = ImmutableMap.of("a", original, "b", 2, "c", ImmutablePair.of(1, original));
+    Map<String, Object> map = new HashMap<>(ImmutableMap.of("a", original, "b", 2, "c", ImmutablePair.of(1, original)));
     Set<String> set = ImmutableSet.of("a", original);
     DummyB dummyBInternal = DummyB.builder().strVal(original).strValIgnored(original).build();
     String[][] strArrArr = new String[][] {new String[] {"a", original, "b"}, new String[] {"c", original, original}};
@@ -151,50 +152,6 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     assertThat(strArrArr[1][0]).isEqualTo("c");
     assertThat(strArrArr[1][1]).isEqualTo(updated);
     assertThat(strArrArr[1][2]).isEqualTo(updated);
-  }
-
-  @Value
-  @Builder
-  private static class DummyFunctor implements ExpressionResolveFunctor {
-    Map<String, Object> context;
-
-    @Override
-    public String renderExpression(String str) {
-      return str.replaceAll("original", "updated");
-    }
-
-    @Override
-    public Object evaluateExpression(String str) {
-      return context != null && context.containsKey(str) ? context.get(str) : str;
-    }
-
-    @Override
-    public boolean hasVariables(String str) {
-      if ("random".equals(str)) {
-        return true;
-      }
-      if (context == null) {
-        return false;
-      }
-
-      for (Map.Entry<String, Object> entry : context.entrySet()) {
-        if (str.equals(entry.getKey())) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    @Override
-    public ResolveObjectResponse processObject(Object o) {
-      if (!(o instanceof DummyField)) {
-        return new ResolveObjectResponse(false, false);
-      }
-
-      DummyField field = (DummyField) o;
-      boolean updated = field.process(this);
-      return new ResolveObjectResponse(true, updated);
-    }
   }
 
   @Data

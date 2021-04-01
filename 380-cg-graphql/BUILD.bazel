@@ -1,17 +1,16 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//:lombok",
     "//400-rest:module",
+    "//490-ce-commons:module",
 ]
 
 java_library(
@@ -42,11 +41,21 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
+    "@maven//:com_google_inject_extensions_guice_assistedinject",
+    "@maven//:com_google_inject_extensions_guice_multibindings",
+    "@maven//:com_google_inject_guice",
 ]
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    data = [
+        "//380-cg-graphql/src/test/resources:resource",
+    ],
+    resources = [
+        "//380-cg-graphql/src/test/resources:resource",
+    ],
     tags = [
         "aeriform",
         "manual",
@@ -54,3 +63,5 @@ java_library(
     visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
+
+run_tests()

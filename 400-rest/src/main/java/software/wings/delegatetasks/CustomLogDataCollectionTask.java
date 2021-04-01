@@ -10,7 +10,7 @@ import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -60,7 +60,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  * @author Praveen
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private RequestExecutor requestExecutor;
@@ -134,6 +134,8 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
   private class LogDataCollector implements Runnable {
     private final CustomLogDataCollectionInfo dataCollectionInfo;
     private long collectionStartTime;
+    private boolean firstDataCollectionCompleted;
+    private long lastEndTime;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
@@ -145,9 +147,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       this.logCollectionMinute = is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
                                               : dataCollectionInfo.getStartMinute();
       this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
-                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
-              + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
+                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.taskResult = taskResult;
+      this.lastEndTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
     }
 
     private Map<String, String> fetchAdditionalHeaders(CustomLogDataCollectionInfo dataCollectionInfo) {
@@ -247,14 +249,24 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       return maskFields;
     }
 
-    private String fetchLogs(String url, Map<String, String> headers, Map<String, String> options,
-        Map<String, Object> body, String query, String host, String hostNameSeparator) {
+    private long getEndTime(long startTime) {
+      if (is24X7Task()) {
+        return dataCollectionInfo.getEndTime();
+      }
+
+      long possibleEndTime = !firstDataCollectionCompleted
+          ? startTime + TimeUnit.MINUTES.toMillis(1)
+          : startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionFrequency());
+      return Math.min(
+          possibleEndTime, collectionStartTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+    }
+
+    private String fetchLogs(long startTime, long endTime, String url, Map<String, String> headers,
+        Map<String, String> options, Map<String, Object> body, String query, String host, String hostNameSeparator) {
       try {
         BiMap<String, Object> headersBiMap = resolveDollarReferences(headers);
         BiMap<String, Object> optionsBiMap = resolveDollarReferences(options);
-        final long startTime = collectionStartTime;
-        final long endTime =
-            is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
+
         String bodyStr = null;
         // We're doing this check because in SG24/7 we allow only one logCollection. So the body is present in the
         // dataCollectionInfo. In workflow there can be one body per logCollection in setup.
@@ -297,12 +309,47 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       }
     }
 
+    private boolean shouldCollectData() {
+      if (is24X7Task()) {
+        return true;
+      }
+      if (!firstDataCollectionCompleted) {
+        log.info("First data not yet collected. Returning true");
+        return true;
+      }
+      long currentTime = Timestamp.currentMinuteBoundary();
+      long lastCollectionTime = lastEndTime + TimeUnit.MINUTES.toMillis(1);
+      if ((int) TimeUnit.MILLISECONDS.toMinutes(currentTime - lastCollectionTime)
+              % dataCollectionInfo.getCollectionFrequency()
+          == 0) {
+        log.info("shouldCollectData is {} for minute {}, lastCollectionTime {}", true, currentTime, lastCollectionTime);
+        return true;
+      }
+
+      if (currentTime > collectionStartTime
+              + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime() + getInitialDelayMinutes())) {
+        log.info("ShouldCollectDataCollection is {} for minute {}, collectionStartMinute {}", true, currentTime,
+            collectionStartTime);
+        return true;
+      }
+
+      return false;
+    }
+
     @Override
     @SuppressWarnings("PMD")
     public void run() {
       int retry = 0;
+      if (!shouldCollectData()) {
+        return;
+      }
       while (!completed.get() && retry < RETRIES) {
         try {
+          final long startTime = lastEndTime;
+          final long endTime = getEndTime(startTime);
+
+          logCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(endTime - collectionStartTime) - 1);
+
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
             List<LogElement> logs = new ArrayList<>();
@@ -317,9 +364,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             // go fetch the logs first
             if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {
               // this query is not host based. So we should not make one call per host
-              String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(),
-                  tempHost, dataCollectionInfo.getHostnameSeparator());
+              String searchResponse = fetchLogs(startTime, endTime, logDataInfo.getKey(),
+                  dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(),
+                  dataCollectionInfo.getQuery(), tempHost, dataCollectionInfo.getHostnameSeparator());
 
               LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
                   dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldDoHostBasedFiltering(),
@@ -329,9 +376,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
               logs.addAll(curLogs);
             } else {
               dataCollectionInfo.getHosts().forEach(host -> {
-                String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
-                    dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(), host,
-                    dataCollectionInfo.getHostnameSeparator());
+                String searchResponse = fetchLogs(startTime, endTime, logDataInfo.getKey(),
+                    dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(),
+                    dataCollectionInfo.getQuery(), host, dataCollectionInfo.getHostnameSeparator());
 
                 LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
                     dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldDoHostBasedFiltering(),
@@ -345,7 +392,16 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             int i = 0;
 
             for (LogElement logObject : logs) {
-              logObject.setLogCollectionMinute(logCollectionMinute);
+              long timestamp = logObject.getTimeStamp();
+
+              if (logObject.getTimeStamp() != 0) {
+                int collectionMin =
+                    (int) ((Timestamp.minuteBoundary(timestamp) - collectionStartTime) / TimeUnit.MINUTES.toMillis(1));
+                logObject.setLogCollectionMinute(collectionMin);
+              } else {
+                logObject.setLogCollectionMinute(logCollectionMinute);
+              }
+
               logObject.setClusterLabel(String.valueOf(i++));
               logObject.setQuery(dataCollectionInfo.getQuery());
               if (logObject.getHost() == null) {
@@ -378,9 +434,13 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
               log.error("Error while saving logs for stateExecutionId: {}", dataCollectionInfo.getStateExecutionId());
             }
           }
-          logCollectionMinute++;
-          collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-          if (logCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+
+          if (!firstDataCollectionCompleted) {
+            firstDataCollectionCompleted = true;
+          }
+
+          lastEndTime = endTime;
+          if (is24X7Task() || logCollectionMinute >= dataCollectionInfo.getCollectionTime() - 1) {
             // We are done with all data collection, so setting task status to success and quitting.
             log.info(
                 "Completed Log collection task. So setting task status to success and quitting. StateExecutionId {}",

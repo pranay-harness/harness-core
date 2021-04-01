@@ -1,10 +1,13 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -33,26 +36,35 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.FailureType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.LastDeployedArtifactInformation;
 import software.wings.beans.ManifestVariable;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -62,6 +74,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.LastDeployedHelmChartInformation;
@@ -101,9 +114,12 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowServiceImplTest extends WingsBaseTest {
   public static final String CHART_NAME = "CHART_NAME";
   public static final String VERSION = "VERSION";
+  private static final String HTTP = "HTTP";
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ArtifactService artifactService;
   @Mock private HelmChartService helmChartService;
@@ -124,6 +140,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void setUp() {
     when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), anyString())).thenReturn(true);
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), anyString())).thenReturn(false);
+    when(featureFlagService.isEnabled(eq(FeatureName.TIMEOUT_FAILURE_SUPPORT), anyString())).thenReturn(false);
   }
 
   @Test
@@ -717,5 +734,94 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
     workflowService.updateWorkflow(newWorkflow, null, false, false, false);
     verify(pipelineService, Mockito.never()).savePipelines(any(), eq(true));
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenNoSpecificStepsAreProvidedForTimeoutErrorFailureType() {
+    when(featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PhaseStep phaseStep =
+        aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+            .addStep(GraphNode.builder().type(HTTP).name(HTTP).build())
+            .withFailureStrategies(Collections.singletonList(
+                FailureStrategy.builder().failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR)).build()))
+            .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(Collections.singletonList(phaseStep)).build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().addWorkflowPhase(phase).build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Specify the steps for timeout error. Allowed step types are:");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenNonSupportedStepsAreProvidedForTimeoutErrorFailureType() {
+    when(featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+                              .addStep(GraphNode.builder().type("JIRA_CREATE_UPDATE").name("Jira").build())
+                              .withFailureStrategies(Collections.singletonList(
+                                  FailureStrategy.builder()
+                                      .failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR))
+                                      .specificSteps(Collections.singletonList("Jira"))
+                                      .build()))
+                              .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(Collections.singletonList(phaseStep)).build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().addWorkflowPhase(phase).build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Timeout error is allowed only for step types:");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenTimeoutErrorFailureTypeIsProvidedOnOrchestrationLevel() {
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow()
+            .withFailureStrategies(Collections.singletonList(
+                FailureStrategy.builder().failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR)).build()))
+            .build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Timeout error is not supported on orchestration level.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenTimeoutErrorFailureTypeIsProvidedWhenFeatureFlagIsDisabled() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+                              .addStep(GraphNode.builder().type(HTTP).name(HTTP).build())
+                              .withFailureStrategies(Collections.singletonList(
+                                  FailureStrategy.builder()
+                                      .failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR))
+                                      .specificSteps(Collections.singletonList(HTTP))
+                                      .build()))
+                              .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(Collections.singletonList(phaseStep)).build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().addWorkflowPhase(phase).build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Timeout error is not supported");
   }
 }

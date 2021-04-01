@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
@@ -36,7 +37,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
@@ -136,7 +138,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class PcfClientImpl implements PcfClient {
   public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
@@ -1485,42 +1488,32 @@ public class PcfClientImpl implements PcfClient {
       return builder.build();
     }
 
+    String path = null;
+    String routeWithoutPath = route;
+    int indexForPath = route.indexOf(PCF_ROUTE_PATH_SEPARATOR_CHAR);
+    if (indexForPath != -1) {
+      path = route.substring(indexForPath + 1);
+      routeWithoutPath = route.substring(0, indexForPath);
+    }
+    builder.path(path);
+
     // HTTP
     builder.type(PCF_ROUTE_TYPE_HTTP);
-    boolean foundMatch = false;
-    String longestMatchingDomain = EMPTY;
-    for (String domainName : domainNames) {
-      if (route.contains(domainName)) {
-        if (!foundMatch) {
-          foundMatch = true;
-          longestMatchingDomain = domainName;
-        } else {
-          if (domainName.length() > longestMatchingDomain.length()) {
-            longestMatchingDomain = domainName;
-          }
-        }
-      }
-    }
-    builder.domain(longestMatchingDomain);
+    String domain = getDomain(domainNames, routeWithoutPath);
 
-    if (!foundMatch) {
+    if (domain == null) {
       throw new PivotalClientApiException(new StringBuilder(128)
                                               .append("Invalid Route Name: ")
                                               .append(route)
                                               .append(", used domain not present in this space")
                                               .toString());
     }
+    builder.domain(domain);
 
-    int domainStartIndex = route.indexOf(longestMatchingDomain);
+    int domainStartIndex = route.indexOf(domain);
     String hostName = domainStartIndex == 0 ? null : route.substring(0, domainStartIndex - 1);
     builder.hostName(hostName);
 
-    String path = null;
-    int indexForPath = route.indexOf(PCF_ROUTE_PATH_SEPARATOR_CHAR);
-    if (indexForPath != -1) {
-      path = route.substring(indexForPath + 1);
-    }
-    builder.path(path);
     return builder.build();
   }
 
@@ -1528,6 +1521,15 @@ public class PcfClientImpl implements PcfClient {
   public void mapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     executeRoutesOperationForApplicationUsingCli("cf map-route", pcfRequestConfig, routes, logCallback);
+  }
+
+  private String getDomain(Set<String> domains, String domain) {
+    if (domains.contains(domain)) {
+      return domain;
+    } else if (domain.contains(".")) {
+      return getDomain(domains, domain.substring(domain.indexOf('.') + 1));
+    }
+    return null;
   }
 
   @VisibleForTesting

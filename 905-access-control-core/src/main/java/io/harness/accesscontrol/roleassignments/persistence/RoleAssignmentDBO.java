@@ -1,6 +1,12 @@
 package io.harness.accesscontrol.roleassignments.persistence;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.DbAliases.ACCESS_CONTROL;
+
+import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -30,6 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -40,7 +47,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "roleassignments", noClassnameStored = true)
 @Document("roleassignments")
 @TypeAlias("roleassignments")
-public class RoleAssignmentDBO implements PersistentEntity {
+@StoreIn(ACCESS_CONTROL)
+public class RoleAssignmentDBO implements PersistentEntity, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @EntityIdentifier final String identifier;
   @NotEmpty final String scopeIdentifier;
@@ -49,7 +57,15 @@ public class RoleAssignmentDBO implements PersistentEntity {
   @NotEmpty final String principalIdentifier;
   @NotNull final PrincipalType principalType;
   final boolean managed;
-  final boolean disabled;
+  @Getter(value = AccessLevel.NONE) final Boolean disabled;
+
+  public boolean isDisabled() {
+    return disabled != null && disabled;
+  }
+
+  public Boolean getDisabled() {
+    return disabled;
+  }
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;
@@ -64,6 +80,15 @@ public class RoleAssignmentDBO implements PersistentEntity {
                  .unique(true)
                  .field(RoleAssignmentDBOKeys.identifier)
                  .field(RoleAssignmentDBOKeys.scopeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueRoleAssignmentIndex")
+                 .unique(true)
+                 .field(RoleAssignmentDBOKeys.scopeIdentifier)
+                 .field(RoleAssignmentDBOKeys.resourceGroupIdentifier)
+                 .field(RoleAssignmentDBOKeys.roleIdentifier)
+                 .field(RoleAssignmentDBOKeys.principalIdentifier)
+                 .field(RoleAssignmentDBOKeys.principalType)
                  .build())
         .build();
   }

@@ -23,11 +23,10 @@ import static software.wings.sm.StateType.ENV_STATE;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
@@ -67,12 +66,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
   public static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
@@ -130,7 +130,7 @@ public class PipelineResumeUtils {
       }
 
       List<PipelineStageExecution> stageExecutions;
-      stageExecutions = getPipelineStageExecutions(pipeline.getAccountId(), pipelineStageExecutions, i, pipelineStage);
+      stageExecutions = getPipelineStageExecutions(pipelineStageExecutions, pipelineStage);
       // Check for compatibility.
       checkStageAndStageExecutions(pipelineStage, stageExecutions);
 
@@ -182,28 +182,25 @@ public class PipelineResumeUtils {
 
   private void setResumePropertiesEnvLoopState(Pipeline pipeline,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap, PipelineStageElement pse,
-      ForkStateExecutionData stateExecutionData, Map<String, Object> properties) {
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      pse.setType(ENV_LOOP_RESUME_STATE.name());
-      ForkStateExecutionData forkStateExecutionData = stateExecutionData;
-      Map<String, String> prevWorkflowExecutionIdStateInstanceId = new HashMap<>();
-      if (isNotEmpty(forkStateExecutionData.getForkStateNames())) {
-        for (String element : forkStateExecutionData.getForkStateNames()) {
-          StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
-          if (executionInstanceLooped == null) {
-            continue;
-          }
-          String executionInstanceLoppedId = executionInstanceLooped.getUuid();
-          StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
-          if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
-            EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
-            String workflowExecutionId = envStateExecutionDataLooped.getWorkflowExecutionId();
-            prevWorkflowExecutionIdStateInstanceId.put(workflowExecutionId, executionInstanceLoppedId);
-          }
+      ForkStateExecutionData forkStateExecutionData, Map<String, Object> properties) {
+    pse.setType(ENV_LOOP_RESUME_STATE.name());
+    Map<String, String> prevWorkflowExecutionIdStateInstanceId = new HashMap<>();
+    if (isNotEmpty(forkStateExecutionData.getForkStateNames())) {
+      for (String element : forkStateExecutionData.getForkStateNames()) {
+        StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
+        if (executionInstanceLooped == null) {
+          continue;
         }
-        properties.put(
-            EnvLoopResumeStateKeys.workflowExecutionIdWithStateExecutionIds, prevWorkflowExecutionIdStateInstanceId);
+        String executionInstanceLoppedId = executionInstanceLooped.getUuid();
+        StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
+        if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
+          EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
+          String workflowExecutionId = envStateExecutionDataLooped.getWorkflowExecutionId();
+          prevWorkflowExecutionIdStateInstanceId.put(workflowExecutionId, executionInstanceLoppedId);
+        }
       }
+      properties.put(
+          EnvLoopResumeStateKeys.workflowExecutionIdWithStateExecutionIds, prevWorkflowExecutionIdStateInstanceId);
     }
   }
 
@@ -230,24 +227,13 @@ public class PipelineResumeUtils {
 
   @VisibleForTesting
   List<PipelineStageExecution> getPipelineStageExecutions(
-      String accountId, List<PipelineStageExecution> pipelineStageExecutions, int i, PipelineStage pipelineStage) {
+      List<PipelineStageExecution> pipelineStageExecutions, PipelineStage pipelineStage) {
     List<PipelineStageExecution> stageExecutions;
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)) {
-      stageExecutions =
-          pipelineStageExecutions.stream()
-              .filter(
-                  t -> t.getPipelineStageElementId().equals(pipelineStage.getPipelineStageElements().get(0).getUuid()))
-              .collect(Collectors.toList());
-      if (isEmpty(stageExecutions)) {
-        // older flow when we didnt add pipeline stage element Id. Can be cleaned up after 6 months. Date:
-        // 30-June-2020
-        PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
-        stageExecutions = Collections.singletonList(stageExecution);
-      }
-    } else {
-      PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
-      stageExecutions = Collections.singletonList(stageExecution);
-    }
+    stageExecutions = pipelineStageExecutions.stream()
+                          .filter(t
+                              -> StringUtils.equals(t.getPipelineStageElementId(),
+                                  pipelineStage.getPipelineStageElements().get(0).getUuid()))
+                          .collect(Collectors.toList());
     return stageExecutions;
   }
 
@@ -355,8 +341,7 @@ public class PipelineResumeUtils {
         break;
       }
 
-      List<PipelineStageExecution> stageExecutions =
-          getPipelineStageExecutions(pipeline.getAccountId(), pipelineStageExecutions, i, pipelineStage);
+      List<PipelineStageExecution> stageExecutions = getPipelineStageExecutions(pipelineStageExecutions, pipelineStage);
       checkStageAndStageExecutions(pipelineStage, stageExecutions);
 
       List<String> newPipelineStageElementNames = pipelineStage.getPipelineStageElements() == null

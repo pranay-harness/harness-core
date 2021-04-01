@@ -8,7 +8,7 @@ import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTE
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -59,7 +59,7 @@ import org.slf4j.Logger;
  * Created by Pranjal on 11/30/18.
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private StackDriverDataCollectionInfo dataCollectionInfo;
 
@@ -379,7 +379,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           if (isPredictiveAnalysis) {
             collectionStartTime = startTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
           } else {
-            return dataCollectionMinute;
+            return (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
           }
           collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
         }
@@ -403,8 +403,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      long endTime = collectionStartTime;
-      long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
+      long startTime = collectionStartTime;
+      long endTime = startTime + TimeUnit.MINUTES.toMillis(1);
 
       if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect())) {
         Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -428,9 +428,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getPerSeriesAligner()));
               dataFetchParameters.setCrossSeriesReducer(
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getCrossSeriesReducer()));
-              dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
-              dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
-                  + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              if (is24X7Task()) {
+                dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
+                dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
+                    + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              }
               callables.add(() -> getMetricDataRecords(dataFetchParameters));
             }));
       }

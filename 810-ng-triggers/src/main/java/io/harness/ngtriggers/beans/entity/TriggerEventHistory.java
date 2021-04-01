@@ -1,6 +1,9 @@
 package io.harness.ngtriggers.beans.entity;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
@@ -24,6 +27,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("triggerEventHistory")
 @TypeAlias("triggerEventHistory")
 @HarnessEntity(exportable = true)
+@OwnedBy(PIPELINE)
 public class TriggerEventHistory implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

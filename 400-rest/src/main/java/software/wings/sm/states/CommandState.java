@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +13,7 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.sm.StateMachineExecutor.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateType.COMMAND;
 
 import static java.lang.String.format;
@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 import static org.joor.Reflect.on;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -39,7 +40,6 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;
@@ -53,7 +53,9 @@ import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -105,6 +107,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
@@ -114,7 +117,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionContext.StateExecutionContextBuilder;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
 
 import com.github.reinert.jjschema.Attributes;
@@ -171,6 +173,7 @@ public class CommandState extends State {
   @Inject @Transient private transient TemplateUtils templateUtils;
   @Inject @Transient private transient ServiceTemplateHelper serviceTemplateHelper;
   @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject @Transient private transient SSHVaultService sshVaultService;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
 
@@ -273,10 +276,10 @@ public class CommandState extends State {
   }
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
+    Integer timeout = super.getTimeoutMillis();
+    return timeout == null ? DEFAULT_STATE_TIMEOUT_MILLIS : timeout;
   }
 
   // Entry function for execution of Command State (for both Service linked and Template library linked)
@@ -306,6 +309,7 @@ public class CommandState extends State {
     Service service = null;
     ServiceInstance serviceInstance = null;
     DeploymentType deploymentType = null;
+    SSHVaultConfig sshVaultConfig = null;
 
     if (instanceElement != null) {
       String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
@@ -383,6 +387,11 @@ public class CommandState extends State {
                   ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
             }
             sshKeyRef = keySettingAttribute.getUuid();
+          }
+          if (keySettingAttribute.getValue() instanceof HostConnectionAttributes
+              && ((HostConnectionAttributes) keySettingAttribute.getValue()).isVaultSSH()) {
+            sshVaultConfig = sshVaultService.getSSHVaultConfig(keySettingAttribute.getAccountId(),
+                ((HostConnectionAttributes) keySettingAttribute.getValue()).getSshVaultConfigId());
           }
 
           String hostName = context.renderExpression(getHost());
@@ -508,7 +517,8 @@ public class CommandState extends State {
               .deploymentType(deploymentType != null ? deploymentType.name() : null)
               .delegateSelectors(getDelegateSelectors(context))
               .disableWinRMEnvVariables(
-                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId));
+                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId))
+              .sshVaultConfig(sshVaultConfig);
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
@@ -724,7 +734,8 @@ public class CommandState extends State {
           WingsException.USER);
     }
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -771,7 +782,8 @@ public class CommandState extends State {
               WingsException.USER);
         }
 
-        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+        ArtifactStreamAttributes artifactStreamAttributes =
+            artifactStream.fetchArtifactStreamAttributes(featureFlagService);
         artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
         if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -850,6 +862,12 @@ public class CommandState extends State {
       commandExecutionContextBuilder.hostConnectionCredentials(
           secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
               context.getAppId(), context.getWorkflowExecutionId()));
+      if (hostConnectionAttribute.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) hostConnectionAttribute.getValue()).isVaultSSH()) {
+        commandExecutionContextBuilder.sshVaultConfig(
+            sshVaultService.getSSHVaultConfig(hostConnectionAttribute.getAccountId(),
+                ((HostConnectionAttributes) hostConnectionAttribute.getValue()).getSshVaultConfigId()));
+      }
     }
     if (isNotEmpty(host.getBastionConnAttr())) {
       SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
@@ -887,6 +905,11 @@ public class CommandState extends State {
     if (featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_COMMAND_ENCODING, accountId)) {
       commandExecutionContextBuilder.disableWinRMCommandEncodingFFSet(true);
     }
+
+    if (featureFlagService.isEnabled(FeatureName.WINRM_COPY_CONFIG_OPTIMIZE, accountId)) {
+      commandExecutionContextBuilder.winrmCopyConfigOptimize(true);
+    }
+
     commandExecutionContextBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }
@@ -1154,6 +1177,10 @@ public class CommandState extends State {
 
   private Artifact findArtifact(String serviceId, ExecutionContext context) {
     if (isRollback()) {
+      if (context.getContextElement(ContextElementType.INSTANCE) == null) {
+        WorkflowStandardParams contextElement = context.getContextElement(ContextElementType.STANDARD);
+        return contextElement.getRollbackArtifactForService(serviceId);
+      }
       Artifact previousArtifact = serviceResourceService.findPreviousArtifact(
           context.getAppId(), context.getWorkflowExecutionId(), context.getContextElement(ContextElementType.INSTANCE));
       if (previousArtifact != null) {

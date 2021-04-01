@@ -2,23 +2,19 @@ package io.harness.pms.yaml;
 
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
-import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.serializer.json.JsonOrchestrationIgnore;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @NoArgsConstructor
-public class ParameterField<T> implements OrchestrationField, VisitorFieldWrapper {
-  public static final OrchestrationFieldType ORCHESTRATION_FIELD_TYPE =
-      OrchestrationFieldType.builder().type("PARAMETER_FIELD").build();
-
+public class ParameterField<T> implements VisitorFieldWrapper {
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 
   @NotExpression private String expressionValue;
@@ -33,7 +29,7 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   private boolean jsonResponseField;
   private String responseField;
 
-  private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null, null, false, null);
+  private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null, false, null, false, null);
 
   public static <T> ParameterField<T> createExpressionField(
       boolean isExpression, String expressionValue, InputSetValidator inputSetValidator, boolean isTypeString) {
@@ -41,7 +37,7 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   }
 
   public static <T> ParameterField<T> createValueField(T value) {
-    return new ParameterField<>(value, false, null, null, value.getClass().equals(String.class));
+    return new ParameterField<>(value, false, null, null, value != null && value.getClass().equals(String.class));
   }
 
   public static <T> ParameterField<T> createValueFieldWithInputSetValidator(
@@ -53,32 +49,29 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     return new ParameterField<>(true, responseField);
   }
 
-  public ParameterField(
-      T value, boolean expression, String expressionValue, InputSetValidator inputSetValidator, boolean typeString) {
-    this.value = value;
-    this.expression = expression;
-    this.expressionValue = expressionValue;
-    this.inputSetValidator = inputSetValidator;
-    this.typeString = typeString;
+  public static <T> ParameterField<T> ofNull() {
+    return (ParameterField<T>) EMPTY;
   }
 
-  private ParameterField(String expressionValue, boolean expression, T value, InputSetValidator inputSetValidator,
-      boolean jsonResponseField, String responseField) {
+  @Builder
+  public ParameterField(String expressionValue, boolean expression, T value, boolean typeString,
+      InputSetValidator inputSetValidator, boolean jsonResponseField, String responseField) {
     this.expressionValue = expressionValue;
     this.expression = expression;
     this.value = value;
+    this.typeString = typeString;
     this.inputSetValidator = inputSetValidator;
     this.jsonResponseField = jsonResponseField;
     this.responseField = responseField;
+  }
+
+  public ParameterField(
+      T value, boolean expression, String expressionValue, InputSetValidator inputSetValidator, boolean typeString) {
+    this(expressionValue, expression, value, typeString, inputSetValidator, false, null);
   }
 
   private ParameterField(boolean jsonResponseField, String responseField) {
-    this.jsonResponseField = jsonResponseField;
-    this.responseField = responseField;
-  }
-
-  public static <T> ParameterField<T> ofNull() {
-    return (ParameterField<T>) EMPTY;
+    this(null, false, null, false, null, jsonResponseField, responseField);
   }
 
   public Object get(String key) {
@@ -88,10 +81,12 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   public void updateWithExpression(String newExpression) {
     expression = true;
     expressionValue = newExpression;
+    value = null;
   }
 
   public void updateWithValue(Object newValue) {
     expression = false;
+    expressionValue = null;
     value = (T) newValue;
   }
 
@@ -113,17 +108,6 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     }
   }
 
-  @Override
-  public Class<? extends OrchestrationField> getDeserializationClass() {
-    return ParameterField.class;
-  }
-
-  @Override
-  public OrchestrationFieldType getType() {
-    return ORCHESTRATION_FIELD_TYPE;
-  }
-
-  @Override
   public Object fetchFinalValue() {
     return expression ? expressionValue : value;
   }

@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -53,6 +54,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -64,7 +66,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -571,6 +572,12 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(listParam.getInstanceElements().size()).isEqualTo(1);
     assertThat(listParam.getInstanceElements().get(0).getHostName()).isEqualTo("HostName");
     assertThat(listParam.getInstanceElements().get(0).getDockerId()).isEqualTo("DockerId");
+    assertThat(response.getFailureTypes()).isNull();
+
+    delegateResponse.getEcsCommandResponse().setTimeoutFailure(true);
+    response = helper.handleDelegateResponseForEcsDeploy(
+        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, false, mockHelper);
+    assertThat(response.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test

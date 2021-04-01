@@ -1,5 +1,10 @@
 package io.harness.ccm.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.service.CEViewService;
@@ -49,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetServiceImpl implements BudgetService {
   @Inject private DataFetcherUtils dataFetcherUtils;
   @Inject private BudgetDao budgetDao;

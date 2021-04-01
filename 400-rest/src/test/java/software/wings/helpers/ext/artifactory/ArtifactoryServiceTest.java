@@ -33,6 +33,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.RepositoryType;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -50,7 +51,6 @@ import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryResponse;
 import org.jfrog.artifactory.client.impl.ArtifactoryResponseImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,17 +67,21 @@ public class ArtifactoryServiceTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(9881);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig =
-      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-
-  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
+  private ArtifactoryConfig artifactoryConfig;
+  private ArtifactoryConfig artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
+    artifactoryConfig =
+        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
     FieldUtils.writeField(
         artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
   }
@@ -85,7 +89,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetMavenRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
     assertThat(repositories).isNotNull();
@@ -96,7 +99,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetIvyRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
     assertThat(repositories).isNotNull();
@@ -107,7 +109,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetDockerRepositoriesWithArtifactType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, ArtifactType.DOCKER);
     assertThat(repositories).isNotNull();
@@ -118,7 +119,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetDockerRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
     assertThat(repositories).isNotNull();
@@ -129,7 +129,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetRepositoriesForMavenWithPackageType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, "maven");
     assertThat(repositories).isNotNull();
@@ -141,7 +140,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetRpmRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RPM);
     assertThat(repositories).isNotNull();
@@ -151,7 +149,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetDockerImages() {
     List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, null, "docker");
     assertThat(repositories).isNotNull();
@@ -161,7 +158,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetDockerTags() {
     List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
         ArtifactStreamAttributes.builder()
@@ -180,7 +176,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetRpmFilePaths() {
     List<BuildDetails> builds =
         artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*/", "generic", 50);
@@ -191,7 +186,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetCorrectBuildNoWithAnyWildcardMatch() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/*/*.war", "any", 50);
@@ -204,7 +198,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetCorrectBuildNoForAtLeastOneWildcardPattern() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/[0-9]+/*.war", "any", 50);
@@ -217,7 +210,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfig, null, "harness-maven", "/io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
@@ -230,7 +222,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter1() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
@@ -241,7 +232,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test(expected = WingsException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData =
         artifactoryService.downloadArtifacts(artifactoryConfig, null, "harness-rpm",
@@ -254,7 +244,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldValidateArtifactPath() {
     assertThat(artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic"))
         .isTrue();
@@ -263,7 +252,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldValidateArtifactPathAnonymous() {
     assertThat(artifactoryService.validateArtifactPath(
                    artifactoryConfigAnonymous, null, "harness-rpm", "todolist*", "generic"))
@@ -273,7 +261,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test(expected = WingsException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldValidateArtifactPathPasswordEmpty() {
     ArtifactoryConfig artifactoryConfigNoPassword =
         ArtifactoryConfig.builder().artifactoryUrl("some url").username("some username").build();
@@ -283,7 +270,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test(expected = WingsException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldValidateArtifactPathEmpty() {
     artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "", "generic");
   }
@@ -291,7 +277,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldValidateArtifactPathMaven() {
     artifactoryService.validateArtifactPath(
         artifactoryConfig, null, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
@@ -300,7 +285,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test(expected = WingsException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadRpmArtifact() {
     Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
         ImmutableMap.of(ArtifactMetadataKeys.artifactPath, "harness-rpm/todolist-1.0-2.x86_64.rpm",
@@ -311,7 +295,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetFileSize() {
     Map<String, String> metadata = new HashMap<>();
     metadata.put(ArtifactMetadataKeys.artifactPath, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
@@ -322,7 +305,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldTestArtifactoryRunning() {
     assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
   }
@@ -330,7 +312,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldThrowExceptionOnArtifactoryResponseWith407StatusCode() throws IOException, IllegalAccessException {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
@@ -350,8 +331,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
-  public void shouldThrowExceptionOnArtifactoryResponseWith400StatusCode() throws IOException, IllegalAccessException {
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
@@ -377,9 +357,37 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
+      throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
         artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.docker);
@@ -391,7 +399,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetMavenRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
         artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.maven);
@@ -403,7 +410,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetAnyRepositoriesWithRepositoryType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.any);
     assertThat(repositories).isNotNull();
@@ -414,7 +420,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetDefaultRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
         artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.nuget);
@@ -426,7 +431,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetFilePathsWithWildCardForAnonymousUser() {
     List<BuildDetails> builds =
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "tdlist/*/*.war", "any", 50);
@@ -439,7 +443,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetFilePathsWithWildCardForAnonymousUser1() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
         artifactoryConfigAnonymous, null, "harness-maven", "tdlist/1.1/*.war", "any", 50);
@@ -450,7 +453,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldThrowExceptionWhenEmptyArtifactPath() {
     assertThatThrownBy(
         () -> artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "    ", "any", 50))
@@ -462,7 +464,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetFilePathsForAnonymousUser() {
     List<BuildDetails> builds =
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "//myartifact/", "any", 50);
@@ -473,7 +474,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldAppendProxyConfig() {
     System.setProperty("http.proxyHost", "proxyHost");
     System.setProperty("proxyScheme", "http");
@@ -492,7 +492,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldNotAppendProxyConfigIfArtifactoryUrlIsInNonProxyList() {
     System.setProperty("http.proxyHost", "proxyHost");
     System.setProperty("http.proxyPort", "123");
@@ -512,7 +511,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldNotAppendProxyConfigWhenProxyIsNotEnabled() {
     ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
     ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();

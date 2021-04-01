@@ -34,12 +34,13 @@ public final class MonitoringSourcePerpetualTask
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("insert_index")
+                 .name("unique_insert_index")
                  .unique(true)
                  .field(MonitoringSourcePerpetualTaskKeys.accountId)
                  .field(MonitoringSourcePerpetualTaskKeys.orgIdentifier)
                  .field(MonitoringSourcePerpetualTaskKeys.projectIdentifier)
                  .field(MonitoringSourcePerpetualTaskKeys.monitoringSourceIdentifier)
+                 .field(MonitoringSourcePerpetualTaskKeys.verificationType)
                  .build())
         .build();
   }
@@ -53,6 +54,7 @@ public final class MonitoringSourcePerpetualTask
   @NotNull private String projectIdentifier;
   @NotNull private String monitoringSourceIdentifier;
   @NotNull private String connectorIdentifier;
+  @NotNull private VerificationType verificationType;
 
   @FdIndex private Long dataCollectionTaskIteration;
   private String perpetualTaskId;
@@ -74,4 +76,6 @@ public final class MonitoringSourcePerpetualTask
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
+
+  public enum VerificationType { LIVE_MONITORING, DEPLOYMENT }
 }

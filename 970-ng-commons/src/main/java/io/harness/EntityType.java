@@ -4,6 +4,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
 import io.harness.common.EntityTypeConstants;
+import io.harness.common.EntityYamlRootNames;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,39 +17,55 @@ import java.util.stream.Collectors;
 // one more enum might come in here for product types.
 public enum EntityType {
   @JsonProperty(EntityTypeConstants.PROJECTS)
-  PROJECTS(ModuleType.CORE, EntityTypeConstants.PROJECTS, IdentifierRef.class),
+  PROJECTS(ModuleType.CORE, EntityTypeConstants.PROJECTS, EntityYamlRootNames.PROJECT, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.PIPELINES)
-  PIPELINES(ModuleType.CD, EntityTypeConstants.PIPELINES, IdentifierRef.class),
+  PIPELINES(ModuleType.CD, EntityTypeConstants.PIPELINES, EntityYamlRootNames.PIPELINE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.PIPELINE_STEPS)
+  PIPELINE_STEPS(
+      ModuleType.CD, EntityTypeConstants.PIPELINE_STEPS, EntityYamlRootNames.PIPELINE_STEP, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
-  CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, IdentifierRef.class),
-  @JsonProperty(EntityTypeConstants.SECRETS) SECRETS(ModuleType.CORE, EntityTypeConstants.SECRETS, IdentifierRef.class),
-  @JsonProperty(EntityTypeConstants.SERVICE) SERVICE(ModuleType.CORE, EntityTypeConstants.SERVICE, IdentifierRef.class),
+  CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, EntityYamlRootNames.CONNECTOR, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.SECRETS)
+  SECRETS(ModuleType.CORE, EntityTypeConstants.SECRETS, EntityYamlRootNames.SECRET, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.SERVICE)
+  SERVICE(ModuleType.CORE, EntityTypeConstants.SERVICE, EntityYamlRootNames.SERVICE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.ENVIRONMENT)
-  ENVIRONMENT(ModuleType.CORE, EntityTypeConstants.ENVIRONMENT, IdentifierRef.class),
+  ENVIRONMENT(ModuleType.CORE, EntityTypeConstants.ENVIRONMENT, EntityYamlRootNames.ENVIRONMENT, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.INPUT_SETS)
-  INPUT_SETS(ModuleType.CORE, EntityTypeConstants.INPUT_SETS, InputSetReference.class),
+  INPUT_SETS(ModuleType.CORE, EntityTypeConstants.INPUT_SETS, EntityYamlRootNames.INPUT_SET, InputSetReference.class),
   @JsonProperty(EntityTypeConstants.CV_CONFIG)
-  CV_CONFIG(ModuleType.CV, EntityTypeConstants.CV_CONFIG, IdentifierRef.class),
+  CV_CONFIG(ModuleType.CV, EntityTypeConstants.CV_CONFIG, EntityYamlRootNames.CV_CONFIG, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.DELEGATES)
-  DELEGATES(ModuleType.CORE, EntityTypeConstants.DELEGATES, IdentifierRef.class),
+  DELEGATES(ModuleType.CORE, EntityTypeConstants.DELEGATES, EntityYamlRootNames.DELEGATE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.DELEGATE_CONFIGURATIONS)
-  DELEGATE_CONFIGURATIONS(ModuleType.CORE, EntityTypeConstants.DELEGATE_CONFIGURATIONS, IdentifierRef.class),
+  DELEGATE_CONFIGURATIONS(ModuleType.CORE, EntityTypeConstants.DELEGATE_CONFIGURATIONS,
+      EntityYamlRootNames.DELEGATE_CONFIGURATION, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.CV_VERIFICATION_JOB)
-  CV_VERIFICATION_JOB(ModuleType.CV, EntityTypeConstants.CV_VERIFICATION_JOB, IdentifierRef.class),
+  CV_VERIFICATION_JOB(ModuleType.CV, EntityTypeConstants.CV_VERIFICATION_JOB, EntityYamlRootNames.CV_VERIFICATION_JOB,
+      IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.INTEGRATION_STAGE)
-  INTEGRATION_STAGE(ModuleType.CI, EntityTypeConstants.INTEGRATION_STAGE, IdentifierRef.class),
+  INTEGRATION_STAGE(
+      ModuleType.CI, EntityTypeConstants.INTEGRATION_STAGE, EntityYamlRootNames.INTEGRATION_STAGE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.INTEGRATION_STEPS)
-  INTEGRATION_STEPS(ModuleType.CI, EntityTypeConstants.INTEGRATION_STEPS, IdentifierRef.class),
+  INTEGRATION_STEPS(
+      ModuleType.CI, EntityTypeConstants.INTEGRATION_STEPS, EntityYamlRootNames.INTEGRATION_STEP, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.CV_KUBERNETES_ACTIVITY_SOURCE)
-  CV_KUBERNETES_ACTIVITY_SOURCE(ModuleType.CV, EntityTypeConstants.CV_KUBERNETES_ACTIVITY_SOURCE, IdentifierRef.class),
+  CV_KUBERNETES_ACTIVITY_SOURCE(ModuleType.CV, EntityTypeConstants.CV_KUBERNETES_ACTIVITY_SOURCE,
+      EntityYamlRootNames.CV_KUBERNETES_ACTIVITY_SOURCE, IdentifierRef.class),
 
   @JsonProperty(EntityTypeConstants.DEPLOYMENT_STEPS)
-  DEPLOYMENT_STEPS(ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STEPS, IdentifierRef.class),
+  DEPLOYMENT_STEPS(
+      ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STEPS, EntityYamlRootNames.DEPLOYMENT_STEP, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.DEPLOYMENT_STAGE)
-  DEPLOYMENT_STAGE(ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, IdentifierRef.class);
+  DEPLOYMENT_STAGE(
+      ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, EntityYamlRootNames.DEPLOYMENT_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
+  APPROVAL_STAGE(
+      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;
+  String yamlRootElementString;
   Class<? extends EntityReference> entityReferenceClass;
 
   @JsonCreator
@@ -74,13 +91,22 @@ public enum EntityType {
         .orElseThrow(() -> new IllegalArgumentException("Invalid value: " + yamlType));
   }
 
+  public static EntityType getEntityTypeFromYamlRootName(String yamlRootString) {
+    return Arrays.stream(EntityType.values())
+        .filter(value -> value.yamlRootElementString.equalsIgnoreCase(yamlRootString))
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("Invalid value: " + yamlRootString));
+  }
+
   public ModuleType getEntityProduct() {
     return this.moduleType;
   }
 
-  EntityType(ModuleType moduleType, String yamlName, Class<? extends EntityReference> entityReferenceClass) {
+  EntityType(ModuleType moduleType, String yamlName, String yamlRootElementString,
+      Class<? extends EntityReference> entityReferenceClass) {
     this.moduleType = moduleType;
     this.yamlName = yamlName;
+    this.yamlRootElementString = yamlRootElementString;
     this.entityReferenceClass = entityReferenceClass;
   }
 

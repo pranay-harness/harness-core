@@ -5,12 +5,14 @@ import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotific
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.ccm.cluster.entities.CEUserInfo;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.User;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -26,6 +28,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -51,6 +55,7 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   @Autowired private TimeScaleDBService timeScaleDBService;
   @Autowired private DataUtils utils;
   @Autowired private CEMailNotificationService emailNotificationService;
+  @Autowired private CEMetadataRecordDao metadataRecordDao;
   private JobParameters parameters;
 
   private static final int MAX_RETRY_COUNT = 3;
@@ -59,6 +64,8 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   private static final String FIRST_RECORD_TIME_QUERY =
       "SELECT STARTTIME FROM billing_data WHERE ACCOUNTID = '%s' ORDER BY STARTTIME ASC LIMIT 1;";
   private static final String CE_CLUSTER_URL = "/account/%s/continuous-efficiency/cluster/insights?clusterList=%s";
+  private static final String queryTemplate =
+      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND appid IS NOT NULL AND starttime >= '%s' LIMIT 1";
   private static final String GET_CLUSTERS_QUERY =
       "SELECT CLUSTERID, CLUSTERNAME FROM billing_data_hourly WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND CLUSTERID IS NOT NULL GROUP BY CLUSTERID, CLUSTERNAME;";
 
@@ -66,8 +73,26 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder().clusterDataConfigured(true).build());
-    log.info("Running BillingDataGeneratedMailTasklet for accountId : {}", accountId);
+    CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
+    boolean isApplicationDataPresent = false;
+    if (ceMetadataRecord != null) {
+      if (ceMetadataRecord.getApplicationDataPresent() != null) {
+        isApplicationDataPresent = ceMetadataRecord.getApplicationDataPresent();
+      }
+      if (!isApplicationDataPresent) {
+        Instant sevenDaysPriorInstant =
+            Instant.ofEpochMilli(Instant.now().truncatedTo(ChronoUnit.DAYS).toEpochMilli() - TimeUnit.DAYS.toMillis(7));
+        String applicationQuery = String.format(queryTemplate, accountId, sevenDaysPriorInstant);
+        if (getCount(applicationQuery, accountId) != 0) {
+          isApplicationDataPresent = true;
+        }
+      }
+    }
+    cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder()
+                                                            .accountId(accountId)
+                                                            .applicationDataPresent(isApplicationDataPresent)
+                                                            .clusterDataConfigured(true)
+                                                            .build());
     boolean notificationSend = notificationDao.isMailSent(accountId);
     if (!notificationSend) {
       long firstEventTime = getFirstDataRecordTime(accountId);
@@ -207,7 +232,27 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
     }
     return time;
   }
-
+  protected Integer getCount(String query, String accountId) {
+    int count = 0;
+    if (timeScaleDBService.isValid()) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet != null && resultSet.next()) {
+          count = 1;
+        }
+      } catch (SQLException e) {
+        log.warn("Failed to execute query in OverviewPageStatsDataFetcher, query=[{}], accountId=[{}], {}", query,
+            accountId, e);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    } else {
+      throw new InvalidRequestException("Cannot process request in OverviewPageStatsDataFetcher");
+    }
+    return count;
+  }
   private long getStartOfCurrentDay() {
     ZoneId zoneId = ZoneId.of("GMT");
     LocalDate today = LocalDate.now(zoneId);

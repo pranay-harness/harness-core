@@ -1,10 +1,6 @@
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
-
-sources()
 
 java_library(
     name = "module",
@@ -19,7 +15,7 @@ java_library(
         "@maven//:io_dropwizard_metrics_metrics_annotation",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
-        "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+        "@maven_harness//:io_harness_ff_java_server_sdk",
     ],
 )
 
@@ -28,13 +24,5 @@ java_library(
 #run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

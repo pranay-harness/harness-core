@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -39,6 +39,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
@@ -58,12 +59,13 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
+public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTestBase {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private transient K8sTaskHelper k8sTaskHelper;
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @Mock private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private transient ContainerService containerService;
+  @Mock private AwsEcsHelperServiceDelegate awsEcsHelperServiceDelegate;
   @Mock private Call<RestResponse<Boolean>> call;
   @Inject KryoSerializer kryoSerializer;
 
@@ -184,6 +186,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
+    doReturn(true).when(awsEcsHelperServiceDelegate).serviceExists(any(), any(), anyString(), anyString(), anyString());
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse = executor.runOnce(
@@ -194,6 +197,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final ContainerSyncResponse containerSyncResponse = containerSyncResponseCaptor.getValue();
 
+    assertThat(containerSyncResponse.isEcs()).isTrue();
     verifyContainerServicesCallSuccess(containerInfo, perpetualTaskResponse, containerSyncResponse);
 
     doThrow(new RuntimeException()).when(call).execute();
@@ -226,6 +230,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
+    doReturn(true).when(awsEcsHelperServiceDelegate).serviceExists(any(), any(), anyString(), anyString(), anyString());
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse = executor.runOnce(
@@ -236,6 +241,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     final ContainerSyncResponse containerSyncResponse = containerSyncResponseCaptor.getValue();
 
+    assertThat(containerSyncResponse.isEcs()).isFalse();
     verifyContainerServicesCallFailure(perpetualTaskResponse, containerSyncResponse);
 
     doThrow(new RuntimeException()).when(call).execute();

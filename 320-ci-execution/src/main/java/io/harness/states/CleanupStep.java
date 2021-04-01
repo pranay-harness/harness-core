@@ -1,95 +1,121 @@
 package io.harness.states;
 
-import io.harness.beans.DelegateTaskRequest;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
-import io.harness.beans.sweepingoutputs.ContextElement;
-import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.PodCleanupDetails;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.serializer.KryoSerializer;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+import io.harness.steps.StepUtils;
 
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * State sends cleanup task to finish CI build job. It has to be executed in the end once all steps are complete
+ * This is not used currently because clean up is implemented via event handler
  */
 
+@OwnedBy(CI)
 @Slf4j
-// TODO Cleanup Support for other types (Non K8)
-public class CleanupStep implements SyncExecutable<CleanupStepInfo> {
+public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecutionResponse> {
   public static final StepType STEP_TYPE = CleanupStepInfo.STEP_TYPE;
-  public static final String TASK_TYPE = "EXECUTE_COMMAND";
+  public static final String TASK_TYPE = "CI_CLEANUP";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
-
+  @Inject private KryoSerializer kryoSerializer;
   @Override
   public Class<CleanupStepInfo> getStepParametersClass() {
     return CleanupStepInfo.class;
   }
 
-  // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
-  //     Async will be supported once we will have delegate microservice ready.
+  @Override
+  public TaskRequest obtainTask(Ambiance ambiance, CleanupStepInfo stepParameters, StepInputPackage inputPackage) {
+    Infrastructure infrastructure = stepParameters.getInfrastructure();
+
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    PodCleanupDetails podCleanupDetails = (PodCleanupDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(CLEANUP_DETAILS));
+
+    // It should always resolved to K8sDirectInfraYaml
+    K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
+
+    final String clusterName = k8sDirectInfraYaml.getSpec().getConnectorRef();
+    final String namespace = k8sDirectInfraYaml.getSpec().getNamespace();
+    final List<String> podNames = new ArrayList<>();
+    podNames.add(stepParameters.getPodName());
+
+    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, clusterName);
+
+    CIK8CleanupTaskParams cik8CleanupTaskParams =
+        CIK8CleanupTaskParams.builder()
+            .k8sConnector(connectorDetails)
+            .cleanupContainerNames(podCleanupDetails.getCleanUpContainerNames())
+            .namespace(namespace)
+            .podNameList(podNames)
+            .serviceNameList(new ArrayList<>())
+            .build();
+
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(stepParameters.getTimeout())
+                                  .taskType(TASK_TYPE)
+                                  .parameters(new Object[] {cik8CleanupTaskParams})
+                                  .build();
+
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+  }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, CleanupStepInfo cleanupStepInfo, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
-    try {
-      K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-          ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
+  public StepResponse handleTaskResult(
+      Ambiance ambiance, CleanupStepInfo stepParameters, Supplier<K8sTaskExecutionResponse> responseSupplier) {
+    K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+      log.info("Cleanup of K8 pod, secret is successful for pod name {} ", stepParameters.getPodName());
+      return StepResponse.builder().status(Status.SUCCEEDED).build();
 
-      final String namespace = k8PodDetails.getNamespace();
-      final String clusterName = k8PodDetails.getClusterName();
-      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    } else {
+      log.error("Failed to clean K8 pod and secret for pod name {} ", stepParameters.getPodName());
 
-      ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, clusterName);
-
-      CIK8CleanupTaskParams cik8CleanupTaskParams = CIK8CleanupTaskParams.builder()
-                                                        .k8sConnector(connectorDetails)
-                                                        .namespace(namespace)
-                                                        .podNameList(new ArrayList<>())
-                                                        .serviceNameList(new ArrayList<>())
-                                                        .build();
-
-      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                    .accountId(ngAccess.getAccountIdentifier())
-                                                    .taskSetupAbstractions(ambiance.getSetupAbstractionsMap())
-                                                    .executionTimeout(Duration.ofSeconds(cleanupStepInfo.getTimeout()))
-                                                    .taskType(TASK_TYPE)
-                                                    .taskParameters(cik8CleanupTaskParams)
-                                                    .taskDescription("Execute command task")
-                                                    .build();
-
-      log.info("Sending cleanup task");
-      K8sTaskExecutionResponse k8sTaskExecutionResponse =
-          (K8sTaskExecutionResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-        log.info("Cleanup task completed successfully");
-        return StepResponse.builder().status(Status.SUCCEEDED).build();
-      } else {
-        log.error("Cleanup task completed with status {}", k8sTaskExecutionResponse.getCommandExecutionStatus());
-        return StepResponse.builder().status(Status.FAILED).build();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.FAILED);
+      if (k8sTaskExecutionResponse.getErrorMessage() != null) {
+        stepResponseBuilder.failureInfo(
+            FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
       }
-    } catch (Exception e) {
-      log.error("Cleanup task errored", e);
-      return StepResponse.builder().status(Status.ERRORED).build();
+      return stepResponseBuilder.build();
     }
   }
 }

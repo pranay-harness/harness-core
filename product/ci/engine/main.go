@@ -25,6 +25,7 @@ var (
 	executeStage        = executor.ExecuteStage
 	newHTTPRemoteLogger = external.GetHTTPRemoteLogger
 	engineServer        = grpc.NewEngineServer
+	getLogKey           = external.GetLogKey
 )
 
 // schema for executing a stage
@@ -60,13 +61,8 @@ func init() {
 func main() {
 	parseArgs()
 
-	// Lite engine logs that are not part of any step are logged with ID engine_state_logs-main
-	key := "engine_stage_logs-main"
-	remoteLogger, err := newHTTPRemoteLogger(key)
-	if err != nil {
-		// Could not create a logger
-		panic(err)
-	}
+	// Lite engine logs that are not part of any step are logged with ID engine:main
+	remoteLogger := getRemoteLogger("engine:main")
 	log := remoteLogger.BaseLogger
 	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
 
@@ -74,29 +70,24 @@ func main() {
 		metrics.Log(int32(os.Getpid()), "engine", log)
 	}
 
-	startServer(remoteLogger)
-
-	log.Infow("Starting stage execution")
-	switch {
-	case args.Stage != nil:
+	if args.Stage != nil {
+		// Starting stage execution
+		startServer(remoteLogger, true)
+		log.Infow("Starting stage execution")
 		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.ServicePorts, args.Stage.Debug, log)
 		if err != nil {
 			remoteLogger.Writer.Close()
 			os.Exit(1) // Exit the lite engine with status code of 1
 		}
-	default:
-		log.Errorw(
-			"One of stage or step needs to be specified",
-			"args", args,
-		)
-		remoteLogger.Writer.Close()
-		os.Exit(1) // Exit the lite engine with status code of 1
+		log.Infow("CI lite engine completed execution, now exiting")
+	} else {
+		// Starts the grpc server and waits for ExecuteStep grpc call to execute a step.
+		startServer(remoteLogger, false)
 	}
-	log.Infow("CI lite engine completed execution, now exiting")
 }
 
 // starts grpc server in background
-func startServer(rl *logs.RemoteLogger) {
+func startServer(rl *logs.RemoteLogger, background bool) {
 	log := rl.BaseLogger
 
 	log.Infow("Starting CI engine server", "port", consts.LiteEnginePort)
@@ -107,10 +98,32 @@ func startServer(rl *logs.RemoteLogger) {
 		os.Exit(1) // Exit engine with exit code 1
 	}
 
-	// Start grpc server in separate goroutine. It will cater to pausing/resuming stage execution.
-	go func() {
+	if background {
+		// Start grpc server in separate goroutine. It will cater to pausing/resuming stage execution.
+		go func() {
+			if err := s.Start(); err != nil {
+				log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
+			}
+		}()
+	} else {
 		if err := s.Start(); err != nil {
 			log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
+			rl.Writer.Close()
+			os.Exit(1) // Exit engine with exit code 1
 		}
-	}()
+	}
+}
+
+func getRemoteLogger(keyID string) *logs.RemoteLogger {
+	key, err := getLogKey(keyID)
+	if err != nil {
+		panic(err)
+	}
+	remoteLogger, err := newHTTPRemoteLogger(key)
+	if err != nil {
+		// Could not create a logger
+		panic(err)
+	}
+
+	return remoteLogger
 }

@@ -54,7 +54,7 @@ func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
 		key:      key,
 		now:      time.Now(),
 		limit:    defaultLimit,
-		interval: time.Second,
+		interval: defaultInterval,
 		close:    make(chan struct{}),
 		ready:    make(chan struct{}, 1),
 		log:      l.Sugar(),

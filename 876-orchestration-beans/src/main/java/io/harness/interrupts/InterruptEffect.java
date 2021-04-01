@@ -3,6 +3,7 @@ package io.harness.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 
 import javax.validation.constraints.NotNull;
@@ -18,4 +19,5 @@ public class InterruptEffect {
   @NotNull String interruptId;
   @NotNull long tookEffectAt;
   @NotNull InterruptType interruptType;
+  @NotNull InterruptConfig interruptConfig;
 }

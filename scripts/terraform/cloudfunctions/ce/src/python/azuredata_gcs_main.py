@@ -85,7 +85,8 @@ def create_scheduler_job(jsonData):
             'topic_name': topic,
             'data': bytes(json.dumps(jsonData), 'utf-8')
         },
-        'schedule': schedule
+        'schedule': schedule,
+        'time_zone': "UTC"
     }
 
     try:

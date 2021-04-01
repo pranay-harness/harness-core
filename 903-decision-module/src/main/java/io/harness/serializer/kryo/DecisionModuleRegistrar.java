@@ -1,6 +1,6 @@
 package io.harness.serializer.kryo;
 
-import io.harness.accesscontrol.acl.dtos.AccessCheckRequestDTO;
+import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;

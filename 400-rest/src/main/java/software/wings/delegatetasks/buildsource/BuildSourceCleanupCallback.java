@@ -14,7 +14,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -24,7 +24,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.Account;
 import software.wings.beans.artifact.Artifact;
@@ -54,8 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
-public class BuildSourceCleanupCallback implements NotifyCallback {
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+public class BuildSourceCleanupCallback implements OldNotifyCallback {
   private String accountId;
   private String artifactStreamId;
   private List<BuildDetails> builds;

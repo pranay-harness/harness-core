@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.audit;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.audit.AuditHeader;
@@ -24,7 +24,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ChangeSetConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLChangeSetFilter, QLNoOpSortCriteria, QLChangeSetConnection> {
   @Inject ChangeSetQueryHelper changeSetQueryHelper;

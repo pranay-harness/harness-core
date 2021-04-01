@@ -23,6 +23,7 @@ type handler struct {
 var (
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newRunTask          = tasks.NewRunTask
+	newRunTestsTask     = tasks.NewRunTestsTask
 	newPluginTask       = tasks.NewPluginTask
 )
 
@@ -47,17 +48,26 @@ func (h *handler) SignalStop(ctx context.Context, in *pb.SignalStopRequest) (*pb
 
 // ExecuteStep executes a unit step.
 func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	rl, err := newGrpcRemoteLogger(in.GetStep().GetId())
+	rl, err := newGrpcRemoteLogger(in.GetStep().GetLogKey())
 	if err != nil {
 		return &pb.ExecuteStepResponse{}, err
 	}
 	defer rl.Writer.Close()
 
+	h.log.Infow("Executing step", "arg", in)
+
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
-		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetPrevStepOutputs(), in.GetTmpFilePath(), rl.BaseLogger,
+			rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
+			NumRetries: numRetries,
+		}
+		return response, err
+	case *enginepb.UnitStep_RunTests:
+		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}
 		return response, err

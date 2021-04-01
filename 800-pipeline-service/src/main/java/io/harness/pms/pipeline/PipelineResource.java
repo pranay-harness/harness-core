@@ -1,5 +1,7 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
@@ -7,6 +9,12 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -15,8 +23,9 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.notification.bean.NotificationRules;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -29,6 +38,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
+import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
@@ -62,6 +72,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PIPELINE)
 @Api("pipelines")
 @Path("pipelines")
 @Produces({"application/json", "application/yaml"})
@@ -74,7 +85,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
     })
 @PipelineServiceAuth
 @Slf4j
-public class PipelineResource {
+public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
   private PMSYamlSchemaService pmsYamlSchemaService;
@@ -112,11 +123,12 @@ public class PipelineResource {
   @GET
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core.pipeline.view")
   public ResponseDTO<PMSPipelineResponseDTO> getPipelineByIdentifier(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId) {
     log.info("Get pipeline");
 
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
@@ -213,11 +225,11 @@ public class PipelineResource {
   @GET
   @Path("/steps")
   @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
-  public ResponseDTO<StepCategory> getSteps(
-      @NotNull @QueryParam("category") String category, @NotNull @QueryParam("module") String module) {
+  public ResponseDTO<StepCategory> getSteps(@NotNull @QueryParam("category") String category,
+      @NotNull @QueryParam("module") String module, @QueryParam("accountId") String accountId) {
     log.info("Get Steps for given module");
 
-    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category, accountId));
   }
 
   @POST
@@ -230,10 +242,12 @@ public class PipelineResource {
       @QueryParam("searchTerm") String searchTerm, @QueryParam("pipelineIdentifier") String pipelineIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
-      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties) {
+      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
+      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments) {
     log.info("Get List of executions");
-    Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm);
+    Criteria criteria =
+        pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier, filterIdentifier,
+            (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status, myDeployments);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));

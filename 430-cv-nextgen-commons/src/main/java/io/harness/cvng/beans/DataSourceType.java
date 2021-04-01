@@ -7,7 +7,9 @@ import java.util.List;
 public enum DataSourceType {
   APP_DYNAMICS("Appdynamics"),
   SPLUNK("Splunk"),
-  STACKDRIVER("Stackdriver");
+  STACKDRIVER("Stackdriver"),
+  KUBERNETES("Kubernetes"),
+  NEW_RELIC("New Relic");
 
   private String displayName;
 
@@ -19,7 +21,7 @@ public enum DataSourceType {
     return displayName;
   }
 
-  public static List<DataSourceType> getTimeSeriesThresholds() {
-    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER));
+  public static List<DataSourceType> getTimeSeriesTypes() {
+    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC));
   }
 }

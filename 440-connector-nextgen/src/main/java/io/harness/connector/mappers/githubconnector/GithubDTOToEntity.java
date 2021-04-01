@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.githubconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.githubconnector.GithubApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
@@ -29,12 +31,13 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
+@OwnedBy(HarnessTeam.DX)
 public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnector toConnectorEntity(GithubConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
     GithubAuthentication githubAuthentication =
-        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType);
+        buildAuthenticationDetails(gitAuthType, configDTO.getAuthentication().getCredentials());
     boolean hasApiAccess = hasApiAccess(configDTO.getApiAccess());
     GithubApiAccessType apiAccessType = null;
     GithubApiAccess githubApiAccess = null;
@@ -53,8 +56,8 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
         .build();
   }
 
-  private GithubAuthentication buildAuthenticationDetails(
-      GithubCredentialsDTO credentialsDTO, GitAuthType gitAuthType) {
+  public static GithubAuthentication buildAuthenticationDetails(
+      GitAuthType gitAuthType, GithubCredentialsDTO credentialsDTO) {
     switch (gitAuthType) {
       case SSH:
         final GithubSshCredentialsDTO sshCredentialsDTO = (GithubSshCredentialsDTO) credentialsDTO;
@@ -71,7 +74,8 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
     }
   }
 
-  private GithubHttpAuth getHttpAuth(GithubHttpAuthenticationType type, GithubHttpCredentialsDTO httpCredentialsDTO) {
+  private static GithubHttpAuth getHttpAuth(
+      GithubHttpAuthenticationType type, GithubHttpCredentialsDTO httpCredentialsDTO) {
     switch (type) {
       case USERNAME_AND_PASSWORD:
         final GithubUsernamePasswordDTO usernamePasswordDTO =
@@ -95,7 +99,7 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
         throw new UnknownEnumTypeException("Github Http Auth Type", type == null ? null : type.getDisplayName());
     }
   }
-  private String getStringSecretForNullableSecret(SecretRefData secretRefData) {
+  private static String getStringSecretForNullableSecret(SecretRefData secretRefData) {
     String usernameRef = null;
     if (secretRefData != null) {
       usernameRef = SecretRefHelper.getSecretConfigString(secretRefData);

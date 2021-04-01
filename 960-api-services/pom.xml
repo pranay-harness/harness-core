@@ -9,6 +9,10 @@
     <artifactId>960-api-services</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.jcraft.harness</groupId>
+            <artifactId>jsch-0-1-54-harness-patch</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-autoscaling</artifactId>
         </dependency>
@@ -18,7 +22,15 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-codecommit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-codedeploy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sns</artifactId>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>

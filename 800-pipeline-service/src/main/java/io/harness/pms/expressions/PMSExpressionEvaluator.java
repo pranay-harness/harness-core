@@ -1,6 +1,9 @@
 package io.harness.pms.expressions;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
+import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ng.core.account.remote.AccountClient;
@@ -21,6 +24,7 @@ import io.harness.steps.StepOutcomeGroup;
 import com.google.inject.Inject;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
   @Inject private AccountClient accountClient;
   @Inject private OrganizationManagerClient organizationManagerClient;
@@ -51,9 +55,17 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
             .ambiance(ambiance)
             .build());
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
+
     addStaticAlias("artifact", "service.artifacts.primary.output");
     addStaticAlias("serviceVariables", "service.variables.output");
     addStaticAlias("env", "infrastructureSection.environment");
+    addStaticAlias(OrchestrationConstants.STAGE_SUCCESS, "<+stage.currentStatus> == \"SUCCEEDED\"");
+    addStaticAlias(OrchestrationConstants.STAGE_FAILURE,
+        "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\"");
+    addStaticAlias(OrchestrationConstants.PIPELINE_FAILURE,
+        "<+pipeline.currentStatus> == \"FAILED\" || <+pipeline.currentStatus> == \"ERRORED\"");
+    addStaticAlias(OrchestrationConstants.PIPELINE_SUCCESS, "<+pipeline.currentStatus> == \"SUCCEEDED\"");
+    addStaticAlias(OrchestrationConstants.ALWAYS, "true");
     addGroupAlias(YAMLFieldNameConstants.STAGE, StepOutcomeGroup.STAGE.name());
     addGroupAlias(YAMLFieldNameConstants.STEP, StepOutcomeGroup.STEP.name());
   }

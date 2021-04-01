@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.budget;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.commons.utils.DataUtils;
@@ -44,7 +47,8 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetTimescaleQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private DataUtils utils;
@@ -95,6 +99,7 @@ public class BudgetTimescaleQueryHelper {
     insertQuery.addColumn(schema.getBudgetId(), data.getBudgetId());
     insertQuery.addColumn(schema.getAccountId(), data.getAccountId());
     insertQuery.addColumn(schema.getAlertThreshold(), data.getAlertThreshold());
+    insertQuery.addColumn(schema.getAlertBasedOn(), data.getAlertBasedOn());
     insertQuery.addColumn(schema.getActualCost(), data.getActualCost());
     insertQuery.addColumn(schema.getBudgetedCost(), data.getBudgetedCost());
     queryMetaDataBuilder.query(insertQuery.toString());
@@ -151,6 +156,7 @@ public class BudgetTimescaleQueryHelper {
     selectQuery.addColumns(schema.getAlertTime());
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getBudgetId(), data.getBudgetId()));
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getAlertThreshold(), data.getAlertThreshold()));
+    selectQuery.addCondition(BinaryCondition.equalTo(schema.getAlertBasedOn(), data.getAlertBasedOn()));
     selectQuery.addCustomOrdering(schema.getAlertTime(), OrderObject.Dir.DESCENDING);
 
     addAccountFilter(selectQuery, data.getAccountId());

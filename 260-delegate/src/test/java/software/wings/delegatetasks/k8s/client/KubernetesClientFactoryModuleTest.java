@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.client;
 
-import static io.harness.annotations.dev.Module._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -46,7 +47,13 @@ public class KubernetesClientFactoryModuleTest extends CategoryTest {
         return mock(GkeClusterService.class);
       }
     });
-
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretDecryptionService secretDecryptionService() {
+        return mock(SecretDecryptionService.class);
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

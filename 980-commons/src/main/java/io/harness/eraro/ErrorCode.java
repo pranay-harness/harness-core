@@ -12,11 +12,15 @@ import static io.harness.eraro.Status.UNAUTHORIZED;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.base.Splitter;
 
 /**
  * The enum Error codes.
  */
+@OwnedBy(HarnessTeam.DX)
 public enum ErrorCode {
   DEFAULT_ERROR_CODE,
 
@@ -490,7 +494,12 @@ public enum ErrorCode {
   INSTANCE_STATS_PROCESS_ERROR,
   INSTANCE_STATS_MIGRATION_ERROR,
   DEPLOYMENT_MIGRATION_ERROR,
-  INSTANCE_STATS_AGGREGATION_ERROR;
+  INSTANCE_STATS_AGGREGATION_ERROR,
+  UNRESOLVED_EXPRESSIONS_ERROR,
+  KRYO_HANDLER_NOT_FOUND_ERROR,
+  DELEGATE_ERROR_HANDLER_EXCEPTION,
+  UNEXPECTED_TYPE_ERROR,
+  EXCEPTION_HANDLER_NOT_FOUND;
 
   private Status status = BAD_REQUEST;
   private String description;

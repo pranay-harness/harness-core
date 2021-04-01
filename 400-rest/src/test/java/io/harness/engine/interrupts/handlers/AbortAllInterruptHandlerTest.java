@@ -1,8 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -17,6 +16,9 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -69,14 +71,21 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     Interrupt handledInterrupt = orchestrationService.registerInterrupt(
-        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(InterruptType.ABORT_ALL).build());
+        InterruptPackage.builder()
+            .planExecutionId(execution.getUuid())
+            .interruptType(InterruptType.ABORT_ALL)
+            .interruptConfig(InterruptConfig.newBuilder()
+                                 .setIssuedBy(IssuedBy.newBuilder()
+                                                  .setManualIssuer(ManualIssuer.newBuilder().setEmailId("Test").build())
+                                                  .build())
+                                 .build())
+            .build());
     assertThat(handledInterrupt).isNotNull();
-    assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
+    assertThat(handledInterrupt.getState()).isEqualTo(PROCESSING);
 
-    interruptTestHelper.waitForPlanCompletion(execution.getUuid());
     PlanExecution abortedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(abortedExecution).isNotNull();
-    assertThat(abortedExecution.getStatus()).isEqualTo(ABORTED);
+    assertThat(abortedExecution.getStatus()).isEqualTo(RUNNING);
   }
 
   private Map<String, String> getAbstractions() {

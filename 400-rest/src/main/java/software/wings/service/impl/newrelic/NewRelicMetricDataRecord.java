@@ -11,11 +11,10 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -31,6 +30,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
@@ -52,19 +52,6 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rsingh on 08/30/17.
  */
-
-@CdIndex(name = "stateExIdx",
-    fields =
-    { @Field("stateExecutionId")
-      , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
-@CdIndex(name = "workflowExIdx",
-    fields =
-    {
-      @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-    })
-@CdIndex(name = "serviceGuardIdx",
-    fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-               , @Field("cvConfigId") })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -75,6 +62,27 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("stateExIdx")
+                 .field(NewRelicMetricDataRecordKeys.stateExecutionId)
+                 .field(NewRelicMetricDataRecordKeys.groupName)
+                 .descSortField(NewRelicMetricDataRecordKeys.dataCollectionMinute)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("workflowExIdx")
+                .field(NewRelicMetricDataRecordKeys.workflowExecutionId)
+                .field(NewRelicMetricDataRecordKeys.groupName)
+                .descSortField(NewRelicMetricDataRecordKeys.dataCollectionMinute)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("serviceGuardIndex")
+                .descSortField(NewRelicMetricDataRecordKeys.dataCollectionMinute)
+                .field(NewRelicMetricDataRecordKeys.cvConfigId)
+                .build())
+        .build();
+  }
   @Transient public static String DEFAULT_GROUP_NAME = "default";
 
   @NotEmpty private StateType stateType;

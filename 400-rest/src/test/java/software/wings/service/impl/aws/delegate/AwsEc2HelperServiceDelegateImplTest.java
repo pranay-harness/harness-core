@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -13,6 +14,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
@@ -33,6 +36,7 @@ import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
+import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.AmazonClientException;
@@ -70,10 +74,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
   @Mock private AmazonEC2Client mockClient;
+  @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
 
   @Spy @InjectMocks private AwsEc2HelperServiceDelegateImpl awsEc2HelperServiceDelegate;
   public static final String REGION = "us-east-1";
@@ -106,13 +112,14 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testValidateAwsAccountCredentialFalseIncorrectCredentials() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     AwsConfig awsConfig = new AwsConfig("ACCESS_KEY".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "",
-        false, "", null, false, null, null, false, null);
+        false, "", null, false, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     when(mockClient.describeRegions()).thenThrow(exception);
     doNothing().when(mockTracker).trackEC2Call(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).attachCredentialsAndBackoffPolicy(any(), any());
     AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
         awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
     assertThat(validateCredentialsResponse.isValid()).isFalse();
@@ -125,13 +132,15 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testValidateAwsAccountCredentialFalseAccessKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     AwsConfig awsConfig = new AwsConfig("".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "",
-        null, false, null, null, false, null);
+        null, false, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     when(mockClient.describeRegions()).thenThrow(exception);
     doNothing().when(mockTracker).trackEC2Call(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).attachCredentialsAndBackoffPolicy(any(), any());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
         awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
     assertThat(validateCredentialsResponse.isValid()).isFalse();
@@ -144,13 +153,14 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testValidateAwsAccountCredentialFalseSecretKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     AwsConfig awsConfig =
-        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, false, null, null, false, null);
+        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, false, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     when(mockClient.describeRegions()).thenThrow(exception);
     doNothing().when(mockTracker).trackEC2Call(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).attachCredentialsAndBackoffPolicy(any(), any());
     AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
         awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
     assertThat(validateCredentialsResponse.isValid()).isFalse();
@@ -359,6 +369,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(new AmazonClientException("exception"))
         .when(mockClient)
         .describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatThrownBy(()
                            -> awsEc2HelperServiceDelegate.getLaunchTemplateVersion(
                                AwsConfig.builder().build(), emptyList(), REGION, "ltid", "3"))
@@ -367,6 +378,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(new AmazonServiceException("exception"))
         .when(mockClient)
         .describeLaunchTemplateVersions(any(DescribeLaunchTemplateVersionsRequest.class));
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
+    //    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).attachCredentialsAndBackoffPolicy(any(),any());
     assertThatThrownBy(()
                            -> awsEc2HelperServiceDelegate.getLaunchTemplateVersion(
                                AwsConfig.builder().build(), emptyList(), REGION, "ltid", "3"))
@@ -390,6 +403,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(new AmazonServiceException("exception"))
         .when(mockClient)
         .createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatThrownBy(()
                            -> awsEc2HelperServiceDelegate.createLaunchTemplateVersion(
                                createLaunchTemplateVersionRequest, AwsConfig.builder().build(), emptyList(), REGION))

@@ -1,10 +1,15 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
@@ -28,6 +33,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepInfo> {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
@@ -41,11 +47,14 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS));
+    StepLogKeyDetails stepLogKeyDetails = (StepLogKeyDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS));
     String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
     log.info("Waiting on response for task id {} and step Id {}", stepTaskDetails.getTaskIds().get(stepIdentifier),
         stepIdentifier);
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(stepTaskDetails.getTaskIds().get(stepIdentifier))
+        .addAllLogKeys(CollectionUtils.emptyIfNull(stepLogKeyDetails.getLogKeys().get(stepIdentifier)))
         .build();
   }
 
@@ -85,5 +94,5 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
   }
 
   @Override
-  public void handleAbort(Ambiance ambiance, CIStepInfo stateParameters, AsyncExecutableResponse executableResponse) {}
+  public void handleAbort(Ambiance ambiance, CIStepInfo stepParameters, AsyncExecutableResponse executableResponse) {}
 }

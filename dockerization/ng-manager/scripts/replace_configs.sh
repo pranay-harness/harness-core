@@ -69,6 +69,10 @@ if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
 fi
 
+if [[ "" != "$MONGO_TRANSACTIONS_ALLOWED" ]]; then
+  yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ALLOWED
+fi
+
 if [[ "" != "$PMS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE pmsMongo.uri "${PMS_MONGO_URI//\\&/&}"
 fi
@@ -103,6 +107,10 @@ fi
 
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
+fi
+
+if [[ "" != "$AUDIT_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE enableAudit "$AUDIT_ENABLED"
 fi
 
 if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
@@ -145,6 +153,14 @@ if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -178,17 +194,57 @@ if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
 fi
 
+if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
 
 replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
+replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
+
 replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
 
 replace_key_value baseUrls.ui $MANAGER_UI_URL
 
 replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
+
+replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+
+replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
+
+replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
+
+replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value outboxIteratorConfig.threadPoolSize "$OUTBOX_ITERATOR_THREAD_POOL_SIZE"
+
+replace_key_value outboxIteratorConfig.intervalInSeconds "$OUTBOX_ITERATOR_INTERVAL"
+
+replace_key_value outboxIteratorConfig.targetIntervalInSeconds "$OUTBOX_ITERATOR_TARGET_INTERVAL"
+
+replace_key_value outboxIteratorConfig.acceptableNoAlertDelayInSeconds "$OUTBOX_ITERATOR_NO_ALERT_DELAY"
+
+replace_key_value outboxIteratorConfig.maximumOutboxEventHandlingAttempts "$OUTBOX_ITERATOR_MAX_ATTEMPTS"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]

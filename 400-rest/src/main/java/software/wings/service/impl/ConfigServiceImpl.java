@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -24,7 +24,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretUsageLog;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
@@ -480,12 +480,18 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
+    delete(appId, entityId, entityType, configFileName, false);
+  }
+
+  @Override
+  public void delete(String appId, String entityId, EntityType entityType, String configFileName, boolean syncFromGit) {
     ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class)
                                 .filter(ConfigFile.APP_ID_KEY2, appId)
                                 .filter(ConfigFileKeys.entityType, entityType.name())
                                 .filter(ConfigFileKeys.entityId, entityId)
                                 .filter(ConfigFileKeys.relativeFilePath, configFileName)
                                 .get();
+    configFile.setSyncFromGit(syncFromGit);
 
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {

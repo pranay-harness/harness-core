@@ -8,6 +8,7 @@ import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -20,6 +21,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
@@ -27,7 +29,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -40,6 +42,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.Application;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -104,13 +107,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.query.Query;
 import retrofit2.Call;
 import retrofit2.Response;
 
 /**
  * Created by rsingh on 9/7/18.
  */
-public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
+public class MetricDataAnalysisServiceTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -205,7 +209,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testSorting() throws IOException {
     final Gson gson = new Gson();
-    File file = new File(getClass().getClassLoader().getResource("./ts_sorting_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/ts_sorting_record.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -228,8 +232,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisTag() throws IOException {
-    File file =
-        new File(getClass().getClassLoader().getResource("./time_series_todolist_analysis_record.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_analysis_record.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
@@ -256,8 +259,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLocalAnalysis() throws IOException {
-    File file = new File(
-        getClass().getClassLoader().getResource("./time_series_todolist_local_analysis_record.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_local_analysis_record.json.zip");
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), NewRelicMetricAnalysisRecord.class);
 
@@ -281,7 +283,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveAnalysisRecordsML_savesRiskScore() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/247_analysis_record_with_risk.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
     assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isNull();
@@ -310,7 +312,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testSaveAnalysisRecordsML_savesRiskScoreWhenNoTestMetrics() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/247_analysis_record_with_risk.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
     assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isNull();
@@ -343,7 +345,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
         });
-    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/247_analysis_record_with_risk.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
     double riskScore = timeSeriesMLAnalysisRecord.getOverallMetricScores()
@@ -367,10 +369,25 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         learningEngineAnalysisTask.getState_execution_id(), null, DEFAULT_GROUP_NAME, 10, taskId, null, cvConfigId,
         timeSeriesMLAnalysisRecord, null);
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    waitForAlert(1, Optional.empty());
     assertThat(alerts.size()).isEqualTo(1);
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alerts.get(0).getAlertData();
     assertThat(alertData.getMlAnalysisType()).isEqualTo(MLAnalysisType.TIME_SERIES);
     assertThat(alertData.getRiskScore()).isEqualTo(riskScore, offset(0.0001));
+  }
+
+  private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
+    int tryCount = 0;
+    long numOfAlerts;
+    do {
+      Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class, excludeAuthority);
+      if (alertStatus.isPresent()) {
+        alertQuery.filter(Alert.AlertKeys.status, alertStatus.get());
+      }
+      numOfAlerts = alertQuery.count();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (numOfAlerts < expectedNumOfAlerts && tryCount < 10);
   }
 
   private void verifyAnalysisOffsetPageSizeAndSorting(int total) {
@@ -421,8 +438,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisNodeData() throws IOException {
-    File file =
-        new File(getClass().getClassLoader().getResource("./time_series_todolist_analysis_record.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_analysis_record.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
@@ -448,8 +464,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testAnalysisNodeDataCustomThresholdBands() throws IOException {
     final Gson gson = new Gson();
-    File file =
-        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_failfast.json").getFile());
+    File file = new File("270-verification/src/test/resources/timeseries_analysis_custom_failfast.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -491,8 +506,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testAnalysisNodeData_FailFastRiskLevel() throws IOException {
     final Gson gson = new Gson();
-    File file =
-        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_failfast.json").getFile());
+    File file = new File("270-verification/src/test/resources/timeseries_analysis_custom_failfast.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -527,8 +541,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testAnalysisNodeData_FailFastRiskLevelLow() throws IOException {
     final Gson gson = new Gson();
-    File file =
-        new File(getClass().getClassLoader().getResource("./timeseries_analysis_custom_dont_failfast.json").getFile());
+    File file = new File("270-verification/src/test/resources/timeseries_analysis_custom_dont_failfast.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -562,8 +575,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisDemoFailure() throws IOException {
-    File file = new File(
-        getClass().getClassLoader().getResource("time_series_todolist_demo_failure_analysis.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_demo_failure_analysis.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
@@ -597,8 +609,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisDemoSuccess() throws IOException {
-    File file = new File(
-        getClass().getClassLoader().getResource("time_series_todolist_demo_success_analysis.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_demo_success_analysis.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
 
@@ -633,8 +644,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testLocalAnalysisNodeData() throws IOException {
-    File file = new File(
-        getClass().getClassLoader().getResource("./time_series_todolist_local_analysis_record.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/time_series_todolist_local_analysis_record.json.zip");
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), NewRelicMetricAnalysisRecord.class);
 
@@ -783,7 +793,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     String cvConfigId = wingsPersistence.save(cvConfiguration);
     LearningEngineAnalysisTask learningEngineAnalysisTask = getLearningEngineAnalysisTask();
     final Gson gson = new Gson();
-    File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/ts_analysis_record.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -822,7 +832,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testCompression_withKeyTxns() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record_key_txn.json.zip").getFile());
+    File file = new File("270-verification/src/test/resources/ts_analysis_record_key_txn.json.zip");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
     assertThat(timeSeriesMLAnalysisRecord.getTransactions()).isNotEmpty();

@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
 import static io.harness.shell.AccessType.KEY_SU_APP_USER;
@@ -10,6 +11,7 @@ import static io.harness.shell.ExecutorType.KEY_AUTH;
 import static io.harness.shell.ExecutorType.PASSWORD_AUTH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.ExecutorType;
@@ -28,7 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by anubhaw on 2/23/17.
  */
+
 @Slf4j
+@OwnedBy(CDP)
 public class SshHelperUtils {
   private static ExecutorType getExecutorType(
       SettingAttribute hostConnectionSetting, SettingAttribute bastionHostConnectionSetting) {
@@ -97,7 +101,10 @@ public class SshHelperUtils {
           .withKeyName(hostConnectionSetting.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
-          .withKeyPath(hostConnectionAttributes.getKeyPath());
+          .withKeyPath(hostConnectionAttributes.getKeyPath())
+          .withVaultSSH(hostConnectionAttributes.isVaultSSH())
+          .withPublicKey(hostConnectionAttributes.getPublicKey())
+          .withSignedPublicKey(hostConnectionAttributes.getSignedPublicKey());
     } else if (KERBEROS == hostConnectionAttributes.getAuthenticationScheme()) {
       KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
 

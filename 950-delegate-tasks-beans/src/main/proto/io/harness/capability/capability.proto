@@ -35,6 +35,7 @@ message CapabilityParameters {
     SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
     WinrmHostValidationParameters winrm_host_validation_parameters = 16;
+    LiteEngineConnectionParameters lite_engine_connection_parameters = 17;
   }
 }
 
@@ -126,4 +127,10 @@ message WinrmHostValidationParameters {
   int32 port = 2;
   bool use_ssl = 3;
   string domain = 1;
+}
+
+// Testing whether a delegate can connect to a given Lite engine resource
+message LiteEngineConnectionParameters {
+  string ip = 1;
+  int32 port = 2;
 }

@@ -26,6 +26,7 @@ public class PlanNode {
 
   // Input/Outputs
   StepParameters stepParameters;
+  String stepInputs;
   @Singular List<RefObject> refObjects;
 
   // Hooks
@@ -37,4 +38,5 @@ public class PlanNode {
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
   String skipCondition;
+  String whenCondition;
 }

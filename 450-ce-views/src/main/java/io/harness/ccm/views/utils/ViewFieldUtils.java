@@ -19,15 +19,17 @@ public class ViewFieldUtils {
   }
   public static List<QLCEViewField> getAzureFields() {
     return ImmutableList.of(
-        QLCEViewField.builder().fieldId("azureResourceGroup").fieldName("Resource group name").build(),
+        QLCEViewField.builder().fieldId("azureSubscriptionGuid").fieldName("Subscription Id").build(),
+        QLCEViewField.builder().fieldId("azureMeterName").fieldName("Meter").build(),
         QLCEViewField.builder().fieldId("azureMeterCategory").fieldName("Meter category").build(),
         QLCEViewField.builder().fieldId("azureMeterSubcategory").fieldName("Meter subcategory").build(),
         QLCEViewField.builder().fieldId("azureMeterId").fieldName("Resource guid").build(),
-        QLCEViewField.builder().fieldId("azureMeterName").fieldName("Meter").build(),
+        QLCEViewField.builder().fieldId("azureResourceGroup").fieldName("Resource group name").build(),
         QLCEViewField.builder().fieldId("azureResourceType").fieldName("Resource type").build(),
+        QLCEViewField.builder().fieldId("azureResource").fieldName("Resource").build(),
         QLCEViewField.builder().fieldId("azureServiceName").fieldName("Service name").build(),
         QLCEViewField.builder().fieldId("azureServiceTier").fieldName("Service tier").build(),
-        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Resource").build());
+        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Instance Id").build());
   }
   public static List<QLCEViewField> getClusterFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("clusterName").fieldName("Cluster Name").build(),

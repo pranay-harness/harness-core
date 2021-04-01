@@ -52,6 +52,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     }
 
     PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+    // TODO (prashant) : Evaluate this
     planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
 
     interrupt.setState(PROCESSING);
@@ -82,6 +83,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .interruptId(interrupt.getUuid())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     pausedStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()

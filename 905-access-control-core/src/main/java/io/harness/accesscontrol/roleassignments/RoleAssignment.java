@@ -3,7 +3,6 @@ package io.harness.accesscontrol.roleassignments;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.data.validator.EntityIdentifier;
 
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,10 +27,9 @@ public class RoleAssignment {
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;
   @NotNull final PrincipalType principalType;
-  final String description;
-  final Map<String, String> tags;
   @Setter boolean managed;
-  @Setter boolean disabled;
+  final boolean disabled;
   final Long createdAt;
   final Long lastModifiedAt;
+  @Setter Long version;
 }

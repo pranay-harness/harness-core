@@ -8,10 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 
 import java.math.BigDecimal;
 import java.sql.Connection;

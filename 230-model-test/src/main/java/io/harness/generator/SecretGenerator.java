@@ -3,6 +3,7 @@ package io.harness.generator;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
 import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.generator.OwnerManager.Owners;
@@ -21,29 +22,65 @@ public class SecretGenerator {
   @Inject ScmSecret scmSecret;
   @Inject SecretManager secretManager;
 
-  public String ensureStored(String accountId, SecretName name) {
-    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue());
+  private String ensureSecretText(String accountId, String name, String value) {
+    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name);
     if (encryptedData != null) {
       return encryptedData.getUuid();
     }
 
-    SecretText secretText = SecretText.builder()
-                                .name(name.getValue())
-                                .value(scmSecret.decryptToString(name))
-                                .usageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                .build();
+    SecretText secretText =
+        SecretText.builder().name(name).value(value).usageRestrictions(getAllAppAllEnvUsageRestrictions()).build();
     try {
       return secretManager.saveSecretUsingLocalMode(accountId, secretText);
     } catch (WingsException we) {
       if (we.getCause() instanceof DuplicateKeyException) {
-        return secretManager.getSecretByName(accountId, name.getValue()).getUuid();
+        return secretManager.getSecretByName(accountId, name).getUuid();
       }
       throw we;
     }
   }
 
+  private String ensureSecretFile(String accountId, String name, String value) {
+    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name);
+    if (encryptedData != null) {
+      return encryptedData.getUuid();
+    }
+
+    SecretFile secretFile = SecretFile.builder()
+                                .name(name)
+                                .fileContent(value.getBytes())
+                                .usageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                .build();
+    try {
+      return secretManager.saveSecretFile(accountId, secretFile);
+    } catch (WingsException we) {
+      if (we.getCause() instanceof DuplicateKeyException) {
+        return secretManager.getSecretByName(accountId, name).getUuid();
+      }
+      throw we;
+    }
+  }
+
+  public String ensureSecretText(Owners owners, String name, String value) {
+    final Account account = owners.obtainAccount();
+    return ensureSecretText(account.getUuid(), name, value);
+  }
+
+  public String ensureStored(String accountId, SecretName name) {
+    return ensureSecretText(accountId, name.getValue(), scmSecret.decryptToString(name));
+  }
+
+  private String ensureStoredFile(String accountId, SecretName name) {
+    return ensureSecretFile(accountId, name.getValue(), scmSecret.decryptToString(name));
+  }
+
   public String ensureStored(Owners owners, SecretName name) {
     final Account account = owners.obtainAccount();
     return ensureStored(account.getUuid(), name);
+  }
+
+  public String ensureStoredFile(Owners owners, SecretName name) {
+    final Account account = owners.obtainAccount();
+    return ensureStoredFile(account.getUuid(), name);
   }
 }

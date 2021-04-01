@@ -256,7 +256,6 @@ public class WorkflowServiceHelper {
   public static final String AZURE_VMSS_SWITCH_ROUTES_ROLLBACK = "Rollback Virtual Machine Scale Set Route";
   public static final String AZURE_WEBAPP_SLOT_SETUP = "Slot Setup";
   public static final String AZURE_WEBAPP_SLOT_DEPLOYMENT = "Slot Deployment";
-  public static final String AZURE_WEBAPP_SLOT_RESIZE = "Slot Resize";
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
   public static final String AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT = "Shift Traffic to Slot";
@@ -317,7 +316,7 @@ public class WorkflowServiceHelper {
   public static final String CF_DELETE_STACK = "CloudFormation Delete Stack";
   public static final String TERRAFORM_APPLY = "Terraform Apply";
   public static final String TERRAFORM_PROVISION = "Terraform Provision";
-  public static final String ARM_CREATE_RESOURCE = "ARM Create Resource";
+  public static final String ARM_CREATE_RESOURCE = "ARM/Blueprint Create Resource";
   public static final String TERRAFORM_DESTROY = "Terraform Destroy";
   public static final String SERVICENOW = "ServiceNow";
   public static final String EMAIL = "Email";
@@ -3213,5 +3212,49 @@ public class WorkflowServiceHelper {
       return AbstractWorkflowFactory.Category.K8S_V2;
     }
     return AbstractWorkflowFactory.Category.GENERAL;
+  }
+
+  public void validateWaitInterval(Workflow workflow) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == null
+        || OrchestrationWorkflowType.CUSTOM.equals(
+            workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+      return;
+    }
+    CanaryOrchestrationWorkflow orchestrationWorkflow = null;
+    if (workflow.getOrchestrationWorkflow() != null) {
+      orchestrationWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (orchestrationWorkflow != null) {
+        validateWaitInterval(orchestrationWorkflow);
+      }
+    }
+  }
+
+  private void validateWaitInterval(CanaryOrchestrationWorkflow orchestrationWorkflow) {
+    validateWaitInterval(orchestrationWorkflow.getPostDeploymentSteps());
+    validateWaitInterval(orchestrationWorkflow.getPreDeploymentSteps());
+    validateWaitInterval(orchestrationWorkflow.getRollbackProvisioners());
+    validateWaitInterval(orchestrationWorkflow.getWorkflowPhaseIdMap());
+    validateWaitInterval(orchestrationWorkflow.getRollbackWorkflowPhaseIdMap());
+  }
+
+  private void validateWaitInterval(WorkflowPhase workflowPhase) {
+    if (workflowPhase != null && workflowPhase.getPhaseSteps() != null
+        && workflowPhase.getPhaseSteps().stream().anyMatch(
+            phaseStep -> phaseStep.getWaitInterval() != null && phaseStep.getWaitInterval() < 0)) {
+      throw new InvalidRequestException("Negative values for waitInterval not allowed.");
+    }
+  }
+
+  public void validateWaitInterval(PhaseStep phaseStep) {
+    if (phaseStep != null && phaseStep.getWaitInterval() != null && phaseStep.getWaitInterval() < 0) {
+      throw new InvalidRequestException("Negative values for wait interval not allowed.");
+    }
+  }
+
+  private void validateWaitInterval(Map<String, WorkflowPhase> workflowPhaseMap) {
+    if (workflowPhaseMap != null) {
+      workflowPhaseMap.forEach((workflowPhaseId, workflowPhase) -> validateWaitInterval(workflowPhase));
+    }
   }
 }

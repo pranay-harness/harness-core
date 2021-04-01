@@ -1,16 +1,16 @@
 package io.harness.ng.core.event;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
-import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class OrganizationEntityCRUDStreamListener implements MessageListener {
@@ -50,7 +51,7 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
             accountEntityChangeDTO = AccountEntityChangeDTO.parseFrom(message.getMessage().getData());
           } catch (InvalidProtocolBufferException e) {
             throw new InvalidRequestException(
-                String.format("Exception in unpacking OrganizationEntityChangeDTO for key %s", message.getId()), e);
+                String.format("Exception in unpacking EntityChangeDTO for key %s", message.getId()), e);
           }
           String action = metadataMap.get(ACTION);
           if (action != null) {
@@ -76,13 +77,7 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
   }
 
   private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
-    try {
-      defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
-    } catch (DuplicateFieldException ex) {
-      log.error(String.format("Default Organization for accountIdentifier %s already exists",
-                    accountEntityChangeDTO.getAccountId()),
-          ex, USER);
-    }
+    defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
     return true;
   }
 

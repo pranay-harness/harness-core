@@ -37,11 +37,8 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,7 +65,7 @@ public class K8sScaleStepTest extends CategoryTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
-    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(storeConfig, ambiance);
+    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
   }
 
   @Test
@@ -98,7 +95,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -115,6 +112,9 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-count-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
   @Test
@@ -145,7 +145,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -162,6 +162,9 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-percentage-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
   @Test
@@ -169,13 +172,12 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -184,14 +186,13 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .errorMessage("Execution failed.")
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .errorMessage("Execution failed.")
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }

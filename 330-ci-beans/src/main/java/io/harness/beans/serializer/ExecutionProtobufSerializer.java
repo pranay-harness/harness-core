@@ -32,15 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElementConfig> {
   @Inject private RunStepProtobufSerializer runStepProtobufSerializer;
-  @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;
-  @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
-  @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
   @Inject private RunTestsStepProtobufSerializer runTestsStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
   public Execution convertExecutionElement(ExecutionElementConfig executionElement,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds) {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, Map<String, String> stepLogKeys) {
     List<Step> protoSteps = new LinkedList<>();
     if (isEmpty(executionElement.getSteps())) {
       return Execution.newBuilder().build();
@@ -50,7 +47,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
 
-        UnitStep serialisedStep = serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds);
+        UnitStep serialisedStep = serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds, stepLogKeys);
         if (serialisedStep != null) {
           protoSteps.add(Step.newBuilder().setUnit(serialisedStep).build());
         }
@@ -62,7 +59,8 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
                 .filter(executionWrapperInParallel
                     -> executionWrapperInParallel.getStep() != null && !executionWrapperInParallel.getStep().isNull())
                 .map(executionWrapperInParallel -> getStepElementConfig(executionWrapperInParallel))
-                .map(stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds))
+                .map(
+                    stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds, stepLogKeys))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
@@ -116,23 +114,17 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
     }
   }
 
-  public UnitStep serialiseStep(
-      StepElementConfig step, LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds) {
+  public UnitStep serialiseStep(StepElementConfig step, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+      Map<String, String> taskIds, Map<String, String> stepLogKeys) {
     if (step.getStepSpecType() instanceof CIStepInfo) {
       CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
         case RUN:
-          return runStepProtobufSerializer.serializeStep(
-              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
+          return runStepProtobufSerializer.serializeStep(step, getPort(liteEngineTaskStepInfo, step.getIdentifier()),
+              taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
         case PLUGIN:
-          return pluginStepProtobufSerializer.serializeStep(
-              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
-        case SAVE_CACHE:
-          return saveCacheStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
-        case RESTORE_CACHE:
-          return restoreCacheStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
-        case PUBLISH:
-          return publishStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
+          return pluginStepProtobufSerializer.serializeStep(step, getPort(liteEngineTaskStepInfo, step.getIdentifier()),
+              taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
         case GCR:
         case DOCKER:
         case ECR:
@@ -143,11 +135,13 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case RESTORE_CACHE_GCS:
         case SAVE_CACHE_S3:
         case RESTORE_CACHE_S3:
-          return pluginCompatibleStepSerializer.serializeStep(
-              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
+          return pluginCompatibleStepSerializer.serializeStep(step,
+              getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()),
+              stepLogKeys.get(step.getIdentifier()));
         case RUN_TESTS:
-          return runTestsStepProtobufSerializer.serializeStep(
-              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
+          return runTestsStepProtobufSerializer.serializeStep(step,
+              getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()),
+              stepLogKeys.get(step.getIdentifier()));
         case CLEANUP:
         case TEST:
         case BUILD:

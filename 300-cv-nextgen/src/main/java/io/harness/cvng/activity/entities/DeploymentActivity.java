@@ -6,9 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
-import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.core.utils.DateTimeUtils;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -59,23 +57,12 @@ public class DeploymentActivity extends Activity {
   }
 
   @Override
-  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {
-    verificationJobInstance.setOldVersionHosts(this.getOldVersionHosts());
-    verificationJobInstance.setNewVersionHosts(this.getNewVersionHosts());
-    verificationJobInstance.setNewHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
-    verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
-
-    // Set the properties needed for a health verification instance
-    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
-    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
-
-    if (!VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-      verificationJobInstance.setStartTime(preactivityStart);
-    } else {
-      verificationJobInstance.setStartTime(this.getVerificationStartTime());
-    }
-    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
-    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstanceBuilder) {
+    verificationJobInstanceBuilder.oldVersionHosts(this.getOldVersionHosts());
+    verificationJobInstanceBuilder.newVersionHosts(this.getNewVersionHosts());
+    verificationJobInstanceBuilder.newHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
+    verificationJobInstanceBuilder.dataCollectionDelay(this.getDataCollectionDelay());
+    verificationJobInstanceBuilder.startTime(this.getVerificationStartTime());
   }
 
   @Override
@@ -105,8 +92,6 @@ public class DeploymentActivity extends Activity {
 
   @JsonIgnore
   public Instant getVerificationStartTime() {
-    return this.verificationStartTime == null
-        ? null
-        : DateTimeUtils.roundDownTo1MinBoundary(Instant.ofEpochMilli(this.verificationStartTime));
+    return Instant.ofEpochMilli(this.verificationStartTime);
   }
 }

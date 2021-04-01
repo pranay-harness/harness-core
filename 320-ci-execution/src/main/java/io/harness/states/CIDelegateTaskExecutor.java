@@ -36,7 +36,8 @@ public class CIDelegateTaskExecutor {
                                                         .executionTimeout(Duration.ofHours(12))
                                                         .taskSetupAbstractions(setupAbstractions)
                                                         .build();
-    return delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    return delegateServiceGrpcClient.submitAsyncTask(
+        delegateTaskRequest, delegateCallbackTokenSupplier.get(), Duration.ofMinutes(5));
   }
 
   public void expireTask(Map<String, String> setupAbstractions, String taskId) {

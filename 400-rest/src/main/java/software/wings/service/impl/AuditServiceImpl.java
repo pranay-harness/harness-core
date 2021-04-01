@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -23,6 +22,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.GlobalContextData;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.ff.FeatureFlagService;
@@ -45,6 +45,7 @@ import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuditPreference;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
@@ -55,14 +56,18 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.RestrictedApi;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
@@ -88,6 +93,7 @@ import java.util.stream.Collectors;
 import javax.activity.InvalidActivityException;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -104,6 +110,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
+  @Inject private EntityMetadataHelper entityMetadataHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
   @Inject private YamlResourceService yamlResourceService;
@@ -112,15 +119,19 @@ public class AuditServiceImpl implements AuditService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private AuditPreferenceHelper auditPreferenceHelper;
   @Inject private MainConfiguration configuration;
+  @Inject private AccountService accountService;
+  @Inject private UserService userService;
+  @Inject private AuditHelper auditHelper;
+  @Inject private ApiKeyService apiKeyService;
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE_FOLDER.name(),
-      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
-      ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
-      EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(),
-      ResourceType.USER_INVITE.name(), ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(),
-      ResourceType.DELEGATE_PROFILE.name());
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(),
+          ResourceType.CONNECTION_ATTRIBUTES.name(), ResourceType.CUSTOM_DASHBOARD.name(),
+          ResourceType.SECRET_MANAGER.name(), EntityType.PIPELINE_GOVERNANCE_STANDARD.name(),
+          ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(), ResourceType.USER_INVITE.name(),
+          ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(), ResourceType.DELEGATE_PROFILE.name());
 
   /**
    * check for nonYamlEntites.
@@ -430,6 +441,27 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private AuditHeader getAuditHeaderById(@NotNull String Id) {
+    return wingsPersistence.createQuery(AuditHeader.class).filter(AuditHeader.ID_KEY2, Id).get();
+  }
+
+  private <T> void addDetails(String accountId, T entity, String auditHeaderId, Type type) {
+    if (auditHeaderId == null) {
+      return;
+    }
+    AuditHeader header = getAuditHeaderById(auditHeaderId);
+    if (header == null) {
+      return;
+    }
+    if (entity instanceof User) {
+      entityMetadataHelper.addUserEntityDetails(accountId, entity, header);
+    } else if (entity instanceof ApiKeyEntry && type.equals(Type.INVOKED)) {
+      entityMetadataHelper.addAPIKeyDetails(accountId, entity, header);
+    } else if (header.getCreatedBy() != null) {
+      entityMetadataHelper.addUserDetails(accountId, entity, header);
+    }
+  }
+
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
     try {
@@ -462,8 +494,11 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE:
         case ADD:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
+        case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
+        case INVOKED:
         case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -477,6 +512,9 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        addDetails(accountId, entityToQuery, auditHeaderId, type);
+      }
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case LOCK:
@@ -495,7 +533,10 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
+        case LOGIN_2FA:
         case NON_WHITELISTED:
+        case INVOKED:
         case CREATE: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
             saveEntityYamlForAudit(newEntity, record, accountId);
@@ -557,7 +598,7 @@ public class AuditServiceImpl implements AuditService {
   public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);
-    changeAuditPreferenceForHomePage(auditPreference);
+    changeAuditPreferenceForHomePage(auditPreference, accountId);
 
     if (!auditPreference.isIncludeAppLevelResources() && !auditPreference.isIncludeAccountLevelResources()) {
       return new PageResponse<>();
@@ -568,12 +609,26 @@ public class AuditServiceImpl implements AuditService {
     return wingsPersistence.query(AuditHeader.class, pageRequest);
   }
 
-  private void changeAuditPreferenceForHomePage(AuditPreference auditPreference) {
-    if (Objects.isNull(auditPreference.getApplicationAuditFilter())
-        && Objects.isNull(auditPreference.getAccountAuditFilter())
-        && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
-      auditPreference.setOperationTypes(
-          Arrays.stream(Type.values()).filter(type -> type != Type.LOGIN).map(Type::name).collect(Collectors.toList()));
+  @VisibleForTesting
+  void changeAuditPreferenceForHomePage(AuditPreference auditPreference, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, accountId)) {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toList()));
+      }
+
+    } else {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values())
+                                              .filter(type -> type != Type.LOGIN)
+                                              .filter(type -> type != Type.LOGIN_2FA)
+                                              .filter(type -> type != Type.UNSUCCESSFUL_LOGIN)
+                                              .map(Type::name)
+                                              .collect(Collectors.toList()));
+      }
     }
   }
 

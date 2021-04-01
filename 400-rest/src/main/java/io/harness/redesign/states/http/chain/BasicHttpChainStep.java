@@ -3,8 +3,10 @@ package io.harness.redesign.states.http.chain;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -27,10 +29,11 @@ import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.Map;
+import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("HTTP_CHAIN").build();
   private static final int socketTimeoutMillis = 10000;
@@ -53,7 +56,7 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
     BasicHttpChainStepParameters parameters = obtainBasicHttpChainStepParameters(stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(1);
     TaskRequest taskRequest = buildTaskRequest(ambiance, linkParam);
@@ -62,7 +65,7 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
@@ -80,8 +83,8 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
 
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1,
+        Collections.emptyList(), true, TaskType.HTTP.name());
   }
 
   @NotNull

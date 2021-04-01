@@ -3,13 +3,13 @@ package software.wings.expression;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.ImageSecretFunctor;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.SimpleEncryption;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.expression.NgSecretManagerFunctor.NgSecretManagerFunctorBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -48,6 +48,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
             .serviceTemplateId(serviceTemplateId)
             .configService(configService)
             .serviceTemplateService(serviceTemplateService)
+            .expressionFunctorToken(expressionFunctorToken)
             .build());
 
     addFunctor("dockerconfig",

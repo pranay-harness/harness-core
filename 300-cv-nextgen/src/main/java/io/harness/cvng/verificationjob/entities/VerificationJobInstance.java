@@ -1,12 +1,14 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static java.util.stream.Collectors.groupingBy;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
-import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
@@ -30,15 +32,18 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -46,7 +51,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
-@Builder
+@Builder(buildMethodName = "unsafeBuild")
 @FieldNameConstants(innerTypeName = "VerificationJobInstanceKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -82,51 +87,63 @@ public final class VerificationJobInstance
   @FdIndex private long lastUpdatedAt;
   private ExecutionStatus executionStatus;
 
-  private String verificationJobIdentifier;
-
-  private Instant deploymentStartTime;
-  private Instant startTime;
+  @Setter(AccessLevel.NONE) private Instant deploymentStartTime;
+  @Setter(AccessLevel.PRIVATE) private Instant startTime;
   @FdIndex private Long dataCollectionTaskIteration;
-  @FdIndex private Long analysisOrchestrationIteration;
-  @FdIndex private Long deletePerpetualTaskIteration;
   @FdIndex private Long timeoutTaskIteration;
 
   // TODO: Refactor and Split into separate job instances
 
   // this stuff is only required for deployment verification
-  private Duration dataCollectionDelay;
-  private List<String> perpetualTaskIds;
-  private Map<String, String> connectorsToPerpetualTaskIdsMap;
+  @Setter(AccessLevel.NONE) private Duration dataCollectionDelay;
+
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
-
-  // this stuff is only required for health verification
-  private Instant preActivityVerificationStartTime;
-  private Instant postActivityVerificationStartTime;
+  private ActivityVerificationStatus verificationStatus;
 
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;
   private Map<String, CVConfig> cvConfigMap;
 
+  // TODO: remove this in the next PR.
+  @Deprecated private Instant preActivityVerificationStartTime;
+  @Deprecated private Instant postActivityVerificationStartTime;
+
   @Builder.Default
   @FdTtlIndex
   private Date validUntil =
       Date.from(OffsetDateTime.now().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION).toInstant());
 
+  public static class VerificationJobInstanceBuilder {
+    public VerificationJobInstanceBuilder deploymentStartTime(Instant deploymentStartTime) {
+      this.deploymentStartTime = DateTimeUtils.roundDownTo1MinBoundary(deploymentStartTime);
+      return this;
+    }
+
+    public VerificationJobInstanceBuilder startTime(Instant startTime) {
+      this.startTime = DateTimeUtils.roundDownTo1MinBoundary(startTime);
+      return this;
+    }
+    public VerificationJobInstance build() {
+      VerificationJobInstance unsafeVerificationJobInstance = unsafeBuild();
+      Instant deploymentStartTime = unsafeVerificationJobInstance.getDeploymentStartTime();
+      Preconditions.checkState(startTime.compareTo(deploymentStartTime) >= 0,
+          "Deployment start time should be before verification start time.");
+      unsafeVerificationJobInstance.setStartTime(
+          getResolvedJob().roundToClosestBoundary(unsafeVerificationJobInstance.getDeploymentStartTime(), startTime));
+      return unsafeVerificationJobInstance;
+    }
+    public VerificationJob getResolvedJob() {
+      return resolvedJob;
+    }
+  }
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
-      return;
-    }
-    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
-      this.analysisOrchestrationIteration = nextIteration;
-      return;
-    }
-    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
-      this.deletePerpetualTaskIteration = nextIteration;
       return;
     }
     if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
@@ -141,32 +158,19 @@ public final class VerificationJobInstance
     if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
-      return this.analysisOrchestrationIteration;
-    }
-    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
-      return this.deletePerpetualTaskIteration;
-    }
+
     if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
       return this.timeoutTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
-  public VerificationJobInstanceDTO toDTO() {
-    return VerificationJobInstanceDTO.builder()
-        .verificationJobIdentifier(verificationJobIdentifier)
-        .deploymentStartTimeMs(deploymentStartTime.toEpochMilli())
-        .newHostsTrafficSplitPercentage(newHostsTrafficSplitPercentage)
-        .oldVersionHosts(oldVersionHosts)
-        .newVersionHosts(newVersionHosts)
-        .verificationTaskStartTimeMs(startTime.toEpochMilli())
-        .dataCollectionDelayMs(dataCollectionDelay.toMillis())
-        .build();
+  public Instant getEndTime() {
+    return getStartTime().plus(getResolvedJob().getDuration());
   }
 
-  public Instant getEndTime() {
-    return getStartTime().plus(getExecutionDuration());
+  public int getVerificationTasksCount() {
+    return cvConfigMap.size();
   }
 
   public List<ProgressLog> getProgressLogs() {
@@ -175,6 +179,7 @@ public final class VerificationJobInstance
     }
     return progressLogs;
   }
+
   @Data
   @SuperBuilder
   public abstract static class ProgressLog {
@@ -192,7 +197,7 @@ public final class VerificationJobInstance
       Preconditions.checkNotNull(createdAt);
     }
     public abstract ExecutionStatus getVerificationJobExecutionStatus();
-    public boolean shouldUpdateJobStatus(VerificationJobInstance verificationJobInstance) {
+    public boolean shouldUpdateJobStatus() {
       return isFailedStatus();
     }
     public boolean isLastProgressLog(VerificationJobInstance verificationJobInstance) {
@@ -204,7 +209,7 @@ public final class VerificationJobInstance
   @Value
   @EqualsAndHashCode(callSuper = true)
   @SuperBuilder
-  public static class AnalysisProgressLog extends VerificationJobInstance.ProgressLog {
+  public static class AnalysisProgressLog extends ProgressLog {
     AnalysisStatus analysisStatus;
 
     @Override
@@ -220,7 +225,7 @@ public final class VerificationJobInstance
   @Value
   @EqualsAndHashCode(callSuper = true)
   @SuperBuilder
-  public static class DataCollectionProgressLog extends VerificationJobInstance.ProgressLog {
+  public static class DataCollectionProgressLog extends ProgressLog {
     DataCollectionExecutionStatus executionStatus;
 
     @Override
@@ -261,27 +266,28 @@ public final class VerificationJobInstance
     if (finalStateLogs.isEmpty()) {
       return 0;
     }
-    ProgressLog lastProgressLog = finalStateLogs.get(finalStateLogs.size() - 1);
-    Instant endTime = lastProgressLog.getEndTime();
-    Duration total = getExecutionDuration();
-    Duration completedTillNow = Duration.between(getStartTime(), endTime);
+    Map<String, List<ProgressLog>> groupByVerificationTaskId =
+        finalStateLogs.stream().collect(groupingBy(ProgressLog::getVerificationTaskId));
+    int progressPercentageSum = groupByVerificationTaskId.values()
+                                    .stream()
+                                    .map(progressLogsGroup -> getProgressLogPercentage(progressLogsGroup))
+                                    .mapToInt(Integer::intValue)
+                                    .sum();
+    return progressPercentageSum / getVerificationTasksCount();
+  }
 
+  private int getProgressLogPercentage(List<ProgressLog> group) {
+    if (group.isEmpty()) {
+      return 0;
+    }
+    ProgressLog lastProgressLog = Collections.max(group, Comparator.comparing(ProgressLog::getEndTime));
+    Instant endTime = lastProgressLog.getEndTime();
+    Duration total = getResolvedJob().getExecutionDuration();
+    Duration completedTillNow = Duration.between(getResolvedJob().getAnalysisStartTime(startTime), endTime);
     return (int) (completedTillNow.get(ChronoUnit.SECONDS) * 100.0 / total.get(ChronoUnit.SECONDS));
   }
 
-  private Duration getExecutionDuration() {
-    Duration jobDuration = getResolvedJob().getDuration();
-    if (VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType())) {
-      return jobDuration;
-    }
-    return jobDuration.plus(jobDuration);
-  }
-
-  private boolean isHealthJob() {
-    return !VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType());
-  }
-
-  public Duration getTimeRemainingMs(Instant currentTime) {
+  public Duration getRemainingTime(Instant currentTime) {
     if (isFinalStatus()) {
       return Duration.ZERO;
     } else if (executionStatus == ExecutionStatus.QUEUED) {
@@ -291,12 +297,9 @@ public final class VerificationJobInstance
       if (percentage == 0) {
         return getResolvedJob().getDuration().plus(Duration.ofMinutes(5));
       }
-      Instant startTimeForDuration = getStartTime();
-      if (!isHealthJob()) {
-        startTimeForDuration = Collections.max(Arrays.asList(getStartTime(), Instant.ofEpochMilli(createdAt)));
-      }
+      Instant startTimeForDuration = getResolvedJob().eligibleToStartAnalysisTime(
+          getStartTime(), getDataCollectionDelay(), Instant.ofEpochMilli(createdAt));
       Duration durationTillNow = Duration.between(startTimeForDuration, currentTime);
-
       Duration durationFor1Percent = Duration.ofMillis(durationTillNow.toMillis() / percentage);
       return Duration.ofMillis((100 - percentage) * durationFor1Percent.toMillis());
     }
@@ -310,5 +313,10 @@ public final class VerificationJobInstance
     Instant cutoff =
         Collections.max(Arrays.asList(Instant.ofEpochMilli(createdAt).plus(TIMEOUT), getEndTime().plus(TIMEOUT)));
     return now.isAfter(cutoff);
+  }
+  // Just to support existing tests. We should never use this for newer API
+  @Deprecated
+  public void setStartTimeFromTest(Instant startTime) {
+    this.setStartTime(startTime);
   }
 }

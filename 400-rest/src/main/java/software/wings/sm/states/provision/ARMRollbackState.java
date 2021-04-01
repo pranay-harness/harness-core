@@ -8,21 +8,23 @@ import static software.wings.beans.TaskType.AZURE_ARM_TASK;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.Activity;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.sm.ExecutionContext;
@@ -50,7 +52,7 @@ public class ARMRollbackState extends ARMProvisionState {
 
     ARMPreExistingTemplate preExistingTemplate = validationData.getPreExistingTemplate();
     AzureARMPreDeploymentData preDeploymentData = preExistingTemplate.getPreDeploymentData();
-    Activity activity = helper.createActivity(context, false, getStateType());
+    Activity activity = helper.createARMActivity(context, false, getStateType());
 
     AzureARMDeploymentParameters taskParams =
         AzureARMDeploymentParameters.builder()
@@ -62,6 +64,7 @@ public class ARMRollbackState extends ARMProvisionState {
             .subscriptionId(preDeploymentData.getSubscriptionId())
             .resourceGroupName(preDeploymentData.getResourceGroup())
             .templateJson(preDeploymentData.getResourceGroupTemplateJson())
+            .parametersJson(EMPTY_TEMPLATE)
             .commandName(ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE)
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
             .rollback(true)
@@ -108,7 +111,13 @@ public class ARMRollbackState extends ARMProvisionState {
     if (provisioner == null || provisioner.getScopeType() == null) {
       validationDataBuilder.isValidData(false);
       validationDataBuilder.errorMessage(
-          String.format("No ARM Provisioner or scope found for provionser id - [%s]", provisionerId));
+          String.format("No ARM Provisioner or scope found for provisioner id - [%s]", provisionerId));
+      return validationDataBuilder.build();
+    }
+
+    if (ARMResourceType.BLUEPRINT == provisioner.getResourceType()) {
+      validationDataBuilder.isValidData(false);
+      validationDataBuilder.errorMessage("Azure Blueprints rollback is not supported");
       return validationDataBuilder.build();
     }
 
@@ -120,9 +129,9 @@ public class ARMRollbackState extends ARMProvisionState {
       return validationDataBuilder.build();
     }
 
-    String prefix = String.format("%s-%s-%s", provisionerId, subscriptionExpression, resourceGroupExpression);
-    ARMPreExistingTemplate preExistingTemplate =
-        (ARMPreExistingTemplate) azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, prefix);
+    String key = String.format("%s-%s-%s", provisionerId, subscriptionExpression, resourceGroupExpression);
+
+    ARMPreExistingTemplate preExistingTemplate = helper.getPreExistingTemplate(key, context);
 
     if (preExistingTemplate == null || preExistingTemplate.getPreDeploymentData() == null) {
       validationDataBuilder.isValidData(false);
@@ -180,8 +189,8 @@ public class ARMRollbackState extends ARMProvisionState {
 
   @Override
   @SchemaIgnore
-  public AzureDeploymentMode getDeploymentMode() {
-    return super.getDeploymentMode();
+  public String getMode() {
+    return super.getMode();
   }
 
   @Override
@@ -212,5 +221,17 @@ public class ARMRollbackState extends ARMProvisionState {
   @SchemaIgnore
   public Integer getTimeoutMillis() {
     return super.getTimeoutMillis();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getInlineParametersExpression() {
+    return super.getInlineParametersExpression();
+  }
+
+  @Override
+  @SchemaIgnore
+  public GitFileConfig getParametersGitFileConfig() {
+    return super.getParametersGitFileConfig();
   }
 }

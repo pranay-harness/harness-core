@@ -3,8 +3,9 @@ use multimap::MultiMap;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use std::process::Command;
 use std::fs;
+use std::path::Path;
+use std::process::Command;
 
 use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
 
@@ -37,7 +38,6 @@ pub fn model_names() -> HashMap<String, String> {
     let targets = String::from_utf8(output.stdout)
         .unwrap()
         .lines()
-        .into_iter()
         .par_bridge()
         .map(|line| line.to_string())
         .filter(|target| target.starts_with("java_library rule ") || target.starts_with("java_binary rule "))
@@ -65,6 +65,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         "io/harness/cv",
         "data-collection-dsl",
         "0.18-RELEASE",
+        Some("CV".to_string()),
     );
 
     let mut result: HashMap<String, JavaModule> = modules
@@ -132,20 +133,25 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
 
     sources
         .lines()
+        .par_bridge()
         .map(|line| line.to_string())
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
-            let (target_module, break_dependencies_on) = populate_internal_info(&tuple.1, module_type);
+            let (package, target_module, break_dependencies_on, team, deprecated) =
+                populate_internal_info(&tuple.1, module_type);
             let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
                 JavaClass {
                     name: tuple.0,
+                    package: package,
                     location: tuple.1,
                     dependencies: class_dependencies,
                     target_module: target_module,
+                    team: team,
                     break_dependencies_on: break_dependencies_on,
+                    deprecated: deprecated,
                 },
             )
         })
@@ -163,6 +169,7 @@ fn populate_module_dependencies(name: &str, modules: &HashSet<String>) -> HashSe
 
     depedencies
         .lines()
+        .par_bridge()
         .map(|line| line.to_string())
         .filter(|name| modules.contains(name.as_str()))
         .collect::<HashSet<String>>()
@@ -210,6 +217,10 @@ fn populate_dependencies(name: &String) -> (MultiMap<String, String>, HashSet<St
 }
 
 fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
+    if !Path::new(jar).exists() {
+        panic!(format!("Jar file {} does not exist", jar));
+    }
+
     let output = Command::new("jdeps")
         .args(&["-v", jar])
         .output()
@@ -224,6 +235,7 @@ fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
 
     result
         .lines()
+        .par_bridge()
         .map(|line| line.to_string())
         .filter(|line| line.starts_with("   "))
         .map(|s| dependency_class(&s))
@@ -242,6 +254,7 @@ fn target_dependencies(name: &str) -> Vec<(String, String)> {
 
     sources
         .lines()
+        .par_bridge()
         .map(|line| line.to_string())
         .filter(|line| line.starts_with("   "))
         .map(|s| dependency_class(&s))
@@ -288,13 +301,15 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
 
     let module_dependencies = populate_module_dependencies(name, modules);
 
-    let (dependencies, protos) = populate_dependencies(name);
+    let (dependencies, maybe_protos) = populate_dependencies(name);
 
     let mut srcs = populate_srcs(&name, &dependencies);
     // println!("{:?}", srcs);
 
-    protos.iter().for_each(|class| {
-        srcs.insert(class.to_string(), external_class(class, &dependencies));
+    maybe_protos.iter().for_each(|class| {
+        if !srcs.contains_key(class) {
+            srcs.insert(class.to_string(), external_class(class, &dependencies, None));
+        }
     });
 
     JavaModule {
@@ -332,7 +347,13 @@ fn index_fraction(name: &String) -> f32 {
     }
 }
 
-fn populate_from_external(artifactory: &str, package: &str, name: &str, version: &str) -> JavaModule {
+fn populate_from_external(
+    artifactory: &str,
+    package: &str,
+    name: &str,
+    version: &str,
+    team: Option<String>,
+) -> JavaModule {
     let jar = format!(
         "{}/external/maven_harness/v1/{}/{}/{}/{}/{}-{}.jar",
         BAZEL_OUTPUT_BASE_DIR.as_str(),
@@ -357,7 +378,12 @@ fn populate_from_external(artifactory: &str, package: &str, name: &str, version:
     let srcs = all
         .iter()
         .filter(|tuple| is_harness_class(&tuple.0))
-        .map(|tuple| (tuple.0.to_string(), external_class(&tuple.0, &dependencies)))
+        .map(|tuple| {
+            (
+                tuple.0.to_string(),
+                external_class(&tuple.0, &dependencies, team.clone()),
+            )
+        })
         .collect();
 
     JavaModule {

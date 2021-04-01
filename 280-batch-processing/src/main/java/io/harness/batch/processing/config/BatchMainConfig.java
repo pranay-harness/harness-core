@@ -30,4 +30,7 @@ public class BatchMainConfig {
   @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
+  @JsonProperty("cfConfig") private CfConfig cfConfig;
+  @JsonProperty("cePythonService") private CEPythonServiceConfig cePythonServiceConfig;
+  @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
 }

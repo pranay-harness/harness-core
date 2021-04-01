@@ -1,11 +1,15 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
@@ -13,9 +17,9 @@ import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.dtos.RepoProviders;
-import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.EntityDetail;
 import io.harness.repositories.gitFileLocation.GitFileLocationRepository;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +29,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +43,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitEntityServiceImpl implements GitEntityService {
-  private GitFileLocationRepository gitFileLocationRepository;
+  private final GitFileLocationRepository gitFileLocationRepository;
 
   @Override
   public GitSyncProductDTO list(String projectId, String orgId, String accountId, ModuleType moduleType, int size) {
@@ -101,7 +107,9 @@ public class GitEntityServiceImpl implements GitEntityService {
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
-        .filePath(getEntityPath(entity))
+        .filePath(entity.getEntityGitPath())
+        .yamlGitConfigId(entity.getYamlGitConfigId())
+        .accountId(entity.getAccountId())
         .build();
   }
 
@@ -134,12 +142,6 @@ public class GitEntityServiceImpl implements GitEntityService {
       log.error("Failed to generate Display Repository Url {}", repositoryUrl, e);
     }
     return repositoryUrl;
-  }
-
-  @NotNull
-  private String getEntityPath(GitFileLocation entity) {
-    return GitFileLocationHelper.getEntityPath(
-        entity.getEntityRootFolderName(), entity.getEntityType(), entity.getEntityIdentifier());
   }
 
   @Override
@@ -182,5 +184,42 @@ public class GitEntityServiceImpl implements GitEntityService {
   @VisibleForTesting
   public List<EntityType> getEntityTypesFromModuleType(ModuleType moduleType) {
     return new ArrayList<>(EntityType.getEntityTypes(moduleType));
+  }
+
+  @Override
+  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType) {
+    final Optional<GitFileLocation> gitFileLocation =
+        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountId(
+            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier());
+    return gitFileLocation.map(this::buildGitSyncEntityDTO).orElse(null);
+  }
+
+  @Override
+  public boolean save(
+      String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath, String commitId) {
+    final Optional<GitFileLocation> gitFileLocation =
+        gitFileLocationRepository.findByEntityGitPathAndYamlGitConfigIdAndAccountId(
+            filePath, yamlGitConfig.getIdentifier(), accountId);
+
+    final GitFileLocation fileLocation = GitFileLocation.builder()
+                                             .accountId(accountId)
+                                             .entityIdentifier(entityDetail.getEntityRef().getIdentifier())
+                                             .entityType(entityDetail.getType().name())
+                                             .entityName(entityDetail.getName())
+                                             .organizationId(entityDetail.getEntityRef().getOrgIdentifier())
+                                             .projectId(entityDetail.getEntityRef().getProjectIdentifier())
+                                             .yamlGitConfigId(yamlGitConfig.getIdentifier())
+                                             .entityGitPath(filePath)
+                                             .branch(yamlGitConfig.getBranch())
+                                             .repo(yamlGitConfig.getRepo())
+                                             .gitConnectorId(yamlGitConfig.getGitConnectorRef())
+                                             .scope(yamlGitConfig.getScope())
+                                             .entityIdentifierFQN(entityDetail.getEntityRef().getFullyQualifiedName())
+                                             .entityReference(entityDetail.getEntityRef())
+                                             .lastCommitId(commitId)
+                                             .build();
+    gitFileLocation.ifPresent(location -> fileLocation.setUuid(location.getUuid()));
+    gitFileLocationRepository.save(fileLocation);
+    return true;
   }
 }

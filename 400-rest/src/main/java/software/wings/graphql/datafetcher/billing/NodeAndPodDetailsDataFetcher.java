@@ -1,12 +1,15 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -50,7 +53,8 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class NodeAndPodDetailsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
         QLCCMGroupBy, QLBillingSortCriteria> {
@@ -324,7 +328,7 @@ public class NodeAndPodDetailsDataFetcher
         instanceIds.add(entry.getId());
       }
     }
-    if (instanceTypes.contains(K8S_POD)) {
+    if (instanceTypes.contains(K8S_POD) || instanceTypes.contains(K8S_POD_FARGATE)) {
       for (QLNodeAndPodDetailsTableRow entry : costData.getData()) {
         instanceIdToCostData.put(entry.getId(), entry);
         instanceIdWithCluster.add(entry.getId());
@@ -357,7 +361,7 @@ public class NodeAndPodDetailsDataFetcher
     if (instanceTypes.contains(K8S_NODE)) {
       data.addAll(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
     }
-    if (instanceTypes.contains(K8S_POD)) {
+    if (instanceTypes.contains(K8S_POD) || instanceTypes.contains(K8S_POD_FARGATE)) {
       data.addAll(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
     }
     if (instanceTypes.contains(K8S_PV)) {

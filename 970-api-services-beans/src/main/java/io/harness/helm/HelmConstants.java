@@ -15,6 +15,12 @@ public final class HelmConstants {
   public static final String HELM_DOCKER_IMAGE_NAME_PLACEHOLDER = "${DOCKER_IMAGE_NAME}";
   public static final String HELM_DOCKER_IMAGE_TAG_PLACEHOLDER = "${DOCKER_IMAGE_TAG}";
   public static final String HELM_COMMAND_FLAG_PLACEHOLDER = "${COMMAND_FLAGS}";
+  public static final String ADD_COMMAND_FOR_REPOSITORY = "helm repo add command for repository ";
+  public static final String REPO_NAME = "${REPO_NAME}";
+  public static final String REPO_URL = "${REPO_URL}";
+  public static final String USERNAME = "${USERNAME}";
+  public static final String PASSWORD = "${PASSWORD}";
+  public static final String HELM_HOME_PATH_FLAG = "${HELM_HOME_PATH_FLAG}";
 
   public static final class V2Commands {
     // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as

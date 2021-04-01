@@ -1,9 +1,12 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -22,6 +25,7 @@ import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -41,6 +45,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretManagerConnectorServiceImpl implements ConnectorService {
@@ -139,6 +144,15 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
     SecretManagerConfigUpdateDTO dto =
         SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorConfigDTO);
+    Optional<ConnectorResponseDTO> currentConfigOfSecretManager = get(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    boolean alreadyDefaultSM = false;
+    if (currentConfigOfSecretManager.isPresent()) {
+      alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
+    } else {
+      throw new InvalidRequestException(
+          String.format("Secret Manager with identifier %s not found.", connectorInfo.getIdentifier()));
+    }
 
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
@@ -147,11 +161,32 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
+      } else if (alreadyDefaultSM) {
+        setHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);
     }
     throw new SecretManagementException(
         SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest.", SRE);
+  }
+
+  private void setHarnessSecretManagerAsDefault(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ConnectorKeys.deleted)
+                            .ne(Boolean.TRUE)
+                            .and(ConnectorKeys.identifier)
+                            .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
+
+    Query query = new Query(criteria);
+    Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
+    connectorRepository.update(query, update);
   }
 
   @Override

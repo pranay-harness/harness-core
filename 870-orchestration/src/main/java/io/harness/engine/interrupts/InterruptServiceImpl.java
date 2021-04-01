@@ -2,7 +2,6 @@ package io.harness.engine.interrupts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.planLevelInterrupts;
 import static io.harness.interrupts.Interrupt.State;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.interrupts.Interrupt.State.REGISTERED;
@@ -11,11 +10,14 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
@@ -35,6 +37,7 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public Interrupt get(String interruptId) {
@@ -61,8 +64,11 @@ public class InterruptServiceImpl implements InterruptService {
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:
-        pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
-        return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
+        if (pauseRequired(interrupt, nodeExecutionId)) {
+          pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+          return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
+        }
+        return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
       case RESUME_ALL:
         resumeAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
@@ -71,10 +77,19 @@ public class InterruptServiceImpl implements InterruptService {
     }
   }
 
+  private boolean pauseRequired(Interrupt interrupt, String nodeExecutionId) {
+    if (interrupt.getNodeExecutionId() == null) {
+      return true;
+    }
+    List<NodeExecution> targetExecutions =
+        nodeExecutionService.findAllChildren(interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), true);
+    return targetExecutions.stream().anyMatch(ne -> ne.getUuid().equals(nodeExecutionId));
+  }
+
   @Override
   public List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId) {
-    return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(
-        planExecutionId, EnumSet.of(REGISTERED, PROCESSING), planLevelInterrupts());
+    return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(planExecutionId,
+        EnumSet.of(REGISTERED, PROCESSING), EnumSet.of(InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL));
   }
 
   @Override
@@ -109,5 +124,11 @@ public class InterruptServiceImpl implements InterruptService {
   public List<Interrupt> fetchActiveInterrupts(String planExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndStateInOrderByCreatedAtDesc(
         planExecutionId, EnumSet.of(REGISTERED, PROCESSING));
+  }
+
+  @Override
+  public List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId) {
+    return interruptRepository.findByPlanExecutionIdAndNodeExecutionIdAndStateInOrderByCreatedAtDesc(
+        planExecutionId, nodeExecutionId, EnumSet.of(REGISTERED, PROCESSING));
   }
 }

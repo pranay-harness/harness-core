@@ -21,9 +21,12 @@ import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.PLUGIN;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.RUN;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.SERVICE;
+import static io.harness.pms.yaml.ParameterField.createValueField;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.util.Lists.newArrayList;
 
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
@@ -45,17 +48,15 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
+import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
+import io.harness.beans.steps.stepinfo.ECRStepInfo;
+import io.harness.beans.steps.stepinfo.GCRStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.TestStepInfo;
-import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
-import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
-import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
@@ -93,8 +94,20 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
@@ -103,7 +116,7 @@ import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -112,11 +125,17 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
+import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
-import graph.StepInfoGraph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -161,6 +180,7 @@ public class CIExecutionPlanTestHelper {
   private static final String SERVICE_IMAGE = "redis";
   private static final String SERVICE_ENTRYPOINT = "redis";
   private static final String SERVICE_ARGS = "start";
+  private static final String SERVICE_CONNECTOR_REF = "dockerConnector";
 
   private static final String REPO_NAMESPACE = "wings";
   private static final String REPO_NAME = "portal";
@@ -246,9 +266,9 @@ public class CIExecutionPlanTestHelper {
         .identifier("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
-        .steps(getExpectedExecutionElement(false))
-        .accountId("accountId")
+        .executionElementConfig(getExecutionElementConfig())
         .ciCodebase(getCICodebase())
+        .infrastructure(getInfrastructure())
         .build();
   }
 
@@ -258,7 +278,7 @@ public class CIExecutionPlanTestHelper {
         .identifier("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
-        .steps(getExpectedExecutionElement(true))
+        .steps(getExpectedExecutionElement())
         .accountId("accountId")
         .ciCodebase(getCICodebase())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -271,7 +291,7 @@ public class CIExecutionPlanTestHelper {
         .identifier("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
-        .steps(getExpectedExecutionElement(true))
+        .steps(getExpectedExecutionElement())
         .accountId("accountId")
         .ciCodebase(getCICodebaseWithRepoName())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -283,8 +303,8 @@ public class CIExecutionPlanTestHelper {
         .identifier("liteEngineTask2")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
         .usePVC(true)
-        .steps(getExecutionElement())
-        .accountId("accountId")
+        .executionElementConfig(getExecutionElementConfig())
+        .infrastructure(getInfrastructure())
         .build();
   }
 
@@ -307,8 +327,15 @@ public class CIExecutionPlanTestHelper {
     return K8BuildJobEnvInfo.builder()
         .workDir("workspace")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
-        .publishArtifactStepIds(getPublishArtifactStepIds())
-        .stepConnectorRefs(getStepConnectorConversionInfoMap())
+        .stepConnectorRefs(emptyMap())
+        .build();
+  }
+
+  public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
+    return K8BuildJobEnvInfo.builder()
+        .workDir("workspace")
+        .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
+        .stepConnectorRefs(emptyMap())
         .build();
   }
 
@@ -317,24 +344,15 @@ public class CIExecutionPlanTestHelper {
     map.put("publish-1",
         ConnectorConversionInfo.builder()
             .connectorRef("gcr-connector")
-            .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, "SECRET_PATH_gcr-connector")
+            .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, "PLUGIN_JSON_KEY")
             .build());
     map.put("publish-2",
         ConnectorConversionInfo.builder()
             .connectorRef("ecr-connector")
-            .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, "ACCESS_KEY_ecr-connector")
-            .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, "SECRET_KEY_ecr-connector")
+            .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, "PLUGIN_ACCESS_KEY")
+            .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, "PLUGIN_SECRET_KEY")
             .build());
     return map;
-  }
-
-  public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
-    return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
-        .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
-        .publishArtifactStepIds(getPublishArtifactStepIds())
-        .stepConnectorRefs(getStepConnectorConversionInfoMap())
-        .build();
   }
 
   public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfoOnFirstPod() {
@@ -342,15 +360,23 @@ public class CIExecutionPlanTestHelper {
     Integer index = 1;
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    volumeToMountPath.put("shared-0", "share/");
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
-                                                  .volumeName("step-exec")
+                                                  .volumeName("shared-0")
                                                   .claimName("")
                                                   .isPresent(false)
                                                   .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
-                                                  .build()))
+                                                  .build(),
+                     PVCParams.builder()
+                         .volumeName("step-exec")
+                         .claimName("pod-step-exec")
+                         .isPresent(false)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build()))
                  .podSetupParams(
                      PodSetupInfo.PodSetupParams.builder()
                          .containerDefinitionInfos(asList(getServiceContainer(), getGitPluginStepContainer(index),
@@ -372,20 +398,29 @@ public class CIExecutionPlanTestHelper {
     List<Integer> serviceGrpcPortList = new ArrayList<>();
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
+    volumeToMountPath.put("shared-0", "share/");
     Integer index = 1;
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
-                                                  .volumeName("step-exec")
-                                                  .claimName("buildnumber22850-2-step-exec")
+                                                  .volumeName("shared-0")
+                                                  .claimName("pod-2-shared-0")
                                                   .isPresent(true)
                                                   .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
-                                                  .build()))
-                 .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                     .containerDefinitionInfos(asList(getServiceContainer(), getRunStepContainer(index),
-                                         getPluginStepContainer(index + 1)))
-                                     .build())
+                                                  .build(),
+                     PVCParams.builder()
+                         .volumeName("step-exec")
+                         .claimName("pod-2-step-exec")
+                         .isPresent(true)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build()))
+                 .podSetupParams(
+                     PodSetupInfo.PodSetupParams.builder()
+                         .containerDefinitionInfos(asList(getServiceContainer(), getGitPluginStepContainer(index),
+                             getRunStepContainer(index + 1), getPluginStepContainer(index + 2)))
+                         .build())
                  .stageMemoryRequest(250)
                  .stageCpuRequest(300)
                  .serviceIdList(serviceIds)
@@ -398,13 +433,6 @@ public class CIExecutionPlanTestHelper {
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
-  public StepInfoGraph getStepsGraph() {
-    return StepInfoGraph.builder()
-        .steps(asList(getBuildEnvSetupStepInfoOnFirstPod(),
-            TestStepInfo.builder().identifier(BUILD_STAGE_NAME).scriptInfos(getBuildCommandSteps()).build()))
-        .build();
-  }
-
   public ExecutionElement getExecutionElement() {
     List<ExecutionWrapper> executionSectionList = getExecutionSectionsWithLESteps();
     executionSectionList.addAll(getCleanupStep());
@@ -412,49 +440,56 @@ public class CIExecutionPlanTestHelper {
   }
 
   public ExecutionElement getExpectedExecutionElementWithoutCleanup() {
-    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps(false);
+    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps();
     return ExecutionElement.builder().steps(executionSectionList).build();
   }
 
-  public ExecutionElement getExpectedExecutionElement(boolean setCallbackId) {
-    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps(setCallbackId);
+  public ExecutionElement getExpectedExecutionElement() {
+    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps();
     executionSectionList.addAll(getCleanupStep());
     return ExecutionElement.builder().steps(executionSectionList).build();
+  }
+
+  public ExecutionElementConfig getExecutionElementConfig() {
+    List<ExecutionWrapperConfig> executionSectionList = getExecutionWrapperConfigList();
+    return ExecutionElementConfig.builder().steps(executionSectionList).build();
+  }
+
+  public List<ExecutionWrapper> getExpectedExecutionSectionsWithLESteps() {
+    return new ArrayList<>(Arrays.asList(getGitCloneStep(),
+        ParallelStepElement.builder().sections(asList(getRunStepElement(), getPluginStepElement())).build()));
+  }
+
+  public List<ExecutionWrapperConfig> getExecutionWrapperConfigList() {
+    return newArrayList(ExecutionWrapperConfig.builder().step(getGitCloneStepElementConfigAsJsonNode()).build(),
+        ExecutionWrapperConfig.builder().parallel(getRunAndPluginStepsInParallelAsJsonNode()).build());
+  }
+
+  public List<ExecutionWrapper> getExecutionSectionsWithLESteps() {
+    return newArrayList(
+        ParallelStepElement.builder().sections(asList(getRunStepElement(), getPluginStepElement())).build());
   }
 
   private DependencyElement getServiceDependencyElement() {
     return DependencyElement.builder()
         .identifier(SERVICE_ID)
-        .dependencySpecType(
-            CIServiceInfo.builder()
-                .identifier(SERVICE_ID)
-                .args(ParameterField.createValueField(Collections.singletonList(SERVICE_ARGS)))
-                .entrypoint(ParameterField.createValueField(Collections.singletonList(SERVICE_ENTRYPOINT)))
-                .image(ParameterField.createValueField(SERVICE_IMAGE))
-                .resources(ContainerResource.builder()
-                               .limits(ContainerResource.Limits.builder()
-                                           .cpu(ParameterField.createValueField(SERVICE_LIMIT_CPU_STRING))
-                                           .memory(ParameterField.createValueField(SERVICE_LIMIT_MEM_STRING))
-                                           .build())
-                               .build())
-                .build())
+        .dependencySpecType(CIServiceInfo.builder()
+                                .identifier(SERVICE_ID)
+                                .args(createValueField(Collections.singletonList(SERVICE_ARGS)))
+                                .entrypoint(createValueField(Collections.singletonList(SERVICE_ENTRYPOINT)))
+                                .image(createValueField(SERVICE_IMAGE))
+                                .connectorRef(createValueField(SERVICE_CONNECTOR_REF))
+                                .resources(ContainerResource.builder()
+                                               .limits(ContainerResource.Limits.builder()
+                                                           .cpu(createValueField(SERVICE_LIMIT_CPU_STRING))
+                                                           .memory(createValueField(SERVICE_LIMIT_MEM_STRING))
+                                                           .build())
+                                               .build())
+                                .build())
         .build();
   }
 
-  private StepElement getRunStepElement(Integer index) {
-    return StepElement.builder()
-        .identifier(RUN_STEP_ID)
-        .type("run")
-        .name(RUN_STEP_NAME)
-        .stepSpecType(RunStepInfo.builder()
-                          .identifier(RUN_STEP_ID)
-                          .name(RUN_STEP_NAME)
-                          .command(ParameterField.createValueField("./test-script1.sh"))
-                          .image(ParameterField.createValueField(RUN_STEP_IMAGE))
-                          .connectorRef(ParameterField.createValueField(RUN_STEP_CONNECTOR))
-                          .build())
-        .build();
-  }
+  // CI Containers
 
   private ContainerDefinitionInfo getServiceContainer() {
     Integer port = PORT_STARTING_RANGE;
@@ -467,8 +502,10 @@ public class CIExecutionPlanTestHelper {
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(ImageDetails.builder().name(SERVICE_IMAGE).tag("").build())
+                                   .connectorIdentifier("dockerConnector")
                                    .build())
         .name(SERVICE_CTR_NAME)
+        .envVars(ImmutableMap.of("HARNESS_SERVICE_ENTRYPOINT", "redis", "HARNESS_SERVICE_ARGS", "start"))
         .containerType(SERVICE)
         .args(args)
         .commands(asList(STEP_COMMAND))
@@ -530,7 +567,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(DEFAULT_LIMIT_MEMORY_MIB)
                                      .build())
         .envVars(getEnvVariables(false))
-        .secretVariables(getCustomSecretVariable())
+        .secretVariables(new ArrayList<>())
         .stepIdentifier(RUN_STEP_ID)
         .stepName(RUN_STEP_NAME)
         .build();
@@ -557,34 +594,10 @@ public class CIExecutionPlanTestHelper {
         .envVars(getEnvVariables(true));
   }
 
-  private StepElement getPluginStepElement(Integer index) {
-    Map<String, String> settings = new HashMap<>();
-    settings.put(PLUGIN_ENV_VAR, PLUGIN_ENV_VAL);
-    return StepElement.builder()
-        .identifier(PLUGIN_STEP_ID)
-        .type("plugin")
-        .name(PLUGIN_STEP_NAME)
-        .stepSpecType(
-            PluginStepInfo.builder()
-                .identifier(PLUGIN_STEP_ID)
-                .name(PLUGIN_STEP_NAME)
-                .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
-                .resources(ContainerResource.builder()
-                               .limits(ContainerResource.Limits.builder()
-                                           .cpu(ParameterField.createValueField(PLUGIN_STEP_LIMIT_CPU_STRING))
-                                           .memory(ParameterField.createValueField(PLUGIN_STEP_LIMIT_MEM_STRING))
-                                           .build())
-                               .build())
-                .settings(ParameterField.createValueField(settings))
-                .build())
-        .build();
-  }
-
   private ContainerDefinitionInfo getPluginStepContainer(Integer index) {
     Map<String, String> envVar = new HashMap<>();
     envVar.put(PLUGIN_ENV_PREFIX + PLUGIN_ENV_VAR.toUpperCase(), PLUGIN_ENV_VAL);
-    envVar.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
-    envVar.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
+    envVar.putAll(getEnvVariables(false));
 
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
@@ -605,6 +618,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(PLUGIN_STEP_LIMIT_MEM)
                                      .build())
         .envVars(envVar)
+        .secretVariables(new ArrayList<>())
         .stepIdentifier(PLUGIN_STEP_ID)
         .stepName(PLUGIN_STEP_NAME)
         .build();
@@ -613,9 +627,7 @@ public class CIExecutionPlanTestHelper {
   private ContainerDefinitionInfo getGitPluginStepContainer(Integer index) {
     Map<String, String> envVar = new HashMap<>();
     envVar.put(GIT_PLUGIN_DEPTH_ENV, GIT_CLONE_MANUAL_DEPTH.toString());
-    envVar.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
-    envVar.put(DRONE_BUILD_NUMBER, Long.toString(BUILD_NUMBER));
-
+    envVar.putAll(getEnvVariables(false));
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     Integer port = PORT_STARTING_RANGE + index;
@@ -635,6 +647,7 @@ public class CIExecutionPlanTestHelper {
                                      .resourceLimitMemoryMiB(GIT_STEP_LIMIT_MEM)
                                      .build())
         .envVars(envVar)
+        .secretVariables(new ArrayList<>())
         .stepName(GIT_CLONE_STEP_NAME)
         .stepIdentifier(GIT_CLONE_STEP_ID)
         .build();
@@ -667,7 +680,8 @@ public class CIExecutionPlanTestHelper {
                                      .build())
         .workingDir(WORK_DIR)
         .volumeToMountPath(volumeToMountPath)
-        .envVars(envVar);
+        .envVars(envVar)
+        .secretEnvVars(Collections.emptyMap());
   }
 
   public CIK8ContainerParamsBuilder getPluginStepCIK8Container() {
@@ -700,128 +714,217 @@ public class CIExecutionPlanTestHelper {
         .envVars(envVar);
   }
 
-  public StepElement getGitCloneStep(Integer index, boolean setCallbackId) {
+  // CI STEPS
+
+  public StepElement getGitCloneStep() {
     Map<String, String> settings = new HashMap<>();
     settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, GIT_CLONE_MANUAL_DEPTH.toString());
-    String callbackId = null;
-    if (setCallbackId) {
-      callbackId = "test-p1-callbackId";
-    }
     return StepElement.builder()
         .identifier(GIT_CLONE_STEP_ID)
         .name(GIT_CLONE_STEP_NAME)
         .type(CIStepInfoType.PLUGIN.name().toLowerCase())
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(GIT_CLONE_STEP_ID)
-                          .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
+                          .image(createValueField(GIT_CLONE_IMAGE))
                           .name(GIT_CLONE_STEP_NAME)
-                          .settings(ParameterField.createValueField(settings))
+                          .settings(createValueField(settings))
                           .build())
         .build();
   }
 
-  public List<ExecutionWrapper> getExecutionSectionsWithLESteps() {
-    Integer index = 1;
-    return new ArrayList<>(Arrays.asList(
-        ParallelStepElement.builder()
-            .sections(asList(getRunStepElement(index), getPluginStepElement(index + 1)))
-            .build(),
-        ParallelStepElement.builder()
-            .sections(asList(
-                StepElement.builder()
-                    .identifier("publish-1")
-                    .type("publishArtifacts")
-                    .stepSpecType(
-                        PublishStepInfo.builder()
-                            .identifier("publish-1")
-                            .publishArtifacts(singletonList(
-                                DockerFileArtifact.builder()
-                                    .connector(
-                                        GcrConnector.builder()
-                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
-                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
-                                            .build())
-                                    .tag(ParameterField.createValueField("v01"))
-                                    .image(ParameterField.createValueField("ci-play/portal"))
-                                    .context(ParameterField.createValueField("~/"))
-                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
-                                    .build()))
-                            .build())
-                    .build(),
-                StepElement.builder()
-                    .identifier("publish-2")
-                    .type("publishArtifacts")
-                    .stepSpecType(
-                        PublishStepInfo.builder()
-                            .identifier("publish-2")
-                            .publishArtifacts(singletonList(
-                                DockerFileArtifact.builder()
-                                    .connector(
-                                        EcrConnector.builder()
-                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
-                                            .location(ParameterField.createValueField(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
-                                            .build())
-                                    .tag(ParameterField.createValueField("v01"))
-                                    .image(ParameterField.createValueField("ci-play/portal"))
-                                    .context(ParameterField.createValueField("~/"))
-                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
-                                    .build()))
-                            .build())
-                    .build()))
-            .build()));
+  public JsonNode getGitCloneStepElementConfigAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode stepElementConfig = mapper.createObjectNode();
+    stepElementConfig.put("identifier", GIT_CLONE_STEP_ID);
+
+    stepElementConfig.put("type", "Plugin");
+    stepElementConfig.put("name", GIT_CLONE_STEP_NAME);
+
+    ObjectNode stepSpecType = mapper.createObjectNode();
+    stepSpecType.put("identifier", GIT_CLONE_STEP_ID);
+    stepSpecType.put("name", GIT_CLONE_STEP_NAME);
+    stepSpecType.put("image", GIT_CLONE_IMAGE);
+
+    ObjectNode settings = mapper.createObjectNode();
+
+    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, GIT_CLONE_MANUAL_DEPTH.toString());
+    stepSpecType.set("settings", settings);
+
+    stepElementConfig.set("spec", stepSpecType);
+    return stepElementConfig;
   }
 
-  public List<ExecutionWrapper> getExpectedExecutionSectionsWithLESteps(boolean setCallbackId) {
-    Integer index = 1;
-    return new ArrayList<>(Arrays.asList(getGitCloneStep(index, setCallbackId),
-        ParallelStepElement.builder()
-            .sections(asList(getRunStepElement(index + 1), getPluginStepElement(index + 2)))
-            .build(),
-        ParallelStepElement.builder()
-            .sections(asList(
-                StepElement.builder()
-                    .identifier("publish-1")
-                    .type("publishArtifacts")
-                    .stepSpecType(
-                        PublishStepInfo.builder()
-                            .identifier("publish-1")
-                            .publishArtifacts(singletonList(
-                                DockerFileArtifact.builder()
-                                    .connector(
-                                        GcrConnector.builder()
-                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
-                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
-                                            .build())
-                                    .tag(ParameterField.createValueField("v01"))
-                                    .image(ParameterField.createValueField("ci-play/portal"))
-                                    .context(ParameterField.createValueField("~/"))
-                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
-                                    .build()))
-                            .build())
-                    .build(),
-                StepElement.builder()
-                    .identifier("publish-2")
-                    .type("publishArtifacts")
-                    .stepSpecType(
-                        PublishStepInfo.builder()
-                            .identifier("publish-2")
-                            .publishArtifacts(singletonList(
-                                DockerFileArtifact.builder()
-                                    .connector(
-                                        EcrConnector.builder()
-                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
-                                            .location(ParameterField.createValueField(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
-                                            .build())
-                                    .tag(ParameterField.createValueField("v01"))
-                                    .image(ParameterField.createValueField("ci-play/portal"))
-                                    .context(ParameterField.createValueField("~/"))
-                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
-                                    .build()))
-                            .build())
-                    .build()))
-            .build()));
+  private StepElement getRunStepElement() {
+    return StepElement.builder()
+        .identifier(RUN_STEP_ID)
+        .type("Run")
+        .name(RUN_STEP_NAME)
+        .stepSpecType(RunStepInfo.builder()
+                          .identifier(RUN_STEP_ID)
+                          .name(RUN_STEP_NAME)
+                          .command(createValueField("./test-script1.sh"))
+                          .image(createValueField(RUN_STEP_IMAGE))
+                          .connectorRef(createValueField(RUN_STEP_CONNECTOR))
+                          .build())
+        .build();
+  }
+
+  private JsonNode getRunStepElementConfigAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode stepElementConfig = mapper.createObjectNode();
+    stepElementConfig.put("identifier", RUN_STEP_ID);
+
+    stepElementConfig.put("type", "Run");
+    stepElementConfig.put("name", RUN_STEP_NAME);
+
+    ObjectNode stepSpecType = mapper.createObjectNode();
+    stepSpecType.put("identifier", RUN_STEP_ID);
+    stepSpecType.put("name", RUN_STEP_NAME);
+    stepSpecType.put("command", "./test-script1.sh");
+    stepSpecType.put("image", RUN_STEP_IMAGE);
+    stepSpecType.put("connectorRef", RUN_STEP_CONNECTOR);
+
+    stepElementConfig.set("spec", stepSpecType);
+    return stepElementConfig;
+  }
+
+  private StepElement getPluginStepElement() {
+    Map<String, String> settings = new HashMap<>();
+    settings.put(PLUGIN_ENV_VAR, PLUGIN_ENV_VAL);
+    return StepElement.builder()
+        .identifier(PLUGIN_STEP_ID)
+        .type("Plugin")
+        .name(PLUGIN_STEP_NAME)
+        .stepSpecType(PluginStepInfo.builder()
+                          .identifier(PLUGIN_STEP_ID)
+                          .name(PLUGIN_STEP_NAME)
+                          .image(createValueField(PLUGIN_STEP_IMAGE))
+                          .resources(ContainerResource.builder()
+                                         .limits(ContainerResource.Limits.builder()
+                                                     .cpu(createValueField(PLUGIN_STEP_LIMIT_CPU_STRING))
+                                                     .memory(createValueField(PLUGIN_STEP_LIMIT_MEM_STRING))
+                                                     .build())
+                                         .build())
+                          .settings(createValueField(settings))
+                          .build())
+        .build();
+  }
+
+  private JsonNode getPluginStepElementConfigAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode stepElementConfig = mapper.createObjectNode();
+    stepElementConfig.put("identifier", PLUGIN_STEP_ID);
+
+    stepElementConfig.put("type", "Plugin");
+    stepElementConfig.put("name", PLUGIN_STEP_NAME);
+
+    ObjectNode stepSpecType = mapper.createObjectNode();
+    stepSpecType.put("identifier", PLUGIN_STEP_ID);
+    stepSpecType.put("name", PLUGIN_STEP_NAME);
+    stepSpecType.put("image", PLUGIN_STEP_IMAGE);
+    stepSpecType.set("resources",
+        mapper.createObjectNode().set("limits",
+            mapper.createObjectNode()
+                .put("cpu", PLUGIN_STEP_LIMIT_CPU_STRING)
+                .put("memory", PLUGIN_STEP_LIMIT_MEM_STRING)));
+    stepSpecType.set("settings", mapper.createObjectNode().put(PLUGIN_ENV_VAR, PLUGIN_ENV_VAL));
+
+    stepElementConfig.set("spec", stepSpecType);
+    return stepElementConfig;
+  }
+
+  private StepElement getECRStepElement() {
+    return StepElement.builder()
+        .identifier("publish-2")
+        .type("BuildAndPushECR")
+        .stepSpecType(ECRStepInfo.builder()
+                          .connectorRef(createValueField("ecr-connector"))
+                          .region(createValueField("eu-west-1"))
+                          .account(createValueField("987923132879"))
+                          .tags(createValueField(singletonList("v01")))
+                          .imageName(createValueField("ci-play/portal"))
+                          .context(createValueField("~/"))
+                          .dockerfile(createValueField("~/Dockerfile"))
+                          .build())
+        .build();
+  }
+
+  private JsonNode getECRStepElementConfigAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode stepElementConfig = mapper.createObjectNode();
+    stepElementConfig.put("identifier", "publish-2");
+    stepElementConfig.put("type", "BuildAndPushECR");
+
+    ArrayNode tags = mapper.createArrayNode();
+    tags.add("v01");
+
+    ObjectNode stepSpecType = mapper.createObjectNode();
+    stepSpecType.put("connectorRef", "ecr-connector");
+    stepSpecType.put("region", "987923132879");
+    stepSpecType.put("account", "./test-script1.sh");
+    stepSpecType.set("tags", tags);
+    stepSpecType.put("imageName", "ci-play/portal");
+    stepSpecType.put("context", "~/");
+    stepSpecType.put("dockerfile", "~/Dockerfile");
+
+    stepElementConfig.set("spec", stepSpecType);
+    return stepElementConfig;
+  }
+
+  private StepElement getGCRStepElement() {
+    return StepElement.builder()
+        .identifier("publish-1")
+        .type("BuildAndPushGCR")
+        .stepSpecType(GCRStepInfo.builder()
+                          .connectorRef(createValueField("gcr-connector"))
+                          .tags(createValueField(singletonList("v01")))
+                          .host(createValueField("us.gcr.io"))
+                          .projectID(createValueField("ci-play"))
+                          .imageName(createValueField("portal"))
+                          .context(createValueField("~/"))
+                          .dockerfile(createValueField("~/Dockerfile"))
+                          .build())
+        .build();
+  }
+
+  private JsonNode getGCRStepElementConfigAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode stepElementConfig = mapper.createObjectNode();
+    stepElementConfig.put("identifier", "publish-1");
+    stepElementConfig.put("type", "BuildAndPushGCR");
+
+    ArrayNode tags = mapper.createArrayNode();
+    tags.add("v01");
+
+    ObjectNode stepSpecType = mapper.createObjectNode();
+    stepSpecType.put("connectorRef", "gcr-connector");
+    stepSpecType.set("tags", tags);
+    stepSpecType.put("imageName", "portal");
+    stepSpecType.put("host", "us.gcr.io");
+    stepSpecType.put("projectID", "ci-play");
+    stepSpecType.put("context", "~/");
+    stepSpecType.put("dockerfile", "~/Dockerfile");
+
+    stepElementConfig.set("spec", stepSpecType);
+    return stepElementConfig;
+  }
+
+  private JsonNode getECRAndGcrStepsInParallelAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ArrayNode arrayNode = mapper.createArrayNode();
+    arrayNode.add(mapper.createObjectNode().set("step", getECRStepElementConfigAsJsonNode()));
+    arrayNode.add(mapper.createObjectNode().set("step", getGCRStepElementConfigAsJsonNode()));
+
+    return arrayNode;
+  }
+
+  private JsonNode getRunAndPluginStepsInParallelAsJsonNode() {
+    ObjectMapper mapper = new ObjectMapper();
+    ArrayNode arrayNode = mapper.createArrayNode();
+    arrayNode.add(mapper.createObjectNode().set("step", getRunStepElementConfigAsJsonNode()));
+    arrayNode.add(mapper.createObjectNode().set("step", getPluginStepElementConfigAsJsonNode()));
+
+    return arrayNode;
   }
 
   public List<ExecutionWrapper> getCleanupStep() {
@@ -912,11 +1015,25 @@ public class CIExecutionPlanTestHelper {
     return asList(var1, var2, var3, var4);
   }
 
+  private List<NGVariable> getStageNGVariables() {
+    SecretNGVariable var1 =
+        SecretNGVariable.builder()
+            .name("VAR1")
+            .value(createValueField(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
+            .build();
+    SecretNGVariable var2 =
+        SecretNGVariable.builder()
+            .name("VAR2")
+            .value(createValueField(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
+            .build();
+    StringNGVariable var3 = StringNGVariable.builder().name("VAR3").value(createValueField("value3")).build();
+    StringNGVariable var4 = StringNGVariable.builder().name("VAR4").value(createValueField("value4")).build();
+    return asList(var1, var2, var3, var4);
+  }
+
   public Map<String, String> getEnvVariables(boolean includeWorkspace) {
     Map<String, String> envVars = new HashMap<>();
     envVars.put(DRONE_COMMIT_BRANCH, REPO_BRANCH);
-    envVars.put("VAR3", "value3");
-    envVars.put("VAR4", "value4");
     envVars.put("DRONE_BUILD_NUMBER", Long.toString(BUILD_NUMBER));
     if (includeWorkspace) {
       envVars.put("HARNESS_WORKSPACE", WORK_DIR);
@@ -926,16 +1043,16 @@ public class CIExecutionPlanTestHelper {
 
   public List<SecretNGVariable> getCustomSecretVariable() {
     List<SecretNGVariable> secretVariables = new ArrayList<>();
-    secretVariables.add(SecretNGVariable.builder()
-                            .name("VAR1")
-                            .value(ParameterField.createValueField(
-                                SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
-                            .build());
-    secretVariables.add(SecretNGVariable.builder()
-                            .name("VAR2")
-                            .value(ParameterField.createValueField(
-                                SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
-                            .build());
+    secretVariables.add(
+        SecretNGVariable.builder()
+            .name("VAR1")
+            .value(createValueField(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
+            .build());
+    secretVariables.add(
+        SecretNGVariable.builder()
+            .name("VAR2")
+            .value(createValueField(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
+            .build());
     return secretVariables;
   }
 
@@ -997,21 +1114,19 @@ public class CIExecutionPlanTestHelper {
   }
   public ConnectorDTO getK8sConnectorFromDelegateDTO() {
     return ConnectorDTO.builder()
-        .connectorInfo(
-            ConnectorInfoDTO.builder()
-                .name("k8sConnector")
-                .identifier("k8sConnector")
-                .connectorType(ConnectorType.KUBERNETES_CLUSTER)
-                .connectorConfig(
-                    KubernetesClusterConfigDTO.builder()
-                        .credential(KubernetesCredentialDTO.builder()
-                                        .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                        .config(KubernetesDelegateDetailsDTO.builder()
-                                                    .delegateSelectors(Collections.singleton("delegate"))
-                                                    .build())
-                                        .build())
-                        .build())
-                .build())
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("k8sConnector")
+                           .identifier("k8sConnector")
+                           .connectorType(ConnectorType.KUBERNETES_CLUSTER)
+                           .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                                .delegateSelectors(Collections.singleton("delegate"))
+                                                .credential(KubernetesCredentialDTO.builder()
+                                                                .kubernetesCredentialType(
+                                                                    KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                                                .config(KubernetesDelegateDetailsDTO.builder().build())
+                                                                .build())
+                                                .build())
+                           .build())
         .build();
   }
   public ConnectorDTO getDockerConnectorDTO() {
@@ -1105,6 +1220,72 @@ public class CIExecutionPlanTestHelper {
                                                              .build())
                                                 .build())
                            .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitHubConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("gitHubConnector")
+                .identifier("gitHubConnector")
+                .connectorType(ConnectorType.GITHUB)
+                .connectorConfig(
+                    GithubConnectorDTO.builder()
+                        .url("https://github.com/wings-software/portal.git")
+                        .connectionType(GitConnectionType.REPO)
+                        .authentication(
+                            GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(
+                                                     GithubUsernamePasswordDTO.builder()
+                                                         .username("username")
+                                                         .passwordRef(SecretRefData.builder()
+                                                                          .identifier("gitPassword")
+                                                                          .scope(Scope.ACCOUNT)
+                                                                          .decryptedValue("password".toCharArray())
+                                                                          .build())
+                                                         .build())
+                                                 .build())
+                                .build())
+
+                        .build())
+                .build())
+        .build();
+  }
+  public ConnectorDTO getAwsCodeCommitConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("awsCodeCommitConnector")
+                .identifier("awsCodeCommitConnector")
+                .connectorType(ConnectorType.CODECOMMIT)
+                .connectorConfig(
+                    AwsCodeCommitConnectorDTO.builder()
+                        .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
+                        .urlType(AwsCodeCommitUrlType.REPO)
+                        .authentication(
+                            AwsCodeCommitAuthenticationDTO.builder()
+                                .authType(AwsCodeCommitAuthType.HTTPS)
+                                .credentials(
+                                    AwsCodeCommitHttpsCredentialsDTO.builder()
+                                        .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                                        .httpCredentialsSpec(
+                                            AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                .accessKey("AKIAIOSFODNN7EXAMPLE")
+                                                .secretKeyRef(SecretRefData.builder()
+                                                                  .identifier("secretKeyRefIdentifier")
+                                                                  .scope(Scope.ACCOUNT)
+                                                                  .decryptedValue("S3CR3TKEYEXAMPLE".toCharArray())
+                                                                  .build())
+                                                .build())
+                                        .build())
+
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 
@@ -1213,5 +1394,22 @@ public class CIExecutionPlanTestHelper {
     context.addAttribute(ExecutionArgs.EXEC_ARGS, getPRCIExecutionArgs());
     context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
     return context;
+  }
+
+  public StageElementConfig getIntegrationStageElementConfig() {
+    return StageElementConfig.builder()
+        .identifier("ciStage")
+        .type("CI")
+        .stageType(getIntegrationStageConfig())
+        .variables(getStageNGVariables())
+        .build();
+  }
+  public IntegrationStageConfig getIntegrationStageConfig() {
+    return IntegrationStageConfig.builder()
+        .execution(getExecutionElementConfig())
+        .infrastructure(getInfrastructure())
+        .sharedPaths(createValueField(newArrayList("share/")))
+        .serviceDependencies(Collections.singletonList(getServiceDependencyElement()))
+        .build();
   }
 }

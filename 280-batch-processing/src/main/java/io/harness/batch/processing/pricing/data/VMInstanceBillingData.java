@@ -11,4 +11,6 @@ public class VMInstanceBillingData {
   private String resourceId;
   private double computeCost;
   private double networkCost;
+  private double cpuCost;
+  private double memoryCost;
 }

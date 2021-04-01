@@ -77,6 +77,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -116,7 +117,7 @@ public class EntityHelper {
     String entityName = EMPTY;
     String entityId = entity.getUuid();
     String entityType = EMPTY;
-    String appId = EMPTY;
+    String appId = "__GLOBAL_APP_ID__";
     String appName = EMPTY;
     String affectedResourceId = EMPTY;
     String affectedResourceName = EMPTY;
@@ -825,6 +826,8 @@ public class EntityHelper {
       } else if (entity instanceof Template) {
         Template template = (Template) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, template.getName(), YAML_EXTENSION);
+      } else if (entity instanceof GovernanceConfig) {
+        finalYaml = format("%s/%s%s", yamlPrefix, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER, YAML_EXTENSION);
       } else {
         finalYaml = yamlPrefix;
       }

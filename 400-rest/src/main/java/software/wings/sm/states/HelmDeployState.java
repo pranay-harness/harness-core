@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -28,6 +29,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -38,6 +41,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -51,7 +55,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.HelmDeployContextElement;
@@ -74,7 +77,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Log;
@@ -174,6 +176,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
+@OwnedBy(CDP)
 public class HelmDeployState extends State {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -779,7 +782,7 @@ public class HelmDeployState extends State {
 
     HelmCommandFlag helmCommandFlag = null;
     if (appManifest != null) {
-      helmCommandFlag = appManifest.getHelmCommandFlag();
+      helmCommandFlag = ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag());
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
           && applicationManifestUtils.isPollForChangesEnabled(appManifest)) {
         applicationManifestUtils.applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
@@ -1323,7 +1326,8 @@ public class HelmDeployState extends State {
       return helmValuesFetchTaskParameters;
     }
 
-    helmValuesFetchTaskParameters.setHelmCommandFlag(applicationManifest.getHelmCommandFlag());
+    helmValuesFetchTaskParameters.setHelmCommandFlag(
+        ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()));
 
     if (helmOverrideManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
       applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(

@@ -53,6 +53,11 @@ public final class K8sWorkloadRecommendation
                  .field(K8sWorkloadRecommendationKeys.workloadName)
                  .field(K8sWorkloadRecommendationKeys.workloadType)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_dirty")
+                 .field(K8sWorkloadRecommendationKeys.accountId)
+                 .field(K8sWorkloadRecommendationKeys.dirty)
+                 .build())
         .build();
   }
 
@@ -71,6 +76,7 @@ public final class K8sWorkloadRecommendation
   @Singular @NotEmpty Map<String, ContainerRecommendation> containerRecommendations;
   @Singular @NotEmpty Map<String, ContainerCheckpoint> containerCheckpoints;
 
+  Cost lastDayCost;
   @FdIndex BigDecimal estimatedSavings;
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;
@@ -124,6 +130,18 @@ public final class K8sWorkloadRecommendation
                                 .limits(SANITIZER.decodeDotsInKey(cr.getRecommended().getLimits()))
                                 .build());
         }
+
+        if (cr.getPercentileBased() != null) {
+          // for p80, p90, p95, etc.
+          for (String percentile : cr.getPercentileBased().keySet()) {
+            cr.getPercentileBased().compute(percentile,
+                (k, v)
+                    -> ResourceRequirement.builder()
+                           .requests(SANITIZER.decodeDotsInKey(v.getRequests()))
+                           .limits(SANITIZER.decodeDotsInKey(v.getLimits()))
+                           .build());
+          }
+        }
       }
     }
   }
@@ -173,6 +191,25 @@ public final class K8sWorkloadRecommendation
                                 .build());
           if (!Objects.equals(cr.getCurrent(), cr.getRecommended())) {
             noDiffInAllContainers = false;
+          }
+        }
+
+        // for p80, p90, p95, etc.
+        if (cr.getPercentileBased() != null) {
+          for (Map.Entry<String, ResourceRequirement> pair : cr.getPercentileBased().entrySet()) {
+            if (isEmpty(pair.getValue())) {
+              validRecommendation = false;
+            } else {
+              ResourceRequirement requirement = ResourceRequirement.builder()
+                                                    .requests(SANITIZER.encodeDotsInKey(pair.getValue().getRequests()))
+                                                    .limits(SANITIZER.encodeDotsInKey(pair.getValue().getLimits()))
+                                                    .build();
+              cr.getPercentileBased().put(pair.getKey(), requirement);
+
+              if (!Objects.equals(cr.getCurrent(), requirement)) {
+                noDiffInAllContainers = false;
+              }
+            }
           }
         }
       }

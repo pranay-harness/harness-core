@@ -1,25 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
-
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//930-ng-core-clients:module",
-        "//940-resource-group-beans:module",
-        "//950-events-api:module",
-        "//960-ng-core-beans:module",
-        "//960-persistence:module",
-        "@maven//:com_google_inject_guice",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
 
 java_library(
     name = "module",
@@ -31,29 +13,26 @@ java_library(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
-        "maven_deps",
         "//:lombok",
+        "//888-pms-client:module",
+        "//908-access-control-admin-client:module",
+        "//930-ng-core-clients:module",
+        "//940-resource-group-beans:module",
+        "//950-events-api:module",
         "//950-events-api/src/main/proto:950_events_api_proto",
+        "//960-ng-core-beans:module",
+        "//960-persistence:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 
 #java_library(
-#    name = "test_deps",
-#    exports = [
-#        "//960-persistence:supporter-test",
-#        "//990-commons-test:module",
-#        "@maven//:junit_junit",
-#    ],
-#)
-#
-#java_library(
-#    name = "tests",
+#    name = "tests",testonly=True,
 #    srcs = glob(["src/test/**/*.java"]),
 #    visibility = ["//visibility:public"],
 #    deps = [
-#        "maven_deps",
 #        "module",
-#        "test_deps",
 #        "//:lombok",
 #    ],
 #)
@@ -61,14 +40,5 @@ java_library(
 #run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

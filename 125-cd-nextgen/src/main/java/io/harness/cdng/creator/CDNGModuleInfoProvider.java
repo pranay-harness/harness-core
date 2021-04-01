@@ -57,10 +57,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
 
   private Optional<ServiceOutcome> getServiceOutcome(NodeExecutionProto nodeExecutionProto) {
     return outcomeService
-        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
-                           .stream()
-                           .map(ref -> ref.getInstanceId())
-                           .collect(Collectors.toList()))
+        .findAllByRuntimeId(nodeExecutionProto.getAmbiance().getPlanExecutionId(), nodeExecutionProto.getUuid())
         .stream()
         .filter(outcome -> outcome instanceof ServiceOutcome)
         .map(outcome -> (ServiceOutcome) outcome)
@@ -69,13 +66,10 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
 
   private Optional<EnvironmentOutcome> getEnvironmentOutcome(NodeExecutionProto nodeExecutionProto) {
     return outcomeService
-        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
-                           .stream()
-                           .map(ref -> ref.getInstanceId())
-                           .collect(Collectors.toList()))
+        .findAllByRuntimeId(nodeExecutionProto.getAmbiance().getPlanExecutionId(), nodeExecutionProto.getUuid())
         .stream()
-        .filter(outcome -> outcome instanceof EnvironmentOutcome)
-        .map(outcome -> (EnvironmentOutcome) outcome)
+        .filter(outcome -> outcome instanceof InfrastructureOutcome)
+        .map(outcome -> ((InfrastructureOutcome) outcome).getEnvironment())
         .findFirst();
   }
 

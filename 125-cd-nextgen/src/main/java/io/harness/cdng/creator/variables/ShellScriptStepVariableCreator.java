@@ -50,14 +50,12 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
 
     YamlField environmentVariablesField = yamlNode.getField(YamlTypes.ENVIRONMENT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(environmentVariablesField)) {
-      VariableCreatorHelper.addVariablesForVariables(
-          environmentVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
+      addVariablesForVariables(environmentVariablesField, yamlPropertiesMap);
     }
 
     YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      VariableCreatorHelper.addVariablesForVariables(
-          outputVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
+      addVariablesForVariables(outputVariablesField, yamlPropertiesMap);
     }
   }
 

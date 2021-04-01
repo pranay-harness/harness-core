@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -16,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -29,6 +32,7 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.collect.Lists;
 import java.util.List;
 
+@OwnedBy(CDP)
 public class PcfStateTestHelper {
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";

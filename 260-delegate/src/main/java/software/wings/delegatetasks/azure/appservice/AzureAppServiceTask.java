@@ -5,7 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -17,6 +17,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.AzureSecretHelper;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
   @Inject private AzureSecretHelper azureSecretHelper;
   @Inject private AzureAppServiceTaskFactory azureAppServiceTaskFactory;
@@ -55,6 +56,9 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
         azureTaskExecutionRequest.getAzureConfigDTO(), azureTaskExecutionRequest.getAzureConfigEncryptionDetails());
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient();
 
+    ArtifactStreamAttributes artifactStreamAttributes = azureTaskExecutionRequest.getArtifactStreamAttributes();
+    artifactStreamAttributes = azureSecretHelper.decryptArtifactStreamAttributes(artifactStreamAttributes);
+
     AzureAppServiceTaskParameters azureAppServiceTaskParameters =
         (AzureAppServiceTaskParameters) azureTaskExecutionRequest.getAzureTaskParameters();
     azureSecretHelper.decryptAzureAppServiceTaskParameters(azureAppServiceTaskParameters);
@@ -62,8 +66,8 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AbstractAzureAppServiceTaskHandler azureAppServiceTask =
         azureAppServiceTaskFactory.getAzureAppServiceTask(azureAppServiceTaskParameters.getCommandType().name());
 
-    AzureTaskExecutionResponse azureTaskExecutionResponse =
-        azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
+    AzureTaskExecutionResponse azureTaskExecutionResponse = azureAppServiceTask.executeTask(
+        azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes);
 
     azureSecretHelper.encryptAzureTaskResponseParams(azureTaskExecutionResponse.getAzureTaskResponse(),
         azureAppServiceTaskParameters.getAccountId(), azureAppServiceTaskParameters.getCommandType());

@@ -1,16 +1,19 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
@@ -18,7 +21,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -44,6 +46,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock SecretManager secretManager;
   @Mock SettingsService settingsService;
@@ -100,7 +103,6 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
                           .build())
                 .build(),
             DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
-    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

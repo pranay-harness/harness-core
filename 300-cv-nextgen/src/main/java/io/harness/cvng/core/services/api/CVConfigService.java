@@ -55,8 +55,8 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
 
   List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
-  List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+  List<CVConfig> getExistingMappedConfigs(String accountId, String orgIdentifier, String projectIdentifier,
+      String identifier, DataSourceType dataSourceType);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds);

@@ -14,11 +14,13 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @JsonTypeName("CE_AZURE")
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "CEAzureConfigKeys")
 @EqualsAndHashCode(callSuper = false)
 public class CEAzureConfig extends SettingValue {
   @Attributes(required = true) @NotEmpty String directoryName;

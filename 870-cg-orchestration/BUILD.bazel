@@ -1,0 +1,57 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//955-delegate-beans:module",
+    "//874-orchestration-delay:module",
+    "//950-wait-engine:module",
+    "//950-delegate-tasks-beans:module",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
+    "@maven//:javax_validation_validation_api",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_hibernate_hibernate_validator",
+    "@maven//:org_mongodb_mongo_java_driver",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_slf4j_slf4j_api",
+    "//:lombok",
+]
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies + [
+        ":module",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:commons_logging_commons_logging",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_jexl3",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_awaitility_awaitility",
+        "@maven//:org_jooq_joor",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_reflections_reflections",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

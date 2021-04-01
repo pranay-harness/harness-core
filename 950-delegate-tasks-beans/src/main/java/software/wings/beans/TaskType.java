@@ -1,10 +1,10 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 
-@TargetModule(Module._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum TaskType {
   BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
   CAPABILITY_VALIDATION(TaskGroup.CAPABILITY_VALIDATION),
@@ -42,6 +42,7 @@ public enum TaskType {
   GCR_GET_BUILDS(TaskGroup.GCR),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR),
   GCR_GET_PLANS(TaskGroup.GCR),
+  ECR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "ECR Task"),
   ACR_GET_BUILDS(TaskGroup.ACR),
   ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR),
   ACR_GET_PLANS(TaskGroup.ACR),
@@ -174,6 +175,8 @@ public enum TaskType {
   VAULT_RENEW_TOKEN(TaskGroup.KMS),
   VAULT_LIST_ENGINES(TaskGroup.KMS),
   VAULT_APPROLE_LOGIN(TaskGroup.KMS),
+  SSH_SECRET_ENGINE_AUTH(TaskGroup.KMS),
+  VAULT_SIGN_PUBLIC_KEY_SSH(TaskGroup.KMS),
   SECRET_DECRYPT(TaskGroup.KMS),
   BATCH_SECRET_DECRYPT(TaskGroup.KMS),
   SECRET_DECRYPT_REF(TaskGroup.KMS),
@@ -184,14 +187,15 @@ public enum TaskType {
   UPSERT_SECRET(TaskGroup.KMS),
   FETCH_SECRET(TaskGroup.KMS),
   ENCRYPT_SECRET(TaskGroup.KMS),
+  VALIDATE_SECRET_MANAGER_CONFIGURATION(TaskGroup.KMS),
 
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER),
   CONTAINER_INFO(TaskGroup.CONTAINER),
   CONTROLLER_NAMES_WITH_LABELS(TaskGroup.CONTAINER),
   AMI_GET_BUILDS(TaskGroup.AMI),
-  CONTAINER_CE_VALIDATION(TaskGroup.CONTAINER),
-  CE_DELEGATE_VALIDATION(TaskGroup.CONTAINER),
+  CONTAINER_CE_VALIDATION(TaskGroup.CE),
+  CE_DELEGATE_VALIDATION(TaskGroup.CE),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER),
   LIST_CLUSTERS(TaskGroup.CONTAINER),
   CONTAINER_VALIDATION(TaskGroup.CONTAINER),
@@ -226,7 +230,7 @@ public enum TaskType {
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_FETCH_TARGETS_TASK(TaskGroup.TERRAFORM),
-  KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(TaskGroup.CONTAINER),
+  KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(TaskGroup.K8S),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   AWS_ECR_TASK(TaskGroup.AWS),
   AWS_ELB_TASK(TaskGroup.AWS),
@@ -239,17 +243,17 @@ public enum TaskType {
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS),
   AWS_CF_TASK(TaskGroup.AWS),
   K8S_COMMAND_TASK(TaskGroup.K8S),
-  K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG),
-  K8S_WATCH_TASK(TaskGroup.K8S),
+  K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG, "K8s Task"),
+  K8S_WATCH_TASK(TaskGroup.CE),
   TRIGGER_TASK(TaskGroup.TRIGGER),
   JIRA(TaskGroup.JIRA),
   CONNECTIVITY_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   GIT_COMMAND(TaskGroup.GIT),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT),
-  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT),
+  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, "Git Fetch Files Task"),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE),
-  DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
-  GCR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
+  DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "DockerHub Task"),
+  GCR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "GCR Task"),
   AWS_ROUTE53_TASK(TaskGroup.AWS),
   SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT),
   CUSTOM_GET_BUILDS(TaskGroup.CUSTOM),
@@ -265,7 +269,9 @@ public enum TaskType {
   CI_LE_STATUS(TaskGroup.CI),
   EXECUTE_COMMAND(TaskGroup.CI),
   CI_CLEANUP(TaskGroup.CI),
+  CI_EXECUTE_STEP(TaskGroup.CI),
   AWS_S3_TASK(TaskGroup.AWS),
+  CUSTOM_MANIFEST_VALUES_FETCH_TASK(TaskGroup.CUSTOM_MANIFEST_VALUES_FETCH_TASK),
 
   // Add all NG tasks below this.
   GCP_TASK(TaskGroup.GCP),
@@ -274,29 +280,44 @@ public enum TaskType {
   NG_SSH_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER),
   NG_AWS_TASK(TaskGroup.AWS),
-  JIRA_TASK_NG(TaskGroup.JIRA_NG),
+  JIRA_TASK_NG(TaskGroup.JIRA_NG, "Jira Task"),
   BUILD_STATUS(TaskGroup.CI),
   GIT_API_TASK(TaskGroup.GIT_NG),
+  AWS_CODECOMMIT_API_TASK(TaskGroup.GIT_NG),
   JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG),
   K8_FETCH_NAMESPACES(TaskGroup.CVNG),
   K8_FETCH_WORKLOADS(TaskGroup.CVNG),
+  K8_FETCH_EVENTS(TaskGroup.CVNG),
   NOTIFY_SLACK(TaskGroup.NOTIFICATION),
   NOTIFY_PAGERDUTY(TaskGroup.NOTIFICATION),
   NOTIFY_MAIL(TaskGroup.NOTIFICATION),
   NOTIFY_MICROSOFTTEAMS(TaskGroup.NOTIFICATION),
-  HTTP_TASK_NG(TaskGroup.HTTP_NG),
-  SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG),
+  HTTP_TASK_NG(TaskGroup.HTTP_NG, "Http Task"),
+  SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG, "Shell Script Task"),
   NG_NEXUS_TASK(TaskGroup.NEXUS),
   NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY),
-  CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CONTAINER);
+  CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CE),
+  NG_AWS_CODE_COMMIT_TASK(TaskGroup.AWS),
+  HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
+  NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
+  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG);
 
   private final TaskGroup taskGroup;
+  private final String displayName;
 
   TaskType(TaskGroup taskGroup) {
     this.taskGroup = taskGroup;
+    this.displayName = null;
+  }
+  TaskType(TaskGroup taskGroup, String displayName) {
+    this.taskGroup = taskGroup;
+    this.displayName = displayName;
   }
 
   public TaskGroup getTaskGroup() {
     return taskGroup;
+  }
+  public String getDisplayName() {
+    return displayName != null ? displayName : name();
   }
 }

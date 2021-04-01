@@ -38,6 +38,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -84,6 +85,7 @@ import software.wings.utils.ServiceVersionConvention;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -98,6 +100,9 @@ import org.jetbrains.annotations.NotNull;
 public class AzureVMSSStateHelper {
   public static final String VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s";
+  protected static final List<String> METADATA_ONLY_ARTIFACT_STREAM_TYPES =
+      Arrays.asList("JENKINS", "BAMBOO", "ARTIFACTORY", "NEXUS", "S3");
+
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
   @Inject private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
@@ -106,6 +111,7 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -115,8 +121,11 @@ public class AzureVMSSStateHelper {
       DeploymentExecutionContext context, String serviceId) {
     Artifact artifact = getArtifact(context, serviceId);
     ArtifactStream artifactStream = getArtifactStream(artifact.getArtifactStreamId());
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
 
+    String subscriptionId = artifactStreamAttributes.getSubscriptionId();
+    String resourceGroupName = artifactStreamAttributes.getAzureResourceGroup();
     String osType = artifactStreamAttributes.getOsType();
     String imageType = artifactStreamAttributes.getImageType();
     String galleryName = artifactStreamAttributes.getAzureImageGalleryName();
@@ -127,6 +136,8 @@ public class AzureVMSSStateHelper {
         .imageOSType(AzureMachineImageArtifactDTO.OSType.valueOf(osType))
         .imageType(AzureMachineImageArtifactDTO.ImageType.valueOf(imageType))
         .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .subscriptionId(subscriptionId)
+                             .resourceGroupName(resourceGroupName)
                              .definitionName(imageDefinitionName)
                              .galleryName(galleryName)
                              .version(imageVersion)
@@ -548,12 +559,21 @@ public class AzureVMSSStateHelper {
   public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
+
+    artifactStreamAttributes.setMetadata(artifact.getMetadata());
+    artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
-    artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
+    artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
     artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
     return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
+  }
+
+  private boolean onlyMetaForArtifactType(ArtifactStream artifactStream) {
+    return METADATA_ONLY_ARTIFACT_STREAM_TYPES.contains(artifactStream.getArtifactStreamType())
+        && artifactStream.isMetadataOnly();
   }
 
   public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
@@ -613,5 +633,11 @@ public class AzureVMSSStateHelper {
   private <T> Set<T> getDuplicateItems(List<T> listItems) {
     Set<T> tempItemsSet = new HashSet<>();
     return listItems.stream().filter(item -> !tempItemsSet.add(item)).collect(Collectors.toSet());
+  }
+
+  public UserDataSpecification getUserDataSpecification(ExecutionContext context) {
+    String appId = context.getAppId();
+    Service service = getServiceByAppId(context, appId);
+    return serviceResourceService.getUserDataSpecification(appId, service.getUuid());
   }
 }

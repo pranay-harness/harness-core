@@ -2,8 +2,12 @@ package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.environment.EnvironmentResourceClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -11,8 +15,12 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.ng.core.account.remote.AccountClient;
+import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.pipeline.PipelineRemoteClientModule;
+import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.redis.RedisConfig;
@@ -28,6 +36,7 @@ import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.StaticResourceGroupValidatorServiceImpl;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
+import io.harness.service.ServiceResourceClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -42,6 +51,7 @@ import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@OwnedBy(HarnessTeam.PL)
 public class ResourceGroupModule extends AbstractModule {
   private static final String RESOURCE_GROUP_CLIENT = "ng-manager";
   private static final String RESOURCE_GROUP_CONSUMER_GROUP = "resource-group";
@@ -65,6 +75,7 @@ public class ResourceGroupModule extends AbstractModule {
         .annotatedWith(Names.named("DynamicResourceValidator"))
         .to(DynamicResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(NG_MANAGER.getServiceId());
+    requireBinding(AccessControlAdminClient.class);
     installResourceValidators();
     addResourceValidatorConstraints();
   }
@@ -75,8 +86,8 @@ public class ResourceGroupModule extends AbstractModule {
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
     }
-    return RedisProducer.of(
-        EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE);
+    return RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+        EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId());
   }
 
   @Provides
@@ -107,6 +118,8 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(ProjectManagerClient.class);
     requireBinding(OrganizationManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
+    requireBinding(PipelineServiceClient.class);
+    requireBinding(AccountClient.class);
   }
 
   private void installResourceValidators() {
@@ -120,6 +133,18 @@ public class ResourceGroupModule extends AbstractModule {
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
     install(new ConnectorResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new AccountClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getManager().getBaseUrl()).build(),
+        resourceGroupConfig.getManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new PipelineRemoteClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getPipelineService().getBaseUrl()).build(),
+        resourceGroupConfig.getPipelineService().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new ServiceResourceClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new EnvironmentResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
   }

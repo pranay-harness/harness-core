@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.instance;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
@@ -16,7 +16,7 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import io.fabric8.utils.Lists;
 import java.util.List;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLInstanceType {
   PHYSICAL_HOST_INSTANCE(Lists.newArrayList(PhysicalHostInstanceInfo.class)),
   EC2_INSTANCE(Lists.newArrayList(Ec2InstanceInfo.class)),

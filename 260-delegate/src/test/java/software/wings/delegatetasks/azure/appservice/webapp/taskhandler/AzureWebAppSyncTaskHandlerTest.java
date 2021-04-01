@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.model.AzureConfig;
@@ -29,6 +29,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotD
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
@@ -44,7 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
   private static final String RESOURCE_GROUP = "test-resourceGroup";
   private static final String SUBSCRIPTION_ID = "test-subscriptionId";
@@ -139,9 +140,11 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
                                                           .resourceGroupName(RESOURCE_GROUP)
                                                           .appServiceType(APP_SERVICE_TYPE)
                                                           .build();
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(true);
 
     doThrow(Exception.class).when(azureWebClient).listWebAppsByResourceGroupName(any());
-    listWebAppNamesTaskHandler.executeTask(parameters, getAzureConfig(), mockLogStreamingTaskClient);
+    listWebAppNamesTaskHandler.executeTask(
+        parameters, getAzureConfig(), mockLogStreamingTaskClient, artifactStreamAttributes);
   }
 
   @Test
@@ -174,5 +177,9 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
 
   private AzureConfig getAzureConfig() {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
+  }
+
+  private ArtifactStreamAttributes buildArtifactStreamAttributes(boolean isDockerArtifactType) {
+    return isDockerArtifactType ? null : ArtifactStreamAttributes.builder().build();
   }
 }

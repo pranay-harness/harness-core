@@ -4,7 +4,7 @@ import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import static com.google.common.base.Strings.nullToEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -44,7 +44,7 @@ import org.apache.commons.io.IOUtils;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAuditInstrumentation extends SimpleInstrumentation {
   @Inject private AuditHelper auditHelper;
   @Inject private ApiKeyService apiKeyService;

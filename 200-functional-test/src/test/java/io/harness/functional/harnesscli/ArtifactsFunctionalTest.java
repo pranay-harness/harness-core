@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -58,6 +59,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getArtifactsTest() throws IOException {
     String command = "harness get artifacts --service " + serviceId;
     List<String> getArtifactsOutput = harnesscliHelper.executeCLICommand(command);
@@ -67,6 +69,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getArtifactsWithWrongServiceIdTest() throws IOException {
     String command = "harness get artifacts --service "
         + "wrongServiceId";

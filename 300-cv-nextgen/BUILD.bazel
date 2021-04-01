@@ -1,19 +1,17 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
-sources()
-
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
 ] + [
     "//:lombok",
     "//430-cv-nextgen-commons:module",
     "//440-connector-nextgen:module",
+    "//876-orchestration-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
@@ -66,10 +64,14 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_jaxrs",
     "@maven//:io_swagger_swagger_jersey2_jaxrs",
     "@maven//:io_swagger_swagger_models",
+    "@maven//:io_opencensus_opencensus_api",
+    "@maven//:io_opencensus_opencensus_impl",
+    "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
     "@maven//:javax_annotation_javax_annotation_api",
     "@maven//:javax_validation_validation_api",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_apache_logging_log4j_log4j_api",
     "@maven//:org_glassfish_jersey_bundles_repackaged_jersey_guava",
     "@maven//:org_glassfish_jersey_containers_jersey_container_servlet",
     "@maven//:org_glassfish_jersey_containers_jersey_container_servlet_core",
@@ -104,6 +106,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//300-cv-nextgen/src/main/resources:resource",
@@ -118,6 +121,7 @@ java_library(
         "module",
         "//:lombok",
         "//430-cv-nextgen-commons:module",
+        "//876-orchestration-beans:module",
         "//940-feature-flag:module",
         "//940-notification-client:module",
         "//960-notification-beans:module",
@@ -134,6 +138,7 @@ java_library(
         "@maven//:io_specto_hoverfly_java",
         "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_logging_log4j_log4j_api",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_mongo_java_driver",
@@ -146,13 +151,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

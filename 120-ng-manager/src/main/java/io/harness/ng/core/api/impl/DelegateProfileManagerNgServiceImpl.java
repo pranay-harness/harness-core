@@ -1,10 +1,10 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.beans.Cd1SetupFields.ENV_ID_FIELD;
+import static io.harness.beans.Cd1SetupFields.ENV_TYPE_FIELD;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
-import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -311,7 +311,8 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
             .description(delegateProfileGrpc.getDescription())
             .primary(delegateProfileGrpc.getPrimary())
             .approvalRequired(delegateProfileGrpc.getApprovalRequired())
-            .startupScript(delegateProfileGrpc.getStartupScript());
+            .startupScript(delegateProfileGrpc.getStartupScript())
+            .numberOfDelegates(delegateProfileGrpc.getNumberOfDelegates());
 
     if (delegateProfileGrpc.hasCreatedBy()) {
       delegateProfileDetailsNgBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()

@@ -3,27 +3,24 @@ package software.wings.verification;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURRENCES;
 
-import static java.lang.Boolean.parseBoolean;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.FeatureName;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.sm.StateType;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -35,13 +32,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-/**
- * @author Vaibhav Tulsyan
- * 05/Oct/2018
- */
-
-@NgUniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
-                                                    , @Field("envId"), @Field("name") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
@@ -49,6 +39,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "verificationServiceConfigurations")
 @HarnessEntity(exportable = true)
 public class CVConfiguration extends Base implements NameAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_name")
+                 .unique(true)
+                 .field("appId")
+                 .field(CVConfigurationKeys.envId)
+                 .field(CVConfigurationKeys.name)
+                 .build())
+        .build();
+  }
+
   @NotNull private String name;
   @NotNull @FdIndex private String accountId;
   @NotNull private String connectorId;
@@ -89,36 +91,6 @@ public class CVConfiguration extends Base implements NameAccess {
     Preconditions.checkArgument(occurrences > 0 && occurrences <= MAX_NUM_ALERT_OCCURRENCES,
         "Provided number of occurrences for alert is not between 0 and " + MAX_NUM_ALERT_OCCURRENCES);
     this.numOfOccurrencesForAlert = occurrences;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class CVConfigurationYaml extends BaseEntityYaml {
-    private String connectorName;
-    private String serviceName;
-    private AnalysisTolerance analysisTolerance;
-    private boolean enabled24x7;
-    private double alertThreshold;
-    private int numOfOccurrencesForAlert = 1;
-    private Date snoozeStartTime;
-    private Date snoozeEndTime;
-    private boolean alertEnabled;
-
-    // TODO: Remove the below setters when DX-574 is fixed.
-    public void setEnabled24x7(Object value) {
-      String enabled24x7 = String.valueOf(value).toLowerCase();
-      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(enabled24x7),
-          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
-      this.enabled24x7 = parseBoolean(enabled24x7);
-    }
-
-    public void setAlertEnabled(Object value) {
-      String alertEnabledStringValue = String.valueOf(value).toLowerCase();
-      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(alertEnabledStringValue),
-          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
-      this.alertEnabled = parseBoolean(alertEnabledStringValue);
-    }
   }
 
   // This should be an abstract method, but currently class cannot be converted to abstract due to multiple

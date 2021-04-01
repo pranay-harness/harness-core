@@ -8,7 +8,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -105,7 +105,8 @@ public abstract class Activity
 
   public abstract void fromDTO(ActivityDTO activityDTO);
 
-  public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
+  public abstract void fillInVerificationJobInstanceDetails(
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder);
 
   protected void addCommonFields(ActivityDTO activityDTO) {
     setAccountId(activityDTO.getAccountIdentifier());

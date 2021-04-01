@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
@@ -8,9 +9,12 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -24,7 +28,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PcfAppNotFoundException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
@@ -53,6 +56,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class PcfHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
@@ -66,7 +70,7 @@ public class PcfHelperService {
       notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
               .data(
                   TaskData.builder()
                       .async(false)

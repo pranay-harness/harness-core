@@ -61,6 +61,7 @@ public class ApprovalPollingJobEntity implements PersistentRegularIterable, Acco
   // shell script approval fields
   String scriptString;
   String activityId;
+  long retryInterval;
 
   ApprovalStateType approvalType;
 

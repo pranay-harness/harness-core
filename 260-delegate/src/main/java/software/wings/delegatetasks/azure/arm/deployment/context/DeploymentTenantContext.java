@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.azure.arm.deployment.context;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -13,7 +16,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class DeploymentTenantContext extends DeploymentContext {
   private AzureConfig azureConfig;
   private String deploymentDataLocation;
@@ -22,7 +26,7 @@ public class DeploymentTenantContext extends DeploymentContext {
   public DeploymentTenantContext(@NotNull String deploymentName, @NotNull AzureConfig azureConfig,
       @NotNull String deploymentDataLocation, @NotNull String templateJson, String parametersJson,
       AzureDeploymentMode mode, ILogStreamingTaskClient logStreamingTaskClient, int steadyStateTimeoutInMin) {
-    super(deploymentName, mode, templateJson, parametersJson, logStreamingTaskClient, steadyStateTimeoutInMin);
+    super(deploymentName, mode, templateJson, parametersJson, logStreamingTaskClient, steadyStateTimeoutInMin, null);
     this.azureConfig = azureConfig;
     this.deploymentDataLocation = deploymentDataLocation;
   }

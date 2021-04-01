@@ -18,12 +18,15 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
@@ -82,6 +85,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(HarnessTeam.CV)
 public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
   private String accountId;
   private String connectorIdentifier;
@@ -108,22 +112,13 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     FieldUtils.writeField(timeSeriesRecordService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
-    when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
-        .thenReturn(Lists.newArrayList(TimeSeriesMetricDefinition.builder()
-                                           .metricName("metric-0")
-                                           .metricType(TimeSeriesMetricType.THROUGHPUT)
-                                           .build(),
-            TimeSeriesMetricDefinition.builder()
-                .metricName("metric-1")
-                .metricType(TimeSeriesMetricType.RESP_TIME)
-                .build(),
-            TimeSeriesMetricDefinition.builder().metricName("metric-2").metricType(TimeSeriesMetricType.INFRA).build(),
-            TimeSeriesMetricDefinition.builder()
-                .metricName("metric-3")
-                .metricType(TimeSeriesMetricType.ERROR)
-                .build()));
+    List<TimeSeriesMetricDefinition> definitions = Lists.newArrayList(
+        TimeSeriesMetricDefinition.builder().metricName("metric-0").metricType(TimeSeriesMetricType.THROUGHPUT).build(),
+        TimeSeriesMetricDefinition.builder().metricName("metric-1").metricType(TimeSeriesMetricType.RESP_TIME).build(),
+        TimeSeriesMetricDefinition.builder().metricName("metric-2").metricType(TimeSeriesMetricType.INFRA).build(),
+        TimeSeriesMetricDefinition.builder().metricName("metric-3").metricType(TimeSeriesMetricType.ERROR).build());
+    when(timeSeriesAnalysisService.getMetricTemplate(anyString())).thenReturn(definitions);
   }
 
   @Test
@@ -133,6 +128,68 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     int numOfMetrics = 4;
     int numOfTxnx = 5;
     long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    for (int i = 0; i < numOfMins; i++) {
+      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
+                                                            .accountId(accountId)
+                                                            .verificationTaskId(verificationTaskId)
+                                                            .timeStamp(TimeUnit.MINUTES.toMillis(i))
+                                                            .metricValues(new HashSet<>())
+                                                            .build();
+      for (int j = 0; j < numOfMetrics; j++) {
+        TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                          .metricName("metric-" + j)
+                                                          .timeSeriesValues(new HashSet<>())
+                                                          .build();
+        for (int k = 0; k < numOfTxnx; k++) {
+          metricValue.getTimeSeriesValues().add(
+              TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
+        }
+        collectionRecord.getMetricValues().add(metricValue);
+      }
+      collectionRecords.add(collectionRecord);
+    }
+    timeSeriesRecordService.save(collectionRecords);
+    List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                                                   .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
+                                                   .asList();
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+    validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
+
+    // save again the same records ans test idempotency
+    timeSeriesRecordService.save(collectionRecords);
+    timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                            .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
+                            .asList();
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+    timeSeriesRecords.forEach(timeSeriesRecord -> {
+      assertThat(timeSeriesRecord.getMetricType()).isNotNull();
+      if (TimeSeriesMetricType.ERROR.equals(timeSeriesRecord.getMetricType())) {
+        timeSeriesRecord.getTimeSeriesGroupValues().forEach(
+            timeSeriesGroupValue -> assertThat(timeSeriesGroupValue.getPercentValue()).isNotNull());
+      } else {
+        timeSeriesRecord.getTimeSeriesGroupValues().forEach(
+            timeSeriesGroupValue -> assertThat(timeSeriesGroupValue.getPercentValue()).isNull());
+      }
+    });
+    validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSave_whenAllWithinBucket_MultipleErrorMetrics() {
+    int numOfMetrics = 4;
+    int numOfTxnx = 5;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    List<TimeSeriesMetricDefinition> definitions = new ArrayList<>();
+    for (int i = 0; i < numOfMetrics; i++) {
+      definitions.add(TimeSeriesMetricDefinition.builder()
+                          .metricName("metric-" + i)
+                          .metricType(TimeSeriesMetricType.ERROR)
+                          .build());
+    }
+    when(timeSeriesAnalysisService.getMetricTemplate(anyString())).thenReturn(definitions);
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
     for (int i = 0; i < numOfMins; i++) {
       TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
@@ -460,6 +517,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder()
             .identifier(PERFORMANCE_PACK_IDENTIFIER)
@@ -525,6 +583,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder()
             .identifier(PERFORMANCE_PACK_IDENTIFIER)
@@ -576,6 +635,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder().identifier(PERFORMANCE_PACK_IDENTIFIER).metrics(new HashSet<>()).build());
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);

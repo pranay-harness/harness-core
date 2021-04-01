@@ -16,6 +16,7 @@ import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
@@ -29,6 +30,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
 import io.harness.tiserviceclient.TIServiceClientModule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -36,6 +38,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -91,6 +94,13 @@ public class CIManagerServiceModule extends AbstractModule {
     return delegateCallbackToken;
   }
 
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    return Jackson.newObjectMapper();
+  }
+
   @Override
   protected void configure() {
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
@@ -119,10 +129,21 @@ public class CIManagerServiceModule extends AbstractModule {
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
-    install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
-                                            .target(ciManagerConfiguration.getManagerTarget())
-                                            .authority(ciManagerConfiguration.getManagerAuthority())
-                                            .build()));
+
+    install(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
+            .target(ciManagerConfiguration.getManagerTarget())
+            .authority(ciManagerConfiguration.getManagerAuthority())
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "CIManager";
+      }
+    });
 
     install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));

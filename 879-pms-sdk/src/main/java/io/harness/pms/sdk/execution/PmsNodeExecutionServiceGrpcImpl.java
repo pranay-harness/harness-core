@@ -8,29 +8,33 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
-import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
 import io.harness.pms.contracts.plan.AdviserResponseRequest;
 import io.harness.pms.contracts.plan.EventErrorRequest;
 import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
-import io.harness.pms.contracts.plan.HandleStepResponseRequest;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
-import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.response.events.SdkResponseEventPublisher;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ResponseData;
 
@@ -50,11 +54,20 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;
+  @Inject private SdkResponseEventPublisher sdkResponseEventPublisher;
 
   @Override
   public void queueNodeExecution(NodeExecutionProto nodeExecution) {
-    nodeExecutionProtoServiceBlockingStub.queueNodeExecution(
-        QueueNodeExecutionRequest.newBuilder().setNodeExecution(nodeExecution).build());
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder()
+                    .setNodeExecutionId(nodeExecution.getUuid())
+                    .setQueueNodeExecutionRequest(
+                        QueueNodeExecutionRequest.newBuilder().setNodeExecution(nodeExecution).build())
+                    .build())
+            .build());
   }
 
   @Override
@@ -78,15 +91,26 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
     if (status != null && status != Status.NO_OP) {
       builder.setStatus(status);
     }
-    nodeExecutionProtoServiceBlockingStub.addExecutableResponse(builder.build());
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(builder.build()).build())
+            .build());
   }
 
   @Override
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
-    nodeExecutionProtoServiceBlockingStub.handleStepResponse(HandleStepResponseRequest.newBuilder()
-                                                                 .setNodeExecutionId(nodeExecutionId)
-                                                                 .setStepResponse(stepResponse)
-                                                                 .build());
+    HandleStepResponseRequest responseRequest = HandleStepResponseRequest.newBuilder()
+                                                    .setNodeExecutionId(nodeExecutionId)
+                                                    .setStepResponse(stepResponse)
+                                                    .build();
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(responseRequest).build())
+            .build());
   }
 
   @Override

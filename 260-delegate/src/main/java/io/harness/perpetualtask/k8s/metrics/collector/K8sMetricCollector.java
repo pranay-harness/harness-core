@@ -1,13 +1,14 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.checkpointToProto;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.checkpointToProto;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
@@ -45,7 +46,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8sMetricCollector {
   private static final TemporalAmount AGGREGATION_WINDOW = Duration.ofMinutes(20);
 

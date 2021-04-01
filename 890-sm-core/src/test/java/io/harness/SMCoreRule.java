@@ -2,7 +2,6 @@ package io.harness;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -22,7 +21,6 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -210,13 +208,6 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         }
       }
     }
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new UserProvider() {
-      @Override
-      public EmbeddedUser activeUser() {
-        return EmbeddedUser.builder().email("test@test.com").name("test").uuid("dummy").build();
-      }
-    });
   }
 
   @Override

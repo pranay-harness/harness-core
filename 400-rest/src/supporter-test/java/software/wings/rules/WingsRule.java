@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -33,6 +34,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -41,7 +43,6 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -73,6 +74,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -91,12 +93,12 @@ import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.ObserversHelper;
 import software.wings.app.SSOModule;
+import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.integration.IntegrationTestBase;
-import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
@@ -246,7 +248,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     log.info("Creating guice injector took: {}ms", diff);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
-    registerProviders();
     registerObservers();
 
     for (Module module : modules) {
@@ -291,11 +292,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         .addAll(ManagerRegistrars.morphiaRegistrars)
         .add(ManagerTestMorphiaRegistrar.class)
         .build();
-  }
-
-  protected void registerProviders() {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   protected void registerObservers() {
@@ -418,12 +414,21 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new AuthModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder()
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
             .target(((MainConfiguration) configuration).getGrpcClientConfig().getTarget())
             .authority(((MainConfiguration) configuration).getGrpcClientConfig().getAuthority())
-            .build()));
+            .build();
+      }
 
+      @Override
+      public String application() {
+        return "Manager";
+      }
+    });
+    modules.add(new SearchModule());
     return modules;
   }
 
@@ -443,6 +448,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
               injector.getInstance(NotifyQueuePublisherRegister.class);
           notifyQueuePublisherRegister.register(
               ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+        } else if (queueListenerClass.equals(NgOrchestrationNotifyEventListener.class)) {
+          final QueuePublisher<NotifyEvent> publisher =
+              injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+          final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+              injector.getInstance(NotifyQueuePublisherRegister.class);
+          notifyQueuePublisherRegister.register(
+              NG_ORCHESTRATION, payload -> publisher.send(asList(NG_ORCHESTRATION), payload));
         }
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }

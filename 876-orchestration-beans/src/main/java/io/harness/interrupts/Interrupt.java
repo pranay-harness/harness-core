@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
@@ -31,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Value
 @Builder
-@Entity(value = "interrupts")
+@Entity(value = "interrupts", noClassnameStored = true)
 @Document(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 @TypeAlias("interrupt")
@@ -40,6 +41,7 @@ public class Interrupt implements PersistentEntity, UuidAccess {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
   @NonNull InterruptType type;
+  @NotNull InterruptConfig interruptConfig;
   @NonNull String planExecutionId;
   String nodeExecutionId;
   StepParameters parameters;

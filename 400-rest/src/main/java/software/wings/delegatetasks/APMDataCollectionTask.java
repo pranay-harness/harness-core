@@ -11,7 +11,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -71,7 +72,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 
@@ -192,11 +193,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.firstDataCollectionCompleted = false;
     }
 
-    private APMRestClient getAPMRestClient(final String baseUrl) {
+    private APMRestClient getAPMRestClient(final String baseUrl, final boolean validateCert) {
       final Retrofit retrofit = new Retrofit.Builder()
                                     .baseUrl(baseUrl)
                                     .addConverterFactory(JacksonConverterFactory.create())
-                                    .client(getUnsafeHttpClient(baseUrl))
+                                    .client(validateCert ? Http.getSafeOkHttpClientBuilder(baseUrl, 15, 60).build()
+                                                         : getUnsafeHttpClient(baseUrl))
                                     .build();
       return retrofit.create(APMRestClient.class);
     }
@@ -316,8 +318,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return "";
     }
 
-    private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
-        Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
+    private List<APMResponseParser.APMResponseData> collect(String baseUrl, boolean validateCert,
+        Map<String, String> headers, Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
         AnalysisComparisonStrategy strategy) throws IOException {
       // OkHttp seems to have issues encoding backtick, so explictly encoding it.
       String[] urlAndBody = initialUrl.split(URL_BODY_APPENDER);
@@ -347,15 +349,17 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             callabels.add(
                 ()
                     -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                        collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
+                        collect(getAPMRestClient(baseUrl, validateCert).collect(url, headersBiMap, optionsBiMap)),
+                        metricInfos));
 
           } else {
             resolvedBodies.forEach(resolvedBody -> {
               callabels.add(
                   ()
                       -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                          collect(getAPMRestClient(baseUrl).postCollect(
-                              url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
+                          collect(
+                              getAPMRestClient(baseUrl, validateCert)
+                                  .postCollect(url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
                           metricInfos));
             });
           }
@@ -368,10 +372,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             // host has already been resolved. So it's ok to pass null here.
             List<String> curUrls = resolveDollarReferences(url, null, strategy);
             curUrls.forEach(curUrl
-                -> callabels.add(()
-                                     -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
-                                         metricInfos)));
+                -> callabels.add(
+                    ()
+                        -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
+                            collect(
+                                getAPMRestClient(baseUrl, validateCert).collect(curUrl, headersBiMap, optionsBiMap)),
+                            metricInfos)));
           }
         } else {
           // This is not a batch query
@@ -386,15 +392,16 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(
-                                  getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap)),
+                              collect(getAPMRestClient(baseUrl, validateCert)
+                                          .postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap)),
                               metricInfos)));
             } else {
               curUrls.forEach(curUrl
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                              collect(
+                                  getAPMRestClient(baseUrl, validateCert).collect(curUrl, headersBiMap, optionsBiMap)),
                               metricInfos)));
             }
           }
@@ -409,8 +416,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                              collect(
-                                  getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap)),
+                              collect(getAPMRestClient(baseUrl, validateCert)
+                                          .collect(curUrls.get(index), headersBiMap, optionsBiMap)),
                               metricInfos)));
         } else {
           IntStream.range(0, curUrls.size()).forEach(index -> {
@@ -418,8 +425,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                            collect(getAPMRestClient(baseUrl).postCollect(
-                                curUrls.get(index), headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
+                            collect(getAPMRestClient(baseUrl, validateCert)
+                                        .postCollect(curUrls.get(index), headersBiMap, optionsBiMap,
+                                            new JSONObject(resolvedBody).toMap())),
                             metricInfos)));
           });
         }
@@ -504,16 +512,16 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
             List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
             if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
-              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
+                  dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
                   dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
             }
 
             for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
                 dataCollectionInfo.getMetricEndpoints().entrySet()) {
-              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
-                  dataCollectionInfo.getStrategy()));
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
+                  dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), metricInfoEntry.getKey(),
+                  metricInfoEntry.getValue(), dataCollectionInfo.getStrategy()));
             }
             Set<String> groupNameSet = dataCollectionInfo.getHosts() != null
                 ? new HashSet<>(dataCollectionInfo.getHosts().values())

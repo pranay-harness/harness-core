@@ -10,6 +10,7 @@ message GraphLayoutNode {
   string nodeUUID = 3;
   EdgeLayoutList edgeLayoutList = 4;
   string nodeGroup = 5;
+  string name = 6;
 }
 
 message EdgeLayoutList {

@@ -1,27 +1,44 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
-sources()
-
-java_library(
-    name = "maven_deps",
+java_binary(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    data = [
+        "cert.pem",
+        "key.pem",
+    ],
+    main_class = "io.harness.PipelineServiceApplication",
+    resources = [
+        "//800-pipeline-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "@maven//:com_google_guava_guava",
+        "@maven//:io_netty_netty_all",
+    ] + [
         "//810-ng-triggers:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//908-access-control-sdk:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
+        "//940-feature-flag:module",
         "//950-events-api:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
+        "//955-alert-beans:module",
+        "//955-delegate-beans:module",
         "//955-filters-sdk:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
@@ -40,7 +57,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:com_smoketurner_dropwizard_swagger",
@@ -65,44 +81,37 @@ java_library(
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_data_spring_data_mongodb",
         "@maven//:org_springframework_spring_context",
-    ],
-)
-
-java_binary(
-    name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-    ]),
-    data = [
-        "cert.pem",
-        "key.pem",
-    ],
-    main_class = "io.harness.PipelineServiceApplication",
-    resources = [
-        "//800-pipeline-service/src/main/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resolution
-        "maven_deps",
         "//:lombok",
     ],
 )
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//800-pipeline-service/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
-        "module",
+        ":module",
         "//:lombok",
+        "//810-ng-triggers:module",
+        "//860-orchestration-visualization:module",
+        "//870-orchestration:module",
+        "//879-pms-sdk:module",
+        "//884-pms-commons:module",
+        "//890-pms-contracts:module",
+        "//930-ng-core-clients:module",
+        "//940-notification-client:module",
+        "//950-events-api:module",
+        "//950-ng-project-n-orgs:module",
+        "//950-timeout-engine:module",
+        "//955-filters-sdk:module",
+        "//960-ng-core-beans:module",
+        "//960-notification-beans:module",
+        "//960-persistence:module",
         "//960-persistence:supporter-test",
+        "//960-yaml-sdk:module",
+        "//980-commons:module",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -113,14 +122,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

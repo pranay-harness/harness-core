@@ -22,4 +22,5 @@ public class TimeScaleDBConfig {
   private int instanceStatsMigrationQueryBatchSize;
   private int deploymentDataMigrationRowLimit;
   private int deploymentDataMigrationQueryBatchSize;
+  boolean isHealthCheckNeeded;
 }

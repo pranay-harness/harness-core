@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -8,8 +9,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.LT;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
 import io.harness.ccm.cluster.entities.K8sLabelFilter;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
@@ -32,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class K8sWorkloadDao {
   private static final String LABEL_FIELD = K8sWorkloadKeys.labels + ".";
   @Inject private HPersistence persistence;
@@ -107,8 +109,7 @@ public class K8sWorkloadDao {
                                            .withLimit(String.valueOf(labelFilter.getLimit()))
                                            .withOffset(String.valueOf(labelFilter.getOffset()))
                                            .build();
-    PageResponse<K8sWorkload> pageResponse = wingsPersistence.query(K8sWorkload.class, request);
-    List<K8sWorkload> workloads = pageResponse.getResponse();
+    List<K8sWorkload> workloads = fetchWorkloads(wingsPersistence.query(K8sWorkload.class, request).iterator());
     Set<String> labelNames = new HashSet<>();
     workloads.forEach(workload -> labelNames.addAll(workload.getLabels().keySet()));
     return new ArrayList<>(labelNames);
@@ -127,8 +128,7 @@ public class K8sWorkloadDao {
     if (!labelFilter.getSearchString().equals("")) {
       request.addFilter(LABEL_FIELD + labelFilter.getLabelName(), CONTAINS, labelFilter.getSearchString());
     }
-    PageResponse<K8sWorkload> pageResponse = wingsPersistence.query(K8sWorkload.class, request);
-    List<K8sWorkload> workloads = pageResponse.getResponse();
+    List<K8sWorkload> workloads = fetchWorkloads(wingsPersistence.query(K8sWorkload.class, request).iterator());
     Set<String> labelNames = new HashSet<>();
     String labelName = labelFilter.getLabelName();
     workloads.forEach(workload -> {

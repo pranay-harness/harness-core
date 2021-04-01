@@ -7,6 +7,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -43,17 +44,22 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("uniqueResourceGroupPrimaryKey")
+                 .name("resourceGroupPrimaryKey_resourceSelectors")
                  .field(ResourceGroupKeys.accountIdentifier)
                  .field(ResourceGroupKeys.orgIdentifier)
                  .field(ResourceGroupKeys.projectIdentifier)
                  .field(ResourceGroupKeys.identifier)
                  .field(ResourceGroupKeys.resourceSelectors)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueResourceGroup")
+                 .field(ResourceGroupKeys.accountIdentifier)
+                 .field(ResourceGroupKeys.orgIdentifier)
+                 .field(ResourceGroupKeys.projectIdentifier)
+                 .field(ResourceGroupKeys.identifier)
                  .unique(true)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
                  .build())
         .build();
   }
@@ -68,7 +74,8 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;
   @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
-  @NotEmpty @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
+  @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
+  @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
 
   @Builder.Default Boolean deleted = Boolean.FALSE;
   @CreatedDate Long createdAt;

@@ -3,9 +3,10 @@ package io.harness.grpc;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.CancelTaskRequest;
@@ -69,7 +70,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.DelegateTaskResponse")
 public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateCallbackRegistry delegateCallbackRegistry;
@@ -108,27 +109,35 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       List<String> taskSelectors =
           request.getSelectorsList().stream().map(TaskSelector::getSelector).collect(Collectors.toList());
 
-      DelegateTask task = DelegateTask.builder()
-                              .uuid(taskId)
-                              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
-                              .waitId(taskId)
-                              .accountId(request.getAccountId().getId())
-                              .setupAbstractions(setupAbstractions)
-                              .logStreamingAbstractions(logAbstractions)
-                              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
-                              .executionCapabilities(capabilities)
-                              .tags(taskSelectors)
-                              .data(TaskData.builder()
-                                        .parked(taskDetails.getParked())
-                                        .async(taskDetails.getMode() == TaskMode.ASYNC)
-                                        .taskType(taskDetails.getType().getType())
-                                        .parameters(new Object[] {kryoSerializer.asInflatedObject(
-                                            taskDetails.getKryoParameters().toByteArray())})
-                                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
-                                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
-                                        .expressions(taskDetails.getExpressionsMap())
-                                        .build())
-                              .build();
+      DelegateTaskBuilder taskBuilder =
+          DelegateTask.builder()
+              .uuid(taskId)
+              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
+              .waitId(taskId)
+              .accountId(request.getAccountId().getId())
+              .setupAbstractions(setupAbstractions)
+              .logStreamingAbstractions(logAbstractions)
+              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
+              .executionCapabilities(capabilities)
+              .tags(taskSelectors)
+              .selectionLogsTrackingEnabled(request.getSelectionTrackingLogEnabled())
+              .forceExecute(request.getForceExecute())
+              .data(TaskData.builder()
+                        .parked(taskDetails.getParked())
+                        .async(taskDetails.getMode() == TaskMode.ASYNC)
+                        .taskType(taskDetails.getType().getType())
+                        .parameters(new Object[] {
+                            kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
+                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
+                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
+                        .expressions(taskDetails.getExpressionsMap())
+                        .build());
+
+      if (request.hasQueueTimeout()) {
+        taskBuilder.expiry(System.currentTimeMillis() + Durations.toMillis(request.getQueueTimeout()));
+      }
+
+      DelegateTask task = taskBuilder.build();
 
       if (task.getData().isParked()) {
         delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);

@@ -20,6 +20,7 @@ import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,8 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Entity(value = "audits", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-
+@HarnessEntity(exportable = true)
 public class AuditHeader extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -108,6 +108,7 @@ public class AuditHeader extends Base implements AccountAccess {
   private Long requestTime;
   @JsonView(JsonViews.Internal.class) private Long responseTime;
   private String failureStatusMsg;
+  @Getter @Setter private HashMap<String, Object> details;
 
   // For Audit Headers created by Git user actions
   @Getter @Setter @FdIndex private String accountId;
@@ -491,6 +492,7 @@ public class AuditHeader extends Base implements AccountAccess {
     private List<EntityAuditRecord> entityAuditRecords;
     private String failureStatusMsg;
     private ApiKeyAuditDetails apiKeyAuditDetails;
+    private HashMap<String, Object> details;
 
     private Builder() {}
 
@@ -784,6 +786,11 @@ public class AuditHeader extends Base implements AccountAccess {
       return this;
     }
 
+    public Builder details(HashMap<String, Object> details) {
+      this.details = details;
+      return this;
+    }
+
     /**
      * Builds the.
      *
@@ -821,6 +828,7 @@ public class AuditHeader extends Base implements AccountAccess {
       auditHeader.setGitAuditDetails(gitAuditDetails);
       auditHeader.setFailureStatusMsg(failureStatusMsg);
       auditHeader.setApiKeyAuditDetails(apiKeyAuditDetails);
+      auditHeader.setDetails(details);
       return auditHeader;
     }
   }

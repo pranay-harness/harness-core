@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -7,7 +8,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
@@ -20,6 +22,7 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
@@ -85,7 +88,8 @@ import org.jetbrains.annotations.NotNull;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
@@ -335,6 +339,21 @@ public class DelegateAgentResource {
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateScripts(
           accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegateScriptsNg")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
     }
   }
 

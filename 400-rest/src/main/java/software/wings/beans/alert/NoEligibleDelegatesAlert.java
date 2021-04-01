@@ -9,6 +9,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -35,6 +38,15 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
+@TargetModule(HarnessModule._920_DELEGATE_SERVICE_BEANS)
+@BreakDependencyOn("software.wings.beans.Application")
+@BreakDependencyOn("software.wings.beans.CatalogItem")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.InfrastructureMapping")
+@BreakDependencyOn("software.wings.service.intfc.AppService")
+@BreakDependencyOn("software.wings.service.intfc.CatalogService")
+@BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
+@BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
 public class NoEligibleDelegatesAlert implements AlertData {
   @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
   @Inject @Transient @SchemaIgnore private transient AppService appService;

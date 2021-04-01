@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_ACCOUNT;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
@@ -8,6 +9,7 @@ import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.api.DeploymentType.AZURE_WEBAPP;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
@@ -18,9 +20,11 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import io.harness.manifest.CustomSourceConfig;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.LambdaSpecification;
@@ -28,6 +32,7 @@ import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -37,6 +42,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.io.Resources;
@@ -58,6 +64,15 @@ public class ServiceGenerator {
   private static final String HELM_S3_SERVICE_NAME = "Helm S3 Functional Test";
   private static final String CHARTMUSEUM_CHART_NAME = "chartmuseum";
   private static final String BASE_PATH = "helm/charts";
+  private static final String K8S_CUSTOM_SCRIPT_PATH = "k8s-manifests/custom/custom-manifest-script.sh";
+  private static final String K8S_CUSTOM_SCRIPT_NO_VALUES_PATH = "k8s-manifests/custom/no-values-manifest-script.sh";
+  private static final String OPENSHIFT_CUSTOM_SCRIPT_PATH = "k8s-manifests/custom/custom-openshift-manifest-script.sh";
+  private static final String K8S_CUSTOM_MANIFEST_PATH = "${serviceVariable.manifestPath}/";
+  private static final String K8S_CUSTOM_MANIFEST_ABSOLUTE_PATH =
+      "${serviceVariable.absolutePath}/${serviceVariable.manifestPath}";
+  private static final String OPENSHIFT_CUSTOM_MANIFEST_PATH = "${serviceVariable.manifestPath}/template.yaml";
+  private static final String OPENSHIFT_CUSTOM_MANIFEST_ABSOLUTE_PATH =
+      "${serviceVariable.absolutePath}/${serviceVariable.manifestPath}/template.yaml";
 
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
@@ -66,6 +81,8 @@ public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
   @Inject ApplicationManifestService applicationManifestService;
+  @Inject ServiceVariableService serviceVariableService;
+  @Inject SecretGenerator secretGenerator;
 
   public enum Services {
     GENERIC_TEST,
@@ -76,6 +93,13 @@ public class ServiceGenerator {
     K8S_V2_TEST,
     K8_V2_SKIP_VERSIONING_TEST,
     K8S_V2_LIST_TEST,
+    CUSTOM_MANIFEST_K8S_V2_TEST,
+    CUSTOM_MANIFEST_K8S_V2_ABSOLUTE_PATH_TEST,
+    CUSTOM_MANIFEST_K8S_V2_NO_VALUES_TEST,
+    CUSTOM_MANIFEST_K8S_V2_VALUES_OVERRIDES,
+    CUSTOM_MANIFEST_OPENSHIFT_TEST,
+    CUSTOM_MANIFEST_OPENSHIFT_TEST_ABSOLUTE_PATH_TEST,
+    CUSTOM_MANFIEST_OPENSHIFT_PARAMS_OVERRIDES,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
     NAS_FUNCTIONAL_TEST,
@@ -104,6 +128,26 @@ public class ServiceGenerator {
         return ensureK8sTestSkipVersioningAllObjects(seed, owners, "Test K8sV2 Service Skip Versioning");
       case K8S_V2_LIST_TEST:
         return ensureK8sListTest(seed, owners, "Test K8sV2 List Service");
+      case CUSTOM_MANIFEST_K8S_V2_TEST:
+        return ensureCustomManifestK8sTest(
+            seed, owners, "Test K8sV2 Custom Manifest", K8S_CUSTOM_MANIFEST_PATH, K8S_CUSTOM_SCRIPT_PATH);
+      case CUSTOM_MANIFEST_K8S_V2_ABSOLUTE_PATH_TEST:
+        return ensureCustomManifestK8sTest(
+            seed, owners, "Test K8sV2 Custom Manifest", K8S_CUSTOM_MANIFEST_ABSOLUTE_PATH, K8S_CUSTOM_SCRIPT_PATH);
+      case CUSTOM_MANIFEST_K8S_V2_NO_VALUES_TEST:
+        return ensureCustomManifestK8sTest(seed, owners, "Test K8sV2 No Values YAML Custom Manifest",
+            K8S_CUSTOM_MANIFEST_PATH, K8S_CUSTOM_SCRIPT_NO_VALUES_PATH);
+      case CUSTOM_MANIFEST_K8S_V2_VALUES_OVERRIDES:
+        return ensureCustomManifestK8sValuesOverridesTest(seed, owners, "Test K8sV2 Values Overrides Custom Manifest");
+      case CUSTOM_MANIFEST_OPENSHIFT_TEST:
+        return ensureCustomManifestOpenshiftTest(
+            seed, owners, "Test Openshift Custom Manifest", OPENSHIFT_CUSTOM_MANIFEST_PATH);
+      case CUSTOM_MANIFEST_OPENSHIFT_TEST_ABSOLUTE_PATH_TEST:
+        return ensureCustomManifestOpenshiftTest(
+            seed, owners, "Test Openshift Custom Manifest", OPENSHIFT_CUSTOM_MANIFEST_ABSOLUTE_PATH);
+      case CUSTOM_MANFIEST_OPENSHIFT_PARAMS_OVERRIDES:
+        return ensureCustomManifestOpenshiftParamsOverrideTest(
+            seed, owners, "Test Openshift Params Override", "${serviceVariable.manifestPath}/template.yaml");
       case MULTI_ARTIFACT_FUNCTIONAL_TEST:
         return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
       case MULTI_ARTIFACT_K8S_V2_TEST:
@@ -358,6 +402,112 @@ public class ServiceGenerator {
         ManifestFile.builder().fileName("templates/deployment.yaml").fileContent(deploymentListYaml).build();
     listDeploymentSpec.setAppId(service.getAppId());
     applicationManifestService.createManifestFileByServiceId(listDeploymentSpec, service.getUuid());
+  }
+
+  public Service ensureCustomManifestOpenshiftTest(
+      Randomizer.Seed seed, Owners owners, String name, String manifestPath) {
+    return ensureCustomManifestK8sV2Test(
+        seed, owners, name, manifestPath, OPENSHIFT_CUSTOM_SCRIPT_PATH, StoreType.CUSTOM_OPENSHIFT_TEMPLATE);
+  }
+
+  public Service ensureCustomManifestOpenshiftParamsOverrideTest(
+      Randomizer.Seed seed, Owners owners, String name, String manifestPath) {
+    Service service = ensureCustomManifestK8sV2Test(
+        seed, owners, name, manifestPath, OPENSHIFT_CUSTOM_SCRIPT_PATH, StoreType.CUSTOM_OPENSHIFT_TEMPLATE);
+    ensureServiceVariableForService(service, "multipleOverridesPath",
+        "${serviceVariable.overridesPath}/params1, ${serviceVariable.overridesPath}/params2");
+    ensureCustomApplicationManifest(
+        service, "", "${serviceVariable.multipleOverridesPath}", StoreType.CUSTOM, AppManifestKind.OC_PARAMS);
+    return service;
+  }
+
+  public Service ensureCustomManifestK8sTest(
+      Randomizer.Seed seed, Owners owners, String name, String manifestPath, String scriptResource) {
+    return ensureCustomManifestK8sV2Test(seed, owners, name, manifestPath, scriptResource, StoreType.CUSTOM);
+  }
+
+  public Service ensureCustomManifestK8sValuesOverridesTest(Randomizer.Seed seed, Owners owners, String name) {
+    Service service = ensureCustomManifestK8sV2Test(
+        seed, owners, name, K8S_CUSTOM_MANIFEST_PATH, K8S_CUSTOM_SCRIPT_PATH, StoreType.CUSTOM);
+    ensureServiceVariableForService(service, "multipleOverridesPath",
+        "${serviceVariable.overridesPath}/values1.yaml, ${serviceVariable.overridesPath}/values2.yaml");
+    ensureCustomApplicationManifest(
+        service, "", "${serviceVariable.multipleOverridesPath}", StoreType.CUSTOM, AppManifestKind.VALUES);
+    return service;
+  }
+
+  private Service ensureCustomManifestK8sV2Test(
+      Randomizer.Seed seed, Owners owners, String name, String path, String scriptResource, StoreType storeType) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .build()));
+    Service service = owners.obtainService();
+    ensureCustomApplicationManifest(service, scriptResource, path, storeType, AppManifestKind.K8S_MANIFEST);
+    ensureServiceVariableForService(
+        service, "absolutePath", "/tmp/functional-tests/custom-manifest/${workflow.variables.workloadName}");
+    ensureServiceVariableForService(service, "manifestPath", "custom/manifest");
+    ensureServiceVariableForService(service, "overridesPath", "custom/overrides");
+    secretGenerator.ensureSecretText(owners, "custom-manifest-fn-test-secret", "custom-manifest-fn-test-value");
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  private void ensureCustomApplicationManifest(
+      Service service, String scriptResource, String path, StoreType storeType, AppManifestKind kind) {
+    ApplicationManifest existing =
+        applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), kind);
+    URL url = isNotEmpty(scriptResource) ? ServiceGenerator.class.getClassLoader().getResource(scriptResource) : null;
+    try {
+      String customManifestScript = url != null ? Resources.toString(url, StandardCharsets.UTF_8) : "";
+      ApplicationManifest applicationManifest =
+          ApplicationManifest.builder()
+              .kind(kind)
+              .accountId(service.getAccountId())
+              .storeType(storeType)
+              .serviceId(service.getUuid())
+              .customSourceConfig(CustomSourceConfig.builder().script(customManifestScript).path(path).build())
+              .build();
+
+      applicationManifest.setAppId(service.getAppId());
+      if (existing != null) {
+        applicationManifest.setUuid(existing.getUuid());
+        applicationManifestService.update(applicationManifest);
+      } else {
+        applicationManifestService.create(applicationManifest);
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private ServiceVariable ensureServiceVariableForService(Service service, String name, String value) {
+    List<ServiceVariable> existing = serviceVariableService.getServiceVariablesForEntity(
+        service.getAppId(), service.getUuid(), ServiceVariableService.EncryptedFieldMode.MASKED);
+    for (ServiceVariable serviceVariable : existing) {
+      if (serviceVariable.getName().equals(name)) {
+        serviceVariable.setValue(value.toCharArray());
+        return serviceVariableService.update(serviceVariable);
+      }
+    }
+
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(GLOBAL_ENV_ID)
+                                          .entityId(service.getUuid())
+                                          .entityType(EntityType.SERVICE)
+                                          .type(ServiceVariable.Type.TEXT)
+                                          .name(name)
+                                          .value(value.toCharArray())
+                                          .accountId(service.getAccountId())
+                                          .build();
+    serviceVariable.setAppId(service.getAppId());
+    return serviceVariableService.save(serviceVariable);
   }
 
   public Service ensureEcsRemoteTest(

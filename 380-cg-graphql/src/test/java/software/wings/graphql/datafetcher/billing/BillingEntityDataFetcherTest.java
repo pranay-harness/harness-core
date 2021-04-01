@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -154,6 +155,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
     when(featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, ACCOUNT1_ID)).thenReturn(false);
+    when(featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, ACCOUNT1_ID)).thenReturn(false);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 

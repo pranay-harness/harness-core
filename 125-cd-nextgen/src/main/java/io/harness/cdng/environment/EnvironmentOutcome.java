@@ -2,6 +2,7 @@ package io.harness.cdng.environment;
 
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @JsonTypeName("environmentOutcome")
-public class EnvironmentOutcome implements Outcome {
+public class EnvironmentOutcome implements Outcome, ExecutionSweepingOutput {
   String name;
   String identifier;
   String description;

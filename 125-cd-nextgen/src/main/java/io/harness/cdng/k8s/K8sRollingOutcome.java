@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -11,7 +12,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("k8sRollingOutcome")
 @JsonTypeName("k8sRollingOutcome")
-public class K8sRollingOutcome implements Outcome {
+public class K8sRollingOutcome implements Outcome, ExecutionSweepingOutput {
   String releaseName;
   int releaseNumber;
 

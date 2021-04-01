@@ -128,6 +128,7 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
@@ -499,6 +500,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public List<Account> getAccounts(List<String> identifiers) {
+    return wingsPersistence.createQuery(Account.class).field("uuid").in(identifiers).asList();
+  }
+
+  @Override
   public Account getFromCache(String accountId) {
     return dbCache.get(Account.class, accountId);
   }
@@ -622,8 +628,9 @@ public class AccountServiceImpl implements AccountService {
     dbCache.invalidate(Account.class, accountId);
 
     final List<User> usersOfAccount = userService.getUsersOfAccount(accountId);
-    if (isNotEmpty(usersOfAccount)) {
-      executorService.submit(() -> usersOfAccount.forEach(user -> sendWelcomeEmail(user, techStacks)));
+    final User currentUser = UserThreadLocal.get();
+    if (isNotEmpty(usersOfAccount) && usersOfAccount.contains(currentUser)) {
+      executorService.submit(() -> sendWelcomeEmail(currentUser, techStacks));
     }
     eventPublishHelper.publishTechStackEvent(accountId, techStacks);
     return true;

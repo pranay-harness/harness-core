@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -15,6 +11,7 @@ shared_dependencies = [
     "//910-delegate-service-driver:module",
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
+    "//930-ng-core-clients:module",
     "//940-notification-client:module",
     "//950-ng-project-n-orgs:module",
     "//960-ng-core-beans:module",
@@ -108,7 +105,7 @@ shared_dependencies = [
     "@maven//:com_hazelcast_hazelcast",
     "@maven//:com_hubspot_jackson_jackson_datatype_protobuf",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_mashape_unirest_unirest_java",
     "@maven//:com_mchange_c3p0",
@@ -344,11 +341,11 @@ shared_dependencies = [
     "@maven//:software_amazon_ion_ion_java",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    main_class = "io.harness.notification.NotificationApplication",
+    #    main_class = "io.harness.notification.NotificationApplication",
     resources = [
         "//830-notification-service/src/main/resources:resource",
     ],
@@ -375,6 +372,7 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//830-notification-service/src/test/resources:resource",
@@ -398,13 +396,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = shared_dependencies + [
-        ":module",
-    ],
-)
 
 pmd()

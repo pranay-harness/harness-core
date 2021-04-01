@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -7,17 +8,21 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.ARMSourceType.GIT;
-import static software.wings.beans.ARMSourceType.TEMPLATE_BODY;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.azure.model.ARMResourceType;
+import io.harness.azure.model.ARMScopeType;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.EncryptedData;
-import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -28,9 +33,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -45,8 +50,6 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptionConfig;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -54,6 +57,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.ARMInfrastructureProvisioner;
+import software.wings.beans.ARMSourceType;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
@@ -130,7 +134,9 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(CDP)
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Slf4j
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
@@ -247,15 +253,68 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void validateARMProvisioner(ARMInfrastructureProvisioner provisioner) {
-    if (GIT == provisioner.getSourceType()) {
-      notNullCheck("Git File Config is NULL", provisioner.getGitFileConfig());
-    } else if (TEMPLATE_BODY == provisioner.getSourceType()) {
-      if (isEmpty(provisioner.getTemplateBody())) {
-        throw new InvalidRequestException("Template Body is empty");
-      }
-    } else {
-      throw new InvalidRequestException("Unrecognized SourceType for ARM provisioner");
+    validateARMProvisionerMandatoryFields(provisioner);
+
+    if (ARMResourceType.BLUEPRINT == provisioner.getResourceType()) {
+      validateBlueprintProvisioner(provisioner);
     }
+
+    if (ARMSourceType.GIT == provisioner.getSourceType()) {
+      validateARMGitSourceType(provisioner);
+    }
+
+    if (ARMSourceType.TEMPLATE_BODY == provisioner.getSourceType()) {
+      validateARMTemplateBodySourceType(provisioner);
+      repairARMProvisionerInlineParams(provisioner);
+    }
+  }
+
+  private void validateARMProvisionerMandatoryFields(ARMInfrastructureProvisioner provisioner) {
+    if (provisioner.getScopeType() == null) {
+      throw new InvalidRequestException("ScopeType for ARM provisioner cannot be null", USER);
+    }
+
+    if (provisioner.getResourceType() == null) {
+      throw new InvalidRequestException("ResourceType for ARM provisioner cannot be null", USER);
+    }
+
+    if (provisioner.getSourceType() == null) {
+      throw new InvalidRequestException("SourceType for ARM provisioner cannot be null", USER);
+    }
+  }
+
+  private void validateBlueprintProvisioner(ARMInfrastructureProvisioner provisioner) {
+    if (ARMSourceType.TEMPLATE_BODY == provisioner.getSourceType()) {
+      throw new InvalidRequestException("Template Body is not supported for Blueprint", USER);
+    }
+
+    if (ARMScopeType.TENANT == provisioner.getScopeType()) {
+      throw new InvalidRequestException("Tenant scope is not supported for Blueprint", USER);
+    }
+
+    if (ARMScopeType.RESOURCE_GROUP == provisioner.getScopeType()) {
+      throw new InvalidRequestException("ResourceGroup scope is not supported for Blueprint", USER);
+    }
+  }
+
+  private void validateARMGitSourceType(ARMInfrastructureProvisioner provisioner) {
+    gitFileConfigHelperService.validate(provisioner.getGitFileConfig());
+    if (isNotEmpty(provisioner.getTemplateBody())) {
+      throw new InvalidRequestException(
+          format("Template Body cannot be set for sourceType: %s", provisioner.getSourceType()), USER);
+    }
+  }
+
+  private void validateARMTemplateBodySourceType(ARMInfrastructureProvisioner provisioner) {
+    if (isEmpty(provisioner.getTemplateBody())) {
+      throw new InvalidRequestException(
+          format("Template Body cannot be empty or null for sourceType: %s", provisioner.getSourceType()), USER);
+    }
+  }
+
+  private void repairARMProvisionerInlineParams(ARMInfrastructureProvisioner provisioner) {
+    provisioner.setTemplateBody(trim(provisioner.getTemplateBody()));
+    provisioner.setGitFileConfig(null);
   }
 
   private void populateDerivedFields(InfrastructureProvisioner infrastructureProvisioner) {
@@ -909,7 +968,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId) {
+  public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(
+      List<NameValuePair> variables, String appId, String workflowExecutionId) {
     if (isEmpty(variables)) {
       return Collections.emptyMap();
     }
@@ -918,22 +978,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         .filter(entry -> entry.getValue() != null)
         .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> {
-          final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                                                  .filter(EncryptedDataKeys.accountId, accountId)
-                                                  .filter(EncryptedDataKeys.uuid, entry.getValue())
-                                                  .get();
+          Optional<EncryptedDataDetail> encryptedDataDetailOptional =
+              secretManager.encryptedDataDetails(accountId, null, entry.getValue(), workflowExecutionId);
 
-          if (encryptedData == null) {
-            throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
-          }
-
-          EncryptionConfig encryptionConfig =
-              secretManager.getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-
-          return EncryptedDataDetail.builder()
-              .encryptedData(SecretManager.buildRecordData(encryptedData))
-              .encryptionConfig(encryptionConfig)
-              .build();
+          return encryptedDataDetailOptional.orElseThrow(
+              ()
+                  -> new InvalidRequestException(
+                      format("The encrypted variable %s was not found", entry.getName()), USER));
         }));
   }
 

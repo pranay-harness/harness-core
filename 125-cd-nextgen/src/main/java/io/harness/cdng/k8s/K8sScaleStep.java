@@ -1,12 +1,12 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -14,25 +14,23 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
+@OwnedBy(PIPELINE)
+public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
 
@@ -43,13 +41,6 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sScaleStepParameter stepParameters, StepInputPackage inputPackage) {
-    ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
-    Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
-    K8sManifestOutcome k8sManifestOutcome =
-        k8sStepHelper.getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
-    StoreConfig storeConfig = k8sManifestOutcome.getStore();
-
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
@@ -74,7 +65,6 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
             .timeoutIntervalInMin(
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure).getTaskRequest();
@@ -82,28 +72,23 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sScaleStepParameter stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-    // do we need to include the newPods with instance details + summaries
-    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    stepResponseBuilder.unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+      Ambiance ambiance, K8sScaleStepParameter stepParameters, Supplier<K8sDeployResponse> responseSupplier) {
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
+      // do we need to include the newPods with instance details + summaries
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return stepResponseBuilder.status(Status.SUCCEEDED).build();
-    } else {
-      stepResponseBuilder.status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                           .build());
-      if (stepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+            .build();
       }
-      return stepResponseBuilder.build();
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (ErrorDataException ex) {
+      return K8sStepHelper
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
+          .build();
     }
   }
 

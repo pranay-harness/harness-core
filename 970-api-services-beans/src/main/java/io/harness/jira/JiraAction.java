@@ -1,5 +1,10 @@
 package io.harness.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC)
 public enum JiraAction {
   CREATE_TICKET("Create Ticket"),
   UPDATE_TICKET("Update Ticket"),
@@ -11,9 +16,10 @@ public enum JiraAction {
   GET_CREATE_METADATA("Get Create Metadata"),
 
   FETCH_ISSUE("Fetch Issue"),
+  FETCH_ISSUE_DATA("Fetch Issue Details"),
   CHECK_APPROVAL("Check Jira Approval");
 
-  private String displayName;
+  private final String displayName;
 
   JiraAction(String s) {
     displayName = s;

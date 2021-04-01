@@ -58,7 +58,7 @@ mkdir -p dist/verification-service ;
 
 cd dist/verification-service
 
-cp ../../270-verification/target/verification-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/270-verification/module_deploy.jar verification-capsule.jar
 cp ../../270-verification/keystore.jks .
 cp ../../270-verification/verification-config.yml .
 
@@ -126,6 +126,21 @@ then
 fi
 cd ../..
 
+mkdir -p dist/change-data-capture ;
+cd dist/change-data-capture
+cp ${HOME}/.bazel-dirs/bin/110-change-data-capture/module_deploy.jar change-data-capture.jar
+cp ../../110-change-data-capture/config.yml .
+cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-openjdk Dockerfile
+cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-gcr-openjdk Dockerfile-gcr
+cp -r ../../dockerization/change-data-capture/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 MODULE_NAME="340-ce-nextgen";
 FOLDER_NAME="ce-nextgen";
 mkdir -p dist/${FOLDER_NAME} ;
@@ -146,6 +161,7 @@ cd ../..
 
 mkdir -p dist/delegate
 cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
@@ -232,17 +248,17 @@ fi
 
 cd ../..
 
-mkdir -p dist/notification-service
-cd dist/notification-service
+mkdir -p dist/platform-service
+cd dist/platform-service
 
-cp ${HOME}/.bazel-dirs/bin/830-notification-service/module_deploy.jar notification-service-capsule.jar
-cp ../../830-notification-service/config.yml .
-cp ../../830-notification-service/keystore.jks .
-cp ../../830-notification-service/key.pem .
-cp ../../830-notification-service/cert.pem .
-cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-openjdk ./Dockerfile
-cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/notification-service/scripts/ .
+cp ${HOME}/.bazel-dirs/bin/820-platform-service/module_deploy.jar platform-service-capsule.jar
+cp ../../820-platform-service/config.yml .
+cp ../../820-platform-service/keystore.jks .
+cp ../../820-platform-service/key.pem .
+cp ../../820-platform-service/cert.pem .
+cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/platform-service/scripts/ .
 
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt

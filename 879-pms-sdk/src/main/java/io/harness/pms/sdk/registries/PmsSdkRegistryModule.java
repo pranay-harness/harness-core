@@ -9,8 +9,6 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.expression.OrchestrationFieldProcessor;
-import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -18,10 +16,8 @@ import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 import io.harness.pms.sdk.core.registries.ResolverRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.Step;
@@ -61,8 +57,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   public void configure() {
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
-
-    MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
   }
 
   @Provides
@@ -136,19 +130,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
       });
     }
     return handlerRegistry;
-  }
-
-  @Provides
-  @Singleton
-  OrchestrationFieldRegistry providesOrchestrationFieldRegistry(
-      Injector injector, Map<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMap) {
-    Set<Pair<OrchestrationFieldType, OrchestrationFieldProcessor>> classes = new HashSet<>();
-    orchestrationFieldRegistrarMap.values().forEach(
-        orchestrationFieldRegistrar -> orchestrationFieldRegistrar.register(classes));
-    OrchestrationFieldRegistry orchestrationFieldRegistry = new OrchestrationFieldRegistry();
-    injector.injectMembers(orchestrationFieldRegistry);
-    classes.forEach(pair -> orchestrationFieldRegistry.register(pair.getLeft(), pair.getRight()));
-    return orchestrationFieldRegistry;
   }
 
   private void mergeEventHandlers(

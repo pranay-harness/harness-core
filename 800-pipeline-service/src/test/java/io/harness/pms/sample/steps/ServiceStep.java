@@ -1,5 +1,8 @@
 package io.harness.pms.sample.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -13,6 +16,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class ServiceStep implements SyncExecutable<MapStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("service").build();
 

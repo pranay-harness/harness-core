@@ -1,14 +1,14 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
+load("//:build-properties.bzl", "build_fullVersion")
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
+] + [
     "//400-rest:module",
     "//420-delegate-agent:module",
     "//420-delegate-service:module",
@@ -47,7 +47,6 @@ shared_dependencies = [
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
-    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
@@ -171,12 +170,12 @@ shared_dependencies = [
     "@maven//:com_google_cloud_google_cloud_logging",
     "@maven//:com_google_cloud_google_cloud_pubsub",
     "@maven//:com_google_cloud_google_cloud_resourcemanager",
+    "@maven//:com_amazonaws_aws_java_sdk_codecommit",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:com_google_code_findbugs_jsr305",
     "@maven//:com_google_code_gson_gson",
     "@maven//:com_google_errorprone_error_prone_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_http_client_google_http_client",
     "@maven//:com_google_http_client_google_http_client_appengine",
     "@maven//:com_google_http_client_google_http_client_jackson",
@@ -203,7 +202,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_mashape_unirest_unirest_java",
     "@maven//:com_mchange_c3p0",
@@ -255,9 +254,6 @@ shared_dependencies = [
     "@maven//:com_segment_backo_backo",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_splunk_splunk",
-    "@maven//:com_squareup_okhttp3_logging_interceptor",
-    "@maven//:com_squareup_okhttp3_okhttp",
-    "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
     "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
     "@maven//:com_squareup_retrofit2_converter_gson",
@@ -675,9 +671,13 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_library(
+java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    deploy_manifest_lines = [
+        "Application-Version: version=" + build_fullVersion,
+    ],
+    main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",
     ],
@@ -685,16 +685,23 @@ java_library(
     deps = shared_dependencies,
 )
 
-java_binary(
-    name = "delegate",
-    main_class = "io.harness.delegate.app.DelegateApplication",
-    runtime_deps = [
-        ":module",
-    ],
-)
+test_dependencies = [
+    "@delegate//:com_squareup_okhttp3_okhttp",
+] + [
+    "//400-rest:supporter-test",
+    "//955-alert-beans:module",
+    "//990-commons-test:module",
+    "@maven//:com_icegreen_greenmail",
+    "@maven//:com_openpojo_openpojo",
+    "@maven//:io_github_benas_random_beans",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+    "@maven//:pl_pragmatists_JUnitParams",
+]
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(
         ["src/test/**/*.java"],
     ),
@@ -717,25 +724,9 @@ java_library(
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = [
+    deps = test_dependencies +
+           shared_dependencies + [
         ":module",
-        "//:lombok",
-        "//400-rest:supporter-test",
-        "//990-commons-test:module",
-        "@maven//:com_bertramlabs_plugins_hcl4j",
-        "@maven//:com_github_tomakehurst_wiremock",
-        "@maven//:com_github_tomakehurst_wiremock_standalone",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_icegreen_greenmail",
-        "@maven//:com_openpojo_openpojo",
-        "@maven//:io_github_benas_random_beans",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
-        "@maven//:org_mockito_mockito_core",
-        "@maven//:org_powermock_powermock_module_junit4",
-        "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
 

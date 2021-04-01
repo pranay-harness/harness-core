@@ -1,8 +1,10 @@
 package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class EntityActivityStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
@@ -41,7 +44,7 @@ public class EntityActivityStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
     }
-    SecurityContextBuilder.unsetContext();
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {

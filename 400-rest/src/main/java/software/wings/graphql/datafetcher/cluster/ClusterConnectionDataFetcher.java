@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.cluster;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -23,7 +26,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class ClusterConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLClusterFilter, QLNoOpSortCriteria, QLClusterConnection> {
   @Override

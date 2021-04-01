@@ -87,6 +87,7 @@ enum ceEntityGroupBy {
   Task
   LaunchType
   Workload
+  WorkloadType
   Namespace
   Node
   Pod
@@ -162,6 +163,7 @@ type BillingDataEntry {
 
 type ceK8sEntity {
   workload: String
+  workloadType: String
   namespace: String
   node: String
   pod: String

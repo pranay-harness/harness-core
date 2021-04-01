@@ -1,16 +1,21 @@
 import .bazelproject-config
 
 directories:
+  .aeriform
+  110-change-data-capture
   120-ng-manager
   125-cd-nextgen
   130-resource-group
   136-git-sync-manager
   160-model-gen-tool
+  190-deployment-functional-tests
+  160-stress-tester
   210-command-library-server
   220-graphql-test
   230-model-test
   250-watcher
   260-delegate
+  270-verification
   280-batch-processing
   300-cv-nextgen
   310-ci-manager
@@ -19,7 +24,10 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  370-users-syncbridge
+  375-ce-graphql
   380-cg-graphql
+  390-db-migration
   400-rest
   420-delegate-agent
   420-delegate-service
@@ -28,29 +36,36 @@ directories:
   450-ce-views
   460-capability
   470-alert
-  480-alert-beans
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
+  820-platform-service
   830-notification-service
   835-notification-senders
   850-execution-plan
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
+  870-cg-yaml-beans
+  870-cg-orchestration
   870-orchestration
   870-yaml-beans
+  874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
   879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
+  888-pms-client
   890-pms-contracts
   890-sm-core
   900-access-control-service
+  902-aggregator-module
   903-decision-module
   905-access-control-core
-  909-access-control-sdk
+  908-access-control-admin-client
+  908-access-control-sdk
+  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -58,24 +73,33 @@ directories:
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
+  955-alert-beans
   955-delegate-beans
   940-feature-flag
+  940-ng-audit-service
   940-notification-client
   940-resource-group-beans
   940-secret-manager-client
+  945-ng-audit-client
+  949-git-sync-sdk
   950-command-library-common
+  950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
   950-events-framework
-  950-git-sync-sdk
+  950-ng-audit-commons
   950-ng-core
   950-ng-project-n-orgs
+  950-ng-signup
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
+  953-git-sync-commons
+  952-scm-java-client
   954-connector-beans
   955-filters-sdk
+  955-outbox-sdk
   955-setup-usage-sdk
   960-api-services
   960-continuous-features
@@ -92,21 +116,27 @@ directories:
   980-commons
   990-commons-test
   run-configurations
+  200-functional-test
   tools
+  toolset
   scripts
+  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
-  run-configurations/DataGen_App.xml
+  run-configurations/DataGenApp.xml
   run-configurations/DelegateApp.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
-  run-configurations/NextGen_Manager.xml
-  run-configurations/Notification Client.xml
-  run-configurations/Notification Microservice.xml
+  run-configurations/NextGenManager.xml
+  run-configurations/NotificationClient.xml
+  run-configurations/PlatformMicroservice.xml
+  run-configurations/VerificationServiceApp.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml

@@ -1,16 +1,22 @@
 package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ACCOUNT;
+import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
+import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.beans.SortOrder;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -21,16 +27,20 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.spring.ResourceGroupRepository;
-import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
+import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
+import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupBuilder;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
+import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
@@ -41,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,11 +70,13 @@ import org.springframework.data.mongodb.core.query.Update;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class ResourceGroupServiceImpl implements ResourceGroupService {
+  private static final String DEFAULT_COLOR = "#0063F7";
   ResourceGroupValidatorService staticResourceGroupValidatorService;
   ResourceGroupValidatorService dynamicResourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
   Producer eventProducer;
   Map<String, ResourceValidator> resourceValidators;
+  AccessControlAdminClient accessControlAdminClient;
 
   @Inject
   public ResourceGroupServiceImpl(
@@ -71,22 +84,30 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       @Named("DynamicResourceValidator") ResourceGroupValidatorService dynamicResourceGroupValidatorService,
       @Named("resourceValidatorMap") Map<String, ResourceValidator> resourceValidators,
       ResourceGroupRepository resourceGroupRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      AccessControlAdminClient accessControlAdminClient) {
     this.staticResourceGroupValidatorService = staticResourceGroupValidatorService;
     this.dynamicResourceGroupValidatorService = dynamicResourceGroupValidatorService;
     this.resourceValidators = resourceValidators;
     this.resourceGroupRepository = resourceGroupRepository;
     this.eventProducer = eventProducer;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
   public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    ResourceGroup createdResourceGroup = create(resourceGroup);
+    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
+  }
+
+  private ResourceGroup create(ResourceGroup resourceGroup) {
+    preprocessResourceGroup(resourceGroup);
     if (validate(resourceGroup)) {
       try {
         ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
         publishEvent(resourceGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
-        return ResourceGroupMapper.toResponseWrapper(savedResourceGroup);
+        return savedResourceGroup;
       } catch (DuplicateKeyException ex) {
         throw new DuplicateFieldException(
             String.format("A resource group with identifier %s already exists at the specified scope",
@@ -154,6 +175,10 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
+    if (TRUE.equals(resourceGroup.getFullScopeSelected()) && isNotEmpty(resourceGroup.getResourceSelectors())) {
+      return false;
+    }
+
     boolean isValid = staticResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     isValid = isValid && dynamicResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     return isValid;
@@ -167,6 +192,17 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                 identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     if (resourceGroupOpt.isPresent()) {
       ResourceGroup resourceGroup = resourceGroupOpt.get();
+      RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+          RoleAssignmentFilterDTO.builder()
+              .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
+              .build();
+      PageResponse<RoleAssignmentResponseDTO> pageResponse =
+          NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
+              accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
+      if (pageResponse.getPageItemCount() > 0) {
+        throw new InvalidRequestException(
+            "There exists role assignments with this resource group. Please delete them first and then try again");
+      }
       resourceGroup.setDeleted(true);
       resourceGroupRepository.save(resourceGroup);
       publishEvent(resourceGroupOpt.get(), EventsFrameworkMetadataConstants.DELETE_ACTION);
@@ -198,6 +234,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (resourceGroup.getHarnessManaged().equals(TRUE)) {
       return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
     }
+    resourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
     Optional<ResourceGroup> resourceGroupOpt =
         resourceGroupRepository
             .findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
@@ -212,6 +249,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     savedResourceGroup.setTags(resourceGroup.getTags());
     savedResourceGroup.setDescription(resourceGroup.getDescription());
     if (validate(resourceGroup)) {
+      savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
       savedResourceGroup.setResourceSelectors(resourceGroup.getResourceSelectors());
     }
     resourceGroup = resourceGroupRepository.save(savedResourceGroup);
@@ -233,8 +271,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
             .stream()
             .filter(StaticResourceSelector.class ::isInstance)
             .map(StaticResourceSelector.class ::cast)
-            .collect(groupingBy(
-                StaticResourceSelector::getResourceType, mapping(StaticResourceSelector::getIdentifier, toList())));
+            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers));
     staticResourceSelectors.forEach((resourceType, value) -> {
       if (resourceValidators.containsKey(resourceType)) {
         value.forEach(resourceId -> {
@@ -261,15 +298,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   private Update getUpdateForResourceDeleteEvent(ResourcePrimaryKey resourcePrimaryKey) {
     String resourceType = resourcePrimaryKey.getResourceType();
     Update update = new Update();
-    if (resourceType.equals(ResourceGroupConstants.ACCOUNT) || resourceType.equals(ResourceGroupConstants.ORGANIZATION)
-        || resourceType.equals(ResourceGroupConstants.PROJECT)) {
+    if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {
       update = update.set(ResourceGroupKeys.deleted, true);
     } else {
-      update = update.pull(ResourceGroupKeys.resourceSelectors,
-          StaticResourceSelector.builder()
-              .identifier(resourcePrimaryKey.getResourceIdetifier())
-              .resourceType(resourcePrimaryKey.getResourceType())
-              .build());
+      update = update.pull(ResourceGroupKeys.resourceSelectors + ".$." + StaticResourceSelectorKeys.identifiers,
+          resourcePrimaryKey.getResourceIdetifier());
+      log.info("{}", update);
     }
     return update;
   }
@@ -285,17 +319,98 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
     }
     if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-      criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
+      criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
     }
 
-    if (resourceType.equals(ResourceGroupConstants.ACCOUNT) || resourceType.equals(ResourceGroupConstants.ORGANIZATION)
-        || resourceType.equals(ResourceGroupConstants.PROJECT)) {
+    if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {
       return criteria;
     }
     criteria.and(ResourceGroupKeys.resourceSelectors + "." + StaticResourceSelectorKeys.resourceType)
         .is(resourcePrimaryKey.getResourceType())
-        .and(ResourceGroupKeys.resourceSelectors + "." + StaticResourceSelectorKeys.identifier)
+        .and(ResourceGroupKeys.resourceSelectors + "." + StaticResourceSelectorKeys.identifiers)
         .is(resourcePrimaryKey.getResourceIdetifier());
     return criteria;
+  }
+
+  public boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey) {
+    String resourceType = resourcePrimaryKey.getResourceType();
+    if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
+      String description = String.format("All the resources in this %s are included in this resource group.",
+          StringUtils.capitalize(resourcePrimaryKey.getResourceType().toLowerCase()));
+
+      ResourceGroupBuilder resourceGroupBuilder = ResourceGroup.builder()
+                                                      .accountIdentifier(resourcePrimaryKey.getAccountIdentifier())
+                                                      .orgIdentifier(resourcePrimaryKey.getOrgIdentifier())
+                                                      .projectIdentifier(resourcePrimaryKey.getProjectIdentifer())
+                                                      .name(resourcePrimaryKey.getResourceIdetifier())
+                                                      .description(description)
+                                                      .harnessManaged(true)
+                                                      .fullScopeSelected(true);
+      String resourceGroupIdentifier = String.format("_%s", resourcePrimaryKey.getResourceIdetifier());
+      boolean created = false;
+      int counter = 1;
+      do {
+        ResourceGroup resourceGroup = resourceGroupBuilder.identifier(resourceGroupIdentifier).build();
+        try {
+          create(resourceGroup);
+          created = true;
+        } catch (DuplicateFieldException e) {
+          log.info("Identifier {} for default resource group already taken", resourceGroupIdentifier);
+        } catch (Exception e) {
+          log.info("Failed to create default resource groups", e);
+          break;
+        }
+        resourceGroupIdentifier = String.format("_%s_%d", resourcePrimaryKey.getResourceIdetifier(), counter++);
+      } while (!created);
+      return created;
+    }
+    return true;
+  }
+
+  void preprocessResourceGroup(ResourceGroup resourceGroup) {
+    resourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
+    if (isBlank(resourceGroup.getColor())) {
+      resourceGroup.setColor(DEFAULT_COLOR);
+    }
+  }
+
+  private static List<ResourceSelector> collectResourceSelectors(List<ResourceSelector> resourceSelectors) {
+    Map<String, List<String>> resources =
+        resourceSelectors.stream()
+            .filter(StaticResourceSelector.class ::isInstance)
+            .map(StaticResourceSelector.class ::cast)
+            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers));
+    List<ResourceSelector> condensedResourceSelectors = new ArrayList<>();
+    resources.forEach(
+        (k, v)
+            -> condensedResourceSelectors.add(StaticResourceSelector.builder().resourceType(k).identifiers(v).build()));
+    resourceSelectors.stream()
+        .filter(DynamicResourceSelector.class ::isInstance)
+        .map(DynamicResourceSelector.class ::cast)
+        .distinct()
+        .forEach(condensedResourceSelectors::add);
+    return condensedResourceSelectors;
+  }
+
+  public boolean restoreResourceGroupsUnderHierarchy(ResourcePrimaryKey resourcePrimaryKey) {
+    String entityType = resourcePrimaryKey.getResourceType();
+    boolean resourceHierarchyChanged =
+        entityType.equals(ACCOUNT) || entityType.equals(ORGANIZATION) || entityType.equals(PROJECT);
+    if (resourceHierarchyChanged) {
+      Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
+                              .is(resourcePrimaryKey.getAccountIdentifier())
+                              .and(ResourceGroupKeys.deleted)
+                              .is(true);
+
+      if (isNotBlank(resourcePrimaryKey.getOrgIdentifier())) {
+        criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
+      }
+      if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
+        criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
+      }
+      Update update = new Update().set(ResourceGroupKeys.deleted, false);
+      return resourceGroupRepository.update(criteria, update);
+    }
+    return true;
   }
 }

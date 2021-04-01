@@ -239,6 +239,8 @@ public enum SettingVariableTypes {
 
   VAULT,
 
+  VAULT_SSH,
+
   AWS_SECRETS_MANAGER,
 
   CYBERARK,

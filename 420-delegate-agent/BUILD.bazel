@@ -2,11 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "//890-sm-core:module",
@@ -14,6 +10,7 @@ shared_dependencies = [
     "//920-delegate-agent-beans:module",
     "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
+    "//950-log-client:module",
     "//970-ng-commons:module",
     "//980-commons:module",
     "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -27,50 +24,36 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-#java_package(
-#    index = 3,
-#    package = "io.harness.logstreaming",
-#    deps = shared_dependencies,
-#)
-#
-#java_package(
-#    index = 3,
-#    package = "io.harness.perpetualtask",
-#    deps = shared_dependencies,
-#)
-#
-#java_package(
-#    index = 2,
-#    package = "io.harness.delegate",
-#    deps = shared_dependencies,
-#)
-#
-#java_package(
-#    index = 1,
-#    package = "io.harness.managerclient",
-#    deps = shared_dependencies + [":2-io_harness_delegate"],
-#)
+java_package(
+    index = 3,
+    package = "io.harness.perpetualtask",
+    deps = shared_dependencies,
+)
+
+java_package(
+    index = 2,
+    package = "io.harness.delegate",
+    deps = shared_dependencies,
+)
+
+java_package(
+    index = 1,
+    package = "io.harness.managerclient",
+    deps = shared_dependencies + [":2-io_harness_delegate"],
+)
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_dependencies,  # + [
+    deps = shared_dependencies,
+    #    + [
     #        ":1-io_harness_managerclient",
     #        ":2-io_harness_delegate",
-    #        ":3-io_harness_logstreaming",
     #        ":3-io_harness_perpetualtask",
     #    ],
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = shared_dependencies + [
-        ":module",
-    ],
-)
 
 pmd()

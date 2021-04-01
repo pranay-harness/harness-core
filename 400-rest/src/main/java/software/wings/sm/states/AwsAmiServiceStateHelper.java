@@ -1,12 +1,14 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -36,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class AwsAmiServiceStateHelper {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private SettingsService settingsService;

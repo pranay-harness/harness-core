@@ -242,6 +242,8 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
 
 timescaledb:
   timescaledbUrl: ""
@@ -252,3 +254,4 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
   instanceDataRetentionDays: 210
+  isHealthCheckNeeded: false

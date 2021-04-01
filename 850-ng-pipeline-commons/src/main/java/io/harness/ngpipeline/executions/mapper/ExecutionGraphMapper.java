@@ -1,5 +1,8 @@
 package io.harness.ngpipeline.executions.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
@@ -14,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
 
+@OwnedBy(CDC)
 public class ExecutionGraphMapper {
   private ExecutionGraphMapper() {}
 
@@ -40,6 +44,7 @@ public class ExecutionGraphMapper {
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
         .skipInfo(graphVertex.getSkipInfo())
+        .nodeRunInfo(graphVertex.getNodeRunInfo())
         .name(graphVertex.getName())
         .startTs(graphVertex.getStartTs())
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
@@ -47,6 +52,7 @@ public class ExecutionGraphMapper {
         .uuid(graphVertex.getUuid())
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
+        .setupId(graphVertex.getPlanNodeId())
         .build();
   }
 

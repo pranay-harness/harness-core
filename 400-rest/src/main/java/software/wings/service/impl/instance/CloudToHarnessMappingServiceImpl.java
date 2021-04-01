@@ -14,9 +14,10 @@ import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
-import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HIterator;
@@ -42,7 +43,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.security.UserGroup;
@@ -250,7 +250,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                  .filter(SettingAttributeKeys.category, category)
                                  .filter(SettingAttributeKeys.value_type, valueType)
                                  .fetch())) {
-      log.info("Fetching settingAttributes query: ", query.toString());
+      log.info("Fetching settingAttributes query: {}", query.toString());
       for (SettingAttribute settingAttribute : query) {
         settingAttributes.add(settingAttribute);
       }
@@ -272,6 +272,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                  .field(SettingAttributeKeys.createdAt)
                                  .lessThan(endTime)
                                  .fetch())) {
+      log.info("Fetching settingAttributes query: {}", query.toString());
       for (SettingAttribute settingAttribute : query) {
         settingAttributes.add(settingAttribute);
       }

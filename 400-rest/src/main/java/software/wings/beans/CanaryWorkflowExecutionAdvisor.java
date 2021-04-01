@@ -1,14 +1,16 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.LOG_APP_DEFAULTS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
 
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
@@ -27,14 +29,17 @@ import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPA
 import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.api.PhaseElement;
@@ -75,18 +80,23 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rishi on 1/24/17.
  */
+@OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
   public static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
   public static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
+  private static final String DEBUG_APP_DEFAULTS = "DEBUG_APP_DEFAULTS";
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
   @Inject @Transient private transient WorkflowService workflowService;
 
   @Inject @Transient private transient WorkflowNotificationHelper workflowNotificationHelper;
+
+  @Inject @Transient private transient WorkflowServiceHelper workflowServiceHelper;
 
   @Inject @Transient private transient ExecutionInterruptManager executionInterruptManager;
 
@@ -95,8 +105,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Transient private transient StateExecutionService stateExecutionService;
-
-  @Inject @Transient private transient WorkflowServiceHelper workflowServiceHelper;
 
   @Inject @Transient private transient FeatureFlagService featureFlagService;
 
@@ -237,7 +245,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       } else if (executionEvent.getExecutionStatus() == STARTING) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
-        return shouldSkipStep(context, phaseStep, state);
+        return shouldSkipStep(context, phaseStep, state, featureFlagService);
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
         return null;
       }
@@ -298,20 +306,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
 
         if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
-          FailureStrategy failureStrategy = selectTopMatchingStrategy(
-              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName(), phaseElement);
+          FailureStrategy failureStrategy = selectTopMatchingStrategy(phaseStep.getFailureStrategies(),
+              executionEvent.getFailureTypes(), state.getName(), phaseElement, FailureStrategyLevel.STEP);
 
           if (failureStrategy == null) {
-            failureStrategy = selectTopMatchingStrategy(
-                workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
+            failureStrategy = selectTopMatchingStrategy(workflowFailureStrategies, executionEvent.getFailureTypes(),
+                state.getName(), phaseElement, FailureStrategyLevel.WORKFLOW);
           }
           return computeExecutionEventAdvice(
               orchestrationWorkflow, failureStrategy, executionEvent, null, stateExecutionInstance);
         }
       }
 
-      FailureStrategy failureStrategy = selectTopMatchingStrategy(
-          workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
+      FailureStrategy failureStrategy = selectTopMatchingStrategy(workflowFailureStrategies,
+          executionEvent.getFailureTypes(), state.getName(), phaseElement, FailureStrategyLevel.WORKFLOW);
 
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
@@ -392,7 +400,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   @VisibleForTesting
-  public static ExecutionEventAdvice shouldSkipStep(ExecutionContextImpl context, PhaseStep phaseStep, State state) {
+  public static ExecutionEventAdvice shouldSkipStep(
+      ExecutionContextImpl context, PhaseStep phaseStep, State state, FeatureFlagService featureFlagService) {
     if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
       return null;
     }
@@ -405,6 +414,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       try {
+        logAppDefaults(context, featureFlagService);
         context.renderExpression(assertionExpression);
         Object resultObj = context.evaluateExpression(assertionExpression);
         if (!(resultObj instanceof Boolean)) {
@@ -430,6 +440,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     return null;
+  }
+
+  private static void logAppDefaults(ExecutionContextImpl context, FeatureFlagService featureFlagService) {
+    if (featureFlagService.isEnabled(LOG_APP_DEFAULTS, context.getAccountId())) {
+      Application app = context.getApp();
+      if (app != null) {
+        Map<String, String> appDefaults = app.getDefaults();
+        if (isEmpty(appDefaults)) {
+          log.info(DEBUG_APP_DEFAULTS + " - There no defaults found");
+        } else {
+          log.info(DEBUG_APP_DEFAULTS + " : " + appDefaults);
+        }
+      }
+    }
   }
 
   private static String processErrorMessage(String assertionExpression, Exception ex) {
@@ -721,7 +745,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null
         && preDeploymentSteps.getSteps().stream().anyMatch(step
             -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
-                || step.getType().equals(StateType.TERRAFORM_PROVISION.getType()))) {
+                || step.getType().equals(StateType.TERRAFORM_PROVISION.getType())
+                || step.getType().equals(StateType.ARM_CREATE_RESOURCE.getType()))) {
       return anExecutionEventAdvice()
           .withNextStateName(ROLLBACK_PROVISIONERS)
           .withExecutionInterruptType(ROLLBACK)
@@ -770,9 +795,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   public static FailureStrategy selectTopMatchingStrategy(List<FailureStrategy> failureStrategies,
-      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement, FailureStrategyLevel level) {
     final FailureStrategy failureStrategy =
-        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName, phaseElement);
+        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName, phaseElement, level);
 
     if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
       log.error("Defaulting to accepting the action. "
@@ -784,7 +809,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   private static FailureStrategy selectTopMatchingStrategyInternal(List<FailureStrategy> failureStrategies,
-      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement, FailureStrategyLevel level) {
     if (isEmpty(failureStrategies)) {
       return null;
     }
@@ -814,6 +839,19 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
+    if (isTimeoutFailure(level, failureTypes)) {
+      Optional<FailureStrategy> timeoutStrategy =
+          filteredFailureStrategies.stream()
+              .filter(failureStrategy -> isNotEmpty(failureStrategy.getFailureTypes()))
+              .filter(failureStrategy -> failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR))
+              .findFirst();
+      if (timeoutStrategy.isPresent()) {
+        return timeoutStrategy.get();
+      }
+    } else {
+      filteredFailureStrategies = filterOutExplicitTimeoutStrategies(filteredFailureStrategies);
+    }
+
     Optional<FailureStrategy> rollbackStrategy =
         filteredFailureStrategies.stream()
             .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
@@ -831,13 +869,57 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get();
     }
 
-    FailureStrategy failureStrategy = filteredFailureStrategies.get(0);
-
-    // If scope is WORKFLOW_PHASE and step is not within the Phase the strategy will not be applied
-    if (failureStrategy.getExecutionScope() == ExecutionScope.WORKFLOW_PHASE && phaseElement == null) {
-      return null;
+    if (level == FailureStrategyLevel.WORKFLOW) {
+      return getResolveWorkflowLevelFailureStrategy(filteredFailureStrategies, phaseElement);
     } else {
-      return failureStrategy;
+      return filteredFailureStrategies.get(0);
     }
+  }
+
+  private static List<FailureStrategy> filterOutExplicitTimeoutStrategies(
+      List<FailureStrategy> filteredFailureStrategies) {
+    return filteredFailureStrategies.stream()
+        .filter(failureStrategy
+            -> !(isNotEmpty(failureStrategy.getFailureTypes()) && failureStrategy.getFailureTypes().size() == 1
+                && failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR)))
+        .collect(toList());
+  }
+
+  private static boolean isTimeoutFailure(FailureStrategyLevel level, EnumSet<FailureType> failureTypes) {
+    return level == FailureStrategyLevel.STEP && isNotEmpty(failureTypes)
+        && failureTypes.contains(FailureType.TIMEOUT_ERROR);
+  }
+
+  private static FailureStrategy getResolveWorkflowLevelFailureStrategy(
+      List<FailureStrategy> filteredFailureStrategies, PhaseElement phaseElement) {
+    FailureStrategy workflowFailureStrategy =
+        getWorkflowFailureStrategyByScope(filteredFailureStrategies, ExecutionScope.WORKFLOW);
+    FailureStrategy workflowPhaseFailureStrategy =
+        getWorkflowFailureStrategyByScope(filteredFailureStrategies, ExecutionScope.WORKFLOW_PHASE);
+
+    // Check if step is within the WF Phase and apply correct strategy
+    if (phaseElement != null) {
+      if (workflowPhaseFailureStrategy != null) {
+        return workflowPhaseFailureStrategy;
+      } else if (workflowFailureStrategy != null) {
+        return workflowFailureStrategy;
+      } else {
+        return null;
+      }
+    } else {
+      if (workflowFailureStrategy != null) {
+        return workflowFailureStrategy;
+      } else {
+        return null;
+      }
+    }
+  }
+
+  private static FailureStrategy getWorkflowFailureStrategyByScope(
+      List<FailureStrategy> filteredFailureStrategies, ExecutionScope scope) {
+    return filteredFailureStrategies.stream()
+        .filter(strategy -> strategy.getExecutionScope() == scope)
+        .findFirst()
+        .orElse(null);
   }
 }

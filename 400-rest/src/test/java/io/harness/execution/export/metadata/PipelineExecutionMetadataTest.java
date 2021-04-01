@@ -22,7 +22,7 @@ public class PipelineExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testAccept() {
-    MetadataTestUtils.SimpleVisitor simpleVisitor = new MetadataTestUtils.SimpleVisitor();
+    SimpleVisitor simpleVisitor = new SimpleVisitor();
     PipelineExecutionMetadata.builder()
         .stages(asList(PipelineStageExecutionMetadata.builder()
                            .workflowExecution(WorkflowExecutionMetadata.builder()

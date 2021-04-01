@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.pipeline.variables;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class GenericStepVariableCreator extends ChildrenVariableCreator {
@@ -84,15 +86,6 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     });
   }
 
-  protected void addVariablesForStepSpec(YamlField specField, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlField> fields = specField.getNode().fields();
-    fields.forEach(field -> {
-      if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
-      }
-    });
-  }
-
   @Override
   public LinkedHashMap<String, VariableCreationResponse> createVariablesForChildrenNodes(
       VariableCreationContext ctx, YamlField config) {
@@ -101,8 +94,40 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
 
   protected void addFieldToPropertiesMapUnderStep(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
     String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.STEPS);
+    String localName = removeExecutionPrefix(
+        YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.EXECUTION));
+
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+  }
+
+  private String removeExecutionPrefix(String name) {
+    String[] split = name.split("\\.");
+    String[] res = new String[split.length - 1];
+    if (split.length - 1 >= 0) {
+      System.arraycopy(split, 1, res, 0, split.length - 1);
+    }
+    return String.join(".", res);
+  }
+
+  protected void addVariablesForVariables(YamlField variablesField, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> variableNodes = variablesField.getNode().asArray();
+    variableNodes.forEach(variableNode -> {
+      YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
+      if (uuidNode != null) {
+        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
+        String localName = removeExecutionPrefix(
+            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION));
+        YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
+        String variableName =
+            Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
+        if (valueNode == null) {
+          throw new InvalidRequestException(
+              "Variable with name \"" + variableName + "\" added without any value. Fqn: " + fqn);
+        }
+        yamlPropertiesMap.put(valueNode.getNode().getCurrJsonNode().textValue(),
+            YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+      }
+    });
   }
 }

@@ -1,10 +1,9 @@
 package io.harness.functional.redesign.engine;
 
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,9 +20,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.interrupts.InterruptType;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.redesign.states.http.BasicHttpStep;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.testframework.framework.MockServerExecutor;
@@ -135,7 +132,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
 
@@ -159,11 +156,12 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
+  @Ignore("Change in abort helper to handle if no node of finalizable status is found.")
   public void shouldExecuteHttpRetryAbortPlan() {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(ABORTED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(3);
 
@@ -185,125 +183,9 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
-  @Category(FunctionalTests.class)
-  @Ignore("Fix after orchestration fields are supported")
-  public void shouldExecuteSimpleShellScriptPlan() {
-    PlanExecution shellScriptResponse = testSetupHelper.executePlan(
-        bearerToken, application.getAccountId(), application.getAppId(), "simple-shell-script");
-
-    assertThat(shellScriptResponse.getStatus()).isEqualTo(SUCCEEDED);
-
-    List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(shellScriptResponse.getUuid());
-    assertThat(nodeExecutions).isNotNull();
-
-    String shellScript11 = fetchShellScriptLogs(nodeExecutions, "shell11");
-    String shellScript12 = fetchShellScriptLogs(nodeExecutions, "shell12");
-    String shellScript2 = fetchShellScriptLogs(nodeExecutions, "shell2");
-
-    String expectedShellScript11 = "echo 'Hello, world, from script 11!'\n"
-        + "export HELLO='hello1!'\n"
-        + "export HI='hi1!'\n"
-        + "echo \"scriptType = BASH\"\n"
-        + "echo \"sweepingOutputScope = SECTION\"\n";
-    assertThat(shellScript11).isEqualTo(expectedShellScript11);
-
-    String expectedShellScript12 = "echo 'Hello, world, from script 12!'\n"
-        + "export HELLO='hello2!'\n"
-        + "export HI='hi2!'\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"scriptType = BASH\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section1.f2 = v12\"\n"
-        + "echo \"sectionChild.f1 = v111\"\n"
-        + "echo \"sectionChild.f1 = v111\"\n"
-        + "echo \"sectionChild.f2 = v112\"\n"
-        + "echo \"sectionChild.f2 = v112\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"scriptType = BASH\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section1.f2 = v12\"\n"
-        + "echo \"sectionChild.f1 = v111\"\n"
-        + "echo \"sectionChild.f1 = v111\"\n"
-        + "echo \"sectionChild.f2 = v112\"\n"
-        + "echo \"sectionChild.f2 = v112\"\n";
-    assertThat(shellScript12.trim()).isEqualTo(expectedShellScript12.trim());
-
-    String expectedShellScript2 = "echo 'Hello, world, from script 2!'\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section11.f1 = v111\"\n"
-        + "echo \"section11.f1 = v111\"\n"
-        + "echo \"shell2.scriptType = BASH\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"scriptType = BASH\"\n"
-        + "echo \"section2.f1 = v21\"\n"
-        + "echo \"section2.f2 = v22\"\n"
-        + "echo \"sectionChild.f1 = v211\"\n"
-        + "echo \"sectionChild.f1 = v211\"\n"
-        + "echo \"sectionChild.f2 = v212\"\n"
-        + "echo \"sectionChild.f2 = v212\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell1.HELLO = hello1!\"\n"
-        + "echo \"shell1.HI = hi1!\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section1.f1 = v11\"\n"
-        + "echo \"section11.f1 = v111\"\n"
-        + "echo \"section11.f1 = v111\"\n"
-        + "echo \"shell2.scriptType = BASH\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"shell2.HELLO = hello2!\"\n"
-        + "echo \"shell2.HI = hi2!\"\n"
-        + "echo \"scriptType = BASH\"\n"
-        + "echo \"section2.f1 = v21\"\n"
-        + "echo \"section2.f2 = v22\"\n"
-        + "echo \"sectionChild.f1 = v211\"\n"
-        + "echo \"sectionChild.f1 = v211\"\n"
-        + "echo \"sectionChild.f2 = v212\"\n"
-        + "echo \"sectionChild.f2 = v212\"\n";
-    assertThat(shellScript2).isEqualTo(expectedShellScript2);
-  }
-
-  @Test
-  @Owner(developers = GARVIT, intermittent = true)
-  @Category(FunctionalTests.class)
-  @Ignore("Ignoring currently as timeouts are ignored for PMS")
-  public void shouldExecuteSimpleTimeoutPlan() {
-    PlanExecution timeoutResponse =
-        testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-timeout");
-    assertThat(timeoutResponse.getStatus()).isEqualTo(EXPIRED);
-  }
-
-  @Test
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
+  @Ignore("Ignore as barrier require yaml right now")
   public void shouldExecuteMultipleBarriersPlan() {
     PlanExecution multipleBarriersResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
@@ -320,18 +202,5 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
         testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "task-chain-v1");
 
     assertThat(taskChainResponse.getStatus()).isEqualTo(SUCCEEDED);
-  }
-
-  private String fetchShellScriptLogs(List<NodeExecution> nodeExecutions, String name) {
-    NodeExecution nodeExecution =
-        nodeExecutions.stream().filter(ne -> name.equals(ne.getNode().getName())).findFirst().orElse(null);
-    assertThat(nodeExecution).isNotNull();
-
-    ShellScriptStepParameters shellScriptStepParameters = nodeExecution.getResolvedStepParameters() == null
-        ? null
-        : RecastOrchestrationUtils.fromDocumentJson(
-            nodeExecution.getResolvedStepParameters().toJson(), ShellScriptStepParameters.class);
-    assertThat(shellScriptStepParameters).isNotNull();
-    return shellScriptStepParameters.getScriptString();
   }
 }

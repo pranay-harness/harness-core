@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.beans.DecryptableEntity;
@@ -29,6 +29,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.settings.SettingValue;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -40,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureSecretHelper {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private LocalEncryptor localEncryptor;
@@ -52,6 +56,7 @@ public class AzureSecretHelper {
         .clientId(azureConfigDTO.getClientId())
         .tenantId(azureConfigDTO.getTenantId())
         .key(azureConfigDTO.getKey().getDecryptedValue())
+        .azureEnvironmentType(azureConfigDTO.getAzureEnvironmentType())
         .build();
   }
 
@@ -145,5 +150,16 @@ public class AzureSecretHelper {
     appServiceSetting.setEncryptedRecord(encryptedRecord);
     appServiceSetting.setValue(EMPTY);
     appServiceSetting.setAccountId(accountId);
+  }
+
+  public ArtifactStreamAttributes decryptArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+    if (artifactStreamAttributes == null) {
+      return null;
+    }
+    SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
+    List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
+        artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
+    secretDecryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails);
+    return artifactStreamAttributes;
   }
 }

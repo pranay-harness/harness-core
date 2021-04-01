@@ -517,6 +517,10 @@ if [[ "" != "$TIMESCALEDB_LOGGERLEVEL" ]]; then
   yq write -i $CONFIG_FILE timescaledb.loggerLevel "$TIMESCALEDB_LOGGERLEVEL"
 fi
 
+if [[ "$TIMESCALEDB_HEALTH_CHECK_NEEDED" == "true" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.isHealthCheckNeeded "$TIMESCALEDB_HEALTH_CHECK_NEEDED"
+fi
+
 if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
 fi
@@ -757,10 +761,22 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi
 
 if [[ "" != "$CVNG_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
+fi
+
+if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
+  yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
 fi

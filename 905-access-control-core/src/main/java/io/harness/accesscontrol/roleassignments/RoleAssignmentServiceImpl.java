@@ -1,7 +1,14 @@
 package io.harness.accesscontrol.roleassignments;
 
-import io.harness.accesscontrol.principals.PrincipalType;
+import static lombok.AccessLevel.PRIVATE;
+
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -9,27 +16,44 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
-  private final RoleAssignmentDao roleAssignmentDao;
+  RoleAssignmentDao roleAssignmentDao;
+  RoleAssignmentValidator roleAssignmentValidator;
 
-  @Inject
-  public RoleAssignmentServiceImpl(RoleAssignmentDao roleAssignmentDao) {
-    this.roleAssignmentDao = roleAssignmentDao;
+  @Override
+  public List<RoleAssignment> createMulti(List<RoleAssignment> roleAssignments) {
+    return roleAssignmentDao.insertAllIgnoringDuplicates(roleAssignments);
   }
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
-    roleAssignment.setDisabled(false);
-    roleAssignment.setManaged(false);
+    RoleAssignmentValidationResult result = roleAssignmentValidator.validate(
+        RoleAssignmentValidationRequest.builder().roleAssignment(roleAssignment).build());
+    if (!result.getPrincipalValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+    }
+    if (!result.getResourceGroupValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getResourceGroupValidationResult().getErrorMessage());
+    }
+    if (!result.getRoleValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getRoleValidationResult().getErrorMessage());
+    }
     return roleAssignmentDao.create(roleAssignment);
   }
 
   @Override
-  public PageResponse<RoleAssignment> getAll(
-      PageRequest pageRequest, String parentIdentifier, String principalIdentifier, String roleIdentifier) {
-    return roleAssignmentDao.getAll(pageRequest, parentIdentifier, principalIdentifier, roleIdentifier);
+  public PageResponse<RoleAssignment> list(PageRequest pageRequest, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.list(pageRequest, roleAssignmentFilter);
   }
 
   @Override
@@ -38,12 +62,43 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
-    return roleAssignmentDao.get(principal, principalType);
+  public RoleAssignment update(RoleAssignment roleAssignmentUpdate) {
+    Optional<RoleAssignment> currentRoleAssignmentOptional =
+        get(roleAssignmentUpdate.getIdentifier(), roleAssignmentUpdate.getScopeIdentifier());
+    if (currentRoleAssignmentOptional.isPresent()) {
+      RoleAssignment roleAssignment = currentRoleAssignmentOptional.get();
+      if (!roleAssignmentUpdate.getResourceGroupIdentifier().equals(roleAssignment.getResourceGroupIdentifier())) {
+        throw new InvalidRequestException("Cannot change resource group in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getPrincipalIdentifier().equals(roleAssignment.getPrincipalIdentifier())) {
+        throw new InvalidRequestException("Cannot change principal in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getPrincipalType().equals(roleAssignment.getPrincipalType())) {
+        throw new InvalidRequestException("Cannot change principal type in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getRoleIdentifier().equals(roleAssignment.getRoleIdentifier())) {
+        throw new InvalidRequestException("Cannot change role in the role assignment");
+      }
+      roleAssignmentUpdate.setManaged(roleAssignment.isManaged());
+      roleAssignmentUpdate.setVersion(roleAssignment.getVersion());
+      return roleAssignmentDao.update(roleAssignmentUpdate);
+    }
+    throw new InvalidRequestException(
+        String.format("Could not find the role assignment in the scope %s", roleAssignmentUpdate.getScopeIdentifier()));
   }
 
   @Override
   public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
     return roleAssignmentDao.delete(identifier, parentIdentifier);
+  }
+
+  @Override
+  public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.deleteMulti(roleAssignmentFilter);
+  }
+
+  @Override
+  public RoleAssignmentValidationResult validate(RoleAssignmentValidationRequest validationRequest) {
+    return roleAssignmentValidator.validate(validationRequest);
   }
 }

@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -14,7 +14,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLGitSyncConfigKeys")
 @Scope(ResourceType.APPLICATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLGitSyncConfig implements QLObject {
   String gitConnectorId;
   private String repositoryName;

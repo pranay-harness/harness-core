@@ -1,6 +1,7 @@
 package io.harness.resourcegroup.resourceclient.project;
 
 import static io.harness.remote.client.NGRestUtils.getResponse;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 
@@ -10,6 +11,7 @@ import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
@@ -17,6 +19,7 @@ import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -39,9 +42,16 @@ public class ProjectResourceValidatorImpl implements ResourceValidator {
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     PageResponse<ProjectResponse> projects =
         getResponse(projectManagerClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
-    Set<String> validResourcIds =
+    Set<String> validResourceIds =
         projects.getContent().stream().map(e -> e.getProject().getIdentifier()).collect(Collectors.toSet());
-    return resourceIds.stream().map(validResourcIds::contains).collect(toList());
+    return resourceIds.stream()
+        .map(resourceId -> validResourceIds.contains(resourceId) && projectIdentifier.equals(resourceId))
+        .collect(toList());
+  }
+
+  @Override
+  public EnumSet<ValidatorType> getValidatorTypes() {
+    return EnumSet.of(STATIC);
   }
 
   @Override
@@ -51,7 +61,7 @@ public class ProjectResourceValidatorImpl implements ResourceValidator {
 
   @Override
   public Set<Scope> getScopes() {
-    return EnumSet.of(Scope.ORGANIZATION);
+    return Collections.emptySet();
   }
 
   @Override

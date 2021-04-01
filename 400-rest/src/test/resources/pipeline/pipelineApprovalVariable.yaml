@@ -1,0 +1,20 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: APPROVAL
+  name: Approval 0
+  parallel: false
+  properties:
+    userGroups:
+    - test
+    - Account Administrator
+    variables:
+    - name: testVar
+      value: '123'
+    stageName: STAGE 1
+    timeoutMillis: 86400000
+    approvalStateType: USER_GROUP
+    sweepingOutputName: var
+  skipCondition:
+    type: DO_NOT_SKIP
+  stageName: STAGE 1

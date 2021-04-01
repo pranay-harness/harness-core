@@ -24,6 +24,7 @@ import lombok.Value;
 public class StepResponse {
   @NonNull Status status;
   @Singular Collection<StepOutcome> stepOutcomes;
+
   FailureInfo failureInfo;
   List<UnitProgress> unitProgressList;
 

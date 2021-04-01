@@ -58,6 +58,16 @@ public class ContainerResourceRequirementEstimators {
     };
   }
 
+  public static ContainerResourceRequirementEstimator customRecommender(
+      Map<String, Long> minResources, double percentile) {
+    final ResourceEstimator requiredEstimator = PercentileEstimator.of(percentile, percentile);
+    return cs -> {
+      Map<String, String> resources =
+          convertToReadableForm(requiredEstimator.withMinResources(minResources).getResourceEstimation(cs));
+      return ResourceRequirement.builder().requests(resources).limits(resources).build();
+    };
+  }
+
   public static ContainerResourceRequirementEstimator recommendedRecommender(Map<String, Long> minResources) {
     K8sWorkloadRecommendationPreset defaultPreset = K8sWorkloadRecommendationPreset.builder()
                                                         .cpuRequest(0.8)

@@ -2,11 +2,12 @@ package io.harness.batch.processing.view;
 
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.shard.AccountShardService;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.views.service.CEViewService;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CEMetadataRecord;
-import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -24,6 +25,7 @@ public class CEMetaDataRecordUpdateService {
   @Autowired private AccountShardService accountShardService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private BigQueryHelperService bigQueryHelperService;
+  @Autowired private CEViewService ceViewService;
 
   public void updateCloudProviderMetadata() {
     List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
@@ -42,6 +44,9 @@ public class CEMetaDataRecordUpdateService {
 
       boolean isAzureConnectorPresent = ceConnectors.stream().anyMatch(
           connector -> connector.getValue().getType().equals(SettingVariableTypes.CE_AZURE.toString()));
+      if (isAzureConnectorPresent && ceViewService.getDefaultAzureViewId(accountId) == null) {
+        ceViewService.createDefaultAzureView(accountId);
+      }
 
       CEMetadataRecordBuilder ceMetadataRecordBuilder = CEMetadataRecord.builder().accountId(accountId);
 

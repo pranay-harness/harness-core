@@ -6,10 +6,14 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.Account;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.service.intfc.AccountService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,6 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 public class AccountResourceNG {
   private final AccountService accountService;
+  private SubdomainUrlHelper subdomainUrlHelper;
 
   @GET
   @Path("{accountId}")
@@ -37,9 +42,29 @@ public class AccountResourceNG {
   }
 
   @GET
-  @Path("/dto")
-  public RestResponse<AccountDTO> getDTO(@QueryParam("accountId") String accountId) {
+  @Path("/dto/{accountId}")
+  public RestResponse<AccountDTO> getDTO(@PathParam("accountId") String accountId) {
     Account account = accountService.get(accountId);
     return new RestResponse<>(AccountMapper.toAccountDTO(account));
+  }
+
+  @GET
+  @Path("/dto")
+  public RestResponse<List<AccountDTO>> getDTOs(@QueryParam("accountIds") @Size(max = 100) List<String> accountIds) {
+    List<Account> accounts = accountService.getAccounts(accountIds);
+    return new RestResponse<>(accounts.stream().map(AccountMapper::toAccountDTO).collect(Collectors.toList()));
+  }
+
+  @GET
+  @Path("/feature-flag-enabled")
+  public RestResponse<Boolean> isFeatureFlagEnabled(
+      @QueryParam("featureName") String featureName, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
+  }
+
+  @GET
+  @Path("/baseUrl")
+  public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
   }
 }

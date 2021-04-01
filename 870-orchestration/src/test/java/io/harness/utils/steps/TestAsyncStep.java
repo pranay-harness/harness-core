@@ -1,7 +1,9 @@
 package io.harness.utils.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
@@ -16,6 +18,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import java.util.Map;
 
+@OwnedBy(PIPELINE)
 public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
   public static final StepType ASYNC_STEP_TYPE = StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").build();
 
@@ -42,7 +45,7 @@ public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, TestStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, TestStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
     // Do Nothing
   }
 }

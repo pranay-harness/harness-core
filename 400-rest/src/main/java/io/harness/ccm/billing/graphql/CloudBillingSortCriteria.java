@@ -1,5 +1,8 @@
 package io.harness.ccm.billing.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -12,6 +15,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CE)
 public class CloudBillingSortCriteria {
   private CloudSortType sortType;
   private QLSortOrder sortOrder;
@@ -53,6 +57,12 @@ public class CloudBillingSortCriteria {
         break;
       case awsLinkedAccount:
         orderIdentifier = PreAggregateConstants.entityConstantAwsLinkedAccount;
+        break;
+      case awsUsageType:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsUsageType;
+        break;
+      case awsInstanceType:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsInstanceType;
         break;
       default:
         break;

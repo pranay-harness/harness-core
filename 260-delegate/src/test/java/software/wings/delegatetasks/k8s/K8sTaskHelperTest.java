@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
@@ -16,13 +18,13 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
-import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -44,6 +46,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -58,11 +61,17 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
@@ -70,7 +79,6 @@ import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.KubernetesContainerService;
-import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -92,18 +100,19 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.exception.ShellScriptException;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
@@ -115,14 +124,11 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
-import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
-import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Secret;
@@ -142,7 +148,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -160,30 +165,25 @@ import wiremock.com.google.common.collect.Lists;
  now,
  * only then use it. Meanwhile, move powermock based tests to K8sTaskHelperSecondaryTest
  */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback logCallback;
-  @Mock private DelegateLogService mockDelegateLogService;
   @Mock private KubernetesContainerService mockKubernetesContainerService;
-  @Mock private TimeLimiter mockTimeLimiter;
   @Mock private GitService mockGitService;
   @Mock private EncryptionService mockEncryptionService;
   @Mock private HelmTaskHelper mockHelmTaskHelper;
-  @Mock private KubernetesHelperService mockKubernetesHelperService;
   @Mock private ExecutionLogCallback executionLogCallback;
-  @Mock private StartedProcess startedProcess;
-  @Mock private Process process;
   @Mock private KustomizeTaskHelper kustomizeTaskHelper;
   @Mock private OpenShiftDelegateService openShiftDelegateService;
   @Mock private K8sTaskHelperBase mockK8sTaskHelperBase;
   @Mock private HelmHelper helmHelper;
+  @Mock private CustomManifestService customManifestService;
 
-  private String resourcePath = "./k8s";
+  private String resourcePath = "k8s";
   private String deploymentYaml = "deployment.yaml";
   private String deploymentConfigYaml = "deployment-config.yaml";
   private String configMapYaml = "configMap.yaml";
-
-  @Captor private ArgumentCaptor<HelmCommandFlag> commandFlagCaptor;
 
   private final String flagValue = "--flag-test-1";
   private final HelmCommandFlag commandFlag =
@@ -478,82 +478,6 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     kubernetesResourceIds.add(
         KubernetesResourceId.builder().kind(Service.name()).name("s" + suffix).namespace("default").build());
     return kubernetesResourceIds;
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetHelmV2CommandForRender() {
-    String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, null);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
-  public void testGetHelmV2CommandForRenderWithCommand() {
-    String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, commandFlag);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-    assertThat(command).contains(flagValue);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetHelmV2CommandForRenderOneChartFile() {
-    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, null);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
-  public void testGetHelmV2CommandForRenderOneChartFileWithCommandFlags() {
-    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, commandFlag);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-    assertThat(command).contains(flagValue);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetHelmV3CommandForRender() {
-    String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, null);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
-  public void testGetHelmV3CommandForRenderWithCommand() {
-    String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, commandFlag);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-    assertThat(command).contains(flagValue);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetHelmV3CommandForRenderOneChartFile() {
-    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, null);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
-  public void testGetHelmV3CommandForRenderOneChartFileWithCommandFlag() {
-    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, commandFlag);
-    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
-    assertThat(command).contains(flagValue);
   }
 
   @Owner(developers = ANSHUL)
@@ -1182,6 +1106,60 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .isFalse();
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectory_Custom() throws IOException {
+    fetchManifestFilesAndWriteToDirectory_Custom(CUSTOM);
+    fetchManifestFilesAndWriteToDirectory_Custom(CUSTOM_OPENSHIFT_TEMPLATE);
+  }
+
+  private void fetchManifestFilesAndWriteToDirectory_Custom(StoreType storeType) throws IOException {
+    reset(customManifestService);
+    String manifestDirectory = "manifest-files";
+    doReturn("").when(mockK8sTaskHelperBase).getManifestFileNamesInLogFormat(anyString());
+    CustomManifestSource customManifestSource = CustomManifestSource.builder().build();
+    K8sDelegateManifestConfig delegateManifestConfig = K8sDelegateManifestConfig.builder()
+                                                           .manifestStoreTypes(storeType)
+                                                           .customManifestSource(customManifestSource)
+                                                           .build();
+
+    delegateManifestConfig.setCustomManifestEnabled(false);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+    verify(customManifestService, times(0))
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+
+    delegateManifestConfig.setCustomManifestEnabled(true);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isTrue();
+    verify(customManifestService, times(1))
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+
+    doThrow(new IOException("file doesn't exists"))
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+
+    doThrow(new ShellScriptException("command not found", ErrorCode.GENERAL_ERROR, Level.ERROR, WingsException.USER))
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+
+    doThrow(new NullPointerException())
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+  }
+
   private List<ManifestFile> convertFileDataToManifestFiles(List<FileData> fileDataList) {
     return fileDataList.stream()
         .map(p -> ManifestFile.builder().fileName(p.getFileName()).fileContent(p.getFileContent()).build())
@@ -1371,18 +1349,14 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
-    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelperBase).executeShellCommand(any(), any(), any(), anyLong());
-
-    final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
+    spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).helmCommandFlag(commandFlag).build(),
         ".", new ArrayList<>(), new ArrayList<>(), "release", "namespace", executionLogCallback,
         K8sApplyTaskParameters.builder().build());
 
-    assertThat(manifestFiles.size()).isEqualTo(0);
-    verify(spyHelper).renderTemplateForHelmChartFiles(any(), anyString(), any(), any(), anyString(), anyString(), any(),
-        any(), anyLong(), commandFlagCaptor.capture());
-    assertThat(commandFlagCaptor.getValue()).isEqualTo(commandFlag);
+    verify(mockK8sTaskHelperBase)
+        .renderTemplateForHelmChartFiles(
+            any(), anyString(), any(), any(), anyString(), anyString(), any(), any(), anyLong(), eq(commandFlag));
   }
 
   @Test
@@ -1518,18 +1492,22 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRenderTemplateHelmSourceRepo() throws Exception {
     final String workingDirectory = ".";
+    final List<String> valuesFiles = Arrays.asList("values");
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
-
-    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(mockK8sTaskHelperBase).executeShellCommand(any(), any(), any(), anyLong());
-    doReturn("").when(mockK8sTaskHelperBase).writeValuesToFile(any(), any());
+    doReturn(Arrays.asList(FileData.builder().filePath("test").fileContent("manifest").build()))
+        .when(mockK8sTaskHelperBase)
+        .renderTemplateForHelm(anyString(), anyString(), anyListOf(String.class), anyString(), anyString(),
+            any(LogCallback.class), any(HelmVersion.class), anyLong(), any(HelmCommandFlag.class));
 
     final List<FileData> manifestFiles = helper.renderTemplate(k8sDelegateTaskParams,
-        K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).build(), ".", new ArrayList<>(),
-        "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+        K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).build(), ".", valuesFiles, "release",
+        "namespace", executionLogCallback, K8sApplyTaskParameters.builder().helmVersion(HelmVersion.V3).build());
 
     assertThat(manifestFiles.size()).isEqualTo(1);
+    verify(mockK8sTaskHelperBase, times(1))
+        .renderTemplateForHelm(eq("helm"), eq("."), eq(valuesFiles), eq("release"), eq("namespace"),
+            eq(executionLogCallback), eq(HelmVersion.V3), anyLong(), any(HelmCommandFlag.class));
   }
 
   @Test
@@ -1540,11 +1518,11 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
-    when(kustomizeTaskHelper.build(any(), any(), any(), any())).thenReturn(new ArrayList<>());
+    when(kustomizeTaskHelper.build(any(), any(), any(), any(), any())).thenReturn(new ArrayList<>());
     final List<FileData> manifestFiles = spyHelper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(KustomizeSourceRepo).build(), ".", new ArrayList<>(),
         "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
-    verify(kustomizeTaskHelper).build(any(), any(), any(), any());
+    verify(kustomizeTaskHelper).build(any(), any(), any(), any(), any());
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
 
@@ -1577,19 +1555,16 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
-    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(mockK8sTaskHelperBase).executeShellCommand(any(), any(), any(), anyLong());
-    doReturn("").when(mockK8sTaskHelperBase).writeValuesToFile(any(), any());
-
-    final List<FileData> manifestFiles = helper.renderTemplate(k8sDelegateTaskParams,
+    helper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder()
             .helmChartConfigParams(HelmChartConfigParams.builder().chartName("chart").build())
             .manifestStoreTypes(HelmChartRepo)
             .build(),
         ".", new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
 
-    verify(mockK8sTaskHelperBase, times(1)).executeShellCommand(eq("./chart"), anyString(), any(), anyLong());
-    assertThat(manifestFiles.size()).isEqualTo(1);
+    verify(mockK8sTaskHelperBase, times(1))
+        .renderTemplateForHelm(eq("helm"), eq("./chart"), anyListOf(String.class), anyString(), anyString(),
+            eq(executionLogCallback), any(HelmVersion.class), anyLong(), any(HelmCommandFlag.class));
   }
 
   /**
@@ -1603,19 +1578,16 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
-    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(mockK8sTaskHelperBase).executeShellCommand(any(), any(), any(), anyLong());
-    doReturn("").when(mockK8sTaskHelperBase).writeValuesToFile(any(), any());
-
-    final List<FileData> manifestFiles = helper.renderTemplate(k8sDelegateTaskParams,
+    helper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder()
             .helmChartConfigParams(HelmChartConfigParams.builder().chartName("bitnami/nginx").build())
             .manifestStoreTypes(HelmChartRepo)
             .build(),
         ".", new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
 
-    verify(mockK8sTaskHelperBase, times(1)).executeShellCommand(eq("./nginx"), anyString(), any(), anyLong());
-    assertThat(manifestFiles.size()).isEqualTo(1);
+    verify(mockK8sTaskHelperBase, times(1))
+        .renderTemplateForHelm(eq("helm"), eq("./nginx"), anyListOf(String.class), anyString(), anyString(),
+            eq(executionLogCallback), any(HelmVersion.class), anyLong(), any(HelmCommandFlag.class));
   }
 
   @Test
@@ -1639,6 +1611,70 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     verify(spyHelperBase, times(1))
         .renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateCustom() throws Exception {
+    final String workingDirectory = ".";
+    final String manifestDirectory = "manifests/";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+    K8sDelegateManifestConfig manifestConfig =
+        K8sDelegateManifestConfig.builder().manifestStoreTypes(CUSTOM).customManifestEnabled(false).build();
+    List<FileData> manifestFiles = emptyList();
+    doReturn(manifestFiles).when(spyHelperBase).readManifestFilesFromDirectory(manifestDirectory);
+    on(helper).set("k8sTaskHelperBase", spyHelperBase);
+
+    // FF is disabled
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(spyHelperBase, times(0)).readManifestFilesFromDirectory(manifestDirectory);
+    verify(spyHelperBase, times(0))
+        .renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+
+    // FF is enabled
+    manifestConfig.setCustomManifestEnabled(true);
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(spyHelperBase, times(1)).readManifestFilesFromDirectory(manifestDirectory);
+    verify(spyHelperBase, times(1))
+        .renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateCustomOpenshiftTemplate() throws Exception {
+    final String workingDirectory = ".";
+    final String manifestDirectory = "manifests/";
+    final String manifestTemplatePath = "manifest/template.yaml";
+    final String ocPath = "oc";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().ocPath(ocPath).workingDirectory(workingDirectory).build();
+    K8sDelegateManifestConfig manifestConfig =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(CUSTOM_OPENSHIFT_TEMPLATE)
+            .customManifestSource(
+                CustomManifestSource.builder().filePaths(singletonList("manifest/template.yaml")).build())
+            .customManifestEnabled(false)
+            .build();
+
+    // FF disabled
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(openShiftDelegateService, times(0))
+        .processTemplatization(manifestDirectory, ocPath, manifestTemplatePath, executionLogCallback, emptyList());
+
+    // FF enabled
+    manifestConfig.setCustomManifestEnabled(true);
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(openShiftDelegateService, times(1))
+        .processTemplatization(manifestDirectory, ocPath, manifestTemplatePath, executionLogCallback, emptyList());
   }
 
   @Test

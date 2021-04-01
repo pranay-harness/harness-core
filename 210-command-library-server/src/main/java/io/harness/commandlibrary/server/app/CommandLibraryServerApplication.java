@@ -10,15 +10,17 @@ import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticat
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UserProvider;
 import io.harness.serializer.CommandLibraryServer;
 import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -28,7 +30,6 @@ import io.harness.serializer.ManagerRegistrars;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
@@ -148,7 +149,12 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -198,8 +204,6 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
 
     initMetrics();
 
-    registerStores(configuration, injector);
-
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
@@ -232,11 +236,6 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
       env = env.replaceAll("-", "_").toLowerCase();
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, description);
     }
-  }
-
-  private void registerStores(CommandLibraryServerConfig configuration, Injector injector) {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerResources(Environment environment, Injector injector) {

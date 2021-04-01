@@ -15,6 +15,7 @@ import io.harness.batch.processing.anomalydetection.alerts.service.impl.AnomalyA
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.anomaly.AnomalyDataStub;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CESlackWebhook;

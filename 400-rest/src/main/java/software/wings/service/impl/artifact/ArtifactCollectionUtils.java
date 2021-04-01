@@ -1,6 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -36,9 +37,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.FeatureName;
+import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
@@ -51,12 +54,11 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 import io.harness.network.Http;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -83,7 +85,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
-import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceParametersBuilder;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
@@ -92,11 +93,9 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -135,17 +134,23 @@ public class ArtifactCollectionUtils {
   @Inject private AzureHelperService azureHelperService;
   @Inject private EcrClassicService ecrClassicService;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
-  @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
-  @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private MainConfiguration mainConfiguration;
 
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+
+  public long getDelegateQueueTimeout(String accountId) {
+    long timeout = DELEGATE_QUEUE_TIMEOUT;
+    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)
+        || DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      timeout = Duration.ofSeconds(15).toMillis();
+    }
+    return System.currentTimeMillis() + timeout;
+  }
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -294,10 +299,15 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                                                  .waitId(waitId)
-                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    String accountId = artifactStreamAttributes.getAccountId();
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder().waitId(waitId).expiry(getDelegateQueueTimeout(accountId));
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, artifactStream.getAccountId())) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());
+    } else {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID);
+    }
+
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
@@ -320,8 +330,6 @@ public class ArtifactCollectionUtils {
       // To remove if any empty tags in case saved for custom artifact stream
       tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
     }
-
-    String accountId = artifactStreamAttributes.getAccountId();
 
     // Set timeout. Labels are not fetched for CUSTOM artifact streams.
     long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
@@ -528,7 +536,8 @@ public class ArtifactCollectionUtils {
     }
     notNullCheck("Fetch Version script is missing", versionScript, USER);
 
-    ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        customArtifactStream.fetchArtifactStreamAttributes(featureFlagService);
 
     String scriptString = versionScript.getScriptString();
     notNullCheck("Script string can not be empty", scriptString, USER);
@@ -588,7 +597,7 @@ public class ArtifactCollectionUtils {
 
   public ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
     if (isMultiArtifact) {
-      return artifactStream.fetchArtifactStreamAttributes();
+      return artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     } else {
       Service service =
           artifactStreamServiceBindingService.getService(artifactStream.fetchAppId(), artifactStream.getUuid(), true);
@@ -596,27 +605,30 @@ public class ArtifactCollectionUtils {
     }
   }
 
-  private static ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+  private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
   }
 
-  private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream, ArtifactType artifactType) {
+  private boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream, ArtifactType artifactType) {
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       return ArtifactType.DOCKER == artifactType
-          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType());
+          || !"maven".equals(artifactStream.fetchArtifactStreamAttributes(featureFlagService).getRepositoryType());
     }
     return false;
   }
 
-  private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
+  private boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
     return ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
-        && (artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals(RepositoryType.docker.name())
-            || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
+        && (artifactStream.fetchArtifactStreamAttributes(featureFlagService)
+                .getRepositoryType()
+                .equals(RepositoryType.docker.name())
+            || !"maven".equals(artifactStream.fetchArtifactStreamAttributes(featureFlagService).getRepositoryType()));
   }
 
-  public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
+  public BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
@@ -627,7 +639,7 @@ public class ArtifactCollectionUtils {
     }
   }
 
-  private static BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
+  private BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
@@ -710,11 +722,11 @@ public class ArtifactCollectionUtils {
                                                          .appId(artifactStream.getAppId())
                                                          .artifactStreamType(artifactStream.getArtifactStreamType());
     SettingValue settingValue;
-    List<String> tags;
+    List<String> tags = new ArrayList<>();
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       parametersBuilder.accountId(artifactStream.getAccountId())
           .buildSourceRequestType(BuildSourceRequestType.GET_BUILDS)
-          .artifactStreamAttributes(artifactStream.fetchArtifactStreamAttributes());
+          .artifactStreamAttributes(artifactStream.fetchArtifactStreamAttributes(featureFlagService));
       tags = ((CustomArtifactStream) artifactStream).getTags();
       if (isNotEmpty(tags)) {
         // To remove if any empty tags in case saved for custom artifact stream
@@ -729,7 +741,12 @@ public class ArtifactCollectionUtils {
       settingValue = settingAttribute.getValue();
       List<EncryptedDataDetail> encryptedDataDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
-      tags = awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute);
+      List<String> delegateSelectors = settingsService.getDelegateSelectors(settingAttribute);
+      if (isNotEmpty(delegateSelectors)) {
+        tags = isNotEmpty(tags) ? tags : new ArrayList<>();
+        tags.addAll(delegateSelectors);
+        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+      }
       accountId = settingAttribute.getAccountId();
       boolean multiArtifactEnabled = multiArtifactEnabled(accountId);
 
@@ -749,18 +766,21 @@ public class ArtifactCollectionUtils {
                               .buildSourceRequestType(requestType);
     }
 
-    return DelegateTask.builder()
-        .accountId(accountId)
-        .rank(DelegateTaskRank.OPTIONAL)
-        .data(TaskData.builder()
-                  .async(false)
-                  .taskType(TaskType.BUILD_SOURCE_TASK.name())
-                  .parameters(new Object[] {parametersBuilder.build()})
-                  .timeout(TimeUnit.MINUTES.toMillis(1))
-                  .build())
-        .tags(tags)
-        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
-        .build();
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId(accountId)
+                                                  .rank(DelegateTaskRank.OPTIONAL)
+                                                  .data(TaskData.builder()
+                                                            .async(false)
+                                                            .taskType(TaskType.BUILD_SOURCE_TASK.name())
+                                                            .parameters(new Object[] {parametersBuilder.build()})
+                                                            .timeout(TimeUnit.MINUTES.toMillis(1))
+                                                            .build())
+                                                  .tags(tags)
+                                                  .expiry(getDelegateQueueTimeout(accountId));
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, accountId)) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());
+    }
+    return delegateTaskBuilder.build();
   }
 
   /**

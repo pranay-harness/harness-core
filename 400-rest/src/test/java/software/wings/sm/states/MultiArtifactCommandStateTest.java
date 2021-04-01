@@ -261,13 +261,13 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).name(APP_NAME).build());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(artifactStream1);
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
-    when(artifactStream1.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream1.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream1.getSettingId()).thenReturn(SETTING_ID_1);
     when(artifactStream1.getUuid()).thenReturn(ARTIFACT_STREAM_ID_1);
     when(settingsService.get(SETTING_ID_1)).thenReturn(settingAttribute);
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(artifactStream2);
-    when(artifactStream2.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream2.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream2.getSettingId()).thenReturn(SETTING_ID_2);
     when(artifactStream2.getUuid()).thenReturn(ARTIFACT_STREAM_ID_2);
     when(settingsService.get(SETTING_ID_2)).thenReturn(settingAttribute);

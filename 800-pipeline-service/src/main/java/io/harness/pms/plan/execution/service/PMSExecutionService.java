@@ -1,6 +1,7 @@
 package io.harness.pms.plan.execution.service;
 
 import io.harness.dto.OrchestrationGraphDTO;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
@@ -20,9 +21,10 @@ public interface PMSExecutionService {
 
   OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
 
-  InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId);
+  InterruptDTO registerInterrupt(
+      PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId);
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm);
+      String searchTerm, ExecutionStatus status, boolean myDeployments);
 }

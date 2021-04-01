@@ -1,7 +1,11 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.core.winrm.executors.WinRmSession;
 
@@ -16,6 +20,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class WinRmExecutorHelper {
   private static final int SPLITLISTOFCOMMANDSBY = 20;
 
@@ -61,6 +66,41 @@ public class WinRmExecutorHelper {
     // last command to run the script we just built - This will execute our command.
     commandList.add(format("%s -f \"%s\" ", powershell, psScriptFile));
     return Lists.partition(commandList, SPLITLISTOFCOMMANDSBY);
+  }
+
+  public static List<String> constructPSScriptWithCommandsBulk(String command, String psScriptFile, String powershell) {
+    command = "$ErrorActionPreference=\"Stop\"\n" + command;
+
+    // Yes, replace() is intentional. We are replacing only character and not a regex pattern.
+    command = command.replace("$", "`$");
+    // This is to escape quotes
+    command = command.replaceAll("\"", "`\\\\\"");
+
+    // This is to change replace by new line char that powershell understands
+    command = command.replaceAll("\n", "`n");
+
+    // write commands to a file and then execute the file
+    String appendPSInvokeCommandtoCommandString;
+    appendPSInvokeCommandtoCommandString =
+        powershell + " Invoke-Command -command {[IO.File]::WriteAllText(\\\"%s\\\", \\\"%s\\\" ) }";
+
+    // Replace pipe only if part of a string, else skip
+    Pattern patternForPipeWithinAString = Pattern.compile("[a-zA-Z]+\\|");
+    // Replace ampersand only if part of a string, else skip
+    Pattern patternForAmpersandWithinString = Pattern.compile("[a-zA-Z0-9]+&");
+    if (patternForPipeWithinAString.matcher(command).find()) {
+      command = command.replaceAll("\\|", "`\\\"|`\\\"");
+    }
+    if (patternForAmpersandWithinString.matcher(command).find()) {
+      command = command.replaceAll("&", "^&");
+    }
+    // Append each command with PS Invoke command which is write command to file and also add the PS newline character
+    // for correct escaping
+    List<String> commandList = new ArrayList<>();
+    commandList.add(format(appendPSInvokeCommandtoCommandString, psScriptFile, command + "`r`n"));
+    // last command to run the script we just built - This will execute our command.
+    commandList.add(format("%s -f \"%s\" ", powershell, psScriptFile));
+    return commandList;
   }
 
   /**

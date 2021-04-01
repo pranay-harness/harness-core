@@ -109,6 +109,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void deployWorkflowWithInfraMapping() throws IOException {
     Workflow rollingWorkflow = workflowUtils.createRollingWorkflowInfraDefinition(
         "Test-Rolling-CLI-Deployment", service, infrastructureDefinition);

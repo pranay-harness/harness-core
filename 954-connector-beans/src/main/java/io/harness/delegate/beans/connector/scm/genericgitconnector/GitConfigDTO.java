@@ -1,6 +1,9 @@
 package io.harness.delegate.beans.connector.scm.genericgitconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -11,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -26,11 +30,13 @@ import org.hibernate.validator.constraints.NotBlank;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector {
+@OwnedBy(HarnessTeam.DX)
+public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") GitAuthType gitAuthType;
   @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
   @NotNull @NotBlank String url;
   String branchName;
+  Set<String> delegateSelectors;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -43,13 +49,14 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector {
 
   @Builder
   public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
-      GitConnectionType gitConnectionType, String url, String branchName) {
+      GitConnectionType gitConnectionType, String url, String branchName, Set<String> delegateSelectors) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
     this.gitSyncConfig = gitSyncConfig;
     this.gitConnectionType = gitConnectionType;
     this.url = url;
     this.branchName = branchName;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override

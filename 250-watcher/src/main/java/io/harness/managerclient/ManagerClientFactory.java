@@ -21,20 +21,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Deprecated
-class ManagerClientX509TrustManager implements X509TrustManager {
-  @Override
-  public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-    return new java.security.cert.X509Certificate[] {};
-  }
-
-  @Override
-  public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-
-  @Override
-  public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-}
-
-@Deprecated
 public class ManagerClientFactory implements Provider<ManagerClient> {
   private static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());
@@ -72,7 +58,7 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
       return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
+          .addInterceptor(new WatcherAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");

@@ -2,9 +2,11 @@ package io.harness.secretmanagerclient.remote;
 
 import static io.harness.NGConstants.FILE_KEY;
 import static io.harness.NGConstants.FILE_METADATA_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
@@ -35,6 +37,7 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+@OwnedBy(PL)
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";
   String SECRET_FILES_API = "ng/secret-files";

@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
     name = "maven_deps",
@@ -87,7 +83,7 @@ java_library(
         "@maven//:com_googlecode_javaewah_JavaEWAH",
         "@maven//:com_hazelcast_hazelcast",
         "@maven//:com_jayway_jsonpath_json_path",
-        "@maven//:com_jcraft_jsch",
+        "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
         "@maven//:com_jcraft_jzlib",
         "@maven//:com_mchange_c3p0",
         "@maven//:com_mchange_mchange_commons_java",
@@ -298,6 +294,7 @@ java_library(
         "//:lombok",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
+        "@maven//:io_netty_netty_all",
     ],
 )
 
@@ -321,14 +318,5 @@ java_binary(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

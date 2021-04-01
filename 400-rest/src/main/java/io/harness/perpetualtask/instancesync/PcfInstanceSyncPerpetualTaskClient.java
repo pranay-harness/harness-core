@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -7,13 +8,14 @@ import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_I
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   public static final String PCF_APPLICATION_NAME = "pcfApplicationName";
 

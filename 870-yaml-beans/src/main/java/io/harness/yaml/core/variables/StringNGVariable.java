@@ -27,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.core.variables.StringNGVariable")
 public class StringNGVariable implements NGVariable {
   String name;
-  @Builder.Default NGVariableType type = NGVariableType.STRING;
+  @ApiModelProperty(allowableValues = NGVariableConstants.STRING_TYPE) NGVariableType type = NGVariableType.STRING;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> value;
   String description;
   boolean required;
@@ -40,5 +40,10 @@ public class StringNGVariable implements NGVariable {
     return LevelNode.builder()
         .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
         .build();
+  }
+
+  @Override
+  public ParameterField<?> getCurrentValue() {
+    return value;
   }
 }

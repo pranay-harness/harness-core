@@ -1,10 +1,12 @@
 package io.harness.ng.core.exceptionmappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.ng.core.Status;
@@ -17,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+@OwnedBy(PL)
 public class OptimisticLockingFailureExceptionMapperTest extends CategoryTest {
   private OptimisticLockingFailureExceptionMapper optimisticLockingFailureExceptionMapper;
 

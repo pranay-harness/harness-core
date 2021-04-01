@@ -3,6 +3,7 @@ package io.harness.accesscontrol.permissions;
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
 import io.harness.accesscontrol.permissions.persistence.PermissionDaoImpl;
 import io.harness.accesscontrol.permissions.persistence.PermissionMorphiaRegistrar;
+import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
@@ -36,6 +37,7 @@ public class PermissionsModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(ScopeService.class);
+    requireBinding(ResourceTypeService.class);
     requireBinding(RoleService.class);
     requireBinding(TransactionTemplate.class);
     requireBinding(MongoTemplate.class);

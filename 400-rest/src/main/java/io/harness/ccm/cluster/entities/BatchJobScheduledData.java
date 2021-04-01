@@ -1,6 +1,11 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -31,14 +36,17 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
+@TargetModule(HarnessModule._280_BATCH_PROCESSING)
+@OwnedBy(CE)
 public final class BatchJobScheduledData
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_batchJobType_endAt")
+                 .name("accountId_batchJobType_validRun_endAt")
                  .field(BatchJobScheduledDataKeys.accountId)
                  .field(BatchJobScheduledDataKeys.batchJobType)
+                 .field(BatchJobScheduledDataKeys.validRun)
                  .descSortField(BatchJobScheduledDataKeys.endAt)
                  .build())
         .build();
@@ -48,6 +56,7 @@ public final class BatchJobScheduledData
   String accountId;
   String batchJobType;
   long jobRunTimeMillis;
+  boolean validRun;
   Instant startAt;
   Instant endAt;
   long createdAt;
@@ -67,5 +76,6 @@ public final class BatchJobScheduledData
     this.jobRunTimeMillis = jobRunTimeMillis;
     this.startAt = startAt;
     this.endAt = endAt;
+    this.validRun = true;
   }
 }

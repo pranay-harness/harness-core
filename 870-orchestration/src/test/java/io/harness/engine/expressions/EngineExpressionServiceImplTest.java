@@ -41,7 +41,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
     ambiance = AmbianceTestUtils.buildAmbiance();
     planExecutionService.save(PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).build());
     pmsOutcomeService.consume(ambiance, OUTCOME_NAME,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("harness").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("harness").build()), null,
+        false);
     pmsSweepingOutputService.consume(ambiance, OUTPUT_NAME,
         RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("harness").build()), null);
   }

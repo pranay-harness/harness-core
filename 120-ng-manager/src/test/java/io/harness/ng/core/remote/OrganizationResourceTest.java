@@ -1,5 +1,6 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -38,6 +40,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
+@OwnedBy(PL)
 public class OrganizationResourceTest extends CategoryTest {
   private OrganizationService organizationService;
   private OrganizationResource organizationResource;
@@ -52,15 +55,15 @@ public class OrganizationResourceTest extends CategoryTest {
     organizationResource = new OrganizationResource(organizationService);
   }
 
-  private OrganizationDTO getOrganizationDTO(String accountIdentifier, String identifier, String name) {
-    return OrganizationDTO.builder().accountIdentifier(accountIdentifier).identifier(identifier).name(name).build();
+  private OrganizationDTO getOrganizationDTO(String identifier, String name) {
+    return OrganizationDTO.builder().identifier(identifier).name(name).build();
   }
 
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testCreate() {
-    OrganizationDTO organizationDTO = getOrganizationDTO(accountIdentifier, identifier, name);
+    OrganizationDTO organizationDTO = getOrganizationDTO(identifier, name);
     OrganizationRequest organizationRequestWrapper =
         OrganizationRequest.builder().organization(organizationDTO).build();
     Organization organization = toOrganization(organizationDTO);
@@ -72,7 +75,6 @@ public class OrganizationResourceTest extends CategoryTest {
         organizationResource.create(accountIdentifier, organizationRequestWrapper);
 
     assertEquals(organization.getVersion().toString(), responseDTO.getEntityTag());
-    assertEquals(accountIdentifier, responseDTO.getData().getOrganization().getAccountIdentifier());
     assertEquals(identifier, responseDTO.getData().getOrganization().getIdentifier());
   }
 
@@ -80,7 +82,7 @@ public class OrganizationResourceTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testGet() {
-    OrganizationDTO organizationDTO = getOrganizationDTO(accountIdentifier, identifier, name);
+    OrganizationDTO organizationDTO = getOrganizationDTO(identifier, name);
     Organization organization = toOrganization(organizationDTO);
     organization.setVersion((long) 0);
 
@@ -89,7 +91,6 @@ public class OrganizationResourceTest extends CategoryTest {
     ResponseDTO<OrganizationResponse> responseDTO = organizationResource.get(identifier, accountIdentifier);
 
     assertEquals(organization.getVersion().toString(), responseDTO.getEntityTag());
-    assertEquals(accountIdentifier, responseDTO.getData().getOrganization().getAccountIdentifier());
     assertEquals(identifier, responseDTO.getData().getOrganization().getIdentifier());
 
     when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.empty());
@@ -110,7 +111,7 @@ public class OrganizationResourceTest extends CategoryTest {
   public void testList() {
     String searchTerm = randomAlphabetic(10);
     PageRequest pageRequest = PageRequest.builder().pageIndex(0).pageSize(10).build();
-    OrganizationDTO organizationDTO = getOrganizationDTO(accountIdentifier, identifier, name);
+    OrganizationDTO organizationDTO = getOrganizationDTO(identifier, name);
     OrganizationRequest organizationRequestWrapper =
         OrganizationRequest.builder().organization(organizationDTO).build();
     Organization organization = toOrganization(organizationDTO);
@@ -128,7 +129,6 @@ public class OrganizationResourceTest extends CategoryTest {
 
     assertEquals(searchTerm, organizationFilterDTO.getSearchTerm());
     assertEquals(1, response.getData().getPageItemCount());
-    assertEquals(accountIdentifier, response.getData().getContent().get(0).getOrganization().getAccountIdentifier());
     assertEquals(identifier, response.getData().getContent().get(0).getOrganization().getIdentifier());
   }
 
@@ -137,7 +137,7 @@ public class OrganizationResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     String ifMatch = "0";
-    OrganizationDTO organizationDTO = getOrganizationDTO(accountIdentifier, identifier, name);
+    OrganizationDTO organizationDTO = getOrganizationDTO(identifier, name);
     OrganizationRequest organizationRequestWrapper =
         OrganizationRequest.builder().organization(organizationDTO).build();
     Organization organization = toOrganization(organizationDTO);
@@ -149,7 +149,6 @@ public class OrganizationResourceTest extends CategoryTest {
         organizationResource.update(ifMatch, identifier, accountIdentifier, organizationRequestWrapper);
 
     assertEquals("1", response.getEntityTag());
-    assertEquals(accountIdentifier, response.getData().getOrganization().getAccountIdentifier());
     assertEquals(identifier, response.getData().getOrganization().getIdentifier());
   }
 

@@ -186,7 +186,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_SaveCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -197,7 +197,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RestoreCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -207,7 +207,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -229,6 +229,9 @@ func (e *unitExecutor) Cleanup(ctx context.Context, step *pb.UnitStep) error {
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		port := x.Run.GetContainerPort()
+		return e.stopAddonServer(ctx, step.GetId(), uint(port))
+	case *pb.UnitStep_RunTests:
+		port := x.RunTests.GetContainerPort()
 		return e.stopAddonServer(ctx, step.GetId(), uint(port))
 	case *pb.UnitStep_Plugin:
 		port := x.Plugin.GetContainerPort()

@@ -6,7 +6,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._950_EVENTS_API)
+@TargetModule(HarnessModule._950_EVENTS_API)
 public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceConfig> {
   private static final int POOL_SIZE = 3;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;

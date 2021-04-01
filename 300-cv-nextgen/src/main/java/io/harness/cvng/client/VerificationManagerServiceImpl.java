@@ -97,6 +97,24 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   }
 
   @Override
+  public List<String> checkCapabilityToGetKubernetesEvents(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
+    if (!connectorDTO.isPresent()) {
+      throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
+    }
+
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).dataCollectionType(KUBERNETES).build();
+
+    return requestExecutor
+        .execute(
+            verificationManagerClient.checkCapabilityToGetEvents(accountId, orgIdentifier, projectIdentifier, bundle))
+        .getResource();
+  }
+
+  @Override
   public List<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String namespace, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =

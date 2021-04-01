@@ -4,13 +4,16 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.interrupts.statusupdate.TerminalStepStatusUpdate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -22,11 +25,13 @@ import com.google.inject.Inject;
 import javax.validation.Valid;
 import lombok.NonNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptService interruptService;
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private TerminalStepStatusUpdate terminalStepStatusUpdate;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -63,9 +68,15 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .interruptType(interrupt.getType())
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptId(interrupt.getUuid())
+                  .interruptConfig(interrupt.getInterruptConfig())
                   .build()));
 
-      planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
+      terminalStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
+                                                      .status(status)
+                                                      .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+                                                      .nodeExecutionId(nodeExecution.getUuid())
+                                                      .interruptId(interrupt.getUuid())
+                                                      .build());
       orchestrationEngine.concludeNodeExecution(nodeExecution, status);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);

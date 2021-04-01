@@ -15,7 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -24,6 +24,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostValidationTaskParameters;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
 
@@ -36,10 +37,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class HostValidationTaskTest extends WingsBaseTest {
   private TaskData taskData = prepareTaskData();
   @Mock private HostValidationService mockHostValidationService;
+  @Mock private SSHVaultService sshVaultService;
 
   @InjectMocks
   private HostValidationTask hostValidationTask =
@@ -56,7 +58,7 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     Object methodReturnValue = hostValidationTask.run(new Object[] {getTaskParameters()});
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
+    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
 
@@ -64,9 +66,9 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testRunthrowsException() {
-    when(mockHostValidationService.validateHost(any(), any(), any(), any())).thenThrow(new UncheckedException());
+    when(mockHostValidationService.validateHost(any(), any(), any(), any(), any())).thenThrow(new UncheckedException());
     hostValidationTask.run(new Object[] {getTaskParameters()});
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
+    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -75,7 +77,6 @@ public class HostValidationTaskTest extends WingsBaseTest {
   public void testRunWithObjectParameters() {
     Object[] objectParams = {any(), any(), Arrays.asList("host1"), any(), Collections.emptyList(), any()};
     Object methodReturnValue = hostValidationTask.run(objectParams);
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
 

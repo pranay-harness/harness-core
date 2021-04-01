@@ -10,12 +10,11 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -28,6 +27,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
@@ -37,6 +37,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -52,7 +53,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private String accountId;
   private String envId;
@@ -93,6 +94,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   private boolean
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean winrmCopyConfigOptimize;
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -101,6 +103,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean multiArtifact;
   private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
   private String artifactFileName;
+  private SSHVaultConfig sshVaultConfig;
 
   public CommandExecutionContext() {}
 
@@ -151,6 +154,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
     artifactFileName = other.artifactFileName;
     delegateSelectors = other.delegateSelectors;
+    sshVaultConfig = other.sshVaultConfig;
   }
 
   /**
@@ -230,14 +234,17 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
         return capabilities;
       case WINRM:
-        if (host != null) {
-          capabilities.add(WinrmHostValidationCapability.builder()
-                               .hostname(host.getPublicDns())
-                               .port(winrmConnectionAttributes.getPort())
-                               .useSSL(winrmConnectionAttributes.isUseSSL())
-                               .domain(winrmConnectionAttributes.getDomain())
-                               .build());
-        }
+        capabilities.add(WinrmHostValidationCapability.builder()
+                             .validationInfo(BasicValidationInfo.builder()
+                                                 .accountId(accountId)
+                                                 .appId(appId)
+                                                 .activityId(activityId)
+                                                 .executeOnDelegate(executeOnDelegate)
+                                                 .publicDns(host == null ? null : host.getPublicDns())
+                                                 .build())
+                             .winRmConnectionAttributes(winrmConnectionAttributes)
+                             .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+                             .build());
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
@@ -257,6 +264,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                              .hostConnectionCredentials(hostConnectionCredentials)
                              .bastionConnectionCredentials(bastionConnectionCredentials)
                              .sshExecutionCredential((SSHExecutionCredential) executionCredential)
+                             .sshVaultConfig(sshVaultConfig)
                              .build());
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
@@ -317,6 +325,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
     private boolean
         disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+    private boolean winrmCopyConfigOptimize;
     private List<String> delegateSelectors;
 
     // new fields for multi artifact
@@ -325,6 +334,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean multiArtifact;
     private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
     private String artifactFileName;
+    private SSHVaultConfig sshVaultConfig;
 
     private Builder() {}
 
@@ -334,6 +344,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
     public Builder accountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public Builder sshVaultConfig(SSHVaultConfig sshVaultConfig) {
+      this.sshVaultConfig = sshVaultConfig;
       return this;
     }
 
@@ -512,6 +527,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder winrmCopyConfigOptimize(boolean winrmCopyConfigOptimize) {
+      this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
+      return this;
+    }
+
     public Builder disableWinRMEnvVariables(boolean disableWinRMEnvVariables) {
       this.disableWinRMEnvVariables = disableWinRMEnvVariables;
       return this;
@@ -598,7 +618,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .artifactFileName(artifactFileName)
           .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
           .disableWinRMEnvVariables(disableWinRMEnvVariables)
-          .delegateSelectors(delegateSelectors);
+          .delegateSelectors(delegateSelectors)
+          .sshVaultConfig(sshVaultConfig);
     }
 
     public CommandExecutionContext build() {
@@ -646,7 +667,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
+      commandExecutionContext.setWinrmCopyConfigOptimize(winrmCopyConfigOptimize);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
+      commandExecutionContext.setSshVaultConfig(sshVaultConfig);
       return commandExecutionContext;
     }
   }

@@ -9,11 +9,14 @@ import static software.wings.core.managerConfiguration.ConfigChangeEvent.Primary
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.MapUtils.synchronizedMap;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.ManagerConfiguration;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,8 +33,10 @@ import org.apache.commons.codec.binary.StringUtils;
 
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._960_PERSISTENCE)
+@BreakDependencyOn("software.wings.beans.ManagerConfiguration")
 public class ConfigurationController implements Managed, QueueController {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ExecutorService executorService;
 
@@ -87,10 +92,10 @@ public class ConfigurationController implements Managed, QueueController {
 
   private void run() {
     while (running.get()) {
-      ManagerConfiguration managerConfiguration = wingsPersistence.createQuery(ManagerConfiguration.class).get();
+      ManagerConfiguration managerConfiguration = persistence.createQuery(ManagerConfiguration.class).get();
       if (managerConfiguration == null) {
         managerConfiguration = aManagerConfiguration().withPrimaryVersion(MATCH_ALL_VERSION).build();
-        wingsPersistence.save(managerConfiguration);
+        persistence.save(managerConfiguration);
       }
 
       if (!StringUtils.equals(primaryVersion.get(), managerConfiguration.getPrimaryVersion())) {

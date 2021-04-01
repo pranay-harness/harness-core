@@ -18,12 +18,14 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.RepairActionCode;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -32,8 +34,6 @@ import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.ExceptionLogger;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -60,7 +60,6 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -75,7 +74,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -106,22 +104,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
-@TargetModule(Module._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
   @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
-  @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   @Setter
   private String envId;
 
-  @EnumData(enumDataProvider = WorkflowServiceImpl.class)
-  @Attributes(required = true, title = "Workflow")
-  @Setter
-  private String workflowId;
+  @Attributes(required = true, title = "Workflow") @Setter private String workflowId;
 
   @Setter @SchemaIgnore private String pipelineId;
   @Setter @SchemaIgnore private String pipelineStageElementId;

@@ -1,12 +1,12 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.schema.type.aggregation.QLDataType;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLBillingDataFilterType {
   Application(BillingDataMetaDataFields.APPID),
   EndTime(BillingDataMetaDataFields.STARTTIME),
@@ -25,6 +25,7 @@ public enum QLBillingDataFilterType {
   NodeInstanceId(BillingDataMetaDataFields.INSTANCEID),
   PodInstanceId(BillingDataMetaDataFields.INSTANCEID),
   ParentInstanceId(BillingDataMetaDataFields.PARENTINSTANCEID),
+  StorageUtilizationValue(BillingDataMetaDataFields.STORAGEUTILIZATIONVALUE),
   LabelSearch(null),
   TagSearch(null),
   Tag(null),

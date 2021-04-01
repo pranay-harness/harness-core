@@ -23,8 +23,8 @@ public class ResourceGroupMapper {
         .name(resourceGroupDTO.getName())
         .color(resourceGroupDTO.getColor())
         .tags(convertToList(resourceGroupDTO.getTags()))
-        .harnessManaged(resourceGroupDTO.getHarnessManaged())
         .resourceSelectors(resourceGroupDTO.getResourceSelectors())
+        .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
         .description(resourceGroupDTO.getDescription())
         .build();
   }
@@ -41,8 +41,8 @@ public class ResourceGroupMapper {
         .name(resourceGroup.getName())
         .color(resourceGroup.getColor())
         .tags(convertToMap(resourceGroup.getTags()))
-        .harnessManaged(resourceGroup.getHarnessManaged())
         .resourceSelectors(resourceGroup.getResourceSelectors())
+        .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
         .description(resourceGroup.getDescription())
         .build();
   }
@@ -55,6 +55,7 @@ public class ResourceGroupMapper {
         .createdAt(resourceGroup.getCreatedAt())
         .lastModifiedAt(resourceGroup.getLastModifiedAt())
         .resourceGroup(toDTO(resourceGroup))
+        .harnessManaged(Boolean.TRUE.equals(resourceGroup.getHarnessManaged()))
         .build();
   }
 }

@@ -2,8 +2,11 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -15,12 +18,15 @@ import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
@@ -34,32 +40,35 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class UserResourceNG {
   private final UserService userService;
+  private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @GET
   @Path("/search")
-  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
+  public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
 
-    PageResponse<User> pageResponse = aPageResponse()
-                                          .withOffset(offset.toString())
-                                          .withLimit(pageSize.toString())
-                                          .withResponse(userList)
-                                          .withTotal(userService.getTotalUserCount(accountId, true))
-                                          .build();
+    PageResponse<UserInfo> pageResponse =
+        aPageResponse()
+            .withOffset(offset.toString())
+            .withLimit(pageSize.toString())
+            .withResponse(userList.stream().map(this::convertUserToNgUser).collect(Collectors.toList()))
+            .withTotal(userService.getTotalUserCount(accountId, true))
+            .build();
 
     return new RestResponse<>(pageResponse);
   }
 
   @POST
   @Path("/batch")
-  public RestResponse<List<User>> listUsersByIds(List<String> userIds) {
-    return new RestResponse<>(userService.getUsers(userIds));
+  public RestResponse<List<UserInfo>> listUsersByIds(List<String> userIds) {
+    return new RestResponse<>(convertUserToNgUser(userService.getUsers(userIds)));
   }
 
   @GET
@@ -79,9 +88,9 @@ public class UserResourceNG {
   }
 
   @GET
-  public RestResponse<Optional<User>> getUserFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
-    return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
+  public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
+    User user = userService.getUserByEmail(emailId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
   @GET
@@ -105,5 +114,49 @@ public class UserResourceNG {
       log.error(String.format("User %s does not belong to account %s", userId, accountId), ex);
       return new RestResponse<>(false);
     }
+  }
+
+  @POST
+  @Path("/user-account")
+  public RestResponse<Boolean> addUserToAccount(
+      @QueryParam("userId") String userId, @QueryParam("accountId") String accountId) {
+    userService.addUserToAccount(userId, accountId);
+    return new RestResponse<>(true);
+  }
+
+  @DELETE
+  @Path("/safeDelete/{userId}")
+  public RestResponse<Boolean> safeDeleteUser(
+      @PathParam("userId") String userId, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(userService.safeDeleteUser(userId, accountId));
+  }
+
+  private List<UserInfo> convertUserToNgUser(List<User> userList) {
+    return userList.stream()
+        .map(user
+            -> UserInfo.builder()
+                   .email(user.getEmail())
+                   .name(user.getName())
+                   .uuid(user.getUuid())
+                   .accountIds(user.getAccountIds())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private UserInfo convertUserToNgUser(User user) {
+    if (user == null) {
+      return null;
+    }
+    return UserInfo.builder()
+        .email(user.getEmail())
+        .name(user.getName())
+        .uuid(user.getUuid())
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
+        .accountIds(user.getAccountIds())
+        .build();
   }
 }

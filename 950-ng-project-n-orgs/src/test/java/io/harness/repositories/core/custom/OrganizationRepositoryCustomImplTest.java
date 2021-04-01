@@ -55,7 +55,7 @@ public class OrganizationRepositoryCustomImplTest extends CategoryTest {
     when(mongoTemplate.find(any(Query.class), eq(Organization.class))).thenReturn(singletonList(organization));
     when(mongoTemplate.count(any(Query.class), eq(Organization.class))).thenReturn(1L);
 
-    Page<Organization> organizations = organizationRepository.findAll(new Criteria(), pageable);
+    Page<Organization> organizations = organizationRepository.findAll(new Criteria(), pageable, false);
 
     assertEquals(pageable, organizations.getPageable());
     assertEquals(1, organizations.getContent().size());
@@ -74,7 +74,7 @@ public class OrganizationRepositoryCustomImplTest extends CategoryTest {
 
     when(mongoTemplate.findAndModify(any(), any(), eq(Organization.class))).thenReturn(null);
 
-    Boolean deleted = organizationRepository.delete(accountIdentifier, identifier, version);
+    Boolean deleted = organizationRepository.delete(accountIdentifier, identifier, version) != null;
 
     verify(mongoTemplate, times(1))
         .findAndModify(queryArgumentCaptor.capture(), updateArgumentCaptor.capture(), eq(Organization.class));
@@ -103,8 +103,8 @@ public class OrganizationRepositoryCustomImplTest extends CategoryTest {
 
     when(mongoTemplate.findAndModify(any(), any(), eq(Organization.class))).thenReturn(null);
 
-    boolean deleted = organizationRepository.restore(accountIdentifier, identifier);
-
+    Organization restoredOrganization = organizationRepository.restore(accountIdentifier, identifier);
+    boolean deleted = restoredOrganization != null;
     verify(mongoTemplate, times(1))
         .findAndModify(queryArgumentCaptor.capture(), updateArgumentCaptor.capture(), eq(Organization.class));
     Query query = queryArgumentCaptor.getValue();

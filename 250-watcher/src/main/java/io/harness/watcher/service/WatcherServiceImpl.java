@@ -57,6 +57,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.or;
 import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -167,6 +168,8 @@ public class WatcherServiceImpl implements WatcherService {
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
 
+  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
@@ -212,6 +215,11 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       log.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       log.info("Multiversion: {}", multiVersion);
+      if (isBlank(delegateSize)) {
+        log.info("No delegate size information found. Watcher will run standard delegates.");
+      } else {
+        log.info("Delegate size {} is set. Watcher will run sized delegates.", delegateSize);
+      }
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -955,11 +963,21 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-        ()
-            -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
-        1L, TimeUnit.MINUTES, true);
+    RestResponse<DelegateScripts> restResponse = null;
+    if (isBlank(delegateSize)) {
+      restResponse = timeLimiter.callWithTimeout(
+          ()
+              -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
+          1L, TimeUnit.MINUTES, true);
+    } else {
+      restResponse = timeLimiter.callWithTimeout(()
+                                                     -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
+                                                         watcherConfiguration.getAccountId(), version, delegateSize)),
+          1L, TimeUnit.MINUTES, true);
+    }
+
     if (restResponse == null) {
+      log.warn("Received null response from manager.");
       return;
     }
 

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seq
+    chart: seq-2.3.1
+    release: release-2963f383-386f-35ed-898e-a54f80adaeec
+    heritage: Tiller
+  name: release-2963f383-386f-35ed-898e-a54f80adaeec-seq
+spec:
+  selector:
+    matchLabels:
+      app: seq
+      release: release-2963f383-386f-35ed-898e-a54f80adaeec
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: seq
+        release: release-2963f383-386f-35ed-898e-a54f80adaeec
+        harness.io/release-name: release-2963f383-386f-35ed-898e-a54f80adaeec
+    spec:
+      containers:
+      - env:
+        - name: VAR
+          value: 'Y'
+        - name: VAR_Y_DOUBLE_QUOTED
+          value: 'Y'
+        - name: VAR_NO_QUOTES
+          value: 'Y'
+        - name: VAR_SMALL_CAPS
+          value: 'y'
+        - name: VAR_N_NO_QUOTE
+          value: 'N'
+        - name: VAR_N_SMALL_CAPS
+          value: 'n'
+        - name: VAR_N_DOUBLE_QUOTED
+          value: 'N'
+        - name: VAR_TRUE
+          value: 'true'
+        - name: VAR_YES
+          value: 'yes'
+        - name: VAR_WRONG_YES
+          value: yEs
+        - name: VAR_NO_SMALL_CAPS
+          value: 'no'
+        - name: VAR_NO_NOT_QUOTED
+          value: 'No'
+        - name: VAR_NO_DOUBLE_QUOTED
+          value: 'No'
+        - name: VAR_ON_NOT_QUOTED
+          value: 'On'
+        - name: VAR_OFF_DOUBLE_QUOTED
+          value: 'Off'

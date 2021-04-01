@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class NexusConnector extends Connector {
   private SecretManager secretManager;
   private ConnectorsController connectorsController;
@@ -32,6 +32,7 @@ public class NexusConnector extends Connector {
     setUsernameAndPassword(nexusConnectorInput, nexusConfig);
     checkUrlExists(nexusConnectorInput, nexusConfig);
     setNexusVersion(nexusConnectorInput, nexusConfig);
+    setDelegateSelectors(nexusConnectorInput, nexusConfig);
 
     SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
                                                            .withValue(nexusConfig)
@@ -53,6 +54,7 @@ public class NexusConnector extends Connector {
     setUsernameAndPassword(nexusConnectorInput, nexusConfig);
     checkUrlExists(nexusConnectorInput, nexusConfig);
     setNexusVersion(nexusConnectorInput, nexusConfig);
+    setDelegateSelectors(nexusConnectorInput, nexusConfig);
 
     settingAttribute.setValue(nexusConfig);
 
@@ -132,6 +134,12 @@ public class NexusConnector extends Connector {
   private void setNexusVersion(QLNexusConnectorInput nexusConnectorInput, NexusConfig nexusConfig) {
     if (nexusConnectorInput.getVersion().isPresent()) {
       nexusConnectorInput.getVersion().getValue().ifPresent(nexusVersion -> nexusConfig.setVersion(nexusVersion.value));
+    }
+  }
+
+  private void setDelegateSelectors(QLNexusConnectorInput nexusConnectorInput, NexusConfig nexusConfig) {
+    if (nexusConnectorInput.getDelegateSelectors().isPresent()) {
+      nexusConnectorInput.getDelegateSelectors().getValue().ifPresent(nexusConfig::setDelegateSelectors);
     }
   }
 }

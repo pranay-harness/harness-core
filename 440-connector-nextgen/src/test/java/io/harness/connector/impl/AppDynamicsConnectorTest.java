@@ -44,6 +44,7 @@ import org.mockito.Spy;
 public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
 
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;

@@ -1,6 +1,7 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -8,11 +9,14 @@ import static io.harness.utils.PageUtils.getPageRequest;
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.api.AggregateProjectService;
+import io.harness.ng.core.api.AggregateUserGroupService;
+import io.harness.ng.core.dto.AggregateACLRequest;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
@@ -20,6 +24,7 @@ import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -30,18 +35,22 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.HashSet;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import retrofit2.http.Body;
 
+@OwnedBy(PL)
 @Api("aggregate")
 @Path("aggregate")
 @Produces({"application/json", "application/yaml"})
@@ -56,6 +65,7 @@ import lombok.AllArgsConstructor;
 public class NGAggregateResource {
   private final AggregateOrganizationService aggregateOrganizationService;
   private final AggregateProjectService aggregateProjectService;
+  private final AggregateUserGroupService aggregateUserGroupService;
 
   @GET
   @Path("projects/{identifier}")
@@ -113,13 +123,37 @@ public class NGAggregateResource {
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
-    if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
-          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
-    }
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder harnessManagedOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();
+      SortOrder nameOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
+      organizationFilterDTO.setIgnoreCase(true);
+      pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, nameOrder));
+    }
     return ResponseDTO.newResponse(getNGPageResponse(aggregateOrganizationService.listOrganizationAggregateDTO(
         accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)));
+  }
+
+  @POST
+  @Path("acl/usergroups")
+  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateDTOList")
+  public ResponseDTO<PageResponse<UserGroupAggregateDTO>> list(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
+      @Body AggregateACLRequest aggregateACLRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
+    if (aggregateACLRequest == null) {
+      aggregateACLRequest =
+          AggregateACLRequest.builder().resourceGroupFilter(new HashSet<>()).roleFilter(new HashSet<>()).build();
+    }
+    return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
+        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
   }
 }

@@ -3,6 +3,8 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.secretmanagerclient.NGEncryptedDataMetadata.NGEncryptedDataMetadataKeys;
+import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
@@ -10,10 +12,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedDataParent.EncryptedDataParentKeys;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -37,6 +38,7 @@ import software.wings.settings.SettingVariableTypes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,27 +72,37 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-
-@NgUniqueIndex(name = "acctNameIdx",
-    fields =
-    {
-      @Field("accountId")
-      , @Field("name"), @Field("ngMetadata.accountIdentifier"), @Field("ngMetadata.orgIdentifier"),
-          @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
-    })
-@CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
-                                         , @Field("kmsId") })
-@CdIndex(name = "ngSecretManagerIdx",
-    fields =
-    {
-      @Field("ngMetadata.accountIdentifier")
-      , @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier"),
-          @Field("ngMetadata.secretManagerIdentifier")
-    })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                UpdatedByAware, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("acctNameIdx")
+                 .field(EncryptedDataKeys.accountId)
+                 .field(EncryptedDataKeys.name)
+                 .field(EncryptedDataKeys.accountIdentifier)
+                 .field(EncryptedDataKeys.orgIdentifier)
+                 .field(EncryptedDataKeys.projectIdentifier)
+                 .field(EncryptedDataKeys.identifier)
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("acctKmsIdx")
+                .field(EncryptedDataKeys.accountId)
+                .field(EncryptedDataKeys.kmsId)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("ngSecretManagerIdx")
+                .field(EncryptedDataKeys.accountIdentifier)
+                .field(EncryptedDataKeys.orgIdentifier)
+                .field(EncryptedDataKeys.projectIdentifier)
+                .field(EncryptedDataKeys.secretManagerIdentifier)
+                .build())
+        .build();
+  }
+
   public static final String PARENT_ID_KEY =
       String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
@@ -157,6 +169,8 @@ public class EncryptedData
 
   @FdIndex private Long nextLocalToGcpKmsMigrationIteration;
 
+  @FdIndex private Long nextAwsKmsToGcpKmsMigrationIteration;
+
   @SchemaIgnore private boolean base64Encoded;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
@@ -204,6 +218,9 @@ public class EncryptedData
     } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
       this.nextLocalToGcpKmsMigrationIteration = nextIteration;
       return;
+    } else if (EncryptedDataKeys.nextAwsKmsToGcpKmsMigrationIteration.equals(fieldName)) {
+      this.nextAwsKmsToGcpKmsMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -216,6 +233,8 @@ public class EncryptedData
       return nextAwsToGcpKmsMigrationIteration;
     } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
       return nextLocalToGcpKmsMigrationIteration;
+    } else if (EncryptedDataKeys.nextAwsKmsToGcpKmsMigrationIteration.equals(fieldName)) {
+      return nextAwsKmsToGcpKmsMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -374,5 +393,11 @@ public class EncryptedData
   public static final class EncryptedDataKeys {
     // Temporary
     public static final String ID_KEY = "_id";
+    public static final String accountIdentifier = "ngMetadata." + NGEncryptedDataMetadataKeys.accountIdentifier;
+    public static final String orgIdentifier = "ngMetadata." + NGEncryptedDataMetadataKeys.orgIdentifier;
+    public static final String projectIdentifier = "ngMetadata." + NGEncryptedDataMetadataKeys.projectIdentifier;
+    public static final String secretManagerIdentifier =
+        "ngMetadata." + NGEncryptedDataMetadataKeys.secretManagerIdentifier;
+    public static final String identifier = "ngMetadata." + NGMetadataKeys.identifier;
   }
 }

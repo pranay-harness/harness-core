@@ -64,7 +64,7 @@ public class CIK8CtlHandler {
       return null;
     }
 
-    return kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+    return kubernetesClient.secrets().inNamespace(namespace).create(secret);
   }
 
   public void createPVC(
@@ -124,7 +124,7 @@ public class CIK8CtlHandler {
     Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);
 
     if (secret != null) {
-      kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+      kubernetesClient.secrets().inNamespace(namespace).create(secret);
     }
     return secret;
   }
@@ -146,9 +146,10 @@ public class CIK8CtlHandler {
 
       // Either pod is in pending phase where it is waiting for scheduling / creation of containers
       // or pod is waiting for containers to move to running state.
-      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod)) {
+      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod) && isIpAssigned(pod)) {
         return PodStatus.builder()
             .status(PodStatus.Status.RUNNING)
+            .ip(pod.getStatus().getPodIP())
             .ciContainerStatusList(getContainersStatus(pod))
             .build();
       }
@@ -184,6 +185,7 @@ public class CIK8CtlHandler {
         .status(PodStatus.Status.ERROR)
         .errorMessage(errMsg)
         .ciContainerStatusList(getContainersStatus(pod))
+        .ip(pod.getStatus().getPodIP())
         .build();
   }
 
@@ -192,6 +194,13 @@ public class CIK8CtlHandler {
       if (containerStatus.getState().getWaiting() != null) {
         return true;
       }
+    }
+    return false;
+  }
+
+  private boolean isIpAssigned(Pod pod) {
+    if (pod.getStatus().getPodIP() != null) {
+      return true;
     }
     return false;
   }
@@ -256,6 +265,10 @@ public class CIK8CtlHandler {
 
   public Boolean deleteService(KubernetesClient kubernetesClient, String namespace, String serviceName) {
     return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
+  }
+
+  public Boolean deleteSecret(KubernetesClient kubernetesClient, String namespace, String secretName) {
+    return kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete();
   }
 
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector)

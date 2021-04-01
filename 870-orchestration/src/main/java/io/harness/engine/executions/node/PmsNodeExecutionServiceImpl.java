@@ -35,7 +35,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -44,6 +44,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -74,8 +75,9 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   @Override
   public String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest taskRequest) {
     TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
-    String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+    String taskId =
+        Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest, Duration.ofSeconds(0)));
+    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
     ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);
     return taskId;
@@ -85,7 +87,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   public void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds) {
     if (EmptyPredicate.isNotEmpty(callbackIds)) {
-      NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
     }
 

@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
@@ -14,12 +15,12 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.dtos.YamlFilterResult;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
@@ -38,11 +39,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class GitChangeSetProcessorTest extends CategoryTest {
   @Mock private GitSyncService gitSyncService;
   @Mock private GitCommitService gitCommitService;
   @Mock private YamlGitConfigService yamlGitConfigService;
-  @Mock private ChangeSetRequestTimeFilter changeSetRequestTimeFilter;
   @Mock private YamlService yamlService;
 
   @InjectMocks @Inject private GitChangeSetProcessor gitChangeSetProcessor;
@@ -142,14 +143,13 @@ public class GitChangeSetProcessorTest extends CategoryTest {
             .rootFolders(
                 Collections.singletonList(YamlGitConfigDTO.RootFolder.builder().rootFolder("filePath").build()))
             .branch(branch)
-            .accountId(accountId)
-            .gitConnectorId("id")
+            .accountIdentifier(accountId)
+            .gitConnectorRef("id")
             .repo(repo)
             .build();
     doReturn(Collections.singletonList(yamlGitConfigDTO))
         .when(yamlGitConfigService)
         .getByConnectorRepoAndBranch("id", repo, branch, accountId);
-    doReturn(YamlFilterResult.builder().build()).when(changeSetRequestTimeFilter).filterFiles(any(), any(), any());
 
     ArgumentCaptor<List> validFilesBasedOnYamlGitConfigFilterCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<List> gitDiffResultChangeSetCaptor = ArgumentCaptor.forClass(List.class);

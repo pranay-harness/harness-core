@@ -1,10 +1,15 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.InfrastructureProvisionerType.ARM;
 
+import static org.apache.commons.lang3.StringUtils.trim;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.beans.EmbeddedUser;
-import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,24 +24,28 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ARM")
+@OwnedBy(CDP)
 public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "arm";
+  private ARMResourceType resourceType;
   private ARMSourceType sourceType;
   private ARMScopeType scopeType;
-  @Trimmed(message = "Template Body should not contain leading and trailing spaces") private String templateBody;
+  private String templateBody;
   private GitFileConfig gitFileConfig;
 
   @Builder
   private ARMInfrastructureProvisioner(String name, String description, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType) {
+      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType,
+      ARMResourceType resourceType) {
     super(name, description, ARM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy, createdAt,
         lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.sourceType = sourceType;
-    this.templateBody = templateBody;
+    this.templateBody = trim(templateBody);
     this.gitFileConfig = gitFileConfig;
     this.scopeType = scopeType;
+    this.resourceType = resourceType;
   }
 
   ARMInfrastructureProvisioner() {
@@ -53,6 +62,7 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
   public static final class Yaml extends InfraProvisionerYaml {
+    private ARMResourceType resourceType;
     private ARMSourceType sourceType;
     private String templateBody;
     private GitFileConfig gitFileConfig;
@@ -61,12 +71,13 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, List<NameValuePair.Yaml> variables,
         List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, ARMSourceType sourceType, String templateBody,
-        GitFileConfig gitFileConfig, ARMScopeType scopeType) {
+        GitFileConfig gitFileConfig, ARMScopeType scopeType, ARMResourceType resourceType) {
       super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);
       this.sourceType = sourceType;
-      this.templateBody = templateBody;
+      this.templateBody = trim(templateBody);
       this.gitFileConfig = gitFileConfig;
       this.scopeType = scopeType;
+      this.resourceType = resourceType;
     }
   }
 }

@@ -14,7 +14,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.EcsUtilization;
@@ -63,7 +63,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @RunWith(Parameterized.class)
-public class EcsPerpetualTaskExecutorTest extends DelegateTest {
+public class EcsPerpetualTaskExecutorTest extends DelegateTestBase {
   @Mock private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private EcsMetricClient ecsMetricClient;

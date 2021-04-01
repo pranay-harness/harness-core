@@ -14,7 +14,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -41,7 +41,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureAppServiceTaskTest extends CategoryTest {
   @Mock private AzureSecretHelper azureSecretHelper;
   @Spy AzureWebAppSlotSetupTaskHandler setupTaskHandler = new AzureWebAppSlotSetupTaskHandler();
@@ -61,7 +61,9 @@ public class AzureAppServiceTaskTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     Map<String, AbstractAzureAppServiceTaskHandler> azureAppServiceTaskTypeToTaskHandlerMap = new HashMap<>();
     azureAppServiceTaskTypeToTaskHandlerMap.put(SLOT_SETUP.name(), setupTaskHandler);
-    doReturn(AzureTaskExecutionResponse.builder().build()).when(setupTaskHandler).executeTask(any(), any(), any());
+    doReturn(AzureTaskExecutionResponse.builder().build())
+        .when(setupTaskHandler)
+        .executeTask(any(), any(), any(), any());
 
     on(azureAppServiceTaskFactory)
         .set("azureAppServiceTaskTypeToTaskHandlerMap", azureAppServiceTaskTypeToTaskHandlerMap);

@@ -14,9 +14,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.KeyValuePair;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
@@ -29,11 +33,12 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.HttpStateExecutionData;
@@ -75,6 +80,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +105,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";
@@ -128,6 +135,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
   @Inject @Transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient FeatureFlagService featureFlagService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AccountServiceImpl accountService;
   @Transient @Inject KryoSerializer kryoSerializer;
@@ -484,6 +492,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       if (!evaluateAssertion(context, executionData) || executionData.getStatus() == ExecutionStatus.ERROR) {
         executionStatus = ExecutionStatus.FAILED;
+        appendFailureType(executionResponseBuilder, context, httpStateExecutionResponse);
       }
       executionResponseBuilder.executionStatus(executionStatus);
 
@@ -607,6 +616,14 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
   private String scheduleDelegateTask(DelegateTask task) {
     return delegateService.queueTask(task);
+  }
+
+  private void appendFailureType(ExecutionResponseBuilder executionResponseBuilder, ExecutionContext context,
+      HttpStateExecutionResponse httpStateExecutionResponse) {
+    if (featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, context.getAccountId())
+        && httpStateExecutionResponse.isTimedOut()) {
+      executionResponseBuilder.failureTypes(EnumSet.of(FailureType.TIMEOUT_ERROR));
+    }
   }
 
   @Override
@@ -795,5 +812,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     private String httpMethod;
     private String httpUrl;
     private String header;
+    private boolean timedOut;
   }
 }

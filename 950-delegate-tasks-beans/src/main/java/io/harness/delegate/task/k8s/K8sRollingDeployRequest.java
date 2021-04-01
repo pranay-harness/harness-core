@@ -18,10 +18,12 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   K8sTaskType taskType;
   Integer timeoutIntervalInMin;
   @Expression(ALLOW_SECRETS) List<String> valuesYamlList;
+  @Expression(ALLOW_SECRETS) List<String> openshiftParamList;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
   boolean inCanaryWorkflow;
   boolean localOverrideFeatureFlag;
   String accountId;
   boolean deprecateFabric8Enabled;
+  boolean skipResourceVersioning;
 }

@@ -10,7 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.DataCollectionType;
@@ -25,7 +25,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.service.KubernetesActivitiesStoreService;
-import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.k8s.apiclient.ApiClientFactory;
@@ -36,9 +35,10 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
+
+import software.wings.delegatetasks.cvng.K8InfoDataService;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -62,11 +62,10 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 
-public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTest {
+public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private K8ActivityCollectionPerpetualTaskExecutor dataCollector = new K8ActivityCollectionPerpetualTaskExecutor();
-  @Mock private SecretDecryptionService secretDecryptionService;
-  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Mock private K8InfoDataService k8InfoDataService;
   @Mock private ApiClientFactory apiClientFactory;
   @Mock private KubernetesActivitiesStoreService kubernetesActivitiesStoreService;
   @Mock private ApiClient apiClient;
@@ -121,8 +120,7 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTest 
                                                    .workloadName(generateUuid())
                                                    .build()))
                                            .build()));
-    FieldUtils.writeField(dataCollector, "secretDecryptionService", secretDecryptionService, true);
-    FieldUtils.writeField(dataCollector, "k8sYamlToDelegateDTOMapper", k8sYamlToDelegateDTOMapper, true);
+    FieldUtils.writeField(dataCollector, "k8InfoDataService", k8InfoDataService, true);
     FieldUtils.writeField(dataCollector, "kubernetesActivitiesStoreService", kubernetesActivitiesStoreService, true);
     FieldUtils.writeField(dataCollector, "apiClientFactory", apiClientFactory, true);
     FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);

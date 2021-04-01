@@ -1,9 +1,15 @@
 package io.harness.pms.notification;
 
 import io.harness.PipelineServiceConfiguration;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
+import io.harness.notification.PipelineEventType;
+import io.harness.notification.bean.NotificationChannelWrapper;
+import io.harness.notification.bean.NotificationRules;
+import io.harness.notification.bean.PipelineEvent;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -12,9 +18,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.notification.bean.NotificationChannelWrapper;
-import io.harness.pms.notification.bean.NotificationRules;
-import io.harness.pms.notification.bean.PipelineEvent;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.StepOutcomeGroup;
@@ -29,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NotificationHelper {
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
@@ -37,15 +41,16 @@ public class NotificationHelper {
   @Inject PlanExecutionService planExecutionService;
   @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
 
-  public Optional<PipelineEventType> getEventTypeForStage(NodeExecutionProto nodeExecutionProto) {
+  public Optional<io.harness.notification.PipelineEventType> getEventTypeForStage(
+      NodeExecutionProto nodeExecutionProto) {
     if (!isStageNode(nodeExecutionProto)) {
       return Optional.empty();
     }
     if (nodeExecutionProto.getStatus() == Status.SUCCEEDED) {
-      return Optional.of(PipelineEventType.STAGE_SUCCESS);
+      return Optional.of(io.harness.notification.PipelineEventType.STAGE_SUCCESS);
     }
     if (StatusUtils.brokeStatuses().contains(nodeExecutionProto.getStatus())) {
-      return Optional.of(PipelineEventType.STAGE_FAILED);
+      return Optional.of(io.harness.notification.PipelineEventType.STAGE_FAILED);
     }
     return Optional.empty();
   }
@@ -54,11 +59,12 @@ public class NotificationHelper {
     return Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
-  public void sendNotification(
-      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecutionProto nodeExecutionProto) {
+  public void sendNotification(Ambiance ambiance, io.harness.notification.PipelineEventType pipelineEventType,
+      NodeExecutionProto nodeExecutionProto) {
     String identifier = nodeExecutionProto != null ? nodeExecutionProto.getNode().getIdentifier() : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
-
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     String yaml = ambiance.getMetadata().getYaml();
     if (EmptyPredicate.isEmpty(yaml)) {
       log.error("Empty yaml found in executionMetaData");
@@ -76,11 +82,13 @@ public class NotificationHelper {
     }
 
     sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecutionProto, identifier));
+        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecutionProto, identifier), orgIdentifier,
+        projectIdentifier);
   }
 
   private void sendNotificationInternal(List<NotificationRules> notificationRulesList,
-      PipelineEventType pipelineEventType, String identifier, String accountIdentifier, String notificationContent) {
+      io.harness.notification.PipelineEventType pipelineEventType, String identifier, String accountIdentifier,
+      String notificationContent, String orgIdentifier, String projectIdentifier) {
     for (NotificationRules notificationRules : notificationRulesList) {
       if (!notificationRules.isEnabled()) {
         continue;
@@ -91,7 +99,8 @@ public class NotificationHelper {
         NotificationChannelWrapper wrapper = notificationRules.getNotificationChannelWrapper();
         String templateId = getNotificationTemplate(pipelineEventType.getLevel(), wrapper.getType());
         NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(accountIdentifier,
-            templateId, ImmutableMap.of("message", notificationContent, "event_name", pipelineEventType.toString()));
+            orgIdentifier, projectIdentifier, templateId,
+            ImmutableMap.of("message", notificationContent, "event_name", pipelineEventType.toString()));
         notificationClient.sendNotificationAsync(channel);
       }
     }
@@ -101,12 +110,12 @@ public class NotificationHelper {
     return String.format("pms_%s_%s_plain", level.toLowerCase(), channelType.toLowerCase());
   }
 
-  private boolean shouldSendNotification(
-      List<PipelineEvent> pipelineEvents, PipelineEventType pipelineEventType, String identifier) {
+  private boolean shouldSendNotification(List<PipelineEvent> pipelineEvents,
+      io.harness.notification.PipelineEventType pipelineEventType, String identifier) {
     String pipelineEventTypeLevel = pipelineEventType.getLevel();
     for (PipelineEvent pipelineEvent : pipelineEvents) {
-      PipelineEventType thisEventType = pipelineEvent.getType();
-      if (thisEventType == PipelineEventType.ALL_EVENTS) {
+      io.harness.notification.PipelineEventType thisEventType = pipelineEvent.getType();
+      if (thisEventType == io.harness.notification.PipelineEventType.ALL_EVENTS) {
         return true;
       } else if (thisEventType == pipelineEventType && pipelineEventTypeLevel.equals("Stage")) {
         List<String> stages = pipelineEvent.getForStages();

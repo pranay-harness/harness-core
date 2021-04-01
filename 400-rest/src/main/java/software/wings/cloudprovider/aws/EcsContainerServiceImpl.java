@@ -91,12 +91,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -115,6 +117,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private static final Integer ECS_LIST_SERVICES_MAX_RESULTS = 100;
   private static final Integer ECS_DESCRIBE_SERVICES_MAX_RESULTS = 10;
+  private static final Integer ECS_DESCRIBE_CONTAINER_INSTANCES_MAX_INPUT = 100;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -972,7 +975,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData) {
+  public void waitForTasksToBeInRunningStateWithHandledExceptions(UpdateServiceCountRequestData requestData) {
     try {
       waitForTasksToBeInRunningState(requestData);
     } catch (TimeoutException | InvalidRequestException e) {
@@ -1031,7 +1034,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                                 .serviceEvents(getEventsFromService(service))
                                                                 .build();
 
-    waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
+    waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
     waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
     return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
         Collections.EMPTY_LIST, executionLogCallback);
@@ -1040,7 +1043,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     try {
@@ -1050,8 +1054,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
               .get(0);
 
-      // If service task count is already equal to desired count, don't try to resize
-      if (service.getDesiredCount() != desiredCount) {
+      // Even if service task count is already equal to desired count, try to resize
+      // This should help retry step in case of timeouts or ECS provisioning issue
+      if (service.getDesiredCount() != desiredCount
+          || (timeoutErrorSupported && !isServiceStable(desiredCount, service))) {
         List<ServiceEvent> serviceEvents = new ArrayList<>();
         if (isNotEmpty(service.getEvents())) {
           serviceEvents.addAll(service.getEvents());
@@ -1072,7 +1078,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
         updateServiceCount(serviceCountRequestData);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
-        waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
+        waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
         if (desiredCount > service.getDesiredCount()) { // don't do it for downsize.
           waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
         }
@@ -1085,6 +1091,19 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (Exception ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
+  }
+
+  /**
+   * This is taken from ECS service stable check waiters.
+   * https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html
+   * logic is: runningCount == desiredCount && (service.getDeployments().size() == 1)
+   *
+   * @param desiredCount
+   * @param service
+   * @return
+   */
+  private boolean isServiceStable(int desiredCount, Service service) {
+    return service.getRunningCount() == desiredCount && !isEmpty(service.getDeployments());
   }
 
   @Override
@@ -1215,6 +1234,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
+      Set<String> originalTaskArnsSet = new HashSet<>(originalTaskArns);
+
       for (Task task : tasks) {
         if (task == null) {
           continue;
@@ -1257,7 +1278,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                .ecsContainerDetails(ecsContainerDetailsBuilder.build())
                                .ec2Instance(ec2Instance)
                                .status(Status.SUCCESS)
-                               .newContainer(!originalTaskArns.contains(task.getTaskArn()))
+                               .newContainer(!originalTaskArnsSet.contains(task.getTaskArn()))
                                .containerTasksReachable(mainContainer != null)
                                .build());
       }
@@ -1355,13 +1376,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private List<ContainerInstance> fetchContainerInstancesForTasks(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, AwsConfig awsConfig) {
-    List<String> containerInstances =
-        tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
-    log.info("Container Instances = " + containerInstances);
-    return awsHelperService
-        .describeContainerInstances(region, awsConfig, encryptedDataDetails,
-            new DescribeContainerInstancesRequest().withCluster(clusterName).withContainerInstances(containerInstances))
-        .getContainerInstances();
+    Set<String> containerInstancesSet =
+        tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(Collectors.toSet());
+    List<String> containerInstancesSetList = new ArrayList<>(containerInstancesSet);
+    log.info("Container Instances = " + containerInstancesSetList);
+    List<List<String>> containerInstancesSetListChunks =
+        Lists.partition(containerInstancesSetList, ECS_DESCRIBE_CONTAINER_INSTANCES_MAX_INPUT);
+    List<ContainerInstance> containerInstanceObjectList = new ArrayList<>();
+
+    containerInstancesSetListChunks.forEach(containerInstancesSetListChunk
+        -> containerInstanceObjectList.addAll(awsHelperService
+                                                  .describeContainerInstances(region, awsConfig, encryptedDataDetails,
+                                                      new DescribeContainerInstancesRequest()
+                                                          .withCluster(clusterName)
+                                                          .withContainerInstances(containerInstancesSetListChunk))
+                                                  .getContainerInstances()));
+    return containerInstanceObjectList;
   }
 
   EcsContainerDetailsBuilder getEcsContainerDetailsBuilder(Task ecsTask, Container container) {
@@ -1377,7 +1407,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * The algorithm is pretty straigh forward.
    * Look at the deployments. If there are more that one deployments, no steady state.
    * else, the deployment.getUpdatedAt() >= last message with "has reached steady state."
+   *
+   * Deprecated Note: Please use {@link #isServiceStable(int, Service)}
    */
+  @Deprecated
   @VisibleForTesting
   boolean hasServiceReachedSteadyState(Service service) {
     List<Deployment> deployments = service.getDeployments();
@@ -1468,7 +1501,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               data.getDesiredCount(), service[0].getDesiredCount()),
           LogLevel.ERROR);
       executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
-      throw new InvalidRequestException("Service update timed out");
+      throw new TimeoutException("Service update timed out", "Timeout", e, WingsException.SRE);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

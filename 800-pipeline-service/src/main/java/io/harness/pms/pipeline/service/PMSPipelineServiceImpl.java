@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -8,6 +9,7 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.DuplicateFieldException;
@@ -15,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
@@ -27,6 +30,7 @@ import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
+import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -48,6 +52,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
@@ -58,6 +63,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   @Inject private FilterCreatorMergeService filterCreatorMergeService;
@@ -66,6 +72,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private FilterService filterService;
   @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  @Inject private CommonStepInfo commonStepInfo;
+  @Inject @Getter private Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -74,9 +82,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
   }
-
-  // ToDo Need to add support for referred entities
-  // saveReferencesPresentInPipeline
 
   @Override
   public PipelineEntity create(PipelineEntity pipelineEntity) {
@@ -160,8 +165,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      Long version) throws ProducerShutdownException {
+  public boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
     Criteria criteria =
         getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
 
@@ -175,9 +180,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
-    if (pipelineEntity.isPresent()) {
-      pipelineSetupUsageHelper.deleteSetupUsagesForGivenPipeline(pipelineEntity.get());
-    }
+    pipelineEntity.ifPresent(entity -> pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, entity));
     return true;
   }
 
@@ -268,6 +271,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
       criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());
     }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineIdentifiers())) {
+      criteria.and(PipelineEntityKeys.identifier).in(piplineFilter.getPipelineIdentifiers());
+    }
     if (piplineFilter.getModuleProperties() != null) {
       ModuleInfoFilterUtils.processNode(
           JsonUtils.readTree(piplineFilter.getModuleProperties().toJson()), "filters", criteria);
@@ -293,11 +299,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public StepCategory getSteps(String module, String category) {
+  public StepCategory getSteps(String module, String category, String accountId) {
     Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
         pmsSdkInstanceService.getInstanceNameToSupportedSteps();
     StepCategory stepCategory =
-        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
+        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module), accountId);
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
       if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
         continue;
@@ -315,7 +321,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return stepCategory;
   }
 
-  private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
+  private StepCategory calculateStepsForModuleBasedOnCategory(
+      String category, List<StepInfo> stepInfos, String accountId) {
     List<StepInfo> filteredStepTypes = new ArrayList<>();
     if (!stepInfos.isEmpty()) {
       filteredStepTypes =
@@ -325,7 +332,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                       || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
-    filteredStepTypes.addAll(CommonStepInfo.getCommonSteps());
+    filteredStepTypes.addAll(commonStepInfo.getCommonSteps(accountId));
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (StepInfo stepType : filteredStepTypes) {
       addToTopLevel(stepCategory, stepType);

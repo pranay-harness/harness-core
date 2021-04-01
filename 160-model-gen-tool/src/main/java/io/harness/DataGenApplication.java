@@ -22,9 +22,9 @@ import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
-import io.harness.mongo.MongoModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.UserProvider;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -121,7 +121,12 @@ public class DataGenApplication extends Application<MainConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
     modules.add(new SpringPersistenceModule());
     modules.add(new ProviderModule() {
       @Provides
@@ -213,8 +218,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     registerObservers(injector);
 
-    registerStores(injector);
-
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
         if (connector instanceof ServerConnector) {
@@ -280,11 +283,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(engineEventHandlersMap)
         .build();
-  }
-
-  private void registerStores(Injector injector) {
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerObservers(Injector injector) {

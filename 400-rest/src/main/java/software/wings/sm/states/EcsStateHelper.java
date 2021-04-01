@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -33,8 +34,10 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
@@ -50,9 +53,7 @@ import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.CommandStateExecutionData;
@@ -126,6 +127,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
@@ -935,12 +937,16 @@ public class EcsStateHelper {
       updateContainerElementAfterSuccessfulResize(context);
     }
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(listParam)
-        .notifyElement(listParam)
-        .build();
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(executionData)
+                                           .executionStatus(executionStatus)
+                                           .contextElement(listParam)
+                                           .notifyElement(listParam);
+
+    if (null != deployResponse && deployResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+    return builder.build();
   }
 
   private List<InstanceDetails> generateEcsInstanceDetails(List<InstanceElement> allInstanceElements) {

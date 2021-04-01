@@ -1,0 +1,25 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+] + [
+    "//960-persistence:module",
+    "@maven//:com_google_inject_guice",
+    "//:lombok",
+]
+
+java_library(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)

@@ -1,11 +1,15 @@
 package io.harness.ccm.billing.preaggregated;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import java.util.List;
 
+@OwnedBy(CE)
 public interface PreAggregateBillingService {
   PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName,

@@ -1,14 +1,12 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 
-import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -33,31 +31,43 @@ import org.mongodb.morphia.annotations.Entity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
-
-@NgUniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
-                                                 , @Field(GitCommitKeys.commitId) })
-@CdIndex(name = "gitCommitStatusLastUpdatedIdx",
-    fields =
-    {
-      @Field(GitCommitKeys.accountId)
-      , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-    })
-@CdIndex(name = "gitCommitAccountIdLastUpdatedAT",
-    fields = { @Field(GitCommitKeys.accountId)
-               , @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC) })
-@CdIndex(name = "gitCommitAccountIdCreatedAtDesc",
-    fields = { @Field(GitCommitKeys.accountId)
-               , @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC), })
-@CdIndex(name = "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx",
-    fields =
-    {
-      @Field(GitCommitKeys.accountId)
-      , @Field(GitCommitKeys.yamlGitConfigIds), @Field(GitCommitKeys.status),
-          @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-    })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("gitCommitIdx")
+                 .unique(true)
+                 .field(GitCommitKeys.accountId)
+                 .field(GitCommitKeys.commitId)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("gitCommitStatusLastUpdatedIdx")
+                 .field(GitCommitKeys.accountId)
+                 .field(GitCommitKeys.status)
+                 .descSortField(GitCommitKeys.lastUpdatedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("gitCommitAccountIdLastUpdatedAT")
+                 .field(GitCommitKeys.accountId)
+                 .descSortField(GitCommitKeys.lastUpdatedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("gitCommitAccountIdCreatedAtDesc")
+                 .field(GitCommitKeys.accountId)
+                 .descSortField(GitCommitKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx")
+                 .field(GitCommitKeys.accountId)
+                 .field(GitCommitKeys.yamlGitConfigIds)
+                 .field(GitCommitKeys.status)
+                 .descSortField(GitCommitKeys.lastUpdatedAt)
+                 .build())
+        .build();
+  }
+
   private String accountId;
   private String yamlGitConfigId;
   private String commitId;

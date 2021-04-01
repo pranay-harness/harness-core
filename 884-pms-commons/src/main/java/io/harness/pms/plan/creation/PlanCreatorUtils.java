@@ -127,4 +127,22 @@ public class PlanCreatorUtils {
     });
     return stepGroupFields;
   }
+
+  public List<YamlField> getStepYamlFields(List<YamlNode> stepYamlNodes) {
+    List<YamlField> stepFields = new LinkedList<>();
+
+    stepYamlNodes.forEach(yamlNode -> {
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
+      if (stepField != null) {
+        stepFields.add(stepField);
+      } else if (stepGroupField != null) {
+        stepFields.add(stepGroupField);
+      } else if (parallelStepField != null) {
+        stepFields.add(parallelStepField);
+      }
+    });
+    return stepFields;
+  }
 }

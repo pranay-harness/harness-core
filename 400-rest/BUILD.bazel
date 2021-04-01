@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -17,13 +13,14 @@ shared_dependencies = [
     "//450-ce-views:module",
     "//460-capability:module",
     "//470-alert:module",
-    "//480-alert-beans:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
     "//860-orchestration-visualization:module",
+    "//870-cg-yaml-beans:module",
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
+    "//874-orchestration-delay:module",
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
@@ -48,6 +45,7 @@ shared_dependencies = [
     "//950-timeout-engine:module",
     "//950-wait-engine:module",
     "//954-connector-beans:module",
+    "//955-alert-beans:module",
     "//960-api-services:module",
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
@@ -197,6 +195,7 @@ shared_dependencies = [
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_j2objc_j2objc_annotations",
     "@maven//:com_google_oauth_client_google_oauth_client",
+    "@maven//:com_googlecode_owasp_java_html_sanitizer_owasp_java_html_sanitizer",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:com_googlecode_javaewah_JavaEWAH",
@@ -213,7 +212,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_lmax_disruptor",
     "@maven//:com_mashape_unirest_unirest_java",
@@ -674,7 +673,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven_harness//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
@@ -697,6 +696,7 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
@@ -712,6 +712,7 @@ java_library(
     ] + shared_dependencies + [
         ":module",
         "//990-commons-test:module",
+        "//960-persistence:supporter-test",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
@@ -756,23 +757,17 @@ run_package_tests(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     tags = [
         "aeriform",
         "manual",
+        "no-ide",
     ],
     visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

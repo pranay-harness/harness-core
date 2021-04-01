@@ -1,5 +1,8 @@
 package io.harness.ccm.anomaly.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.anomaly.dao.AnomalyEntityDao;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.service.AnomalyDataQueryBuilder;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@OwnedBy(CE)
 public class AnomalyServiceImpl implements AnomalyService {
   @Autowired @Inject private AnomalyEntityDao anomalyEntityDao;
 
@@ -33,6 +37,18 @@ public class AnomalyServiceImpl implements AnomalyService {
     addAccountIdFilter(account, query);
     query.addCondition(
         BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, date.truncatedTo(ChronoUnit.DAYS)));
+    return anomalyEntityDao.list(query.validate().toString());
+  }
+
+  @Override
+  public List<AnomalyEntity> list(String account, Instant from, Instant to) {
+    SelectQuery query = new SelectQuery();
+    query.addAllTableColumns(AnomalyEntity.AnomaliesDataTableSchema.table);
+    addAccountIdFilter(account, query);
+    query.addCondition(BinaryCondition.lessThanOrEq(
+        AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, to.truncatedTo(ChronoUnit.DAYS)));
+    query.addCondition(BinaryCondition.greaterThanOrEq(
+        AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, from.truncatedTo(ChronoUnit.DAYS)));
     return anomalyEntityDao.list(query.validate().toString());
   }
 

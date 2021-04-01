@@ -18,11 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 public class BuildSetupUtils {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
 
-  public CIBuildSetupTaskParams getBuildSetupTaskParams(
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance, Map<String, String> taskIds) {
+  public CIBuildSetupTaskParams getBuildSetupTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+      Ambiance ambiance, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     switch (liteEngineTaskStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
-        return k8BuildSetupUtils.getCIk8BuildTaskParams(liteEngineTaskStepInfo, ambiance, taskIds);
+        return k8BuildSetupUtils.getCIk8BuildTaskParams(
+            liteEngineTaskStepInfo, ambiance, taskIds, logPrefix, stepLogKeys);
       default:
         unhandled(liteEngineTaskStepInfo.getBuildJobEnvInfo().getType());
     }

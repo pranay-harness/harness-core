@@ -1,8 +1,11 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.ccm.setup.CEMetadataRecordDao;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
@@ -10,7 +13,6 @@ import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
 
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.graphql.datafetcher.AbstractFieldsDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {
   @Inject private ViewCustomFieldService viewCustomFieldService;
   @Inject private CEMetadataRecordDao metadataRecordDao;
@@ -41,7 +44,7 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
       isExplorerQuery = !metadataFilter.isPreview();
       viewId = metadataFilter.getViewId();
-      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId);
+      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId, accountId);
     }
 
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();

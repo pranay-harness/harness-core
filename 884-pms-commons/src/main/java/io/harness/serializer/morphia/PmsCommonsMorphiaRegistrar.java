@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.interrupts.InterruptEvent;
 
 import java.util.Set;
 
@@ -14,6 +16,8 @@ public class PmsCommonsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(NodeExecutionEvent.class);
+    set.add(InterruptEvent.class);
+    set.add(SdkResponseEvent.class);
   }
 
   @Override

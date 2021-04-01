@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -27,11 +28,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -80,6 +84,8 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
@@ -115,7 +121,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         .extractUnresolvedTextVariables(anyListOf(NameValuePair.class));
     doAnswer(doExtractEncryptedVariables)
         .when(infrastructureProvisionerService)
-        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString());
+        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString(), anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString());
   }
 
@@ -239,7 +245,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     when(morphiaIterator.getCursor()).thenReturn(dbCursor);
     when(query.fetch()).thenReturn(morphiaIterator);
 
-    when(fileService.getLatestFileId(anyString(), any(DelegateAgentFileService.FileBucket.class))).thenReturn("fileId");
+    when(fileService.getLatestFileId(anyString(), any(FileBucket.class))).thenReturn("fileId");
     when(gitUtilsManager.getGitConfig(anyString())).thenReturn(GitConfig.builder().build());
     when(infrastructureProvisionerService.getManagerExecutionCallback(anyString(), anyString(), anyString()))
         .thenReturn(mock(ManagerExecutionLogCallback.class));
@@ -305,8 +311,8 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
     verifyResponse(executionResponse, 1);
     verify(fileService, times(1))
-        .updateParentEntityIdAndVersion(any(Class.class), anyString(), anyInt(), anyString(), anyMap(),
-            any(DelegateAgentFileService.FileBucket.class));
+        .updateParentEntityIdAndVersion(
+            any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
 
     // no state file
     terraformExecutionData.setStateFileId(null);
@@ -350,8 +356,8 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
 
     verify(fileService, times(1))
-        .updateParentEntityIdAndVersion(any(Class.class), anyString(), anyInt(), anyString(), anyMap(),
-            any(DelegateAgentFileService.FileBucket.class));
+        .updateParentEntityIdAndVersion(
+            any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     verify(wingsPersistence, times(1)).createQuery(TerraformConfig.class);
     verify(wingsPersistence, times(1)).delete(query);

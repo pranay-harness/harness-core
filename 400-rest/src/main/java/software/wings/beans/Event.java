@@ -202,9 +202,17 @@ public class Event {
      */
     DISABLE_2FA,
     /**
+     * 2FA Login
+     */
+    LOGIN_2FA,
+    /**
      * Login type.
      */
     LOGIN,
+    /**
+     * Unsuccessful login type.
+     */
+    UNSUCCESSFUL_LOGIN,
     /**
      * Link SSO type.
      */
@@ -250,7 +258,11 @@ public class Event {
     /**
      * for non-whitelisted users login attempt
      */
-    NON_WHITELISTED
+    NON_WHITELISTED,
+    /**
+     * for API Invocation using API_Key
+     */
+    INVOKED
   }
 
   /**

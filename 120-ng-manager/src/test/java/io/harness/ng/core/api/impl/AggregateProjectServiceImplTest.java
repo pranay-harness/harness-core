@@ -22,7 +22,7 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.rule.Owner;
 
@@ -99,9 +99,9 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     return userProjectMapList;
   }
 
-  private List<User> getUsers(List<UserProjectMap> userProjectMaps) {
-    List<User> users = new ArrayList<>();
-    userProjectMaps.forEach(userProjectMap -> users.add(User.builder().uuid(userProjectMap.getUserId()).build()));
+  private List<UserInfo> getUsers(List<UserProjectMap> userProjectMaps) {
+    List<UserInfo> users = new ArrayList<>();
+    userProjectMaps.forEach(userProjectMap -> users.add(UserInfo.builder().uuid(userProjectMap.getUserId()).build()));
     return users;
   }
 
@@ -122,20 +122,18 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     List<UserProjectMap> userProjectMaps = getUserProjectMapList(accountIdentifier, orgIdentifier, projectIdentifier);
     when(ngUserService.listUserProjectMap(any())).thenReturn(userProjectMaps);
 
-    List<User> users = getUsers(userProjectMaps);
+    List<UserInfo> users = getUsers(userProjectMaps);
     when(ngUserService.getUsersByIds(any())).thenReturn(users);
 
     ProjectAggregateDTO projectAggregateDTO =
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
 
     // project
-    assertEquals(accountIdentifier, projectAggregateDTO.getProjectResponse().getProject().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());
     assertEquals(projectIdentifier, projectAggregateDTO.getProjectResponse().getProject().getIdentifier());
     assertEquals(project.getName(), projectAggregateDTO.getProjectResponse().getProject().getName());
 
     // organization
-    assertEquals(accountIdentifier, projectAggregateDTO.getOrganization().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getOrganization().getIdentifier());
     assertEquals(organization.getName(), projectAggregateDTO.getOrganization().getName());
 
@@ -165,7 +163,6 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
 
     // project
-    assertEquals(accountIdentifier, projectAggregateDTO.getProjectResponse().getProject().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());
     assertEquals(projectIdentifier, projectAggregateDTO.getProjectResponse().getProject().getIdentifier());
     assertEquals(project.getName(), projectAggregateDTO.getProjectResponse().getProject().getName());
@@ -221,7 +218,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     List<UserProjectMap> userProjectMaps = getUserProjectMapList(projects);
     when(ngUserService.listUserProjectMap(any())).thenReturn(userProjectMaps);
 
-    List<User> users = getUsers(userProjectMaps);
+    List<UserInfo> users = getUsers(userProjectMaps);
     when(ngUserService.getUsersByIds(any())).thenReturn(users);
 
     Page<ProjectAggregateDTO> projectAggregateDTOs =

@@ -7,14 +7,28 @@ import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
 public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, String> {
-  Long removeByAccountIdAndOrganizationIdAndProjectIdAndScopeAndUuid(
+  Long removeByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndUuid(
       String accountId, String organizationIdentifier, String projectIdentifier, Scope scope, String uuid);
 
-  List<YamlGitConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScope(
-      String accountId, String organizationIdentifier, String projectIdentifier, Scope scope);
+  Optional<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+      String accountId, String organizationIdentifier, String projectIdentifier, String uuid);
+
+  List<YamlGitConfig> findByGitConnectorRefAndRepoAndBranchAndAccountId(
+      String gitConnectorId, String repo, String branchName, String accountId);
+
+  List<YamlGitConfig> findByRepoAndBranchAndAccountId(String repo, String branch, String accountId);
+
+  Optional<YamlGitConfig> findByUuidAndAccountId(String uuid, String accountId);
+
+  Boolean existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier);
+
+  List<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeOrderByCreatedAtDesc(
+      String accountId, String orgIdentifier, String projectIdentifier, Scope scope);
 }

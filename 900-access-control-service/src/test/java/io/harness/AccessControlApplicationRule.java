@@ -1,11 +1,8 @@
 package io.harness;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
-import io.harness.persistence.HPersistence;
-import io.harness.persistence.UserProvider;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -44,7 +41,6 @@ public class AccessControlApplicationRule implements MethodRule, InjectorRuleMix
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(AccessControlClientModule.getInstance());
     return modules;
   }
 
@@ -57,13 +53,6 @@ public class AccessControlApplicationRule implements MethodRule, InjectorRuleMix
         }
       }
     }
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new UserProvider() {
-      @Override
-      public EmbeddedUser activeUser() {
-        return EmbeddedUser.builder().email("test@test.com").name("test").uuid("dummy").build();
-      }
-    });
   }
 
   @Override

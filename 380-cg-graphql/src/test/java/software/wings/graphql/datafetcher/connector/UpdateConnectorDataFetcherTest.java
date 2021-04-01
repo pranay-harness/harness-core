@@ -72,6 +72,7 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashSet;
 import javax.validation.ConstraintViolationException;
 import org.junit.Before;
@@ -289,18 +290,25 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateDockerConnector() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withAccountId(ACCOUNT_ID)
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-                 .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
+                 .withValue(DockerConfig.builder()
+                                .accountId(ACCOUNT_ID)
+                                .dockerRegistryUrl(URL)
+                                .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                .build())
                  .build())
         .when(settingsService)
         .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
@@ -335,11 +343,14 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateDockerConnectorWithoutUsername() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     QLDockerConnectorInputBuilder updateDockerConnectorInputBuilder =
         getQlDockerConnectorInputBuilder()
@@ -435,6 +446,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                        .connectorId(CONNECTOR_ID)
                                        .connectorType(QLConnectorType.NEXUS)
                                        .nexusConnector(getQlNexusConnectorInputBuilder()
+                                                           .delegateSelectors(RequestField.ofNull())
                                                            .passwordSecretId(RequestField.ofNullable(PASSWORD))
                                                            .version(RequestField.ofNullable(QLNexusVersion.V2))
                                                            .build())

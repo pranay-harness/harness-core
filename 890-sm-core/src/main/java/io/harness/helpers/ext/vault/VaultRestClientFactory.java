@@ -122,42 +122,39 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String secretEngine, String fullPath, String value)
+    public boolean writeSecret(String authToken, String namespace, String secretEngine, String fullPath, String value)
         throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       Map<String, String> valueMap = new HashMap<>();
       valueMap.put(pathAndKey.keyName, value);
       Response<Void> response =
-          vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, valueMap).execute();
+          vaultRestClient.writeSecret(authToken, namespace, secretEngine, pathAndKey.path, valueMap).execute();
       logErrorIfRequestFailed(response);
       return response.isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String secretEngine, String fullPath) throws IOException {
+    public boolean deleteSecret(String authToken, String namespace, String secretEngine, String fullPath)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
-      return vaultRestClient.deleteSecret(authToken, secretEngine, pathAndKey.path).execute().isSuccessful();
+      return vaultRestClient.deleteSecret(authToken, namespace, secretEngine, pathAndKey.path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String secretEngine, String fullPath) throws IOException {
+    public String readSecret(String authToken, String namespace, String secretEngine, String fullPath)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
 
       VaultReadResponse response =
-          vaultRestClient.readSecret(authToken, secretEngine, pathAndKey.path).execute().body();
+          vaultRestClient.readSecret(authToken, namespace, secretEngine, pathAndKey.path).execute().body();
       return response == null || response.getData() == null ? null : response.getData().get(pathAndKey.keyName);
     }
 
     @Override
-    public VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath)
-        throws IOException {
+    public VaultSecretMetadata readSecretMetadata(
+        String authToken, String namespace, String secretEngine, String fullPath) throws IOException {
       // Older Vault services doesn't have secret version metadata available!
       return null;
-    }
-
-    @Override
-    public boolean renewToken(String authToken) throws IOException {
-      return vaultRestClient.renewToken(authToken).execute().isSuccessful();
     }
   }
 
@@ -169,46 +166,43 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String secretEngine, String fullPath, String value)
+    public boolean writeSecret(String authToken, String namespace, String secretEngine, String fullPath, String value)
         throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       Map<String, String> dataMap = new HashMap<>();
       dataMap.put(pathAndKey.keyName, value);
       VaultSecretValue vaultSecretValue = new VaultSecretValue(dataMap);
       Response<Void> response =
-          vaultRestClient.writeSecret(authToken, secretEngine, pathAndKey.path, vaultSecretValue).execute();
+          vaultRestClient.writeSecret(authToken, namespace, secretEngine, pathAndKey.path, vaultSecretValue).execute();
       logErrorIfRequestFailed(response);
       return response.isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String secretEngine, String fullPath) throws IOException {
+    public boolean deleteSecret(String authToken, String namespace, String secretEngine, String fullPath)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
-      return vaultRestClient.deleteSecret(authToken, secretEngine, pathAndKey.path).execute().isSuccessful();
+      return vaultRestClient.deleteSecret(authToken, namespace, secretEngine, pathAndKey.path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String secretEngine, String fullPath) throws IOException {
+    public String readSecret(String authToken, String namespace, String secretEngine, String fullPath)
+        throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
 
       VaultReadResponseV2 response =
-          vaultRestClient.readSecret(authToken, secretEngine, pathAndKey.path).execute().body();
+          vaultRestClient.readSecret(authToken, namespace, secretEngine, pathAndKey.path).execute().body();
       return response == null || response.getData() == null ? null
                                                             : response.getData().getData().get(pathAndKey.keyName);
     }
 
     @Override
-    public VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath)
-        throws IOException {
+    public VaultSecretMetadata readSecretMetadata(
+        String authToken, String namespace, String secretEngine, String fullPath) throws IOException {
       VaultPathAndKey pathAndKey = parseFullPath(fullPath);
       VaultMetadataReadResponse response =
-          vaultRestClient.readSecretMetadata(authToken, secretEngine, pathAndKey.path).execute().body();
+          vaultRestClient.readSecretMetadata(authToken, namespace, secretEngine, pathAndKey.path).execute().body();
       return response == null ? null : response.getData();
-    }
-
-    @Override
-    public boolean renewToken(String authToken) throws IOException {
-      return vaultRestClient.renewToken(authToken).execute().isSuccessful();
     }
   }
 

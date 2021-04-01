@@ -1,5 +1,8 @@
 package io.harness.plancreator.stages.parallel;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -7,7 +10,7 @@ import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
+import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
@@ -37,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(PIPELINE)
 public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
   @Inject private KryoSerializer kryoSerializer;
 
@@ -104,6 +108,7 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         -> GraphLayoutNode.newBuilder()
                .setNodeUUID(stageField.getNode().getUuid())
                .setNodeGroup(StepOutcomeGroup.STAGE.name())
+               .setName(stageField.getNode().getName())
                .setNodeType(stageField.getNode().getType())
                .setNodeIdentifier(stageField.getNode().getIdentifier())
                .setEdgeLayoutList(EdgeLayoutList.newBuilder().build())
@@ -128,9 +133,9 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
                 .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                    OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+                    NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
                 .build());
       }
     }

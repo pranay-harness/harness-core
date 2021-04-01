@@ -235,6 +235,7 @@ timescaledb:
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
 
 grpcServerConfig:
   connectors:
@@ -271,6 +272,8 @@ events-mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+
+userChangeStreamEnabled: false
 
 searchEnabled: false
 
@@ -552,6 +555,8 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
 
 mockServerConfig:
   baseUrl: http://localhost

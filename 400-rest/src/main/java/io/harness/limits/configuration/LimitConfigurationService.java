@@ -1,5 +1,8 @@
 package io.harness.limits.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.lib.Limit;
@@ -10,6 +13,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+@OwnedBy(PL)
 @ParametersAreNonnullByDefault
 public interface LimitConfigurationService extends OwnedByAccount {
   /**

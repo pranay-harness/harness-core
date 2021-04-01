@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ public class ContainerRecommendation {
   ResourceRequirement burstable;
   ResourceRequirement guaranteed;
   ResourceRequirement recommended;
+  Map<String, ResourceRequirement> percentileBased;
   int numDays;
   int totalSamplesCount;
 }

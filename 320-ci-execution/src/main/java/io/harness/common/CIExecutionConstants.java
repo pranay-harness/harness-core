@@ -26,7 +26,9 @@ public class CIExecutionConstants {
 
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
+  public static final String CLEANUP_STEP_ID = "harness-cleanup";
   public static final String GIT_CLONE_STEP_NAME = "Git clone";
+  public static final String CLEANUP_STEP_NAME = "Cleanup";
   public static final String GIT_CLONE_IMAGE = "drone/git";
   public static final Integer GIT_CLONE_DEPTH = 50;
   public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
@@ -37,9 +39,10 @@ public class CIExecutionConstants {
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
-  public static final Integer STEP_REQUEST_MEMORY_MIB = 1;
-  public static final Integer STEP_REQUEST_MILLI_CPU = 1;
+  public static final Integer STEP_REQUEST_MEMORY_MIB = 10;
+  public static final Integer STEP_REQUEST_MILLI_CPU = 10;
   public static final Integer PORT_STARTING_RANGE = 20002;
+  public static final Integer LITE_ENGINE_PORT = 20001;
   public static final String PLUGIN_ENV_PREFIX = "PLUGIN_";
 
   public static final String LOCALHOST_IP = "127.0.0.1";
@@ -101,6 +104,8 @@ public class CIExecutionConstants {
   public static final String HARNESS_ORG_ID_VARIABLE = "HARNESS_ORG_ID";
   public static final String HARNESS_BUILD_ID_VARIABLE = "HARNESS_BUILD_ID";
   public static final String HARNESS_STAGE_ID_VARIABLE = "HARNESS_STAGE_ID";
+  public static final String HARNESS_LOG_PREFIX_VARIABLE = "HARNESS_LOG_PREFIX";
+  public static final String HARNESS_SERVICE_LOG_KEY_VARIABLE = "HARNESS_SERVICE_LOG_KEY";
   public static final String HARNESS_PIPELINE_ID_VARIABLE = "HARNESS_PIPELINE_ID";
 
   public static final String HARNESS_SERVICE_ENTRYPOINT = "HARNESS_SERVICE_ENTRYPOINT";
@@ -116,4 +121,7 @@ public class CIExecutionConstants {
 
   public static final String IMAGE_PATH_SPLIT_REGEX = ":";
   public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
+
+  public static final String AWS_CODE_COMMIT_URL_REGEX =
+      "^https://git-codecommit\\.([^/.]*)\\.amazonaws\\.com/v1/repos(?:/?|/[^/.]*)$";
 }

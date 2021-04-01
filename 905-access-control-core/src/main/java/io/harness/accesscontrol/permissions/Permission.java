@@ -1,6 +1,9 @@
 package io.harness.accesscontrol.permissions;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.permissions.validator.PermissionIdentifier;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.NGEntityName;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -17,6 +20,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(PL)
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
@@ -24,26 +28,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "Permission")
 public class Permission {
+  public static final String PERMISSION_DELIMITER = "_";
+
   @PermissionIdentifier String identifier;
   @NGEntityName String name;
   @NotNull PermissionStatus status;
   @NotEmpty Set<String> allowedScopeLevels;
   @EqualsAndHashCode.Exclude @Setter Long version;
 
-  private String getPermissionMetadata(int index) {
-    List<String> permissionMetadata = Arrays.asList(identifier.split("\\."));
+  public String getPermissionMetadata(int index) {
+    List<String> permissionMetadata = Arrays.asList(identifier.split(PERMISSION_DELIMITER));
     return permissionMetadata.get(index);
-  }
-
-  public String getAction() {
-    return getPermissionMetadata(2);
-  }
-
-  public String getResourceType() {
-    return getPermissionMetadata(1);
-  }
-
-  public String getModule() {
-    return getPermissionMetadata(0);
   }
 }

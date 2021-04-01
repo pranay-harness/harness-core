@@ -17,7 +17,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -40,7 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @Mock private HostValidationService mockHostValidationService;
   @Mock private Mailer mockMailer;
@@ -74,9 +74,9 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
             .build();
     doReturn(singletonList(aHostValidationResponse().withHostName("host").withStatus("SUCCESS").build()))
         .when(mockHostValidationService)
-        .validateHost(anyList(), any(), anyList(), any());
+        .validateHost(anyList(), any(), anyList(), any(), any());
     task.run(new Object[] {request});
-    verify(mockHostValidationService).validateHost(anyList(), any(), anyList(), any());
+    verify(mockHostValidationService).validateHost(anyList(), any(), anyList(), any(), any());
     request = ConnectivityValidationDelegateRequest.builder()
                   .encryptedDataDetails(emptyList())
                   .settingAttribute(aSettingAttribute()
@@ -87,7 +87,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
                                         .build())
                   .build();
     task.run(new Object[] {request});
-    verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any());
+    verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any(), any());
     request =
         ConnectivityValidationDelegateRequest.builder()
             .encryptedDataDetails(emptyList())

@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 
@@ -15,6 +18,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class AwsEKSClusterServiceImpl implements AwsEKSClusterService {
   private final AwsHelperResourceService awsHelperResourceService;
   private final AwsEKSHelperService awsEKSHelperService;

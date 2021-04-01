@@ -29,8 +29,10 @@ import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultB
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.helper.CatalogueHelper;
+import io.harness.connector.helper.HarnessManagedConnectorHelper;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorFilterService;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
@@ -52,6 +54,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
@@ -59,13 +62,12 @@ import io.harness.utils.PageUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +94,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private NGErrorHelper ngErrorHelper;
   private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private SecretRefInputValidationHelper secretRefInputValidationHelper;
+  ConnectorHeartbeatService connectorHeartbeatService;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
+  private final ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -146,21 +151,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (isEmpty(decryptableEntities)) {
       return;
     }
-    List<SecretRefData> secrets = new ArrayList<>();
-    for (DecryptableEntity decryptableEntity : decryptableEntities) {
-      List<Field> secretFields = decryptableEntity.getSecretReferenceFields();
-      for (Field secretField : secretFields) {
-        SecretRefData secretRefData = null;
-        try {
-          secretField.setAccessible(true);
-          secretRefData = (SecretRefData) secretField.get(decryptableEntity);
-        } catch (IllegalAccessException ex) {
-          log.info("Error reading the secret data", ex);
-          throw new UnexpectedException("Error processing the data");
-        }
-        secrets.add(secretRefData);
-      }
-    }
+    Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
     NGAccess baseNGAccess = BaseNGAccess.builder()
                                 .accountIdentifier(accountIdentifier)
                                 .orgIdentifier(connectorDTO.getOrgIdentifier())
@@ -215,9 +206,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Connector savedConnectorEntity = null;
     try {
       savedConnectorEntity = connectorRepository.save(connectorEntity);
+      connectorEntityReferenceHelper.createSetupUsageForSecret(
+          connectorRequestDTO.getConnectorInfo(), accountIdentifier, false);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", connectorEntity.getIdentifier()));
     }
+
     return connectorMapper.writeDTO(savedConnectorEntity);
   }
 
@@ -267,9 +261,20 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    Connector updatedConnector = null;
+    if (existingConnector.getHeartbeatPerpetualTaskId() == null
+        && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+      PerpetualTaskId connectorHeartbeatTaskId =
+          connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
+              existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
+      newConnector.setHeartbeatPerpetualTaskId(
+          connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
+    } else {
+      newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+    }
+    Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector);
+      connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
@@ -326,6 +331,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
     Connector existingConnector = existingConnectorOptional.get();
+    ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(existingConnector);
+    connectorEntityReferenceHelper.deleteConnectorEntityReferenceWhenConnectorGetsDeleted(
+        connectorDTO.getConnector(), accountIdentifier);
+
     checkThatTheConnectorIsNotUsedByOthers(existingConnector);
     existingConnector.setDeleted(true);
     connectorRepository.save(existingConnector);

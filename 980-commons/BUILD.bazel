@@ -1,12 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "module",
@@ -62,6 +58,7 @@ java_library(
         "@maven//:commons_logging_commons_logging",
         "@maven//:commons_validator_commons_validator",
         "@maven//:de_javakaffee_kryo_serializers",
+        "@maven//:io_dropwizard_dropwizard_jersey",
         "@maven//:io_dropwizard_dropwizard_lifecycle",
         "@maven//:io_dropwizard_dropwizard_logging",
         "@maven//:io_dropwizard_metrics_metrics_core",
@@ -105,6 +102,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
         "//980-commons/src/test/resources:resource",
@@ -124,13 +122,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

@@ -6,6 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.logstreaming.LogLine;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -51,8 +52,6 @@ public class NGLogCallback implements LogCallback {
       iLogStreamingTaskClient.closeStream(commandUnitName);
     }
 
-    ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
-
     LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
         commandUnitsProgress.getCommandUnitProgressMap();
 
@@ -69,6 +68,9 @@ public class NGLogCallback implements LogCallback {
     }
     commandUnitProgressMap.put(commandUnitName, commandUnitProgressBuilder.build());
 
-    taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+    ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
+    if (taskProgressClient != null) {
+      taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+    }
   }
 }

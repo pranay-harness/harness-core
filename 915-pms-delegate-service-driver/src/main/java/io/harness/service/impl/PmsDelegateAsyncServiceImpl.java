@@ -6,6 +6,8 @@ import static java.lang.System.currentTimeMillis;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse.DelegateAsyncTaskResponseKeys;
 import io.harness.exception.FailureType;
@@ -31,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
   @Inject private MongoTemplate persistence;
   @Inject private KryoSerializer kryoSerializer;
@@ -58,9 +61,14 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
         log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
             BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build());
-        responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
-        if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
-          deleteProcessedResponses(responsesToBeDeleted);
+
+        if (lockedAsyncTaskResponse.getHoldUntil() == null
+            || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+          responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
+          if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
+            deleteProcessedResponses(responsesToBeDeleted);
+            responsesToBeDeleted.clear();
+          }
         }
       } catch (Exception ex) {
         log.info(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()));
@@ -95,11 +103,12 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
           .build());
 
   @Override
-  public void setupTimeoutForTask(String taskId, long expiry) {
+  public void setupTimeoutForTask(String taskId, long expiry, long holdUntil) {
     persistence.save(DelegateAsyncTaskResponse.builder()
                          .uuid(taskId)
                          .responseData(getTimeoutMessage())
                          .processAfter(expiry)
+                         .holdUntil(holdUntil)
                          .build());
   }
 }

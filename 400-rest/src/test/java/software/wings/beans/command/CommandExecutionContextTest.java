@@ -23,7 +23,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -31,6 +30,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;

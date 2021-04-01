@@ -47,6 +47,9 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(anyString(), anyString(), anyString(), anyString()))
         .thenCallRealMethod();
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+             anyString(), anyString(), anyString(), anyString(), any()))
+        .thenCallRealMethod();
   }
 
   @Test

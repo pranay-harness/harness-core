@@ -31,21 +31,31 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.BarrierNodeRepository;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
 import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
+import io.harness.steps.barriers.beans.StageDetail.StageDetailKeys;
+import io.harness.steps.barriers.service.visitor.BarrierVisitor;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -66,6 +76,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private Injector injector;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -110,8 +121,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   @Override
-  public BarrierExecutionInstance findByPlanNodeId(String planNodeId) {
-    return barrierNodeRepository.findByPlanNodeId(planNodeId)
+  public BarrierExecutionInstance findByPlanNodeIdAndPlanExecutionId(String planNodeId, String planExecutionId) {
+    return barrierNodeRepository.findByPlanNodeIdAndPlanExecutionId(planNodeId, planExecutionId)
         .orElseThrow(() -> new InvalidRequestException("Barrier not found for planNodeId: " + planNodeId));
   }
 
@@ -130,7 +141,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       case STANDING:
         return barrierExecutionInstance;
       case DOWN:
-        log.info("The barrier [{}] was done with", barrierExecutionInstance.getUuid());
+        log.info("The barrier [{}] is down", barrierExecutionInstance.getUuid());
         waitNotifyEngine.doneWith(
             barrierExecutionInstance.getBarrierGroupId(), BarrierResponseData.builder().failed(false).build());
         break;
@@ -146,7 +157,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         unhandled(state);
     }
 
-    return HPersistence.retry(() -> updateState(barrierExecutionInstance.getUuid(), state));
+    return HMongoTemplate.retry(() -> updateState(barrierExecutionInstance.getUuid(), state));
   }
 
   @Override
@@ -179,7 +190,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       try {
         planExecution = planExecutionService.get(forcerId.getValue());
       } catch (InvalidRequestException e) {
-        log.error("Plan Execution was not found. State set to APPROACHING", e);
+        log.warn("Plan Execution was not found. State set to APPROACHING", e);
         return APPROACHING;
       }
 
@@ -197,7 +208,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           barrierExecutionInstance.getPlanExecutionId(), barrierExecutionInstance.getIdentifier());
 
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.SUCCEEDED)) {
-        log.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(), nodeExecutions);
+        log.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(),
+            nodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.joining(",")));
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(
@@ -207,8 +219,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
       if (barrierExecutionInstancesSize == nodeExecutions.size()
           && nodeExecutions.stream().allMatch(node -> node.getStatus() == Status.ASYNC_WAITING)) {
-        log.info(
-            "Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(), nodeExecutions);
+        log.info("Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(),
+            nodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.joining(",")));
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == EXPIRED)) {
@@ -229,5 +241,37 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         where("node.stepType.type").is(BarrierStep.STEP_TYPE.getType()),
         where("resolvedStepParameters.identifier").is(identifier)));
     return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public List<BarrierExecutionInstance> findByStageIdentifierAndPlanExecutionIdAnsStateIn(
+      String stageIdentifier, String planExecutionId, Set<State> stateSet) {
+    Criteria planExecutionIdCriteria = Criteria.where(BarrierExecutionInstanceKeys.planExecutionId).is(planExecutionId);
+    Criteria stageIdentifierCriteria = Criteria.where(BarrierExecutionInstanceKeys.stages)
+                                           .elemMatch(Criteria.where(StageDetailKeys.identifier).is(stageIdentifier));
+
+    Query query = query(new Criteria().andOperator(planExecutionIdCriteria, stageIdentifierCriteria));
+
+    if (!stateSet.isEmpty()) {
+      query.addCriteria(where(BarrierExecutionInstanceKeys.barrierState).in(stateSet));
+    }
+
+    return mongoTemplate.find(query, BarrierExecutionInstance.class);
+  }
+
+  @Override
+  public List<BarrierSetupInfo> getBarrierSetupInfoList(String yaml) {
+    try {
+      YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
+      BarrierVisitor barrierVisitor = new BarrierVisitor(injector);
+      barrierVisitor.walkElementTree(yamlNode);
+      return new ArrayList<>(barrierVisitor.getBarrierIdentifierMap().values());
+    } catch (IOException e) {
+      log.error("Error while extracting yaml");
+      throw new InvalidRequestException("Error while extracting yaml");
+    } catch (InvalidRequestException e) {
+      log.error("Error while processing yaml");
+      throw e;
+    }
   }
 }

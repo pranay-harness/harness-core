@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -15,7 +16,8 @@ import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGAT
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -74,15 +76,13 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by rohitkarelia on 11/18/19.
- */
 @Api("/setup/delegates")
 @Path("/setup/delegates")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateSetupResource {
   private static final String DOWNLOAD_URL = "downloadUrl";
   private static final String ACCOUNT_ID = "?accountId=";
@@ -161,6 +161,16 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAvailableVersions(accountId));
     }
+  }
+
+  @GET
+  @Path("connected-ratio-with-primary")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Double> getConnectedRatioWithPrimary(
+      @QueryParam("targetVersion") @NotEmpty String targetVersion) {
+    return new RestResponse<>(delegateService.getConnectedRatioWithPrimary(targetVersion));
   }
 
   @GET

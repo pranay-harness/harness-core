@@ -1,5 +1,6 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
@@ -18,6 +19,7 @@ import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_INSTALLED;
 import static io.harness.ccm.health.CEError.K8S_PERMISSIONS_MISSING;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
+import static io.harness.ccm.health.CEError.NODES_IS_FORBIDDEN;
 import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
 import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
@@ -28,6 +30,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -59,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class HealthStatusServiceImpl implements HealthStatusService {
   private static final String SUCCEEDED = "SUCCEEDED";
   @Inject SettingsService settingsService;
@@ -152,6 +156,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         cloudProvider.getAccountId(), billingPipelineRecordSettingId);
 
     if (billingDataPipelineRecord == null) {
+      // Case just after creating the connector.
       return serialiseHealthStatusToPOJO(
           true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), lastS3SyncTimestamp);
     }
@@ -187,11 +192,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       messages.add(BILLING_PIPELINE_CREATION_FAILED.getMessage());
       if (isAWSConnector) {
         messages.add(s3SyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
       }
       if (isAzureConnector) {
         messages.add(storageSyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastStorageSyncTimestamp);
       }
-      return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
     }
 
     dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
@@ -205,9 +211,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     messages.add(healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage());
     if (isAWSConnector) {
       messages.add(s3SyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
     }
     if (isAzureConnector) {
       messages.add(storageSyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastStorageSyncTimestamp);
     }
     return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
   }
@@ -286,30 +294,56 @@ public class HealthStatusServiceImpl implements HealthStatusService {
                   perpetualTaskRecord.getUnassignedReason());
           }
         }
-        continue;
-      }
-
-      long recentTimestamp = Instant.now().minus(3, ChronoUnit.MINUTES).toEpochMilli();
-      CeExceptionRecord ceExceptionRecord = ceExceptionRecordDao.getRecentException(
-          clusterRecord.getAccountId(), clusterRecord.getUuid(), recentTimestamp);
-      if (ceExceptionRecord != null) {
-        String exceptionMessage = ceExceptionRecord.getMessage();
-        if (exceptionMessage.contains("Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
-          errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
-        } else if (exceptionMessage.startsWith("code=[401]") || exceptionMessage.startsWith("code=[403]")) {
-          errors.add(K8S_PERMISSIONS_MISSING);
-        } else if (exceptionMessage.startsWith("code=[404]") || exceptionMessage.toLowerCase().contains("not found")) {
-          errors.add(METRICS_SERVER_NOT_FOUND);
-        }
-      }
-
-      long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
-      String clusterType = clusterRecord.getCluster().getClusterType();
-      if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp, clusterType)) {
-        errors.add(NO_RECENT_EVENTS_PUBLISHED);
       }
     }
+
+    long recentTimestamp = Instant.now().minus(3, ChronoUnit.MINUTES).toEpochMilli();
+    CeExceptionRecord ceExceptionRecord =
+        ceExceptionRecordDao.getRecentException(clusterRecord.getAccountId(), clusterRecord.getUuid(), recentTimestamp);
+
+    if (ceExceptionRecord != null) {
+      String exceptionMessage = ceExceptionRecord.getMessage();
+      if (exceptionMessage.contains("Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
+        errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
+      } else {
+        metricsServerErrorCheck(exceptionMessage, errors);
+      }
+    }
+
+    long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
+    String clusterType = clusterRecord.getCluster().getClusterType();
+    if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp, clusterType)) {
+      errors.add(NO_RECENT_EVENTS_PUBLISHED);
+    }
     return errors;
+  }
+
+  private void metricsServerErrorCheck(final String exceptionMessage, final List<CEError> errors) {
+    CEError ceError = null;
+
+    // on first level check by code=[4xx], then in inner block check for specific message related to resource
+    if (exceptionMessage.startsWith("code=[401]")) {
+      ceError = K8S_PERMISSIONS_MISSING;
+
+      if (exceptionMessage.contains("\\\"message\\\":\\\"Unauthorized\\\"")) {
+        ceError = K8S_PERMISSIONS_MISSING;
+      }
+    } else if (exceptionMessage.startsWith("code=[403]")) {
+      // generaly the 403 is due to 'nodes is forbidden: User \\\"system:anonymous\\\" cannot list resource
+      // \\\"nodes\\\" in API group \\\"\\\" at the cluster scope\"'
+      ceError = NODES_IS_FORBIDDEN;
+
+      if (exceptionMessage.contains("nodes is forbidden")
+          || exceptionMessage.contains("nodes.metrics.k8s.io is forbidden")) {
+        ceError = NODES_IS_FORBIDDEN;
+      }
+    } else if (exceptionMessage.startsWith("code=[404]")) {
+      ceError = METRICS_SERVER_NOT_FOUND;
+    }
+
+    if (ceError != null) {
+      errors.add(ceError);
+    }
   }
 
   private List<String> getMessages(ClusterRecord clusterRecord, List<CEError> errors) {
@@ -351,7 +385,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
               PERPETUAL_TASK_CREATION_FAILURE.getMessage());
           break;
         default:
-          messages.add("Unexpected error. Please contact Harness support.");
+          messages.add(error.getMessage());
           log.warn("The cluster id={} encounters an unexpected error {}.", clusterRecord.getUuid(), error.getMessage());
           break;
       }

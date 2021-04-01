@@ -18,16 +18,15 @@ public interface VaultRestClientV1 {
   String BASE_VAULT_URL = "v1/";
 
   @POST(BASE_VAULT_URL + "{secretEngine}/{path}")
-  Call<Void> writeSecret(@Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine,
-      @Path("path") String fullPath, @Body Map<String, String> value);
+  Call<Void> writeSecret(@Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace,
+      @Path("secretEngine") String secretEngine, @Path("path") String fullPath, @Body Map<String, String> value);
 
   @DELETE(BASE_VAULT_URL + "{secretEngine}/{path}")
-  Call<Void> deleteSecret(
-      @Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine, @Path("path") String fullPath);
+  Call<Void> deleteSecret(@Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace,
+      @Path("secretEngine") String secretEngine, @Path("path") String fullPath);
 
   @GET(BASE_VAULT_URL + "{secretEngine}/{path}")
-  Call<VaultReadResponse> readSecret(
-      @Header("X-Vault-Token") String header, @Path("secretEngine") String secretEngine, @Path("path") String fullPath);
-
-  @POST("v1/auth/token/renew-self") Call<Object> renewToken(@Header("X-Vault-Token") String header);
+  Call<VaultReadResponse> readSecret(@Header("X-Vault-Token") String header,
+      @Header("X-Vault-Namespace") String namespace, @Path("secretEngine") String secretEngine,
+      @Path("path") String fullPath);
 }
