@@ -9,9 +9,9 @@ import static io.harness.persistence.GoogleDataStoreAware.readString;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.GoogleDataStoreAware;
 
 import software.wings.beans.Base;
@@ -21,6 +21,8 @@ import software.wings.sm.StateType;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,9 +31,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-@NgUniqueIndex(name = "logFeedbackUniqueIdx",
-    fields = { @Field("applicationId")
-               , @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -40,6 +39,19 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_log_feedback")
+                 .unique(true)
+                 .field("applicationId")
+                 .field(LogMLFeedbackRecordKeys.stateExecutionId)
+                 .field(LogMLFeedbackRecordKeys.clusterType)
+                 .field(LogMLFeedbackRecordKeys.clusterLabel)
+                 .build())
+        .build();
+  }
+
   @NotEmpty @FdIndex private String serviceId;
 
   private String envId;

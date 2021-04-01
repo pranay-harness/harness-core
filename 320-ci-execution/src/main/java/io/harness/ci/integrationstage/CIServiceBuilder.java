@@ -7,6 +7,8 @@ import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -32,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIServiceBuilder {
   private static final String SEPARATOR = ",";
 

@@ -26,7 +26,7 @@ const (
 	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
-	javaAgentArg = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
+	javaAgentArg = "-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
 	tiConfigPath = ".ticonfig.yaml"
 )
 
@@ -104,12 +104,13 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 // Execute commands with timeout and retry handling
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	var err, errCg error
+	cgDir := fmt.Sprintf(outDir, r.tmpFilePath)
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
 			st := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails.
-			errCg = collectCg(ctx, r.id, outDir, r.log)
+			errCg = collectCg(ctx, r.id, cgDir, r.log)
 			err = collectTestReports(ctx, r.reports, r.id, r.log)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
@@ -135,7 +136,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCg(ctx, r.id, outDir, r.log)
+		errCg = collectCg(ctx, r.id, cgDir, r.log)
 		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
@@ -160,11 +161,14 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 		return "", err
 	}
 	data := fmt.Sprintf(`outDir: %s
-logLevel: 0
-logConsole: false
+logLevel: 6
+logConsole: true
 writeTo: COVERAGE_JSON
-instrPackages: %s
-testAnnotations: %s`, dir, r.packages, r.annotations)
+instrPackages: %s`, dir, r.packages)
+	// Add test annotations if they were provided
+	if r.annotations != "" {
+		data = data + "\n" + fmt.Sprintf("testAnnotations: %s", r.annotations)
+	}
 	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
 	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
 	err = ioutil.WriteFile(iniFile, []byte(data), 0644)
@@ -184,7 +188,7 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		// TODO -- Aman - check if instumentation is required here too.
-		return fmt.Sprintf("%s %s -am %s", mvnCmd, r.args, instrArg), nil
+		return fmt.Sprintf("%s %s -am -DargLine=%s", mvnCmd, r.args, instrArg), nil
 	}
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
@@ -202,7 +206,7 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 		ut = append(ut, t.Class)
 	}
 	testStr := strings.Join(ut, ",")
-	return fmt.Sprintf("%s %s -Dtest=%s -am %s", mvnCmd, r.args, testStr, instrArg), nil
+	return fmt.Sprintf("%s %s -Dtest=%s -am -DargLine=%s", mvnCmd, r.args, testStr, instrArg), nil
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
@@ -304,7 +308,8 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
 	}
 
-	command := fmt.Sprintf("set -e\n%s\n%s\n%s", r.preCommand, testCmd, r.postCommand)
+	// TMPDIR needs to be set for some build tools like bazel
+	command := fmt.Sprintf("set -e\nexport TMPDIR=%s\n%s\n%s\n%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand)
 	logCmd, err := utils.GetLoggableCmd(command)
 	if err != nil {
 		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))

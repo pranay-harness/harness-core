@@ -35,7 +35,7 @@ public class RerunJobTasklet implements Tasklet {
     Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
-    Instant startInstant = Instant.ofEpochMilli(startTime).minus(2, ChronoUnit.DAYS);
+    Instant startInstant = Instant.ofEpochMilli(startTime).minus(4, ChronoUnit.DAYS);
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
     if (null != ceMetadataRecord && isCloudDataPresent(ceMetadataRecord)) {
       log.info("invalidate jobs for {}", accountId);

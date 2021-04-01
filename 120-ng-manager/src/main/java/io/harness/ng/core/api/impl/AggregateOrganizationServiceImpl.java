@@ -1,25 +1,24 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.getAdmins;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.getCollaborators;
 import static io.harness.ng.core.invites.remote.UserSearchMapper.writeDTO;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
-import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 
+import static java.util.Collections.singletonList;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.dto.OrganizationAggregateDTO.OrganizationAggregateDTOBuilder;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.dto.OrganizationResponse;
-import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.invites.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.ng.core.remote.OrganizationMapper;
-import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
@@ -40,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AggregateOrganizationServiceImpl implements AggregateOrganizationService {
@@ -71,8 +71,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private OrganizationAggregateDTO buildOrganizationAggregateDTO(
       OrganizationAggregateDTOBuilder organizationAggregateDTOBuilder, String accountIdentifier, String identifier) {
     // projects
-    List<ProjectDTO> projectDTOs = getProjects(accountIdentifier, identifier);
-    organizationAggregateDTOBuilder.projectsCount(projectDTOs.size());
+    int projectsCount = getProjectsCountForOrganization(accountIdentifier, identifier);
+    organizationAggregateDTOBuilder.projectsCount(projectsCount);
 
     // admins and collaborators
     try {
@@ -89,22 +89,17 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     return organizationAggregateDTOBuilder.build();
   }
 
-  private List<ProjectDTO> getProjects(String accountIdentifier, String identifier) {
-    Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(ProjectKeys.orgIdentifier)
-                            .is(identifier)
-                            .and(ProjectKeys.deleted)
-                            .ne(Boolean.TRUE);
-    return projectService.list(criteria).stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
+  private int getProjectsCountForOrganization(String accountIdentifier, String orgIdentifier) {
+    return projectService.getProjectsCountPerOrganization(accountIdentifier, singletonList(orgIdentifier))
+        .getOrDefault(orgIdentifier, 0);
   }
 
   private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
-      String accountIdentifier, String identifier) {
+      String accountIdentifier, String orgIdentifier) {
     Criteria userOrganizationMapCriteria = Criteria.where(UserProjectMapKeys.accountIdentifier)
                                                .is(accountIdentifier)
                                                .and(UserProjectMapKeys.orgIdentifier)
-                                               .is(identifier)
+                                               .is(orgIdentifier)
                                                .and(UserProjectMapKeys.projectIdentifier)
                                                .is(null);
     List<UserProjectMap> userOrganizationMaps = ngUserService.listUserProjectMap(userOrganizationMapCriteria);
@@ -137,13 +132,14 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private void buildOrganizationAggregateDTOPage(Page<OrganizationAggregateDTO> organizationAggregateDTOs,
       String accountIdentifier, Page<OrganizationResponse> organizations) {
     // projects
-    Map<String, List<ProjectDTO>> projectMap = getProjects(accountIdentifier, organizations);
-    organizationAggregateDTOs.forEach(organizationAggregateDTO
-        -> organizationAggregateDTO.setProjectsCount(
-            projectMap
-                .getOrDefault(organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier(),
-                    new ArrayList<>())
-                .size()));
+    Map<String, Integer> projectMap = getProjectsCountPerOrganization(accountIdentifier, organizations);
+    organizationAggregateDTOs.forEach(organizationAggregateDTO -> {
+      Integer count = Optional
+                          .ofNullable(projectMap.get(
+                              organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier()))
+                          .orElse(0);
+      organizationAggregateDTO.setProjectsCount(count);
+    });
 
     // admins and collaborators
     try {
@@ -153,25 +149,11 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     }
   }
 
-  private Map<String, List<ProjectDTO>> getProjects(
+  private Map<String, Integer> getProjectsCountPerOrganization(
       String accountIdentifier, Page<OrganizationResponse> organizations) {
     List<String> orgIdentifiers =
         organizations.map(organizationResponse -> organizationResponse.getOrganization().getIdentifier()).getContent();
-    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier)
-                                   .is(accountIdentifier)
-                                   .and(ProjectKeys.orgIdentifier)
-                                   .in(orgIdentifiers)
-                                   .and(ProjectKeys.deleted)
-                                   .ne(Boolean.TRUE);
-    List<Project> projects = projectService.list(projectCriteria);
-    Map<String, List<ProjectDTO>> projectMap = new HashMap<>();
-    projects.forEach(project -> {
-      if (!projectMap.containsKey(project.getOrgIdentifier())) {
-        projectMap.put(project.getOrgIdentifier(), new ArrayList<>());
-      }
-      projectMap.get(project.getOrgIdentifier()).add(writeDTO(project));
-    });
-    return projectMap;
+    return projectService.getProjectsCountPerOrganization(accountIdentifier, orgIdentifiers);
   }
 
   private void addAdminsAndCollaborators(Page<OrganizationAggregateDTO> organizationAggregateDTOs,

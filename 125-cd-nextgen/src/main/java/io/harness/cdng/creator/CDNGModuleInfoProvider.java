@@ -68,8 +68,8 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     return outcomeService
         .findAllByRuntimeId(nodeExecutionProto.getAmbiance().getPlanExecutionId(), nodeExecutionProto.getUuid())
         .stream()
-        .filter(outcome -> outcome instanceof EnvironmentOutcome)
-        .map(outcome -> (EnvironmentOutcome) outcome)
+        .filter(outcome -> outcome instanceof InfrastructureOutcome)
+        .map(outcome -> ((InfrastructureOutcome) outcome).getEnvironment())
         .findFirst();
   }
 

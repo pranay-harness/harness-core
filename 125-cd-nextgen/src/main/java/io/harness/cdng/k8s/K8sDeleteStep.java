@@ -1,5 +1,7 @@
 package io.harness.cdng.k8s;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -14,6 +16,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -25,8 +28,9 @@ import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
@@ -88,30 +92,29 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, K8sDeleteStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    return k8sStepHelper.executeNextLink(this, ambiance, stepParameters, passThroughData, responseDataMap);
+      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
+    return k8sStepHelper.executeNextLink(this, ambiance, stepParameters, passThroughData, responseSupplier);
   }
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sDeleteStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
+      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+            .build();
+      }
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (ErrorDataException ex) {
       return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
           .build();
     }
-
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
-          .build();
-    }
-
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override

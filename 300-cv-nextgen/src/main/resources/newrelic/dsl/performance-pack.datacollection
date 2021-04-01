@@ -1,0 +1,53 @@
+Var index = 0
+Var tempList = []
+Var one = 1
+Var lengthOfItems = Env:queries.length()
+Var requests = []
+Var emptySpace = ""
+Var queryConcat = concat(" WHERE appId = ", Env:appId, " SINCE ", Env:startTimeMillis, " UNTIL ", Env:endTimeMillis," TIMESERIES FACET transactionName")
+Var returnList = []
+while Var:index !=  Var:lengthOfItems {
+  Var query = Env:queries[Var:index]
+  Var jsonPath = Env:jsonPaths[Var:index]
+  Var metricName = Env:metricNames[Var:index]
+  Var hostGrouping = ""
+  if Env:collectHostData == "true" {
+    hostGrouping = ",host"
+  }
+  Var fullQuery = concat(Env:baseUrl, "query?nrql=", Var:query, Var:queryConcat, Var:hostGrouping)
+  print Var:fullQuery
+  Request metricRequest = new Request(url=Var:fullQuery, header=Env:commonHeaders)
+  Var resp = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+  Var facets = extract(Var:resp, $.facets)
+  foreach metricObject in Var:facets {
+    Var txnNamePath = "$.name"
+    if Env:collectHostData == "true" {
+      txnNamePath = "$.name.[0]"
+    }
+    print Var:txnNamePath
+    Var txnName = extract(Var:metricObject, Var:txnNamePath)
+    Var timeseriesArr = extract(Var:metricObject, $.timeSeries)
+    print Var:timeseriesArr
+    foreach metricData in Var:timeseriesArr {
+        Var metricVal = extract(Var:metricData, Var:jsonPath)
+        Var timestamp = extract(Var:metricData, $.endTimeSeconds)
+        Var nullVal = null
+        if Var:metricVal != Var:nullVal  {
+            if Env:collectHostData == "true" {
+              Var hostname = extract(Var:metricObject,$.name.[1])
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp, host=Var:hostname)
+              Var:returnList.append(Var:tsRecord)
+            }
+
+            if Env:collectHostData != "true" {
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:metricVal, timestamp=Var:timestamp)
+              Var:returnList.append(Var:tsRecord)
+            }
+
+        }
+    }
+  }
+  index = Var:index + Var:one
+}
+
+return Var:returnList

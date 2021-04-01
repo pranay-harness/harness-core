@@ -173,7 +173,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
   }
 
-  private void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId) {
+  @Override
+  public void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId) {
     if (isEmpty(apiKeyEntries)) {
       return;
     }

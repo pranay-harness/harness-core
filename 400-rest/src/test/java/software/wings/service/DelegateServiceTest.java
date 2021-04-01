@@ -72,6 +72,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EncryptedData;
@@ -149,7 +150,6 @@ import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.service.intfc.DelegateTaskService;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;

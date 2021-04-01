@@ -1,6 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
+import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -12,10 +14,12 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
@@ -119,10 +123,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDP)
 @Singleton
 public class K8sStepHelper {
   private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
@@ -143,6 +149,11 @@ public class K8sStepHelper {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
         return k8SDirectInfrastructure.getReleaseName();
+
+      case KUBERNETES_GCP:
+        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
+        return k8sGcpInfrastructure.getReleaseName();
+
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
@@ -233,10 +244,17 @@ public class K8sStepHelper {
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
+        StoreConfig storeConfig = kustomizeManifestOutcome.getStore();
+        if (!ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
+          throw new UnsupportedOperationException(
+              format("Kustomize Manifest is not supported for store type: [%s]", storeConfig.getKind()));
+        }
+        GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
         return KustomizeManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
             .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
 
       case ManifestType.OpenshiftTemplate:
@@ -354,8 +372,10 @@ public class K8sStepHelper {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
       case ManifestType.HelmChart:
-      case ManifestType.Kustomize:
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
+        break;
+      case ManifestType.Kustomize:
+        paths.add("");
         break;
 
       default:
@@ -490,8 +510,8 @@ public class K8sStepHelper {
     for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
       if (ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind())) {
         String validationMessage = format("Values YAML with Id [%s]", valuesManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
-            ambiance, valuesManifest.getIdentifier(), valuesManifest.getStore(), validationMessage);
+        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(ambiance, valuesManifest.getIdentifier(),
+            valuesManifest.getStore(), validationMessage, ManifestType.VALUES);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -499,8 +519,9 @@ public class K8sStepHelper {
     for (OpenshiftParamManifestOutcome openshiftParamManifest : openshiftParamManifests) {
       if (ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind())) {
         String validationMessage = format("Openshift Param file with Id [%s]", openshiftParamManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
-            ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(), validationMessage);
+        GitFetchFilesConfig gitFetchFilesConfig =
+            getGitFetchFilesConfig(ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(),
+                validationMessage, ManifestType.OpenshiftParam);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -534,7 +555,7 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig getGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage) {
+      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
@@ -547,7 +568,7 @@ public class K8sStepHelper {
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
     GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, ManifestType.VALUES);
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
@@ -668,8 +689,9 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
-      K8sStepParameters k8sStepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
+      K8sStepParameters k8sStepParameters, PassThroughData passThroughData,
+      Supplier<ResponseData> responseDataSupplier) {
+    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataSupplier.get();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
       GitFetchResponsePassThroughData gitFetchResponsePassThroughData =

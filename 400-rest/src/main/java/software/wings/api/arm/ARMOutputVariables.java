@@ -1,6 +1,6 @@
 package software.wings.api.arm;
 
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.beans.SweepingOutput;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;

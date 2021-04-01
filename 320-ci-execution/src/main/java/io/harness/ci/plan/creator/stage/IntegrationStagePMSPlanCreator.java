@@ -13,6 +13,8 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -66,6 +68,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
@@ -126,7 +129,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
         .stepType(IntegrationStageStepPMS.STEP_TYPE)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
+        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen(), true))
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }

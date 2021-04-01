@@ -4,10 +4,6 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.CgOrchestrationModule;
-import io.harness.OrchestrationModule;
-import io.harness.OrchestrationModuleConfig;
-import io.harness.OrchestrationStepsModule;
-import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -87,8 +83,6 @@ import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.encryptors.managerproxy.ManagerCustomEncryptor;
 import io.harness.encryptors.managerproxy.ManagerKmsEncryptor;
 import io.harness.encryptors.managerproxy.ManagerVaultEncryptor;
-import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -140,10 +134,7 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.queue.QueueController;
-import io.harness.redesign.services.CustomExecutionService;
-import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
@@ -296,7 +287,6 @@ import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
-import software.wings.service.DelegateTaskExecutor;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -848,10 +838,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .serviceName("CD")
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .build()));
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
@@ -880,19 +866,19 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
-                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE));
+                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
     });
@@ -1334,12 +1320,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
-    install(OrchestrationStepsModule.getInstance());
-    install(OrchestrationVisualizationModule.getInstance());
-    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskCategory.DELEGATE_TASK_V1).to(DelegateTaskExecutor.class);
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);

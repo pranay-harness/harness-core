@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
-use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
+use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM, UNKNOWN_LOCATION};
 use crate::java_module::{modules, JavaModule};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -91,8 +91,11 @@ pub struct Analyze {
     #[clap(long)]
     auto_actionable_command: bool,
 
-    #[clap(short, long)]
+    #[clap(long)]
     issue_points_per_class_limit: Option<f64>,
+
+    #[clap(short, long)]
+    indirect: bool,
 }
 
 #[derive(Debug)]
@@ -228,18 +231,20 @@ pub fn analyze(opts: Analyze) {
     println!("Detecting indirectly involved classes...");
 
     let indirect_classes: &mut HashSet<&String> = &mut HashSet::new();
-    loop {
-        let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
+    if opts.indirect {
+        loop {
+            let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
 
-        results
-            .iter()
-            .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
-            .for_each(|report| {
-                indirect_classes.extend(&report.indirect_classes);
-            });
+            results
+                .iter()
+                .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
+                .for_each(|report| {
+                    indirect_classes.extend(&report.indirect_classes);
+                });
 
-        if original.len() == indirect_classes.len() {
-            break;
+            if original.len() == indirect_classes.len() {
+                break;
+            }
         }
     }
 
@@ -862,6 +867,10 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.deprecated {
+        return results;
+    }
+
+    if UNKNOWN_LOCATION.eq(&class.location) {
         return results;
     }
 

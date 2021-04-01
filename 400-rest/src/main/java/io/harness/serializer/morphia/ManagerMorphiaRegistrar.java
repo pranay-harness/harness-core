@@ -2,7 +2,6 @@ package io.harness.serializer.morphia;
 
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -32,11 +31,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.email.EmailStepParameters;
-import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
-import io.harness.redesign.states.wait.WaitStepParameters;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
@@ -862,7 +856,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BatchJobInterval.class);
     set.add(BatchJobScheduledData.class);
     set.add(BillingDataPipelineRecord.class);
-    set.add(Budget.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CECloudAccount.class);
     set.add(CECloudAccountOld.class);
@@ -1094,11 +1087,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("marketplace.gcp.events.ProcurementPubsubMessage", ProcurementPubsubMessage.class);
 
     // Redesign Classes
-    h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
-    h.put("redesign.states.http.BasicHttpStepParameters", BasicHttpStepParameters.class);
-    h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
-    h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
-    h.put("redesign.states.email.EmailStepParameters", EmailStepParameters.class);
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);

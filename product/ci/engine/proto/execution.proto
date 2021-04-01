@@ -56,7 +56,10 @@ message RunStep {
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;  // Deprecated. Port of the container on which plugin step needs to be executed
+  // Deprecated. Port of the container on which plugin step needs to be executed
+  uint32 container_port = 3;
+  // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
+  repeated string entrypoint = 4;
 }
 
 message SaveCacheStep {

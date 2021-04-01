@@ -6,6 +6,7 @@ import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 
 import java.util.Optional;
@@ -41,6 +42,14 @@ public class EnvironmentMapper {
         .deleted(environment.getDeleted())
         .tags(convertToMap(environment.getTags()))
         .version(environment.getVersion())
+        .build();
+  }
+
+  public EnvironmentResponse toResponseWrapper(Environment environment) {
+    return EnvironmentResponse.builder()
+        .environment(writeDTO(environment))
+        .createdAt(environment.getCreatedAt())
+        .lastModifiedAt(environment.getLastModifiedAt())
         .build();
   }
 }

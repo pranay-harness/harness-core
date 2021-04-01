@@ -16,6 +16,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlo
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -48,12 +49,16 @@ public class PerpetualTaskServiceGrpcClient {
   }
 
   public void heartbeat(PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
-    serviceBlockingStub.withDeadlineAfter(60, TimeUnit.SECONDS)
-        .heartbeat(HeartbeatRequest.newBuilder()
-                       .setId(taskId.getId())
-                       .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
-                       .setResponseCode(perpetualTaskResponse.getResponseCode())
-                       .setResponseMessage(perpetualTaskResponse.getResponseMessage())
-                       .build());
+    try {
+      serviceBlockingStub.withDeadlineAfter(60, TimeUnit.SECONDS)
+          .heartbeat(HeartbeatRequest.newBuilder()
+                         .setId(taskId.getId())
+                         .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
+                         .setResponseCode(perpetualTaskResponse.getResponseCode())
+                         .setResponseMessage(perpetualTaskResponse.getResponseMessage())
+                         .build());
+    } catch (StatusRuntimeException ex) {
+      log.error("StatusRunTimeException: {}", ex.getMessage());
+    }
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.govern.Switch.unhandled;
@@ -19,6 +20,7 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -52,12 +54,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
+@OwnedBy(CDP)
 public class K8sCanaryRequestHandler extends K8sRequestHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private K8sCanaryBaseHandler k8sCanaryBaseHandler;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
 
   private final K8sCanaryHandlerConfig k8sCanaryHandlerConfig = new K8sCanaryHandlerConfig();
+  private boolean canaryWorkloadDeployed;
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
@@ -74,10 +78,13 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sCanaryDeployRequest.getTimeoutIntervalInMin());
 
+    List<String> manifestHelperFiles = isEmpty(k8sCanaryDeployRequest.getValuesYamlList())
+        ? k8sCanaryDeployRequest.getOpenshiftParamList()
+        : k8sCanaryDeployRequest.getValuesYamlList();
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(manifestHelperFiles), commandUnitsProgress),
         timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -104,6 +111,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
+    // At this point we're sure that manifest has been applied successfully and canary workload is deployed
+    this.canaryWorkloadDeployed = true;
     LogCallback steadyStateLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
     KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
@@ -132,6 +141,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
                                .k8sPodList(allPods)
                                .releaseNumber(k8sCanaryHandlerConfig.getCurrentRelease().getNumber())
                                .currentInstances(k8sCanaryHandlerConfig.getTargetInstances())
+                               .canaryWorkloadDeployed(this.canaryWorkloadDeployed)
                                .build())
         .build();
   }
@@ -242,6 +252,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     if (canaryWorkload != null && canaryWorkload.getResourceId() != null) {
       k8sCanaryDeployResponseBuilder.canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
     }
+
+    k8sCanaryDeployResponseBuilder.canaryWorkloadDeployed(this.canaryWorkloadDeployed);
 
     return getGenericFailureResponse(k8sCanaryDeployResponseBuilder.build());
   }

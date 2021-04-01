@@ -5,11 +5,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.CustomDeploymentTypeInfo;
 import software.wings.api.DeploymentSummary;

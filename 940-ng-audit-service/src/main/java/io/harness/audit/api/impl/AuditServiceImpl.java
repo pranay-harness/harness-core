@@ -1,6 +1,5 @@
 package io.harness.audit.api.impl;
 
-import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -23,11 +22,11 @@ import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
-import com.mongodb.DuplicateKeyException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -78,11 +77,8 @@ public class AuditServiceImpl implements AuditService {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
-                           .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                          .is(ENVIRONMENT_IDENTIFIER_KEY)
-                                          .and(KeyValuePairKeys.value)
-                                          .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers())));
+      criteriaList.add(Criteria.where(AuditEventKeys.environmentIdentifier)
+                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
@@ -109,6 +105,17 @@ public class AuditServiceImpl implements AuditService {
         criteria.and(AuditEventKeys.ORG_IDENTIFIER_KEY).is(resourceScope.getOrgIdentifier());
         if (isNotEmpty(resourceScope.getProjectIdentifier())) {
           criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
+          List<KeyValuePair> labels = resourceScope.getLabels();
+          if (isNotEmpty(labels)) {
+            List<Criteria> labelsCriteria = new ArrayList<>();
+            labels.forEach(label
+                -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEY)
+                                          .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                         .is(label.getKey())
+                                                         .and(KeyValuePairKeys.value)
+                                                         .is(label.getValue()))));
+            criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
+          }
         }
       }
       criteriaList.add(criteria);
@@ -125,13 +132,16 @@ public class AuditServiceImpl implements AuditService {
       }
       List<KeyValuePair> labels = resource.getLabels();
       if (isNotEmpty(labels)) {
+        List<Criteria> labelsCriteria = new ArrayList<>();
         labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
-                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
-                                  .is(label.getKey())
-                                  .and(KeyValuePairKeys.value)
-                                  .is(label.getValue())));
+            -> labelsCriteria.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
+                                      .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                                     .is(label.getKey())
+                                                     .and(KeyValuePairKeys.value)
+                                                     .is(label.getValue()))));
+        criteria.andOperator(labelsCriteria.toArray(new Criteria[0]));
       }
+
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

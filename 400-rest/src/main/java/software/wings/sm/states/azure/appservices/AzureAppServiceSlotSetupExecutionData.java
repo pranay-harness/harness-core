@@ -5,6 +5,9 @@ import static io.harness.azure.model.AzureConstants.ACTIVITY_ID;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
@@ -33,6 +36,11 @@ public class AzureAppServiceSlotSetupExecutionData
   private String deploySlotName;
   private String targetSlotName;
   private String webAppUrl;
+  private boolean isGitFetchDone;
+  private TaskType taskType;
+  private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
+  private Map<String, ApplicationManifest> appServiceConfigurationManifests;
+
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override

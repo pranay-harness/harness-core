@@ -1,11 +1,15 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.dao.InstanceDataDao;
 import io.harness.ccm.commons.entities.InstanceData;
 
 import com.google.inject.Inject;
 import java.util.List;
 
+@OwnedBy(CE)
 public class InstanceDataServiceImpl implements InstanceDataService {
   @Inject InstanceDataDao instanceDataDao;
 

@@ -1,9 +1,11 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.persistence.HPersistence;
@@ -20,6 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class UsageBucketIntegrationTest extends IntegrationTestBase {
   @Inject private HPersistence persistence;
 

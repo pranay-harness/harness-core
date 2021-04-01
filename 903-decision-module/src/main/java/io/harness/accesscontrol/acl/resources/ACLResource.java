@@ -7,7 +7,9 @@ import io.harness.accesscontrol.acl.services.ACLService;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
-import io.harness.exception.AccessDeniedException;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -44,10 +46,11 @@ import lombok.extern.slf4j.Slf4j;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@OwnedBy(HarnessTeam.PL)
 public class ACLResource {
   private final ACLService aclService;
 
-  private boolean shouldBypassAccessControlChecks(io.harness.security.dto.Principal principalInContext,
+  private boolean serviceContextAndNoPrincipalInBody(io.harness.security.dto.Principal principalInContext,
       io.harness.accesscontrol.Principal principalToCheckPermissions) {
     /*
      bypass access control check if principal in context is SERVICE and principalToCheckPermissions is either null or
@@ -61,7 +64,7 @@ public class ACLResource {
             || Objects.equals(serviceCall.get().getName(), principalToCheckPermissions.getPrincipalIdentifier()));
   }
 
-  private boolean shouldApplyAccessControlCheckToQueryPermissions(io.harness.security.dto.Principal principalInContext,
+  private boolean userContextAndDifferentPrincipalInBody(io.harness.security.dto.Principal principalInContext,
       io.harness.accesscontrol.Principal principalToCheckPermissions) {
     /* apply access control checks if a principal of type other than SERVICE is trying to check permissions for any
        other principal */
@@ -72,19 +75,25 @@ public class ACLResource {
             && !Objects.equals(principalInContext.getName(), principalToCheckPermissions.getPrincipalIdentifier()));
   }
 
+  private void checkForValidContextOrThrow(io.harness.security.dto.Principal principalInContext) {
+    if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
+      throw new InvalidRequestException("Missing principal in context.", USER);
+    }
+  }
+
+  private boolean notPresent(io.harness.accesscontrol.Principal principal) {
+    return !Optional.ofNullable(principal).map(Principal::getPrincipalIdentifier).filter(x -> !x.isEmpty()).isPresent();
+  }
+
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal principalInContext = SecurityContextBuilder.getPrincipal();
     Principal principalToCheckPermissions = dto.getPrincipal();
 
-    // check if context is valid
-    if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
-      throw new AccessDeniedException("Missing principal in context.", USER);
-    }
+    checkForValidContextOrThrow(principalInContext);
 
-    // if access check is to be bypassed, directly return response
-    if (shouldBypassAccessControlChecks(principalInContext, principalToCheckPermissions)) {
+    if (serviceContextAndNoPrincipalInBody(principalInContext, principalToCheckPermissions)) {
       return ResponseDTO.newResponse(
           AccessCheckResponseDTO.builder()
               .principal(Principal.builder()
@@ -105,15 +114,13 @@ public class ACLResource {
               .build());
     }
 
-    if (shouldApplyAccessControlCheckToQueryPermissions(principalInContext, principalToCheckPermissions)) {
-      // apply RBAC checks here
+    if (userContextAndDifferentPrincipalInBody(principalInContext, principalToCheckPermissions)) {
+      // a user principal needs elevated permissions to check for permissions of another principal
+      // TODO{phoenikx} Apply access check here
       log.debug("checking for access control checks here...");
     }
 
-    if (!Optional.ofNullable(principalToCheckPermissions)
-             .map(Principal::getPrincipalIdentifier)
-             .filter(x -> !x.isEmpty())
-             .isPresent()) {
+    if (notPresent(principalToCheckPermissions)) {
       principalToCheckPermissions =
           Principal.builder()
               .principalIdentifier(principalInContext.getName())
@@ -123,7 +130,6 @@ public class ACLResource {
     }
 
     // otherwise forward the call ahead and return response
-    return ResponseDTO.newResponse(aclService.checkAccess(principalToCheckPermissions.getPrincipalType().name(),
-        principalToCheckPermissions.getPrincipalIdentifier(), dto.getPermissions()));
+    return ResponseDTO.newResponse(aclService.checkAccess(principalToCheckPermissions, dto.getPermissions()));
   }
 }

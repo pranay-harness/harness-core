@@ -1,9 +1,13 @@
 package io.harness.common;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIExecutionConstants {
   // Pod labels
   public static final String ACCOUNT_ID_ATTR = "accountID";
@@ -42,6 +46,7 @@ public class CIExecutionConstants {
   public static final Integer STEP_REQUEST_MEMORY_MIB = 10;
   public static final Integer STEP_REQUEST_MILLI_CPU = 10;
   public static final Integer PORT_STARTING_RANGE = 20002;
+  public static final Integer LITE_ENGINE_PORT = 20001;
   public static final String PLUGIN_ENV_PREFIX = "PLUGIN_";
 
   public static final String LOCALHOST_IP = "127.0.0.1";

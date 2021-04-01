@@ -1,5 +1,6 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
@@ -11,6 +12,7 @@ import static javax.ws.rs.core.HttpHeaders.IF_NONE_MATCH;
 import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 import static jodd.util.StringPool.COMMA;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.SupportsEntityTag;
 
 import com.google.inject.Singleton;
@@ -27,6 +29,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
+@OwnedBy(PL)
 @Provider
 @Priority(Priorities.USER)
 @Singleton

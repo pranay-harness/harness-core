@@ -37,9 +37,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.FeatureName;
+import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
@@ -52,12 +54,11 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 import io.harness.network.Http;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -84,7 +85,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping;
-import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceParametersBuilder;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
@@ -93,11 +93,9 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -136,21 +134,19 @@ public class ArtifactCollectionUtils {
   @Inject private AzureHelperService azureHelperService;
   @Inject private EcrClassicService ecrClassicService;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
-  @Inject private AppService appService;
   @Inject private ExpressionEvaluator evaluator;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
-  @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private MainConfiguration mainConfiguration;
 
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
-    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)) {
+    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)
+        || DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
       timeout = Duration.ofSeconds(15).toMillis();
     }
     return System.currentTimeMillis() + timeout;

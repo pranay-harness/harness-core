@@ -2,12 +2,14 @@ package io.harness.steps.common.script;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -32,12 +34,14 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
   RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;
   Map<String, Object> environmentVariables;
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
       ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, String name, String identifier, String type,
       String description, ParameterField<String> skipCondition, ParameterField<String> timeout,
-      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, Object> environmentVariables) {
+      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, Object> environmentVariables,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(shellType, source, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
@@ -49,6 +53,7 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
     this.type = StepSpecTypeConstants.SHELL_SCRIPT;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override

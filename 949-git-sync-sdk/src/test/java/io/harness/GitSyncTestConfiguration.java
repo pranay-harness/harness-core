@@ -6,6 +6,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
+import io.harness.scm.ScmConnectionConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.Singleton;
@@ -24,6 +25,7 @@ public class GitSyncTestConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("gitSyncClientConfig") GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
   @JsonProperty("redis") private RedisConfig redisConfig;
 
   public GitSyncTestConfiguration() {

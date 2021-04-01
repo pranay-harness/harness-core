@@ -1,5 +1,7 @@
 package io.harness.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag.Scope;
 
 import lombok.Getter;
@@ -8,6 +10,7 @@ import lombok.Getter;
  * Add your feature name here. When the feature is fully launched and no longer needs to be flagged,
  * delete the feature name.
  */
+@OwnedBy(HarnessTeam.PL)
 public enum FeatureName {
   APPD_CV_TASK,
   ARTIFACT_PERPETUAL_TASK,
@@ -95,6 +98,7 @@ public enum FeatureName {
   NEWRELIC_24_7_CV_TASK,
   NEXT_GEN_ENABLED,
   NG_RBAC_ENABLED,
+  NG_ACCESS_CONTROL_MIGRATION,
   NG_DASHBOARDS,
   NG_USERPROFILE,
   ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER,
@@ -172,7 +176,8 @@ public enum FeatureName {
   SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
   AWS_SM_ASSUME_IAM_ROLE,
-  SERVICE_DASHBOARD_NG;
+  SERVICE_DASHBOARD_NG,
+  VAULT_NAMESPACE;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

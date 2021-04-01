@@ -22,7 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -65,7 +65,7 @@ public class AsyncStrategy implements ExecuteStrategy {
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
 
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     asyncWaitEngine.waitForAllOn(callback, response.getCallbackIdsList().toArray(new String[0]));
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());

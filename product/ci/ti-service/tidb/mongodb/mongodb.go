@@ -71,8 +71,12 @@ func NewRelation(source int, tests []int) *Relation {
 	}
 }
 
-func New(username, password, host, port, dbName string, log *zap.SugaredLogger) (*MongoDb, error) {
-	connStr := fmt.Sprintf("mongodb://%s:%s/?connect=direct", host, port)
+func New(username, password, host, port, dbName string, connStr string, log *zap.SugaredLogger) (*MongoDb, error) {
+	// If any connStr is provided, use that
+	if connStr == "" {
+		connStr = fmt.Sprintf("mongodb://%s:%s/?connect=direct", host, port)
+	}
+
 	log.Infow("trying to connect to mongo", "connStr", connStr)
 	ctx := context.Background()
 	credential := options.Credential{
@@ -196,6 +200,19 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 			fileNames = append(fileNames, f.Name)
 		}
 	}
+	deletedTests := make(map[types.RunnableTest]struct{})
+	// Add deleted tests to a map to remove them from the final list
+	for _, f := range req.Files {
+		if f.Status != types.FileDeleted {
+			continue
+		}
+		n, err := utils.ParseFileNames([]string{f.Name})
+		if err != nil {
+			// Ignore errors
+			continue
+		}
+		deletedTests[types.RunnableTest{Pkg: n[0].Pkg, Class: n[0].Class}] = struct{}{}
+	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
 	nodes, err := utils.ParseFileNames(fileNames)
@@ -209,17 +226,12 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 	if err != nil {
 		return res, err
 	}
-	// Unique test at class level
-	// Having to do this since tests are stored with <pkg, class, method> whereas we consider
-	// a unique test using the <pkg, class> tuple
-	allm := make(map[types.RunnableTest]struct{}) // Get list of all unique tests
+	// Test methods corresponding to each <package, class>
+	methodMap := make(map[types.RunnableTest][]types.RunnableTest)
 	for _, t := range all {
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
-		if _, ok := allm[u]; !ok {
-			// Being added for the first time
-			allm[u] = struct{}{}
-			totalTests += 1
-		}
+		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
+		totalTests += 1
 	}
 
 	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run
@@ -239,19 +251,32 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 			if !isValid(t) {
 				mdb.Log.Errorw("received test without pkg/class as input")
 			} else {
+				// If there is any test which was deleted in this PR, don't process it
+				if _, ok := deletedTests[t]; ok {
+					mdb.Log.Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
+					continue
+				}
 				// Test is valid, add the test
 				if _, ok := m[t]; !ok { // hasn't been added before
-					// Figure out the type of the test. If it exists in all, then it is updated otherwise new
-					if _, ok2 := allm[t]; !ok2 {
+					// Figure out the type of the test. If it exists in cnt,
+					// then it is updated otherwise new
+					if _, ok2 := methodMap[t]; !ok2 {
 						// Doesn't exist in existing callgraph
 						totalTests += 1
+						// This is actually not correct since it may have multiple methods.
+						// TODO: This needs to be updated from partial call graph
 						new += 1
 						t.Selection = types.SelectNewTest
+						// Mark Methods field as * since it's a new test.
+						// We can get method information only from the PCG.
+						t.Method = "*"
+						l = append(l, t)
 					} else {
-						updated += 1
-						t.Selection = types.SelectUpdatedTest
+						updated += len(methodMap[t])
+						for _, upd := range methodMap[t] {
+							l = append(l, types.RunnableTest{Pkg: upd.Pkg, Class: upd.Class, Method: upd.Method, Selection: types.SelectUpdatedTest})
+						}
 					}
-					l = append(l, t)
 					m[t] = struct{}{}
 				}
 			}
@@ -280,11 +305,18 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 		if !isValid(t) {
 			mdb.Log.Errorw("found test without pkg/class data in mongo")
 		} else {
+			// If there is any test which was deleted in this PR, don't process it
+			if _, ok := deletedTests[t]; ok {
+				mdb.Log.Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
+				continue
+			}
 			// Test is valid, add the test
 			if _, ok := m[t]; !ok { // hasn't been added before
 				m[t] = struct{}{}
-				t.Selection = types.SelectSourceCode
-				l = append(l, t)
+				for _, src := range methodMap[t] {
+					l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
+						Method: src.Method, Selection: types.SelectSourceCode})
+				}
 			}
 		}
 	}

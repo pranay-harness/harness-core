@@ -59,6 +59,9 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -252,9 +255,11 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new NotificationClientPersistenceModule());
+    modules.add(new MetricsModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    initMetrics(injector);
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -277,6 +282,11 @@ public class VerificationApplication extends Application<VerificationConfigurati
     runMigrations(injector);
 
     log.info("Starting app done");
+  }
+
+  private void initMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {

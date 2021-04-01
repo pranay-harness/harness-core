@@ -73,7 +73,8 @@ public class JiraClient {
   }
 
   /**
-   * Get the issue create meta information - schema and other information for all project(s), issue type(s) and fields.
+   * Get the issue create metadata information - schema and other information for all project(s), issue type(s) and
+   * fields.
    *
    * There is special handling for these fields:
    * - project and issue type are not part of the fields (they are already passed as parameters)
@@ -92,10 +93,10 @@ public class JiraClient {
    * @param fetchStatus should also fetch status
    * @return the issue create meta
    */
-  public JiraIssueCreateMetaResponseNG getIssueCreateMeta(
+  public JiraIssueCreateMetadataNG getIssueCreateMetadata(
       String projectKey, String issueType, String expand, boolean fetchStatus) {
-    JiraIssueCreateMetaResponseNG createMetaResponse =
-        executeCall(restClient.getIssueCreateMeta(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
+    JiraIssueCreateMetadataNG createMetadata =
+        executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
             "fetching create meta");
@@ -106,19 +107,19 @@ public class JiraClient {
         // type. This means in the ui dropdown we might show statuses which at runtime will fail because they are not
         // part of the runtime project and issue type.
         List<JiraStatusNG> statuses = getStatuses();
-        createMetaResponse.updateStatuses(statuses);
+        createMetadata.updateStatuses(statuses);
       } else {
         List<JiraIssueTypeNG> projectStatuses = getProjectStatuses(projectKey);
-        createMetaResponse.updateProjectStatuses(projectKey, projectStatuses);
+        createMetadata.updateProjectStatuses(projectKey, projectStatuses);
       }
     } else {
-      // After deserialization to JiraIssueCreateMetaResponseNG, by default, we receive a status field with no allowed
+      // After deserialization to JiraIssueCreateMetadataNG, by default, we receive a status field with no allowed
       // values in all issue types. If fetchStatus is false, remove that field from issue types so that ui doesn't show
       // it as one the fields.
-      createMetaResponse.removeField(JiraConstantsNG.STATUS_NAME);
+      createMetadata.removeField(JiraConstantsNG.STATUS_NAME);
     }
 
-    return createMetaResponse;
+    return createMetadata;
   }
 
   private List<JiraStatusNG> getStatuses() {
@@ -153,7 +154,7 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetaResponseNG createMetaResponse = getIssueCreateMeta(projectKey, issueTypeName, null, false);
+    JiraIssueCreateMetadataNG createMetaResponse = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
     JiraProjectNG project = createMetaResponse.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));

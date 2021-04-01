@@ -4,11 +4,11 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -16,8 +16,10 @@ import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -30,21 +32,30 @@ import org.mongodb.morphia.annotations.Entity;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
-
-@CdIndex(name = "stateHostIdx",
-    fields =
-    {
-      @Field("workflowId")
-      , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
-    })
-@CdIndex(name = "workflowExec_idx",
-    fields = { @Field("workflowExecutionId")
-               , @Field(value = "createdAt", type = IndexType.DESC) })
-@CdIndex(name = "cv_certified_index", fields = { @Field("pipelineExecutionId")
-                                                 , @Field(value = "accountId") })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("stateHostIdx")
+                 .field(ContinuousVerificationExecutionMetaDataKeys.workflowId)
+                 .field(ContinuousVerificationExecutionMetaDataKeys.stateType)
+                 .field(ContinuousVerificationExecutionMetaDataKeys.executionStatus)
+                 .descSortField(ContinuousVerificationExecutionMetaDataKeys.workflowStartTs)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("workflowExec_idx")
+                .field(ContinuousVerificationExecutionMetaDataKeys.workflowExecutionId)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("cv_certified_index")
+                .field(ContinuousVerificationExecutionMetaDataKeys.pipelineExecutionId)
+                .field(ContinuousVerificationExecutionMetaDataKeys.accountId)
+                .build())
+        .build();
+  }
   @NotEmpty @FdIndex private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;
 

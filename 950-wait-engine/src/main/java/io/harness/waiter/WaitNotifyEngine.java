@@ -70,7 +70,7 @@ public class WaitNotifyEngine {
     return waitForAllOn(publisherName, callback, progressCallback, list);
   }
 
-  public String waitForAllOnInList(String publisherName, NotifyCallback callback, List<String> list) {
+  public String waitForAllOnInList(String publisherName, OldNotifyCallback callback, List<String> list) {
     return waitForAllOn(publisherName, callback, null, list);
   }
 

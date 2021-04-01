@@ -71,7 +71,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 
 	// Test intelligence DB
 	var tidb tidb.TiDB
-	if config.MongoDb.DbName != "" && config.MongoDb.Host != "" {
+	if config.MongoDb.DbName != "" && (config.MongoDb.Host != "" || config.MongoDb.ConnStr != "") {
 		// Create mongoDB connection
 		log.Infow("configuring TI service to use mongo DB",
 			"host", config.MongoDb.Host,
@@ -82,6 +82,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.MongoDb.Host,
 			config.MongoDb.Port,
 			config.MongoDb.DbName,
+			config.MongoDb.ConnStr,
 			log)
 		if err != nil {
 			log.Errorw("unable to connect to mongo DB")
@@ -89,8 +90,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	} else {
 		log.Errorw("mongo DB not configured properly")
-		// TODO: remove this comment once we have test intelligence dependencies running in environments.
-		// return errors.New("mongo db info not configured")
+		return errors.New("mongo db info not configured")
 	}
 
 	// create the http server.

@@ -8,4 +8,5 @@ public interface OrchestrationService {
   void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime);
   void orchestrate(String verificationTaskId);
   void orchestrate(AnalysisOrchestrator orchestrator);
+  void recordMetrics();
 }

@@ -1,5 +1,9 @@
 package io.harness.pms.plan.execution.beans.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
@@ -20,6 +24,7 @@ import org.bson.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("GraphLayoutNode")
+@OwnedBy(PIPELINE)
 public class GraphLayoutNodeDTO {
   String nodeType;
   String nodeGroup;
@@ -34,4 +39,6 @@ public class GraphLayoutNodeDTO {
   EdgeLayoutListDTO edgeLayoutList;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
+  Boolean barrierFound;
+  ExecutionErrorInfo failureInfo;
 }

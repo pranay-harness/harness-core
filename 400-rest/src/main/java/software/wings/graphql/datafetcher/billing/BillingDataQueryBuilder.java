@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
@@ -86,6 +88,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(CE)
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private CeActivePodCountTableSchema podTableSchema = new CeActivePodCountTableSchema();
@@ -1476,7 +1479,7 @@ public class BillingDataQueryBuilder {
       case Region:
         return schema.getRegion();
       case CloudProvider:
-        return schema.getCloudProvider();
+        return schema.getCloudProviderId();
       default:
         throw new InvalidRequestException("Group by entity not supported in filter values");
     }

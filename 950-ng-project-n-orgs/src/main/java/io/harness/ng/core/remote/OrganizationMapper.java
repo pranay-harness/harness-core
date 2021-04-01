@@ -1,8 +1,10 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.entities.Organization;
@@ -12,6 +14,7 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class OrganizationMapper {
   public static Organization toOrganization(OrganizationDTO dto) {

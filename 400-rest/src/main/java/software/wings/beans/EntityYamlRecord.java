@@ -1,16 +1,15 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
-import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
-
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -22,21 +21,25 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
-@CdIndex(name = "index_1",
-    fields =
-    {
-      @Field(EntityYamlRecordKeys.accountId)
-      , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
-          @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
-    })
-@CdIndex(name = "index_2",
-    fields =
-    {
-      @Field(EntityYamlRecordKeys.accountId)
-      , @Field(EntityYamlRecordKeys.entityType), @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC),
-          @Field(EntityYamlRecordKeys.yamlPath)
-    })
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("index_1")
+                 .field(EntityYamlRecordKeys.accountId)
+                 .field(EntityYamlRecordKeys.entityId)
+                 .field(EntityYamlRecordKeys.entityType)
+                 .descSortField(EntityYamlRecordKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("index_2")
+                 .field(EntityYamlRecordKeys.accountId)
+                 .field(EntityYamlRecordKeys.entityType)
+                 .descSortField(EntityYamlRecordKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private String accountId;
   private long createdAt;

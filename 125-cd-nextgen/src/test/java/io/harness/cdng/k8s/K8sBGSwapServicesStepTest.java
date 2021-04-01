@@ -45,10 +45,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -158,14 +155,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testObtainTaskInRollbackWhenSwapServicesDidNotExecuteInForwardPhase() {
-    Ambiance ambiance =
-        Ambiance.newBuilder()
-            .addLevels(
-                Level.newBuilder()
-                    .setStepType(
-                        StepType.newBuilder().setType(RollbackOptionalChildChainStep.STEP_TYPE.getType()).build())
-                    .build())
-            .build();
+    Ambiance ambiance = getAmbianceForRollback();
     OptionalOutcome optionalOutcome = OptionalOutcome.builder().found(false).build();
     doReturn(optionalOutcome)
         .when(outcomeService)
@@ -182,13 +172,12 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleTaskResult() {
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .commandExecutionStatus(SUCCESS)
+                                         .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
@@ -196,16 +185,31 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testHandleTaskResultInRollback() {
+    Ambiance ambiance = getAmbianceForRollback();
+
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .commandExecutionStatus(SUCCESS)
+                                         .build();
+
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
+    assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
+    assertThat(response.getStepOutcomes()).isEmpty();
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(FAILED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -235,5 +239,14 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(BG_STEP_MISSING_ERROR);
+  }
+
+  private Ambiance getAmbianceForRollback() {
+    return Ambiance.newBuilder()
+        .addLevels(
+            Level.newBuilder()
+                .setStepType(StepType.newBuilder().setType(RollbackOptionalChildChainStep.STEP_TYPE.getType()).build())
+                .build())
+        .build();
   }
 }

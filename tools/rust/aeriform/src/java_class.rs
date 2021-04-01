@@ -9,6 +9,7 @@ use std::iter::FromIterator;
 use crate::repo::GIT_REPO_ROOT_DIR;
 
 pub const UNKNOWN_TEAM: &str = "UNK";
+pub const UNKNOWN_LOCATION: &str = "n/a";
 
 #[derive(Debug)]
 pub struct JavaClass {
@@ -141,7 +142,7 @@ pub fn class_dependencies(name: &str, dependencies: &MultiMap<String, String>) -
 pub fn external_class(key: &str, dependencies: &MultiMap<String, String>, team: Option<String>) -> JavaClass {
     JavaClass {
         name: key.to_string(),
-        location: "n/a".to_string(),
+        location: UNKNOWN_LOCATION.to_string(),
         package: None,
         dependencies: class_dependencies(key, &dependencies),
         target_module: Default::default(),

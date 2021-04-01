@@ -5,6 +5,8 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -19,10 +21,8 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

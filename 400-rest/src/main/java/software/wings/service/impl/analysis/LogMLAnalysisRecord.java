@@ -9,11 +9,10 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 
@@ -34,6 +33,7 @@ import software.wings.sm.StateType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -55,38 +55,6 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by rsingh on 6/23/17.
  */
 
-@CdIndex(name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1",
-    fields =
-    { @Field("cvConfigId")
-      , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC) })
-@CdIndex(name = "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1",
-    fields =
-    {
-      @Field("cvConfigId")
-      , @Field("deprecated"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
-          @Field(value = "lastUpdatedAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "analysisSummaryIdx",
-    fields =
-    {
-      @Field("stateExecutionId")
-      , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
-          @Field(value = "lastUpdatedAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx",
-    fields =
-    {
-      @Field("cvConfigId")
-      , @Field(value = "analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
-          @Field("deprecated"),
-    })
-@CdIndex(name = "stateExecStatusIdx", fields = { @Field("stateExecutionId")
-                                                 , @Field("analysisStatus") })
-@CdIndex(name = "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1",
-    fields =
-    {
-      @Field("stateExecutionId"), @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-    })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -95,10 +63,45 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogMLAnalysisRecord extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("cvConfigId_1_analysisStatus_1_logCollectionMinute_-1")
+                 .field(LogMLAnalysisRecordKeys.cvConfigId)
+                 .field(LogMLAnalysisRecordKeys.analysisStatus)
+                 .descSortField(LogMLAnalysisRecordKeys.logCollectionMinute)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1")
+                .field(LogMLAnalysisRecordKeys.cvConfigId)
+                .field(LogMLAnalysisRecordKeys.deprecated)
+                .descSortField(LogMLAnalysisRecordKeys.logCollectionMinute)
+                .descSortField(LAST_UPDATED_AT_KEY)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("analysisSummaryIndex")
+                .field(LogMLAnalysisRecordKeys.stateExecutionId)
+                .field(LogMLAnalysisRecordKeys.logCollectionMinute)
+                .field(LogMLAnalysisRecordKeys.analysisStatus)
+                .descSortField(LAST_UPDATED_AT_KEY)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("stateExecStatusIdx")
+                .field(LogMLAnalysisRecordKeys.stateExecutionId)
+                .field(LogMLAnalysisRecordKeys.analysisStatus)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1")
+                .field(LogMLAnalysisRecordKeys.stateExecutionId)
+                .field(LogMLAnalysisRecordKeys.analysisStatus)
+                .descSortField(LogMLAnalysisRecordKeys.logCollectionMinute)
+                .build())
+        .build();
+  }
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;
-  @FdIndex private String workflowExecutionId;
-  @FdIndex private String accountId;
+  private String workflowExecutionId;
+  private String accountId;
 
   @NotEmpty private StateType stateType;
 

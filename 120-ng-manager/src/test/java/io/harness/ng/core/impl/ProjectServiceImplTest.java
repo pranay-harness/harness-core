@@ -1,6 +1,7 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.ModuleType.CD;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -8,10 +9,12 @@ import static io.harness.utils.PageTestUtils.getPage;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -20,8 +23,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
@@ -35,6 +40,9 @@ import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.bson.Document;
 import org.junit.Before;
@@ -43,9 +51,17 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;
   private OrganizationService organizationService;
@@ -203,5 +219,32 @@ public class ProjectServiceImplTest extends CategoryTest {
     assertTrue(criteriaObject.containsKey(ProjectKeys.modules));
 
     assertEquals(0, projectPage.getTotalElements());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testProjectsCount() throws NoSuchFieldException, IllegalAccessException {
+    String accountIdentifier = randomAlphabetic(10);
+    ArgumentCaptor<Aggregation> aggregationArgumentCaptor = ArgumentCaptor.forClass(Aggregation.class);
+    List<ProjectsPerOrganizationCount> projectsCount = new ArrayList<>();
+    AggregationResults<ProjectsPerOrganizationCount> aggregationResults = mock(AggregationResults.class);
+    when(projectRepository.aggregate(any(), eq(ProjectsPerOrganizationCount.class))).thenReturn(aggregationResults);
+    when(aggregationResults.getMappedResults()).thenReturn(projectsCount);
+    projectService.getProjectsCountPerOrganization(accountIdentifier, null);
+
+    verify(projectRepository, times(1))
+        .aggregate(aggregationArgumentCaptor.capture(), eq(ProjectsPerOrganizationCount.class));
+    Aggregation aggregation = aggregationArgumentCaptor.getValue();
+    assertNotNull(aggregation);
+
+    Field f = aggregation.getClass().getDeclaredField("operations");
+    f.setAccessible(true);
+    List<AggregationOperation> operations = (List<AggregationOperation>) f.get(aggregation);
+    assertEquals(4, operations.size());
+    assertEquals(MatchOperation.class, operations.get(0).getClass());
+    assertEquals(SortOperation.class, operations.get(1).getClass());
+    assertEquals(GroupOperation.class, operations.get(2).getClass());
+    assertEquals(ProjectionOperation.class, operations.get(3).getClass());
   }
 }

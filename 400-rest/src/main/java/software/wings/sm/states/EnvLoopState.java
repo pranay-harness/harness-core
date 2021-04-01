@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
+import io.harness.beans.RepairActionCode;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ForkElement;

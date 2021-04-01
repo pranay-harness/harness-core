@@ -16,12 +16,13 @@ import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
@@ -29,24 +30,21 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_APPROVAL)
 @TypeAlias("jiraApprovalStepInfo")
 public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueId;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
   @NotNull CriteriaSpecWrapper rejectionCriteria;
 
   @Builder(builderMethodName = "infoBuilder")
-  public JiraApprovalStepInfo(String name, String identifier, ParameterField<String> approvalMessage,
-      ParameterField<Boolean> includePipelineExecutionHistory, ParameterField<String> connectorRef,
-      ParameterField<String> projectKey, ParameterField<String> issueId, CriteriaSpecWrapper approvalCriteria,
-      CriteriaSpecWrapper rejectionCriteria) {
-    super(name, identifier, approvalMessage, includePipelineExecutionHistory);
+  public JiraApprovalStepInfo(String name, String identifier, ParameterField<String> connectorRef,
+      ParameterField<String> issueKey, CriteriaSpecWrapper approvalCriteria, CriteriaSpecWrapper rejectionCriteria) {
+    super(name, identifier);
     this.connectorRef = connectorRef;
-    this.projectKey = projectKey;
-    this.issueId = issueId;
+    this.issueKey = issueKey;
     this.approvalCriteria = approvalCriteria;
     this.rejectionCriteria = rejectionCriteria;
   }
@@ -64,14 +62,13 @@ public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
   @Override
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return JiraApprovalStepParameters.infoBuilder()
+        .name(getName())
+        .identifier(getIdentifier())
+        .timeout(baseStepParameterInfo.getTimeout())
+        .connectorRef(connectorRef)
+        .issueKey(issueKey)
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
-        .issueId(issueId)
-        .name(getName())
-        .connectorRef(connectorRef)
-        .approvalMessage(getApprovalMessage())
-        .projectKey(projectKey)
-        .includePipelineExecutionHistory(getIncludePipelineExecutionHistory())
         .build();
   }
 

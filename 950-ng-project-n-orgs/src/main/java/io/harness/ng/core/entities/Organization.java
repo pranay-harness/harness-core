@@ -1,6 +1,9 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.CollationLocale;
@@ -31,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "OrganizationKeys")
@@ -50,13 +54,32 @@ public class Organization implements PersistentEntity, NGAccountAccess {
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountIdentifierNameIdx")
+                 .name("accountIdentifierDeletedHarnessManagedNameWithCollationIdx")
                  .field(OrganizationKeys.accountIdentifier)
+                 .field(OrganizationKeys.deleted)
                  .descSortField(OrganizationKeys.harnessManaged)
                  .ascSortField(OrganizationKeys.name)
                  .unique(false)
                  .collation(
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdentifierIdentifierDeletedHarnessManagedNameWithCollationIdx")
+                 .field(OrganizationKeys.accountIdentifier)
+                 .field(OrganizationKeys.identifier)
+                 .field(OrganizationKeys.deleted)
+                 .descSortField(OrganizationKeys.harnessManaged)
+                 .ascSortField(OrganizationKeys.name)
+                 .unique(false)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountIdentifierDeletedIdentifierIdx")
+                 .field(OrganizationKeys.accountIdentifier)
+                 .field(OrganizationKeys.deleted)
+                 .field(OrganizationKeys.identifier)
+                 .unique(false)
                  .build())
         .build();
   }

@@ -1,5 +1,8 @@
 package io.harness.delegate.task.jira.connection;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -12,15 +15,15 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.jira.JiraTaskNGHelper;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.jira.JiraAction;
-import io.harness.logging.CommandExecutionStatus;
+import io.harness.exception.ExceptionUtils;
+import io.harness.jira.JiraActionNG;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(CDC)
 public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
   @Inject JiraTaskNGHelper jiraTaskNGHelper;
 
@@ -40,19 +43,16 @@ public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
     JiraConnectionTaskParams jiraConnectionTaskParams = (JiraConnectionTaskParams) parameters;
     JiraConnectorDTO connectorDTO = jiraConnectionTaskParams.getJiraConnectorDTO();
 
-    JiraTaskNGResponse jiraTaskNGResponse =
-        jiraTaskNGHelper.getJiraTaskResponse(JiraTaskNGParameters.builder()
-                                                 .jiraConnectorDTO(connectorDTO)
-                                                 .jiraAction(JiraAction.AUTH)
-                                                 .encryptionDetails(jiraConnectionTaskParams.getEncryptionDetails())
-                                                 .build());
-
-    JiraTestConnectionTaskNGResponseBuilder responseBuilder =
-        JiraTestConnectionTaskNGResponse.builder().delegateMetaInfo(jiraTaskNGResponse.getDelegateMetaInfo());
-    if (jiraTaskNGResponse.getExecutionStatus() == CommandExecutionStatus.SUCCESS) {
+    JiraTestConnectionTaskNGResponseBuilder responseBuilder = JiraTestConnectionTaskNGResponse.builder();
+    try {
+      jiraTaskNGHelper.getJiraTaskResponse(JiraTaskNGParameters.builder()
+                                               .jiraConnectorDTO(connectorDTO)
+                                               .action(JiraActionNG.VALIDATE_CREDENTIALS)
+                                               .encryptionDetails(jiraConnectionTaskParams.getEncryptionDetails())
+                                               .build());
       responseBuilder.canConnect(true);
-    } else {
-      responseBuilder.canConnect(false).errorMessage(jiraTaskNGResponse.getErrorMessage());
+    } catch (Exception ex) {
+      responseBuilder.canConnect(false).errorMessage(ExceptionUtils.getMessage(ex));
     }
     return responseBuilder.build();
   }

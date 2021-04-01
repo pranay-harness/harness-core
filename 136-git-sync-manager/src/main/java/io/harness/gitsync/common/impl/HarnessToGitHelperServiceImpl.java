@@ -1,14 +1,18 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.PushInfo;
-import io.harness.gitsync.common.beans.InfoForPush;
+import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
@@ -23,6 +27,7 @@ import com.google.inject.name.Named;
 import java.util.Optional;
 
 @Singleton
+@OwnedBy(DX)
 public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService {
   private final ConnectorService connectorService;
   private final DecryptGitApiAccessHelper decryptScmApiAccess;
@@ -42,7 +47,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   }
 
   @Override
-  public InfoForPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
+  public InfoForGitPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
       EntityReference entityReference, EntityType entityType) {
     final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(yamlGitConfigId, accountId);
     final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType);
@@ -51,14 +56,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         if (!gitSyncEntityDTO.getFilePath().equals(filePath)) {
           throw new InvalidRequestException("Incorrect file path");
         } else {
-          return InfoForPush.builder()
+          return InfoForGitPush.builder()
               .scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
               .filePath(filePath)
               .build();
         }
       }
     }
-    return InfoForPush.builder()
+    return InfoForGitPush.builder()
         .scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
         .filePath(filePath)
         .build();
@@ -84,5 +89,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityDetailRestToProtoMapper.createEntityDetailDTO(pushInfo.getEntityDetail()), yamlGitConfigDTO,
         pushInfo.getFilePath(), pushInfo.getCommitId());
     // todo(abhinav): record git commit and git file activity.
+  }
+
+  @Override
+  public Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo) {
+    return yamlGitConfigService.isGitSyncEnabled(entityScopeInfo.getAccountId(), entityScopeInfo.getOrgId().getValue(),
+        entityScopeInfo.getProjectId().getValue());
   }
 }

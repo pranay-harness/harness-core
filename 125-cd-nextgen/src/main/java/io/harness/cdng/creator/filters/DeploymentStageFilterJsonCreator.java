@@ -65,6 +65,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
+    if (service == null
+        && (deploymentStageConfig.getServiceConfig().getServiceRef() == null
+            || deploymentStageConfig.getServiceConfig().getServiceRef().fetchFinalValue() == null)
+        && deploymentStageConfig.getServiceConfig().getUseFromStage() == null) {
+      throw new InvalidRequestException("One of service, serviceRef and useFromStage should be present");
+    }
     if (service != null && isNotEmpty(service.getName())) {
       cdFilter.serviceName(service.getName());
     }
@@ -75,12 +81,20 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
-    if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+    if (infrastructure == null) {
+      throw new InvalidRequestException("Infrastructure cannot be null");
+    }
+    if (infrastructure.getEnvironment() == null
+        && (infrastructure.getEnvironmentRef() == null || infrastructure.getEnvironmentRef().fetchFinalValue() == null)
+        && infrastructure.getUseFromStage() == null) {
+      throw new InvalidRequestException("One of environment, environment and useFromStage should be present");
+    }
+
+    if (infrastructure.getEnvironment() != null && isNotEmpty(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
     }
 
-    if (infrastructure != null && infrastructure.getInfrastructureDefinition() != null
+    if (infrastructure.getInfrastructureDefinition() != null
         && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
       cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }

@@ -1,5 +1,8 @@
 package io.harness.audit;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.mapper.AuditFilterPropertiesMapper;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -9,6 +12,7 @@ import io.harness.persistence.HPersistence;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
+@OwnedBy(PL)
 public class AuditFilterModule extends AbstractModule {
   @Override
   protected void configure() {

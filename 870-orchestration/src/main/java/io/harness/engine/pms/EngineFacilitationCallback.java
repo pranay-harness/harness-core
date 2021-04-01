@@ -12,7 +12,7 @@ import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -20,7 +20,7 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 
 @OwnedBy(CDC)
-public class EngineFacilitationCallback implements NotifyCallback {
+public class EngineFacilitationCallback implements OldNotifyCallback {
   @Inject private OrchestrationEngine orchestrationEngine;
 
   String nodeExecutionId;

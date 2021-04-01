@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -63,7 +64,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
           (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          resumePackage.getResponseDataMap());
+          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       pmsNodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
@@ -72,7 +73,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
       TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          resumePackage.getResponseDataMap());
+          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }
@@ -92,14 +93,14 @@ public class TaskChainStrategy implements ExecuteStrategy {
                                 .setChainEnd(true)
                                 .setPassThroughData(
                                     ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
-                                .addAllLogKeys(taskChainResponse.getLogKeys())
-                                .addAllUnits(taskChainResponse.getUnits())
+                                .addAllLogKeys(CollectionUtils.emptyIfNull(taskChainResponse.getLogKeys()))
+                                .addAllUnits(CollectionUtils.emptyIfNull(taskChainResponse.getUnits()))
                                 .build())
               .build(),
           Collections.emptyList());
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
-          null);
+          () -> null);
       pmsNodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
       return;

@@ -11,6 +11,12 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -39,6 +45,7 @@ import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logStreaming.LogStreamingStepClientFactory;
@@ -53,10 +60,13 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
-import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -64,14 +74,18 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.rbac.CDNGRbacPermissions;
+import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.steps.executable.TaskChainExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +94,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
@@ -87,8 +103,9 @@ import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDP)
 @Slf4j
-public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
+public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
 
   public static final String SERVICE_STEP_COMMAND_UNIT = "Execute";
@@ -97,6 +114,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @Inject private ArtifactStep artifactStep;
   @Inject private ManifestStep manifestStep;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
+  @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
+  @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   @Override
   public Class<ServiceStepParameters> getStepParametersClass() {
@@ -104,7 +124,35 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   }
 
   @Override
-  public TaskChainResponse startChainLink(
+  public void validateResources(Ambiance ambiance, ServiceStepParameters stepParameters) {
+    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      return;
+    }
+    PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
+        executionPrincipalInfo.getPrincipalType());
+    Set<EntityDetailProtoDTO> entityDetails =
+        entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getService());
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
+    boolean hasAccess = accessControlClient.hasAccess(principal, principalType,
+        PermissionCheckDTO.builder()
+            .permission(CDNGRbacPermissions.SERVICE_CREATE_PERMISSION)
+            .resourceIdentifier(projectIdentifier)
+            .resourceScope(
+                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
+            .resourceType("project")
+            .build());
+    if (!hasAccess) {
+      throw new InvalidRequestException("Rbac validation failed for Service step");
+    }
+  }
+
+  @Override
+  public TaskChainResponse startChainLinkAfterRbac(
       Ambiance ambiance, ServiceStepParameters stepParameters, StepInputPackage inputPackage) {
     NGManagerLogCallback ngManagerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, true);
@@ -135,11 +183,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
     boolean chainEnd = artifactsWithCorrespondingOverrides.size() == 1;
-    ngManagerLogCallback.saveExecutionLog(color("Starting delegate task for fetching details of artifact :"
-            + passThroughData.artifactsWithCorrespondingOverrides.get(passThroughData.currentIndex)
-                  .getArtifact()
-                  .getIdentifier(),
-        Cyan, Bold));
+    ArtifactStepParameters artifactStepParameters =
+        passThroughData.artifactsWithCorrespondingOverrides.get(passThroughData.currentIndex);
+    String artifactIdentifier = artifactStepParameters.getArtifact() != null
+        ? (artifactStepParameters.getArtifact().getIdentifier())
+        : (artifactStepParameters.getArtifactOverrideSet() != null
+                ? (artifactStepParameters.getArtifactOverrideSet().getIdentifier())
+                : (artifactStepParameters.getArtifactStageOverride().getIdentifier()));
+    ngManagerLogCallback.saveExecutionLog(
+        color("Starting delegate task for fetching details of artifact :" + artifactIdentifier, Cyan, Bold));
     TaskChainResponse taskChainResponse = TaskChainResponse.builder()
                                               .taskRequest(taskRequest)
                                               .chainEnd(chainEnd)
@@ -151,10 +203,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, ServiceStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
     NGManagerLogCallback ngManagerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
-    DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
+    DelegateResponseData notifyResponseData = (DelegateResponseData) responseSupplier.get();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     int currentIndex = serviceStepPassThroughData.getCurrentIndex();
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
@@ -188,14 +240,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @SneakyThrows
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
     long startTime = System.currentTimeMillis();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     NGManagerLogCallback managerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
-    if (!isEmpty(responseDataMap)) {
+    ResponseData data = responseDataSupplier.get();
+    if (data != null) {
       // Artifact task executed
-      DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
+      DelegateResponseData notifyResponseData = (DelegateResponseData) data;
       int currentIndex = serviceStepPassThroughData.getCurrentIndex();
       List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
           serviceStepPassThroughData.getArtifactsWithCorrespondingOverrides();

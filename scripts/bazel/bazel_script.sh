@@ -43,6 +43,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
+  //110-change-data-capture:module \
   //120-ng-manager:module \
   //125-cd-nextgen:module \
   //130-resource-group:module \
@@ -123,6 +124,7 @@ BAZEL_MODULES="\
   //945-ng-audit-client:module \
   //949-git-sync-sdk:module \
   //950-command-library-common:module \
+  //950-cg-ng-shared-orchestration-beans:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
@@ -142,7 +144,7 @@ BAZEL_MODULES="\
   //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
-  //955-scm-java-client:module \
+  //952-scm-java-client:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
@@ -328,6 +330,7 @@ build_proto_module() {
 
 build_bazel_application 260-delegate
 
+build_bazel_application_module 110-change-data-capture
 build_bazel_application_module 120-ng-manager
 build_bazel_application_module 160-model-gen-tool
 build_bazel_application_module 210-command-library-server
@@ -396,6 +399,7 @@ build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 950-command-library-common
+build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api
@@ -411,7 +415,7 @@ build_bazel_module 950-walktree-visitor
 build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-setup-usage-sdk
-build_bazel_module 955-scm-java-client
+build_bazel_module 952-scm-java-client
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features
 build_bazel_module 960-expression-service

@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.constants.Constants.AMZ_SUBSCRIPTION_CONFIRMATION_TYPE;
 import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
@@ -17,6 +18,7 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLA
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
@@ -29,6 +31,7 @@ import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails.WebhookDetailsBuilder;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityBuilder;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -61,6 +64,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +80,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NGTriggerElementMapper {
   public static final int DAYS_BEFORE_CURRENT_DATE = 6;
   private TriggerEventHistoryRepository triggerEventHistoryRepository;
@@ -108,21 +113,31 @@ public class NGTriggerElementMapper {
 
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, NGTriggerConfig config, String yaml) {
-    return NGTriggerEntity.builder()
-        .name(config.getName())
-        .identifier(config.getIdentifier())
-        .description(config.getDescription())
-        .yaml(yaml)
-        .type(config.getSource().getType())
-        .accountId(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .targetIdentifier(config.getTarget().getTargetIdentifier())
-        .targetType(config.getTarget().getType())
-        .metadata(toMetadata(config.getSource()))
-        .enabled(config.getEnabled())
-        .tags(TagMapper.convertToList(config.getTags()))
-        .build();
+    NGTriggerEntityBuilder entityBuilder = NGTriggerEntity.builder()
+                                               .name(config.getName())
+                                               .identifier(config.getIdentifier())
+                                               .description(config.getDescription())
+                                               .yaml(yaml)
+                                               .type(config.getSource().getType())
+                                               .accountId(accountIdentifier)
+                                               .orgIdentifier(orgIdentifier)
+                                               .projectIdentifier(projectIdentifier)
+                                               .targetIdentifier(config.getTarget().getTargetIdentifier())
+                                               .targetType(config.getTarget().getType())
+                                               .metadata(toMetadata(config.getSource()))
+                                               .enabled(config.getEnabled())
+                                               .tags(TagMapper.convertToList(config.getTags()));
+    if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
+      entityBuilder.nextIterations(new ArrayList<>());
+    }
+    NGTriggerEntity entity = entityBuilder.build();
+    if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
+      List<Long> nextIterations = entity.recalculateNextIterations("unused", true, 0);
+      if (!nextIterations.isEmpty()) {
+        entity.setNextIterations(nextIterations);
+      }
+    }
+    return entity;
   }
 
   NGTriggerMetadata toMetadata(NGTriggerSource triggerSource) {
@@ -222,8 +237,9 @@ public class NGTriggerElementMapper {
       webhookSourceRepo = BITBUCKET;
     } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_AMZ_SNS_MESSAGE_TYPE)) {
       webhookSourceRepo = AWS_CODECOMMIT;
-      if (headers.get(X_AMZ_SNS_MESSAGE_TYPE).contains(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE)) {
-        isConfirmationMessage = true;
+      List<String> headerValues = webhookEventPayloadParser.getHeaderValue(headers, X_AMZ_SNS_MESSAGE_TYPE);
+      if (isNotEmpty(headerValues)) {
+        isConfirmationMessage = headerValues.stream().anyMatch(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE::equalsIgnoreCase);
       }
     } else {
       webhookSourceRepo = CUSTOM;

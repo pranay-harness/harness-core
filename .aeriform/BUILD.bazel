@@ -78,6 +78,10 @@ aeriform("//360-cg-manager:module")
 
 aeriform("//370-users-syncbridge:module")
 
+aeriform("//375-ce-graphql:module")
+
+aeriform("//375-ce-graphql:tests")
+
 aeriform("//380-cg-graphql:module")
 
 aeriform("//380-cg-graphql:tests")
@@ -264,6 +268,8 @@ aeriform("//949-git-sync-sdk:module")
 
 aeriform("//950-command-library-common:module")
 
+aeriform("//950-cg-ng-shared-orchestration-beans:module")
+
 aeriform("//950-common-entities:module")
 
 aeriform("//950-delegate-tasks-beans:module")
@@ -304,6 +310,10 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
+aeriform("//952-scm-java-client:module")
+
+aeriform("//952-scm-java-client:tests")
+
 aeriform("//953-git-sync-commons:module")
 
 aeriform("//954-connector-beans:module")
@@ -319,10 +329,6 @@ aeriform("//955-filters-sdk:tests")
 aeriform("//955-outbox-sdk:module")
 
 aeriform("//955-outbox-sdk:tests")
-
-aeriform("//955-scm-java-client:module")
-
-aeriform("//955-scm-java-client:tests")
 
 aeriform("//955-setup-usage-sdk:module")
 

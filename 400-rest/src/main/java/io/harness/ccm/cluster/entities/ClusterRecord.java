@@ -1,6 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -23,6 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "clusterRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CE)
 public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @FdIndex String accountId;

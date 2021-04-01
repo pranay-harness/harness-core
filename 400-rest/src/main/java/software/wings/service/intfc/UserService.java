@@ -548,6 +548,8 @@ public interface UserService extends OwnedByAccount {
 
   String sanitizeUserName(String name);
 
+  List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId);
+
   void addUserToAccount(String userId, String accountId);
 
   boolean safeDeleteUser(String userId, String accountId);

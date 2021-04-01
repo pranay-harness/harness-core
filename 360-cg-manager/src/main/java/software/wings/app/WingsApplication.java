@@ -8,7 +8,6 @@ import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
@@ -52,7 +51,6 @@ import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
-import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -102,22 +100,10 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
-import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -129,7 +115,6 @@ import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.springdata.SpringPersistenceModule;
-import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
@@ -138,7 +123,6 @@ import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -274,7 +258,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -363,7 +346,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    mapper.registerModule(new PmsBeansJacksonModule());
     mapper.addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
@@ -524,7 +506,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance
@@ -625,23 +606,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
-  }
-
-  private PmsSdkConfiguration getPmsSdkConfiguration() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return PmsSdkConfiguration.builder()
-        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
-        .serviceName("wings")
-        .engineSteps(WingsStepRegistrar.getEngineSteps())
-        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(engineEventHandlersMap)
-        .build();
   }
 
   private void registerCVNGVerificationTaskIterator(Injector injector) {
@@ -816,8 +780,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
     notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
-    notifyQueuePublisherRegister.register(
-        NG_ORCHESTRATION, payload -> publisher.send(asList(NG_ORCHESTRATION), payload));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -845,9 +807,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
-    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
@@ -1024,9 +983,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
     injector.getInstance(DeploymentFreezeActivationHandler.class).registerIterators();
     injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
-    injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
-    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();

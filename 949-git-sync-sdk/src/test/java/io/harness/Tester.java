@@ -12,7 +12,7 @@ public class Tester {
 
   public SampleBean save() {
     return cdRepository.save(SampleBean.builder()
-                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                 .accountIdentifier("kmpySmUISimoRrJL6NL73w")
                                  .projectIdentifier("test_cd")
                                  .orgIdentifier("test_org")
                                  .name("xyz")

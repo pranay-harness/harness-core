@@ -1,5 +1,8 @@
 package software.wings.settings;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 
 import software.wings.security.UsageRestrictions;
@@ -18,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@OwnedBy(CDP)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;

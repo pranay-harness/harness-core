@@ -480,12 +480,18 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
+    delete(appId, entityId, entityType, configFileName, false);
+  }
+
+  @Override
+  public void delete(String appId, String entityId, EntityType entityType, String configFileName, boolean syncFromGit) {
     ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class)
                                 .filter(ConfigFile.APP_ID_KEY2, appId)
                                 .filter(ConfigFileKeys.entityType, entityType.name())
                                 .filter(ConfigFileKeys.entityId, entityId)
                                 .filter(ConfigFileKeys.relativeFilePath, configFileName)
                                 .get();
+    configFile.setSyncFromGit(syncFromGit);
 
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {

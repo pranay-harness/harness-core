@@ -1,8 +1,11 @@
 package io.harness.plancreator.stages.stage;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -24,16 +27,17 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @TypeAlias("stageElementConfig")
+@OwnedBy(PIPELINE)
 public class StageElementConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityIdentifier String identifier;
-  @EntityName String name;
+  @NotNull @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
-  ParameterField<String> skipCondition;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> when;
+  ParameterField<String> when;
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;

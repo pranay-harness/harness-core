@@ -2,6 +2,7 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  110-change-data-capture
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -24,6 +25,7 @@ directories:
   350-event-server
   360-cg-manager
   370-users-syncbridge
+  375-ce-graphql
   380-cg-graphql
   390-db-migration
   400-rest
@@ -80,6 +82,7 @@ directories:
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  950-cg-ng-shared-orchestration-beans
   950-command-library-common
   950-log-client
   950-common-entities
@@ -94,11 +97,11 @@ directories:
   950-wait-engine
   950-walktree-visitor
   953-git-sync-commons
+  952-scm-java-client
   954-connector-beans
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
-  955-scm-java-client
   960-api-services
   960-continuous-features
   960-expression-service
@@ -116,6 +119,7 @@ directories:
   run-configurations
   200-functional-test
   tools
+  toolset
   scripts
   cargo
 
@@ -124,6 +128,7 @@ import_run_configurations:
   run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml

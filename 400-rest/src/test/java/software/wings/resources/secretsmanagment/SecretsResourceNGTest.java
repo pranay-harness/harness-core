@@ -1,11 +1,13 @@
 package software.wings.resources.secretsmanagment;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
@@ -22,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class SecretsResourceNGTest extends WingsBaseTest {
   private final String SECRET_NAME = "SECRET_NAME";
   private final String SECRET_IDENTIFIER = "SECRET_ID";
