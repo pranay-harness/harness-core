@@ -37,15 +37,15 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   private AuthSettingsManagerClient managerClient;
 
   @Override
-  public AuthenticationSettingsResponse getAuthenticationSettings(String accountId) {
-    Set<String> whitelistedDomains = getResponse(managerClient.getWhitelistedDomains(accountId));
+  public AuthenticationSettingsResponse getAuthenticationSettings(String accountIdentifier) {
+    Set<String> whitelistedDomains = getResponse(managerClient.getWhitelistedDomains(accountIdentifier));
     log.info("Whitelisted domains: {}", whitelistedDomains);
-    SSOConfig ssoConfig = getResponse(managerClient.getAccountAccessManagementSettings(accountId));
+    SSOConfig ssoConfig = getResponse(managerClient.getAccountAccessManagementSettings(accountIdentifier));
 
-    List<NGAuthSettings> settingsList = buildAuthSettingsList(ssoConfig, accountId);
+    List<NGAuthSettings> settingsList = buildAuthSettingsList(ssoConfig, accountIdentifier);
     log.info("settings list: {}", settingsList);
 
-    boolean twoFactorEnabled = getResponse(managerClient.twoFactorEnabled(accountId));
+    boolean twoFactorEnabled = getResponse(managerClient.twoFactorEnabled(accountIdentifier));
 
     return AuthenticationSettingsResponse.builder()
         .whitelistedDomains(whitelistedDomains)
@@ -54,11 +54,11 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
         .build();
   }
 
-  private List<NGAuthSettings> buildAuthSettingsList(SSOConfig ssoConfig, String accountId) {
+  private List<NGAuthSettings> buildAuthSettingsList(SSOConfig ssoConfig, String accountIdentifier) {
     List<NGAuthSettings> settingsList = new ArrayList<>();
     AuthenticationMechanism authenticationMechanism = ssoConfig.getAuthenticationMechanism();
     if (authenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
-      LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountId));
+      LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
       settingsList.add(UsernamePasswordSettings.builder()
                            .passwordExpirationPolicy(loginSettings.getPasswordExpirationPolicy())
                            .userLockoutPolicy(loginSettings.getUserLockoutPolicy())

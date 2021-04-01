@@ -72,14 +72,14 @@ public class AccountResourceNG {
   }
 
   @GET
-  @Path("{accountId}/whitelisted-domains")
-  public RestResponse<Set<String>> getWhitelistedDomains(@PathParam("accountId") @NotEmpty String accountId) {
+  @Path("/get-whitelisted-domains")
+  public RestResponse<Set<String>> getWhitelistedDomains(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.getWhitelistedDomains(accountId));
   }
 
   @GET
-  @Path("two-factor-enabled/{accountId}")
-  public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@PathParam("accountId") @NotEmpty String accountId) {
+  @Path("two-factor-enabled")
+  public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
   }
 }

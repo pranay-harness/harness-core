@@ -23,7 +23,6 @@ import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.annotations.LearningEngineAuth;
-import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.seeddata.SampleDataProviderService;
 

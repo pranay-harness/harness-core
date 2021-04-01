@@ -6,5 +6,5 @@ import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 
 @OwnedBy(HarnessTeam.PL)
 public interface AuthenticationSettingsService {
-  AuthenticationSettingsResponse getAuthenticationSettings(String accountId);
+  AuthenticationSettingsResponse getAuthenticationSettings(String accountIdentifier);
 }

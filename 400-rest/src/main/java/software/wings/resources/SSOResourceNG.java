@@ -58,11 +58,11 @@ public class SSOResourceNG {
   }
 
   @GET
-  @Path("access-management/{accountId}")
+  @Path("get-access-management")
   @Timed
   @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
-  public RestResponse<SSOConfig> getAccountAccessManagementSettings(@PathParam("accountId") String accountId) {
+  public RestResponse<SSOConfig> getAccountAccessManagementSettings(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(ssoService.getAccountAccessManagementSettings(accountId));
   }
 }

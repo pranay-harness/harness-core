@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -31,9 +32,11 @@ public class AuthenticationSettingsResource {
   @Path("/")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Get authentication settings for an account", nickname = "getAuthenticationSettings")
   public RestResponse<AuthenticationSettingsResponse> getAuthenticationSettings(
-      @QueryParam("accountId") @NotEmpty String accountId) {
-    AuthenticationSettingsResponse response = authenticationSettingsService.getAuthenticationSettings(accountId);
+      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    AuthenticationSettingsResponse response =
+        authenticationSettingsService.getAuthenticationSettings(accountIdentifier);
     return new RestResponse<>(response);
   }
 }
