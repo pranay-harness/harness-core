@@ -12,18 +12,18 @@ import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
 import io.harness.audit.beans.Principal.PrincipalKeys;
+import io.harness.audit.beans.Resource;
+import io.harness.audit.beans.Resource.ResourceKeys;
+import io.harness.audit.beans.ResourceScope;
+import io.harness.audit.beans.ResourceScope.ResourceScopeKeys;
 import io.harness.audit.beans.YamlDiff;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.ng.core.Resource;
-import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
-import io.harness.scope.ResourceScope;
-import io.harness.scope.ResourceScope.ResourceScopeKeys;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
@@ -78,84 +78,35 @@ public class AuditEvent {
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeModulePrincipalResourceEnvironmentActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
+        .add(CompoundMongoIndex.builder()
+                 .name("ngAuditTimeAccountResourceIdx")
+                 .field(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.module)
-                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.environmentIdentifier)
-                 .field(AuditEventKeys.action)
                  .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeModuleResourceEnvironmentActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
+        .add(CompoundMongoIndex.builder()
+                 .name("ngAuditTimeAccountOrgResourceIdx")
+                 .field(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.module)
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.environmentIdentifier)
-                 .field(AuditEventKeys.action)
                  .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopePrincipalResourceEnvironmentActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
+        .add(CompoundMongoIndex.builder()
+                 .name("ngAuditTimeAccountOrgProjectResourceIdx")
+                 .field(AuditEventKeys.timestamp)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
                  .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.environmentIdentifier)
-                 .field(AuditEventKeys.action)
                  .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeResourceEnvironmentActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.RESOURCE_TYPE_KEY)
-                 .field(AuditEventKeys.RESOURCE_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.environmentIdentifier)
-                 .field(AuditEventKeys.action)
-                 .build())
-        .add(SortCompoundMongoIndex.builder()
-                 .name("ngAuditTimeScopeEnvironmentActionIdx")
-                 .descSortField(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                 .field(AuditEventKeys.environmentIdentifier)
-                 .field(AuditEventKeys.action)
-                 .build())
-        .add(SortCompoundMongoIndex.builder()
+        .add(CompoundMongoIndex.builder()
                  .name("uniqueNgAuditEventIdx")
-                 .descSortField(AuditEventKeys.timestamp)
-                 .field(AuditEventKeys.insertId)
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.timestamp)
+                 .field(AuditEventKeys.insertId)
                  .unique(true)
                  .build())
         .build();
