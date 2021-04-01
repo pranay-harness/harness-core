@@ -231,6 +231,7 @@ public class ConnectorUtils {
   }
 
   private ConnectorDetails getGcpConnectorDetails(
+    
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
     GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
