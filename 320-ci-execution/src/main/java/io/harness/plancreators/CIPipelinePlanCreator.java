@@ -7,6 +7,8 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGES_
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Override

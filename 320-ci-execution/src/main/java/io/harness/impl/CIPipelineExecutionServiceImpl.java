@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionService {
   @Inject private OrchestrationService orchestrationService;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;

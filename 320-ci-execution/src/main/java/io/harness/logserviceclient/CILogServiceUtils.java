@@ -1,5 +1,7 @@
 package io.harness.logserviceclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.exception.GeneralException;
 
@@ -17,6 +19,7 @@ import retrofit2.Response;
 @Setter
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class CILogServiceUtils {
   private final CILogServiceClient ciLogServiceClient;
   private final LogServiceConfig logServiceConfig;

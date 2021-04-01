@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -13,6 +15,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import java.util.Optional;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIExecutionServiceModule extends AbstractModule {
   private CIExecutionServiceConfig ciExecutionServiceConfig;
   private final Boolean withPMS;

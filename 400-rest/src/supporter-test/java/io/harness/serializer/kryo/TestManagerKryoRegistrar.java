@@ -1,6 +1,5 @@
 package io.harness.serializer.kryo;
 
-import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.engine.interrupts.steps.TestTransportEntity;
 import io.harness.serializer.KryoRegistrar;
 
@@ -24,7 +23,5 @@ public class TestManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SweepingOutputData.class, index++);
 
     kryo.register(TestTransportEntity.class, index++);
-
-    kryo.register(SimpleStepAsyncParams.class, index++);
   }
 }

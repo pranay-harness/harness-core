@@ -1,5 +1,7 @@
 package io.harness.ci.plan.creator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
@@ -18,6 +20,7 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class CIModuleInfoMapper {
   private static final String PR_OPEN = "open";
   private static final String PR_CLOSED = "closed";

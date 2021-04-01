@@ -1,8 +1,13 @@
 package io.harness.kustomize;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(CDP)
 @UtilityClass
 public final class KustomizeConstants {
   static final String KUSTOMIZE_BINARY_PATH = "${KUSTOMIZE_BINARY_PATH}";

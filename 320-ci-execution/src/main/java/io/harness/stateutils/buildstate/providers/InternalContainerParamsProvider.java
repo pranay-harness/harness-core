@@ -31,6 +31,8 @@ import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -57,6 +59,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
