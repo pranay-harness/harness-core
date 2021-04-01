@@ -58,15 +58,6 @@ public class K8sNodeInfoTasklet implements Tasklet {
   private static final String AZURE_SPOT_INSTANCE = "spot";
   private static final boolean UPDATE_OLD_NODE_DATA = false;
 
-  private static final int VM_INDEX = 2;
-  private static final String VM_INDEX_VALUE = "virtualMachines";
-  private static final int VMSS_INDEX = 4;
-  private static final String VMSS_INDEX_VALUE = "virtualMachineScaleSets";
-  private static final int SUBSCRIPTION_INDEX = 3;
-  private static final String SUBSCRIPTION_INDEX_VALUE = "subscriptions";
-  private static final int RESOURCE_GROUP_INDEX = 5;
-  private static final String RESOURCE_GROUP_INDEX_VALUE = "resourceGroups";
-
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
@@ -137,8 +128,10 @@ public class K8sNodeInfoTasklet implements Tasklet {
       String[] arrOfStr = nodeInfo.getProviderId().split("/");
       log.info("Azure providerId after split: {}", Arrays.toString(arrOfStr));
       try {
-        if (arrOfStr[SUBSCRIPTION_INDEX].equals(SUBSCRIPTION_INDEX_VALUE)) {
-          metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID, arrOfStr[SUBSCRIPTION_INDEX + 1]);
+        if (arrOfStr[InstanceMetaDataConstants.SUBSCRIPTION_INDEX].equals(
+                InstanceMetaDataConstants.SUBSCRIPTION_INDEX_VALUE)) {
+          metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID,
+              arrOfStr[InstanceMetaDataConstants.SUBSCRIPTION_INDEX + 1]);
         }
       } catch (Exception e) {
         log.error("Error while getting subscription id", e);
@@ -146,8 +139,10 @@ public class K8sNodeInfoTasklet implements Tasklet {
       }
 
       try {
-        if (arrOfStr[RESOURCE_GROUP_INDEX].equals(RESOURCE_GROUP_INDEX_VALUE)) {
-          metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME, arrOfStr[RESOURCE_GROUP_INDEX + 1]);
+        if (arrOfStr[InstanceMetaDataConstants.RESOURCE_GROUP_INDEX].equals(
+                InstanceMetaDataConstants.RESOURCE_GROUP_INDEX_VALUE)) {
+          metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME,
+              arrOfStr[InstanceMetaDataConstants.RESOURCE_GROUP_INDEX + 1]);
         }
       } catch (Exception e) {
         log.error("Error while getting resource group", e);
@@ -231,10 +226,13 @@ public class K8sNodeInfoTasklet implements Tasklet {
       // azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_ce-dev-cluster2_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-agentpool-14257926-vmss/virtualMachines/1
       String[] arrOfStr = providerId.split("/");
       try {
-        if (arrOfStr[arrOfStr.length - VM_INDEX].equals(VM_INDEX_VALUE)
-            && arrOfStr[arrOfStr.length - VMSS_INDEX].equals(VMSS_INDEX_VALUE)) {
+        if (arrOfStr[arrOfStr.length - InstanceMetaDataConstants.VM_INDEX].equals(
+                InstanceMetaDataConstants.VM_INDEX_VALUE)
+            && arrOfStr[arrOfStr.length - InstanceMetaDataConstants.VMSS_INDEX].equals(
+                InstanceMetaDataConstants.VMSS_INDEX_VALUE)) {
           providerId = arrOfStr[arrOfStr.length - 3] + "_" + arrOfStr[arrOfStr.length - 1];
-        } else if (arrOfStr[arrOfStr.length - VM_INDEX].equals(VM_INDEX_VALUE)) {
+        } else if (arrOfStr[arrOfStr.length - InstanceMetaDataConstants.VM_INDEX].equals(
+                       InstanceMetaDataConstants.VM_INDEX_VALUE)) {
           providerId = arrOfStr[arrOfStr.length - 1];
         }
         return providerId;

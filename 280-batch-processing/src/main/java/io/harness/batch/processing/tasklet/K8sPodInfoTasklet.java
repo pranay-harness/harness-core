@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -46,6 +48,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
@@ -160,6 +163,14 @@ public class K8sPodInfoTasklet implements Tasklet {
       if (null != prunedInstanceData.getCloudProviderInstanceId()) {
         metaData.put(
             InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, prunedInstanceData.getCloudProviderInstanceId());
+        if (nodeMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER) != null
+            && nodeMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER).equals(CloudProvider.AZURE.name())) {
+          // Insert subscriptionid, resourcegroup name too in metadata
+          metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID,
+              prunedInstanceData.getMetaData().get(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID));
+          metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME,
+              prunedInstanceData.getMetaData().get(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME));
+        }
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
