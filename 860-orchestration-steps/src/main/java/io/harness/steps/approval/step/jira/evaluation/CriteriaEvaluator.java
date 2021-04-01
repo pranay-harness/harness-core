@@ -59,10 +59,10 @@ public class CriteriaEvaluator {
     boolean matchAnyCondition = keyValueCriteriaSpec.isMatchAnyCondition();
     for (ConditionDTO condition : conditions) {
       try {
-        Operator op = condition.getOp();
+        Operator operator = condition.getOperator();
         String standardValue = condition.getValue();
         Object issueValue = issue.getFields().get(condition.getKey());
-        boolean currentResult = ConditionEvaluator.evaluate(issueValue, standardValue, op);
+        boolean currentResult = ConditionEvaluator.evaluate(issueValue, standardValue, operator);
         if (matchAnyCondition) {
           if (currentResult) {
             return true;

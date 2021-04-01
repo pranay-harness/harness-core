@@ -7,8 +7,13 @@ spec:
           type: JiraApproval
           timeout: 1d
           spec:
-            approvalMessage: |-
-              Please review the following jira ticket
-              and update fields to satisfy approval criteria
-              and approve the pipeline progression
-            includePipelineExecutionHistory: true
+            approvalCriteria:
+              type: KeyValues
+              spec:
+                matchAnyCondition: false
+                conditions: []
+            rejectionCriteria:
+              type: KeyValues
+              spec:
+                matchAnyCondition: false
+                conditions: []
