@@ -235,7 +235,7 @@ public class StepUtils {
                     .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters) == null
                             ? new byte[] {}
                             : kryoSerializer.asDeflatedBytes(taskParameters)))
-                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
+                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() / 1000).build())
                     .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
                     .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
                     .setParked(taskData.isParked())
