@@ -317,6 +317,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 	}, nil
 }
 
+// UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, repo, branch, sha string) error {
 	nodes := make([]interface{}, len(cg.Nodes))
 	rels := make([]interface{}, len(cg.Relations))
@@ -332,20 +333,20 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, repo,
 		rels[i] = *NewRelation(rel.Source, rel.Tests, vcsInfo)
 	}
 
-	// query for partial callgraph for the filter -(repo + branch) and delete them.
-	// this will delete all the nodes create by older commits for repo + branch.
+	// query for partial callgraph for the filter -(repo + branch) and delete old entries.
+	// this will delete all the nodes create by older commits for current pull request
 	r1, err := mdb.Database.Collection("nodes").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": repo, "vcs_info.branch": branch}, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
 	}
-	// this will delete all the relations	 create by older commits for repo + branch.
+	// this will delete all the relations	 create by older commits for current pull request
 	r2, err := mdb.Database.Collection("relations").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": repo, "vcs_info.branch": branch}, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d recorde from nodes collection and %d records from relns collection", r1.DeletedCount, r2.DeletedCount))
-	// write new relations and nodes to db
-	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection", len(nodes), len(rels)))
+	mdb.Log.Infow(fmt.Sprintf("deleted %d recorde from nodes collection and %d records from relns collection for repo %s, branch %s", r1.DeletedCount, r2.DeletedCount, repo, branch))
+	// dump new relations and nodes to db
+	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection for repo %s, branch %s", len(nodes), len(rels), repo, branch))
 	mdb.Database.Collection(nodeColl).InsertMany(context.TODO(), nodes)
 	mdb.Database.Collection(relnsColl).InsertMany(context.TODO(), rels)
 	return nil

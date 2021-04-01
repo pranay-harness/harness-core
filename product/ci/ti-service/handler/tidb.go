@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	// path of this needs to be decided [TODO: Aman]
 	cgSchemaPath = "callgraph.avsc"
 )
 
@@ -133,23 +132,27 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
 			log.Errorf("failed to create callgraph serializer instance", zap.Error(err))
-			WriteInternalError(w, err)
+			WriteBadRequest(w, err)
 			return
 		}
 		cgString, err := cgSer.Deserialize(data)
 		if err != nil {
 			log.Errorf("failed to deserialize callgraph", zap.Error(err))
-			WriteInternalError(w, err)
+			WriteBadRequest(w, err)
 			return
 		}
-
 		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
 			log.Errorf("failed to construct callgraph object from interface object", zap.Error(err))
-			WriteInternalError(w, err)
+			WriteBadRequest(w, err)
 			return
 		}
 		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)))
+		err = validate(r, repoParam, branchParam, shaParam)
+		if err != nil {
+			WriteBadRequest(w, err)
+			return
+		}
 		repo := r.FormValue(repoParam)
 		branch := r.FormValue(branchParam)
 		sha := r.FormValue(shaParam)

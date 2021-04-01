@@ -249,7 +249,6 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 
 // getCgFiles return list of cg files in given directory
 func (h *tiProxyHandler) getCgFiles(dir string) ([]string, error) {
-	h.log.Infow(fmt.Sprintf("finding cg files in directory: %s - %s ", dir, dir+"*.json"))
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}
