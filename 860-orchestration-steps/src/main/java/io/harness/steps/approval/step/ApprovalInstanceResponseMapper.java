@@ -40,8 +40,6 @@ public class ApprovalInstanceResponseMapper {
         .id(instance.getId())
         .type(instance.getType())
         .status(instance.getStatus())
-        .approvalMessage(instance.getApprovalMessage())
-        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .deadline(instance.getDeadline())
         .details(toApprovalInstanceDetailsDTO(instance))
         .createdAt(instance.getCreatedAt())
