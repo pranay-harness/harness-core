@@ -37,12 +37,12 @@ public class HarnessUserGroup extends Base {
   private String description;
   @FdIndex private Set<String> memberIds;
   private Set<String> accountIds;
-  private String groupType;
+  private HarnessUserGroupType groupType;
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String name, String description, Set<String> memberIds,
-      Set<String> accountIds, String groupType) {
+      Set<String> accountIds, HarnessUserGroupType groupType) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;

@@ -14,14 +14,26 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.ng.userprofile.commons.BitbucketSCMDTO;
+import io.harness.ng.userprofile.commons.GithubSCMDTO;
+import io.harness.ng.userprofile.commons.GitlabSCMDTO;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.commons.SourceCodeManagerDTO;
 import io.harness.ng.userprofile.entities.BitbucketSCM;
+import io.harness.ng.userprofile.entities.GithubSCM;
+import io.harness.ng.userprofile.entities.GitlabSCM;
 import io.harness.ng.userprofile.entities.SourceCodeManager;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
@@ -66,7 +78,7 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
-  public void testSave() {
+  public void testSaveBitbucket() {
     SourceCodeManagerDTO sourceCodeManagerDTO = bitbucketSCMDTOCreate();
     when(sourceCodeManagerRepository.save(any()))
         .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
@@ -78,18 +90,43 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
   public void testGet() {
-    SourceCodeManager sourceCodeManager = bitbucketSCMCreate();
-    List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(sourceCodeManager));
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    SourceCodeManager githubSCM = githubSCMCreate();
+    SourceCodeManager gitlabSCM = gitlabSCMCreate();
+    List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(bitbucketSCM, githubSCM, gitlabSCM));
     when(sourceCodeManagerRepository.findByUserIdentifier(any())).thenReturn(sourceCodeManagerList);
     List<SourceCodeManagerDTO> sourceCodeManagerDTOList = sourceCodeManagerService.get();
-    assertThat(sourceCodeManagerDTOList).hasSize(1);
+    assertThat(sourceCodeManagerDTOList).hasSize(3);
     assertThat(sourceCodeManagerDTOList.get(0))
-        .isEqualTo(scmMapBinder.get(sourceCodeManager.getType()).toSCMDTO(sourceCodeManager));
+        .isEqualTo(scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM));
+    assertThat(sourceCodeManagerDTOList.get(1)).isEqualTo(scmMapBinder.get(githubSCM.getType()).toSCMDTO(githubSCM));
+    assertThat(sourceCodeManagerDTOList.get(2)).isEqualTo(scmMapBinder.get(gitlabSCM.getType()).toSCMDTO(gitlabSCM));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testSaveGithub() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = githubSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testSaveGitlab() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = gitlabSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
   }
 
   private SourceCodeManager bitbucketSCMCreate() {
-    BitbucketAuthentication bitbucketAuthentication =
-        BitbucketSshAuthentication.builder().sshKeyRef("ssh-key-ref").build();
+    BitbucketAuthentication bitbucketAuthentication = BitbucketSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
     return BitbucketSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
@@ -109,6 +146,54 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
         .userIdentifier(userIdentifier)
         .name(name)
         .bitbucketAuthenticationDTO(bitbucketAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManager githubSCMCreate() {
+    GithubAuthentication githubAuthentication = GithubSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
+    return GithubSCM.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authType(GitAuthType.SSH)
+        .authenticationDetails(githubAuthentication)
+        .build();
+  }
+
+  private SourceCodeManagerDTO githubSCMDTOCreate() {
+    GithubAuthenticationDTO githubAuthenticationDTO =
+        GithubAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(
+                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .build();
+    return GithubSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .githubAuthenticationDTO(githubAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManager gitlabSCMCreate() {
+    GitlabAuthentication gitlabAuthentication = GitlabSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
+    return GitlabSCM.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authType(GitAuthType.SSH)
+        .authenticationDetails(gitlabAuthentication)
+        .build();
+  }
+
+  private SourceCodeManagerDTO gitlabSCMDTOCreate() {
+    GitlabAuthenticationDTO gitlabAuthenticationDTO =
+        GitlabAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(
+                GitlabSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .build();
+    return GitlabSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(gitlabAuthenticationDTO)
         .build();
   }
 }

@@ -8,6 +8,8 @@ import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
@@ -31,6 +33,7 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.beans.security.HarnessUserGroupType;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -52,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(HarnessTeam.PL)
 @Singleton
 @Slf4j
 public class AccountGenerator {
@@ -311,7 +315,7 @@ public class AccountGenerator {
                                             .memberIds(Sets.newHashSet(user.getUuid()))
                                             .accountIds(Sets.newHashSet(accountId))
                                             .name("harnessUserGroup")
-                                            .groupType("DEFAULT")
+                                            .groupType(HarnessUserGroupType.DEFAULT)
                                             .build();
     harnessUserGroupService.save(harnessUserGroup);
   }

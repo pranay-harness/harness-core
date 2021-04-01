@@ -1,5 +1,8 @@
 package io.harness.ccm.anomaly;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.TimeGranularity;
 
@@ -12,6 +15,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+@OwnedBy(CE)
 public class AnomalyDataStub {
   public static String accountId = "ACCOUNT_ID";
   public static Instant anomalyTime = Instant.ofEpochMilli(0);

@@ -111,7 +111,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 
 import software.wings.api.DeploymentType;
@@ -257,6 +259,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.
   // The order of StepTypes dictates the order in which Step Types are shown under each Category.
@@ -673,7 +676,7 @@ public enum StepType {
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
       asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
@@ -781,6 +784,10 @@ public enum StepType {
 
   public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
     return yamlValidatorClass;
+  }
+
+  public boolean supportsTimeoutFailure() {
+    return supportsTimeoutFailure;
   }
 
   public boolean matchesDeploymentType(DeploymentType deploymentType) {
