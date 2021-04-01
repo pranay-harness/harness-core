@@ -247,6 +247,14 @@ if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /de
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
 
+if [ ! -z "$OC_PATH" ] && ! `grep ocPath config-delegate.yml > /dev/null` ; then
+  echo "ocPath: $OC_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/null` ; then
+  echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=v1.12.2
