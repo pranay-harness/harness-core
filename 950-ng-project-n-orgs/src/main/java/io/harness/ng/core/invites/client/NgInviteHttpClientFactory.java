@@ -1,6 +1,7 @@
 package io.harness.ng.core.invites.client;
 
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NgInviteHttpClientFactory extends AbstractHttpClientFactory implements Provider<NgInviteClient> {
   public NgInviteHttpClientFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, ClientMode.PRIVILEGED);
     log.info("secretManagerConfig {}", ngManagerConfig);
   }
 

@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -17,7 +18,8 @@ public class AccessControlAdminHttpClientFactory
   public AccessControlAdminHttpClientFactory(ServiceHttpClientConfig accessControlAdminClientConfig,
       String serviceSecret, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory,
       String clientId) {
-    super(accessControlAdminClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+    super(accessControlAdminClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false,
+        ClientMode.PRIVILEGED);
   }
 
   @Override

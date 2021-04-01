@@ -74,6 +74,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(PL)
 public class ResourceGroupServiceImpl implements ResourceGroupService {
   private static final String DEFAULT_COLOR = "#0063F7";
+  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
   ResourceGroupValidatorService staticResourceGroupValidatorService;
   ResourceGroupValidatorService dynamicResourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
@@ -363,16 +364,15 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     String resourceType = StringUtils.capitalize(
         getDefaultResourceGroupType(accountIdentifier, orgIdentifier, projectIdentifier).toLowerCase());
     String description = String.format("All the resources in %s are included in this resource group.", resourceType);
-    ResourceGroupBuilder resourceGroupBuilder =
-        ResourceGroup.builder()
-            .accountIdentifier(accountIdentifier)
-            .orgIdentifier(orgIdentifier)
-            .projectIdentifier(projectIdentifier)
-            .name(getDefaultResourceGroupName(accountIdentifier, orgIdentifier, projectIdentifier))
-            .description(description)
-            .resourceSelectors(Collections.emptyList())
-            .harnessManaged(true)
-            .fullScopeSelected(true);
+    ResourceGroupBuilder resourceGroupBuilder = ResourceGroup.builder()
+                                                    .accountIdentifier(accountIdentifier)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .name(DEFAULT_RESOURCE_GROUP_NAME)
+                                                    .description(description)
+                                                    .resourceSelectors(Collections.emptyList())
+                                                    .harnessManaged(true)
+                                                    .fullScopeSelected(true);
     String resourceGroupIdentifier =
         getDefaultResourceGroupIdentifier(accountIdentifier, orgIdentifier, projectIdentifier);
     ResourceGroup resourceGroup = resourceGroupBuilder.identifier(resourceGroupIdentifier).build();

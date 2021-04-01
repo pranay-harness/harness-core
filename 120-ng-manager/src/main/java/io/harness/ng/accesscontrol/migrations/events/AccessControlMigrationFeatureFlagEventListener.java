@@ -3,8 +3,6 @@ package io.harness.ng.accesscontrol.migrations.events;
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -35,7 +33,7 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -65,6 +63,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private static final String ACCOUNT_VIEWER_ROLE_IDENTIFIER = "_account_viewer";
   private static final String ORG_VIEWER_ROLE_IDENTIFIER = "_organization_viewer";
   private static final String PROJECT_VIEWER_ROLE_IDENTIFIER = "_project_viewer";
+  private static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
   private static final String ACCOUNT_LEVEL = "ACCOUNT";
   private static final String ORGANIZATION_LEVEL = "ORGANIZATION";
   private static final String PROJECT_LEVEL = "PROJECT";
@@ -73,20 +72,20 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private final OrganizationService orgService;
   private final AccessControlMigrationService accessControlMigrationService;
   private final NgUserService ngUserService;
-  private final ResourceGroupClient resourceGroupClient;
+  private final ResourceGroupService resourceGroupService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
 
   @Inject
   public AccessControlMigrationFeatureFlagEventListener(ProjectService projectService,
       OrganizationService organizationService, AccessControlMigrationService accessControlMigrationService,
-      NgUserService ngUserService, ResourceGroupClient resourceGroupClient,
+      NgUserService ngUserService, ResourceGroupService resourceGroupService,
       AccessControlAdminClient accessControlAdminClient, UserClient userClient) {
     this.projectService = projectService;
     this.orgService = organizationService;
     this.accessControlMigrationService = accessControlMigrationService;
     this.ngUserService = ngUserService;
-    this.resourceGroupClient = resourceGroupClient;
+    this.resourceGroupService = resourceGroupService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.userClient = userClient;
     levelToRolesMapping = new HashMap<>();
@@ -179,8 +178,6 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
       return true;
     }
 
-    upsertResourceGroup(accountId, null, null);
-
     // adding account level roles to users
     List<RoleAssignmentMetadata> roleAssignmentMetadataList = new ArrayList<>();
     roleAssignmentMetadataList.add(createRoleAssignments(accountId, null, null, users));
@@ -190,7 +187,6 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     List<Organization> organizations =
         orgService.list(accountId, Pageable.unpaged(), OrganizationFilterDTO.builder().build()).getContent();
     for (Organization organization : organizations) {
-      upsertResourceGroup(accountId, organization.getIdentifier(), null);
       roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(), null, users));
       users.forEach(user -> upsertUserMembership(accountId, organization.getIdentifier(), null, user));
 
@@ -200,7 +196,6 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
                                        ProjectFilterDTO.builder().orgIdentifier(organization.getIdentifier()).build())
                                    .getContent();
       for (Project project : projects) {
-        upsertResourceGroup(accountId, organization.getIdentifier(), project.getIdentifier());
         roleAssignmentMetadataList.add(
             createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
 
@@ -253,31 +248,26 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     return true;
   }
 
-  private RoleAssignmentDTO getRoleAssignment(
-      String principalIdentifier, String roleIdentifier, String account, String org, String project) {
+  private RoleAssignmentDTO getRoleAssignment(String principalIdentifier, String roleIdentifier,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return RoleAssignmentDTO.builder()
         .disabled(false)
         .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
         .roleIdentifier(roleIdentifier)
-        .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(account, org, project))
+        .resourceGroupIdentifier(getResourceGroupIdentifier(accountIdentifier, orgIdentifier, projectIdentifier))
         .principal(PrincipalDTO.builder().identifier(principalIdentifier).type(PrincipalType.USER).build())
         .build();
   }
 
-  private String getDefaultResourceGroupIdentifier(String account, String org, String project) {
-    String defaultResourceGroupName;
-    if (!isBlank(project)) {
-      defaultResourceGroupName = project;
-    } else if (!isBlank(org)) {
-      defaultResourceGroupName = org;
+  private String getResourceGroupIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    String resourceGroupName;
+    if (!StringUtils.isBlank(projectIdentifier)) {
+      resourceGroupName = projectIdentifier;
+    } else if (!StringUtils.isBlank(orgIdentifier)) {
+      resourceGroupName = orgIdentifier;
     } else {
-      defaultResourceGroupName = account;
+      resourceGroupName = accountIdentifier;
     }
-    return String.format("_%s", defaultResourceGroupName);
-  }
-
-  private void upsertResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    NGRestUtils.getResponse(
-        resourceGroupClient.ensureDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
+    return String.format("_%s", resourceGroupName);
   }
 }
