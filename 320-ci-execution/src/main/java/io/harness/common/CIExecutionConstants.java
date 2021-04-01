@@ -1,9 +1,13 @@
 package io.harness.common;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIExecutionConstants {
   // Pod labels
   public static final String ACCOUNT_ID_ATTR = "accountID";

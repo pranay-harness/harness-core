@@ -49,6 +49,8 @@ import static java.util.stream.Collectors.toList;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -130,6 +132,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class K8BuildSetupUtils {
   @Inject private SecretUtils secretUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;

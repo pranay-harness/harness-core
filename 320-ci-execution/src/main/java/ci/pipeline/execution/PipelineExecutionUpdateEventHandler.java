@@ -2,6 +2,8 @@ package ci.pipeline.execution;
 
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -22,6 +24,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
