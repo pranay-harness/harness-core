@@ -1,5 +1,7 @@
 package io.harness.ng.authenticationsettings.resources;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
 import io.harness.rest.RestResponse;
@@ -25,6 +27,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
 public class AuthenticationSettingsResource {
   AuthenticationSettingsService authenticationSettingsService;
 

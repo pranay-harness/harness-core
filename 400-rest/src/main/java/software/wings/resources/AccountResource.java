@@ -12,6 +12,8 @@ import static software.wings.utils.Utils.urlDecode;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.account.ProvisionStep;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
@@ -88,6 +90,7 @@ import retrofit2.http.Body;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
 public class AccountResource {
   private final AccountService accountService;
   private final UserService userService;

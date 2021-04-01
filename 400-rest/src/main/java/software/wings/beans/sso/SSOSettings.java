@@ -1,29 +1,27 @@
 package software.wings.beans.sso;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.ImmutableList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
-
-import software.wings.beans.Base;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Base;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 @OwnedBy(PL)
 @Data

@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -26,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 @Produces(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(HarnessTeam.PL)
 public class LoginSettingsResourceNG {
   LoginSettingsService loginSettingsService;
 

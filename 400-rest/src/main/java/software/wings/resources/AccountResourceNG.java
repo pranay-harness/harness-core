@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mappers.AccountMapper;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.rest.RestResponse;
@@ -33,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
