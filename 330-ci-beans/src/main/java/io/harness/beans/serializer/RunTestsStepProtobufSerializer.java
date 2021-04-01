@@ -96,7 +96,8 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
   }
 
   public UnitStep serializeStepWithStepParameters(RunTestsStepInfo runTestsStepInfo, Integer port, String callbackId,
-      String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout, String accountId) {
+      String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout, String accountId,
+      String stepName) {
     if (callbackId == null) {
       throw new CIStageExecutionException("CallbackId can not be null");
     }
@@ -153,7 +154,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
         .setContainerPort(port)
         .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable("runTest").orElse("")) // TODO Set name
+        .setDisplayName(stepName)
         .setRunTests(runTestsStepBuilder.build())
         .setLogKey(logKey)
         .build();
