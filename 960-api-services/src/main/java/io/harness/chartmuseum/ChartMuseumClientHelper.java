@@ -60,7 +60,7 @@ public class ChartMuseumClientHelper {
       boolean useEc2IamCredentials, char[] accessKey, char[] secretKey) throws Exception {
     Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials);
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
-                                   .replace("${FOLDER_PATH}", basePath)
+                                   .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
 
     StringBuilder builder = new StringBuilder(128);
@@ -79,8 +79,8 @@ public class ChartMuseumClientHelper {
       environment.put(GOOGLE_APPLICATION_CREDENTIALS, credentialFilePath);
     }
 
-    String evaluatedTemplate =
-        GCS_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket).replace("${FOLDER_PATH}", basePath);
+    String evaluatedTemplate = GCS_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
+                                   .replace("${FOLDER_PATH}", basePath == null ? "" : basePath);
 
     StringBuilder builder = new StringBuilder(128);
     builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
