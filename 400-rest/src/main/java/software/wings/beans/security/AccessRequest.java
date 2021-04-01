@@ -15,7 +15,7 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
-@Entity(value = "alerts")
+@Entity(value = "accessRequest")
 public class AccessRequest implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id @NotNull @SchemaIgnore private String uuid;
   @SchemaIgnore private long createdAt;
