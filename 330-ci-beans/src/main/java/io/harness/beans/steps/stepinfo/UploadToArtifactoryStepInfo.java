@@ -42,7 +42,6 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -50,20 +49,13 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> sourcePath;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "target", "sourcePath"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "target", "sourcePath"})
   UploadToArtifactoryStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> target,
-      ParameterField<String> sourcePath) {
+      ContainerResource resources, ParameterField<String> target, ParameterField<String> sourcePath) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/artifactory"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/artifactory");
-    }
     this.resources = resources;
     this.target = target;
     this.sourcePath = sourcePath;

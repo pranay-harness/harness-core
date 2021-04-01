@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.CustomExecutionSource;
@@ -9,6 +11,7 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
@@ -97,6 +100,24 @@ public class IntegrationStageUtils {
     }
 
     return null;
+  }
+
+  public ImageDetails getImageInfo(String image) {
+    String tag = "";
+    String name = image;
+
+    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length > 2) {
+        throw new InvalidRequestException(String.format("Image should not contain multiple tags: %s", image));
+      }
+      if (subTokens.length == 2) {
+        name = subTokens[0];
+        tag = subTokens[1];
+      }
+    }
+
+    return ImageDetails.builder().name(name).tag(tag).build();
   }
 
   private CustomExecutionSource buildCustomExecutionSource(
