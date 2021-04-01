@@ -1,7 +1,10 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+@OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   private static final String GIT_SYNC_SDK = "GitSyncSdk";
   @Override

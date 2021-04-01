@@ -1,5 +1,8 @@
 package io.harness.gitsync.persistance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.beans.NGDTO;
 
 import com.google.inject.Inject;
@@ -10,6 +13,7 @@ import org.springframework.util.Assert;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class GitAwareRepositoryImpl<T extends GitSyncableEntity, Y extends NGDTO, ID>
     implements GitAwareRepository<T, Y, ID> {
   private final GitAwarePersistence gitAwarePersistence;

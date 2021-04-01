@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -14,7 +14,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-public class EngineResumeCallback implements NotifyCallback {
+public class EngineResumeCallback implements OldNotifyCallback {
   @Inject PmsNodeExecutionService pmsNodeExecutionService;
 
   String nodeExecutionId;

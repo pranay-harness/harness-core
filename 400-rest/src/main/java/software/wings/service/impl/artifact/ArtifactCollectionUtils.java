@@ -37,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.FeatureName;
@@ -55,7 +56,6 @@ import io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.app.MainConfiguration;

@@ -2,8 +2,8 @@ package software.wings.sm;
 
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
-import io.harness.interrupts.ExecutionInterruptType;
 
 public class CustomExecutionEventAdvisor implements ExecutionEventAdvisor {
   private ExecutionInterruptType executionInterruptType;

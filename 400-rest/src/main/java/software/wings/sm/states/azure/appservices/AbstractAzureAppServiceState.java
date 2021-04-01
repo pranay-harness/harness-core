@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.harness.azure.model.AzureConstants;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
@@ -23,7 +24,6 @@ import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.beans.Activity;

@@ -21,6 +21,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -49,7 +50,6 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 

@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -29,7 +29,7 @@ import com.google.inject.Inject;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDP)
 public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();

@@ -1,4 +1,4 @@
-package io.harness.interrupts;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
