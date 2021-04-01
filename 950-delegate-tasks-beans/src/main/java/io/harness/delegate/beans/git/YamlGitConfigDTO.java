@@ -33,6 +33,7 @@ public class YamlGitConfigDTO {
   @NotNull private ConnectorType gitConnectorType;
   private String repo;
   private String branch;
+  private String name;
   // pair of identifier and folder name
   private List<RootFolder> rootFolders;
   private RootFolder defaultRootFolder;

@@ -207,11 +207,21 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
     } catch (Exception ex) {
-      throw new InvalidRequestException(String.format("A git sync config with the repo %s and branch %s already exists",
-          gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
+      if (ex.getMessage().contains("accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index")) {
+        throw new InvalidRequestException(
+            String.format("A git sync config with the repo %s and branch %s already exists", gitSyncConfigDTO.getRepo(),
+                gitSyncConfigDTO.getBranch()));
+      } else if (ex.getMessage().contains("accountId_orgId_projectId_identifier_unique_Index")) {
+        throw new InvalidRequestException(
+            String.format("A git sync config with the identifier %s already exists", gitSyncConfigDTO.getIdentifier()));
+      } else if (ex.getMessage().contains("accountId_orgId_projectId_name_unique_Index")) {
+        throw new InvalidRequestException(
+            String.format("A git sync config with the name %s already exists", gitSyncConfigDTO.getName()));
+      }
+      throw new InvalidRequestException(String.format("Git Sync Config could not be created"));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
-        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getUuid(), "Save");
+        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
   }
 

@@ -28,6 +28,7 @@ public class GitSyncConfigDTO {
   @Trimmed @NotEmpty private String gitConnectorRef;
   @Trimmed @NotEmpty private String repo;
   @Trimmed @NotEmpty private String branch;
+  private String name;
   @ApiModelProperty(allowableValues = "Github, Gitlab, Bitbucket") @NotNull private ConnectorType gitConnectorType;
   private List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOs;
 }

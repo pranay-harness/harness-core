@@ -49,13 +49,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
 public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
-  @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id @EntityIdentifier private String uuid;
+  @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;
   @NotEmpty String gitConnectorRef;
   @NotEmpty String repo;
   @NotEmpty String branch;
+  @NotEmpty String name;
+  @EntityIdentifier @NotEmpty String identifier;
   @NotEmpty String webhookToken;
   Scope scope;
   List<YamlGitConfigDTO.RootFolder> rootFolders;
@@ -74,7 +76,19 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
                  .name("accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index")
                  .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
                      YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.gitConnectorRef, YamlGitConfigKeys.repo,
-                     YamlGitConfigKeys.branch))
+                     YamlGitConfigKeys.branch, YamlGitConfigKeys.name))
+                 .unique(true)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_identifier_unique_Index")
+                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
+                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.identifier))
+                 .unique(true)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_name_unique_Index")
+                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
+                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.name))
                  .unique(true)
                  .build())
         .build();
