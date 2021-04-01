@@ -216,7 +216,7 @@ com.microsoft.azure:msal4j:jar:1.8.1
 com.microsoft.rest:client-runtime:jar:1.7.4
 com.networknt:json-schema-validator:jar:1.0.45
 com.nimbusds:content-type:jar:2.0
-com.nimbusds:lang-tag:jar:1.4.4
+com.nimbusds:lang-tag:jar:1.5
 com.nimbusds:nimbus-jose-jwt:jar:8.19
 com.nimbusds:oauth2-oidc-sdk:jar:7.4
 com.ning:async-http-client:jar:1.9.40
