@@ -7,10 +7,8 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
-import io.harness.ng.core.Resource;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -31,19 +29,19 @@ import org.hibernate.validator.constraints.NotBlank;
 @Builder
 public class AuditEventDTO {
   @NotNull @NotBlank String insertId;
-  @Valid @NotNull ResourceScope resourceScope;
+  @Valid @NotNull ResourceScopeDTO resourceScope;
 
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
   @NotNull Long timestamp;
 
-  @NotNull @Valid AuthenticationInfo authenticationInfo;
+  @NotNull @Valid AuthenticationInfoDTO authenticationInfo;
 
   @NotNull ModuleType module;
   String environmentIdentifier;
 
-  @NotNull @Valid Resource resource;
+  @NotNull @Valid ResourceDTO resource;
   @NotNull Action action;
 
   YamlDiff yamlDiff;
