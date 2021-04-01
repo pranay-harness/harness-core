@@ -1,11 +1,13 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
@@ -21,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class TriggerFilterHelper {
   public Criteria createCriteriaForGetList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String targetIdentifier, NGTriggerType type, String searchTerm, boolean deleted) {
@@ -114,6 +117,9 @@ public class TriggerFilterHelper {
     update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
     update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
+    if (triggerEntity.getNextIterations() != null) {
+      update.set(NGTriggerEntityKeys.nextIterations, triggerEntity.getNextIterations());
+    }
 
     return update;
   }
