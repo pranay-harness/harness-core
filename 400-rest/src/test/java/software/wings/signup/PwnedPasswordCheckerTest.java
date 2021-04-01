@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import okhttp3.Call;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -55,7 +56,7 @@ public class PwnedPasswordCheckerTest extends WingsBaseTest {
     OkHttpClient mockHttpClient = mock(OkHttpClient.class);
     Call call = mock(Call.class);
     Request request = new Request.Builder().url("https://dummyurl.com").method("GET", null).build();
-    ResponseBody responseBody = new RealResponseBody("text/plain", mockResponseBytes.length, bufferedSource);
+    ResponseBody responseBody = new RealResponseBody(Headers.of(), bufferedSource);
     Response response = new Response.Builder()
                             .code(200)
                             .body(responseBody)
