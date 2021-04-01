@@ -6,11 +6,11 @@ import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.TAG_TYPE;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.BuildSpec;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-import org.codehaus.jackson.annotate.JsonTypeName;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value

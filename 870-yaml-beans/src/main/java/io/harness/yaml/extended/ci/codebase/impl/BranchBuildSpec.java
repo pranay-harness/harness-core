@@ -10,8 +10,8 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-import org.codehaus.jackson.annotate.JsonTypeName;
 import org.springframework.data.annotation.TypeAlias;
+import wiremock.com.fasterxml.jackson.annotation.JsonTypeName;
 
 @Value
 @Builder
