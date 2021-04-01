@@ -125,9 +125,8 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   }
 
   @Override
-  public HarnessUserGroup createHarnessUserGroup(
-      String name, String description, Set<String> memberIds, Set<String> accountIds, HarnessUserGroup.GroupType groupType) {
-
+  public HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds,
+      Set<String> accountIds, HarnessUserGroup.GroupType groupType) {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .name(name)
                                             .description(description)
