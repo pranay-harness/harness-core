@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class SecretUtils {
   private final SecretNGManagerClient secretNGManagerClient;
   private final SecretManagerClientService secretManagerClientService;

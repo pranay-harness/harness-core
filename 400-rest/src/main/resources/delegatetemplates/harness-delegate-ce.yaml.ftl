@@ -234,6 +234,10 @@ spec:
           value: ""
         - name: KUSTOMIZE_PATH
           value: ""
+        - name: OC_PATH
+          value: ""
+        - name: KUBECTL_PATH
+          value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
         - name: MANAGER_SERVICE_SECRET

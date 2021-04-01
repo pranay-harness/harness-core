@@ -6,6 +6,8 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -24,7 +26,6 @@ import io.harness.ng.core.auditevent.ProjectUpdateEvent;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -92,8 +93,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .newYaml(yamlObjectMapper.writeValueAsString(
                                     ProjectRequest.builder().project(projectCreateEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
@@ -122,8 +123,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .oldYaml(yamlObjectMapper.writeValueAsString(
                                     ProjectRequest.builder().project(projectUpdateEvent.getOldProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
@@ -150,8 +151,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .newYaml(yamlObjectMapper.writeValueAsString(
                                     ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
@@ -178,8 +179,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
                                 .newYaml(yamlObjectMapper.writeValueAsString(
                                     ProjectRequest.builder().project(projectRestoreEvent.getProject()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);

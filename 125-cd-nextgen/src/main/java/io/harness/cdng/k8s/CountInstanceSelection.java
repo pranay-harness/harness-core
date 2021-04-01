@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
@@ -7,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("Count")
 public class CountInstanceSelection implements InstanceSelectionBase {

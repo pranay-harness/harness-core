@@ -105,6 +105,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -128,7 +129,6 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.StateInspectionService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 

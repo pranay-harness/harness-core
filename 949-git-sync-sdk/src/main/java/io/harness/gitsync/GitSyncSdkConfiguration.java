@@ -1,8 +1,11 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
 import io.harness.Microservice;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.redis.RedisConfig;
@@ -16,6 +19,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(DX)
 public class GitSyncSdkConfiguration {
   /**
    * Grpc server config which sdk will start.

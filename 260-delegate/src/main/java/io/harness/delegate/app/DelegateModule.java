@@ -1,8 +1,7 @@
 package io.harness.delegate.app;
 
-import static io.harness.annotations.dev.HarnessTeam.DEL;
-
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
@@ -51,7 +50,8 @@ import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
-import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
+import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
@@ -163,6 +163,8 @@ import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.exception.exceptionmanager.ExceptionHandler;
+import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
@@ -506,6 +508,8 @@ import software.wings.settings.SettingValue;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -524,8 +528,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@OwnedBy(DEL)
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
 
@@ -740,7 +744,7 @@ public class DelegateModule extends AbstractModule {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
     install(NGDelegateModule.getInstance());
-    install(DelegateExceptionModule.getInstance());
+    install(ExceptionModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
@@ -1035,6 +1039,8 @@ public class DelegateModule extends AbstractModule {
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();
+
+    bindExceptionHandlers();
   }
 
   private void bindDelegateTasks() {
@@ -1438,5 +1444,13 @@ public class DelegateModule extends AbstractModule {
         .to(GcpValidationTaskHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.AWS.getDisplayName())
         .to(AwsValidationHandler.class);
+  }
+
+  private void bindExceptionHandlers() {
+    MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
+        binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
+
+    exceptionHandlerMapBinder.addBinding(AmazonServiceException.class).to(AmazonServiceExceptionHandler.class);
+    exceptionHandlerMapBinder.addBinding(AmazonClientException.class).to(AmazonClientExceptionHandler.class);
   }
 }

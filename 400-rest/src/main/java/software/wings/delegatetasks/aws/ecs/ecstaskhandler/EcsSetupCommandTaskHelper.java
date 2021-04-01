@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -24,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
@@ -108,6 +110,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -685,6 +688,13 @@ public class EcsSetupCommandTaskHelper {
       // those are created with serviceCreation. We always create service with 0 count and
       // then upsize it in all case other than daemon (where ECS launches tasks with service creation)
       createServiceRequest.setPropagateTags(advancedServiceConfig.getPropagateTags());
+
+      if (advancedServiceConfig.getCapacityProviderStrategy() != null
+          && CollectionUtils.isNotEmpty(advancedServiceConfig.getCapacityProviderStrategy())) {
+        createServiceRequest.setCapacityProviderStrategy(advancedServiceConfig.getCapacityProviderStrategy());
+        // If a capacityProviderStrategy is specified, the launchType parameter must be omitted.
+        createServiceRequest.setLaunchType(null);
+      }
     }
     setServiceRegistryForDNSSwap((AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, setupParams,
         containerServiceName, serviceRegistries, executionLogCallback, logger, commandExecutionDataBuilder);

@@ -21,6 +21,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -105,7 +106,9 @@ public class TriggerExecutionHelper {
     TriggerType triggerType = WEBHOOK;
     if (triggerPayload.getType() == CUSTOM) {
       triggerType = WEBHOOK_CUSTOM;
-    } // cron will come here
+    } else if (triggerPayload.getType() == Type.SCHEDULED) {
+      triggerType = TriggerType.SCHEDULER_CRON;
+    }
 
     return triggerType;
   }

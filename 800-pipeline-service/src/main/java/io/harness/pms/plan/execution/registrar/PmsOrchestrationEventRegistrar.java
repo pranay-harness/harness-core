@@ -9,6 +9,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.notification.orchestration.NotificationOrchestrationRegistrar;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
+import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
@@ -30,7 +31,8 @@ public class PmsOrchestrationEventRegistrar {
         new HashMap<>();
     engineEventHandlersMap.put(ORCHESTRATION_START, Sets.newHashSet(ExecutionSummaryCreateEventHandler.class));
     engineEventHandlersMap.put(PLAN_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(ExecutionInfoUpdateEventHandler.class, PlanStatusEventEmitterHandler.class));
+        Sets.newHashSet(ExecutionInfoUpdateEventHandler.class, PlanStatusEventEmitterHandler.class,
+            PipelineStatusUpdateEventHandler.class));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, NotificationOrchestrationRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(

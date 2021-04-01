@@ -9,11 +9,6 @@ import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskPara
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
-import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.email.EmailStepParameters;
-import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
-import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ARMStateExecutionData;
@@ -1608,7 +1603,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
-    kryo.register(BasicHttpStepParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
     kryo.register(CustomSecretsManagerConfig.class, 7378);
@@ -1617,7 +1611,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Criteria.class, 7382);
     kryo.register(ConditionalOperator.class, 7383);
     kryo.register(ContainerSyncResponse.class, 7384);
-    kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
@@ -1683,8 +1676,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GitConfig.UrlType.class, 7460);
-    kryo.register(EmailStepParameters.class, 7461);
-    kryo.register(WaitStepParameters.class, 7463);
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);
@@ -1721,7 +1712,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
 
-    kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
     kryo.register(HelmSubCommand.class, 8076);
     kryo.register(HelmCommandFlagConfig.class, 8077);
