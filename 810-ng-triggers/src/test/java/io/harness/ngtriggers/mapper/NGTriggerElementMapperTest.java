@@ -29,7 +29,7 @@ import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;

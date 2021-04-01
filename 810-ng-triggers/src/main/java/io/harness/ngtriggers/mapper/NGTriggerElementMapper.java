@@ -53,7 +53,7 @@ import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.annotations.VisibleForTesting;
