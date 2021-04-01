@@ -1,15 +1,20 @@
 package io.harness.cdng.manifest.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
 import static io.harness.cdng.manifest.ManifestType.Kustomize;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
@@ -17,6 +22,8 @@ import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
+import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -34,6 +41,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
+@OwnedBy(CDP)
 public class ManifestOutcomeMapper {
   public List<ManifestOutcome> toManifestOutcome(List<ManifestAttributes> manifestAttributesList) {
     return manifestAttributesList.stream()
@@ -112,6 +120,8 @@ public class ManifestOutcomeMapper {
       chartVersion = helmChartManifest.getChartVersion().getValue();
     }
 
+    validateHelmChartManifestStoreConfig(helmChartManifest.getStoreConfig());
+
     return HelmChartManifestOutcome.builder()
         .identifier(helmChartManifest.getIdentifier())
         .store(helmChartManifest.getStoreConfig())
@@ -154,5 +164,30 @@ public class ManifestOutcomeMapper {
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
         .build();
+  }
+
+  private void validateHelmChartManifestStoreConfig(StoreConfig storeConfig) {
+    if (ManifestStoreType.S3.equals(storeConfig.getKind())) {
+      S3StoreConfig s3StoreConfig = (S3StoreConfig) storeConfig;
+
+      if (ParameterField.isNull(s3StoreConfig.getRegion())
+          || isEmpty(getParameterFieldValue(s3StoreConfig.getRegion()))) {
+        throw new InvalidArgumentsException(Pair.of("region", "Cannot be empty or null for S3 store"));
+      }
+
+      if (ParameterField.isNull(s3StoreConfig.getBucketName())
+          || isEmpty(getParameterFieldValue(s3StoreConfig.getBucketName()))) {
+        throw new InvalidArgumentsException(Pair.of("bucketName", "Cannot be empty or null for S3 store"));
+      }
+    }
+
+    if (ManifestStoreType.GCS.equals(storeConfig.getKind())) {
+      GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) storeConfig;
+
+      if (ParameterField.isNull(gcsStoreConfig.getBucketName())
+          || isEmpty(getParameterFieldValue(gcsStoreConfig.getBucketName()))) {
+        throw new InvalidArgumentsException(Pair.of("bucketName", "Cannot be empty or null for Gcs store"));
+      }
+    }
   }
 }
