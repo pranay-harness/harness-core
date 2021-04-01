@@ -24,7 +24,6 @@ import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
@@ -121,15 +120,15 @@ public class InviteResource {
 
   @GET
   @Path("/accept")
-  @ApiOperation(value = "Verify user invite", nickname = "verifyInvite")
-  @InternalApi
+  @ApiOperation(value = "Verify user invite", nickname = "verifyInvite", hidden = true)
+  @NextGenManagerAuth
   public ResponseDTO<InviteAcceptResponse> accept(@QueryParam("token") @NotNull String jwtToken) {
     return ResponseDTO.newResponse(inviteService.acceptInvite(jwtToken));
   }
 
   @GET
   @Path("/complete")
-  @ApiOperation(value = "Complete user invite", nickname = "completeInvite")
+  @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
   @NextGenManagerAuth
   public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
     return ResponseDTO.newResponse(inviteService.completeInvite(token));
