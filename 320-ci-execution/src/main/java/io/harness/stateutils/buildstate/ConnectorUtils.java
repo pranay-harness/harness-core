@@ -261,7 +261,7 @@ public class ConnectorUtils {
       return buildGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else {
       throw new CIStageExecutionException(
-          "Unsupported git connector " + connectorDTO.getConnectorInfo().getConnectorType());
+          "Unsupported git cosssnnector " + connectorDTO.getConnectorInfo().getConnectorType());
     }
   }
 
