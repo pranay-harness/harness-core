@@ -5,7 +5,6 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.validation.Update;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import javax.validation.constraints.NotNull;
