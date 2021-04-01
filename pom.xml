@@ -804,8 +804,18 @@
             </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
+                <artifactId>lang-tag</artifactId>
+                <version>1.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>8.19</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>oauth2-oidc-sdk</artifactId>
+                <version>7.4</version>
             </dependency>
             <dependency>
                 <groupId>com.novemberain</groupId>

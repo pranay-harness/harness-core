@@ -1451,7 +1451,7 @@ maven_install(
         "com.microsoft.rest:client-runtime:1.7.4",
         "com.nimbusds:lang-tag:1.5",
         "com.nimbusds:nimbus-jose-jwt:8.19",
-        "com.nimbusds:oauth2-oidc-sdk:6.5",
+        "com.nimbusds:oauth2-oidc-sdk:7.4",
         "com.ning:async-http-client:1.9.40",
         "com.novemberain:quartz-mongodb:2.1.1",
         "com.offbytwo.jenkins:jenkins-client:0.3.8",
