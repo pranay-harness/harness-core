@@ -145,7 +145,6 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     notNullCheck("Invalid account with id: " + accountId, account);
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
     query.filter("accountIds", accountId);
-    List<HarnessUserGroup> harnessUserGroups = query.asList();
-    return harnessUserGroups;
+    return query.asList();
   }
 }
