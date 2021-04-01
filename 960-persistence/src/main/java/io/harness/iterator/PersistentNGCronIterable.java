@@ -41,10 +41,6 @@ public interface PersistentNGCronIterable extends PersistentIrregularIterable {
     final Cron cron = parser.parse(cronExpression);
     ExecutionTime executionTime = ExecutionTime.forCron(cron);
 
-    if (times.isEmpty()) {
-      times.add(ZonedDateTime.now().toInstant().toEpochMilli());
-    }
-
     while (times.size() < 10) {
       final Optional<ZonedDateTime> nextTime = executionTime.nextExecution(time);
       if (!nextTime.isPresent()) {

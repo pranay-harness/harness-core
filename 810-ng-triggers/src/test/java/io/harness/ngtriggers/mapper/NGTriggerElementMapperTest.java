@@ -210,6 +210,10 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     NGTriggerEntity ngTriggerEntity =
         ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerCronYaml).getNgTriggerEntity();
     assertThat(ngTriggerEntity.getNextIterations()).isNotEmpty();
+    // all elements snap to the nearest minute -- in other words,  now is not an element.
+    for (long nextIteration : ngTriggerEntity.getNextIterations()) {
+      assertThat(nextIteration % 60000).isEqualTo(0);
+    }
   }
 
   @Test

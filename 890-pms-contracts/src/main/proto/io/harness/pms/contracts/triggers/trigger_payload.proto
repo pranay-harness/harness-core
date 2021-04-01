@@ -22,4 +22,5 @@ message ParsedPayload {
 enum Type {
   CUSTOM = 0;
   GIT = 1;
+  SCHEDULED = 2;
 }
