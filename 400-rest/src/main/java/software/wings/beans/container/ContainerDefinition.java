@@ -1,5 +1,8 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.stencils.DefaultValue;
@@ -12,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(CDP)
 @Builder
 public class ContainerDefinition {
   @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;

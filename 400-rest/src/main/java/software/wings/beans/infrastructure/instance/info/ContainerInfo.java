@@ -1,5 +1,9 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
@@ -19,6 +23,7 @@ import lombok.NoArgsConstructor;
   , @JsonSubTypes.Type(value = EcsContainerInfo.class, name = "ECS_CONTAINER_INFO"),
       @JsonSubTypes.Type(value = K8sPodInfo.class, name = "K8S_POD_INFO")
 })
+@OwnedBy(CDP)
 public abstract class ContainerInfo extends InstanceInfo {
   private String clusterName;
 

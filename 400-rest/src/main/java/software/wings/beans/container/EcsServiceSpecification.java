@@ -1,6 +1,9 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.DeploymentSpecification;
 
@@ -12,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
+@OwnedBy(CDP)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -27,7 +31,8 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   public static final String preamble = "# Enter your Service JSON spec below.\n"
       + "# ---\n\n";
 
-  public static final String manifestTemplate = "{\n\"placementConstraints\":[ ],\n"
+  public static final String manifestTemplate = "{\n\"capacityProviderStrategy\":[ ],\n"
+      + "\"placementConstraints\":[ ],\n"
       + "\"placementStrategy\":[ ],\n"
       + "\"healthCheckGracePeriodSeconds\":null,\n"
       + "\"tags\":[ ],\n"
