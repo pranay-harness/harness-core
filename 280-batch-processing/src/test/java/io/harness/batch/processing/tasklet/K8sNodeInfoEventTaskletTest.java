@@ -13,6 +13,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
@@ -63,6 +65,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
+@OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
 public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @InjectMocks private K8sNodeEventTasklet k8sNodeEventTasklet;
@@ -311,7 +314,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldReturnCloudProviderInstance() {
     String providerId = "aws:///eu-west-2c/i-072ecaefff88547de";
-    String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(providerId);
+    String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(providerId, CloudProvider.AWS);
     assertThat(cloudProviderInstanceId).isEqualTo("i-072ecaefff88547de");
   }
 
