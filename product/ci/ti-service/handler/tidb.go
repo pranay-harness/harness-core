@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
-	"net/http"
-	"time"
-
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
+	"net/http"
+	"time"
 )
 
 const (
@@ -124,6 +124,19 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 
 func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, branchParam, shaParam)
+		if err != nil {
+			WriteBadRequest(w, err)
+			return
+		}
+		acc := r.FormValue(accountIDParam)
+		org := r.FormValue(orgIdParam)
+		proj := r.FormValue(projectIdParam)
+		info := mongodb.VCSInfo{
+			Repo:     r.FormValue(repoParam),
+			Branch:   r.FormValue(branchParam),
+			CommitId: r.FormValue(shaParam),
+		}
 		var data []byte
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			log.Errorw("could not unmarshal request body")
@@ -131,32 +144,29 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		}
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
-			log.Errorf("failed to create callgraph serializer instance", zap.Error(err))
+			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
 		cgString, err := cgSer.Deserialize(data)
 		if err != nil {
-			log.Errorf("failed to deserialize callgraph", zap.Error(err))
+			log.Errorw("failed to deserialize callgraph", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
 		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
-			log.Errorf("failed to construct callgraph object from interface object", zap.Error(err))
+			log.Errorw("failed to construct callgraph object from interface object", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
-		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)))
-		err = validate(r, repoParam, branchParam, shaParam)
+		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)), accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch)
+		err = tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj)
 		if err != nil {
+			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
-		repo := r.FormValue(repoParam)
-		branch := r.FormValue(branchParam)
-		sha := r.FormValue(shaParam)
-		tidb.UploadPartialCg(r.Context(), cg, repo, branch, sha)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

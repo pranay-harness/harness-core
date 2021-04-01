@@ -39,6 +39,9 @@ type Relation struct {
 
 	Source  int     `json:"source" bson:"source"`
 	Tests   []int   `json:"tests" bson:"tests"`
+	Acct    string  `json:"account" bson:"account"`
+	Proj    string  `json:"project" bson:"project"`
+	Org     string  `json:"organization" bson:"organization"`
 	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
 }
 
@@ -48,10 +51,13 @@ type Node struct {
 
 	Package string  `json:"package" bson:"package"`
 	Method  string  `json:"method" bson:"method"`
-	Hash    int     `json:"hash" bson:"hash"`
+	Id      int     `json:"id" bson:"id"`
 	Params  string  `json:"params" bson:"params"`
 	Class   string  `json:"class" bson:"class"`
 	Type    string  `json:"type" bson:"type"`
+	Acct    string  `json:"account" bson:"account"`
+	Proj    string  `json:"project" bson:"project"`
+	Org     string  `json:"organization" bson:"organization"`
 	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
 }
 
@@ -68,23 +74,29 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(hash int, pkg, method, params, class, typ string, vcs VCSInfo) *Node {
+func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
-		Hash:    hash,
+		Id:      id,
 		Package: pkg,
 		Method:  method,
 		Params:  params,
 		Class:   class,
 		Type:    typ,
+		Acct:    acc,
+		Org:     org,
+		Proj:    proj,
 		VCSInfo: vcs,
 	}
 }
 
 // NewRelation creates Relation object form given fields
-func NewRelation(source int, tests []int, vcs VCSInfo) *Relation {
+func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
 	return &Relation{
 		Source:  source,
 		Tests:   tests,
+		Acct:    acc,
+		Org:     org,
+		Proj:    proj,
 		VCSInfo: vcs,
 	}
 }
@@ -152,7 +164,7 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, e
 
 	nids := []int{}
 	for _, n := range nodes {
-		nids = append(nids, n.Hash)
+		nids = append(nids, n.Id)
 	}
 
 	// Query 2
@@ -349,36 +361,30 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, repo, branch, sha string) error {
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj string) error {
 	nodes := make([]interface{}, len(cg.Nodes))
 	rels := make([]interface{}, len(cg.Relations))
-	vcsInfo := VCSInfo{
-		Repo:     repo,
-		Branch:   branch,
-		CommitId: sha,
-	}
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, vcsInfo)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, acc, org, proj)
 	}
 	for i, rel := range cg.Relations {
-		rels[i] = *NewRelation(rel.Source, rel.Tests, vcsInfo)
+		rels[i] = *NewRelation(rel.Source, rel.Tests, info, acc, org, proj)
 	}
-
 	// query for partial callgraph for the filter -(repo + branch) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
-	r1, err := mdb.Database.Collection("nodes").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": repo, "vcs_info.branch": branch}, &options.DeleteOptions{})
+	r1, err := mdb.Database.Collection("nodes").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
+		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
-	// this will delete all the relations	 create by older commits for current pull request
-	r2, err := mdb.Database.Collection("relations").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": repo, "vcs_info.branch": branch}, &options.DeleteOptions{})
+	// this will delete all the relations create by older commits for current pull request
+	r2, err := mdb.Database.Collection("relations").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s and branch: %s", repo, branch))
+		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d recorde from nodes collection and %d records from relns collection for repo %s, branch %s", r1.DeletedCount, r2.DeletedCount, repo, branch))
+	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection and %d records from relns collection", r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
 	// dump new relations and nodes to db
-	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection for repo %s, branch %s", len(nodes), len(rels), repo, branch))
-	mdb.Database.Collection(nodeColl).InsertMany(context.TODO(), nodes)
-	mdb.Database.Collection(relnsColl).InsertMany(context.TODO(), rels)
+	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection", len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+	mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
+	mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
 	return nil
 }

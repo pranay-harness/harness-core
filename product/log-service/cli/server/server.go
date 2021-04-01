@@ -109,7 +109,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	}()
 
-	logrus.Infof(fmt.Sprint("server listening at %s", config.Server.Bind))
+	logrus.Infof(fmt.Sprintf("server listening at: %s", config.Server.Bind))
 
 	// starts the http server.
 	err = server.ListenAndServe(ctx)
