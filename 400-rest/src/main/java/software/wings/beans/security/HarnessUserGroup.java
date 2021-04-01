@@ -38,7 +38,7 @@ public class HarnessUserGroup extends Base {
   @FdIndex private Set<String> memberIds;
   private Set<String> accountIds;
   private GroupType groupType;
-  public enum GroupType {DEFAULT, RESTRICTED}
+  public enum GroupType { DEFAULT, RESTRICTED }
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
