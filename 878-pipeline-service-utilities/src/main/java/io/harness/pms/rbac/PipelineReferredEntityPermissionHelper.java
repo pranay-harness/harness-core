@@ -1,4 +1,4 @@
-package io.harness.pms.rbac.validator;
+package io.harness.pms.rbac;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -11,8 +11,11 @@ import org.apache.groovy.util.Maps;
 @UtilityClass
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineReferredEntityPermissionHelper {
-  public final Map<EntityType, String> coreEntityTypeToPermissionEntityName = Maps.of(EntityType.CONNECTORS,
-      "connector", EntityType.SECRETS, "secret", EntityType.SERVICE, "service", EntityType.ENVIRONMENT, "environment");
+  private final String PERMISSION_PLACE_HOLDER = "core_%s_%s";
+
+  public final Map<EntityType, String> coreEntityTypeToPermissionEntityName =
+      Maps.of(EntityType.CONNECTORS, NGResourceType.CONNECTOR, EntityType.SECRETS, NGResourceType.SECRETS,
+          EntityType.SERVICE, NGResourceType.SERVICE, EntityType.ENVIRONMENT, NGResourceType.ENVIRONMENT);
 
   public String getPermissionForGivenType(EntityType entityType, boolean isNew) {
     String permission = "runtimeAccess";
@@ -20,7 +23,8 @@ public class PipelineReferredEntityPermissionHelper {
       permission = "create";
     }
     if (coreEntityTypeToPermissionEntityName.containsKey(entityType)) {
-      return String.format("core_%s_%s", coreEntityTypeToPermissionEntityName.get(entityType), permission);
+      return String.format(
+          PERMISSION_PLACE_HOLDER, coreEntityTypeToPermissionEntityName.get(entityType).toLowerCase(), permission);
     }
     throw new UnsupportedOperationException();
   }
