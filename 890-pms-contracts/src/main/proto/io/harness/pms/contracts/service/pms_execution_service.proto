@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package io.harness.pms.contracts.service;
 
+import "io/harness/pms/contracts/cd/module_info.proto";
+import "io/harness/pms/contracts/ci/module_info.proto";
+
 option java_multiple_files = true;
 
 service PmsExecutionService {
@@ -15,6 +18,22 @@ message ExecutionSummaryUpdateRequest {
   string nodeModuleInfoJson = 4;
   string pipelineModuleInfoJson = 5;
   string nodeExecutionId = 6;
+  StageModuleInfoProto stageModuleInfo = 7;
+  PipelineModuleInfoProto pipelineModuleInfo = 8;
+}
+
+message StageModuleInfoProto {
+  oneof info {
+    cd.CDStageModuleInfoProto cdStageModuleInfo = 1;
+    ci.CIStageModuleInfoProto ciStageModuleInfo = 2;
+  }
+}
+
+message PipelineModuleInfoProto {
+  oneof info {
+    cd.CDPipelineModuleInfoProto cdPipelineModuleInfo = 1;
+    ci.CIPipelineModuleInfoProto ciPipelineModuleInfo = 2;
+  }
 }
 
 message ExecutionSummaryResponse {}

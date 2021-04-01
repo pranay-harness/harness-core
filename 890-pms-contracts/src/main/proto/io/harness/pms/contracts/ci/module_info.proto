@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.ci;
+
+option java_multiple_files = true;
+
+message CIPipelineModuleInfoProto {
+  CIWebhookInfoProto ciExecutionInfo = 1;
+  string branch = 2;
+  string repoName = 3;
+  string tag = 4;
+}
+
+message CIWebhookInfoProto {
+  string event = 1;
+  CIBuildAuthorProto author = 2;
+  CIBuildBranchHookProto branch = 3;
+  CIBuildPRHookProto pullRequest = 4;
+  repeated PublishedArtifactProto publishedArtifacts = 5;
+}
+
+message CIBuildAuthorProto {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string avatar = 4;
+}
+
+message CIBuildBranchHookProto {
+  string name = 1;
+  string link = 2;
+  string state = 3;
+  repeated CIBuildCommitProto commits = 4;
+}
+
+message CIBuildPRHookProto {
+  int64 id = 1;
+  string link = 2;
+  string title = 3;
+  string body = 4;
+  string sourceRepo = 5;
+  string sourceBranch = 6;
+  string targetBranch = 7;
+  string state = 8;
+  repeated CIBuildCommitProto commits = 9;
+}
+
+message CIBuildCommitProto {
+  string id = 1;
+  string link = 2;
+  string message = 3;
+  string ownerName = 4;
+  string ownerId = 5;
+  string ownerEmail = 6;
+  int64 timeStamp = 7;
+}
+
+message PublishedArtifactProto {
+  string buildNumber = 1;
+  string buildLink = 2;
+}
+
+message CIStageModuleInfoProto {
+  string nodeExecutionId = 1;
+}

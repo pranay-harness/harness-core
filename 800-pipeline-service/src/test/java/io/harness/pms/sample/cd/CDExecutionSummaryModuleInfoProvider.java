@@ -16,7 +16,7 @@ public class CDExecutionSummaryModuleInfoProvider implements ExecutionSummaryMod
     return new SampleStageInfo();
   }
 
-  public class SamplePipelineModule implements PipelineModuleInfo {}
+  public static class SamplePipelineModule implements PipelineModuleInfo {}
 
-  public class SampleStageInfo implements StageModuleInfo {}
+  public static class SampleStageInfo implements StageModuleInfo {}
 }

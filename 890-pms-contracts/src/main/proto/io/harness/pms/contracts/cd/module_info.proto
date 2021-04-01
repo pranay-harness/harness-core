@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.cd;
+
+option java_multiple_files = true;
+
+message CDPipelineModuleInfoProto {
+  repeated string serviceIdentifiers = 1;
+  repeated string envIdentifiers = 2;
+  repeated string serviceDefinitionTypes = 3;
+  repeated EnvironmentTypeProto environmentTypes = 4;
+  repeated string infrastructureTypes = 5;
+}
+
+enum EnvironmentTypeProto {
+  PreProduction = 0;
+  Production = 1;
+}
+
+message CDStageModuleInfoProto {
+  string nodeExecutionId = 1;
+  ServiceExecutionSummaryProto serviceInfo = 2;
+  InfraExecutionSummaryProto infraInfo = 3;
+}
+
+message ServiceExecutionSummaryProto {
+  string identifier = 1;
+  string name = 2;
+  string deploymentType = 3;
+  ArtifactsSummaryProto artifacts = 4;
+}
+
+message ArtifactsSummaryProto {
+  ArtifactSummaryProto primary = 1;
+  repeated ArtifactSummaryProto sidecars = 2;
+}
+
+message ArtifactSummaryProto {
+  oneof summary {
+    DockerArtifactSummaryProto dockerArtifactSummary = 1;
+    GcrArtifactSummaryProto gcrArtifactSummary = 2;
+    EcrArtifactSummaryProto ecrArtifactSummary = 3;
+  }
+}
+
+message DockerArtifactSummaryProto {
+  string imagePath = 1;
+  string tag = 2;
+}
+
+message GcrArtifactSummaryProto {
+  string imagePath = 1;
+  string tag = 2;
+}
+
+message EcrArtifactSummaryProto {
+  string imagePath = 1;
+  string tag = 2;
+}
+
+message InfraExecutionSummaryProto {
+  string identifier = 1;
+  string name = 2;
+}
