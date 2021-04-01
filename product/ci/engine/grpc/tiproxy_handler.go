@@ -199,10 +199,10 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	fs := fs.NewOSFileSystem(h.log)
 	parser := ti.NewCallGraphParser(h.log, fs)
 	cg, err := parser.Parse(cgDir, files)
-	h.log.Infow(fmt.Sprintf("size of nodes parsed is:%d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
 	if err != nil {
 		return res, errors.Wrap(err, "failed to parse callgraph directory")
 	}
+	h.log.Infow(fmt.Sprintf("size of nodes parsed is:%d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
 	cgMap := cg.ToStringMap()
 	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 	if err != nil {

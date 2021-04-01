@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -42,8 +43,8 @@ public class PagerDutyChannel extends NotificationChannel {
                           .addAllPagerDutyIntegrationKeys(integrationKeys)
                           .setTemplateId(templateId)
                           .putAllTemplateData(templateData)
-                          .addAllUserGroupIds(userGroupIds)
-                          .addAllUserGroup(userGroups))
+                          .addAllUserGroupIds(CollectionUtils.emptyIfNull(userGroupIds))
+                          .addAllUserGroup(CollectionUtils.emptyIfNull(userGroups)))
         .build();
   }
 }

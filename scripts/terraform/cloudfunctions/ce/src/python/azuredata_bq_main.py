@@ -261,16 +261,18 @@ def ingestDataInUnifiedTableTable(client, jsonData):
                         azureMeterName,
                         azureInstanceId, region, azureResourceGroup,
                         azureSubscriptionGuid, azureServiceName,
-                        cloudProvider, labels"""
+                        cloudProvider, labels, azureResource"""
     SELECT_COLUMNS = """MeterCategory AS product, TIMESTAMP(%s) as startTime, %s AS cost,
                         MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
                         MeterName as azureMeterName,
                         %s as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
                         %s as azureSubscriptionGuid, MeterCategory as azureServiceName,
-                        "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels
+                        "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels,
+                        ARRAY_REVERSE(SPLIT(%s,REGEXP_EXTRACT(%s, r'(?i)providers/')))[OFFSET(0)] as azureResource 
                      """ % (CE_COLUMN_MAPPING["startTime"],
                             CE_COLUMN_MAPPING["cost"], CE_COLUMN_MAPPING["azureInstanceId"],
-                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"])
+                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"], CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureInstanceId"])
 
     # Amend query as per columns availability
     for additionalColumn in ["AccountName", "Frequency", "PublisherType", "ServiceTier", "ResourceType",
@@ -366,7 +368,8 @@ def alterUnifiedTable(client, jsonData):
         ADD COLUMN IF NOT EXISTS azureReservationId STRING, \
         ADD COLUMN IF NOT EXISTS azureReservationName STRING, \
         ADD COLUMN IF NOT EXISTS azurePublisherName STRING, \
-        ADD COLUMN IF NOT EXISTS azureServiceName STRING;" % ds
+        ADD COLUMN IF NOT EXISTS azureServiceName STRING, \
+        ADD COLUMN IF NOT EXISTS azureResource STRING;" % ds
 
     try:
         query_job = client.query(query)

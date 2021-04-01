@@ -97,11 +97,14 @@ public class HarnessApprovalInstance extends ApprovalInstance {
   }
 
   public HarnessApprovalOutcome toHarnessApprovalOutcome() {
+    List<ApproverInput> approverInputs = getStatus() == ApprovalStatus.APPROVED
+        ? fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null)
+        : null;
     return HarnessApprovalOutcome.builder()
         .approvalActivities(approvalActivities)
-        .approverInputs(getStatus() == ApprovalStatus.APPROVED
-                ? fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null)
-                : null)
+        .approverInputs(approverInputs == null
+                ? null
+                : approverInputs.stream().collect(Collectors.toMap(ApproverInput::getName, ApproverInput::getValue)))
         .build();
   }
 

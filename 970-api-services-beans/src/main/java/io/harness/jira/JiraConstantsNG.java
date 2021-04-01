@@ -29,6 +29,7 @@ public interface JiraConstantsNG {
   String STATUS_NAME = "Status";
   String STATUS_INTERNAL_NAME = "__" + STATUS_KEY;
 
+  String TIME_TRACKING_KEY = "timetracking";
   String ORIGINAL_ESTIMATE_NAME = "Original Estimate";
   String REMAINING_ESTIMATE_NAME = "Remaining Estimate";
   String ORIGINAL_ESTIMATE_KEY = "originalEstimate";

@@ -41,8 +41,8 @@ import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.threading.Poller;
-import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyResponse;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.waiter.WaitNotifyEngine;
@@ -406,7 +406,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     assertThat(Arrays.asList(result1.getData(), result2.getData())).containsExactlyInAnyOrder("Progress1", "Progress2");
   }
 
-  public static class TestNotifyCallback implements NotifyCallback {
+  public static class TestNotifyCallback implements OldNotifyCallback {
     @Override
     public void notify(Map<String, ResponseData> response) {}
 

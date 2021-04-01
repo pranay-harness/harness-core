@@ -1,7 +1,9 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -29,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonTypeName("RunTests")
 @TypeAlias("runTestsStepInfo")
+@OwnedBy(CI)
 public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
@@ -37,7 +40,8 @@ public class RunTestsStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN_TESTS).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

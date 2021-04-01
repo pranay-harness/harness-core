@@ -12,7 +12,7 @@ import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -20,7 +20,7 @@ import java.util.Map;
 import lombok.Builder;
 
 @OwnedBy(CDC)
-public class InterruptCallback implements NotifyCallback {
+public class InterruptCallback implements OldNotifyCallback {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;

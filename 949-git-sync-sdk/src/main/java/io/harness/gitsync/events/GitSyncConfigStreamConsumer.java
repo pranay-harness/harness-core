@@ -1,8 +1,10 @@
 package io.harness.gitsync.events;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncConfigStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;

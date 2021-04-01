@@ -1,10 +1,13 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.DelegateErrorHandlerException;
+import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.KryoHandlerNotFoundException;
@@ -19,6 +22,7 @@ import io.harness.tasks.FailureResponseData;
 import com.esotericsoftware.kryo.Kryo;
 import java.time.ZonedDateTime;
 
+@OwnedBy(HarnessTeam.PL)
 public class CommonsKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -42,5 +46,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(java.lang.StackTraceElement.class, 31011);
     kryo.register(DelegateErrorHandlerException.class, 31012);
     kryo.register(KryoHandlerNotFoundException.class, 31013);
+    kryo.register(ExceptionHandlerNotFoundException.class, 31014);
   }
 }

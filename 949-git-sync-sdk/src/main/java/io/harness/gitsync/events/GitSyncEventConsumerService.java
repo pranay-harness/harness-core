@@ -1,7 +1,10 @@
 package io.harness.gitsync.events;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -12,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncEventConsumerService implements Managed {
   @Inject private GitSyncConfigStreamConsumer gitSyncConfigStreamConsumer;
   private ExecutorService gitSyncConfigConsumerService;

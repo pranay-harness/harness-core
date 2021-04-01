@@ -1,7 +1,7 @@
 package software.wings.api.arm;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;

@@ -107,7 +107,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
 
     MetricPackValidationResponse metricPackValidationResponse =
         newRelicService.validateData(accountId, connectorIdentifier, generateUuid(), generateUuid(), "appName", "appId",
-            Arrays.asList(MetricPackDTO.builder().build()));
+            Arrays.asList(MetricPackDTO.builder().build()), generateUuid());
 
     assertThat(metricPackValidationResponse.getOverallStatus().name())
         .isEqualTo(ThirdPartyApiResponseStatus.SUCCESS.name());
@@ -133,7 +133,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
 
     MetricPackValidationResponse metricPackValidationResponse =
         newRelicService.validateData(accountId, connectorIdentifier, generateUuid(), generateUuid(), "appName", "appId",
-            Arrays.asList(MetricPackDTO.builder().build()));
+            Arrays.asList(MetricPackDTO.builder().build()), generateUuid());
 
     assertThat(metricPackValidationResponse.getOverallStatus().name())
         .isEqualTo(ThirdPartyApiResponseStatus.SUCCESS.name());
@@ -163,7 +163,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
 
     MetricPackValidationResponse metricPackValidationResponse =
         newRelicService.validateData(accountId, connectorIdentifier, generateUuid(), generateUuid(), "appName", "appId",
-            Arrays.asList(MetricPackDTO.builder().build()));
+            Arrays.asList(MetricPackDTO.builder().build()), generateUuid());
 
     assertThat(metricPackValidationResponse.getOverallStatus().name())
         .isEqualTo(ThirdPartyApiResponseStatus.NO_DATA.name());
@@ -189,7 +189,7 @@ public class NewRelicServiceImplTest extends CvNextGenTestBase {
 
     MetricPackValidationResponse metricPackValidationResponse =
         newRelicService.validateData(accountId, connectorIdentifier, generateUuid(), generateUuid(), "appName", "appId",
-            Arrays.asList(MetricPackDTO.builder().build()));
+            Arrays.asList(MetricPackDTO.builder().build()), generateUuid());
 
     assertThat(metricPackValidationResponse.getOverallStatus().name())
         .isEqualTo(ThirdPartyApiResponseStatus.FAILED.name());

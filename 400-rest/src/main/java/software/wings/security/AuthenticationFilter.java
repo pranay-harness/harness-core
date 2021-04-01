@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.logging.AccountLogContext;
@@ -39,6 +40,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.security.annotations.AdminPortalAuth;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ScimAPI;
@@ -129,7 +131,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-    if (isExternalFacingApiRequest(containerRequestContext)) {
+    boolean isApiKeyAuthorizeRequest = isApiKeyAuthorizationAPI();
+    if (isExternalFacingApiRequest(containerRequestContext) || isApiKeyAuthorizeRequest) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
       if (isNotEmpty(apiKey)) {
@@ -145,6 +148,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             throw exception;
           }
         }
+      }
+
+      if (isApiKeyAuthorizeRequest && isEmpty(apiKey)) {
+        if (allowEmptyApiKey()) {
+          return;
+        }
+        throw new AccessDeniedException("Api Key cannot be empty", USER);
       }
 
       if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
@@ -257,6 +267,33 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     return false;
   }
 
+  private boolean allowEmptyApiKey() {
+    boolean methodAllowEmptyApiKey = false;
+    boolean classAllowEmptyApiKey = false;
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    ApiKeyAuthorized[] methodAnnotations = resourceMethod.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (ApiKeyAuthorized methodAnnotation : methodAnnotations) {
+        methodAllowEmptyApiKey = methodAnnotation.allowEmptyApiKey() || methodAllowEmptyApiKey;
+      }
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    ApiKeyAuthorized[] classAnnotations = resourceClass.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (ApiKeyAuthorized classAnnotation : classAnnotations) {
+        classAllowEmptyApiKey = classAnnotation.allowEmptyApiKey() || classAllowEmptyApiKey;
+      }
+    }
+
+    if (isEmpty(methodAnnotations)) {
+      return classAllowEmptyApiKey;
+    } else {
+      return methodAllowEmptyApiKey;
+    }
+  }
+
   private void setPrincipal(String tokenString) {
     if (tokenString.length() > 32) {
       Map<String, Claim> claimMap = verifyJWTToken(tokenString, secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET));
@@ -337,6 +374,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         containerRequestContext.getUriInfo().getQueryParameters());
 
     if (isEmpty(accountId)) {
+      accountId = getRequestParamFromContext("routingId", containerRequestContext.getUriInfo().getPathParameters(),
+          containerRequestContext.getUriInfo().getQueryParameters());
+    }
+
+    if (isEmpty(accountId)) {
       // In case of graphql, accountId comes as null. For the new version of api keys, we can get the accountId
       accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
     }
@@ -403,6 +445,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected boolean externalFacingAPI() {
     return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
+  }
+
+  protected boolean isApiKeyAuthorizationAPI() {
+    return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
   }
 
   private String getRequestParamFromContext(
