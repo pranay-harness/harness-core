@@ -167,9 +167,9 @@ public class K8sPodInfoTasklet implements Tasklet {
             && nodeMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER).equals(CloudProvider.AZURE.name())) {
           // Insert subscriptionid, resourcegroup name too in metadata
           metaData.put(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID,
-              prunedInstanceData.getMetaData().get(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID));
+              nodeMetaData.getOrDefault(InstanceMetaDataConstants.AZURE_SUBSCRIPTION_ID, ""));
           metaData.put(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME,
-              prunedInstanceData.getMetaData().get(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME));
+              nodeMetaData.getOrDefault(InstanceMetaDataConstants.AZURE_RESOURCEGROUP_NAME, ""));
         }
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
