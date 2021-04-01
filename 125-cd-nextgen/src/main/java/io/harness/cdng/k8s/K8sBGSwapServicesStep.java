@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -35,7 +35,7 @@ import io.harness.steps.StepUtils;
 import com.google.inject.Inject;
 import java.util.function.Supplier;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDP)
 public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesStepParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();

@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -10,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 
+@OwnedBy(CDP)
 public interface K8sStepParameters extends StepParameters {
   ParameterField<String> getTimeout();
   ParameterField<Boolean> getSkipDryRun();

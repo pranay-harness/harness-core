@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDP)
 public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
