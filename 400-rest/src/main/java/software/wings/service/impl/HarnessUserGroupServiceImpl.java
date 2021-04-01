@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.beans.security.HarnessUserGroupType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
@@ -126,7 +127,8 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public HarnessUserGroup createHarnessUserGroup(
-      String name, String description, Set<String> memberIds, Set<String> accountIds, String groupType) {
+      String name, String description, Set<String> memberIds, Set<String> accountIds, HarnessUserGroup.GroupType groupType) {
+
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
                                             .name(name)
                                             .description(description)
