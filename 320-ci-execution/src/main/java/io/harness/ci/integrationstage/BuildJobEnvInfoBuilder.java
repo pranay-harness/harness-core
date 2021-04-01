@@ -6,7 +6,6 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParam
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
@@ -29,6 +28,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
@@ -46,7 +46,6 @@ import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
@@ -288,11 +287,10 @@ public class BuildJobEnvInfoBuilder {
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
         .secretVariables(getSecretVariables(integrationStage))
-        .containerImageDetails(
-            ContainerImageDetails.builder()
-                .imageDetails(getImageInfo(resolveStringParameter("containerImage", stepInfo.getStepType().getType(),
-                    identifier, stepInfo.getContainerImage(), true)))
-                .build())
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(
+                                       CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
+                                   .build())
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -322,13 +320,12 @@ public class BuildJobEnvInfoBuilder {
         .envVars(stepEnvVars)
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
-        .containerImageDetails(
-            ContainerImageDetails.builder()
-                .imageDetails(
-                    getImageInfo(resolveStringParameter("Image", "Run", identifier, runStepInfo.getImage(), true)))
-                .connectorIdentifier(
-                    resolveStringParameter("connectorRef", "Run", identifier, runStepInfo.getConnectorRef(), true))
-                .build())
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
+                                       "Image", "Run", identifier, runStepInfo.getImage(), true)))
+                                   .connectorIdentifier(resolveStringParameter(
+                                       "connectorRef", "Run", identifier, runStepInfo.getConnectorRef(), true))
+                                   .build())
         .containerResourceParams(getStepContainerResource(runStepInfo.getResources(), "Run", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.RUN)
@@ -358,7 +355,7 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(runTestsStepInfo.getImage()))
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
                                    .connectorIdentifier(runTestsStepInfo.getConnector())
                                    .build())
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
@@ -392,7 +389,7 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(resolveStringParameter(
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
                                        "Image", "Plugin", identifier, pluginStepInfo.getImage(), true)))
                                    .connectorIdentifier(resolveStringParameter(
                                        "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
@@ -540,24 +537,6 @@ public class BuildJobEnvInfoBuilder {
             ngVariable
             -> resolveStringParameterWithDefaultValue("variableValue", "stage", stageElementConfig.getIdentifier(),
                 ngVariable.getValue(), false, ngVariable.getDefaultValue())));
-  }
-
-  private ImageDetails getImageInfo(String image) {
-    String tag = "";
-    String name = image;
-
-    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
-      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
-      if (subTokens.length > 2) {
-        throw new InvalidRequestException("Image should not contain multiple tags");
-      }
-      if (subTokens.length == 2) {
-        name = subTokens[0];
-        tag = subTokens[1];
-      }
-    }
-
-    return ImageDetails.builder().name(name).tag(tag).build();
   }
 
   private Integer getContainerMemoryLimit(ContainerResource resource, String stepType, String stepId) {
