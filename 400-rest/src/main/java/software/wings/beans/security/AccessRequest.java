@@ -25,5 +25,5 @@ public class AccessRequest implements PersistentEntity, UuidAware, CreatedAtAwar
   @NotNull String harnessUserGroupId;
   private long accessStartAt;
   private long accessEndAt;
-  Boolean accessActive;
+  private boolean accessActive;
 }
