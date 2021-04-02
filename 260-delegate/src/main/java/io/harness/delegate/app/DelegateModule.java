@@ -196,6 +196,8 @@ import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
+import io.harness.terraform.TerraformClient;
+import io.harness.terraform.TerraformClientImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -863,6 +865,7 @@ public class DelegateModule extends AbstractModule {
     bind(K8InfoDataService.class).to(K8InfoDataServiceImpl.class);
     bind(TerraformBaseHelper.class).to(TerraformBaseHelperImpl.class);
     bind(DelegateFileManagerBase.class).to(DelegateFileManagerImpl.class);
+    bind(TerraformClient.class).to(TerraformClientImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
