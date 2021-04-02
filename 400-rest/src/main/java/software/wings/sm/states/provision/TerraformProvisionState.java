@@ -62,6 +62,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -95,7 +96,6 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
@@ -631,6 +631,8 @@ public abstract class TerraformProvisionState extends State {
             .encryptedTfPlan(element.getEncryptedTfPlan())
             .secretManagerConfig(secretManagerConfig)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .build();
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
   }
@@ -645,9 +647,11 @@ public abstract class TerraformProvisionState extends State {
   protected ExecutionResponse createAndRunTask(String activityId, ExecutionContextImpl executionContext,
       TerraformProvisionParameters parameters, String delegateTag) {
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String accountId = requireNonNull(executionContext.getApp()).getAccountId();
+
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .accountId(requireNonNull(executionContext.getApp()).getAccountId())
+            .accountId(accountId)
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, requireNonNull(executionContext.getApp()).getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
@@ -847,6 +851,8 @@ public abstract class TerraformProvisionState extends State {
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);

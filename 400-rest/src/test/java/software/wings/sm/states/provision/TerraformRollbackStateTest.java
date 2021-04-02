@@ -36,6 +36,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -190,18 +191,17 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   public void testExecuteInternal() {
     setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
     ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(
-        executionResponse, "sourceRepoBranch", true, 1, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 1, TerraformCommand.DESTROY);
 
     // no variables, no backend configs, no source repo branch
     setUp(null, false, WORKFLOW_EXECUTION_ID);
     executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(executionResponse, null, false, 2, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyResponse(executionResponse, null, false, 2, TerraformCommand.DESTROY);
 
     // Inheriting terraform execution from last successful terraform execution
     setUp("sourceRepoBranch", true, null);
     executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformProvisionParameters.TerraformCommand.APPLY);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformCommand.APPLY);
   }
 
   private void setUp(String sourceRepoBranch, boolean setVarsAndBackendConfigs, String workflowExecutionId) {
@@ -252,7 +252,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   }
 
   private void verifyResponse(ExecutionResponse executionResponse, String branch, boolean checkVarsAndBackendConfigs,
-      int i, TerraformProvisionParameters.TerraformCommand command) {
+      int i, TerraformCommand command) {
     verify(wingsPersistence, times(i)).createQuery(TerraformConfig.class);
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo(ACTIVITY_ID);
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
@@ -300,12 +300,11 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
                                                                                 .build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
     Map<String, ResponseData> response = new HashMap<>();
-    TerraformExecutionData terraformExecutionData =
-        TerraformExecutionData.builder()
-            .executionStatus(ExecutionStatus.SUCCESS)
-            .stateFileId("stateFileId")
-            .commandExecuted(TerraformProvisionParameters.TerraformCommand.APPLY)
-            .build();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .stateFileId("stateFileId")
+                                                        .commandExecuted(TerraformCommand.APPLY)
+                                                        .build();
     response.put("activityId", terraformExecutionData);
 
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
@@ -342,12 +341,11 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         TerraformInfrastructureProvisioner.builder().build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
     Map<String, ResponseData> response = new HashMap<>();
-    TerraformExecutionData terraformExecutionData =
-        TerraformExecutionData.builder()
-            .executionStatus(ExecutionStatus.SUCCESS)
-            .stateFileId("stateFileId")
-            .commandExecuted(TerraformProvisionParameters.TerraformCommand.DESTROY)
-            .build();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .stateFileId("stateFileId")
+                                                        .commandExecuted(TerraformCommand.DESTROY)
+                                                        .build();
     response.put("activityId", terraformExecutionData);
 
     Query<TerraformConfig> query = mock(Query.class);
