@@ -1,5 +1,7 @@
 package software.wings.service.impl.gcp;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +11,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
@@ -16,8 +21,9 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.gcp.GcpTaskType;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
-import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
+import io.harness.delegate.task.gcp.request.GcpTaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +43,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class GcpHelperServiceManagerTest extends WingsBaseTest {
   @Mock private GcpHelperService gcpHelperService;
   @Mock private DelegateService delegateService;
@@ -79,10 +87,11 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).containsExactly("foo");
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TaskData.DEFAULT_SYNC_CALL_TIMEOUT);
     assertThat(delegateTask.getData().getParameters()[0])
-        .isEqualTo(GcpValidationRequest.builder()
-                       .delegateSelectors(Collections.singleton("foo"))
-                       .requestType(RequestType.VALIDATE)
-                       .build());
+        .isEqualTo(
+            GcpTaskParameters.builder()
+                .gcpRequest(GcpValidationRequest.builder().delegateSelectors(Collections.singleton("foo")).build())
+                .gcpTaskType(GcpTaskType.VALIDATE)
+                .build());
   }
 
   @Test

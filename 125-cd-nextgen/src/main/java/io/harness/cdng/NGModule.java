@@ -1,8 +1,11 @@
 package io.harness.cdng;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.NGPipelineCommonsModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.WalkTreeModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
 import io.harness.cdng.artifact.resources.ecr.service.EcrResourceService;
@@ -13,6 +16,8 @@ import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
+import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
+import io.harness.cdng.k8s.resources.gcp.service.impl.GcpResourceServiceImpl;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
@@ -27,6 +32,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 
+@OwnedBy(CDP)
 public class NGModule extends AbstractModule {
   private static final AtomicReference<NGModule> instanceRef = new AtomicReference<>();
   private final OrchestrationModuleConfig config;
@@ -57,6 +63,7 @@ public class NGModule extends AbstractModule {
     bind(EcrResourceService.class).to(EcrResourceServiceImpl.class);
     bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
     bind(CdYamlSchemaService.class).to(CdYamlSchemaServiceImpl.class);
+    bind(GcpResourceService.class).to(GcpResourceServiceImpl.class);
 
     MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);

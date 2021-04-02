@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -35,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDP)
 public class InfrastructureStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock EnvironmentService environmentService;
@@ -75,7 +78,7 @@ public class InfrastructureStepTest extends CategoryTest {
                                             .build();
 
     InfraMapping expectedInfraMapping =
-        K8sGcpInfraMapping.builder().k8sConnector(connector).namespace(namespace).cluster(cluster).build();
+        K8sGcpInfraMapping.builder().gcpConnector(connector).namespace(namespace).cluster(cluster).build();
 
     InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(infrastructureSpec);
     assertThat(infraMapping).isEqualTo(expectedInfraMapping);

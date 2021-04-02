@@ -34,7 +34,7 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable {
   @Override
   public InfraMapping getInfraMapping() {
     return K8sGcpInfraMapping.builder()
-        .k8sConnector(connectorRef.getValue())
+        .gcpConnector(connectorRef.getValue())
         .namespace(namespace.getValue())
         .cluster(cluster.getValue())
         .build();
