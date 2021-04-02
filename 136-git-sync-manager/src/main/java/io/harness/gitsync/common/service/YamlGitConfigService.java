@@ -33,6 +33,7 @@ public interface YamlGitConfigService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 
   YamlGitConfigDTO get(String uuid, String accountId);
+  // todo(abhinav): change get function to provide accountId, orgId and projectId along with identifier
 
   Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 }
