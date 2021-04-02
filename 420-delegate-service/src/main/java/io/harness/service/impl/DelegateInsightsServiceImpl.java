@@ -1,7 +1,10 @@
 package io.harness.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
@@ -14,8 +17,6 @@ import software.wings.beans.DelegateInsightsBarDetails;
 import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
-import software.wings.beans.DelegatePerpetualTaskUsageInsights;
-import software.wings.beans.DelegatePerpetualTaskUsageInsightsEventType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
@@ -34,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(DEL)
 public class DelegateInsightsServiceImpl
     implements DelegateInsightsService, DelegateTaskStatusObserver, PerpetualTaskStateObserver {
   @Inject private HPersistence persistence;
@@ -41,15 +43,15 @@ public class DelegateInsightsServiceImpl
   @Inject private DelegateCache delegateCache;
 
   @Override
-  public void onTaskAssigned(String accountId, String taskId, String delegateId) {
+  public void onTaskAssigned(String accountId, String taskId, String delegateId, long taskTimeout) {
     if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
       String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
 
       DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, delegateGroupId, DelegateTaskUsageInsightsEventType.STARTED);
+          accountId, taskId, delegateId, delegateGroupId, 0, DelegateTaskUsageInsightsEventType.STARTED);
 
       DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, delegateGroupId, DelegateTaskUsageInsightsEventType.UNKNOWN);
+          accountId, taskId, delegateId, delegateGroupId, taskTimeout, DelegateTaskUsageInsightsEventType.UNKNOWN);
 
       persistence.save(delegateTaskUsageInsightsCreateEvent);
       persistence.save(delegateTaskUsageInsightsUnknownEvent);
@@ -78,21 +80,7 @@ public class DelegateInsightsServiceImpl
 
   @Override
   public void onPerpetualTaskAssigned(String accountId, String taskId, String delegateId) {
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
-      String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
-
-      DelegatePerpetualTaskUsageInsights perpetualTaskUsageInsights =
-          DelegatePerpetualTaskUsageInsights.builder()
-              .accountId(accountId)
-              .taskId(taskId)
-              .delegateId(delegateId)
-              .delegateGroupId(delegateGroupId)
-              .eventType(DelegatePerpetualTaskUsageInsightsEventType.ASSIGNED)
-              .timestamp(System.currentTimeMillis())
-              .build();
-
-      persistence.save(perpetualTaskUsageInsights);
-    }
+    // Do nothing for now
   }
 
   private String obtainDelegateGroupId(String accountId, String delegateId) {
@@ -106,12 +94,12 @@ public class DelegateInsightsServiceImpl
   }
 
   private DelegateTaskUsageInsights createDelegateTaskUsageInsightsEvent(String accountId, String taskId,
-      String delegateId, String delegateGroupId, DelegateTaskUsageInsightsEventType eventType) {
+      String delegateId, String delegateGroupId, long taskTimeout, DelegateTaskUsageInsightsEventType eventType) {
     return DelegateTaskUsageInsights.builder()
         .accountId(accountId)
         .taskId(taskId)
         .eventType(eventType)
-        .timestamp(System.currentTimeMillis())
+        .timestamp(System.currentTimeMillis() + taskTimeout)
         .delegateId(delegateId)
         .delegateGroupId(delegateGroupId)
         .build();

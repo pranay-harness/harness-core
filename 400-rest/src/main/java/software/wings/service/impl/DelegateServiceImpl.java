@@ -882,7 +882,7 @@ public class DelegateServiceImpl implements DelegateService {
           List<Delegate> groupDelegates = entry.getValue();
 
           String delegateType = groupDelegates.get(0).getDelegateType();
-          String groupName = groupDelegates.get(0).getDelegateName();
+          String groupName = obtainDelegateGroupName(accountId, entry.getKey(), groupDelegates.get(0));
 
           String groupHostName = "";
           if (KUBERNETES.equals(delegateType)) {
@@ -905,6 +905,11 @@ public class DelegateServiceImpl implements DelegateService {
               .build();
         })
         .collect(toList());
+  }
+
+  private String obtainDelegateGroupName(String accountId, String delegateGroupId, Delegate delegate) {
+    DelegateGroup delegateGroup = getDelegateGroup(accountId, delegateGroupId);
+    return delegateGroup != null ? delegateGroup.getName() : delegate.getDelegateName();
   }
 
   private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
@@ -3777,8 +3782,8 @@ public class DelegateServiceImpl implements DelegateService {
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
 
-      delegateTaskStatusObserverSubject.fireInform(
-          DelegateTaskStatusObxxxxxxxx:onTaskAssigned, delegateTask.getAccountId(), taskId, delegateId);
+      delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
+          delegateTask.getAccountId(), taskId, delegateId, task.getData().getTimeout());
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }
