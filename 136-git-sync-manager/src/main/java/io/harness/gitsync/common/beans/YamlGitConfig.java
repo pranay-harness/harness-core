@@ -76,7 +76,7 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
                  .name("accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index")
                  .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
                      YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.gitConnectorRef, YamlGitConfigKeys.repo,
-                     YamlGitConfigKeys.branch, YamlGitConfigKeys.name))
+                     YamlGitConfigKeys.branch))
                  .unique(true)
                  .build())
         .add(CompoundMongoIndex.builder()
