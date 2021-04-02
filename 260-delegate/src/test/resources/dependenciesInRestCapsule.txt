@@ -235,7 +235,7 @@ com.squareup.okhttp3:logging-interceptor:jar:3.14.3
 com.squareup.okhttp3:mockwebxxxxxxxxjar:3.9.0:test
 com.squareup.okhttp3:okhttp-urlconnection:jar:3.12.2
 com.squareup.okhttp3:okhttp:jar:3.6.0
-com.squareup.okio:okio:jar:1.11.0
+com.squareup.okio:okio:jar:1.13.0
 com.squareup.retrofit2:adapter-rxjava:jar:2.7.2
 com.squareup.retrofit2:converter-gson:jar:2.3.0
 com.squareup.retrofit2:converter-jackson:jar:2.2.0
