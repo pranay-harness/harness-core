@@ -1,18 +1,24 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.TaskType.GCP_TASK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
+import io.harness.delegate.task.gcp.GcpTaskType;
+import io.harness.delegate.task.gcp.request.GcpTaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest.GcpValidationRequestBuilder;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
+
+@OwnedBy(CDP)
 public class GcpConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
@@ -23,15 +29,18 @@ public class GcpConnectorValidator extends AbstractConnectorValidator {
     switch (gcpConnector.getGcpCredentialType()) {
       case MANUAL_CREDENTIALS:
         final GcpManualDetailsDTO gcpDetailsDTO = (GcpManualDetailsDTO) gcpConnector.getConfig();
-        return gcpValidationRequestBuilder.gcpManualDetailsDTO(gcpDetailsDTO)
-            .requestType(RequestType.VALIDATE)
-            .encryptionDetails(
-                super.getEncryptionDetail(gcpDetailsDTO, accountIdentifier, orgIdentifier, projectIdentifier))
+        GcpValidationRequest manualCredentialsRequest = gcpValidationRequestBuilder.gcpManualDetailsDTO(gcpDetailsDTO)
+                                                            .encryptionDetails(super.getEncryptionDetail(gcpDetailsDTO,
+                                                                accountIdentifier, orgIdentifier, projectIdentifier))
+                                                            .build();
+        return GcpTaskParameters.builder()
+            .gcpRequest(manualCredentialsRequest)
+            .gcpTaskType(GcpTaskType.VALIDATE)
             .build();
       case INHERIT_FROM_DELEGATE:
-        return gcpValidationRequestBuilder.requestType(RequestType.VALIDATE)
-            .delegateSelectors(gcpConnectorDTO.getDelegateSelectors())
-            .build();
+        GcpValidationRequest inheritDelegateRequest =
+            gcpValidationRequestBuilder.delegateSelectors(gcpConnectorDTO.getDelegateSelectors()).build();
+        return GcpTaskParameters.builder().gcpRequest(inheritDelegateRequest).gcpTaskType(GcpTaskType.VALIDATE).build();
       default:
         throw new InvalidRequestException("Invalid credential type: " + gcpConnector.getGcpCredentialType());
     }

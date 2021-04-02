@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 
+@OwnedBy(CDP)
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-@OwnedBy(CDP)
-public class GcpValidationRequest extends GcpRequest {}
+public class GcpListClustersRequest extends GcpRequest {}

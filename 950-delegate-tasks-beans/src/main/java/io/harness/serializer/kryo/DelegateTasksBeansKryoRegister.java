@@ -248,8 +248,11 @@ import io.harness.delegate.task.ci.CIBuildPushParameters;
 import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
-import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.GcpTaskType;
+import io.harness.delegate.task.gcp.request.GcpListClustersRequest;
+import io.harness.delegate.task.gcp.request.GcpTaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
+import io.harness.delegate.task.gcp.response.GcpClusterListTaskResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -263,6 +266,7 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.GcpK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
@@ -473,7 +477,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(StepExecutionStatus.class, 19333);
     kryo.register(GitConnectionNGCapability.class, 19334);
     kryo.register(GitInstallationCapability.class, 19550);
-    kryo.register(GcpRequest.RequestType.class, 19335);
     kryo.register(GcpValidationRequest.class, 19336);
     kryo.register(GcpValidationTaskResponse.class, 19337);
     kryo.register(SSHConfigValidationTaskResponse.class, 19338);
@@ -691,5 +694,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);
+    kryo.register(GcpK8sInfraDelegateConfig.class, 543278);
+    kryo.register(GcpListClustersRequest.class, 543279);
+    kryo.register(GcpTaskParameters.class, 543280);
+    kryo.register(GcpTaskType.class, 543281);
+    kryo.register(GcpClusterListTaskResponse.class, 543282);
   }
 }
