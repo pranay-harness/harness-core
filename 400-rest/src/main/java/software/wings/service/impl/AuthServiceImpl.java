@@ -922,7 +922,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void addUserPrincipal(String userId, String email, String accountId, JWTCreator.Builder jwtBuilder) {
-    UserPrincipal userPrincipal = new UserPrincipal(userId, email, accountId);
+    UserPrincipal userPrincipal = new UserPrincipal(email, userId, accountId);
     Map<String, String> userClaims = userPrincipal.getJWTClaims();
     userClaims.forEach(jwtBuilder::withClaim);
   }

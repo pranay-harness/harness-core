@@ -14,6 +14,7 @@ import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.repositories.ng.userprofile.spring.SourceCodeManagerRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
     Optional<String> userId = Optional.empty();
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+      userId = Optional.of(((UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal()).getUserId());
     }
     return userId;
   }

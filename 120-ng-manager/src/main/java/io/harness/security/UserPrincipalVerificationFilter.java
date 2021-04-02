@@ -47,7 +47,7 @@ public class UserPrincipalVerificationFilter implements ContainerRequestFilter {
         MultivaluedMap<String, String> queryParameters = containerRequestContext.getUriInfo().getQueryParameters();
         String accountIdentifier = queryParameters.getFirst(ACCOUNT_KEY);
         if (isNotBlank(userPrincipal.getAccountId())
-            && !ngUserService.isUserInAccount(userPrincipal.getAccountId(), userPrincipal.getName())) {
+            && !ngUserService.isUserInAccount(userPrincipal.getAccountId(), userPrincipal.getUserId())) {
           throw new InvalidRequestException(
               String.format("User does not belong to account %s", userPrincipal.getAccountId()), USER_DOES_NOT_EXIST,
               WingsException.USER);
@@ -55,7 +55,7 @@ public class UserPrincipalVerificationFilter implements ContainerRequestFilter {
         // for environments without gateway, we don't change the accountId in token while switching accounts so
         // validating accountIdentifier == accountId is wrong
         if (isNotBlank(accountIdentifier)
-            && !ngUserService.isUserInAccount(accountIdentifier, userPrincipal.getName())) {
+            && !ngUserService.isUserInAccount(accountIdentifier, userPrincipal.getUserId())) {
           throw new InvalidRequestException(String.format("User does not belong to account %s", accountIdentifier),
               USER_DOES_NOT_EXIST, WingsException.USER);
         }

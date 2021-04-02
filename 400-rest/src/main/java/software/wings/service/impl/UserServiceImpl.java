@@ -2614,7 +2614,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addUserPrincipal(Map<String, String> claims, User user) {
-    UserPrincipal userPrincipal = new UserPrincipal(user.getUuid(), user.getEmail(), user.getDefaultAccountId());
+    UserPrincipal userPrincipal = new UserPrincipal(user.getEmail(), user.getUuid(), user.getDefaultAccountId());
     Map<String, String> userClaims = userPrincipal.getJWTClaims();
     if (userClaims != null) {
       claims.putAll(userClaims);

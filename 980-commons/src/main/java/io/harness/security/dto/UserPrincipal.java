@@ -2,9 +2,9 @@ package io.harness.security.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.SecurityContextBuilder.ACCOUNT_ID;
-import static io.harness.security.SecurityContextBuilder.EMAIL;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_NAME;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_TYPE;
+import static io.harness.security.SecurityContextBuilder.USER_ID;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -23,13 +23,13 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("USER")
 public class UserPrincipal extends Principal {
-  String email;
+  String userId;
   String accountId;
 
-  public UserPrincipal(String name, String email, String accountId) {
+  public UserPrincipal(String name, String userId, String accountId) {
     this.type = USER;
     this.name = name;
-    this.email = email;
+    this.userId = userId;
     this.accountId = accountId;
   }
 
@@ -38,14 +38,14 @@ public class UserPrincipal extends Principal {
     Map<String, String> claims = new HashMap<>();
     claims.put(PRINCIPAL_TYPE, getType().toString());
     claims.put(PRINCIPAL_NAME, getName());
-    claims.put(EMAIL, getEmail());
+    claims.put(USER_ID, getUserId());
     claims.put(ACCOUNT_ID, getAccountId());
     return claims;
   }
 
   public static UserPrincipal getPrincipal(Map<String, Claim> claims) {
     return new UserPrincipal(claims.get(PRINCIPAL_NAME) == null ? null : claims.get(PRINCIPAL_NAME).asString(),
-        claims.get(EMAIL) == null ? null : claims.get(EMAIL).asString(),
+        claims.get(USER_ID) == null ? null : claims.get(USER_ID).asString(),
         claims.get(ACCOUNT_ID) == null ? null : claims.get(ACCOUNT_ID).asString());
   }
 }

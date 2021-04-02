@@ -40,8 +40,8 @@ import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.repositories.ng.userprofile.spring.SourceCodeManagerRepository;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -67,9 +67,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     userIdentifier = generateUuid();
     sourceCodeManagerRepository = mock(SourceCodeManagerRepository.class);
     sourceCodeManagerService = new SourceCodeManagerServiceImpl(sourceCodeManagerRepository, scmMapBinder);
-    Principal principal = mock(Principal.class);
+    UserPrincipal principal = mock(UserPrincipal.class);
     when(principal.getType()).thenReturn(PrincipalType.USER);
-    when(principal.getName()).thenReturn(userIdentifier);
+    when(principal.getUserId()).thenReturn(userIdentifier);
     SourcePrincipalContextBuilder.setSourcePrincipal(principal);
     name = "some-name";
     sshKeyRef = "ssh-ref";

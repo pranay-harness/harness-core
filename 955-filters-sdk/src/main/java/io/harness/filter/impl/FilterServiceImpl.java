@@ -117,7 +117,7 @@ public class FilterServiceImpl implements FilterService {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
-      return userPrincipal.getName();
+      return userPrincipal.getUserId();
     }
     return null;
   }

@@ -33,6 +33,7 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -105,7 +106,7 @@ public class OrganizationServiceImpl implements OrganizationService {
   private void createUserProjectMap(Organization organization) {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      String userId = ((UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal()).getUserId();
       Role role = Role.builder()
                       .accountIdentifier(organization.getAccountIdentifier())
                       .orgIdentifier(organization.getIdentifier())

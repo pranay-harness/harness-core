@@ -51,7 +51,7 @@ public class FilterMapper {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
-      EmbeddedUser user = EmbeddedUser.builder().uuid(userPrincipal.getName()).build();
+      EmbeddedUser user = EmbeddedUser.builder().uuid(userPrincipal.getUserId()).build();
       filterBuilder.createdBy(user);
     }
   }

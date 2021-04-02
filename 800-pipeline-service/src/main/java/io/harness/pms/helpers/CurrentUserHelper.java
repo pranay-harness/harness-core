@@ -1,8 +1,10 @@
 package io.harness.pms.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.PipelineServiceConfiguration;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -17,6 +19,7 @@ import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(PIPELINE)
 @Singleton
 public class CurrentUserHelper {
   private static final EmbeddedUser DEFAULT_EMBEDDED_USER =
@@ -35,7 +38,7 @@ public class CurrentUserHelper {
     }
 
     UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
-    String userId = userPrincipal.getName();
+    String userId = userPrincipal.getUserId();
     List<UserInfo> users = RestClientUtils.getResponse(userClient.getUsersByIds(Collections.singletonList(userId)));
     if (EmptyPredicate.isEmpty(users)) {
       throw new InvalidRequestException(String.format("Invalid user: %s", userId));

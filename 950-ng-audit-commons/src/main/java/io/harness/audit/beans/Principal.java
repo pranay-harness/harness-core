@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.security.dto.UserPrincipal;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -25,7 +24,7 @@ public class Principal {
     }
     switch (principal.getType()) {
       case USER:
-        return Principal.builder().type(PrincipalType.USER).identifier(((UserPrincipal) principal).getEmail()).build();
+        return Principal.builder().type(PrincipalType.USER).identifier(principal.getName()).build();
       case API_KEY:
         return Principal.builder().type(PrincipalType.API_KEY).identifier(principal.getName()).build();
       case SERVICE:
