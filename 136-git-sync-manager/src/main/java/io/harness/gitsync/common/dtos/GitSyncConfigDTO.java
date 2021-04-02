@@ -22,13 +22,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 @ApiModel("GitSyncConfig")
 public class GitSyncConfigDTO {
-  private String identifier;
+  @Trimmed @NotEmpty private String identifier;
   @Trimmed private String projectIdentifier;
   @Trimmed private String orgIdentifier;
   @Trimmed @NotEmpty private String gitConnectorRef;
   @Trimmed @NotEmpty private String repo;
   @Trimmed @NotEmpty private String branch;
-  private String name;
+  @Trimmed @NotEmpty private String name;
   @ApiModelProperty(allowableValues = "Github, Gitlab, Bitbucket") @NotNull private ConnectorType gitConnectorType;
   private List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOs;
 }
