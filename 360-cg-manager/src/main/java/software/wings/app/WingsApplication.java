@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -21,6 +22,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
@@ -66,6 +68,7 @@ import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
+import io.harness.insights.DelegateInsightsSummaryJob;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -296,6 +299,7 @@ import ru.vyarus.guice.validator.ValidationModule;
  * @author Rishi
  */
 @Slf4j
+@OwnedBy(PL)
 public class WingsApplication extends Application<MainConfiguration> {
   private static final SecureRandom random = new SecureRandom();
 
@@ -875,6 +879,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
                                                 injector.getInstance(DelegateSyncServiceImpl.class)),
         0L, 2L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while calculating delegate insights summaries",
+                                                injector.getInstance(DelegateInsightsSummaryJob.class)),
+        0L, 10L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {

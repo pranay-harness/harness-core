@@ -1,10 +1,14 @@
-package io.harness.testing;
+package io.harness.stresstesting.execution;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
+import io.harness.testing.DelegateTaskStressTestStage;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateTaskStressTestThread extends Thread {
   DelegateServiceBlockingStub delegateServiceBlockingStub;
   DelegateTaskStressTestStage stage;
@@ -20,13 +24,12 @@ public class DelegateTaskStressTestThread extends Thread {
   @Override
   public void run() {
     try {
-      Thread.sleep(stage.getOffset() * 1000);
       int taskRequestCount = stage.getTaskRequestCount();
 
       for (int i = 0; i < stage.getIterations(); i++) {
         int item = (int) (Math.random() * taskRequestCount);
-        log.info("Firing iteration " + i + "on stage " + stageId);
-        delegateServiceBlockingStub.submitTask(stage.getTaskRequest(item));
+        String taskId = delegateServiceBlockingStub.submitTask(stage.getTaskRequest(item)).getTaskId().getId();
+        log.info("Firing iteration " + i + "on stage " + stageId + "task id " + taskId);
         Thread.sleep(1000 / stage.getQps());
       }
     } catch (Exception e) {

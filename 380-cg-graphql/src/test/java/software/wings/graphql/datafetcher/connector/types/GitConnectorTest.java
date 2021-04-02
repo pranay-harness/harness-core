@@ -14,6 +14,8 @@ import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGi
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
@@ -23,10 +25,12 @@ import io.harness.utils.RequestField;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -42,6 +46,7 @@ public class GitConnectorTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingsService settingsService;
   @Mock private ConnectorsController connectorsController;
+  @Mock private UsageScopeController usageScopeController;
 
   @InjectMocks private GitConnector gitConnector = new GitConnector();
 
@@ -71,12 +76,14 @@ public class GitConnectorTest {
                                                              .commitMessage(RequestField.ofNullable(MESSAGE))
                                                              .build()))
             .sshSettingId(RequestField.ofNullable(SSH))
+            .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
             .passwordSecretId(RequestField.ofNull())
             .build();
 
     SettingAttribute settingAttribute = gitConnector.getSettingAttribute(
         QLConnectorInput.builder().gitConnector(qlGitConnectorInput).build(), ACCOUNT_ID);
 
+    verify(usageScopeController, times(1)).populateUsageRestrictions(any(), any());
     assertThat(((GitConfig) settingAttribute.getValue()).getSshSettingId()).isEqualTo(SSH);
   }
 

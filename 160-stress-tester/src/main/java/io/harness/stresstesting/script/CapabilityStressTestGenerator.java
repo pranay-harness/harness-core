@@ -1,5 +1,7 @@
-package io.harness.testing;
+package io.harness.stresstesting.script;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.Capability;
 import io.harness.delegate.SubmitTaskRequest;
@@ -7,17 +9,24 @@ import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
+import io.harness.shell.ScriptType;
+import io.harness.testing.DelegateTaskStressTest;
+import io.harness.testing.DelegateTaskStressTestStage;
+
+import software.wings.beans.delegation.ShellScriptParameters;
 
 import com.google.protobuf.ByteString;
 
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityStressTestGenerator extends StressTestGenerator {
+  // The default account id we use is kmpySmUISimoRrJL6NL73w
   private final String ACCOUNT_ID = "fill_me_in";
-  private ShellScriptTaskParametersNG shellScriptTaskParameters = ShellScriptTaskParametersNG.builder()
-                                                                      .executeOnDelegate(true)
-                                                                      .script("echo \"hello world!\"; sleep 10")
-                                                                      .accountId(ACCOUNT_ID)
-                                                                      .build();
+  private ShellScriptParameters shellScriptTaskParameters = ShellScriptParameters.builder()
+                                                                .executeOnDelegate(true)
+                                                                .scriptType(ScriptType.BASH)
+                                                                .script("echo \"hello world!\"; sleep 10")
+                                                                .accountId(ACCOUNT_ID)
+                                                                .build();
 
   // Construct
   // 1. Tasks that were executed before - has delegates to run these tasks - 1000 at 40 qps

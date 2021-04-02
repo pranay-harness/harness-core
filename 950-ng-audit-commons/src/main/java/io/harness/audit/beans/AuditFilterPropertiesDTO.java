@@ -8,8 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
-import io.harness.ng.core.Resource;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -34,8 +32,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
-  List<ResourceScope> scopes;
-  List<Resource> resources;
+  List<ResourceScopeDTO> scopes;
+  List<ResourceDTO> resources;
 
   List<ModuleType> modules;
   List<Action> actions;

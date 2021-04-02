@@ -2,7 +2,9 @@ package io.harness.beans.serializer;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
@@ -18,6 +20,7 @@ import java.util.function.Supplier;
 
 public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<PluginCompatibleStep> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
+  @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   @Override
   public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
@@ -37,12 +40,14 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
       throw new CIStageExecutionException("callbackId can not be null");
     }
 
-    PluginStep pluginStep = PluginStep.newBuilder()
-                                .setContainerPort(port)
-                                .setImage(RunTimeInputHandler.resolveStringParameter("Image", "Plugin",
-                                    step.getIdentifier(), pluginCompatibleStep.getContainerImage(), true))
-                                .setContext(stepContext)
-                                .build();
+    PluginStep pluginStep =
+        PluginStep.newBuilder()
+            .setContainerPort(port)
+            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig))
+            .addAllEntrypoint(
+                CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
+            .setContext(stepContext)
+            .build();
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
@@ -74,8 +79,9 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
     PluginStep pluginStep =
         PluginStep.newBuilder()
             .setContainerPort(port)
-            .setImage(RunTimeInputHandler.resolveStringParameter("Image", "Plugin",
-                pluginCompatibleStep.getIdentifier(), pluginCompatibleStep.getContainerImage(), true))
+            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig))
+            .addAllEntrypoint(
+                CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
             .build();
 
