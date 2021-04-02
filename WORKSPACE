@@ -1462,7 +1462,7 @@ maven_install(
         "com.segment.backo:backo:1.0.0",
         "com.smoketurner:dropwizard-swagger:1.3.17-1",
         "com.splunk:splunk:1.6.3.0",
-        "com.squareup.okhttp3:logging-interceptor:3.9.1",
+        "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
         "com.squareup.okhttp3:okhttp:3.9.0",
         "com.squareup.okio:okio:1.13.0",
@@ -2054,7 +2054,6 @@ maven_install(
 maven_install(
     name = "delegate",
     artifacts = [
-        "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
         "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
