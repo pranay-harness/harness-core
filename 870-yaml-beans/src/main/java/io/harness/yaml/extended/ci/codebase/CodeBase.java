@@ -1,7 +1,9 @@
 package io.harness.yaml.extended.ci.codebase;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
@@ -16,6 +18,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("io.harness.yaml.extended.ci.CodeBase")
+@OwnedBy(CI)
 public class CodeBase {
   @NotNull String connectorRef;
   String repoName;
