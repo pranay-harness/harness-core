@@ -289,9 +289,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   @Override
   public YamlGitConfigDTO get(String uuid, String accountId) {
-    final Optional<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.findByIdentifierAndAccountId(uuid, accountId);
+    final Optional<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.findByUuidAndAccountId(uuid, accountId);
     return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
-        .orElseThrow(() -> new InvalidRequestException("Incorrect id for git sync config"));
+        .orElseThrow(() -> new InvalidRequestException("Incorrect uuid for git sync config"));
   }
 
   @Override
