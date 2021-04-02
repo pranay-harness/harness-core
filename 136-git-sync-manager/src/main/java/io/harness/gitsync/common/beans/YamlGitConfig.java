@@ -79,18 +79,18 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
                      YamlGitConfigKeys.branch))
                  .unique(true)
                  .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_identifier_unique_Index")
-                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
-                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.identifier))
-                 .unique(true)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_name_unique_Index")
-                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
-                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.name))
-                 .unique(true)
-                 .build())
+        //        .add(CompoundMongoIndex.builder()
+        //                 .name("accountId_orgId_projectId_identifier_unique_Index")
+        //                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
+        //                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.identifier))
+        //                 .unique(true)
+        //                 .build())
+        //        .add(CompoundMongoIndex.builder()
+        //                 .name("accountId_orgId_projectId_name_unique_Index")
+        //                 .fields(Arrays.asList(YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier,
+        //                     YamlGitConfigKeys.projectIdentifier, YamlGitConfigKeys.name))
+        //                 .unique(true)
+        //                 .build())
         .build();
   }
 }
