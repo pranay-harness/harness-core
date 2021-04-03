@@ -59,6 +59,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>949-git-sync-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>954-connector-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

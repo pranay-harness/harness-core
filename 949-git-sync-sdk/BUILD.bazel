@@ -4,9 +4,11 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//950-events-api:module",
         "//952-scm-java-client:module",
         "//953-git-sync-commons:module",
@@ -45,56 +47,26 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
     ],
 )
 
-#java_library(
-#    name = "test_deps",
-#    exports = [
-#        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
-#        "//960-persistence:supporter-test",
-#        "//990-commons-test:module",
-#        "@maven//:com_fasterxml_jackson_core_jackson_databind",
-#        "@maven//:com_squareup_retrofit2_retrofit",
-#        "@maven//:junit_junit",
-#        "@maven//:org_assertj_assertj_core",
-#        "@maven//:org_mockito_mockito_core",
-#        "@maven//:org_mongodb_mongo_java_driver",
-#        "@maven//:org_slf4j_slf4j_api",
-#    ],
-#)
-#
-#java_library(
-#    name = "tests",testonly=True,
-#    srcs = glob(["src/test/**/*.java"]),
-#    visibility = ["//visibility:public"],
-#    deps = [
-#        "module",
-#        "test_deps",
-#        "//:lombok",
-#    ],
-#)
-
 java_binary(
     name = "git_test",
-    srcs = glob(["src/test/**/*.java"]),
+    testonly = True,
     data = ["//:resource"],
     main_class = "io.harness.GitSyncTestApplication",
     resources = [],
     visibility = ["//visibility:private"],
     runtime_deps = [
+        ":tests",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        "maven_deps",
-        "module",
-        "//:lombok",
     ],
 )
 

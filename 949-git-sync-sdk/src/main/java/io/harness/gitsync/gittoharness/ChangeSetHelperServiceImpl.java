@@ -1,9 +1,9 @@
-package io.harness.gitsync;
+package io.harness.gitsync.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.gittoharness.ChangeSetHelperService;
+import io.harness.gitsync.ChangeSet;
 
 import com.google.inject.Singleton;
 
