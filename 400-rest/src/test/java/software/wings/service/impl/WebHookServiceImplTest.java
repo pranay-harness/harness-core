@@ -14,6 +14,7 @@ import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -1065,5 +1066,28 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError()).isEqualTo("Service Name [" + SERVICE_NAME + 2 + "] does not exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenUserProvidesWrongArtifactSource() {
+    WebHookServiceImpl webhookServiceImpl = (WebHookServiceImpl) webHookService;
+    WebHookRequest webHookRequest = WebHookRequest.builder()
+                                        .application(APP_ID)
+                                        .artifacts(Collections.singletonList(of("service", SERVICE_NAME,
+                                            "artifactSourceName", ARTIFACT_SOURCE_NAME, "versionNumber", "1.0")))
+                                        .build();
+
+    when(triggerService.getTriggerByWebhookToken("TOKEN")).thenReturn(Trigger.builder().appId(APP_ID).build());
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
+
+    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(400);
+    assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError()).isEqualTo("Artifact Source Name [ARTIFACT_SOURCE_NAME] does not exist");
   }
 }

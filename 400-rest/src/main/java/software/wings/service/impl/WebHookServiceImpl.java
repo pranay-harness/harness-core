@@ -27,6 +27,7 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
@@ -44,6 +45,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
@@ -83,6 +85,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject protected FeatureFlagService featureFlagService;
 
   private String getBaseUrlUI() {
@@ -328,6 +331,13 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
+          if (artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName) == null) {
+            return prepareResponse(WebHookResponse.builder()
+                                       .error("Artifact Source Name [" + artifactStreamName + "] does not exist")
+                                       .build(),
+                Response.Status.BAD_REQUEST);
+          }
+
           if (isNotEmpty(parameterMap)) {
             serviceArtifactMapping.put(service.getUuid(),
                 ArtifactSummary.builder()
