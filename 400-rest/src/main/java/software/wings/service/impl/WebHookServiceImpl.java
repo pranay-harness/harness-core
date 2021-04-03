@@ -27,7 +27,6 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
