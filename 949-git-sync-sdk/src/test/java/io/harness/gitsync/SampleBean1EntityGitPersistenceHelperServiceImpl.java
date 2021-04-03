@@ -1,6 +1,9 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean1;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
@@ -10,6 +13,7 @@ import com.google.inject.Singleton;
 import java.util.function.Supplier;
 
 @Singleton
+@OwnedBy(DX)
 public class SampleBean1EntityGitPersistenceHelperServiceImpl
     implements EntityGitPersistenceHelperService<SampleBean1, SampleBean1> {
   @Override

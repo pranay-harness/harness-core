@@ -3,18 +3,31 @@ package io.harness.ng;
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.EntityType;
+import io.harness.Microservice;
+import io.harness.SCMGrpcClientModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.entities.Connector;
+import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
@@ -52,7 +65,6 @@ import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
-import io.harness.scm.SCMGrpcClientModule;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -99,13 +111,17 @@ import java.lang.annotation.Annotation;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -117,6 +133,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
@@ -181,10 +198,23 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
-    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
 
-    modules.add(GitSyncGrpcModule.getInstance());
+    if (appConfig.getShouldDeployWithGitSync()) {
+      modules.add(GitSyncGrpcModule.getInstance());
+      GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
+      modules.add(new AbstractGitSyncSdkModule() {
+        @Override
+        public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+          return gitSyncSdkConfiguration;
+        }
+      });
+    } else {
+      modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
+    }
     Injector injector = Guice.createInjector(modules);
+    if (appConfig.getShouldDeployWithGitSync()) {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
@@ -210,6 +240,27 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
+    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+    Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(ConnectorDTO.class)
+                                          .entityClass(Connector.class)
+                                          .entityHelperClass(ConnectorGitSyncHelper.class)
+                                          .build());
+    return GitSyncSdkConfiguration.builder()
+        .gitSyncSortOrder(sortOrder)
+        .grpcClientConfig(config.getGrpcClientConfig())
+        .grpcServerConfig(config.getGrpcServerConfig())
+        .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
+        .microservice(Microservice.CORE)
+        .scmConnectionConfig(config.getScmConnectionConfig())
+        .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
+        .serviceHeader(NG_MANAGER)
+        .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+        .build();
   }
 
   private void registerRequestContextFilter(Environment environment) {
