@@ -146,9 +146,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public List<NGTriggerEntity> findTriggersForCustomWehbook(
-      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled) {
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
     Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
-                                                  triggerWebhookEvent, decryptedAuthToken, EMPTY, isDeleted, enabled),
+                                                  triggerWebhookEvent, EMPTY, isDeleted, enabled),
         Pageable.unpaged());
 
     return triggersPage.get().collect(Collectors.toList());
