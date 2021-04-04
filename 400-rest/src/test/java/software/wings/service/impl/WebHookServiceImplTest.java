@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -34,8 +35,10 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -52,6 +55,7 @@ import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
@@ -91,6 +95,7 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private AppService appService;
@@ -176,6 +181,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
+    when(artifactStreamService.getArtifactStreamByName(anyString(), anyString(), anyString()))
+        .thenReturn(mock(ArtifactStream.class));
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
@@ -974,6 +981,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     parameterMap.put("package", "npm-app1");
     List<Map<String, Object>> artifacts = Collections.singletonList(
         of("service", SERVICE_NAME, "buildNumber", BUILD_NO, "artifactVariables", parameterMap));
+    when(artifactStreamService.getArtifactStreamByName(anyString(), anyString(), anyString()))
+        .thenReturn(mock(ArtifactStream.class));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
