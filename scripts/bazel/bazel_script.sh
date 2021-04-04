@@ -24,10 +24,6 @@ if [ "${STEP}" == "dockerization" ]; then
   GCP=""
 fi
 
-#JAVA_AGENT=/root/.m2/repository/software/wings/java-agent-trampoline/0.0.1-SNAPSHOT/java-agent-trampoline-0.0.1-SNAPSHOT.jar
-#CONFIG_FILE=/home/jenkins/workspace/unit-test-ignore/config.ini
-#HARNESS_ARGS=-javaagent:${JAVA_AGENT}=${CONFIG_FILE}
-
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
   bazel ${bazelrc} test --cache_test_results=no --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
