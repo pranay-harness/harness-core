@@ -27,7 +27,7 @@ fi
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
 if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
-  CACHE_TEST_RESULTS=yes
+  export CACHE_TEST_RESULTS=yes
 fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
