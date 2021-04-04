@@ -17,4 +17,6 @@ public interface HarnessToGitHelperService {
   void postPushOperation(PushInfo pushInfo);
 
   Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo);
+
+  void onBranchCreationReadFilesAndProcessThem(String accountId, String gitSyncConfigId, String branch);
 }
