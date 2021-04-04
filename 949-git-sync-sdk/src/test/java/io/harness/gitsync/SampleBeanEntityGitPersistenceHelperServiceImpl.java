@@ -17,6 +17,11 @@ import java.util.function.Supplier;
 public class SampleBeanEntityGitPersistenceHelperServiceImpl
     implements EntityGitPersistenceHelperService<SampleBean, SampleBean> {
   @Override
+  public Supplier<SampleBean> getYamlFromEntity(SampleBean entity) {
+    return null;
+  }
+
+  @Override
   public EntityType getEntityType() {
     return EntityType.CONNECTORS;
   }

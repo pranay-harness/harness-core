@@ -22,6 +22,11 @@ public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService
   private final ConnectorMapper connectorMapper;
 
   @Override
+  public Supplier<ConnectorDTO> getYamlFromEntity(Connector entity) {
+    return () -> ConnectorDTO.builder().connectorInfo(connectorMapper.getConnectorInfoDTO(entity)).build();
+  }
+
+  @Override
   public EntityType getEntityType() {
     return EntityType.CONNECTORS;
   }

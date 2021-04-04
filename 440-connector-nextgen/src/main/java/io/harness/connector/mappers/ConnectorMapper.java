@@ -2,6 +2,8 @@ package io.harness.connector.mappers;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
@@ -34,6 +36,7 @@ import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(HarnessTeam.DX)
 public class ConnectorMapper {
   KubernetesDTOToEntity kubernetesDTOToEntity;
   KubernetesEntityToDTO kubernetesEntityToDTO;
@@ -82,19 +85,7 @@ public class ConnectorMapper {
   }
 
   public ConnectorResponseDTO writeDTO(Connector connector) {
-    ConnectorConfigDTO connectorConfigDTO = createConnectorConfigDTO(connector);
-    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
-                                         .name(connector.getName())
-                                         .identifier(connector.getIdentifier())
-                                         .description(connector.getDescription())
-                                         .orgIdentifier(connector.getOrgIdentifier())
-                                         .projectIdentifier(connector.getProjectIdentifier())
-                                         .connectorConfig(connectorConfigDTO)
-                                         .connectorType(connector.getType())
-                                         .tags(TagMapper.convertToMap(connector.getTags()))
-                                         .connectorType(connector.getType())
-
-                                         .build();
+    ConnectorInfoDTO connectorInfo = getConnectorInfoDTO(connector);
     Long timeWhenConnectorIsLastUpdated =
         getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
     return ConnectorResponseDTO.builder()
@@ -104,6 +95,21 @@ public class ConnectorMapper {
         .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
+        .build();
+  }
+
+  public ConnectorInfoDTO getConnectorInfoDTO(Connector connector) {
+    ConnectorConfigDTO connectorConfigDTO = createConnectorConfigDTO(connector);
+    return ConnectorInfoDTO.builder()
+        .name(connector.getName())
+        .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
+        .connectorConfig(connectorConfigDTO)
+        .connectorType(connector.getType())
+        .tags(TagMapper.convertToMap(connector.getTags()))
+        .connectorType(connector.getType())
         .build();
   }
 
