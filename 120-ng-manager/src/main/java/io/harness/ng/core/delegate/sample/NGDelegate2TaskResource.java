@@ -2,6 +2,9 @@ package io.harness.ng.core.delegate.sample;
 
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -28,6 +31,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGDelegate2TaskResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
 
