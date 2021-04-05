@@ -1,8 +1,12 @@
 package io.harness.cvng.beans.appd;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
+@OwnedBy(CV)
 public abstract class AppDynamicsDataCollectionRequest extends DataCollectionRequest<AppDynamicsConnectorDTO> {
   @Override
   public Map<String, String> collectionHeaders() {
@@ -19,7 +24,9 @@ public abstract class AppDynamicsDataCollectionRequest extends DataCollectionReq
     headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(getConnectorConfigDTO()));
     return headers;
   }
+
   @Override
+  @JsonIgnore
   public String getBaseUrl() {
     return getConnectorConfigDTO().getControllerUrl();
   }

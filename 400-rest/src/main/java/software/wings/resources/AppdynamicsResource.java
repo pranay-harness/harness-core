@@ -1,9 +1,14 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
@@ -46,6 +51,8 @@ import retrofit2.http.Body;
 @Path("/appdynamics")
 @Produces("application/json")
 @Scope(SETTING)
+@OwnedBy(CV)
+@TargetModule(HarnessModule._360_CG_MANGER)
 public class AppdynamicsResource {
   @Inject private AppdynamicsService appdynamicsService;
 

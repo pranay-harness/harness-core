@@ -1,6 +1,9 @@
 package io.harness.perpetualtask.datacollection;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -8,8 +11,6 @@ import io.harness.cvng.beans.cvnglog.TraceableType;
 import io.harness.datacollection.entity.CallDetails;
 
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
 import com.hazelcast.util.Preconditions;
 import java.time.Instant;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CV)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   private String accountId;
@@ -38,27 +40,14 @@ public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   @Override
   public void accept(CallDetails callDetails) {
     Preconditions.checkNotNull(callDetails.getRequest(), "Call Details request is null.");
-    final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().stateExecutionId(requestUuid).build();
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("url")
-                                     .type(ThirdPartyApiCallLog.FieldType.URL)
-                                     .value(callDetails.getRequest().request().url().toString())
-                                     .build());
-    if (callDetails.getResponse() != null) {
-      apiCallLog.addFieldToResponse(
-          callDetails.getResponse().code(), callDetails.getResponse().body(), ThirdPartyApiCallLog.FieldType.JSON);
-    }
-
-    delegateLogService.save(accountId, apiCallLog);
-
     final ApiCallLogDTO cvngLogDTO = ApiCallLogDTO.builder()
                                          .traceableId(requestUuid)
                                          .traceableType(TraceableType.VERIFICATION_TASK)
                                          .accountId(accountId)
                                          .startTime(startTime)
                                          .endTime(endTime)
-                                         .requestTime(OffsetDateTime.now().toInstant())
-                                         .responseTime(OffsetDateTime.now().toInstant())
+                                         .requestTime(callDetails.getRequestTime())
+                                         .responseTime(callDetails.getResponseTime())
                                          .build();
     cvngLogDTO.addFieldToRequest(ApiCallLogDTOField.builder()
                                      .name("url")

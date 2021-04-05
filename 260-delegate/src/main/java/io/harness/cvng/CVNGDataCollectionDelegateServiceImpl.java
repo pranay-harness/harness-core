@@ -1,8 +1,10 @@
 package io.harness.cvng;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.DataCollectionRequest;
@@ -19,17 +21,21 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CV)
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollectionDelegateService {
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private Clock clock;
   @Inject private DelegateLogService delegateLogService;
+  @Inject @Named("cvngSyncCallExecutor") protected ExecutorService cvngSyncCallExecutor;
+
   @Override
   public String getDataCollectionResult(
       String accountId, DataCollectionRequest dataCollectionRequest, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -48,6 +54,7 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
                                                     .endTime(dataCollectionRequest.getEndTime(now))
                                                     .startTime(dataCollectionRequest.getStartTime(now))
                                                     .build();
+    dataCollectionDSLService.registerDatacollectionExecutorService(cvngSyncCallExecutor);
     return JsonUtils.asJson(dataCollectionDSLService.execute(dsl, runtimeParameters, callDetails -> {
       // TODO: write unit test case for this lambda expression.
       if (dataCollectionRequest.getTracingId() != null) {
@@ -57,8 +64,8 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
                                              .accountId(accountId)
                                              .startTime(dataCollectionRequest.getStartTime(now))
                                              .endTime(dataCollectionRequest.getEndTime(now))
-                                             .requestTime(OffsetDateTime.now().toInstant())
-                                             .responseTime(OffsetDateTime.now().toInstant())
+                                             .requestTime(callDetails.getRequestTime())
+                                             .responseTime(callDetails.getResponseTime())
                                              .build();
         cvngLogDTO.addFieldToRequest(ApiCallLogDTOField.builder()
                                          .name("url")
