@@ -1,8 +1,11 @@
 package software.wings.graphql.datafetcher.application;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.graphql.utils.nameservice.NameService.application;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -29,6 +32,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ApplicationConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLApplicationFilter, QLNoOpSortCriteria, QLApplicationConnection> {

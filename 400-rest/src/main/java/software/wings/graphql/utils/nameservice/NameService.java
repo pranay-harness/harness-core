@@ -1,11 +1,15 @@
 package software.wings.graphql.utils.nameservice;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public interface NameService {
   String application = "Application";
@@ -28,6 +32,7 @@ public interface NameService {
   String trigger = "Trigger";
   String pipelineExecution = "PipelineExecution";
   String user = "User";
+  String tag = "Tag";
 
   String infrastructureDefinition = "InfrastructureDefinition";
 

@@ -6,24 +6,22 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.schema.type.aggregation.QLEntityType;
-import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
-@OwnedBy(CDC)
 @Value
 @Builder
-@Scope(PermissionAttribute.ResourceType.SETTING)
-@FieldNameConstants(innerTypeName = "QLTagLinkKeys")
+@FieldNameConstants(innerTypeName = "QLTagEntityKeys")
+@OwnedBy(CDC)
+@Scope(ResourceType.SETTING)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class QLTagLink implements QLObject {
-  private String name;
-  private String value;
-  private QLEntityType entityType;
-  private String entityId;
-  private String appId;
+public class QLTagEntity implements QLObject {
+  String id;
+  String name;
+  Long createdAt;
+  QLUser createdBy;
 }
