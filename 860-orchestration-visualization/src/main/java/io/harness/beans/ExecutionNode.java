@@ -1,8 +1,9 @@
-package io.harness.pms.execution.beans;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -39,4 +40,5 @@ public class ExecutionNode {
   Map<String, List<ProgressData>> taskIdToProgressDataMap;
   List<UnitProgress> unitProgresses;
   List<DelegateInfo> delegateInfoList;
+  List<InterruptEffect> interruptHistories;
 }

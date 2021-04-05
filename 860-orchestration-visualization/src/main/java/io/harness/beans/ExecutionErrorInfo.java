@@ -1,4 +1,4 @@
-package io.harness.pms.execution.beans;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
