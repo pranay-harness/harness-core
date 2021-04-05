@@ -27,6 +27,8 @@ public class JiraTaskNGHelper {
         return jiraTaskNGHandler.validateCredentials(params);
       case GET_PROJECTS:
         return jiraTaskNGHandler.getProjects(params);
+      case GET_STATUSES:
+        return jiraTaskNGHandler.getStatuses(params);
       case GET_ISSUE:
         return jiraTaskNGHandler.getIssue(params);
       case GET_ISSUE_CREATE_METADATA:

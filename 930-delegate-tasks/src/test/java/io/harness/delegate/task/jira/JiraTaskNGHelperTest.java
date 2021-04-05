@@ -53,6 +53,15 @@ public class JiraTaskNGHelperTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  public void shouldGetStatuses() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_STATUSES);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getStatuses(params);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
   public void shouldGetIssue() {
     JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_ISSUE);
     jiraTaskNGHelper.getJiraTaskResponse(params);

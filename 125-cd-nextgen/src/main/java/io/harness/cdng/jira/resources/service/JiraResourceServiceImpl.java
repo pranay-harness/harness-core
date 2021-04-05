@@ -24,6 +24,7 @@ import io.harness.exception.WingsException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
+import io.harness.jira.JiraStatusNG;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -67,6 +68,15 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     JiraTaskNGParametersBuilder paramsBuilder = JiraTaskNGParameters.builder().action(JiraActionNG.GET_PROJECTS);
     JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
     return jiraTaskResponse.getProjects();
+  }
+
+  @Override
+  public List<JiraStatusNG> getStatuses(
+      IdentifierRef jiraConnectorRef, String orgId, String projectId, String projectKey, String issueType) {
+    JiraTaskNGParametersBuilder paramsBuilder =
+        JiraTaskNGParameters.builder().action(JiraActionNG.GET_STATUSES).projectKey(projectKey).issueType(issueType);
+    JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
+    return jiraTaskResponse.getStatuses();
   }
 
   @Override
