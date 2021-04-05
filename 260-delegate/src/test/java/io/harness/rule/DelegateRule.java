@@ -1,6 +1,8 @@
 package io.harness.rule;
 
-import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.exceptionhandler.TestingExceptionModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -33,6 +35,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateRule implements MethodRule, InjectorRuleMixin {
   ClosingFactory closingFactory;
 
@@ -93,7 +96,7 @@ public class DelegateRule implements MethodRule, InjectorRuleMixin {
     });
 
     modules.add(TestMongoModule.getInstance());
-    modules.add(DelegateExceptionModule.getInstance());
+    modules.add(TestingExceptionModule.getInstance());
 
     //    modules.add(new ProviderModule() {
     //      @Provides

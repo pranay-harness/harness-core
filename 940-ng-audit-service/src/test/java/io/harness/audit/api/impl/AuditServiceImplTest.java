@@ -25,14 +25,14 @@ import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.PrincipalType;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.core.Resource;
 import io.harness.rule.Owner;
-import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
 import java.util.List;
@@ -87,7 +87,7 @@ public class AuditServiceImplTest extends CategoryTest {
     AuditFilterPropertiesDTO correctFilter =
         AuditFilterPropertiesDTO.builder()
             .scopes(singletonList(
-                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
+                ResourceScopeDTO.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
             .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
@@ -120,7 +120,7 @@ public class AuditServiceImplTest extends CategoryTest {
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
     AuditFilterPropertiesDTO correctFilter =
         AuditFilterPropertiesDTO.builder()
-            .resources(singletonList(Resource.builder().identifier(identifier).type(resourceType).build()))
+            .resources(singletonList(ResourceDTO.builder().identifier(identifier).type(resourceType).build()))
             .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));

@@ -1,8 +1,10 @@
 package io.harness.gitsync.persistance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
@@ -13,7 +15,7 @@ import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.PushInfo;
-import io.harness.gitsync.beans.NGDTO;
+import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
@@ -39,7 +41,8 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @Slf4j
 @Singleton
-public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends NGDTO>
+@OwnedBy(DX)
+public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends YamlDTO>
     implements GitAwarePersistence<B, Y> {
   Class<B> entityClass;
   Class<Y> yamlClass;

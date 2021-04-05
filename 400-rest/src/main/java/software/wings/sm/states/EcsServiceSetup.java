@@ -21,6 +21,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -34,7 +35,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.CommandStateExecutionData;

@@ -78,6 +78,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -101,7 +102,6 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ContainerServiceElement;

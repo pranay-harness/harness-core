@@ -83,7 +83,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 

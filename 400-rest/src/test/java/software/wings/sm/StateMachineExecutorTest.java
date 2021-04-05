@@ -1,5 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.beans.ExecutionInterruptType.ABORT;
+import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.beans.ExecutionInterruptType.MARK_FAILED;
+import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
+import static io.harness.beans.ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -7,11 +12,6 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT;
-import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_FAILED;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
-import static io.harness.interrupts.ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;

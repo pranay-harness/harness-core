@@ -1,6 +1,6 @@
 package io.harness.states;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.pms.sdk.core.resolver.ResolverUtils.GLOBAL_GROUP_SCOPE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
@@ -25,7 +25,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@OwnedBy(PIPELINE)
+@OwnedBy(CI)
 public class CIPipelineSetupStep
     implements ChildExecutable<CIPipelineSetupParameters>, SyncExecutable<CIPipelineSetupParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("CI_PIPELINE_SETUP").build();

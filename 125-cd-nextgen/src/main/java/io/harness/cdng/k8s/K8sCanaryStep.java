@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDP)
 public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
@@ -80,7 +80,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .taskType(K8sTaskType.CANARY_DEPLOY)
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .instances(instancesValue)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))

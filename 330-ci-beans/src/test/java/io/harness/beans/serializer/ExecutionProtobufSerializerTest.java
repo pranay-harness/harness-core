@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.CiBeansTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.rule.Owner;
 
@@ -14,6 +15,7 @@ import org.junit.experimental.categories.Category;
 
 public class ExecutionProtobufSerializerTest extends CiBeansTestBase {
   @Inject ProtobufSerializer<ExecutionElementConfig> executionProtobufSerializer;
+  @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
   @SneakyThrows
   @Test

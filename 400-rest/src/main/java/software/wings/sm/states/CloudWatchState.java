@@ -12,10 +12,10 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ContainerServiceElement;

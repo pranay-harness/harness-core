@@ -43,7 +43,6 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -52,19 +51,14 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "bucket", "sourcePath", "target"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "bucket", "sourcePath", "target"})
   public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> bucket,
-      ParameterField<String> sourcePath, ParameterField<String> target) {
+      ContainerResource resources, ParameterField<String> bucket, ParameterField<String> sourcePath,
+      ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage = Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/gcs"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/gcs");
-    }
     this.resources = resources;
     this.bucket = bucket;
     this.sourcePath = sourcePath;

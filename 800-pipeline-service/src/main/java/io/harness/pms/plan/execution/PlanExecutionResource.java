@@ -3,6 +3,8 @@ package io.harness.pms.plan.execution;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -35,6 +37,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Api("/pipeline/execute")
 @Path("/pipeline/execute")
 @Produces({"application/json", "application/yaml"})
@@ -111,6 +114,21 @@ public class PlanExecutionResource {
   @Path("/interrupt/{planExecutionId}/{nodeExecutionId}")
   public ResponseDTO<InterruptDTO> handleStageInterrupt(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
+      @NotNull @PathParam("planExecutionId") String planExecutionId,
+      @NotNull @PathParam("nodeExecutionId") String nodeExecutionId) {
+    return ResponseDTO.newResponse(
+        pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId));
+  }
+
+  @PUT
+  @ApiOperation(value = "Ignore,Abort,MarkAsSuccess,Retry on post manual intervention",
+      nickname = "handleManualInterventionInterrupt")
+  @Path("/manualIntervention/interrupt/{planExecutionId}/{nodeExecutionId}")
+  public ResponseDTO<InterruptDTO>
+  handleManualInterventionInterrupt(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,

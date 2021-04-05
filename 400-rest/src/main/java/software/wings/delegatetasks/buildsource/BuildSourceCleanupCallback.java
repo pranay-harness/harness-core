@@ -24,7 +24,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.Account;
 import software.wings.beans.artifact.Artifact;
@@ -55,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
-public class BuildSourceCleanupCallback implements NotifyCallback {
+public class BuildSourceCleanupCallback implements OldNotifyCallback {
   private String accountId;
   private String artifactStreamId;
   private List<BuildDetails> builds;

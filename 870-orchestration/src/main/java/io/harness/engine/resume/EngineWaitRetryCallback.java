@@ -12,7 +12,7 @@ import io.harness.pms.contracts.advisers.IssuedBy;
 import io.harness.pms.contracts.advisers.RetryInterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class EngineWaitRetryCallback implements NotifyCallback {
+public class EngineWaitRetryCallback implements OldNotifyCallback {
   @Inject private InterruptManager interruptManager;
 
   @NonNull String planExecutionId;

@@ -43,6 +43,7 @@ type pluginTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	image             string
+	entrypoint        []string
 	prevStepOutputs   map[string]*pb.StepOutput
 	logMetrics        bool
 	log               *zap.SugaredLogger
@@ -68,6 +69,7 @@ func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
 		image:             r.GetImage(),
+		entrypoint:        r.GetEntrypoint(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		prevStepOutputs:   prevStepOutputs,
@@ -145,6 +147,10 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) error {
 }
 
 func (t *pluginTask) getEntrypoint(ctx context.Context) ([]string, error) {
+	if len(t.entrypoint) != 0 {
+		return t.entrypoint, nil
+	}
+
 	imageSecret, _ := os.LookupEnv(imageSecretEnv)
 	return t.combinedEntrypoint(getImgMetadata(ctx, t.id, t.image, imageSecret, t.log))
 }

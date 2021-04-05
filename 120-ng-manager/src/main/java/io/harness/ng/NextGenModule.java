@@ -96,8 +96,6 @@ import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
-import io.harness.redesign.services.CustomExecutionService;
-import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
@@ -248,7 +246,6 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
-    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
     install(new AuthenticationSettingsModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));

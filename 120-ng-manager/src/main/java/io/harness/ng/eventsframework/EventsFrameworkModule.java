@@ -93,10 +93,6 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, NG_MANAGER.getServiceId(), redisConfig,
               EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_ACTIVITY_READ_BATCH_SIZE));
-      bind(Producer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, redisConfig,
-              EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH, NG_MANAGER.getServiceId(),

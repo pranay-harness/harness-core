@@ -20,12 +20,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

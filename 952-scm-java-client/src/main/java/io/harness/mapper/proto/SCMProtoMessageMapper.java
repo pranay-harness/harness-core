@@ -1,5 +1,8 @@
 package io.harness.mapper.proto;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CommitDetails;
 import io.harness.beans.WebhookGitUser;
 import io.harness.product.ci.scm.proto.Commit;
@@ -12,6 +15,7 @@ import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(DX)
 public class SCMProtoMessageMapper {
   public User convertWebhookGitUser(WebhookGitUser webhookGitUser) {
     return User.newBuilder()

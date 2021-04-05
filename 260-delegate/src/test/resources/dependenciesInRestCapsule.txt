@@ -181,7 +181,7 @@ com.microsoft.azure:adal4j:jar:1.6.4
 com.microsoft.azure:azure-annotations:jar:1.10.0
 com.microsoft.azure:azure-client-authentication:jar:1.7.0
 com.microsoft.azure:azure-client-runtime:jar:1.7.0
-com.microsoft.azure:azure-keyvault-core:jar:0.8.0
+com.microsoft.azure:azure-keyvault-core:jar:1.2.4
 com.microsoft.azure:azure-keyvault-cryptography:jar:1.2.4
 com.microsoft.azure:azure-keyvault-webkey:jar:1.2.4
 com.microsoft.azure:azure-keyvault:jar:1.2.4
@@ -216,7 +216,7 @@ com.microsoft.azure:msal4j:jar:1.8.1
 com.microsoft.rest:client-runtime:jar:1.7.4
 com.networknt:json-schema-validator:jar:1.0.45
 com.nimbusds:content-type:jar:2.0
-com.nimbusds:lang-tag:jar:1.4.4
+com.nimbusds:lang-tag:jar:1.5
 com.nimbusds:nimbus-jose-jwt:jar:8.19
 com.nimbusds:oauth2-oidc-sdk:jar:7.4
 com.ning:async-http-client:jar:1.9.40
@@ -337,7 +337,7 @@ io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1
 io.grpc:grpc-testing:jar:1.33.1:test
 io.gsonfire:gson-fire:jar:1.8.3
-io.harness.cv:data-collection-dsl:jar:0.18-RELEASE
+io.harness.cv:data-collection-dsl:jar:0.21-RELEASE
 io.harness:ff-java-server-sdk:jar:0.0.3
 io.jsonwebtoken:jjwt:jar:0.9.1
 io.kubernetes:client-java-api:jar:8.0.2

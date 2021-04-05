@@ -8,6 +8,7 @@ import io.harness.exception.WingsException;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
@@ -56,6 +57,8 @@ import com.google.inject.Singleton;
 public class ConnectorsController {
   public static final String WEBHOOK_URL_PATH = "api/setup-as-code/yaml/webhook/";
   @Inject private SubdomainUrlHelper subdomainUrlHelper;
+  @Inject private UsageScopeController usageScopeController;
+
   public QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
@@ -152,7 +155,8 @@ public class ConnectorsController {
                                  .authorName(gitConfig.getAuthorName())
                                  .authorEmailId(gitConfig.getAuthorEmailId())
                                  .commitMessage(gitConfig.getCommitMessage())
-                                 .build());
+                                 .build())
+        .usageScope(usageScopeController.populateUsageScope(settingAttribute.getUsageRestrictions()));
     if (null != gitConfig.getEncryptedPassword()) {
       builder.passwordSecretId(gitConfig.getEncryptedPassword());
     } else if (null != gitConfig.getPassword()) {

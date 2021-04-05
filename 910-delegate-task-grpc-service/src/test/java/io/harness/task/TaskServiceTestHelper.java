@@ -1,5 +1,8 @@
 package io.harness.task;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.TaskResponseData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
@@ -20,6 +23,7 @@ import java.time.Duration;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(CI)
 public class TaskServiceTestHelper {
   public static final String JIRA_ISSUE_KEY = "issueKey";
   public static final String JIRA_ISSUE_ID = "TEST-123";
@@ -56,7 +60,7 @@ public class TaskServiceTestHelper {
         .stepStatus(
             io.harness.delegate.task.stepstatus.StepStatus.builder()
                 .numberOfRetries(1)
-                .totalTimeTaken(Duration.ofSeconds(50))
+                .totalTimeTakenInMillis(Duration.ofSeconds(50).toMillis())
                 .output(io.harness.delegate.task.stepstatus.StepMapOutput.builder().output("VAR1", "VALUE1").build())
                 .stepExecutionStatus(io.harness.delegate.task.stepstatus.StepExecutionStatus.SUCCESS)
                 .build())
@@ -165,7 +169,6 @@ public class TaskServiceTestHelper {
       int index = 25 * 10000;
       kryo.register(DummyHTTPResponseData.class, ++index);
       kryo.register(DummyJIRAResponseData.class, ++index);
-      kryo.register(Duration.class, ++index);
     }
   }
 

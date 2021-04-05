@@ -54,6 +54,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -65,7 +66,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;

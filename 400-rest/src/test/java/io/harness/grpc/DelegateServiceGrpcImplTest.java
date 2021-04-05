@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.MockableTestMixin;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.Status;
@@ -55,7 +56,6 @@ import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.shell.ScriptType;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ProgressData;
 
 import software.wings.WingsBaseTest;

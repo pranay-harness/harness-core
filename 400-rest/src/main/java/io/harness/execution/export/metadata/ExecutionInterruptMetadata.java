@@ -3,8 +3,8 @@ package io.harness.execution.export.metadata;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.execution.export.ExportExecutionsUtils;
-import io.harness.interrupts.ExecutionInterruptType;
 
 import software.wings.beans.StateExecutionInterrupt;
 

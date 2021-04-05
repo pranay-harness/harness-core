@@ -773,6 +773,26 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-keyvault</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-keyvault-core</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-keyvault-cryptography</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-keyvault-webkey</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
                 <groupId>com.microsoft.rest</groupId>
                 <artifactId>client-runtime</artifactId>
                 <version>1.7.4</version>
@@ -784,8 +804,18 @@
             </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
+                <artifactId>lang-tag</artifactId>
+                <version>1.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>8.19</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>oauth2-oidc-sdk</artifactId>
+                <version>7.4</version>
             </dependency>
             <dependency>
                 <groupId>com.novemberain</groupId>
@@ -1016,7 +1046,7 @@
             <dependency>
                 <groupId>io.harness.cv</groupId>
                 <artifactId>data-collection-dsl</artifactId>
-                <version>0.18-RELEASE</version>
+                <version>0.21-RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>

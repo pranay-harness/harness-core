@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import io.harness.beans.ExecutionInterruptType;
+import io.harness.beans.RepairActionCode;
 import io.harness.exception.FailureType;
-import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.yaml.BaseYaml;
 
 import java.util.ArrayList;

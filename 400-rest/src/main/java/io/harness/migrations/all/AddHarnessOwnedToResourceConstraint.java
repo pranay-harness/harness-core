@@ -2,10 +2,10 @@ package io.harness.migrations.all;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.ResourceConstraint.ResourceConstraintKeys;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintKeys;
 
 import software.wings.beans.Account;
 import software.wings.common.InfrastructureConstants;

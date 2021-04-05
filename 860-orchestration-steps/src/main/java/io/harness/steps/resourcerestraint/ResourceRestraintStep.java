@@ -6,6 +6,8 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -27,12 +29,10 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;

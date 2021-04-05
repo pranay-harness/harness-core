@@ -19,6 +19,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("HarnessApprovalInstanceDetails")
 public class HarnessApprovalInstanceDetailsDTO implements ApprovalInstanceDetailsDTO {
+  @NotNull String approvalMessage;
+  boolean includePipelineExecutionHistory;
   @NotNull ApproversDTO approvers;
   List<HarnessApprovalActivity> approvalActivities;
   List<ApproverInputInfoDTO> approverInputs;

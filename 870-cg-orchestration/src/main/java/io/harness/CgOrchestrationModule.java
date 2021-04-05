@@ -29,6 +29,7 @@ public class CgOrchestrationModule extends AbstractModule implements ServersModu
   protected void configure() {
     install(WaiterModule.getInstance());
     install(OrchestrationDelayModule.getInstance());
+    install(CgNgSharedOrchestrationModule.getInstance());
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
   }
 

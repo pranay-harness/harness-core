@@ -12,7 +12,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
@@ -117,7 +117,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
         .isInstanceOf(GroupNotFoundException.class);
   }
 
-  private void validateResult(SweepingOutput foundOutput, String testValue) {
+  private void validateResult(ExecutionSweepingOutput foundOutput, String testValue) {
     assertThat(foundOutput).isNotNull();
     assertThat(foundOutput).isInstanceOf(DummySweepingOutput.class);
 
@@ -143,11 +143,11 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
     String outputName = "outcomeName";
     executionSweepingOutputService.consume(ambiance, outputName, null, null);
 
-    SweepingOutput output = resolve(ambiance, outputName);
+    ExecutionSweepingOutput output = resolve(ambiance, outputName);
     assertThat(output).isNull();
   }
 
-  private SweepingOutput resolve(Ambiance ambiance, String outputName) {
+  private ExecutionSweepingOutput resolve(Ambiance ambiance, String outputName) {
     return executionSweepingOutputService.resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject(outputName));
   }
 }

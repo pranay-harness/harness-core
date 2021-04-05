@@ -27,6 +27,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -42,7 +43,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;

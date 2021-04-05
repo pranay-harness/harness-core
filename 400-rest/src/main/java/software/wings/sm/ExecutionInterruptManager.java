@@ -5,6 +5,17 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.ABORT;
+import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
+import static io.harness.beans.ExecutionInterruptType.IGNORE;
+import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED;
+import static io.harness.beans.ExecutionInterruptType.PAUSE;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_ALL;
+import static io.harness.beans.ExecutionInterruptType.RESUME;
+import static io.harness.beans.ExecutionInterruptType.RESUME_ALL;
+import static io.harness.beans.ExecutionInterruptType.RETRY;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -32,17 +43,6 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
-import static io.harness.interrupts.ExecutionInterruptType.IGNORE;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_EXPIRED;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
-import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
@@ -51,6 +51,7 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -58,7 +59,6 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.WaitNotifyEngine;
 

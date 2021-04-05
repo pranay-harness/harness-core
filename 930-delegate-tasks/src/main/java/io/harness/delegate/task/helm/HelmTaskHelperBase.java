@@ -1,12 +1,12 @@
 package io.harness.delegate.task.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.USER_PASSWORD;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
-import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.S3_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
@@ -25,6 +25,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
@@ -64,6 +65,7 @@ import org.zeroturnaround.exec.ProcessResult;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class HelmTaskHelperBase {
   public static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
 
@@ -386,13 +388,35 @@ public class HelmTaskHelperBase {
     String chartName = manifestDelegateConfig.getChartName();
     String chartVersion = manifestDelegateConfig.getChartVersion();
     String chartBucket = "";
+    String region = "";
     String chartRepoUrl = "";
 
-    if (HTTP_HELM == manifestDelegateConfig.getStoreDelegateConfig().getType()) {
-      HttpHelmStoreDelegateConfig httpStoreDelegateConfig =
-          (HttpHelmStoreDelegateConfig) manifestDelegateConfig.getStoreDelegateConfig();
-      repoDisplayName = httpStoreDelegateConfig.getRepoDisplayName();
-      chartRepoUrl = httpStoreDelegateConfig.getHttpHelmConnector().getHelmRepoUrl();
+    switch (manifestDelegateConfig.getStoreDelegateConfig().getType()) {
+      case HTTP_HELM:
+        HttpHelmStoreDelegateConfig httpStoreDelegateConfig =
+            (HttpHelmStoreDelegateConfig) manifestDelegateConfig.getStoreDelegateConfig();
+        repoDisplayName = httpStoreDelegateConfig.getRepoDisplayName();
+        chartRepoUrl = httpStoreDelegateConfig.getHttpHelmConnector().getHelmRepoUrl();
+        break;
+
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3HelmStoreDelegateConfig =
+            (S3HelmStoreDelegateConfig) manifestDelegateConfig.getStoreDelegateConfig();
+        repoDisplayName = s3HelmStoreDelegateConfig.getRepoDisplayName();
+        basePath = s3HelmStoreDelegateConfig.getFolderPath();
+        chartBucket = s3HelmStoreDelegateConfig.getBucketName();
+        region = s3HelmStoreDelegateConfig.getRegion();
+        break;
+
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
+            (GcsHelmStoreDelegateConfig) manifestDelegateConfig.getStoreDelegateConfig();
+        repoDisplayName = gcsHelmStoreDelegateConfig.getRepoDisplayName();
+        basePath = gcsHelmStoreDelegateConfig.getFolderPath();
+        chartBucket = gcsHelmStoreDelegateConfig.getBucketName();
+        break;
+
+      default:
     }
 
     if (isNotBlank(repoDisplayName)) {
@@ -417,6 +441,10 @@ public class HelmTaskHelperBase {
 
     if (isNotBlank(chartBucket)) {
       executionLogCallback.saveExecutionLog("Chart bucket: " + chartBucket);
+    }
+
+    if (isNotBlank(region)) {
+      executionLogCallback.saveExecutionLog("Region: " + region);
     }
 
     if (isNotBlank(chartRepoUrl)) {
