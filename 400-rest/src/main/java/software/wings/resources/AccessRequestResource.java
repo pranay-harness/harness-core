@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PL)
-@Api("accessReqeust")
+@Api("accessRequest")
 @Path("/accessRequest")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
@@ -49,7 +49,7 @@ public class AccessRequestResource {
 
   @GET
   @Path("update")
-  public RestResponse<AccessRequest> update(@QueryParam("accountId") String accountId,
+  public RestResponse<Boolean> update(@QueryParam("accountId") String accountId,
       @QueryParam("accessRequestId") String accessRequestId, @QueryParam("accessStartAt") long accessStartAt,
       @QueryParam("accessEndAt") long accessEndAt) {
     return new RestResponse<>(accessRequestService.update(accessRequestId, accessStartAt, accessEndAt));
@@ -57,7 +57,7 @@ public class AccessRequestResource {
 
   @GET
   @Path("update/status")
-  public RestResponse<AccessRequest> updateStatus(@QueryParam("accountId") String accountId,
+  public RestResponse<Boolean> updateStatus(@QueryParam("accountId") String accountId,
       @QueryParam("accessRequestId") String accessRequestId,
       @QueryParam("accessStatus") @DefaultValue("false") boolean accessStatus) {
     return new RestResponse<>(accessRequestService.updateStatus(accessRequestId, accessStatus));
@@ -73,7 +73,7 @@ public class AccessRequestResource {
   @GET
   @Path("listAccessRequest/harnessUserGroup")
   public RestResponse<List<AccessRequest>> listActiveAccessRequest(
-      @QueryParam("harnessUserGroupId") String harnessUserGroupId) {
+      @QueryParam("accountId") String accountId, @QueryParam("harnessUserGroupId") String harnessUserGroupId) {
     return new RestResponse<>(accessRequestService.getActiveAccessRequest(harnessUserGroupId));
   }
 
