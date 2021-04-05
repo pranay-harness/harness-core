@@ -58,7 +58,7 @@ public class BillingDataServiceImpl {
       "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?, ?) ;";
 
   static final String DELETE_EXISTING_BILLING_DATA =
-      "DELETE FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' ?;";
+      "DELETE FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s';";
 
   private static final String READER_QUERY =
       "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
