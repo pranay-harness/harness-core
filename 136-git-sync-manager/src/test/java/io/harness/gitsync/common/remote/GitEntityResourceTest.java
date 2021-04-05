@@ -6,14 +6,12 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EntityType;
-import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
-import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -42,56 +40,20 @@ public class GitEntityResourceTest extends GitSyncTestBase {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void testList() {
-    final String repo = "repo";
-    final String branch = "branch";
-    final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getYamlName();
-    final String id = "id";
-    final String connector = EntityType.CONNECTORS.getYamlName();
-    final String id1 = "id1";
-    final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
-    final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
-    gitFileLocationRepository.saveAll(Arrays.asList(gitFileLocation, gitFileLocation, gitFileLocation1));
-
-    final ResponseDTO<GitSyncProductDTO> gitSyncEntities =
-        gitEntityResource.list(null, null, accountId, 5, ModuleType.CD);
-    final GitSyncProductDTO data = gitSyncEntities.getData();
-
-    assertThat(data).isNotNull();
-    assertThat(data.getGitSyncEntityListDTOList()
-                   .stream()
-                   .map(GitSyncEntityListDTO::getEntityType)
-                   .collect(Collectors.toList()))
-        .isEqualTo(gitEntityService.getEntityTypesFromModuleType(ModuleType.CD));
-    assertThat(data.getGitSyncEntityListDTOList()
-                   .stream()
-                   .flatMap(gitSyncEntityListDTO -> gitSyncEntityListDTO.getGitSyncEntities().stream())
-                   .collect(Collectors.toList())
-                   .size())
-        .isEqualTo(2);
-    assertThat(
-        data.getGitSyncEntityListDTOList().stream().map(GitSyncEntityListDTO::getCount).collect(Collectors.toList()))
-        .isEqualTo(Arrays.asList(2L, 0L, 0L, 0L, 0L));
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
   public void testListByType() {
-    final String repo = "repo";
+    final String gitSyncConfigId = "repo";
     final String branch = "branch";
     final String accountId = "accountId";
-    final String pipeline = EntityType.PIPELINES.getYamlName();
+    final String pipeline = EntityType.PIPELINES.name();
     final String id = "id";
-    final String connector = EntityType.CONNECTORS.getYamlName();
+    final String connector = EntityType.CONNECTORS.name();
     final String id1 = "id1";
-    final GitFileLocation gitFileLocation = buildGitFileLocation(repo, branch, accountId, pipeline, id);
-    final GitFileLocation gitFileLocation1 = buildGitFileLocation(repo, branch, accountId, connector, id1);
+    final GitFileLocation gitFileLocation = buildGitFileLocation(gitSyncConfigId, branch, accountId, pipeline, id);
+    final GitFileLocation gitFileLocation1 = buildGitFileLocation(gitSyncConfigId, branch, accountId, connector, id1);
     gitFileLocationRepository.saveAll(Arrays.asList(gitFileLocation, gitFileLocation, gitFileLocation1));
 
     final ResponseDTO<PageResponse<GitSyncEntityListDTO>> ngPageResponseResponseDTO =
-        gitEntityResource.listByType(null, null, accountId, EntityType.PIPELINES, 0, 5, "cd");
+        gitEntityResource.listByType(null, null, accountId, "repo", "branch", EntityType.PIPELINES, 0, 5, "cd");
     final PageResponse<GitSyncEntityListDTO> data = ngPageResponseResponseDTO.getData();
     assertThat(data).isNotNull();
     assertThat(data.getContent()
@@ -103,14 +65,15 @@ public class GitEntityResourceTest extends GitSyncTestBase {
   }
 
   public GitFileLocation buildGitFileLocation(
-      String repo, String branch, String accountId, String pipeline, String id) {
+      String gitSyncConfigId, String branch, String accountId, String pipeline, String id) {
     return GitFileLocation.builder()
-        .repo(repo)
+        .gitSyncConfigId(gitSyncConfigId)
         .branch(branch)
         .entityType(pipeline)
         .entityIdentifier(id)
         .accountId(accountId)
         .scope(Scope.ACCOUNT)
+        .isDefault(true)
         .build();
   }
 }

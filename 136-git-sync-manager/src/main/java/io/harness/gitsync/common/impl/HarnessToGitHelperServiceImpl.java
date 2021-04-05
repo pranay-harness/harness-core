@@ -60,7 +60,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType);
     if (gitSyncEntityDTO != null) {
       if (filePath != null) {
-        if (!gitSyncEntityDTO.getFilePath().equals(filePath)) {
+        if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
           throw new InvalidRequestException("Incorrect file path");
         } else {
           // todo(abhinav): Set is default based on entity.
