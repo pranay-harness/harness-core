@@ -546,6 +546,8 @@ go get  # this updates go.mod
 ```lang=bash
 gazelle  # generates, updates BUILD.bazel
 ```
+
+
 * To update go_repository() at portal/WORKSPACE, run this script as:
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
