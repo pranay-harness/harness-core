@@ -1,11 +1,21 @@
 package io.harness.ng.core.environment.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.USER_SRE;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -17,9 +27,13 @@ import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.repositories.environment.spring.EnvironmentRepository;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.UpdateResult;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,21 +42,28 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class EnvironmentServiceImpl implements EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EntitySetupUsageService entitySetupUsageService;
+  private final Producer eventProducer;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Environment [%s] under Project[%s], Organization [%s] already exists";
+
+  @Inject
+  public EnvironmentServiceImpl(EnvironmentRepository environmentRepository,
+      EntitySetupUsageService entitySetupUsageService, @Named(ENTITY_CRUD) Producer eventProducer) {
+    this.environmentRepository = environmentRepository;
+    this.entitySetupUsageService = entitySetupUsageService;
+    this.eventProducer = eventProducer;
+  }
 
   @Override
   public Environment create(@NotNull @Valid Environment environment) {
@@ -50,7 +71,10 @@ public class EnvironmentServiceImpl implements EnvironmentService {
       validatePresenceOfRequiredFields(environment.getAccountId(), environment.getOrgIdentifier(),
           environment.getProjectIdentifier(), environment.getIdentifier());
       setName(environment);
-      return environmentRepository.save(environment);
+      Environment createdEnvironment = environmentRepository.save(environment);
+      publishEvent(environment.getAccountId(), environment.getOrgIdentifier(), environment.getProjectIdentifier(),
+          environment.getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
+      return createdEnvironment;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, environment.getIdentifier(),
                                             environment.getProjectIdentifier(), environment.getOrgIdentifier()),
@@ -78,6 +102,9 @@ public class EnvironmentServiceImpl implements EnvironmentService {
               requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
               requestEnvironment.getOrgIdentifier()));
     }
+    publishEvent(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(),
+        EventsFrameworkMetadataConstants.UPDATE_ACTION);
     return updatedResult;
   }
 
@@ -94,6 +121,9 @@ public class EnvironmentServiceImpl implements EnvironmentService {
               requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
               requestEnvironment.getOrgIdentifier()));
     }
+    publishEvent(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(),
+        EventsFrameworkMetadataConstants.UPSERT_ACTION);
     return updatedResult;
   }
 
@@ -120,6 +150,8 @@ public class EnvironmentServiceImpl implements EnvironmentService {
           String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be deleted.",
               environmentIdentifier, projectIdentifier, orgIdentifier));
     }
+    publishEvent(accountId, orgIdentifier, projectIdentifier, environmentIdentifier,
+        EventsFrameworkMetadataConstants.DELETE_ACTION);
     return true;
   }
 
@@ -178,5 +210,29 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     }
 
     return criteria;
+  }
+
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
+    try {
+      EntityChangeDTO.Builder environmentChangeEvent = EntityChangeDTO.newBuilder()
+                                                           .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                           .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        environmentChangeEvent.setOrgIdentifier(StringValue.of(orgIdentifier));
+      }
+      if (isNotBlank(projectIdentifier)) {
+        environmentChangeEvent.setProjectIdentifier(StringValue.of(projectIdentifier));
+      }
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.ENVIRONMENT_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(environmentChangeEvent.build().toByteString())
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework environment Identifier: {}", identifier, e);
+    }
   }
 }
