@@ -191,13 +191,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             VaultRestClientFactory
                 .getVaultRetrofit(baseVaultConfig.getVaultUrl(), baseVaultConfig.isCertValidationRequired())
                 .create(VaultSysAuthRestClient.class);
-        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken(), baseVaultConfig.getNamespace())
-                                   .execute()
-                                   .isSuccessful();
+        Response<Object> response =
+            restClient.renewToken(baseVaultConfig.getAuthToken(), baseVaultConfig.getNamespace()).execute();
+        boolean isSuccessful = response.isSuccessful();
         if (isSuccessful) {
           return true;
         } else {
-          String errorMsg = "Request not successful.";
+          String errorMsg = String.format("Failed to renew token for %s due to the following error from vault: \"%s\".",
+              baseVaultConfig.name, response.errorBody().string());
           log.error(errorMsg);
           throw new IOException(errorMsg);
         }
