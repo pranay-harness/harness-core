@@ -16,12 +16,14 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("USER")
+@TypeAlias("UserPrincipal")
 public class UserPrincipal extends Principal {
   String email;
   String accountId;
