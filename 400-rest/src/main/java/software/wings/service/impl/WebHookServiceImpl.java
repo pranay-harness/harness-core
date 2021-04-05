@@ -11,7 +11,9 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
@@ -70,6 +72,7 @@ import org.mongodb.morphia.annotations.Transient;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebHookServiceImpl implements WebHookService {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
