@@ -23,8 +23,8 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 public class AccessRequestServiceImpl implements AccessRequestService {
   @Inject WingsPersistence wingsPersistence;
-  @Inject AccountService accountService;
-  @Inject HarnessUserGroupService harnessUserGroupService;
+  @Inject private AccountService accountService;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
 
   @Override
   public AccessRequest create(
