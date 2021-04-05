@@ -16,7 +16,6 @@ public interface ScmPushResponse {
 
   boolean isPushToDefaultBranch();
 
-  // returns fqn of yaml git config.
   String getYamlGitConfigId();
 
   String getObjectId();
