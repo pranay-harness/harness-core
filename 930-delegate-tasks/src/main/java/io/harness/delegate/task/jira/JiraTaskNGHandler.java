@@ -9,6 +9,7 @@ import io.harness.jira.JiraClient;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
 import io.harness.jira.JiraProjectBasicNG;
+import io.harness.jira.JiraStatusNG;
 
 import com.google.inject.Singleton;
 import java.util.List;
@@ -34,6 +35,12 @@ public class JiraTaskNGHandler {
     JiraClient jiraClient = getJiraClient(params);
     List<JiraProjectBasicNG> projects = jiraClient.getProjects();
     return JiraTaskNGResponse.builder().projects(projects).build();
+  }
+
+  public JiraTaskNGResponse getStatuses(JiraTaskNGParameters params) {
+    JiraClient jiraClient = getJiraClient(params);
+    List<JiraStatusNG> statuses = jiraClient.getStatuses(params.getProjectKey(), params.getIssueType());
+    return JiraTaskNGResponse.builder().statuses(statuses).build();
   }
 
   public JiraTaskNGResponse getIssue(JiraTaskNGParameters params) {
