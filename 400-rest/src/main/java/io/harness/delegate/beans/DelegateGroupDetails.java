@@ -30,4 +30,5 @@ public class DelegateGroupDetails {
   private DelegateInsightsDetails delegateInsightsDetails;
   private long lastHeartBeat;
   private List<DelegateStatus.DelegateInner> delegates;
+  // TODO MARKO: Add new field to DelegateGroupDetails for expected replica count
 }

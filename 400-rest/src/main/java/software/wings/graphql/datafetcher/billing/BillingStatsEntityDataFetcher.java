@@ -189,8 +189,7 @@ public class BillingStatsEntityDataFetcher
       String additionalInfo = "";
 
       // Number fields should be null initially, will help in debugging without harm.
-      // TODO(utsav): TEMPORARY; change to 0D after testing
-      Double defaultDoubleValue = -1D;
+      Double defaultDoubleValue = 0D;
       Double storageCost = defaultDoubleValue;
       Double memoryBillingAmount = defaultDoubleValue;
       Double cpuBillingAmount = defaultDoubleValue;

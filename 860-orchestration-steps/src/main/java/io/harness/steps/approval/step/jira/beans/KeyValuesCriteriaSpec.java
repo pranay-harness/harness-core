@@ -26,7 +26,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("KeyValuesCriteriaSpec")
 @TypeAlias("keyValuesCriteriaSpec")
 public class KeyValuesCriteriaSpec implements CriteriaSpec {
-  @NotNull
   @YamlSchemaTypes({string})
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   private ParameterField<Boolean> matchAnyCondition;

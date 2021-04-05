@@ -1,5 +1,8 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
@@ -26,8 +29,10 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GIT)
 @OneOfField(fields = {"paths", "folderPath"})
+@OneOfField(fields = {"branch", "commitId"})
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 @TypeAlias("gitStore")
+@OwnedBy(CDP)
 public class GitStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 

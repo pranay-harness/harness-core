@@ -1,7 +1,9 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_NODE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
 
@@ -46,6 +49,7 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
                 K8sGranularUtilizationData.builder()
                     .accountId(accountId)
                     .instanceId(nodeUtilizationMetric.getName())
+                    .actualInstanceId(nodeUtilizationMetric.getName())
                     .instanceType(K8S_NODE)
                     .clusterId(nodeUtilizationMetric.getClusterId())
                     .settingId(nodeUtilizationMetric.getCloudProviderId())

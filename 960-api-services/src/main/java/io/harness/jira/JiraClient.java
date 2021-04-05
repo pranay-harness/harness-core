@@ -11,13 +11,19 @@ import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -49,6 +55,34 @@ public class JiraClient {
    */
   public List<JiraProjectBasicNG> getProjects() {
     return executeCall(restClient.getProjects(), "fetching projects");
+  }
+
+  /**
+   * Get all statuses. Optionally filter by projectKey and issueType
+   *
+   * @return the list of projects
+   */
+  public List<JiraStatusNG> getStatuses(String projectKey, String issueType) {
+    if (StringUtils.isBlank(projectKey)) {
+      return getStatuses();
+    }
+
+    List<JiraIssueTypeNG> issueTypes = getProjectStatuses(projectKey);
+    if (EmptyPredicate.isEmpty(issueTypes)) {
+      return Collections.emptyList();
+    }
+    if (StringUtils.isNotBlank(issueType)) {
+      issueTypes = issueTypes.stream().filter(it -> it.getName().equals(issueType)).collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(issueTypes)) {
+        return Collections.emptyList();
+      }
+    }
+
+    // Collect all the statuses from all issue types and deduplicate based on status name.
+    return issueTypes.stream()
+        .flatMap(it -> it.getStatuses().stream())
+        .collect(Collectors.collectingAndThen(
+            Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(JiraStatusNG::getName))), ArrayList::new));
   }
 
   /**

@@ -1,11 +1,13 @@
 package io.harness.steps.resourcerestraint;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -25,14 +27,12 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
@@ -42,12 +42,12 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class ResourceRestraintStep
     implements SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.RESOURCE_RESTRAINT).build();
+      StepType.newBuilder().setType(StepSpecTypeConstants.RESOURCE_CONSTRAINT).build();
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintService resourceRestraintService;
@@ -64,7 +64,7 @@ public class ResourceRestraintStep
   public StepResponse executeSync(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
     String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
 
     executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, false);
@@ -89,7 +89,7 @@ public class ResourceRestraintStep
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, StepInputPackage inputPackage) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
     String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
 
     String consumerId = executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, true);
@@ -101,7 +101,7 @@ public class ResourceRestraintStep
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
 
     resourceRestraintService.updateBlockedConstraints(ImmutableSet.of(resourceRestraint.getUuid()));
 
@@ -141,7 +141,8 @@ public class ResourceRestraintStep
     ConstraintUnit renderedResourceUnit =
         new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, stepParameters.getResourceUnit()));
 
-    Map<String, Object> constraintContext = populateConstraintContext(stepParameters, releaseEntityId);
+    Map<String, Object> constraintContext =
+        populateConstraintContext(resourceRestraint, stepParameters, releaseEntityId);
 
     String consumerId = generateUuid();
     try {
@@ -184,12 +185,12 @@ public class ResourceRestraintStep
   }
 
   private Map<String, Object> populateConstraintContext(
-      ResourceRestraintStepParameters stepParameters, String releaseEntityId) {
+      ResourceRestraint resourceRestraint, ResourceRestraintStepParameters stepParameters, String releaseEntityId) {
     Map<String, Object> constraintContext = new HashMap<>();
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityType, stepParameters.getHoldingScope().getScope());
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityId, releaseEntityId);
-    constraintContext.put(ResourceRestraintInstanceKeys.order,
-        resourceRestraintService.getMaxOrder(stepParameters.getResourceRestraintId()) + 1);
+    constraintContext.put(
+        ResourceRestraintInstanceKeys.order, resourceRestraintService.getMaxOrder(resourceRestraint.getUuid()) + 1);
 
     return constraintContext;
   }

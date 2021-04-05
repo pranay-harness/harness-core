@@ -27,7 +27,6 @@ import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueNG;
 import io.harness.logging.AutoLogContext;
@@ -58,7 +57,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +113,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
           prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef);
       JiraTaskNGResponse jiraTaskNGResponse = fetchJiraTaskResponse(accountIdentifier, jiraTaskNGParameters);
       if (isNull(jiraTaskNGResponse.getIssue())) {
-        throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse", USER_SRE);
+        throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse");
       }
       checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), entity);
     } catch (Exception ex) {
@@ -128,36 +126,39 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     try {
       if (isNull(jiraApprovalInstance.getApprovalCriteria())
           || isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
-        throw new InvalidRequestException("Approval criteria can't be missing");
+        throw new InvalidRequestException("Approval criteria can't be empty");
       }
+
       CriteriaSpecDTO approvalCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
       boolean approvalEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, approvalCriteriaSpec);
       if (approvalEvaluationResult) {
-        log.info("Approval Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
+        log.info("Approval criteria has been met");
         updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.APPROVED);
         waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
             JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
         return;
       }
 
-      if (!isNull(jiraApprovalInstance.getApprovalCriteria())
-          && !isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
-        CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
-        boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
-        if (rejectionEvaluationResult) {
-          log.info("Rejection Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
-          updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);
-          waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
-              JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
-        }
+      if (isNull(jiraApprovalInstance.getRejectionCriteria())
+          || isNull(jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO())) {
+        throw new InvalidRequestException("Rejection criteria can't be empty");
+      }
+
+      CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO();
+      boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
+      if (rejectionEvaluationResult) {
+        log.info("Rejection criteria for has been met");
+        updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);
+        waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
+            JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
       }
     } catch (Exception e) {
-      throw new HarnessJiraException("Error while evaluating Approval/Rejection criteria", e, USER_SRE);
+      throw new HarnessJiraException("Error while evaluating approval/rejection criteria", e, USER_SRE);
     }
   }
 
-  private JiraTaskNGParameters prepareJiraTaskParameters(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String issueId, String connectorRef) throws IOException {
+  private JiraTaskNGParameters prepareJiraTaskParameters(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String issueId, String connectorRef) {
     JiraConnectorDTO jiraConnectorDTO =
         getJiraConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorRef);
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
@@ -231,7 +232,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
 
       if (!connectorDTO.isPresent()) {
         throw new InvalidRequestException(
-            String.format("Connector not found for identifier : [%s]", connectorIdentifierRef), WingsException.USER);
+            String.format("Connector not found for identifier : [%s]", connectorIdentifierRef));
       }
       ConnectorInfoDTO connectorInfoDTO = connectorDTO.get().getConnectorInfo();
       ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
@@ -239,10 +240,10 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
         return (JiraConnectorDTO) connectorConfigDTO;
       }
       throw new HarnessJiraException(
-          format("Connector of other then Jira type was found : [%s] ", connectorIdentifierRef), USER_SRE);
+          format("Connector of other then Jira type was found : [%s] ", connectorIdentifierRef));
     } catch (Exception e) {
       throw new HarnessJiraException(
-          format("Error while getting connector information : [%s]", connectorIdentifierRef), USER_SRE);
+          format("Error while getting connector information : [%s]", connectorIdentifierRef));
     }
   }
 

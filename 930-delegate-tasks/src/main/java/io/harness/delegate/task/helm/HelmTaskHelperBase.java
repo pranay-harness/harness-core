@@ -388,6 +388,7 @@ public class HelmTaskHelperBase {
     String chartName = manifestDelegateConfig.getChartName();
     String chartVersion = manifestDelegateConfig.getChartVersion();
     String chartBucket = "";
+    String region = "";
     String chartRepoUrl = "";
 
     switch (manifestDelegateConfig.getStoreDelegateConfig().getType()) {
@@ -404,6 +405,7 @@ public class HelmTaskHelperBase {
         repoDisplayName = s3HelmStoreDelegateConfig.getRepoDisplayName();
         basePath = s3HelmStoreDelegateConfig.getFolderPath();
         chartBucket = s3HelmStoreDelegateConfig.getBucketName();
+        region = s3HelmStoreDelegateConfig.getRegion();
         break;
 
       case GCS_HELM:
@@ -439,6 +441,10 @@ public class HelmTaskHelperBase {
 
     if (isNotBlank(chartBucket)) {
       executionLogCallback.saveExecutionLog("Chart bucket: " + chartBucket);
+    }
+
+    if (isNotBlank(region)) {
+      executionLogCallback.saveExecutionLog("Region: " + region);
     }
 
     if (isNotBlank(chartRepoUrl)) {

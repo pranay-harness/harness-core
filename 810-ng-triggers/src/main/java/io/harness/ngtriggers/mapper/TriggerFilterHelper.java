@@ -55,8 +55,8 @@ public class TriggerFilterHelper {
     return criteria;
   }
 
-  public Criteria createCriteriaForCustomWebhookTriggerGetList(TriggerWebhookEvent triggerWebhookEvent,
-      String decryptedAuthToken, String searchTerm, boolean deleted, boolean enabled) {
+  public Criteria createCriteriaForCustomWebhookTriggerGetList(
+      TriggerWebhookEvent triggerWebhookEvent, String searchTerm, boolean deleted, boolean enabled) {
     Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
         triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
         deleted, enabled);
@@ -65,10 +65,6 @@ public class TriggerFilterHelper {
         criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
       }
       criteria.and("metadata.webhook.type").is("CUSTOM");
-      criteria.and("metadata.webhook.custom.customAuthTokenType")
-          .is("inline")
-          .and("metadata.webhook.custom.customAuthTokenValue")
-          .is(decryptedAuthToken);
     }
 
     return criteria;
@@ -134,6 +130,7 @@ public class TriggerFilterHelper {
   public Update getUpdateOperationsForDelete() {
     Update update = new Update();
     update.set(NGTriggerEntityKeys.deleted, true);
+    update.set(NGTriggerEntityKeys.enabled, false);
     return update;
   }
 

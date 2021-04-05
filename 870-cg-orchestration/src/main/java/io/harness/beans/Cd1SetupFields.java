@@ -4,6 +4,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Cd1SetupFields {
+  public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String APP_ID_FIELD = "appId";
   public static final String ENV_ID_FIELD = "envId";
   public static final String INFRASTRUCTURE_MAPPING_ID_FIELD = "infrastructureMappingId";

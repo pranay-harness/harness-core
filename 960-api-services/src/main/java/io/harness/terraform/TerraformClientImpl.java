@@ -1,15 +1,21 @@
 package io.harness.terraform;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.terraform.TerraformConstants.DEFAULT_TERRAFORM_COMMAND_TIMEOUT;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
+import io.harness.exception.TerraformCommandExecutionException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.terraform.request.TerraformApplyCommandRequest;
 import io.harness.terraform.request.TerraformDestroyCommandRequest;
 import io.harness.terraform.request.TerraformInitCommandRequest;
@@ -28,6 +34,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class TerraformClientImpl implements TerraformClient {
   public static final String TARGET_PARAM = "-target=";
   public static final String VAR_FILE_PARAM = "-var-file=";
@@ -74,15 +81,17 @@ public class TerraformClientImpl implements TerraformClient {
       throws InterruptedException, TimeoutException, IOException {
     String command;
     if (terraformPlanCommandRequest.isDestroySet()) {
-      command = format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
-          TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
-          TerraformHelperUtils.generateCommandFlagsString(
-              terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM));
+      command =
+          format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
+              TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
+              TerraformHelperUtils.generateCommandFlagsString(
+                  terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM))
+          + terraformPlanCommandRequest.getVarParams();
     } else {
       command = format("terraform plan -input=false -out=tfplan %s %s",
           TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
-          TerraformHelperUtils.generateCommandFlagsString(
-              terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM));
+          TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM)
+              + terraformPlanCommandRequest.getVarParams());
     }
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
@@ -96,7 +105,8 @@ public class TerraformClientImpl implements TerraformClient {
     String command = "terraform refresh -input=false "
         + TerraformHelperUtils.generateCommandFlagsString(terraformRefreshCommandRequest.getTargets(), TARGET_PARAM)
         + TerraformHelperUtils.generateCommandFlagsString(
-            terraformRefreshCommandRequest.getVarFilePaths(), VAR_FILE_PARAM);
+            terraformRefreshCommandRequest.getVarFilePaths(), VAR_FILE_PARAM)
+        + terraformRefreshCommandRequest.getVarParams();
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
@@ -106,17 +116,18 @@ public class TerraformClientImpl implements TerraformClient {
   public CliResponse apply(TerraformApplyCommandRequest terraformApplyCommandRequest, Map<String, String> envVariables,
       String scriptDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
-    String command = "terraform apply -input=false tfplan";
+    String command = "terraform apply -input=false " + terraformApplyCommandRequest.getPlanName();
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
 
   @Nonnull
   @Override
-  public CliResponse workspace(String workspace, boolean isNew, Map<String, String> envVariables,
+  public CliResponse workspace(String workspace, boolean isExistingWorkspace, Map<String, String> envVariables,
       String scriptDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
-    String command = isNew ? "terraform workspace NEW " + workspace : "terraform workspace SELECT " + workspace;
+    String command =
+        isExistingWorkspace ? "terraform workspace select " + workspace : "terraform workspace new " + workspace;
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
@@ -133,17 +144,18 @@ public class TerraformClientImpl implements TerraformClient {
   @Nonnull
   @Override
   public CliResponse show(String planName, Map<String, String> envVariables, String scriptDirectory,
-      @Nonnull LogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
+      @Nonnull LogCallback executionLogCallback, @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream)
+      throws InterruptedException, TimeoutException, IOException {
     String command = "terraform show -json " + planName;
-    return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
-        new LogCallbackOutputStream(executionLogCallback));
+    return executeTerraformCLICommand(
+        command, envVariables, scriptDirectory, executionLogCallback, command, planJsonLogOutputStream);
   }
 
   @Nonnull
   @Override
   public CliResponse output(String tfOutputsFile, Map<String, String> envVariables, String scriptDirectory,
       @Nonnull LogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
-    String command = "terraform show -json > " + tfOutputsFile;
+    String command = "terraform output -json > " + tfOutputsFile;
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
@@ -151,8 +163,14 @@ public class TerraformClientImpl implements TerraformClient {
   @VisibleForTesting
   CliResponse executeTerraformCLICommand(String command, Map<String, String> envVariables, String scriptDirectory,
       LogCallback executionLogCallBack, String loggingCommand, LogOutputStream logOutputStream)
-      throws IOException, InterruptedException, TimeoutException {
-    return cliHelper.executeCliCommand(command, DEFAULT_TERRAFORM_COMMAND_TIMEOUT, envVariables, scriptDirectory,
-        executionLogCallBack, loggingCommand, logOutputStream);
+      throws IOException, InterruptedException, TimeoutException, TerraformCommandExecutionException {
+    CliResponse response = cliHelper.executeCliCommand(command, DEFAULT_TERRAFORM_COMMAND_TIMEOUT, envVariables,
+        scriptDirectory, executionLogCallBack, loggingCommand, logOutputStream);
+    if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
+      throw new TerraformCommandExecutionException(
+          format("Failed to execute terraform Command %s : Reason: %s", command, response.getError()),
+          WingsException.SRE);
+    }
+    return response;
   }
 }

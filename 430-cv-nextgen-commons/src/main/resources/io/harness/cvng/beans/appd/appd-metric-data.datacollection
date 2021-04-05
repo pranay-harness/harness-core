@@ -1,0 +1,31 @@
+Var metricDataUrl = concat(Env:baseUrl, "rest/applications/", Env:applicationName, "/metric-data?output=JSON&time-range-type=BEFORE_NOW&duration-in-mins=60&rollup=true&metric-path=")
+Var metricRequests = []
+foreach metricDefinition in Env:metricsToCollect {
+  Var metricPath = concat("", Var:metricDefinition)
+  Var:metricPath.replaceAll("__tier_name__", Env:tierName)
+  Var metricCall = concat(Var:metricDataUrl, Var:metricPath)
+  Request metricRequest = new Request(url=Var:metricCall, header=Env:commonHeaders)
+  Var:metricRequests.append(Var:metricRequest)
+}
+Var metrics = execute-parallel(Var:metricRequests)
+
+Var metricsToReturn = []
+foreach metricArr in Var:metrics {
+  foreach metric in Var:metricArr {
+    Var metricName = extract(Var:metric,$.metricName)
+    if Var:metricName != "METRIC DATA NOT FOUND" {
+      Var metricPath = extract(Var:metric,$.metricPath)
+      Var metricPathSplit = Var:metricPath.split("|")
+      Var txnName = Var:metricPathSplit[0]
+      Var mName = Var:metricPathSplit[2]
+      Var metricValues = extract(Var:metric,$.metricValues)
+      foreach metricValue in Var:metricValues {
+        Var value = extract(Var:metricValue,$.value)
+        Var timestamp = extract(Var:metricValue,$.startTimeInMillis)
+        Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:mName, metricValue=Var:value, timestamp=Var:timestamp)
+        Var:metricsToReturn.append(Var:tsRecord)
+      }
+    }
+  }
+}
+return Var:metricsToReturn

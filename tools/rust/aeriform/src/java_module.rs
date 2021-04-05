@@ -7,7 +7,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
 
 #[derive(Debug)]
 pub struct JavaModule {
