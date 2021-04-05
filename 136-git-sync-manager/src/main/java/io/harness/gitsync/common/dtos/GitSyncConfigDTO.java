@@ -22,7 +22,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 @ApiModel("GitSyncConfig")
 public class GitSyncConfigDTO {
-  private String identifier;
+  @Trimmed @NotEmpty private String identifier;
+  @Trimmed @NotEmpty private String name;
   @Trimmed private String projectIdentifier;
   @Trimmed private String orgIdentifier;
   @Trimmed @NotEmpty private String gitConnectorRef;
