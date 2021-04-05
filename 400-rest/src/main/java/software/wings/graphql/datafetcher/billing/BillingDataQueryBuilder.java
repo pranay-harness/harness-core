@@ -9,6 +9,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -103,6 +105,7 @@ public class BillingDataQueryBuilder {
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject CEMetadataRecordDao ceMetadataRecordDao;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -1483,12 +1486,13 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
-    if (ImmutableSet
-            .of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q",
-                "DVExhMPMScy6RpRNKwyvZQ")
-            .contains(accountId)) {
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if ((null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+            && ceMetadataRecord.getAwsDataPresent())
+        || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
       return false;
     }
+
     List<QLBillingDataFilter> validFilters =
         filters.stream().filter(filter -> filter.getStartTime() != null).collect(Collectors.toList());
     if (!validFilters.isEmpty()) {

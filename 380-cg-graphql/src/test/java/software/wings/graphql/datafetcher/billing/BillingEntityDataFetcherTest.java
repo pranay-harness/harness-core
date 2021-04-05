@@ -25,6 +25,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
@@ -86,6 +87,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BillingDataHelper billingDataHelper;
   @Mock FeatureFlagService featureFlagService;
   @Mock CeAccountExpirationChecker accountChecker;
+  @Mock CEMetadataRecordDao ceMetadataRecordDao;
   @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
@@ -426,6 +428,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
         .thenReturn(serviceValues);
     when(tagHelper.getEntityIdsFromTags(ACCOUNT1_ID, filters.get(2).getTag().getTags(), EntityType.ENVIRONMENT))
         .thenReturn(environmentValues);
+    when(ceMetadataRecordDao.getByAccountId(anyString())).thenReturn(null);
     List<QLCCMGroupBy> groupBy = Collections.emptyList();
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
