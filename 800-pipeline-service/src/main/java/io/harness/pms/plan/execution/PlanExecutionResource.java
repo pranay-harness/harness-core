@@ -22,6 +22,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
@@ -64,7 +65,7 @@ public class PlanExecutionResource {
   @Path("/{identifier}")
   @ApiOperation(
       value = "Execute a pipeline with inputSet pipeline yaml", nickname = "postPipelineExecuteWithInputSetYaml")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_execute")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<PlanExecutionResponseDto>
   runPipelineWithInputSetPipelineYaml(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
@@ -88,7 +89,7 @@ public class PlanExecutionResource {
   @Path("/{identifier}/inputSetList")
   @ApiOperation(
       value = "Execute a pipeline with input set references list", nickname = "postPipelineExecuteWithInputSetList")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_execute")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<PlanExecutionResponseDto>
   runPipelineWithInputSetIdentifierList(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
@@ -120,8 +121,8 @@ public class PlanExecutionResource {
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
 
-    accessControlClient.checkForAccessOrThrow(PMSPipelineDtoMapper.toPermissionCheckDTO(
-        accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), "core_pipeline_execute"));
+    accessControlClient.checkForAccessOrThrow(PMSPipelineDtoMapper.toPermissionCheckDTO(accountId, orgId, projectId,
+        executionSummaryEntity.getPipelineIdentifier(), PipelineRbacPermissions.PIPELINE_EXECUTE));
 
     return ResponseDTO.newResponse(
         pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, null));
@@ -160,7 +161,7 @@ public class PlanExecutionResource {
   @POST
   @ApiOperation(value = "initiate pre flight check", nickname = "startPreflightCheck")
   @Path("/preflightCheck")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_execute")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<String> startPreFlightCheck(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
