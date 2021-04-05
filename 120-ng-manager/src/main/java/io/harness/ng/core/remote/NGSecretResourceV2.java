@@ -7,6 +7,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -14,7 +15,10 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
@@ -61,6 +65,7 @@ public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
+  private final SecretManagerClientService secretManagerClientService;
 
   @GET
   @Path("/validateUniqueIdentifier/{identifier}")
@@ -212,5 +217,15 @@ public class NGSecretResourceV2 {
     validateRequestPayload(dto);
 
     return ResponseDTO.newResponse(ngSecretService.createFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
+  }
+
+  @POST
+  @Path("encryption-details")
+  @ApiOperation(hidden = true, value = "Get Encryption Details", nickname = "postEncryptionDetails")
+  @InternalApi
+  public ResponseDTO<List<EncryptedDataDetail>> getEncryptionDetails(
+      NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
+    return ResponseDTO.newResponse(secretManagerClientService.getEncryptionDetails(
+        ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
   }
 }
