@@ -5,6 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.AuditFilterModule;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.AuditYamlService;
+import io.harness.audit.api.AuditYamlServiceImpl;
 import io.harness.audit.api.impl.AuditServiceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -17,6 +19,7 @@ import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGAuditServiceRegistrars;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionModule;
 
@@ -33,6 +36,8 @@ import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -92,7 +97,15 @@ public class AuditServiceModule extends AbstractModule {
     install(new AuditPersistenceModule());
 
     install(new AuditFilterModule());
+    bind(AuditYamlService.class).to(AuditYamlServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  protected TransactionTemplate getTransactionTemplate(
+      MongoTransactionManager mongoTransactionManager, MongoConfig mongoConfig) {
+    return new HTransactionTemplate(mongoTransactionManager, mongoConfig.isTransactionsEnabled());
   }
 
   @Provides

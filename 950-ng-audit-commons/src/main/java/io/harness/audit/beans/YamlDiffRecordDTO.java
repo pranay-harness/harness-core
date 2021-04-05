@@ -10,7 +10,7 @@ import lombok.Data;
 @OwnedBy(PL)
 @Data
 @Builder
-public class YamlDiff {
-  YamlRecord oldYaml;
-  YamlRecord newYaml;
+public class YamlDiffRecordDTO {
+  String oldYaml;
+  String newYaml;
 }

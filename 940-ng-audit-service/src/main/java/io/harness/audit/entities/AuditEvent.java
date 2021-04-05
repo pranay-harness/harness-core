@@ -16,7 +16,6 @@ import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.Resource.ResourceKeys;
 import io.harness.audit.beans.ResourceScope;
 import io.harness.audit.beans.ResourceScope.ResourceScopeKeys;
-import io.harness.audit.beans.YamlDiff;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -69,7 +68,6 @@ public class AuditEvent {
   @NotNull @Valid Resource resource;
   @NotNull Action action;
 
-  YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
   List<KeyValuePair> internalInfo;

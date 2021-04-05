@@ -102,5 +102,6 @@ auditServiceConfig:
     connectionsPerHost: 300
     indexManagerMode: AUTO
     aliasDBName: ng-audits
+    transactionsEnabled: false
 
   enableAuditService: true
