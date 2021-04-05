@@ -35,9 +35,11 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.api.client.util.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -50,7 +52,7 @@ public class AsyncPreFlightHandler implements Runnable {
   private final PreFlightRepository preFlightRepository;
   private final ConnectorResourceClient connectorResourceClient;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
-  private final Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
+  private Map<String, Object> fqnToObjectMapMergedYaml;
 
   private static final int PAGE = 0;
   private static final int SIZE = 100;
@@ -60,6 +62,7 @@ public class AsyncPreFlightHandler implements Runnable {
     log.info("Handling preflight check with id " + entity.getUuid() + " for pipeline with id "
         + entity.getPipelineIdentifier());
     try {
+      fqnToObjectMapMergedYaml = new HashMap<>();
       Map<FQN, Object> fqnObjectMap =
           FQNUtils.generateFQNMap(YamlUtils.readTree(entity.getPipelineYaml()).getNode().getCurrJsonNode());
       fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
@@ -124,7 +127,7 @@ public class AsyncPreFlightHandler implements Runnable {
     return connectorResponses;
   }
 
-  private List<ConnectorCheckResponse> getConnectorCheckResponse(
+  public List<ConnectorCheckResponse> getConnectorCheckResponse(
       List<ConnectorResponseDTO> connectorResponses, Map<String, String> connectorIdentifierToFqn) {
     List<ConnectorCheckResponse> connectorCheckResponses = new ArrayList<>();
     connectorResponses.forEach(connectorResponse -> {
@@ -154,7 +157,33 @@ public class AsyncPreFlightHandler implements Runnable {
       }
       connectorCheckResponses.add(checkResponse.build());
     });
+    List<String> availableConnectors =
+        connectorResponses.stream().map(c -> c.getConnector().getIdentifier()).collect(Collectors.toList());
+    for (String connectorRef : connectorIdentifierToFqn.keySet()) {
+      if (availableConnectors.contains(connectorRef)) {
+        continue;
+      }
+      String stageIdentifier = YamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorRef));
+      connectorCheckResponses.add(ConnectorCheckResponse.builder()
+                                      .connectorIdentifier(connectorRef)
+                                      .fqn(connectorIdentifierToFqn.get(connectorRef))
+                                      .stageIdentifier(stageIdentifier)
+                                      .stageName(getStageName(stageIdentifier))
+                                      .status(PreFlightStatus.FAILURE)
+                                      .errorInfo(getNotFoundErrorInfo())
+                                      .build());
+    }
     return connectorCheckResponses;
+  }
+
+  private PreFlightEntityErrorInfo getNotFoundErrorInfo() {
+    return PreFlightEntityErrorInfo.builder()
+        .summary("Connector not found or does not exist")
+        .causes(
+            Collections.singletonList(PreFlightCause.builder().cause("Connector not found or does not exist").build()))
+        .resolution(
+            Collections.singletonList(PreFlightResolution.builder().resolution("Create this connector").build()))
+        .build();
   }
 
   private String getStageName(String identifier) {

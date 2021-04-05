@@ -1,5 +1,7 @@
 package io.harness.beans.serializer;
 
+import static java.util.Collections.emptyList;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
@@ -37,12 +39,14 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     if (callbackId == null) {
       throw new CIStageExecutionException("CallbackId can not be null");
     }
-    PluginStep pluginStep = PluginStep.newBuilder()
-                                .setContainerPort(port)
-                                .setImage(RunTimeInputHandler.resolveStringParameter(
-                                    "Image", "Plugin", step.getIdentifier(), pluginStepInfo.getImage(), true))
-                                .setContext(stepContext)
-                                .build();
+    PluginStep pluginStep =
+        PluginStep.newBuilder()
+            .setContainerPort(port)
+            .setImage(RunTimeInputHandler.resolveStringParameter(
+                "Image", "Plugin", step.getIdentifier(), pluginStepInfo.getImage(), true))
+            .addAllEntrypoint(Optional.ofNullable(pluginStepInfo.getEntrypoint()).orElse(emptyList()))
+            .setContext(stepContext)
+            .build();
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
@@ -70,12 +74,14 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginStepInfo.getDefaultTimeout());
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
 
-    PluginStep pluginStep = PluginStep.newBuilder()
-                                .setContainerPort(port)
-                                .setImage(RunTimeInputHandler.resolveStringParameter(
-                                    "Image", "Plugin", identifier, pluginStepInfo.getImage(), true))
-                                .setContext(stepContext)
-                                .build();
+    PluginStep pluginStep =
+        PluginStep.newBuilder()
+            .setContainerPort(port)
+            .setImage(RunTimeInputHandler.resolveStringParameter(
+                "Image", "Plugin", identifier, pluginStepInfo.getImage(), true))
+            .addAllEntrypoint(Optional.ofNullable(pluginStepInfo.getEntrypoint()).orElse(emptyList()))
+            .setContext(stepContext)
+            .build();
 
     return UnitStep.newBuilder()
         .setId(identifier)

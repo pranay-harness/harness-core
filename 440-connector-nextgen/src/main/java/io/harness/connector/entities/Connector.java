@@ -1,6 +1,8 @@
 package io.harness.connector.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
@@ -10,6 +12,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -49,7 +52,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(DbAliases.NG_MANAGER)
 @Document("connectors")
 @Persistent
-public abstract class Connector implements PersistentEntity, NGAccountAccess {
+@OwnedBy(HarnessTeam.DX)
+public abstract class Connector implements PersistentEntity, NGAccountAccess, GitSyncableEntity {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
@@ -87,6 +91,11 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
         ConnectorKeys.connectivityDetails + "." + ConnectorConnectivityDetailsKeys.status;
     public static final String tagKey = ConnectorKeys.tags + "." + NGTagKeys.key;
     public static final String tagValue = ConnectorKeys.tags + "." + NGTagKeys.value;
+  }
+
+  @Override
+  public String getObjectId() {
+    return null;
   }
 
   public static List<MongoIndex> mongoIndexes() {

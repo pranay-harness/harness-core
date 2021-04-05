@@ -5,10 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -22,5 +21,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Resource {
   @NotEmpty String type;
   @NotEmpty String identifier;
-  List<KeyValuePair> labels;
+  Map<String, String> labels;
 }

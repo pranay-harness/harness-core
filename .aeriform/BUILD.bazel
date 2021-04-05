@@ -1,5 +1,7 @@
 load("//:tools/bazel/aeriform.bzl", "aeriform")
 
+aeriform("//110-change-data-capture:module")
+
 aeriform("//120-ng-manager:module")
 
 aeriform("//120-ng-manager:tests")
@@ -266,9 +268,11 @@ aeriform("//945-ng-audit-client:module")
 
 aeriform("//949-git-sync-sdk:module")
 
-aeriform("//950-command-library-common:module")
+aeriform("//949-git-sync-sdk:tests")
 
 aeriform("//950-cg-ng-shared-orchestration-beans:module")
+
+aeriform("//950-command-library-common:module")
 
 aeriform("//950-common-entities:module")
 

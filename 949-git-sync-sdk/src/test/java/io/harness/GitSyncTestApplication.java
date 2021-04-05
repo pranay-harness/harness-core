@@ -1,8 +1,10 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SampleBean;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
@@ -36,6 +38,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncTestApplication extends Application<GitSyncTestConfiguration> {
   private static final String APPLICATION_NAME = "Git Sync Sample Application";
 

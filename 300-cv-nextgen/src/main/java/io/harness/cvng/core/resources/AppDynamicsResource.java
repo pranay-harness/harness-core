@@ -1,10 +1,13 @@
 package io.harness.cvng.core.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotations.ExposeInternalException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -40,6 +43,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@OwnedBy(CV)
 public class AppDynamicsResource {
   @Inject private AppDynamicsService appDynamicsService;
   @POST
@@ -52,7 +56,7 @@ public class AppDynamicsResource {
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
       @QueryParam("appName") @NotNull String appName, @QueryParam("tierName") @NotNull String tierName,
-      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPack> metricPacks) {
+      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return ResponseDTO.newResponse(appDynamicsService.getMetricPackData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, tierName, requestGuid, metricPacks));
   }

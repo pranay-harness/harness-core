@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -46,6 +48,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
@@ -113,6 +116,9 @@ public class K8sPodInfoTasklet implements Tasklet {
 
     String workloadName = podInfo.getTopLevelOwner().getName();
     String workloadType = podInfo.getTopLevelOwner().getKind();
+
+    // TODO(utsav): insert workload into the timescaleDB as a part of new Data Model for nodeRecommendation
+    // insertWorkload(podInfo.getTopLevelOwner()) into timescaleDB;
 
     if (podInfo.getNamespace().equals(KUBE_SYSTEM_NAMESPACE)
         && podInfo.getPodName().startsWith(KUBE_PROXY_POD_PREFIX)) {

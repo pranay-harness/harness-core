@@ -4,7 +4,6 @@ import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
@@ -210,7 +209,8 @@ public class CILiteEngineStepGroupUtils {
     PluginStepInfo step =
         PluginStepInfo.builder()
             .identifier(GIT_CLONE_STEP_ID)
-            .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
+            .image(ParameterField.createValueField(
+                ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
             .connectorRef(ParameterField.createValueField(ciExecutionServiceConfig.getDefaultInternalImageConnector()))
             .name(GIT_CLONE_STEP_NAME)
             .settings(ParameterField.createValueField(settings))
