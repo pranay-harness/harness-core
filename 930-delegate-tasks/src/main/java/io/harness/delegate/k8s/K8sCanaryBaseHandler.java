@@ -6,7 +6,6 @@ import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
@@ -27,7 +26,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
 import software.wings.beans.LogColor;
@@ -163,8 +161,6 @@ public class K8sCanaryBaseHandler {
     logCallback.saveExecutionLog("Wrapping up..\n");
 
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, logCallback);
-
-    logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
   public void failAndSaveKubernetesRelease(K8sCanaryHandlerConfig canaryHandlerConfig, String releaseName)
