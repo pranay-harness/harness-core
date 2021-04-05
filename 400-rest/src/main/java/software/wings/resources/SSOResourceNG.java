@@ -1,22 +1,27 @@
 package software.wings.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.service.intfc.SSOService;
 
-import javax.ws.rs.*;
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(value = "/ng/sso", hidden = true)
 @Path("/ng/sso")

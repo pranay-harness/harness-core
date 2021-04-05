@@ -1,23 +1,20 @@
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
-import software.wings.beans.loginSettings.*;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.Scope;
+import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.LoginSettingsService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
