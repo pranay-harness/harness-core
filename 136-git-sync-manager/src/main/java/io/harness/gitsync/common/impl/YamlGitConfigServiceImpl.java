@@ -63,7 +63,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   @Override
   public YamlGitConfigDTO get(String projectIdentifier, String orgIdentifier, String accountId, String identifier) {
     Optional<YamlGitConfig> yamlGitConfig =
-        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             accountId, orgIdentifier, projectIdentifier, identifier);
     return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
         .orElseThrow(()
@@ -80,7 +80,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private Optional<YamlGitConfig> getYamlGitConfigEntity(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    return yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+    return yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
         accountId, orgIdentifier, projectIdentifier, identifier);
   }
 
@@ -157,7 +157,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private YamlGitConfigDTO updateInternal(YamlGitConfigDTO gitSyncConfigDTO) {
     validateTheGitConfigInput(gitSyncConfigDTO);
     Optional<YamlGitConfig> existingYamlGitConfigDTO =
-        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
     if (!existingYamlGitConfigDTO.isPresent()) {
@@ -211,7 +211,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
           gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
-        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getUuid(), "Save");
+        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
   }
 
@@ -267,8 +267,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    boolean deleted = yamlGitConfigRepository.removeByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndUuid(
-                          accountId, orgIdentifier, projectIdentifier, scope, identifier)
+    boolean deleted =
+        yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndIdentifier(
+            accountId, orgIdentifier, projectIdentifier, scope, identifier)
         != 0;
     if (deleted) {
       sendEventForConfigChange(accountId, orgIdentifier, projectIdentifier, identifier, "delete");
