@@ -40,7 +40,7 @@ import org.hibernate.validator.constraints.NotBlank;
  * @author Swapnil
  */
 @OwnedBy(PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)

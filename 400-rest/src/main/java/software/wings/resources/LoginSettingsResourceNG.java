@@ -28,7 +28,7 @@ import lombok.experimental.FieldDefaults;
 @NextGenManagerAuth
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LoginSettingsResourceNG {
   LoginSettingsService loginSettingsService;
 

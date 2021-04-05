@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @NextGenManagerAuth
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SSOResourceNG {
   private SSOService ssoService;
 

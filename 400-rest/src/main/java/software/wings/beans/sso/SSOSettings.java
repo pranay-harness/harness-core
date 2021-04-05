@@ -28,7 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

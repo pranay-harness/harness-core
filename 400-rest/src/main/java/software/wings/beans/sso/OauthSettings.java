@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)

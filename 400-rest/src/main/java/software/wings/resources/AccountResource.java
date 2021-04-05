@@ -93,7 +93,7 @@ import retrofit2.http.Body;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AccountResource {
   private final AccountService accountService;
   private final UserService userService;

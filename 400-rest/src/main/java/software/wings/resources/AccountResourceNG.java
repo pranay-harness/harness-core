@@ -38,7 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._120_NG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;

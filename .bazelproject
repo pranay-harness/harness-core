@@ -90,6 +90,7 @@ directories:
   950-events-api
   950-events-framework
   950-ng-audit-commons
+  950-ng-authentication-service
   950-ng-core
   950-ng-project-n-orgs
   950-ng-signup

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 @OwnedBy(DX)
 public enum HarnessModule {
   UNDEFINED,
-  _120_NG_MANAGER,
   _280_BATCH_PROCESSING,
   _310_CI_MANAGER,
   _320_CI_EXECUTION,
@@ -61,6 +60,7 @@ public enum HarnessModule {
   _950_TIMEOUT_ENGINE,
   _950_WAIT_ENGINE,
   _950_WALKTREE_VISITOR,
+  _950_NG_AUTHENTICATION_SERVICE,
   _950_NG_SIGNUP,
   _955_ALERT_BEANS,
   _955_DELEGATE_BEANS,

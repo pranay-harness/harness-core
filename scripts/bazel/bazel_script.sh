@@ -137,6 +137,7 @@ BAZEL_MODULES="\
   //950-events-api/src/main/proto:all \
   //950-events-api:module \
   //950-events-framework:module \
+  //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-ng-signup:module \
