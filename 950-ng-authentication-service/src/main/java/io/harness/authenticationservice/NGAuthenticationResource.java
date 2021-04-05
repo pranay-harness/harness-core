@@ -1,5 +1,7 @@
 package io.harness.authenticationservice;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
@@ -24,6 +26,7 @@ import lombok.NoArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@OwnedBy(HarnessTeam.PL)
 public class NGAuthenticationResource {
   @GET
   public RestResponse<Boolean> status() {
