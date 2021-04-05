@@ -90,28 +90,42 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
 
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
-      if (!MongoEntityUtils.isNewEntity(objectToSave)) {
-        removeOldEntityGitBranchMetadata(gitBranchInfo, entityDetail, scmPushResponse);
-      }
+
       final String objectIdOfYaml = scmPushResponse.getObjectId();
       objectToSave.setObjectIdOfYaml(objectIdOfYaml);
 
       final EntityGitBranchMetadata entityGitBranchMetadata =
           getEntityGitBranchMetadata(gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml);
 
-      // new entity then only save entity in db else not.
-      if (entityGitBranchMetadata == null && !scmPushResponse.isPushToDefaultBranch()) {
-        savedObject = mongoTemplate.save(objectToSave);
-      } else {
-        savedObject = getAlreadySavedObject(objectToSave, objectIdOfYaml);
-      }
-      saveEntityGitBranchMetadata(objectToSave, objectIdOfYaml, gitBranchInfo, entityDetail, scmPushResponse);
-      gitSyncMsvcHelper.postPushInformationToGitMsvc(gitBranchInfo, entityDetail, scmPushResponse);
+      savedObject = mongoTemplate.save(objectToSave);
 
+      processGitBranchMetadata(objectToSave, changeType, gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml,
+          entityGitBranchMetadata);
+
+      gitSyncMsvcHelper.postPushInformationToGitMsvc(gitBranchInfo, entityDetail, scmPushResponse);
     } else {
       savedObject = mongoTemplate.save(objectToSave);
     }
     return savedObject;
+  }
+
+  private void processGitBranchMetadata(B objectToSave, ChangeType changeType, GitEntityInfo gitBranchInfo,
+      EntityDetail entityDetail, ScmPushResponse scmPushResponse, String objectIdOfYaml,
+      EntityGitBranchMetadata entityGitBranchMetadata) {
+    if (changeType != ChangeType.DELETE) {
+      if (entityGitBranchMetadata == null) {
+        saveEntityGitBranchMetadata(objectToSave, objectIdOfYaml, gitBranchInfo, entityDetail, scmPushResponse);
+      } else {
+        entityGitBranchMetadata.setObjectId(objectIdOfYaml);
+        mongoTemplate.save(entityGitBranchMetadata);
+      }
+    } else {
+      if (entityGitBranchMetadata != null) {
+        mongoTemplate.remove(entityGitBranchMetadata);
+      } else {
+        log.error("Expected entity git branch metadata for {}", objectToSave);
+      }
+    }
   }
 
   private B getAlreadySavedObject(B objectToSave, String objectIdOfYaml) {
@@ -142,20 +156,6 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
                                            .and(EntityGitBranchMetadataKeys.objectId)
                                            .is(objectIdOfYaml)),
         EntityGitBranchMetadata.class);
-  }
-
-  private void removeOldEntityGitBranchMetadata(
-      GitEntityInfo gitBranchInfo, EntityDetail entityDetail, ScmPushResponse scmPushResponse) {
-    mongoTemplate.remove(query(Criteria.where(EntityGitBranchMetadataKeys.entityFqn)
-                                   .is(entityDetail.getEntityRef().getFullyQualifiedName())
-                                   .and(EntityGitBranchMetadataKeys.entityType)
-                                   .is(entityDetail.getType().name())
-                                   .and(EntityGitBranchMetadataKeys.branch)
-                                   .is(gitBranchInfo.getBranch())
-                                   .and(EntityGitBranchMetadataKeys.accountId)
-                                   .is(gitBranchInfo.getAccountId())
-                                   .and(EntityGitBranchMetadataKeys.yamlGitConfigId)
-                                   .is(scmPushResponse.getYamlGitConfigId())));
   }
 
   private void saveEntityGitBranchMetadata(B objectToSave, String objectIdOfYaml, GitEntityInfo gitBranchInfo,
