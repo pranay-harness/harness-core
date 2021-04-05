@@ -244,6 +244,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "HoldingScope": {
+      "type": "object",
+      "required": [
+        "nodeSetupId",
+        "scope"
+      ],
+      "properties": {
+        "nodeSetupId": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "HttpHeaderConfig": {
       "type": "object",
       "properties": {
@@ -757,6 +773,46 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ResourceConstraintStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "acquireMode",
+            "holdingScope",
+            "name",
+            "permits",
+            "resourceUnit"
+          ],
+          "properties": {
+            "acquireMode": {
+              "type": "string",
+              "enum": [
+                "ENSURE",
+                "ACCUMULATE"
+              ]
+            },
+            "holdingScope": {
+              "$ref": "#/definitions/HoldingScope"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permits": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "resourceUnit": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "RetryFailureActionConfig": {

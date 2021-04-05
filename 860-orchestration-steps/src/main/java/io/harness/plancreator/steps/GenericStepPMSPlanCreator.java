@@ -245,8 +245,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       NGFailureActionType actionType = action.getType();
 
       String nextNodeUuid = null;
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
+      YamlField siblingField = obtainNextSiblingField(currentField);
       // Check if step is in parallel section then dont have nextNodeUUid set.
       if (siblingField != null && !checkIfStepIsInParallelSection(currentField)) {
         nextNodeUuid = siblingField.getNode().getUuid();
@@ -403,13 +402,17 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return action.getType() != NGFailureActionType.RETRY;
   }
 
+  protected YamlField obtainNextSiblingField(YamlField currentField) {
+    return currentField.getNode().nextSiblingFromParentArray(
+        currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
+  }
+
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
     if (currentField != null && currentField.getNode() != null) {
       if (checkIfStepIsInParallelSection(currentField)) {
         return null;
       }
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
+      YamlField siblingField = obtainNextSiblingField(currentField);
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         return AdviserObtainment.newBuilder()
             .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -426,8 +429,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (checkIfStepIsInParallelSection(currentField)) {
         return null;
       }
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
+      YamlField siblingField = obtainNextSiblingField(currentField);
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         return AdviserObtainment.newBuilder()
             .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())

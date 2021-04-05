@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -19,11 +21,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "PipelineInfrastructureKeys")
 @NoArgsConstructor
 @AllArgsConstructor
 @OneOfField(fields = {"environment", "environmentRef"})
@@ -33,6 +38,8 @@ public class PipelineInfrastructure implements Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
+  private boolean allowSimultaneousDeployments;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> infrastructureKey;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> environmentRef;
 
   // For Visitor Framework Impl

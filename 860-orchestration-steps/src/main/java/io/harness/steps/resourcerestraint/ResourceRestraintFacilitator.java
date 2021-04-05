@@ -1,9 +1,9 @@
 package io.harness.steps.resourcerestraint;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.shared.ResourceRestraint;
 import io.harness.beans.shared.RestraintService;
@@ -13,6 +13,7 @@ import io.harness.distribution.constraint.Consumer;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
@@ -30,7 +31,7 @@ import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class ResourceRestraintFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
@@ -51,7 +52,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
 
     ResourceRestraintStepParameters stepParams = (ResourceRestraintStepParameters) stepParameters;
     final ResourceRestraint resourceRestraint = Preconditions.checkNotNull(
-        restraintService.get(stepParams.getClaimantId(), stepParams.getResourceRestraintId()));
+        restraintService.getByNameAndAccountId(stepParams.getName(), AmbianceUtils.getAccountId(ambiance)));
     final Constraint constraint = resourceRestraintService.createAbstraction(resourceRestraint);
 
     int permits = stepParams.getPermits();
