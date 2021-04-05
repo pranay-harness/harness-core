@@ -53,7 +53,6 @@ public class SCMServiceGitClientImpl implements ScmClient {
   private FileModifyRequest.Builder getFileModifyRequest(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
-    // todo @deepak: write helper util to extract username from connector
     return FileModifyRequest.newBuilder()
         .setBranch(gitFileDetails.getBranch())
         .setSlug(slug)
@@ -62,7 +61,10 @@ public class SCMServiceGitClientImpl implements ScmClient {
         .setContent(gitFileDetails.getFileContent())
         .setMessage(gitFileDetails.getCommitMessage())
         .setProvider(gitProvider)
-        .setSignature(Signature.newBuilder().setEmail(gitFileDetails.getUserEmail()).setName("test").build());
+        .setSignature(Signature.newBuilder()
+                          .setEmail(gitFileDetails.getUserEmail())
+                          .setName(gitFileDetails.getUserName())
+                          .build());
   }
 
   @Override

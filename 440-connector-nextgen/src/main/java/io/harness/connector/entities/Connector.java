@@ -94,8 +94,13 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   }
 
   @Override
-  public String getObjectId() {
+  public String getObjectIdOfYaml() {
     return null;
+  }
+
+  @Override
+  public void setObjectIdOfYaml(String objectId) {
+    // todo(abhinav): add object id to pojo when it goes live
   }
 
   public static List<MongoIndex> mongoIndexes() {
