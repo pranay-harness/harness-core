@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.AccessRequest;
@@ -16,6 +18,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PL)
 @Api("accessReqeust")
 @Path("/accessRequest")
 @Produces(MediaType.APPLICATION_JSON)
