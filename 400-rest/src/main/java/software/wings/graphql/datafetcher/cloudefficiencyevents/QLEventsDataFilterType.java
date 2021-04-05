@@ -8,7 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQueryMetaData.CEEventsMetaDataFields;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public enum QLEventsDataFilterType {
   Application(CEEventsMetaDataFields.APPID),

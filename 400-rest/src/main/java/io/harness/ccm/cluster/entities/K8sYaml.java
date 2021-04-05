@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "k8sYaml", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
 @OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public final class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

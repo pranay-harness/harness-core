@@ -26,7 +26,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class ClusterConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLClusterFilter, QLNoOpSortCriteria, QLClusterConnection> {
