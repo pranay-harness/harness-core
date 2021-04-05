@@ -1,6 +1,6 @@
 package io.harness.steps.resourcerestraint.service;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
@@ -34,7 +34,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Singleton
 @Slf4j
 public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry {

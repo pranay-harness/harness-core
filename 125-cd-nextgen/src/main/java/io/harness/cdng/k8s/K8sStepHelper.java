@@ -100,7 +100,6 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -816,34 +815,14 @@ public class K8sStepHelper {
     stepResponseBuilder.status(Status.FAILED)
         .failureInfo(
             FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sDeployResponse)).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
     return stepResponseBuilder;
   }
 
   public static StepResponseBuilder getDelegateErrorFailureResponseBuilder(
       K8sStepParameters k8sStepParameters, ErrorNotifyResponseData responseData) {
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder()
-            .status(Status.FAILED)
-            .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
-    return stepResponseBuilder;
+    return StepResponse.builder()
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
   }
 
   public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {

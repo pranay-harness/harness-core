@@ -11,6 +11,7 @@ import javax.validation.Valid;
 @OwnedBy(CDC)
 public interface RestraintService {
   ResourceConstraint get(String ownerId, String id);
+  ResourceConstraint getByNameAndAccountId(String name, String accountId);
   ResourceConstraint save(@Valid ResourceConstraint resourceConstraint);
   List<ResourceConstraint> getConstraintsIn(Set<String> constraintIds);
 }

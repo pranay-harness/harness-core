@@ -15,6 +15,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
@@ -31,6 +32,7 @@ import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
 
@@ -73,6 +75,7 @@ public class ManifestOutcomeMapper {
     K8sManifest k8sManifest = (K8sManifest) manifestAttributes;
     boolean skipResourceVersioning = !ParameterField.isNull(k8sManifest.getSkipResourceVersioning())
         && k8sManifest.getSkipResourceVersioning().getValue();
+    validateManifestStoreConfig(k8sManifest.getStoreConfig());
 
     return K8sManifestOutcome.builder()
         .identifier(k8sManifest.getIdentifier())
@@ -83,6 +86,7 @@ public class ManifestOutcomeMapper {
 
   private ValuesManifestOutcome getValuesOutcome(ManifestAttributes manifestAttributes) {
     ValuesManifest attributes = (ValuesManifest) manifestAttributes;
+    validateManifestStoreConfig(attributes.getStoreConfig());
     return ValuesManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
@@ -120,7 +124,7 @@ public class ManifestOutcomeMapper {
       chartVersion = helmChartManifest.getChartVersion().getValue();
     }
 
-    validateHelmChartManifestStoreConfig(helmChartManifest.getStoreConfig());
+    validateManifestStoreConfig(helmChartManifest.getStoreConfig());
 
     return HelmChartManifestOutcome.builder()
         .identifier(helmChartManifest.getIdentifier())
@@ -139,6 +143,7 @@ public class ManifestOutcomeMapper {
         && kustomizeManifest.getSkipResourceVersioning().getValue();
     String pluginPath =
         !ParameterField.isNull(kustomizeManifest.getPluginPath()) ? kustomizeManifest.getPluginPath().getValue() : null;
+    validateManifestStoreConfig(kustomizeManifest.getStoreConfig());
     return KustomizeManifestOutcome.builder()
         .identifier(kustomizeManifest.getIdentifier())
         .store(kustomizeManifest.getStoreConfig())
@@ -151,6 +156,8 @@ public class ManifestOutcomeMapper {
     OpenshiftManifest openshiftManifest = (OpenshiftManifest) manifestAttributes;
     boolean skipResourceVersioning = !ParameterField.isNull(openshiftManifest.getSkipResourceVersioning())
         && openshiftManifest.getSkipResourceVersioning().getValue();
+    validateManifestStoreConfig(openshiftManifest.getStoreConfig());
+
     return OpenshiftManifestOutcome.builder()
         .identifier(openshiftManifest.getIdentifier())
         .store(openshiftManifest.getStoreConfig())
@@ -160,13 +167,43 @@ public class ManifestOutcomeMapper {
 
   private OpenshiftParamManifestOutcome getOpenshiftParamOutcome(ManifestAttributes manifestAttributes) {
     OpenshiftParamManifest attributes = (OpenshiftParamManifest) manifestAttributes;
+    validateManifestStoreConfig(attributes.getStoreConfig());
+
     return OpenshiftParamManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
         .build();
   }
 
-  private void validateHelmChartManifestStoreConfig(StoreConfig storeConfig) {
+  private void validateManifestStoreConfig(StoreConfig storeConfig) {
+    if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
+      GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
+
+      if (FetchType.BRANCH == gitStoreConfig.getGitFetchType()) {
+        if (!ParameterField.isNull(gitStoreConfig.getCommitId())) {
+          throw new InvalidArgumentsException(Pair.of("commitId", "Not allowed for gitFetchType: Branch"));
+        }
+
+        if (ParameterField.isNull(gitStoreConfig.getBranch())
+            || isEmpty(getParameterFieldValue(gitStoreConfig.getBranch()))) {
+          throw new InvalidArgumentsException(Pair.of("branch", "Cannot be empty or null for gitFetchType: Branch"));
+        }
+      }
+
+      if (FetchType.COMMIT == gitStoreConfig.getGitFetchType()) {
+        if (!ParameterField.isNull(gitStoreConfig.getBranch())) {
+          throw new InvalidArgumentsException(Pair.of("branch", "Not allowed for gitFetchType: Commit"));
+        }
+
+        if (ParameterField.isNull(gitStoreConfig.getCommitId())
+            || isEmpty(getParameterFieldValue(gitStoreConfig.getCommitId()))) {
+          throw new InvalidArgumentsException(Pair.of("commitId", "Cannot be empty or null for gitFetchType: Commit"));
+        }
+      }
+
+      return;
+    }
+
     if (ManifestStoreType.S3.equals(storeConfig.getKind())) {
       S3StoreConfig s3StoreConfig = (S3StoreConfig) storeConfig;
 
@@ -179,6 +216,8 @@ public class ManifestOutcomeMapper {
           || isEmpty(getParameterFieldValue(s3StoreConfig.getBucketName()))) {
         throw new InvalidArgumentsException(Pair.of("bucketName", "Cannot be empty or null for S3 store"));
       }
+
+      return;
     }
 
     if (ManifestStoreType.GCS.equals(storeConfig.getKind())) {

@@ -36,6 +36,7 @@ type runTask struct {
 	displayName       string
 	command           string
 	envVarOutputs     []string
+	environment       map[string]string
 	timeoutSecs       int64
 	numRetries        int32
 	tmpFilePath       string
@@ -70,6 +71,7 @@ func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tm
 		command:           r.GetCommand(),
 		tmpFilePath:       tmpFilePath,
 		envVarOutputs:     r.GetEnvVarOutputs(),
+		environment:       r.GetEnvironment(),
 		reports:           r.GetReports(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
@@ -214,6 +216,9 @@ func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, 
 // resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
 func (r *runTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
 	envVarMap := getEnvVars()
+	for k, v := range r.environment {
+		envVarMap[k] = v
+	}
 	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, r.id, r.prevStepOutputs, r.log)
 	if err != nil {
 		return nil, err

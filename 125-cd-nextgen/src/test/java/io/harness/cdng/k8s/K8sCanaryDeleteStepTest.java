@@ -34,8 +34,6 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -124,11 +122,8 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
-    RollbackInfo rollbackInfo = RollbackInfo.builder().identifier("test").build();
-    K8sCanaryDeleteStepParameters stepParameters = K8sCanaryDeleteStepParameters.infoBuilder()
-                                                       .timeout(ParameterField.createValueField("10m"))
-                                                       .rollbackInfo(rollbackInfo)
-                                                       .build();
+    K8sCanaryDeleteStepParameters stepParameters =
+        K8sCanaryDeleteStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
     K8sDeployResponse responseData = K8sDeployResponse.builder()
                                          .commandExecutionStatus(FAILURE)
                                          .errorMessage("task failed")
@@ -138,10 +133,6 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(FAILED);
     assertThat(stepResponse.getFailureInfo().getErrorMessage()).isEqualTo("task failed");
-    assertThat(stepResponse.getStepOutcomes()).hasSize(1);
-    StepResponse.StepOutcome outcome = stepResponse.getStepOutcomes().iterator().next();
-    assertThat(outcome.getOutcome()).isInstanceOf(RollbackOutcome.class);
-    assertThat(((RollbackOutcome) outcome.getOutcome()).getRollbackInfo()).isEqualTo(rollbackInfo);
   }
 
   @Test

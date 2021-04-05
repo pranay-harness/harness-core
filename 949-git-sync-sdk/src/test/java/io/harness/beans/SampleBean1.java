@@ -17,10 +17,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
-@Entity(value = "sampleBean", noClassnameStored = true)
+@Entity(value = "sampleBean1", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document("sampleBean")
-@FieldNameConstants(innerTypeName = "SampleBeanKeys")
+@Document("sampleBean1")
+@FieldNameConstants(innerTypeName = "SampleBean1Keys")
 @OwnedBy(HarnessTeam.DX)
 public class SampleBean1 implements UuidAware, PersistentEntity, GitSyncableEntity, YamlDTO {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
@@ -31,5 +31,5 @@ public class SampleBean1 implements UuidAware, PersistentEntity, GitSyncableEnti
   String orgIdentifier;
   String identifier;
   String name;
-  String objectId;
+  String objectIdOfYaml;
 }

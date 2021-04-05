@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -22,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CV)
 public class CVNGLogTest {
   private Instant requestTime;
   private Instant responseTime;
@@ -58,11 +61,11 @@ public class CVNGLogTest {
     assertThat(cvngLogDTOS).hasSize(4);
     cvngLogDTOS.forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
-      assertThat(((ApiCallLogDTO) logRecord).getRequestTime()).isEqualTo(requestTime);
-      assertThat(((ApiCallLogDTO) logRecord).getResponseTime()).isEqualTo(responseTime);
+      assertThat(((ApiCallLogDTO) logRecord).getRequestTime()).isEqualTo(requestTime.toEpochMilli());
+      assertThat(((ApiCallLogDTO) logRecord).getResponseTime()).isEqualTo(responseTime.toEpochMilli());
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
-      assertThat(logRecord.getStartTime()).isEqualTo(startTime);
-      assertThat(logRecord.getEndTime()).isEqualTo(endTime);
+      assertThat(logRecord.getStartTime()).isEqualTo(startTime.toEpochMilli());
+      assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.VERIFICATION_TASK);
     });
   }
@@ -74,7 +77,10 @@ public class CVNGLogTest {
     String name = "default-name";
     String value = "default-value";
     ApiCallLogDTOField apiCallLogDTOField = ApiCallLogDTOField.builder().name(name).value(value).build();
-    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder().requestTime(requestTime).responseTime(responseTime).build();
+    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder()
+                                      .requestTime(requestTime.toEpochMilli())
+                                      .responseTime(responseTime.toEpochMilli())
+                                      .build();
     apiCallLogDTO.addFieldToRequest(apiCallLogDTOField);
     apiCallLogDTO.addFieldToResponse(apiCallLogDTOField);
 

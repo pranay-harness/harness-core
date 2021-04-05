@@ -6,6 +6,7 @@ import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -42,12 +43,13 @@ public class CIPMSStepPlanCreator extends GenericStepPMSPlanCreator {
             .stepType(stepElement.getStepSpecType().getStepType())
             .group(StepOutcomeGroup.STEP.name())
             .stepParameters(stepElement.getStepSpecType().getStepParameters())
+            .whenCondition(RunInfoUtils.getRunCondition(stepElement.getWhen(), false))
             .facilitatorObtainment(FacilitatorObtainment.newBuilder()
                                        .setType(FacilitatorType.newBuilder()
                                                     .setType(stepElement.getStepSpecType().getFacilitatorType())
                                                     .build())
                                        .build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField(), null))
+            .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)

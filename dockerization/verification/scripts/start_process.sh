@@ -35,6 +35,11 @@ fi
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml
+
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml > /opt/harness/logs/verification.log 2>&1
+    if [[ "${ROLLING_FILE_LOGGING_ENABLED}" == "true" ]]; then
+        java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml
+    else
+        java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml > /opt/harness/logs/verification.log 2>&1
+    fi
 fi

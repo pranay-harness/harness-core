@@ -14,4 +14,10 @@ import lombok.Data;
 public class InfoForGitPush {
   ScmConnector scmConnector;
   String filePath;
+  boolean isDefault;
+  String branch;
+  String yamlGitConfigId;
+  String accountId;
+  String projectIdentifier;
+  String orgIdentifier;
 }

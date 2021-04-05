@@ -44,6 +44,7 @@ type pluginTask struct {
 	numRetries        int32
 	image             string
 	entrypoint        []string
+	environment       map[string]string
 	prevStepOutputs   map[string]*pb.StepOutput
 	logMetrics        bool
 	log               *zap.SugaredLogger
@@ -70,6 +71,7 @@ func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
 		displayName:       step.GetDisplayName(),
 		image:             r.GetImage(),
 		entrypoint:        r.GetEntrypoint(),
+		environment:       r.GetEnvironment(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		prevStepOutputs:   prevStepOutputs,
@@ -95,6 +97,9 @@ func (t *pluginTask) Run(ctx context.Context) (int32, error) {
 // resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
 func (t *pluginTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
 	envVarMap := getEnvVars()
+	for k, v := range t.environment {
+		envVarMap[k] = v
+	}
 	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, t.id, t.prevStepOutputs, t.log)
 	if err != nil {
 		return nil, err

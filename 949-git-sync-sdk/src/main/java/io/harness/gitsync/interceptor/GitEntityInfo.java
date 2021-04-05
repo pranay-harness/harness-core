@@ -10,13 +10,13 @@ import lombok.experimental.FieldNameConstants;
 
 @Getter
 @Builder
-@FieldNameConstants(innerTypeName = "GitBranchInfoKeys")
+@FieldNameConstants(innerTypeName = "GitEntityInfoKeys")
 @OwnedBy(DX)
-public class GitBranchInfo {
+public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
   String filePath;
   String accountId;
   String commitMsg;
-  String lastCommitId;
+  String lastObjectId; // required in case of update file
 }

@@ -15,6 +15,7 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentAggregateRespo
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.AggregateUserGroupService;
@@ -32,10 +33,12 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -104,6 +107,41 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
           .users(users)
           .build();
     }));
+  }
+
+  @Override
+  public UserGroupAggregateDTO getAggregatedUserGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOpt =
+        userGroupService.get(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    if (!userGroupOpt.isPresent()) {
+      throw new InvalidRequestException(String.format("User Group is not available %s:%s:%s:%s", accountIdentifier,
+          orgIdentifier, projectIdentifier, userGroupIdentifier));
+    }
+    PrincipalDTO principalDTO = PrincipalDTO.builder().identifier(userGroupIdentifier).type(USER_GROUP).build();
+    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+        RoleAssignmentFilterDTO.builder().principalFilter(Collections.singleton(principalDTO)).build();
+
+    RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO =
+        getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(
+            accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO));
+
+    Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
+        getPrincipalRoleAssignmentMap(roleAssignmentAggregateResponseDTO);
+
+    Set<String> userIdentifiers =
+        userGroupOpt.get().getUsers() == null ? new HashSet<>() : userGroupOpt.get().getUsers();
+
+    List<UserSearchDTO> users = ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers))
+                                    .stream()
+                                    .map(UserSearchMapper::writeDTO)
+                                    .collect(toList());
+
+    return UserGroupAggregateDTO.builder()
+        .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))
+        .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroupIdentifier))
+        .users(users)
+        .build();
   }
 
   private Map<String, List<RoleAssignmentMetadataDTO>> getPrincipalRoleAssignmentMap(

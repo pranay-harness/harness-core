@@ -14,12 +14,14 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("API_KEY")
+@TypeAlias("ApiKeyPrincipal")
 public class ApiKeyPrincipal extends Principal {
   public ApiKeyPrincipal(String name) {
     this.type = API_KEY;
