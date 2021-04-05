@@ -23,7 +23,7 @@ import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.PL)
 public interface AccessControlAdminClient {
-  String ROLE_ASSIGNMENTS_API = "/api/roleassignments";
+  String ROLE_ASSIGNMENTS_API = "roleassignments";
 
   @GET(ROLE_ASSIGNMENTS_API)
   Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> getRoleAssignments(
