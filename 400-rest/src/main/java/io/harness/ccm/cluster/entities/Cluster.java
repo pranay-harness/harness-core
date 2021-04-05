@@ -6,7 +6,9 @@ import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -20,6 +22,7 @@ import org.mongodb.morphia.query.Query;
       @JsonSubTypes.Type(value = AzureKubernetesCluster.class, name = AZURE_KUBERNETES)
 })
 @OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public interface Cluster {
   String getClusterType();
   String getCloudProviderId();

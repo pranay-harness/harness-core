@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggregationList<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, CloudBillingSortCriteria> {

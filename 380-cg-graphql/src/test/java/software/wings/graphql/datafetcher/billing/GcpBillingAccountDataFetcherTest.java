@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.GcpBillingAccountQueryArguments;
 import io.harness.ccm.config.GcpBillingAccount;
@@ -30,6 +34,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String uuid = "UUID";

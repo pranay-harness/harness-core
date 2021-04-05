@@ -19,7 +19,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class ClusterDataFetcher extends AbstractObjectDataFetcher<QLCluster, QLClusterQueryParameters> {
   public static final String CLUSTERRECORD_DOES_NOT_EXIST_MSG = "Cluster record does not exist";

@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyInput, QLUpdateAnomalyPayLoad> {
   @Inject @Autowired private AnomalyService anomalyService;

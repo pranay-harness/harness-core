@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class AnomalyEntityDao {
   static final int MAX_RETRY = 3;
