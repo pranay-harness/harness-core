@@ -138,7 +138,7 @@ public class NGAggregateResource {
 
   @POST
   @Path("acl/usergroups")
-  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateDTOList")
+  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateList")
   public ResponseDTO<PageResponse<UserGroupAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -155,5 +155,17 @@ public class NGAggregateResource {
     }
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
         pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
+  }
+
+  @GET
+  @Path("acl/usergroups/{identifier}")
+  @ApiOperation(value = "Get Aggregated User Group", nickname = "getUserGroupAggregate")
+  public ResponseDTO<UserGroupAggregateDTO> list(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(aggregateUserGroupService.getAggregatedUserGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }
