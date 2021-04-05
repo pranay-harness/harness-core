@@ -81,9 +81,7 @@ public class BatchJobRunner {
     if (batchJobType == BatchJobType.ANOMALY_DETECTION_CLOUD) {
       endAt = Instant.now().minus(7, ChronoUnit.HOURS);
     }
-    if (batchJobType == BatchJobType.RERUN_JOB) {
-      endAt = Instant.now().minus(15, ChronoUnit.HOURS);
-    }
+
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
