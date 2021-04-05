@@ -1,6 +1,8 @@
 package io.harness.pms.plan.execution.beans.dto;
 
-import io.harness.pms.execution.beans.ExecutionGraph;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionGraph;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -10,6 +12,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

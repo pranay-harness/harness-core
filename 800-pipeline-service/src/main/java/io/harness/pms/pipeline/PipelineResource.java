@@ -16,8 +16,10 @@ import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -29,6 +31,7 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
+import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -92,8 +95,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
-  private final PMSYamlSchemaService pmsYamlSchemaService;
+  private PMSYamlSchemaService pmsYamlSchemaService;
+  private NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
+  private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -341,5 +346,20 @@ public class PipelineResource implements YamlSchemaResource {
   @ApiOperation(value = "Get Notification Schema", nickname = "getNotificationSchema")
   public ResponseDTO<NotificationRules> getNotificationSchema() {
     return ResponseDTO.newResponse(NotificationRules.builder().build());
+  }
+
+  @GET
+  @Path("/getExecutionNode")
+  @ApiOperation(value = "get execution node", nickname = "getExecutionNode")
+  public ResponseDTO<ExecutionNode> getExecutionNode(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam("nodeExecutionId") String nodeExecutionId) {
+    if (nodeExecutionId == null) {
+      return null;
+    }
+    return ResponseDTO.newResponse(
+        nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
   }
 }
