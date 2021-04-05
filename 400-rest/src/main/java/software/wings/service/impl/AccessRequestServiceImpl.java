@@ -78,7 +78,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   @Override
-  public AccessRequest updateStatus(String accessRequestId, boolean acccessStatus){
+  public AccessRequest updateStatus(String accessRequestId, boolean acccessStatus) {
     AccessRequest accessRequest = AccessRequest.builder().build();
     return accessRequest;
   }
