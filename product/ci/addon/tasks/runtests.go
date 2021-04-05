@@ -23,7 +23,8 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
-	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
+	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
+	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
 	javaAgentArg = "-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
@@ -104,7 +105,7 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 // Execute commands with timeout and retry handling
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	var err, errCg error
-	cgDir := fmt.Sprintf(outDir, r.tmpFilePath)
+	cgDir := fmt.Sprintf(cgDir, r.tmpFilePath)
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
 			st := time.Now()

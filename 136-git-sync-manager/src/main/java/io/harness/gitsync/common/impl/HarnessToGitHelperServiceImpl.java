@@ -17,6 +17,7 @@ import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
@@ -34,16 +35,19 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitEntityService gitEntityService;
   private final YamlGitConfigService yamlGitConfigService;
   private final EntityDetailProtoToRestMapper entityDetailRestToProtoMapper;
+  private final GitToHarnessProcessorService gitToHarnessProcessorService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
-      YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper) {
+      YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
+      GitToHarnessProcessorService gitToHarnessProcessorService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
     this.yamlGitConfigService = yamlGitConfigService;
     this.entityDetailRestToProtoMapper = entityDetailRestToProtoMapper;
+    this.gitToHarnessProcessorService = gitToHarnessProcessorService;
   }
 
   @Override
@@ -95,5 +99,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo) {
     return yamlGitConfigService.isGitSyncEnabled(entityScopeInfo.getAccountId(), entityScopeInfo.getOrgId().getValue(),
         entityScopeInfo.getProjectId().getValue());
+  }
+
+  @Override
+  public void onBranchCreationReadFilesAndProcessThem(String accountId, String gitSyncConfigId, String branch) {
+    final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(gitSyncConfigId, accountId);
+    gitToHarnessProcessorService.readFilesFromBranchAndProcess(yamlGitConfigDTO, branch, accountId);
   }
 }

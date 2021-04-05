@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
+import io.harness.ScmConnectionConfig;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,7 +20,6 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupConfig;
-import io.harness.scm.ScmConnectionConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;

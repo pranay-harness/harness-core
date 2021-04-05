@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -120,7 +121,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	}()
 
-	log.Info("server listening at %s", config.Server.Bind)
+	log.Info(fmt.Sprintf("server listening at %s", config.Server.Bind))
 
 	// starts the http server.
 	err = server.ListenAndServe(ctx)

@@ -10,6 +10,7 @@ import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmOrchestratorService;
@@ -46,5 +47,10 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     return scmServiceGitClient.getFileContent(scmConnector, gitFilePathDetails);
+  }
+
+  @Override
+  public FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector scmConnector, String branch) {
+    return scmServiceGitClient.getHarnessFilesOfBranch(scmConnector, branch);
   }
 }

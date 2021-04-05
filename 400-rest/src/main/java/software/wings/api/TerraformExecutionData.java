@@ -2,14 +2,16 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
@@ -22,6 +24,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
 

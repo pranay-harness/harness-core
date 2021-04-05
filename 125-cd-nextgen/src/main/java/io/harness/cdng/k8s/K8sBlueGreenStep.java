@@ -76,7 +76,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .releaseName(releaseName)
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))

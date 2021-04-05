@@ -110,6 +110,8 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
                                                  .defaultMemoryLimit(200)
                                                  .delegateServiceEndpointVariableValue("delegate-service:8080")
                                                  .liteEngineImageTag("v1.4-alpha")
+                                                 .addonImage("harness/ci-addon:1.0")
+                                                 .liteEngineImage("harness/ci-lite-engine:1.0")
                                                  .pvcDefaultStorageSize(25600)
                                                  .build(),
         false));

@@ -1,6 +1,8 @@
 package io.harness.beans;
 
-import io.harness.gitsync.beans.NGDTO;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -19,7 +21,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("sampleBean")
 @FieldNameConstants(innerTypeName = "SampleBeanKeys")
-public class SampleBean implements UuidAware, PersistentEntity, GitSyncableEntity, NGDTO {
+@OwnedBy(HarnessTeam.DX)
+public class SampleBean implements UuidAware, PersistentEntity, GitSyncableEntity, YamlDTO {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String test1;
   String branch;

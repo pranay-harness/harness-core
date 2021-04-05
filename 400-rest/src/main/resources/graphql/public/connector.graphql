@@ -190,6 +190,7 @@ type GitConnector implements Connector {
   webhookUrl: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetails
+  usageScope: UsageScope
 }
 type JenkinsConnector implements Connector {
   id: String

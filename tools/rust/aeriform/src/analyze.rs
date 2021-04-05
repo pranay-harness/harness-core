@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
-use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM, UNKNOWN_LOCATION};
+use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION, UNKNOWN_TEAM};
 use crate::java_module::{modules, JavaModule};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -237,7 +237,9 @@ pub fn analyze(opts: Analyze) {
 
             results
                 .iter()
-                .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
+                .filter(|&report| {
+                    filter_report(&opts, report, &class_locations) || original.contains(&report.for_class)
+                })
                 .for_each(|report| {
                     indirect_classes.extend(&report.indirect_classes);
                 });
@@ -339,7 +341,12 @@ fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<St
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
+    report.for_modules.iter().any(|module| {
+        !module.eq("//990-commons-test:abstract-module")
+            && !module.eq("//990-commons-test:module")
+            && !module.eq("//990-commons-test:tests")
+    }) &&
+        (opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap()))
 }
 
 fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {

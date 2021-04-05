@@ -113,7 +113,8 @@ import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.docker.DockerValidationHandler;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTask;
 import io.harness.delegate.task.gcp.GcpTask;
-import io.harness.delegate.task.gcp.request.GcpRequest;
+import io.harness.delegate.task.gcp.GcpTaskType;
+import io.harness.delegate.task.gcp.taskHandlers.GcpListClustersTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
@@ -195,6 +196,8 @@ import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
+import io.harness.terraform.TerraformClient;
+import io.harness.terraform.TerraformClientImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -862,6 +865,7 @@ public class DelegateModule extends AbstractModule {
     bind(K8InfoDataService.class).to(K8InfoDataServiceImpl.class);
     bind(TerraformBaseHelper.class).to(TerraformBaseHelperImpl.class);
     bind(DelegateFileManagerBase.class).to(DelegateFileManagerImpl.class);
+    bind(TerraformClient.class).to(TerraformClientImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -1000,9 +1004,10 @@ public class DelegateModule extends AbstractModule {
     artifactServiceMapBinder.addBinding(DockerArtifactDelegateRequest.class)
         .toInstance(DockerArtifactTaskHandler.class);
 
-    MapBinder<GcpRequest.RequestType, TaskHandler> gcpTaskTypeToTaskHandlerMap =
-        MapBinder.newMapBinder(binder(), GcpRequest.RequestType.class, TaskHandler.class);
-    gcpTaskTypeToTaskHandlerMap.addBinding(GcpRequest.RequestType.VALIDATE).to(GcpValidationTaskHandler.class);
+    MapBinder<GcpTaskType, TaskHandler> gcpTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), GcpTaskType.class, TaskHandler.class);
+    gcpTaskTypeToTaskHandlerMap.addBinding(GcpTaskType.VALIDATE).to(GcpValidationTaskHandler.class);
+    gcpTaskTypeToTaskHandlerMap.addBinding(GcpTaskType.LIST_CLUSTERS).to(GcpListClustersTaskHandler.class);
 
     // Azure App Service tasks
     MapBinder<String, AbstractAzureAppServiceTaskHandler> azureAppServiceTaskTypeToTaskHandlerMap =

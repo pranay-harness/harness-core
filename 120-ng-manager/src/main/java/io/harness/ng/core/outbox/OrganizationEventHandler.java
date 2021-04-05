@@ -7,6 +7,8 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -25,7 +27,6 @@ import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -92,8 +93,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationCreateEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
-            .resource(outboxEvent.getResource())
-            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
@@ -117,8 +118,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
                                 .newYaml(organizationUpdateEvent.getNewOrganization().toString())
                                 .oldYaml(organizationUpdateEvent.getOldOrganization().toString())
                                 .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
 
@@ -144,8 +145,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationDeleteEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
-            .resource(outboxEvent.getResource())
-            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
 
@@ -171,8 +172,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .newYaml(yamlObjectMapper.writeValueAsString(
                 OrganizationRequest.builder().organization(organizationRestoreEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
-            .resource(outboxEvent.getResource())
-            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
 

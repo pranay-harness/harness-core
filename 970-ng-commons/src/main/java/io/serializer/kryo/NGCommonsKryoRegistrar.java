@@ -47,7 +47,6 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Resource.class, 22009);
     kryo.register(HttpRequestInfo.class, 22010);
     kryo.register(RequestMetadata.class, 22011);
-    kryo.register(io.harness.scope.ResourceScope.class, 22012);
 
     kryo.register(HttpHeaderConfig.class, 19462);
   }

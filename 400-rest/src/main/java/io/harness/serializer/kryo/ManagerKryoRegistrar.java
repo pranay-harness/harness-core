@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -831,6 +833,8 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import java.time.Instant;
 
+@Deprecated
+@OwnedBy(HarnessTeam.PL)
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -1009,7 +1013,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
     kryo.register(ShellScriptParameters.class, 5186);
-    kryo.register(TerraformProvisionParameters.TerraformCommand.class, 5524);
     kryo.register(TerraformProvisionParameters.TerraformCommandUnit.class, 5525);
     kryo.register(TerraformProvisionParameters.class, 5342);
     kryo.register(DockerConfig.class, 5010);

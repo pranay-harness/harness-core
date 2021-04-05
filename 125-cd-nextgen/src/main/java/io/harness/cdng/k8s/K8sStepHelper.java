@@ -72,6 +72,7 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.GcpK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -455,6 +456,18 @@ public class K8sStepHelper {
             .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
             .build();
 
+      case KUBERNETES_GCP:
+        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
+        ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
+        KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
+
+        return GcpK8sInfraDelegateConfig.builder()
+            .namespace(k8sGcpInfrastructure.getNamespace())
+            .cluster(k8sGcpInfrastructure.getCluster())
+            .gcpConnectorDTO((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
+            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .build();
+
       default:
         throw new UnsupportedOperationException(
             format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
@@ -472,7 +485,7 @@ public class K8sStepHelper {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(getTimeout(k8sStepParameters))
+                            .timeout(getTimeoutInMillis(k8sStepParameters))
                             .async(true)
                             .build();
 
@@ -532,7 +545,7 @@ public class K8sStepHelper {
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .timeout(getTimeoutInMillis(k8sStepParameters))
                                   .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -769,12 +782,20 @@ public class K8sStepHelper {
     return HelmCommandFlag.builder().valueMap(commandsValueMap).build();
   }
 
-  public static int getTimeout(K8sStepParameters stepParameters) {
-    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+  public static int getTimeoutInMin(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
+  }
+
+  public static long getTimeoutInMillis(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeout);
+  }
+
+  public static String getTimeoutValue(K8sStepParameters stepParameters) {
+    return stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
         ? StepConstants.defaultTimeout
         : stepParameters.getTimeout().getValue();
-
-    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
   }
 
   public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {

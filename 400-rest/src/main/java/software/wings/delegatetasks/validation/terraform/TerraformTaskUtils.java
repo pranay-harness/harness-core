@@ -18,6 +18,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.inject.Singleton;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
@@ -72,5 +73,46 @@ public class TerraformTaskUtils {
     }
 
     return builder.toString();
+  }
+
+  /**
+   * Currently using tfVarDirectory only for Git TfVarFiles sources
+   * @param userDir user home directory
+   * @param tfVarSource input tf-var files source
+   * @param workingDir working directory of tf-var script repository
+   * @param tfVarDirectory tf-var directory. (this is different from tf-var script repository and used only for Git
+   *     sources for now.
+   * @return List consisting of TFvar file paths
+   */
+  @VisibleForTesting
+  public List<String> fetchAndBuildAllTfVarFilesPaths(String userDir,
+      @org.jetbrains.annotations.NotNull TfVarSource tfVarSource, String workingDir, String tfVarDirectory) {
+    final List<String> filePathList;
+    final List<String> filePathListWithAbsPaths = new ArrayList<>();
+    TfVarScriptRepositorySource scriptRepositorySource;
+    TfVarGitSource gitSource;
+    final String directory;
+
+    if (tfVarSource.getTfVarSourceType() == TfVarSourceType.SCRIPT_REPOSITORY) {
+      scriptRepositorySource = (TfVarScriptRepositorySource) tfVarSource;
+      filePathList = scriptRepositorySource.getTfVarFilePaths();
+      directory = workingDir;
+    } else if (tfVarSource.getTfVarSourceType() == TfVarSourceType.GIT) {
+      gitSource = (TfVarGitSource) tfVarSource;
+      filePathList = gitSource.getGitFileConfig().getFilePathList();
+      directory = tfVarDirectory;
+    } else {
+      filePathList = null;
+      directory = null;
+    }
+
+    if (!isEmpty(filePathList)) {
+      filePathList.forEach(file -> {
+        String pathForFile = Paths.get(userDir, directory, file).toString();
+        filePathListWithAbsPaths.add(pathForFile);
+      });
+    }
+
+    return filePathListWithAbsPaths;
   }
 }

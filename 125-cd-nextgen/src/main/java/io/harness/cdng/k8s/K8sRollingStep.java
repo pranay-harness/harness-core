@@ -73,7 +73,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))

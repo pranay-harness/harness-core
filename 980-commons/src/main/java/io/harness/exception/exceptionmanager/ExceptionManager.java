@@ -56,9 +56,9 @@ public class ExceptionManager {
           setExceptionCause(handledException, handleException((Exception) handledException.getCause()));
         }
       } else {
-        ExceptionHandler delegateExceptionHandler = getExceptionHandler(exception);
-        if (delegateExceptionHandler != null) {
-          handledException = delegateExceptionHandler.handleException(exception);
+        ExceptionHandler exceptionHandler = getExceptionHandler(exception);
+        if (exceptionHandler != null) {
+          handledException = exceptionHandler.handleException(exception);
         } else {
           throw new DelegateErrorHandlerException("Exception handler not registered for exception : " + exception);
         }
