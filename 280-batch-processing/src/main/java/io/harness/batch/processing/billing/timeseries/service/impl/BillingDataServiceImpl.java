@@ -57,6 +57,9 @@ public class BillingDataServiceImpl {
   static final String DELETE_EXISTING_PREAGG =
       "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?, ?) ;";
 
+  static final String DELETE_EXISTING_BILLING_DATA =
+      "DELETE FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s';";
+
   private static final String READER_QUERY =
       "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
 
@@ -306,6 +309,31 @@ public class BillingDataServiceImpl {
     statement.setTimestamp(++i, new Timestamp(startTime.toEpochMilli()), utils.getDefaultCalendar());
     statement.setTimestamp(++i, new Timestamp(endTime.toEpochMilli()), utils.getDefaultCalendar());
     return i;
+  }
+
+  public boolean cleanBillingData(
+      @NotNull String accountId, @NotNull Instant startTime, @NotNull Instant endTime, BatchJobType batchJobType) {
+    boolean successfulUpdate = false;
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+      while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
+        try (Connection dbConnection = timeScaleDBService.getDBConnection();
+             PreparedStatement statement = dbConnection.prepareStatement(
+                 String.format(DELETE_EXISTING_BILLING_DATA, BillingDataTableNameProvider.getTableName(batchJobType),
+                     accountId, startTime.toString(), endTime.toString()))) {
+          log.info("Deleting existing billing data: {} ", statement);
+          statement.execute();
+          successfulUpdate = true;
+        } catch (SQLException e) {
+          log.error("Failed to delete existing billing data for account:{}, retryCount=[{}], Exception: ", accountId,
+              retryCount, e);
+          retryCount++;
+        }
+      }
+    } else {
+      log.warn("Couldnt delete existing billing data in same time period");
+    }
+    return successfulUpdate;
   }
 
   public boolean cleanPreAggBillingData(
