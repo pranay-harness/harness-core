@@ -18,7 +18,7 @@ public interface AccessRequestService {
 
   List<AccessRequest> getActiveAccessRequestForAccount(String accountId);
 
-  boolean update(String accessRequestId, long startTime, long endTime);
+  boolean update(String accessRequestId, long accessStartAt, long accessEndAt);
 
   boolean updateStatus(String accessRequestId, boolean accessStatus);
 

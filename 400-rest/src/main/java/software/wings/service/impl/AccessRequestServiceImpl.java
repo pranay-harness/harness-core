@@ -77,9 +77,13 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   @Override
-  public boolean update(String accessRequestId, long startTime, long endTime) {
+  public boolean update(String accessRequestId, long accessStartAt, long accessEndAt) {
     AccessRequest accessRequest = wingsPersistence.get(AccessRequest.class, accessRequestId);
     notNullCheck(String.format("Invalid Access Request with id: {}", accessRequestId), accessRequest);
+    UpdateOperations<AccessRequest> updateOperations = wingsPersistence.createUpdateOperations(AccessRequest.class);
+    updateOperations.set("accessStartAt", accessStartAt);
+    updateOperations.set("accessEndAt", accessEndAt);
+    wingsPersistence.update(accessRequest, updateOperations);
     return true;
   }
 
@@ -93,7 +97,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     AccessRequest accessRequest = get(accessRequestId);
     notNullCheck(String.format("Invalid Access Request with id: {}", accessRequestId), accessRequest);
     UpdateOperations<AccessRequest> updateOperations = wingsPersistence.createUpdateOperations(AccessRequest.class);
-    updateOperations.set("acccessStatus", acccessStatus);
+    updateOperations.set("accessActive", acccessStatus);
     wingsPersistence.update(accessRequest, updateOperations);
     return true;
   }
