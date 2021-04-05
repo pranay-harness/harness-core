@@ -831,6 +831,7 @@ import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
+import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
 @Deprecated
@@ -1745,5 +1746,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ARMPreExistingTemplate.class, 8122);
     kryo.register(ARMStateExecutionData.class, 8123);
     kryo.register(AccountPreferences.class, 8124);
+    kryo.register(ApiException.class, 8125);
   }
 }

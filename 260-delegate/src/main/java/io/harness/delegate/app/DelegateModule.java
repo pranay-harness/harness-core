@@ -639,6 +639,16 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("cvngSyncCallExecutor")
+  public ExecutorService cvngSyncCallExecutor() {
+    ExecutorService cvngSyncCallExecutor = ThreadPool.create(1, 5, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("cvngSyncCallExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngSyncCallExecutor.shutdownNow()));
+    return cvngSyncCallExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("alternativeExecutor")
   public ExecutorService alternativeExecutor() {
     ExecutorService alternativeExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
