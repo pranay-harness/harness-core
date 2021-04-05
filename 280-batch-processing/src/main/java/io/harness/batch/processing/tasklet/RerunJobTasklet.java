@@ -51,7 +51,7 @@ public class RerunJobTasklet implements Tasklet {
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
       boolean cleanBillingData = billingDataService.cleanBillingData(
           accountId, startInstant, Instant.ofEpochMilli(endTime), BatchJobType.INSTANCE_BILLING);
-      if (!cleanBillingData) {
+      if (cleanBillingData) {
         throw new Exception("Error Cleaning billing data");
       }
     }
