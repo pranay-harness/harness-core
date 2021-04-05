@@ -5,6 +5,7 @@ import io.harness.rest.RestResponse;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.service.intfc.HarnessUserGroupService;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
@@ -16,7 +17,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Sets;
 
 @Api("harnessUserGroup")
 @Path("/harnessUserGroup")
