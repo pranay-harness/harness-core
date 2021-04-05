@@ -1,9 +1,11 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,13 +23,14 @@ import org.junit.experimental.categories.Category;
  * created by ujjawal
  */
 
+@OwnedBy(PL)
 public class PermissionAttributeTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testAddedPermissionsAreInSync() {
-    assertThat(PermissionAttribute.PermissionType.values().length).isEqualTo(42);
-    assertThat(QLAccountPermissionType.values().length).isEqualTo(27);
+    assertThat(PermissionAttribute.PermissionType.values().length).isEqualTo(43);
+    assertThat(QLAccountPermissionType.values().length).isEqualTo(28);
     assertThat(PermissionAttribute.PermissionType.values().length - 42)
         .isEqualTo(QLAccountPermissionType.values().length - 27);
   }
