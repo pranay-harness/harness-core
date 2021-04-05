@@ -22,7 +22,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -115,13 +114,6 @@ public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResp
       // Just Place holder for now till we have assertions
       if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
         responseBuilder.status(Status.FAILED);
-        if (stepParameters.getRollbackInfo() != null) {
-          responseBuilder.stepOutcome(
-              StepOutcome.builder()
-                  .name("RollbackOutcome")
-                  .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                  .build());
-        }
         if (!assertionSuccessful) {
           responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
         }
@@ -139,13 +131,6 @@ public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResp
                                       .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
                                           errorNotifyResponseData.getFailureTypes()))
                                       .build());
-      if (stepParameters.getRollbackInfo() != null) {
-        responseBuilder.stepOutcome(
-            StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
-      }
       return responseBuilder.build();
     }
   }

@@ -76,7 +76,6 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return K8sRollingStepParameters.infoBuilder()
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())

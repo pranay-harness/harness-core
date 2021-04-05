@@ -21,6 +21,7 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

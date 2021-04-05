@@ -78,7 +78,6 @@ public class K8sBlueGreenStepInfo extends K8sBlueGreenBaseStepInfo implements CD
     return K8sBlueGreenStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())
