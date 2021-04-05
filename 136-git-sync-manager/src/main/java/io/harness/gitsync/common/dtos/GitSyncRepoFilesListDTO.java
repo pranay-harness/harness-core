@@ -1,23 +1,24 @@
 package io.harness.gitsync.common.dtos;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
-
 import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import io.swagger.annotations.ApiModel;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
-@Data
+@OwnedBy(HarnessTeam.DX)
+@Value
 @Builder
-@FieldNameConstants(innerTypeName = "GitSyncProductDTOKeys")
+@ApiModel("GitSyncRepoFilesList")
+@FieldNameConstants(innerTypeName = "GitSyncConfigFilesListDTOKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@OwnedBy(DX)
-public class GitSyncProductDTO {
+public class GitSyncRepoFilesListDTO {
   private ModuleType moduleType;
-  private List<GitSyncEntityListDTO> gitSyncEntityListDTOList;
+  private List<GitSyncRepoFilesDTO> gitSyncRepoFilesList;
 }
