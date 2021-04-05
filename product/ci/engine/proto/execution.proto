@@ -51,6 +51,7 @@ message RunStep {
   repeated string envVarOutputs = 3;  // output variables to export as step outcome
   uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
+  map<string, string> environment = 6;
 }
 
 message PluginStep {
@@ -60,6 +61,7 @@ message PluginStep {
   uint32 container_port = 3;
   // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
   repeated string entrypoint = 4;
+  map<string, string> environment = 5;
 }
 
 message SaveCacheStep {
