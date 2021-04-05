@@ -12,7 +12,10 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class CDNGRbacPermissions {
   public String SERVICE_CREATE_PERMISSION = "core_service_create";
+  public String SERVICE_UPDATE_PERMISSION = "core_service_edit";
   public String SERVICE_RUNTIME_PERMISSION = "core_service_runtimeAccess";
+
   public String ENVIRONMENT_CREATE_PERMISSION = "core_environment_create";
   public String ENVIRONMENT_RUNTIME_PERMISSION = "core_environment_runtimeAccess";
+  public String ENVIRONMENT_UPDATE_PERMISSION = "core_environment_edit";
 }
