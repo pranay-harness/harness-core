@@ -98,7 +98,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private AppService appService;
