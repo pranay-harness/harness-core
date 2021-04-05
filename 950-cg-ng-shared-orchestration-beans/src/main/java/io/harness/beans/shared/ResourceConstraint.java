@@ -33,6 +33,8 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(CDC)
 @Data
@@ -40,6 +42,8 @@ import org.mongodb.morphia.annotations.Id;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
 @Entity(value = "resourceConstraint", noClassnameStored = true)
+@Document("resourceConstraint")
+@TypeAlias("resourceConstraint")
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
@@ -57,7 +61,7 @@ public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedA
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String NAME_KEY = "name";
 
-  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @org.springframework.data.annotation.Id @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;
 

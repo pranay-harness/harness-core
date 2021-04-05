@@ -1,5 +1,7 @@
 package io.harness.cdng.creator.plan.infrastructure;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
@@ -42,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class InfrastructurePmsPlanCreator {
   public PlanNode getInfraStepPlanNode(PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
@@ -58,7 +61,8 @@ public class InfrastructurePmsPlanCreator {
   }
 
   public PlanNode getInfraSectionPlanNode(YamlNode infraSectionNode, String infraStepNodeUuid,
-      PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer, YamlField infraField) {
+      PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer, YamlField infraField,
+      YamlField resourceConstraintField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
     PlanNodeBuilder planNodeBuilder =
@@ -70,7 +74,9 @@ public class InfrastructurePmsPlanCreator {
             .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(infraSectionNode, kryoSerializer));
+            .adviserObtainments(infrastructure.isAllowSimultaneousDeployments()
+                    ? getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer)
+                    : getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer));
 
     if (!isProvisionerConfigured(actualInfraConfig)) {
       planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
@@ -78,7 +84,7 @@ public class InfrastructurePmsPlanCreator {
     return planNodeBuilder.build();
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToExecution(
       YamlNode currentNode, KryoSerializer kryoSerializer) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentNode != null) {
@@ -91,6 +97,22 @@ public class InfrastructurePmsPlanCreator {
                     OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
                 .build());
       }
+    }
+    return adviserObtainments;
+  }
+
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToResourceConstraint(
+      YamlField resourceConstraintField, KryoSerializer kryoSerializer) {
+    List<AdviserObtainment> adviserObtainments = new ArrayList<>();
+    if (resourceConstraintField != null && resourceConstraintField.getNode().getUuid() != null) {
+      adviserObtainments.add(
+          AdviserObtainment.newBuilder()
+              .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+              .setParameters(ByteString.copyFrom(
+                  kryoSerializer.asBytes(OnSuccessAdviserParameters.builder()
+                                             .nextNodeId(resourceConstraintField.getNode().getUuid())
+                                             .build())))
+              .build());
     }
     return adviserObtainments;
   }
@@ -199,5 +221,9 @@ public class InfrastructurePmsPlanCreator {
     YamlField infraDefField = infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF);
     YamlField provisionerYamlField = infraDefField.getNode().getField(YAMLFieldNameConstants.PROVISIONER);
     return provisionerYamlField.getNode().getUuid();
+  }
+
+  public boolean areSimultaneousDeploymentsAllowed(YamlNode infraNode) {
+    return infraNode.getCurrJsonNode().get("allowSimultaneousDeployments") != null;
   }
 }
