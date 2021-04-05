@@ -2,8 +2,10 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -42,6 +44,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 public class UserResourceNG {
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private final UserService userService;

@@ -3,7 +3,9 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -38,6 +40,7 @@ import org.hibernate.validator.constraints.NotBlank;
  * @author Swapnil
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 @Data
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)

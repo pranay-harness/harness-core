@@ -3,7 +3,9 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SAML")

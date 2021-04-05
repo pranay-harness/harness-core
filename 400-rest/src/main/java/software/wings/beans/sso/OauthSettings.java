@@ -3,7 +3,9 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.authentication.OauthProviderType;
 
@@ -19,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)

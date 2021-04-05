@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -26,6 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

@@ -12,8 +12,10 @@ import static software.wings.utils.Utils.urlDecode;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.account.ProvisionStep;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
@@ -91,6 +93,7 @@ import retrofit2.http.Body;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 public class AccountResource {
   private final AccountService accountService;
   private final UserService userService;

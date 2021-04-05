@@ -2,8 +2,10 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @NextGenManagerAuth
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._120_NG_MANAGER)
 public class SSOResourceNG {
   private SSOService ssoService;
 
