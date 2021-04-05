@@ -20,11 +20,11 @@ public class BigQueryConstants {
       + "WHERE accountid = '%s' and starttime = %s ; ";
 
   public static final String AZURE_VM_BILLING_QUERY =
-      "SELECT SUM(cost) as cost, azureInstanceId, azureVMProviderId, azureMeterCategory"
+      "SELECT SUM(cost) as cost, azureInstanceId, azureVMProviderId, azureMeterCategory "
       + "FROM `%s` "
       + "WHERE  azureVMProviderId IN ( '%s' )  AND "
-      + "startTime  >= '%s' AND startTime < '%s' AND cloudProvider = 'AZURE'"
-      + "GROUP BY  azureInstanceId, azureVMProviderId, azureMeterCategory";
+      + "startTime  >= '%s' AND startTime < '%s' AND cloudProvider = 'AZURE' "
+      + "GROUP BY  azureInstanceId, azureVMProviderId, azureMeterCategory; ";
 
   public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(blendedcost) as cost, resourceid, usagetype  "
       + "FROM `%s` "

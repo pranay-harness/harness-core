@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @Service
 public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
@@ -43,7 +46,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
 
   @Autowired
   public ComputeInstancePricingStrategy(VMPricingService vmPricingService,
-      AwsCustomBillingService awsCustomBillingService, AzureCustomBillingService azureCustomBillingService, InstanceResourceService instanceResourceService,
+      AwsCustomBillingService awsCustomBillingService, AzureCustomBillingService azureCustomBillingService,
+      InstanceResourceService instanceResourceService,
       EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy,
       CustomBillingMetaDataService customBillingMetaDataService, PricingProfileService pricingProfileService) {
     this.vmPricingService = vmPricingService;
@@ -145,13 +149,10 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(instanceData.getAccountId());
     String azureDataSetId = customBillingMetaDataService.getAzureDataSetId(instanceData.getAccountId());
     if (cloudProvider == CloudProvider.AWS && null != awsDataSetId) {
-      vmInstanceBillingData =
-          awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
-    }
-    else if (cloudProvider == CloudProvider.AZURE && null != azureDataSetId) {
+      vmInstanceBillingData = awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
+    } else if (cloudProvider == CloudProvider.AZURE && null != azureDataSetId) {
       log.info("Getting custom VM pricing for Azure");
-      vmInstanceBillingData =
-              azureCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
+      vmInstanceBillingData = azureCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
     }
     if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
       double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / instanceActiveSeconds;

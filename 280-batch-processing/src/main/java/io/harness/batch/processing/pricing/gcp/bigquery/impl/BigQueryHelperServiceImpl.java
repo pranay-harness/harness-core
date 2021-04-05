@@ -56,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @OwnedBy(HarnessTeam.CE)
 @Service
@@ -155,7 +156,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   }
 
   private Map<String, VMInstanceBillingData> query(String formattedQuery, String cloudProviderType) {
-    log.info("Formatted query {}", formattedQuery);
+    log.info("Formatted query for {} : {}", cloudProviderType, formattedQuery);
     BigQuery bigQueryService = getBigQueryService();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
     TableResult result = null;
@@ -166,13 +167,15 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
           return convertToAwsInstanceBillingData(result);
         case "AZURE":
           return convertToAzureInstanceBillingData(result);
+        default:
+          break;
       }
 
     } catch (InterruptedException e) {
-      log.error("Failed to get AWS EC2 Billing Data. {}", e);
+      log.error("Failed to get {} Billing Data. {}", cloudProviderType, e);
       Thread.currentThread().interrupt();
     } catch (Exception ex) {
-      log.error("Exception Failed to get AWS EC2 Billing Data", ex);
+      log.error("Exception Failed to get {} Billing Data", cloudProviderType, ex);
     }
     return Collections.emptyMap();
   }
@@ -205,7 +208,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    log.info("resource map data {} ", vmInstanceBillingDataMap);
+    log.info("Azure: resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 
@@ -313,7 +316,6 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   @Override
   public Map<String, VMInstanceBillingData> getAzureVMBillingData(
       List<String> resourceIds, Instant startTime, Instant endTime, String dataSetId) {
-    // TODO: Correct the query
     String query = BigQueryConstants.AZURE_VM_BILLING_QUERY;
     String resourceId = String.join("','", resourceIds);
     String projectTableName = getAzureProjectTableName(dataSetId);
@@ -398,7 +400,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    log.info("resource map data {} ", vmInstanceBillingDataMap);
+    log.info("AWS: resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 

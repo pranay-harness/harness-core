@@ -2,6 +2,8 @@ package io.harness.batch.processing.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Slf4j
 public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataService {
@@ -37,7 +40,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
 
   private LoadingCache<String, String> azureBillingMetaDataCache =
-          Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAzureBillingMetaData);
+      Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAzureBillingMetaData);
 
   private LoadingCache<CacheKey, Boolean> pipelineJobStatusCache =
       Caffeine.newBuilder()
@@ -103,12 +106,12 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   private String getAzureBillingMetaData(String accountId) {
     // Enabled for all
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-            accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE);
+        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE);
     log.info("Setting att size {}", settingAttributes.size());
     if (!settingAttributes.isEmpty()) {
       SettingAttribute settingAttribute = settingAttributes.get(0);
       BillingDataPipelineRecord billingDataPipelineRecord =
-              billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
+          billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
       log.info("BDPR {}", billingDataPipelineRecord);
       return billingDataPipelineRecord.getDataSetId();
     }
