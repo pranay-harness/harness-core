@@ -32,7 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("liteEngineTaskStepInfo")
 public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  public static final int DEFAULT_TIMEOUT = 1200;
+  public static final int DEFAULT_TIMEOUT = 600 * 1000;
   public static final String CALLBACK_IDS = "callbackIds";
   public static final String LOG_KEYS = "logKeys";
 
