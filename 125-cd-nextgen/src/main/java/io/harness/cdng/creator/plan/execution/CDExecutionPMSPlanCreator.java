@@ -1,13 +1,17 @@
 package io.harness.cdng.creator.plan.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.advisers.RollbackCustomAdviser;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -30,9 +34,13 @@ import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CDC)
 public class CDExecutionPMSPlanCreator {
   public PlanCreationResponse createPlanForExecution(YamlField executionField) {
-    YamlField stepsField = Preconditions.checkNotNull(executionField.getNode().getField(YAMLFieldNameConstants.STEPS));
+    YamlField stepsField = executionField.getNode().getField(YAMLFieldNameConstants.STEPS);
+    if (stepsField == null || stepsField.getNode().asArray().size() == 0) {
+      throw new InvalidRequestException("Execution section cannot have empty steps in a pipeline");
+    }
     StepParameters stepParameters = NGSectionStepParameters.builder()
                                         .childNodeId(stepsField.getNode().getUuid())
                                         .logMessage("Execution Element")
@@ -40,10 +48,10 @@ public class CDExecutionPMSPlanCreator {
     PlanNode executionPlanNode =
         PlanNode.builder()
             .uuid(executionField.getNode().getUuid())
-            .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER)
+            .identifier(OrchestrationConstants.EXECUTION_NODE_IDENTIFIER)
             .stepType(NGSectionStep.STEP_TYPE)
             .group(StepOutcomeGroup.EXECUTION.name())
-            .name(PlanCreationConstants.EXECUTION_NODE_NAME)
+            .name(OrchestrationConstants.EXECUTION_NODE_NAME)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())

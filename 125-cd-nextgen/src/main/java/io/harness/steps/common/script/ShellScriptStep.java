@@ -42,7 +42,6 @@ import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -241,13 +240,6 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
           break;
         case FAILURE:
           stepResponseBuilder.status(Status.FAILED);
-          if (stepParameters.getRollbackInfo() != null) {
-            stepResponseBuilder.stepOutcome(
-                StepResponse.StepOutcome.builder()
-                    .name("RollbackOutcome")
-                    .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                    .build());
-          }
           break;
         case RUNNING:
           stepResponseBuilder.status(Status.RUNNING);
@@ -285,13 +277,6 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
           FailureInfo.newBuilder().setErrorMessage(ex.getErrorResponseData().getErrorMessage()).build());
-      if (stepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
-      }
       return stepResponseBuilder.build();
     }
   }

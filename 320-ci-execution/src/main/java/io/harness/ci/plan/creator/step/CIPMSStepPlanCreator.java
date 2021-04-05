@@ -49,7 +49,7 @@ public class CIPMSStepPlanCreator extends GenericStepPMSPlanCreator {
                                                     .setType(stepElement.getStepSpecType().getFacilitatorType())
                                                     .build())
                                        .build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField(), null))
+            .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)

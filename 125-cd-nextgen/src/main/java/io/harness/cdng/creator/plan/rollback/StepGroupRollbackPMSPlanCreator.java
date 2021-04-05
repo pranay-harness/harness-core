@@ -1,7 +1,10 @@
 package io.harness.cdng.creator.plan.rollback;
 
-import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -17,16 +20,16 @@ import io.harness.steps.common.NGSectionStepParameters;
 import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@OwnedBy(HarnessTeam.CDC)
 public class StepGroupRollbackPMSPlanCreator {
   public static PlanCreationResponse createStepGroupRollbackPlan(YamlField stepGroup) {
     YamlField rollbackStepsNode = stepGroup.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
 
-    if (rollbackStepsNode != null) {
+    if (rollbackStepsNode != null && rollbackStepsNode.getNode().asArray().size() != 0) {
       PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
       List<YamlField> stepYamlFields = getStepYamlFields(rollbackStepsNode);
       for (YamlField stepYamlField : stepYamlFields) {
@@ -44,8 +47,8 @@ public class StepGroupRollbackPMSPlanCreator {
       PlanNode stepGroupRollbackNode =
           PlanNode.builder()
               .uuid(rollbackStepsNode.getNode().getUuid())
-              .name(stepGroup.getNode().getNameOrIdentifier() + "(" + PlanCreationConstants.ROLLBACK_NODE_NAME + ")")
-              .identifier(stepGroup.getNode().getIdentifier() + "(" + PlanCreationConstants.ROLLBACK_NODE_NAME + ")")
+              .name(stepGroup.getNode().getNameOrIdentifier() + OrchestrationConstants.ROLLBACK_NODE_NAME)
+              .identifier(stepGroup.getNode().getIdentifier() + OrchestrationConstants.ROLLBACK_NODE_NAME)
               .stepType(NGSectionStep.STEP_TYPE)
               .group(StepOutcomeGroup.STEP.name())
               .stepParameters(stepParameters)
@@ -61,20 +64,6 @@ public class StepGroupRollbackPMSPlanCreator {
   private static List<YamlField> getStepYamlFields(YamlField rollbackStepsNode) {
     List<YamlNode> yamlNodes =
         Optional.of(Preconditions.checkNotNull(rollbackStepsNode).getNode().asArray()).orElse(Collections.emptyList());
-    List<YamlField> stepFields = new LinkedList<>();
-
-    yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField("step");
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
-      YamlField parallelStepField = yamlNode.getField("parallel");
-      if (stepField != null) {
-        stepFields.add(stepField);
-      } else if (stepGroupField != null) {
-        stepFields.add(stepGroupField);
-      } else if (parallelStepField != null) {
-        stepFields.add(parallelStepField);
-      }
-    });
-    return stepFields;
+    return PlanCreatorUtils.getStepYamlFields(yamlNodes);
   }
 }

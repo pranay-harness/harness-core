@@ -64,7 +64,6 @@ public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
         .name(baseStepParameterInfo.getName())
         .description(baseStepParameterInfo.getDescription())
         .skipCondition(baseStepParameterInfo.getSkipCondition())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
         .skipDryRun(skipDryRun)
         .build();

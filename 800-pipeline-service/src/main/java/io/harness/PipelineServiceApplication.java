@@ -49,6 +49,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
@@ -250,6 +251,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
+        .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .build();
