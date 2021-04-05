@@ -28,7 +28,7 @@ public class RerunJobTasklet implements Tasklet {
   @Autowired private BillingDataServiceImpl billingDataService;
 
   @Override
-  public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
+  public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
     Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
@@ -42,14 +42,18 @@ public class RerunJobTasklet implements Tasklet {
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
     }
 
-    if (null != ceMetadataRecord && ceMetadataRecord.getAwsDataPresent()) {
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+        && ceMetadataRecord.getAwsDataPresent()) {
       log.info("invalidate cluster jobs for {}", accountId);
       ImmutableList<String> batchJobs =
           ImmutableList.of(BatchJobType.INSTANCE_BILLING.toString(), BatchJobType.ACTUAL_IDLE_COST_BILLING.toString(),
               BatchJobType.INSTANCE_BILLING_AGGREGATION.toString(), BatchJobType.CLUSTER_DATA_TO_BIG_QUERY.toString());
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
-      billingDataService.cleanBillingData(
+      boolean cleanBillingData = billingDataService.cleanBillingData(
           accountId, startInstant, Instant.ofEpochMilli(endTime), BatchJobType.INSTANCE_BILLING);
+      if (!cleanBillingData) {
+        throw new Exception("Error Cleaning billing data");
+      }
     }
     return null;
   }
