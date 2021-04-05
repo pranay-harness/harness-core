@@ -30,7 +30,6 @@ public class AuditEventMapper {
         .module(dto.getModule())
         .resource(ResourceMapper.fromDTO(dto.getResource()))
         .action(dto.getAction())
-        .yamlDiff(dto.getYamlDiff())
         .auditEventData(dto.getAuditEventData())
         .internalInfo(internalInfo)
         .build();
@@ -47,7 +46,6 @@ public class AuditEventMapper {
         .module(auditEvent.getModule())
         .resource(ResourceMapper.toDTO(auditEvent.getResource()))
         .action(auditEvent.getAction())
-        .yamlDiff(auditEvent.getYamlDiff())
         .auditEventData(auditEvent.getAuditEventData())
         .build();
   }

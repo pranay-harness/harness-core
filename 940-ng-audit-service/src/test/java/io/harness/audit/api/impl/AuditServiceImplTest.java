@@ -22,6 +22,7 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.PrincipalType;
@@ -44,19 +45,27 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 public class AuditServiceImplTest extends CategoryTest {
   private AuditRepository auditRepository;
+  private AuditYamlService auditYamlService;
   private AuditFilterPropertiesValidator auditFilterPropertiesValidator;
   private AuditService auditService;
+  private TransactionTemplate transactionTemplate;
+
   private final PageRequest samplePageRequest = PageRequest.builder().pageIndex(0).pageSize(50).build();
 
   @Before
   public void setup() {
     auditRepository = mock(AuditRepository.class);
+    auditYamlService = mock(AuditYamlService.class);
     auditFilterPropertiesValidator = mock(AuditFilterPropertiesValidator.class);
-    auditService = spy(new AuditServiceImpl(auditRepository, auditFilterPropertiesValidator));
+    transactionTemplate = mock(TransactionTemplate.class);
+
+    auditService = spy(
+        new AuditServiceImpl(auditRepository, auditYamlService, auditFilterPropertiesValidator, transactionTemplate));
     doNothing().when(auditFilterPropertiesValidator).validate(any(), any());
   }
 

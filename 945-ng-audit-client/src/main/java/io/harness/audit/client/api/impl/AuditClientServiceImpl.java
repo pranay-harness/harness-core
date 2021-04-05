@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditEventDTO.AuditEventDTOBuilder;
+import io.harness.audit.beans.YamlDiffRecordDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.audit.client.remote.AuditClient;
 import io.harness.context.GlobalContext;
@@ -49,6 +50,10 @@ public class AuditClientServiceImpl implements AuditClientService {
         && ((MdcGlobalContextData) globalContext.get(MDC_ID)).getMap() != null) {
       correlationId = ((MdcGlobalContextData) globalContext.get(MDC_ID)).getMap().get(getCorrelationIdKey());
     }
+
+    YamlDiffRecordDTO yamlDiffRecordDTO =
+        YamlDiffRecordDTO.builder().newYaml(auditEntry.getNewYaml()).oldYaml(auditEntry.getOldYaml()).build();
+
     AuditEventDTOBuilder auditEventDTOBuilder = AuditEventDTO.builder()
                                                     .resource(auditEntry.getResource())
                                                     .action(auditEntry.getAction())
@@ -56,6 +61,7 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .insertId(auditEntry.getInsertId())
                                                     .module(auditEntry.getModule())
                                                     .auditEventData(auditEntry.getAuditEventData())
+                                                    .yamlDiffRecordDTO(yamlDiffRecordDTO)
                                                     .timestamp(auditEntry.getTimestamp());
     if (principal != null) {
       auditEventDTOBuilder.authenticationInfo(fromSecurityPrincipal(principal));
