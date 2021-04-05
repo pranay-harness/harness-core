@@ -96,7 +96,7 @@ public class PipelineResource implements YamlSchemaResource {
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
-  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_pipeline_create")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_pipeline_edit")
   public ResponseDTO<String> createPipeline(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
