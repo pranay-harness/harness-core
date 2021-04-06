@@ -1,4 +1,4 @@
-package io.harness.steps.jira.create;
+package io.harness.steps.jira.update;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -22,35 +22,40 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
-public class JiraCreateStep implements TaskExecutable<JiraCreateStepParameters, JiraTaskNGResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).build();
+public class JiraUpdateStep implements TaskExecutable<JiraUpdateStepParameters, JiraTaskNGResponse> {
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_UPDATE).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, JiraCreateStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, JiraUpdateStepParameters stepParameters, StepInputPackage inputPackage) {
     JiraTaskNGParametersBuilder paramsBuilder =
         JiraTaskNGParameters.builder()
-            .action(JiraActionNG.CREATE_ISSUE)
-            .projectKey(stepParameters.getProjectKey().getValue())
-            .issueType(stepParameters.getIssueType().getValue())
+            .action(JiraActionNG.UPDATE_ISSUE)
+            .issueKey(stepParameters.getIssueKey().getValue())
+            .transitionToStatus(stepParameters.getTransitionTo() == null
+                    ? null
+                    : (String) stepParameters.getTransitionTo().getStatus().fetchFinalValue())
+            .transitionName(stepParameters.getTransitionTo() == null
+                    ? null
+                    : (String) stepParameters.getTransitionTo().getTransitionName().fetchFinalValue())
             .fields(stepParameters.getFields() == null
                     ? null
                     : stepParameters.getFields().entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
+                        Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue().fetchFinalValue())));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
-        stepParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Create Issue");
+        stepParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Update Issue");
   }
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, JiraCreateStepParameters stepParameters, Supplier<JiraTaskNGResponse> responseSupplier) {
+      Ambiance ambiance, JiraUpdateStepParameters stepParameters, Supplier<JiraTaskNGResponse> responseSupplier) {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }
 
   @Override
-  public Class<JiraCreateStepParameters> getStepParametersClass() {
-    return JiraCreateStepParameters.class;
+  public Class<JiraUpdateStepParameters> getStepParametersClass() {
+    return JiraUpdateStepParameters.class;
   }
 }

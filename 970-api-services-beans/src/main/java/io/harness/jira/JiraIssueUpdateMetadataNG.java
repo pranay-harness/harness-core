@@ -3,13 +3,15 @@ package io.harness.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.jackson.JsonNodeUtils;
-import io.harness.jira.deserializer.JiraStatusDeserializer;
+import io.harness.jira.deserializer.JiraIssueUpdateMetadataDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -22,18 +24,20 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonDeserialize(using = JiraStatusDeserializer.class)
-public class JiraStatusNG {
-  @NotNull String id;
-  @NotNull String name;
-  private JiraStatusCategoryNG statusCategory;
+@JsonDeserialize(using = JiraIssueUpdateMetadataDeserializer.class)
+public class JiraIssueUpdateMetadataNG {
+  @NotNull Map<String, JiraFieldNG> fields = new HashMap<>();
 
-  public JiraStatusNG(JsonNode node) {
-    this.id = JsonNodeUtils.mustGetString(node, "id");
-    this.name = JsonNodeUtils.mustGetString(node, "name");
-    JsonNode statusCategory = node.get("statusCategory");
-    if (statusCategory != null && statusCategory.isObject()) {
-      this.statusCategory = new JiraStatusCategoryNG(statusCategory);
+  public JiraIssueUpdateMetadataNG(JsonNode node) {
+    addFields(node.get("fields"));
+  }
+
+  private void addFields(JsonNode node) {
+    if (node == null || !node.isObject()) {
+      return;
     }
+
+    ObjectNode fields = (ObjectNode) node;
+    fields.fields().forEachRemaining(f -> JiraFieldNG.addFields(this.fields, f.getKey(), f.getValue()));
   }
 }
