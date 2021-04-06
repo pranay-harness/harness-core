@@ -18,6 +18,7 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -40,6 +41,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -49,6 +51,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -101,6 +104,31 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
+
+    List<KubernetesResource> kubernetesResources = getResources();
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(kubernetesResources)
+        .when(k8sTaskHelperBase)
+        .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheckForAllCustomResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean(), anyLong());
   }
 
   @Test
@@ -617,5 +645,27 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
                                     .map(resource -> resource.getResourceId().getName())
                                     .collect(Collectors.toList());
     assertThat(resoucesName).containsExactlyInAnyOrder("mysecret", "deployment", "mycm");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalFailedGetPods() throws Exception {
+    InvalidRequestException thrownException = new InvalidRequestException("Failed to get pods");
+
+    doReturn(emptyList())
+        .when(k8sRollingBaseHandler)
+        .getExistingPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString(),
+            any(LogCallback.class));
+    doThrow(thrownException)
+        .when(k8sRollingBaseHandler)
+        .getPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString());
+
+    assertThatThrownBy(
+        ()
+            -> k8sRollingDeployTaskHandler.executeTaskInternal(
+                K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+                K8sDelegateTaskParams.builder().build()))
+        .isEqualTo(thrownException);
   }
 }
