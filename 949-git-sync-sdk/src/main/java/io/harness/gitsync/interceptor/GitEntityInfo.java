@@ -18,5 +18,5 @@ public class GitEntityInfo {
   String filePath;
   String commitMsg;
   String lastObjectId; // required in case of update file
-  @Builder.Default boolean createPrKey = false;
+  boolean createPrKey;
 }
