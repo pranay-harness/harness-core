@@ -41,6 +41,14 @@ public class InstanceMetaDataConstants {
   public static final String SLOW_ACCOUNT = "SFByhonVQvGJX0SbY82rjA";
   public static final String AZURE_SUBSCRIPTION_ID = "vm_subscription_id";
   public static final String AZURE_RESOURCEGROUP_NAME = "vm_resource_group_name";
+  public static final int VM_INDEX = 2;
+  public static final String VM_INDEX_VALUE = "virtualMachines";
+  public static final int VMSS_INDEX = 4;
+  public static final String VMSS_INDEX_VALUE = "virtualMachineScaleSets";
+  public static final int SUBSCRIPTION_INDEX = 3;
+  public static final String SUBSCRIPTION_INDEX_VALUE = "subscriptions";
+  public static final int RESOURCE_GROUP_INDEX = 5;
+  public static final String RESOURCE_GROUP_INDEX_VALUE = "resourceGroups";
 
   private InstanceMetaDataConstants() {}
 }
