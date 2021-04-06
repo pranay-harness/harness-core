@@ -19,6 +19,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -85,7 +86,9 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @OrgIdentifier @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @ProjectIdentifier @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+      @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
+      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo) {
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (!connectorResponseDTO.isPresent()) {
@@ -138,7 +141,8 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
-      @Body ConnectorFilterPropertiesDTO connectorListFilter) {
+      @Body ConnectorFilterPropertiesDTO connectorListFilter, @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
+      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo) {
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -147,7 +151,12 @@ public class ConnectorResource {
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
+      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
+      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
+      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
+      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -161,7 +170,13 @@ public class ConnectorResource {
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
+      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
+      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
+      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
+      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR,
+      @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
@@ -174,7 +189,12 @@ public class ConnectorResource {
   public ResponseDTO<Boolean> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank String connectorIdentifier) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank String connectorIdentifier,
+      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
+      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
+      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
+      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
+      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager");
     }

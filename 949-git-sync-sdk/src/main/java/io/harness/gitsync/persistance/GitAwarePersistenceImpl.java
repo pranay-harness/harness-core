@@ -151,7 +151,7 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
                                            .and(EntityGitBranchMetadataKeys.entityType)
                                            .is(entityDetail.getType().name())
                                            .and(EntityGitBranchMetadataKeys.accountId)
-                                           .is(gitBranchInfo.getAccountId())
+                                           .is(entityDetail.getEntityRef().getAccountIdentifier())
                                            .is(scmPushResponse.getYamlGitConfigId())
                                            .and(EntityGitBranchMetadataKeys.objectId)
                                            .is(objectIdOfYaml)),
@@ -163,7 +163,7 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
     mongoTemplate
         .save(EntityGitBranchMetadata.builder()
                   .objectId(objectIdOfYaml)
-                  .accountId(gitBranchInfo.getAccountId())
+                  .accountId(entityDetail.getEntityRef().getAccountIdentifier())
                   .orgIdentifier(objectToSave.getOrgIdentifier()))
         .projectIdentifier(objectToSave.getProjectIdentifier())
         .branch(gitBranchInfo.getBranch())

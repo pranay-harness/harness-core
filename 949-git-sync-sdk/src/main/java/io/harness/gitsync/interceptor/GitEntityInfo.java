@@ -16,7 +16,7 @@ public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
   String filePath;
-  String accountId;
   String commitMsg;
   String lastObjectId; // required in case of update file
+  @Builder.Default boolean createPrKey = false;
 }
