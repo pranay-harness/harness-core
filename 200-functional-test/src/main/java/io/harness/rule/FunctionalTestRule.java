@@ -131,7 +131,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    // ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
