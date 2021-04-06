@@ -23,4 +23,6 @@ public interface AccessRequestService {
   boolean updateStatus(String accessRequestId, boolean accessStatus);
 
   boolean delete(String accessRequestId);
+
+  void checkAndAutoUpdateAccessRequests();
 }
