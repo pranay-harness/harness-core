@@ -64,6 +64,21 @@ eventsConfig:
     password: ${EVENTS_CONFIG_REDIS_PASSWORD:-""}
   enabled: true
 
+redisLockConfig:
+  sentinel: ${LOCK_CONFIG_USE_SENTINEL:-false}
+  masterName: ${LOCK_CONFIG_SENTINEL_MASTER_NAME:-test}
+  redisUrl: ${LOCK_CONFIG_REDIS_URL:-redis://localhost:6379}
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ${LOCK_CONFIG_ENV_NAMESPACE:-""}
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  userName: ${LOCK_CONFIG_REDIS_USERNAME:-""}
+  password: ${LOCK_CONFIG_REDIS_PASSWORD:-""}
+
 iteratorsConfig:
   resourceGroupIteratorConfig:
     enabled: ${RESOURCE_GROUP_ITERATOR_ENABLED:-true}

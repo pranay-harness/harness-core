@@ -45,6 +45,7 @@ import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
@@ -69,6 +70,13 @@ public class AccessControlModule extends AbstractModule {
       instance = new AccessControlModule(config);
     }
     return instance;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  public RedisConfig redisLockConfig() {
+    return config.getRedisLockConfig();
   }
 
   @Provides
