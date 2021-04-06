@@ -175,8 +175,8 @@ public class ConnectorResource {
       @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
       @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
       @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
-      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR,
-      @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId) {
+      @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId,
+      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
