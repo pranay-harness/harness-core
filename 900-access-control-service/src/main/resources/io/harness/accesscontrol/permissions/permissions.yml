@@ -69,8 +69,8 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_connector_create
-    name: Create Connector
+  - identifier: core_connector_access
+    name: Access a Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -84,7 +84,7 @@ permissions:
       - organization
       - project
   - identifier: core_connector_edit
-    name: Edit a Connector
+    name: Create or Edit a Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -92,13 +92,6 @@ permissions:
       - project
   - identifier: core_connector_delete
     name: Delete a Connector
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-      - organization
-      - project
-  - identifier: core_connector_runtimeAccess
-    name: Runtime Access to Connector
     status: ACTIVE
     allowedScopeLevels:
       - account

@@ -10,11 +10,10 @@ roles:
         - core_secret_edit
         - core_secret_delete
         - core_secret_access
-        - core_connector_create
+        - core_connector_access
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
-        - core_connector_runtimeAccess
         - core_pipeline_view
         - core_pipeline_edit
         - core_pipeline_delete
@@ -56,11 +55,10 @@ roles:
         - core_secret_edit
         - core_secret_delete
         - core_secret_access
-        - core_connector_create
+        - core_connector_access
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
-        - core_connector_runtimeAccess
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -96,11 +94,10 @@ roles:
         - core_secret_edit
         - core_secret_delete
         - core_secret_access
-        - core_connector_create
+        - core_connector_access
         - core_connector_view
         - core_connector_edit
         - core_connector_delete
-        - core_connector_runtimeAccess
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -131,7 +128,7 @@ roles:
         - core_secret_view
         - core_secret_access
         - core_connector_view
-        - core_connector_runtimeAccess
+        - core_connector_access
         - core_pipeline_view
         - core_pipeline_execute
         - core_service_view
