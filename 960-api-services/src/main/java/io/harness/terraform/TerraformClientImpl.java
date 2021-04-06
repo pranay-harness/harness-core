@@ -2,6 +2,7 @@ package io.harness.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.terraform.TerraformConstants.DEFAULT_TERRAFORM_COMMAND_TIMEOUT;
 
 import static java.lang.String.format;
@@ -81,18 +82,25 @@ public class TerraformClientImpl implements TerraformClient {
       throws InterruptedException, TimeoutException, IOException {
     String command;
     if (terraformPlanCommandRequest.isDestroySet()) {
-      command =
-          format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
-              TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
-              TerraformHelperUtils.generateCommandFlagsString(
-                  terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM))
-          + terraformPlanCommandRequest.getVarParams();
+      command = format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
+          TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
+          TerraformHelperUtils.generateCommandFlagsString(
+              terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM));
     } else {
       command = format("terraform plan -input=false -out=tfplan %s %s",
           TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), TARGET_PARAM),
-          TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM)
-              + terraformPlanCommandRequest.getVarParams());
+          TerraformHelperUtils.generateCommandFlagsString(
+              terraformPlanCommandRequest.getVarFilePaths(), VAR_FILE_PARAM));
     }
+
+    if (isNotEmpty(terraformPlanCommandRequest.getVarParams())) {
+      String loggingCommand = command + terraformPlanCommandRequest.getUiLogs();
+      command = command + terraformPlanCommandRequest.getVarParams();
+
+      return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, loggingCommand,
+          new LogCallbackOutputStream(executionLogCallback));
+    }
+
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
@@ -102,11 +110,18 @@ public class TerraformClientImpl implements TerraformClient {
   public CliResponse refresh(TerraformRefreshCommandRequest terraformRefreshCommandRequest,
       Map<String, String> envVariables, String scriptDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
-    String command = "terraform refresh -input=false "
+    String command;
+    command = "terraform refresh -input=false "
         + TerraformHelperUtils.generateCommandFlagsString(terraformRefreshCommandRequest.getTargets(), TARGET_PARAM)
         + TerraformHelperUtils.generateCommandFlagsString(
-            terraformRefreshCommandRequest.getVarFilePaths(), VAR_FILE_PARAM)
-        + terraformRefreshCommandRequest.getVarParams();
+            terraformRefreshCommandRequest.getVarFilePaths(), VAR_FILE_PARAM);
+
+    if (isNotEmpty(terraformRefreshCommandRequest.getVarParams())) {
+      String loggingCommand = command + terraformRefreshCommandRequest.getUiLogs();
+      command = command + terraformRefreshCommandRequest.getVarParams();
+      return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, loggingCommand,
+          new LogCallbackOutputStream(executionLogCallback));
+    }
     return executeTerraformCLICommand(command, envVariables, scriptDirectory, executionLogCallback, command,
         new LogCallbackOutputStream(executionLogCallback));
   }
