@@ -37,6 +37,7 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.rule.Owner;
 
 import com.mongodb.BasicDBList;
+import java.time.Instant;
 import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
@@ -208,12 +209,12 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(startTimeDocument);
     Document startTimestampDocument = (Document) startTimeDocument.get(AuditEventKeys.timestamp);
     assertNotNull(startTimestampDocument);
-    assertEquals(17L, startTimestampDocument.get("$gte"));
+    assertEquals(Instant.ofEpochMilli(17L), startTimestampDocument.get("$gte"));
 
     Document endTimeDocument = (Document) andList.get(2);
     assertNotNull(endTimeDocument);
     Document endTimestampDocument = (Document) endTimeDocument.get(AuditEventKeys.timestamp);
-    assertEquals(18L, endTimestampDocument.get("$lte"));
+    assertEquals(Instant.ofEpochMilli(18L), endTimestampDocument.get("$lte"));
   }
 
   @Test

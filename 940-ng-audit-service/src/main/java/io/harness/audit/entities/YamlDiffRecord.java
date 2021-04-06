@@ -12,6 +12,7 @@ import io.harness.ng.DbAliases;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -36,6 +37,8 @@ public class YamlDiffRecord {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotNull String auditId;
   @NotNull @NotBlank String accountIdentifier;
+  @NotNull Instant timestamp;
+
   String oldYaml;
   String newYaml;
 
