@@ -168,7 +168,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
     return ResponseDTO.newResponse(pipelineExecuteHelper.startPreflightCheck(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
