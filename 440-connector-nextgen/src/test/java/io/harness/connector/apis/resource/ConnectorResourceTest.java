@@ -142,8 +142,8 @@ public class ConnectorResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void delete() {
     when(connectorService.delete(any(), any(), any(), any())).thenReturn(true);
-    ResponseDTO<Boolean> result = connectorResource.delete("accountIdentifier", "orgIdentifier", "projectIdentifier",
-        "connectorIdentifier", null, null, null, null, false);
+    ResponseDTO<Boolean> result = connectorResource.delete(
+        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null);
     Mockito.verify(connectorService, times(1)).delete(any(), any(), any(), any());
     assertThat(result.getData()).isTrue();
   }

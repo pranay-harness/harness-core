@@ -20,9 +20,9 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
-import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -183,11 +183,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank String connectorIdentifier,
-      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
-      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
-      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
-      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
-      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager");
     }
