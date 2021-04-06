@@ -372,6 +372,7 @@ public class K8sStepHelper {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
       case ManifestType.HelmChart:
+      case ManifestType.TerraformConfig:
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
       case ManifestType.Kustomize:
@@ -566,7 +567,7 @@ public class K8sStepHelper {
         .build();
   }
 
-  private GitFetchFilesConfig getGitFetchFilesConfig(
+  public GitFetchFilesConfig getGitFetchFilesConfig(
       Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();

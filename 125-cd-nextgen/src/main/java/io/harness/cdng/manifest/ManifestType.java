@@ -1,5 +1,10 @@
 package io.harness.cdng.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface ManifestType {
   String K8Manifest = "K8sManifest";
   String VALUES = "Values";
@@ -8,4 +13,6 @@ public interface ManifestType {
   String Kustomize = "Kustomize";
   String OpenshiftTemplate = "OpenshiftTemplate";
   String OpenshiftParam = "OpenshiftParam";
+  String TerraformConfig = "TerraformConfig";
+  String TerraformVarFile = "TerraformVarFile";
 }
