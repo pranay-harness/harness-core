@@ -49,9 +49,8 @@ roles:
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
-        - core_project_edit
         - core_project_view
-        - core_project_delete
+        - core_project_create
         - core_secret_delete
         - core_secret_view
         - core_secret_edit
@@ -77,6 +76,7 @@ roles:
       permissions:
         - core_organization_view
         - core_project_view
+        - core_project_create
         - core_secret_view
         - core_connector_view
         - core_service_view
@@ -89,8 +89,7 @@ roles:
       description: Administer an account
       permissions:
         - core_organization_view
-        - core_organization_edit
-        - core_organization_delete
+        - core_organization_create
         - core_secret_delete
         - core_secret_view
         - core_secret_edit
