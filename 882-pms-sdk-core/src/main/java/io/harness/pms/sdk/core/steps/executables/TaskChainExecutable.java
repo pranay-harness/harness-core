@@ -10,9 +10,8 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
-
-import java.util.function.Supplier;
 
 /**
  * Use this interface when you want to execute multiple tasks in a chain inside a single node
@@ -42,10 +41,10 @@ public interface TaskChainExecutable<T extends StepParameters>
   TaskChainResponse startChainLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   TaskChainResponse executeNextLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Supplier<ResponseData> responseSupplier);
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier) throws Exception;
 
   StepResponse finalizeExecution(Ambiance ambiance, T stepParameters, PassThroughData passThroughData,
-      Supplier<ResponseData> responseDataSupplier);
+      ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception;
 
   default void handleAbort(Ambiance ambiance, T stepParameters, TaskChainExecutableResponse executableResponse) {
     // NOOP : By default this is noop as task abortion is handled by the PMS but you are free to override it

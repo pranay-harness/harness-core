@@ -82,6 +82,7 @@ import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.TaskChainExecutableWithRbac;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
@@ -98,7 +99,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
@@ -207,7 +207,8 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
 
   @Override
   public TaskChainResponse executeNextLink(Ambiance ambiance, ServiceStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Supplier<ResponseData> responseSupplier) {
+      StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
+      throws Exception {
     NGManagerLogCallback ngManagerLogCallback =
         new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
     DelegateResponseData notifyResponseData = (DelegateResponseData) responseSupplier.get();
@@ -244,7 +245,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
   @SneakyThrows
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
-      PassThroughData passThroughData, Supplier<ResponseData> responseDataSupplier) {
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     long startTime = System.currentTimeMillis();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     NGManagerLogCallback managerLogCallback =

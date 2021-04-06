@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplierSimple;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -41,6 +41,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -61,20 +62,31 @@ public class TaskChainStrategy implements ExecuteStrategy {
     TaskChainExecutableResponse lastLinkResponse =
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
     if (lastLinkResponse.getChainEnd()) {
-      StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-          (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          buildResponseDataSupplierSimple(resumePackage.getResponseDataMap()));
+      StepResponse stepResponse = null;
+      try {
+        stepResponse = taskChainExecutable.finalizeExecution(ambiance,
+            pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
+            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+      } catch (Exception e) {
+        stepResponse = strategyHelper.handleException(e);
+      }
       pmsNodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
-      TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
-          (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          buildResponseDataSupplierSimple(resumePackage.getResponseDataMap()));
-      handleResponse(ambiance, nodeExecution, chainResponse);
+      TaskChainResponse chainResponse = null;
+      try {
+        chainResponse = taskChainExecutable.executeNextLink(ambiance,
+            pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
+            (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
+            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+        handleResponse(ambiance, nodeExecution, chainResponse);
+      } catch (Exception e) {
+        pmsNodeExecutionService.handleStepResponse(
+            nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
+      }
     }
   }
 
@@ -98,9 +110,14 @@ public class TaskChainStrategy implements ExecuteStrategy {
                                 .build())
               .build(),
           Collections.emptyList());
-      StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
-          () -> null);
+      StepResponse stepResponse = null;
+      try {
+        stepResponse = taskChainExecutable.finalizeExecution(ambiance,
+            pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            taskChainResponse.getPassThroughData(), () -> null);
+      } catch (Exception e) {
+        stepResponse = strategyHelper.handleException(e);
+      }
       pmsNodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
       return;
