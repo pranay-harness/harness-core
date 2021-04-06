@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,7 +36,7 @@ public class AuditEventDTO {
   @Valid HttpRequestInfo httpRequestInfo;
   @Valid RequestMetadata requestMetadata;
 
-  @NotNull @Min(value = 0) Long timestamp;
+  @NotNull Long timestamp;
 
   @NotNull @Valid AuthenticationInfoDTO authenticationInfo;
 

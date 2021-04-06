@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.entities.AuditEvent;
-import io.harness.audit.entities.AuditRetention;
+import io.harness.audit.entities.AuditSettings;
 import io.harness.audit.entities.YamlDiffRecord;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -16,7 +16,7 @@ public class NGAuditServiceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(AuditEvent.class);
-    set.add(AuditRetention.class);
+    set.add(AuditSettings.class);
     set.add(YamlDiffRecord.class);
   }
 

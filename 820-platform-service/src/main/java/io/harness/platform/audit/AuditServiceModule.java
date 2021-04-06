@@ -8,6 +8,8 @@ import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.api.impl.AuditServiceImpl;
 import io.harness.audit.api.impl.AuditYamlServiceImpl;
+import io.harness.audit.retention.AuditSettingsService;
+import io.harness.audit.retention.AuditSettingsServiceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -97,8 +99,10 @@ public class AuditServiceModule extends AbstractModule {
     install(new AuditPersistenceModule());
 
     install(new AuditFilterModule());
+
     bind(AuditYamlService.class).to(AuditYamlServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
+    bind(AuditSettingsService.class).to(AuditSettingsServiceImpl.class);
   }
 
   @Provides

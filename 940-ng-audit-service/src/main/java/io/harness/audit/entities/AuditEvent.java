@@ -28,9 +28,9 @@ import io.harness.request.RequestMetadata;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -61,7 +61,7 @@ public class AuditEvent {
   @Valid HttpRequestInfo httpRequestInfo;
   @Valid RequestMetadata requestMetadata;
 
-  @NotNull @Min(value = 0) Long timestamp;
+  @NotNull Instant timestamp;
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 

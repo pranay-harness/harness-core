@@ -31,13 +31,16 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.TransactionException;
@@ -92,6 +95,7 @@ public class AuditServiceImpl implements AuditService {
                                           .accountIdentifier(auditEventDTO.getResourceScope().getAccountIdentifier())
                                           .oldYaml(auditEventDTO.getYamlDiffRecordDTO().getOldYaml())
                                           .newYaml(auditEventDTO.getYamlDiffRecordDTO().getNewYaml())
+                                          .timestamp(Instant.ofEpochMilli(auditEventDTO.getTimestamp()))
                                           .build();
       auditYamlService.save(yamlDiffRecord);
     }
@@ -131,10 +135,12 @@ public class AuditServiceImpl implements AuditService {
     }
     criteriaList.add(
         Criteria.where(AuditEventKeys.timestamp)
-            .gte(auditFilterPropertiesDTO.getStartTime() == null ? 0 : auditFilterPropertiesDTO.getStartTime()));
+            .gte(Instant.ofEpochMilli(
+                auditFilterPropertiesDTO.getStartTime() == null ? 0 : auditFilterPropertiesDTO.getStartTime())));
     criteriaList.add(Criteria.where(AuditEventKeys.timestamp)
-                         .lte(auditFilterPropertiesDTO.getEndTime() == null ? currentTimeMillis()
-                                                                            : auditFilterPropertiesDTO.getEndTime()));
+                         .lte(Instant.ofEpochMilli(auditFilterPropertiesDTO.getEndTime() == null
+                                 ? currentTimeMillis()
+                                 : auditFilterPropertiesDTO.getEndTime())));
     return new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
   }
 
@@ -205,6 +211,20 @@ public class AuditServiceImpl implements AuditService {
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+  }
+
+  @Override
+  public void purgeAuditsOlderThanTimestamp(String accountIdentifier, Instant timestamp) {
+    auditRepository.delete(new Criteria()
+                               .where(AuditEventKeys.timestamp)
+                               .lte(timestamp)
+                               .and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                               .is(accountIdentifier));
+  }
+
+  @Override
+  public Set<String> getUniqueAuditedAccounts() {
+    return new HashSet<>(auditRepository.fetchDistinctAccountIdentifiers());
   }
 
   private Criteria getEnvironmentCriteria(List<Environment> environments) {

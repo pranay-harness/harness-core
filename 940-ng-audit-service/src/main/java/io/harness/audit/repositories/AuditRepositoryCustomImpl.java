@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.entities.AuditEvent;
+import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -26,6 +27,18 @@ public class AuditRepositoryCustomImpl implements AuditRepositoryCustom {
     List<AuditEvent> auditEvents = mongoTemplate.find(query, AuditEvent.class);
     return PageableExecutionUtils.getPage(
         auditEvents, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), AuditEvent.class));
+  }
+
+  @Override
+  public void delete(Criteria criteria) {
+    Query query = new Query(criteria);
+    mongoTemplate.findAllAndRemove(query, AuditEvent.class);
+  }
+
+  @Override
+  public List<String> fetchDistinctAccountIdentifiers() {
+    Query query = new Query();
+    return mongoTemplate.findDistinct(query, AuditEventKeys.ACCOUNT_IDENTIFIER_KEY, AuditEvent.class, String.class);
   }
 
   @Override
