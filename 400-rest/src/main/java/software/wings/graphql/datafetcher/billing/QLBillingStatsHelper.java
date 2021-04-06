@@ -313,7 +313,7 @@ public class QLBillingStatsHelper {
         boolean valid = false;
         CECluster ceCluster = ceClusterDao.getCECluster(entityId);
         if (null != ceCluster && ceCluster.getAccountId().equals(accountId)) {
-          valid = true;
+          continue;
         }
         ClusterRecord clusterRecord = clusterRecordService.get(entityId);
         Cluster cluster = null;
