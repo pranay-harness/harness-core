@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
@@ -68,6 +69,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
@@ -173,6 +177,8 @@ import org.mockito.Mockito;
 /**
  * Created by anubhaw on 11/3/16.
  */
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ApprovalStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams()
@@ -271,7 +277,8 @@ public class ApprovalStateTest extends WingsBaseTest {
                                               .serviceExecutionSummaries(elementExecutionSummaries)
                                               .build();
 
-    when(workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true))
+    when(
+        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true, false))
         .thenReturn(workflowExecution);
 
     String approvalId = generateUuid();

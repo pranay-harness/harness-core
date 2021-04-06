@@ -6,6 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -29,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateSyncServiceImpl implements DelegateSyncService {
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
@@ -93,6 +96,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
     Object response = kryoSerializer.asInflatedObject(taskResponse.getResponseData());
     if (response instanceof ErrorNotifyResponseData) {
       WingsException exception = ((ErrorNotifyResponseData) response).getException();
+      // if task registered to error handling framework on delegate, then exception won't be null
       if (exception != null) {
         throw exception;
       }

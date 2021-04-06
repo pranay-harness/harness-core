@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -24,6 +25,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(DX)
 // todo(abhinav): add indexes
 public class EntityGitBranchMetadata {
+  @Id @org.mongodb.morphia.annotations.Id String uuid;
   String entityType;
   String branch;
   String yamlGitConfigId;

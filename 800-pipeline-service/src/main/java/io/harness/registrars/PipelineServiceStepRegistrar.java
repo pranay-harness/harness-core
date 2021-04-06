@@ -15,7 +15,7 @@ import lombok.experimental.UtilityClass;
 public class PipelineServiceStepRegistrar {
   public Map<StepType, Class<? extends Step>> getEngineSteps() {
     Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps(true));
+    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
     return engineSteps;
   }
 }

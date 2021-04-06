@@ -11,6 +11,7 @@ import io.harness.ng.core.common.beans.KeyValuePair;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -28,5 +29,5 @@ public class ResourceScope {
   @NotNull @NotBlank String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
-  List<KeyValuePair> labels;
+  @Size(max = 10) List<KeyValuePair> labels;
 }

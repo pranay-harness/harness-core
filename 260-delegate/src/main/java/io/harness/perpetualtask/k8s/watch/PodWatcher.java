@@ -71,6 +71,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private static final String POD_EVENT_MSG = "Pod: {}, action: {}";
   private static final String FAILED_PUBLISH_MSG = "Error publishing V1Pod.{} event.";
   private static final String MESSAGE_PROCESSOR_TYPE_EXCEPTION = "EXCEPTION";
+  private static final String AZURE_SEARCH_STRING = "azure:";
 
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -120,9 +121,10 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   public void onAdd(V1Pod pod) {
     try {
       log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
-
+      boolean isAzure = podInfoPrototype.getCloudProviderId().startsWith(AZURE_SEARCH_STRING);
       DateTime creationTimestamp = pod.getMetadata().getCreationTimestamp();
-      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      if (isAzure || !isClusterSeen || creationTimestamp == null
+          || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
         eventReceived(pod);
       } else {
         publishedPods.add(pod.getMetadata().getUid());

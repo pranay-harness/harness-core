@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusServiceImpl;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class CeConnectorDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLNoOpSortCriteria, QLCEConnectorData> {
   @Inject private CESetupQueryHelper ceSetupQueryHelper;

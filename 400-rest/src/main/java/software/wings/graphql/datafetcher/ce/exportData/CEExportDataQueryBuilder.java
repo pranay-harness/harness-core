@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class CEExportDataQueryBuilder {
   private CEExportDataTableSchema schema = new CEExportDataTableSchema();

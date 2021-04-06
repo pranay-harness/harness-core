@@ -80,7 +80,6 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackBaseStepInfo i
     return K8sRollingRollbackStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())

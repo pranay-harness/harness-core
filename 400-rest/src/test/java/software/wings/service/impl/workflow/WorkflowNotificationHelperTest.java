@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -37,6 +38,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -88,6 +92,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.FieldEnd;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._830_NOTIFICATION_SERVICE)
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String EXPECTED_WORKFLOW_URL =
@@ -158,7 +164,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getAppId()).thenReturn(APP_ID);
     when(executionContext.getWorkflowId()).thenReturn(WORKFLOW_ID);
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, false))
         .thenReturn(WorkflowExecution.builder()
                         .serviceIds(asList("service-1", "service-2"))
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
@@ -292,7 +298,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, false))
         .thenReturn(WorkflowExecution.builder()
                         .serviceIds(asList("service-1", "service-2"))
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
@@ -470,7 +476,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoServices() {
     when(executionContext.getArtifacts()).thenReturn(null);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, false))
         .thenReturn(WorkflowExecution.builder().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
     NotificationRule notificationRule =
         setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
@@ -515,7 +521,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   public void shouldSendWorkflowStatusChangeNotificationBuildWorkflow() {
     when(executionContext.getEnv()).thenReturn(null);
     when(executionContext.getArtifacts()).thenReturn(null);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, false))
         .thenReturn(WorkflowExecution.builder().triggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
     NotificationRule notificationRule =
         setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
@@ -568,7 +574,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                          .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
                                          .withArtifactStreamId(ARTIFACT_STREAM_ID_1)
                                          .build()));
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, false))
         .thenReturn(WorkflowExecution.builder()
                         .serviceIds(asList("service-1", "service-2"))
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())

@@ -1,10 +1,12 @@
 package io.harness.cdng.manifest.state;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -25,6 +27,7 @@ import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class ManifestStepTest extends CategoryTest {
   private final ManifestStep manifestStep = new ManifestStep();
 
@@ -63,7 +66,7 @@ public class ManifestStepTest extends CategoryTest {
                                                      .paths(ParameterField.createValueField(
                                                          Collections.singletonList("override/path1")))
                                                      .connectorRef(ParameterField.createValueField("connector"))
-                                                     .branch(ParameterField.createValueField("commitId"))
+                                                     .commitId(ParameterField.createValueField("commitId"))
                                                      .gitFetchType(FetchType.COMMIT)
                                                      .build())
                                     .build())
@@ -82,7 +85,7 @@ public class ManifestStepTest extends CategoryTest {
                                                      .paths(ParameterField.createValueField(
                                                          Collections.singletonList("overrides/path1")))
                                                      .connectorRef(ParameterField.createValueField("connector1"))
-                                                     .branch(ParameterField.createValueField("commitId1"))
+                                                     .commitId(ParameterField.createValueField("commitId1"))
                                                      .gitFetchType(FetchType.COMMIT)
                                                      .build())
                                     .build())
@@ -101,7 +104,7 @@ public class ManifestStepTest extends CategoryTest {
                                                      .paths(ParameterField.createValueField(
                                                          Collections.singletonList("overrides/path2")))
                                                      .connectorRef(ParameterField.createValueField("connector2"))
-                                                     .branch(ParameterField.createValueField("commitId2"))
+                                                     .commitId(ParameterField.createValueField("commitId2"))
                                                      .gitFetchType(FetchType.COMMIT)
                                                      .build())
                                     .build())
@@ -125,7 +128,7 @@ public class ManifestStepTest extends CategoryTest {
                                                      .paths(ParameterField.createValueField(
                                                          Collections.singletonList("overrides/path3")))
                                                      .connectorRef(ParameterField.createValueField("connector3"))
-                                                     .branch(ParameterField.createValueField("commitId3"))
+                                                     .commitId(ParameterField.createValueField("commitId3"))
                                                      .gitFetchType(FetchType.COMMIT)
                                                      .build())
                                     .build())

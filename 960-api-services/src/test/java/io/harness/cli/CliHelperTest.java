@@ -1,5 +1,6 @@
 package io.harness.cli;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -23,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class CliHelperTest extends CategoryTest {
   @InjectMocks private CliHelper cliHelper;
   @Mock LogCallback logCallback;
@@ -44,6 +47,7 @@ public class CliHelperTest extends CategoryTest {
     cliResponse = cliHelper.executeCliCommand(
         "echo1 $abc", TimeUnit.MINUTES.toMillis(1), Collections.emptyMap(), ".", logCallback);
     assertThat(cliResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(cliResponse.getError()).isNotNull();
 
     assertThatThrownBy(()
                            -> cliHelper.executeCliCommand(

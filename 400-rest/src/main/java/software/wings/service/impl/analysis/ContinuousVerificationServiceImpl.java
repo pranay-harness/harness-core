@@ -42,6 +42,10 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -233,6 +237,8 @@ import org.mongodb.morphia.query.Sort;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
@@ -2665,17 +2671,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
+    stateAnalysisExecutionData.setBaselineExecutionId(
+        analysisContext == null ? null : analysisContext.getPrevWorkflowExecutionId());
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
       stateAnalysisExecutionData.setProgressPercentage(100);
       stateAnalysisExecutionData.setRemainingMinutes(0);
-    } else {
-      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                            .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                            .get();
-      if (analysisContext != null) {
-        setProgress(stateAnalysisExecutionData, analysisContext);
-        setRemainingTime(stateAnalysisExecutionData, analysisContext);
-      }
+    } else if (analysisContext != null) {
+      setProgress(stateAnalysisExecutionData, analysisContext);
+      setRemainingTime(stateAnalysisExecutionData, analysisContext);
     }
     return stateAnalysisExecutionData;
   }

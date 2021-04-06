@@ -29,6 +29,7 @@ import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -72,6 +73,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)

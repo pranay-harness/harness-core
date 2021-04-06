@@ -50,7 +50,9 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreA
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.totalStringValueConstant;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.AliasExpression;
@@ -113,6 +115,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class PreAggregatedBillingDataHelper {
   @Inject BillingDataHelper billingDataHelper;
   @Inject CloudBillingHelper cloudBillingHelper;

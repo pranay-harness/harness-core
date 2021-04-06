@@ -42,10 +42,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class GitFileLocation implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private String yamlGitConfigId;
   private String gitConnectorId;
-  private String branch;
   private String repo;
+  private String gitSyncConfigId;
+  private String branch;
+  private boolean isDefault;
   private String entityGitPath;
   private String entityIdentifier;
   private String entityName;

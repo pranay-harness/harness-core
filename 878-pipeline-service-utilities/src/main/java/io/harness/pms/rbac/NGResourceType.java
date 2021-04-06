@@ -8,9 +8,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.PIPELINE)
 public class NGResourceType {
-  public String SERVICE = "SERVICE";
-  public String PIPELINE = "PIPELINE";
-  public String ENVIRONMENT = "ENVIRONMENT";
-  public String CONNECTOR = "CONNECTOR";
-  public String SECRETS = "SECRET";
+  public final String SERVICE = "SERVICE";
+  public final String PIPELINE = "PIPELINE";
+  public final String ENVIRONMENT = "ENVIRONMENT";
+  public final String CONNECTOR = "CONNECTOR";
+  public final String SECRETS = "SECRET";
 }

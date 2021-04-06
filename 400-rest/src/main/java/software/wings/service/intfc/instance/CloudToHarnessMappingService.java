@@ -1,5 +1,10 @@
 package software.wings.service.intfc.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
@@ -21,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public interface CloudToHarnessMappingService {
   Optional<HarnessServiceInfo> getHarnessServiceInfo(DeploymentSummary deploymentSummary);
 

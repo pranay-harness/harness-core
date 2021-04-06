@@ -10,7 +10,14 @@ import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
+import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
+import io.harness.product.ci.scm.proto.IsLatestFileResponse;
+import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmOrchestratorService;
 
@@ -46,5 +53,51 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     return scmServiceGitClient.getFileContent(scmConnector, gitFilePathDetails);
+  }
+
+  @Override
+  public FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector scmConnector, String branch) {
+    return scmServiceGitClient.getHarnessFilesOfBranch(scmConnector, branch);
+  }
+
+  @Override
+  public FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceGitClient.getLatestFile(scmConnector, gitFilePathDetails);
+  }
+
+  @Override
+  public IsLatestFileResponse isLatestFile(
+      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, FileContent fileContent) {
+    return scmServiceGitClient.isLatestFile(scmConnector, gitFilePathDetails, fileContent);
+  }
+
+  @Override
+  public FileContent pushFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceGitClient.pushFile(scmConnector, gitFileDetails);
+  }
+
+  @Override
+  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch) {
+    return scmServiceGitClient.findFilesInBranch(scmConnector, branch);
+  }
+
+  @Override
+  public FindFilesInCommitResponse findFilesInCommit(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceGitClient.findFilesInCommit(scmConnector, gitFilePathDetails);
+  }
+
+  @Override
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
+    return scmServiceGitClient.getLatestCommit(scmConnector, branch);
+  }
+
+  @Override
+  public ListBranchesResponse listBranches(ScmConnector scmConnector) {
+    return scmServiceGitClient.listBranches(scmConnector);
+  }
+
+  @Override
+  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
+    return scmServiceGitClient.listCommits(scmConnector, branch);
   }
 }

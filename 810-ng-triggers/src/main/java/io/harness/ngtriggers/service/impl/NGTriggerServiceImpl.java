@@ -40,6 +40,7 @@ import com.mongodb.client.result.UpdateResult;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +121,64 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public boolean deleteAllForPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    String pipelineRef = new StringBuilder(128)
+                             .append(accountId)
+                             .append('/')
+                             .append(orgIdentifier)
+                             .append('/')
+                             .append(projectIdentifier)
+                             .append('/')
+                             .append(pipelineIdentifier)
+                             .toString();
+
+    final AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+
+    try {
+      Optional<List<NGTriggerEntity>> nonDeletedTriggerForPipeline =
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndTargetIdentifierAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, true);
+
+      if (nonDeletedTriggerForPipeline.isPresent()) {
+        log.info("Deleting triggers for pipeline-deletion-event. PipelineRef: " + pipelineRef);
+        List<NGTriggerEntity> ngTriggerEntities = nonDeletedTriggerForPipeline.get();
+        String triggerRef = new StringBuilder(128)
+                                .append(accountId)
+                                .append('/')
+                                .append(orgIdentifier)
+                                .append('/')
+                                .append(projectIdentifier)
+                                .append('/')
+                                .append(pipelineIdentifier)
+                                .append('/')
+                                .append("{trigger}")
+                                .toString();
+
+        ngTriggerEntities.forEach(ngTriggerEntity -> {
+          try {
+            log.info("Deleting triggers for pipeline-deletion-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            delete(
+                accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, ngTriggerEntity.getIdentifier(), null);
+          } catch (Exception e) {
+            log.error("Error while deleting trigger while processing pipeline-delete-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            exceptionOccured.set(true);
+          }
+        });
+      } else {
+        log.info("No non-deleted Trigger found while processing pipeline-deletion-event. PipelineRef: " + pipelineRef);
+      }
+    } catch (Exception e) {
+      log.error("Error while deleting triggers while processing pipeline-delete-event. PipelineRef: " + pipelineRef);
+      exceptionOccured.set(true);
+    }
+
+    return !exceptionOccured.get();
+  }
+
+  @Override
   public TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord) {
     try {
       return webhookEventQueueRepository.save(webhookEventQueueRecord);
@@ -146,9 +205,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public List<NGTriggerEntity> findTriggersForCustomWehbook(
-      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled) {
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
     Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
-                                                  triggerWebhookEvent, decryptedAuthToken, EMPTY, isDeleted, enabled),
+                                                  triggerWebhookEvent, EMPTY, isDeleted, enabled),
         Pageable.unpaged());
 
     return triggersPage.get().collect(Collectors.toList());

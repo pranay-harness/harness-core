@@ -5,8 +5,11 @@ import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.toDBO;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.Role;
@@ -15,6 +18,7 @@ import io.harness.accesscontrol.roles.persistence.RoleDBO.RoleDBOKeys;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
@@ -33,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PL)
 @Singleton
 @ValidateOnExecution
 public class RoleDaoImpl implements RoleDao {
@@ -128,6 +133,11 @@ public class RoleDaoImpl implements RoleDao {
 
   private Criteria createCriteriaFromFilter(RoleFilter roleFilter) {
     Criteria criteria = new Criteria();
+
+    if (isNotBlank(roleFilter.getSearchTerm())) {
+      criteria.orOperator(Criteria.where(RoleDBOKeys.name).regex(roleFilter.getSearchTerm(), "i"),
+          Criteria.where(RoleDBOKeys.identifier).regex(roleFilter.getSearchTerm(), "i"));
+    }
 
     if (!roleFilter.getIdentifierFilter().isEmpty()) {
       criteria.and(RoleDBOKeys.identifier).in(roleFilter.getIdentifierFilter());

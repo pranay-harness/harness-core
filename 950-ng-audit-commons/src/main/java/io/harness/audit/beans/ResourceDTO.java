@@ -9,10 +9,12 @@ import io.harness.ng.core.Resource;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Data
@@ -20,9 +22,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonInclude(NON_NULL)
 @FieldNameConstants(innerTypeName = "ResourceKeys")
 public class ResourceDTO {
-  @NotEmpty String type;
-  @NotEmpty String identifier;
-  Map<String, String> labels;
+  @NotNull @NotBlank String type;
+  @NotNull @NotBlank String identifier;
+  @Size(max = 5) Map<String, String> labels;
 
   public static ResourceDTO fromResource(Resource resource) {
     if (resource == null) {

@@ -1,10 +1,15 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.k8s.model.ContainerApiVersions;
 
@@ -20,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Created by brett on 3/1/17
  */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class KubernetesDeploy extends ContainerServiceDeploy {
   public static final String INSTANCE_UNIT_TYPE_KEY = "instanceUnitType";
   public static final String INSTANCE_COUNT_KEY = "instanceCount";

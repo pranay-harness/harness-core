@@ -2,8 +2,12 @@ package io.harness.rule;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static org.mockito.Mockito.mock;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
@@ -62,10 +66,16 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
   public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
     List<Module> modules = new ArrayList<>();
+    modules.add(mongoTypeModule(annotations));
+    modules.add(TestMongoModule.getInstance());
+    modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(ConnectorGitSyncHelper.class).toInstance(mock(ConnectorGitSyncHelper.class));
+        bind(GitBranchingHelper.class).toInstance(mock(GitBranchingHelper.class));
         MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
             MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
@@ -73,10 +83,6 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
       }
     });
-    modules.add(mongoTypeModule(annotations));
-    modules.add(TestMongoModule.getInstance());
-    modules.add(KryoModule.getInstance());
-    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

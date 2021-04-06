@@ -14,6 +14,7 @@ import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -26,6 +27,7 @@ public interface UserClient {
   String USER_BATCH_LIST_API = "ng/users/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/users/user-account";
   String USER_SAFE_DELETE = "ng/users/safeDelete/{userId}";
+  String UPDATE_USER_API = "ng/users/user";
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
@@ -36,6 +38,8 @@ public interface UserClient {
       @Query(value = "accountId") String accountId, @Query(value = "emailList") List<String> emailList);
 
   @GET(USERS_API) Call<RestResponse<Optional<UserInfo>>> getUserFromEmail(@Query(value = "emailId") String email);
+
+  @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
 
   @POST(USER_BATCH_LIST_API) Call<RestResponse<List<UserInfo>>> getUsersByIds(@Body List<String> userIds);
 

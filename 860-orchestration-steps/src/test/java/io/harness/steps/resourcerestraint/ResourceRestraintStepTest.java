@@ -14,6 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.shared.ResourceConstraint;
 import io.harness.beans.shared.RestraintService;
 import io.harness.category.element.UnitTests;
@@ -43,8 +45,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
-  private static final String CLAIMANT_ID = generateUuid();
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
   private static final String RESOURCE_UNIT = generateUuid();
   private static final HoldingScope HOLDING_SCOPE = HoldingScopeBuilder.aPlan().build();
@@ -57,14 +59,15 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
 
   @Before
   public void setUp() {
+    ResourceConstraint resourceConstraint = ResourceConstraint.builder()
+                                                .accountId(generateUuid())
+                                                .capacity(1)
+                                                .strategy(Constraint.Strategy.FIFO)
+                                                .uuid(generateUuid())
+                                                .build();
     ConstraintId constraintId = new ConstraintId(RESOURCE_RESTRAINT_ID);
-    when(restraintService.get(any(), any()))
-        .thenReturn(ResourceConstraint.builder()
-                        .accountId(generateUuid())
-                        .capacity(1)
-                        .strategy(Constraint.Strategy.FIFO)
-                        .uuid(generateUuid())
-                        .build());
+    when(restraintService.getByNameAndAccountId(any(), any())).thenReturn(resourceConstraint);
+    when(restraintService.get(any(), any())).thenReturn(resourceConstraint);
     doReturn(Constraint.builder()
                  .id(constraintId)
                  .spec(Constraint.Spec.builder().limits(1).strategy(Constraint.Strategy.FIFO).build())
@@ -89,12 +92,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
@@ -124,12 +125,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.emptyList())
@@ -154,12 +153,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.emptyList())
@@ -185,12 +182,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
@@ -219,12 +214,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doNothing().when(resourceRestraintService).updateBlockedConstraints(any());
@@ -234,7 +227,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
 
-    verify(restraintService).get(any(), any());
+    verify(restraintService).getByNameAndAccountId(any(), any());
     verify(resourceRestraintService).updateBlockedConstraints(any());
   }
 
@@ -250,12 +243,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     when(resourceRestraintService.finishInstance(any(), any())).thenReturn(ResourceRestraintInstance.builder().build());
@@ -278,12 +269,10 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     when(resourceRestraintService.finishInstance(any(), any())).thenThrow(new InvalidRequestException("Exception"));

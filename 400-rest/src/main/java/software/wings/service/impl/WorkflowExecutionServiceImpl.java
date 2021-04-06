@@ -438,14 +438,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
-    return listExecutions(pageRequest, includeGraph, false, true, true);
+    return listExecutions(pageRequest, includeGraph, false, true, true, false);
   }
 
   @Override
   public List<WorkflowExecution> listExecutionsUsingQuery(
       Query<WorkflowExecution> query, FindOptions findOptions, boolean includeGraph) {
     List<WorkflowExecution> res = query.asList(findOptions);
-    return processExecutions(res, includeGraph, false, true, true);
+    return processExecutions(res, includeGraph, false, true, true, false);
   }
 
   /**
@@ -453,14 +453,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
-      boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
+      boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus,
+      boolean withFailureDetails) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     return (PageResponse<WorkflowExecution>) processExecutions(
-        res, includeGraph, runningOnly, withBreakdownAndSummary, includeStatus);
+        res, includeGraph, runningOnly, withBreakdownAndSummary, includeStatus, withFailureDetails);
   }
 
   private List<WorkflowExecution> processExecutions(List<WorkflowExecution> res, boolean includeGraph,
-      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
+      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus, boolean withFailureDetails) {
     if (isEmpty(res)) {
       return res;
     }
@@ -509,6 +510,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           log.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
         }
       }
+    }
+    if (withFailureDetails) {
+      res.forEach(this::populateFailureDetails);
     }
     return res;
   }
@@ -940,13 +944,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, boolean upToDate) {
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, boolean upToDate, boolean withFailureDetails) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       populateNodeHierarchy(workflowExecution, false, true, upToDate);
     } else {
       populateNodeHierarchy(workflowExecution, true, false, upToDate);
+    }
+
+    if (withFailureDetails) {
+      populateFailureDetails(workflowExecution);
     }
     return workflowExecution;
   }
@@ -4851,7 +4860,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!isEmpty(serviceId)) {
       pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, EQ, serviceId);
     }
-    final PageResponse<WorkflowExecution> workflowExecutions = listExecutions(pageRequest, false, true, false, false);
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        listExecutions(pageRequest, false, true, false, false, false);
     if (workflowExecutions != null) {
       return workflowExecutions.getResponse();
     }
@@ -5319,5 +5329,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new InvalidRequestException("Workflow execution does not exist.");
     }
     return workflowExecution;
+  }
+
+  @Override
+  public String fetchFailureDetails(String appId, String workflowExecutionId) {
+    return workflowExecutionServiceHelper.fetchFailureDetails(appId, workflowExecutionId);
+  }
+
+  @Override
+  public void populateFailureDetails(WorkflowExecution workflowExecution) {
+    if (workflowExecution.getWorkflowType() == ORCHESTRATION && workflowExecution.getStatus() == FAILED) {
+      workflowExecution.setFailureDetails(
+          fetchFailureDetails(workflowExecution.getAppId(), workflowExecution.getUuid()));
+    } else if (workflowExecution.getWorkflowType() == PIPELINE) {
+      PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+      if (pipelineExecution != null && isNotEmpty(pipelineExecution.getPipelineStageExecutions())) {
+        pipelineExecution.getPipelineStageExecutions()
+            .stream()
+            .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+            .filter(execution -> execution.getStatus() == FAILED)
+            .forEach(execution
+                -> execution.setFailureDetails(fetchFailureDetails(execution.getAppId(), execution.getUuid())));
+      }
+    }
   }
 }

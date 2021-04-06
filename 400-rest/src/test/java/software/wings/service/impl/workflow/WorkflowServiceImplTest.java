@@ -31,6 +31,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -823,5 +824,53 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                canaryOrchestrationWorkflow, false, false, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Timeout error is not supported");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenNonSupportedStepsAreProvidedForTimeoutErrorFailureTypeOnRollbackPhasesLevel() {
+    when(featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.K8S_PHASE_STEP)
+                              .addStep(GraphNode.builder().type("JIRA_CREATE_UPDATE").name("Jira").build())
+                              .withFailureStrategies(Collections.singletonList(
+                                  FailureStrategy.builder()
+                                      .failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR))
+                                      .specificSteps(Collections.singletonList("Jira"))
+                                      .build()))
+                              .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(Collections.singletonList(phaseStep)).build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withRollbackWorkflowPhaseIdMap(Collections.singletonMap(UUID, phase)).build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Timeout error is allowed only for step types:");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenNoStepsAreProvidedForTimeoutErrorFailureTypeOnRollbackPhasesLevel() {
+    when(featureFlagService.isEnabled(FeatureName.TIMEOUT_FAILURE_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    PhaseStep phaseStep =
+        aPhaseStep(PhaseStepType.K8S_PHASE_STEP)
+            .addStep(GraphNode.builder().type("JIRA_CREATE_UPDATE").name("Jira").build())
+            .withFailureStrategies(Collections.singletonList(
+                FailureStrategy.builder().failureTypes(Collections.singletonList(FailureType.TIMEOUT_ERROR)).build()))
+            .build();
+    WorkflowPhase phase = aWorkflowPhase().phaseSteps(Collections.singletonList(phaseStep)).build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withRollbackWorkflowPhaseIdMap(Collections.singletonMap(UUID, phase)).build();
+
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflow(aWorkflow().appId(APP_ID).name(WORKFLOW_NAME).build(),
+                               canaryOrchestrationWorkflow, false, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Specify the steps for timeout error. Allowed step types are:");
   }
 }

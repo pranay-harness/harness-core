@@ -21,7 +21,6 @@ import software.wings.beans.ErrorData;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.exception.WeakPasswordException;
-import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -108,8 +107,7 @@ public class SignupResource {
   @PublicApi
   @POST
   @Path("complete/{token}")
-  public RestResponse<User> completeSignup(
-      UpdatePasswordRequest passwordRequest, @NotEmpty @PathParam("token") String secretToken) {
+  public RestResponse<User> completeSignup(@NotEmpty @PathParam("token") String secretToken) {
     try {
       return new RestResponse<>(signupService.completeSignup(secretToken));
     } catch (SignupException ex) {

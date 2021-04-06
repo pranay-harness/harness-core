@@ -1,6 +1,6 @@
 package io.harness.steps.resourcerestraint.service;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
@@ -18,6 +18,7 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.distribution.constraint.UnableToLoadConstraintException;
 import io.harness.distribution.constraint.UnableToSaveConstraintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceBuilder;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
@@ -34,12 +35,10 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Singleton
 @Slf4j
 public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry {
-  private static final String PLAN = "PLAN";
-
   @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -147,7 +146,8 @@ public class ResourceRestraintRegistryImpl implements ResourceRestraintRegistry 
     String blockedReleaseScope =
         (String) blockedConsumer.getContext().get(ResourceRestraintInstanceKeys.releaseEntityType);
 
-    if (!PLAN.equals(releaseScope) || !PLAN.equals(blockedReleaseScope)) {
+    if (!PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(releaseScope)
+        || !PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(blockedReleaseScope)) {
       return false;
     }
 

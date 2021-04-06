@@ -12,6 +12,7 @@ import static org.mockito.Mockito.spy;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
@@ -95,6 +96,22 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidPrincipalFilter);
+      fail();
+    } catch (InvalidRequestException exception) {
+      // continue
+    }
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testInvalidEnvironmentAuditFilter() {
+    String accountIdentifier = randomAlphabetic(10);
+    String identifier = randomAlphabetic(10);
+    AuditFilterPropertiesDTO invalidEnvironmentFilter =
+        AuditFilterPropertiesDTO.builder().environments(singletonList(Environment.builder().build())).build();
+    try {
+      auditFilterPropertiesValidator.validate(accountIdentifier, invalidEnvironmentFilter);
       fail();
     } catch (InvalidRequestException exception) {
       // continue

@@ -1,5 +1,8 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters.RollbackOptionalChildrenParametersBuilder;
@@ -20,6 +23,7 @@ import io.harness.pms.yaml.YamlUtils;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class ParallelStepGroupRollbackPMSPlanCreator {
   public static PlanCreationResponse createParallelStepGroupRollbackPlan(YamlField parallelStepGroup) {
     List<YamlField> stepGroupFields = PlanCreatorUtils.getStepGroupInParallelSectionHavingRollback(parallelStepGroup);
@@ -52,7 +56,7 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
     PlanNode parallelStepGroupsRollbackNode =
         PlanNode.builder()
             .uuid(parallelStepGroup.getNode().getUuid() + "_rollback")
-            .name("Parallel StepGroups Rollback")
+            .name(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_NAME)
             .identifier(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER
                 + parallelStepGroup.getNode().getUuid() + "_rollback")
             .stepType(RollbackOptionalChildrenStep.STEP_TYPE)

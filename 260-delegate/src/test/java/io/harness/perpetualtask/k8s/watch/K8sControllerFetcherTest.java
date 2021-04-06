@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -25,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
 public class K8sControllerFetcherTest extends CategoryTest {
   @Mock private Store<V1Deployment> deploymentStore;
@@ -44,6 +47,9 @@ public class K8sControllerFetcherTest extends CategoryTest {
                         .addToLabels("app", "event-service")
                         .addToLabels("harness.io/release-name", "1df77a95-fed5-3853-bb2a-0b896c8901b1")
                         .endMetadata()
+                        .withNewSpec()
+                        .withReplicas(3)
+                        .endSpec()
                         .build());
     when(replicaSetStore.getByKey("harness/event-service-65f7f468b4"))
         .thenReturn(new V1ReplicaSetBuilder()
@@ -88,6 +94,7 @@ public class K8sControllerFetcherTest extends CategoryTest {
                        .setUid("37f2dbf2-8c96-4bfd-8b32-42ed61c68d50")
                        .setKind("Deployment")
                        .setName("event-service")
+                       .setReplicas(3)
                        .putLabels("app", "event-service")
                        .putLabels("harness.io/release-name", "1df77a95-fed5-3853-bb2a-0b896c8901b1")
                        .build());
@@ -109,6 +116,7 @@ public class K8sControllerFetcherTest extends CategoryTest {
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
                        .setUid("39267b76-d563-4a2f-a783-783fcd89111e")
                        .setKind("Pod")
+                       .setReplicas(1)
                        .setName("event-service-65f7f468b4-fs2fm")
                        .putLabels("key1", "val1")
                        .putLabels("key2", "val2")
@@ -132,7 +140,8 @@ public class K8sControllerFetcherTest extends CategoryTest {
                 .withUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
                 .addToLabels("key1", "val1")
                 .addToLabels("key2", "val2")
-                .build()));
+                .build(),
+            1));
     assertThat(k8sControllerFetcher.getTopLevelOwner(new V1PodBuilder()
                                                          .withNewMetadata()
                                                          .withName("event-service-65f7f468b4-fs2fm")
@@ -151,6 +160,7 @@ public class K8sControllerFetcherTest extends CategoryTest {
         .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
                        .setUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
                        .setKind("FooBar")
+                       .setReplicas(1)
                        .setName("event-service-foobar")
                        .putLabels("key1", "val1")
                        .putLabels("key2", "val2")
