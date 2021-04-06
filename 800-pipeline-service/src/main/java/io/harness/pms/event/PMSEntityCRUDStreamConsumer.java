@@ -1,6 +1,6 @@
 package io.harness.pms.event;
 
-import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
@@ -40,7 +40,7 @@ public class PMSEntityCRUDStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for entity crud stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
+    SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
