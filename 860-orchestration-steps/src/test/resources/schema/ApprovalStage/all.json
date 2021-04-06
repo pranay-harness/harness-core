@@ -453,6 +453,44 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "JiraUpdateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "issueKey"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "issueKey": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "transitionTo": {
+              "$ref": "#/definitions/TransitionTo"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "KeyValuesCriteriaSpec": {
       "allOf": [
         {
@@ -1045,6 +1083,21 @@
       "type": "object",
       "properties": {
         "delegateSelectors": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TransitionTo": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "transitionName": {
           "type": "string"
         }
       },

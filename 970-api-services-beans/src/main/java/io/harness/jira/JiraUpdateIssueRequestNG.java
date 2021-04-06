@@ -2,8 +2,6 @@ package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import static java.util.Collections.singletonMap;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 
@@ -21,19 +19,21 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JiraCreateIssueRequestNG {
+public class JiraUpdateIssueRequestNG {
+  JiraIssueTransitionRequestNG transition;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
-  public JiraCreateIssueRequestNG(JiraProjectNG project, JiraIssueTypeNG issueType, Map<String, String> fields) {
-    // Add project and issue type fields which are required and are not part of fields. We don't need special handling
-    // for status field as we manually remove status field from issueType.fields before calling this method.
-    this.fields.put(JiraConstantsNG.PROJECT_KEY, singletonMap("key", project.getKey()));
-    this.fields.put(JiraConstantsNG.ISSUE_TYPE_KEY, singletonMap("id", issueType.getId()));
+  public JiraUpdateIssueRequestNG(
+      JiraIssueUpdateMetadataNG updateMetadata, String transitionId, Map<String, String> fields) {
+    if (EmptyPredicate.isNotEmpty(transitionId)) {
+      this.transition = new JiraIssueTransitionRequestNG(transitionId);
+    }
+
     if (EmptyPredicate.isEmpty(fields)) {
       return;
     }
 
     fields = new HashMap<>(fields);
-    JiraIssueUtilsNG.updateFieldValues(this.fields, issueType.getFields(), fields);
+    JiraIssueUtilsNG.updateFieldValues(this.fields, updateMetadata.getFields(), fields);
   }
 }
