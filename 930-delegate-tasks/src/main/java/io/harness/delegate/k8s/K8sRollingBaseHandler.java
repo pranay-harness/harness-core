@@ -3,6 +3,9 @@ package io.harness.delegate.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 
 import static java.util.Arrays.asList;
 
@@ -19,6 +22,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -142,5 +146,21 @@ public class K8sRollingBaseHandler {
     }
 
     return k8sPods;
+  }
+
+  public List<K8sPod> getExistingPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,
+      KubernetesConfig kubernetesConfig, String releaseName, LogCallback logCallback) throws Exception {
+    List<K8sPod> existingPodList;
+    try {
+      logCallback.saveExecutionLog("\nFetching existing pod list.");
+      existingPodList = getPods(timeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
+    } catch (Exception e) {
+      logCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
+
+    logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+    return existingPodList;
   }
 }
