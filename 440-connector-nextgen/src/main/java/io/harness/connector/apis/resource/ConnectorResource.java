@@ -19,6 +19,9 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -40,6 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -87,8 +91,7 @@ public class ConnectorResource {
       @OrgIdentifier @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @ProjectIdentifier @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
-      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
-      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo) {
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (!connectorResponseDTO.isPresent()) {
@@ -141,8 +144,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
-      @Body ConnectorFilterPropertiesDTO connectorListFilter, @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
-      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo) {
+      @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -152,11 +154,7 @@ public class ConnectorResource {
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
-      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
-      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
-      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
-      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -171,12 +169,7 @@ public class ConnectorResource {
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch,
-      @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String repo,
-      @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath,
-      @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg,
-      @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId,
-      @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) @DefaultValue("false") boolean createPR) {
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }

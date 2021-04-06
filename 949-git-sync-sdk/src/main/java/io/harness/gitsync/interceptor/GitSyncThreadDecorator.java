@@ -44,7 +44,7 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
                                          .yamlGitConfigId(yamlGitConfigId)
                                          .commitMsg(commitMsg)
                                          .lastObjectId(lastObjectId)
-                                         .createPrKey(Boolean.getBoolean(createPrKey))
+                                         .createPr(Boolean.getBoolean(createPrKey))
                                          .build();
     GitSyncBranchThreadLocal.set(branchInfo);
   }

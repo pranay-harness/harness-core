@@ -87,7 +87,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void create() {
     doReturn(connectorResponse).when(connectorService).create(any(), any());
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.create(connectorRequest, accountIdentifier, null, null, null, null, false);
+        connectorResource.create(connectorRequest, accountIdentifier, null);
     Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -98,7 +98,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void update() {
     when(connectorService.update(any(), any())).thenReturn(connectorResponse);
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.update(connectorRequest, accountIdentifier, null, null, null, null, null, false);
+        connectorResource.update(connectorRequest, accountIdentifier, null);
     Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -109,8 +109,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void get() {
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorResponse));
     ConnectorResponseDTO connectorRequestDTO =
-        connectorResource
-            .get("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null, null)
+        connectorResource.get("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null)
             .getData();
     Mockito.verify(connectorService, times(1)).get(any(), any(), any(), any());
     assertThat(connectorRequestDTO).isNotNull();
@@ -130,8 +129,8 @@ public class ConnectorResourceTest extends CategoryTest {
     when(connectorService.list(
              0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier, searchTerm, false))
         .thenReturn(page);
-    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(0, 100,
-        accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null, null, null);
+    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
+        0, 100, accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null, null);
     Mockito.verify(connectorService, times(1))
         .list(eq(0), eq(100), eq(accountIdentifier), eq(null), eq(orgIdentifier), eq(projectIdentifier),
             eq(filterIdentifier), eq(searchTerm), eq(false));
