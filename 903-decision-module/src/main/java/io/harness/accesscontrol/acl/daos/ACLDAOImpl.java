@@ -80,7 +80,7 @@ public class ACLDAOImpl implements ACLDAO {
 
         String currentResourceType = permissionCheckDTO.getResourceType();
         Scope currentScope = scope;
-        while (!resourceTypes.contains(currentResourceType)) {
+        while (!resourceTypes.contains(currentResourceType) && currentScope.getParentScope() != null) {
           queryStrings.add(ACL.getAclQueryString(currentScope.getParentScope().toString(),
               getResourceSelector(currentScope.getLevel().getResourceType(), currentScope.getInstanceId()),
               principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
