@@ -2,6 +2,7 @@ package io.harness.delegate.git;
 
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.git.model.AuthRequest;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.FetchFilesResult;
@@ -18,4 +19,6 @@ public interface NGGitService {
 
   void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String manifestFilesDirectory, String accountId,
       SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO);
+
+  AuthRequest getAuthRequest(GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig);
 }

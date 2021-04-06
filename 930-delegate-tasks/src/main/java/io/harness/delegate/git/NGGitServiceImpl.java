@@ -61,7 +61,7 @@ public class NGGitServiceImpl implements NGGitService {
     gitBaseRequest.setAccountId(accountId);
   }
 
-  private AuthRequest getAuthRequest(GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig) {
+  public AuthRequest getAuthRequest(GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig) {
     switch (gitConfig.getGitAuthType()) {
       case SSH:
         return JgitSshAuthRequest.builder().factory(getSshSessionFactory(sshSessionConfig)).build();

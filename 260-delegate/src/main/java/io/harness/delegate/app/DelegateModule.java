@@ -511,7 +511,6 @@ import software.wings.settings.SettingValue;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
-import com.amazonaws.AmazonClientException;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
