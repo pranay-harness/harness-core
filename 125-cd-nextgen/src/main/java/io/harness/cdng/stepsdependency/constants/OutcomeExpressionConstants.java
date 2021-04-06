@@ -20,4 +20,5 @@ public class OutcomeExpressionConstants {
   public final String K8S_BG_SWAP_SERVICES_OUTCOME = "k8sBGSwapServicesOutcome";
   public final String ENVIRONMENT = "environment";
   public final String OUTPUT = "output";
+  public final String TERRAFORM_OUTPUT = "terraform";
 }

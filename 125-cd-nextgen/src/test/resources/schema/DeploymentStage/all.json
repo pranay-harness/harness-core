@@ -992,6 +992,38 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InlineTerraformBackendConfigSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformBackendConfigSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InlineTerraformVarFileSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformVarFileSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "InputSetValidator": {
       "type": "object",
       "properties": {
@@ -2029,6 +2061,22 @@
         }
       ]
     },
+    "RemoteTerraformVarFileSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformVarFileSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "store": {
+              "$ref": "#/definitions/StoreConfigWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ResourceConstraintStepInfo": {
       "allOf": [
         {
@@ -2656,6 +2704,118 @@
       "properties": {
         "delegateSelectors": {
           "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformApplyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformBackendConfig": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TerraformBackendConfigSpec"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformBackendConfigSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformConfigFilesWrapper": {
+      "type": "object",
+      "properties": {
+        "store": {
+          "$ref": "#/definitions/StoreConfigWrapper"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformExecutionData": {
+      "type": "object",
+      "properties": {
+        "backendConfig": {
+          "$ref": "#/definitions/TerraformBackendConfig"
+        },
+        "configFiles": {
+          "$ref": "#/definitions/TerraformConfigFilesWrapper"
+        },
+        "environmentVariables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "varFiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TerraformVarFile"
+          }
+        },
+        "workspace": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformVarFile": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TerraformVarFileSpec"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformVarFileSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerrformStepConfiguration": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TerraformExecutionData"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "INLINE",
+            "INHERIT_FROM_PLAN",
+            "INHERIT_FROM_APPLY"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

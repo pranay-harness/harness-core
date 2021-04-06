@@ -1,6 +1,9 @@
-
 package io.harness.provision;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CDP)
 public final class TerraformConstants {
   private TerraformConstants() {}
 
@@ -49,4 +52,7 @@ public final class TerraformConstants {
   public static final String TF_BASE_DIR = "./terraform-working-dir/${ACCOUNT_ID}/${ENTITY_ID}";
   public static final String TF_VAR_FILES_DIR = "tf-var-files";
   public static final String TF_SCRIPT_DIR = "script-repository";
+
+  public static final String COMMAND_UNIT = "Execute Terraform";
+  public static final String DEFAULT_TIMEOUT = "10m";
 }
