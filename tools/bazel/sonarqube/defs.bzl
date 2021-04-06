@@ -18,6 +18,7 @@ def sonarqube_coverage_generator_binary():
     )
 
 def _build_sonar_project_properties(ctx, sq_properties_file):
+    print("Entering Inside BuildSonarQube Function.........")
     module_path = ctx.build_file_path.replace("BUILD", "")
     depth = len(module_path.split("/")) - 1
     parent_path = "../" * depth
