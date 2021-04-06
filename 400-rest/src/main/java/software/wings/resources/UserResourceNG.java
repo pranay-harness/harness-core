@@ -2,8 +2,10 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -25,6 +27,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -32,6 +35,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Api(value = "/ng/users", hidden = true)
 @Path("/ng/users")
@@ -41,6 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public class UserResourceNG {
   private final UserService userService;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
@@ -90,6 +95,14 @@ public class UserResourceNG {
   @GET
   public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
     User user = userService.getUserByEmail(emailId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @PUT
+  @Path("/user")
+  public RestResponse<Optional<UserInfo>> updateUser(@Body UserInfo userInfo) {
+    User user = convertNgUserToUserWithNameUpdated(userInfo);
+    user = userService.update(user);
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
@@ -158,5 +171,14 @@ public class UserResourceNG {
                 .orElse(false))
         .accountIds(user.getAccountIds())
         .build();
+  }
+
+  private User convertNgUserToUserWithNameUpdated(UserInfo userInfo) {
+    if (userInfo == null) {
+      return null;
+    }
+    User user = userService.getUserByEmail(userInfo.getEmail());
+    user.setName(userInfo.getName());
+    return user;
   }
 }

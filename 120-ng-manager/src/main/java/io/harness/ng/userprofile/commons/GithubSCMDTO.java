@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public class GithubSCMDTO extends SourceCodeManagerDTO {
   @JsonProperty("authentication") GithubAuthenticationDTO githubAuthenticationDTO;
   @Override
