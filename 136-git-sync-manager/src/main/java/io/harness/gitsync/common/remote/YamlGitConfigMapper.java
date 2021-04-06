@@ -28,6 +28,7 @@ public class YamlGitConfigMapper {
         .accountId(yamlGitConfigDTO.getAccountIdentifier())
         .orgIdentifier(nullIfEmpty(yamlGitConfigDTO.getOrganizationIdentifier()))
         .identifier(nullIfEmpty(yamlGitConfigDTO.getIdentifier()))
+        .name(yamlGitConfigDTO.getName())
         .projectIdentifier(nullIfEmpty(yamlGitConfigDTO.getProjectIdentifier()))
         .branch(yamlGitConfigDTO.getBranch())
         .repo(yamlGitConfigDTO.getRepo())
@@ -45,6 +46,7 @@ public class YamlGitConfigMapper {
         .accountIdentifier(yamlGitConfig.getAccountId())
         .organizationIdentifier(nullIfEmpty(yamlGitConfig.getOrgIdentifier()))
         .identifier(nullIfEmpty(yamlGitConfig.getIdentifier()))
+        .name(yamlGitConfig.getName())
         .projectIdentifier(nullIfEmpty(yamlGitConfig.getProjectIdentifier()))
         .branch(yamlGitConfig.getBranch())
         .repo(yamlGitConfig.getRepo())
@@ -103,6 +105,7 @@ public class YamlGitConfigMapper {
   public static final GitSyncConfigDTO toSetupGitSyncDTO(YamlGitConfigDTO yamlGitConfig) {
     return GitSyncConfigDTO.builder()
         .identifier(yamlGitConfig.getIdentifier())
+        .name(yamlGitConfig.getName())
         .orgIdentifier(yamlGitConfig.getOrganizationIdentifier())
         .projectIdentifier(yamlGitConfig.getProjectIdentifier())
         .gitConnectorRef(yamlGitConfig.getGitConnectorRef())
