@@ -1,7 +1,8 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
