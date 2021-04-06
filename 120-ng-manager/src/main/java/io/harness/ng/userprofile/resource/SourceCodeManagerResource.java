@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -38,5 +39,11 @@ public class SourceCodeManagerResource {
   @ApiOperation(value = "save source code manager", nickname = "saveSourceCodeManagers")
   public ResponseDTO<SourceCodeManagerDTO> save(@NotNull @Body @Valid SourceCodeManagerDTO sourceCodeManagerDTO) {
     return ResponseDTO.newResponse(sourceCodeManagerService.save(sourceCodeManagerDTO));
+  }
+
+  @DELETE
+  @ApiOperation(value = "delete source code manager", nickname = "deleteSourceCodeManagers")
+  public ResponseDTO<Boolean> delete(@NotNull @Body String sourceCodeManagerName) {
+    return ResponseDTO.newResponse(sourceCodeManagerService.delete(sourceCodeManagerName));
   }
 }
