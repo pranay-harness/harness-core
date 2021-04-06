@@ -1,4 +1,4 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
 import io.harness.plancreator.steps.StepElementConfig;
 

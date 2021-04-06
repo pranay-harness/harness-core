@@ -1,3 +1,3 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
 public interface ProtobufSerializer<T> {}

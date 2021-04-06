@@ -1,4 +1,4 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
