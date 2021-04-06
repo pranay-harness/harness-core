@@ -11,10 +11,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "GitSyncEntityDTOKeys")
 @OwnedBy(DX)
 public class GitSyncEntityDTO {
   private String entityName;
@@ -23,8 +25,7 @@ public class GitSyncEntityDTO {
   private String gitConnectorId;
   @JsonProperty("repositoryName") private String repo;
   private String branch;
-  private String filePath;
+  private String entityGitPath;
   private RepoProviders repoProviderType;
-  @JsonIgnore String yamlGitConfigId;
   @JsonIgnore String accountId;
 }

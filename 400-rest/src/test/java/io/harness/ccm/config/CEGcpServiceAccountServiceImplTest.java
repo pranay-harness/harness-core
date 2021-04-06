@@ -1,5 +1,6 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 import io.harness.rule.Owner;
@@ -24,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CE)
 public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String accountName = "ACCOUNT_NAME";

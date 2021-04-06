@@ -38,7 +38,6 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
 import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
-import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
@@ -47,7 +46,6 @@ import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
-import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GitRepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
@@ -147,7 +145,7 @@ public class NGTriggerElementMapper {
 
         WebhookMetadataBuilder metadata = WebhookMetadata.builder();
         if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
-          metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+          metadata.custom(CustomMetadata.builder().build());
         } else if (isGitSpec(webhookTriggerConfig)) {
           metadata.git(prepareGitMetadata(webhookTriggerConfig));
         }
@@ -184,24 +182,6 @@ public class NGTriggerElementMapper {
           .build();
     }
 
-    return null;
-  }
-
-  @VisibleForTesting
-  CustomMetadata prepareCustomMetadata(WebhookTriggerConfig webhookTriggerConfig) {
-    CustomWebhookTriggerSpec customWebhookTriggerSpec = (CustomWebhookTriggerSpec) webhookTriggerConfig.getSpec();
-    CustomWebhookInlineAuthToken customWebhookInlineAuthToken;
-
-    if ("inline".equals(customWebhookTriggerSpec.getAuthToken().getType())) {
-      customWebhookInlineAuthToken = (CustomWebhookInlineAuthToken) customWebhookTriggerSpec.getAuthToken().getSpec();
-
-      String encryptedToken = Base64.encodeBase64String(customWebhookInlineAuthToken.getValue().getBytes());
-
-      return CustomMetadata.builder()
-          .customAuthTokenType(customWebhookTriggerSpec.getAuthToken().getType())
-          .customAuthTokenValue(encryptedToken)
-          .build();
-    }
     return null;
   }
 

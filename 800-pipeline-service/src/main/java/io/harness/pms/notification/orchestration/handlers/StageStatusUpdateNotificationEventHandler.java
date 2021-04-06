@@ -3,7 +3,7 @@ package io.harness.pms.notification.orchestration.handlers;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.PipelineEventType;
-import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -34,8 +34,7 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncOrchestra
         || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.PIPELINE.name())
         || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.EXECUTION.name())
         || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STEP_GROUP.name())
-        || nodeExecutionProto.getNode().getIdentifier().endsWith(
-            "(" + PlanCreationConstants.ROLLBACK_NODE_NAME + ")")) {
+        || nodeExecutionProto.getNode().getIdentifier().endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
       return;
     }
     if (!Objects.equals(nodeExecutionProto.getNode().getSkipType(), SkipType.SKIP_NODE)

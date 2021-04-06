@@ -79,7 +79,6 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
         .instanceSelection(instanceSelection)
         .skipDryRun(skipDryRun)
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())

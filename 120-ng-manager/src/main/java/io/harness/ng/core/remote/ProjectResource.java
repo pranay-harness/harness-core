@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.accesscontrol.PlatformPermissions.CREATE_PROJECT_PERMISSION;
 import static io.harness.ng.core.accesscontrol.PlatformPermissions.DELETE_PROJECT_PERMISSION;
 import static io.harness.ng.core.accesscontrol.PlatformPermissions.EDIT_PROJECT_PERMISSION;
 import static io.harness.ng.core.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
@@ -82,7 +83,7 @@ public class ProjectResource {
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = EDIT_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_PROJECT_PERMISSION)
   public ResponseDTO<ProjectResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER)

@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline.stepinfo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
@@ -38,6 +40,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 @TypeAlias("shellScriptStepInfo")
+@OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
@@ -86,7 +89,6 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
         .onDelegate(getOnDelegate())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .shellType(getShell())
         .source(getSource())
         .timeout(baseStepParameterInfo.getTimeout())

@@ -15,17 +15,14 @@ roles:
         - core_connector_delete
         - core_connector_runtimeAccess
         - core_pipeline_view
-        - core_pipeline_create
         - core_pipeline_edit
         - core_pipeline_delete
         - core_pipeline_execute
         - core_service_view
-        - core_service_create
         - core_service_edit
         - core_service_delete
         - core_service_runtimeAccess
         - core_environment_view
-        - core_environment_create
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess
@@ -52,9 +49,8 @@ roles:
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
-        - core_project_edit
         - core_project_view
-        - core_project_delete
+        - core_project_create
         - core_secret_delete
         - core_secret_view
         - core_secret_edit
@@ -64,12 +60,10 @@ roles:
         - core_connector_delete
         - core_connector_runtimeAccess
         - core_service_view
-        - core_service_create
         - core_service_edit
         - core_service_delete
         - core_service_runtimeAccess
         - core_environment_view
-        - core_environment_create
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess
@@ -82,6 +76,7 @@ roles:
       permissions:
         - core_organization_view
         - core_project_view
+        - core_project_create
         - core_secret_view
         - core_connector_view
         - core_service_view
@@ -94,8 +89,7 @@ roles:
       description: Administer an account
       permissions:
         - core_organization_view
-        - core_organization_edit
-        - core_organization_delete
+        - core_organization_create
         - core_secret_delete
         - core_secret_view
         - core_secret_edit
@@ -105,12 +99,10 @@ roles:
         - core_connector_delete
         - core_connector_runtimeAccess
         - core_service_view
-        - core_service_create
         - core_service_edit
         - core_service_delete
         - core_service_runtimeAccess
         - core_environment_view
-        - core_environment_create
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess

@@ -1,5 +1,6 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.exception.InvalidRequestException;
@@ -33,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CE)
 public class GcpOrganizationServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationId1 = "GCP_ORGANIZATION_ID_1";

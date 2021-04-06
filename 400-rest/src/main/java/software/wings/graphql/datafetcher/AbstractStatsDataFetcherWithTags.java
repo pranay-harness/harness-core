@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static java.util.function.Function.identity;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -37,6 +39,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA extends TagAggregation, EA>

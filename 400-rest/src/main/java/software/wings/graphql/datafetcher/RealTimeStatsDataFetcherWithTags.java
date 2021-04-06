@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -8,6 +11,7 @@ import software.wings.graphql.schema.type.aggregation.TagAggregation;
 
 import java.util.List;
 
+@OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class RealTimeStatsDataFetcherWithTags<A, F, G, S, E, TA extends TagAggregation, EA>
     extends AbstractStatsDataFetcherWithTags<A, F, G, S, E, TA, EA> implements BaseRealTimeStatsDataFetcher<F> {

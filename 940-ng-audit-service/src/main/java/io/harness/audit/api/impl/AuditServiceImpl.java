@@ -9,8 +9,10 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.ResourceDTO;
@@ -18,39 +20,80 @@ import io.harness.audit.beans.ResourceScope;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
+import io.harness.audit.entities.YamlDiffRecord;
 import io.harness.audit.mapper.ResourceMapper;
 import io.harness.audit.mapper.ResourceScopeMapper;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class AuditServiceImpl implements AuditService {
+  private final TransactionTemplate transactionTemplate;
+
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+
   private final AuditRepository auditRepository;
+  private final AuditYamlService auditYamlService;
   private final AuditFilterPropertiesValidator auditFilterPropertiesValidator;
+
+  @Inject
+  public AuditServiceImpl(AuditRepository auditRepository, AuditYamlService auditYamlService,
+      AuditFilterPropertiesValidator auditFilterPropertiesValidator, TransactionTemplate transactionTemplate) {
+    this.auditRepository = auditRepository;
+    this.auditYamlService = auditYamlService;
+    this.auditFilterPropertiesValidator = auditFilterPropertiesValidator;
+    this.transactionTemplate = transactionTemplate;
+  }
 
   @Override
   public Boolean create(AuditEventDTO auditEventDTO) {
     AuditEvent auditEvent = fromDTO(auditEventDTO);
     try {
-      auditRepository.save(auditEvent);
-      return true;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        AuditEvent savedAuditEvent = auditRepository.save(auditEvent);
+        saveYamlDiff(auditEventDTO, savedAuditEvent.getId());
+        return true;
+      }));
+
     } catch (DuplicateKeyException ex) {
       log.info("Audit for this entry already exists with id {} and account identifier {}", auditEvent.getInsertId(),
           auditEvent.getResourceScope().getAccountIdentifier());
       return true;
+    } catch (Exception e) {
+      log.error("Could not audit this event with id {} and account identifier {}", auditEvent.getInsertId(),
+          auditEvent.getResourceScope().getAccountIdentifier(), e);
+      return false;
+    }
+  }
+
+  private void saveYamlDiff(AuditEventDTO auditEventDTO, String auditId) {
+    if (auditEventDTO.getYamlDiffRecordDTO() != null) {
+      YamlDiffRecord yamlDiffRecord = YamlDiffRecord.builder()
+                                          .auditId(auditId)
+                                          .accountIdentifier(auditEventDTO.getResourceScope().getAccountIdentifier())
+                                          .oldYaml(auditEventDTO.getYamlDiffRecordDTO().getOldYaml())
+                                          .newYaml(auditEventDTO.getYamlDiffRecordDTO().getNewYaml())
+                                          .build();
+      auditYamlService.save(yamlDiffRecord);
     }
   }
 
@@ -80,9 +123,8 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.environmentIdentifier)
-                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironments())) {
+      criteriaList.add(getEnvironmentCriteria(auditFilterPropertiesDTO.getEnvironments()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
@@ -160,6 +202,21 @@ public class AuditServiceImpl implements AuditService {
                               .is(principal.getType())
                               .and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                               .is(principal.getIdentifier());
+      criteriaList.add(criteria);
+    });
+    return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+  }
+
+  private Criteria getEnvironmentCriteria(List<Environment> environments) {
+    List<Criteria> criteriaList = new ArrayList<>();
+    environments.forEach(environment -> {
+      Criteria criteria = new Criteria();
+      if (environment.getType() != null) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_TYPE_KEY).is(environment.getType());
+      }
+      if (isNotEmpty(environment.getIdentifier())) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_IDENTIFIER_KEY).is(environment.getIdentifier());
+      }
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

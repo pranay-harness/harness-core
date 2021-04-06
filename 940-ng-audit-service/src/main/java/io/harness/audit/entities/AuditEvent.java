@@ -11,12 +11,13 @@ import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
+import io.harness.audit.beans.Environment;
+import io.harness.audit.beans.Environment.EnvironmentKeys;
 import io.harness.audit.beans.Principal.PrincipalKeys;
 import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.Resource.ResourceKeys;
 import io.harness.audit.beans.ResourceScope;
 import io.harness.audit.beans.ResourceScope.ResourceScopeKeys;
-import io.harness.audit.beans.YamlDiff;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -51,25 +53,24 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonInclude(NON_NULL)
 @StoreIn(DbAliases.AUDITS)
 public class AuditEvent {
-  @NotBlank String insertId;
+  @NotNull @NotBlank String insertId;
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @Valid @NotNull ResourceScope resourceScope;
 
-  HttpRequestInfo httpRequestInfo;
-  RequestMetadata requestMetadata;
+  @Valid HttpRequestInfo httpRequestInfo;
+  @Valid RequestMetadata requestMetadata;
 
-  @NotNull Long timestamp;
+  @NotNull @Min(value = 0) Long timestamp;
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
   @NotNull ModuleType module;
-  String environmentIdentifier;
+  @Valid Environment environment;
 
   @NotNull @Valid Resource resource;
   @NotNull Action action;
 
-  YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
   List<KeyValuePair> internalInfo;
@@ -131,9 +132,12 @@ public class AuditEvent {
     public static final String PRINCIPAL_IDENTIFIER_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.identifier;
 
+    public static final String ENVIRONMENT_TYPE_KEY = AuditEventKeys.environment + "." + EnvironmentKeys.type;
+    public static final String ENVIRONMENT_IDENTIFIER_KEY =
+        AuditEventKeys.environment + "." + EnvironmentKeys.identifier;
+
     public static final String RESOURCE_TYPE_KEY = AuditEventKeys.resource + "." + ResourceKeys.type;
     public static final String RESOURCE_IDENTIFIER_KEY = AuditEventKeys.resource + "." + ResourceKeys.identifier;
-
     public static final String RESOURCE_LABEL_KEY = AuditEventKeys.resource + "." + ResourceKeys.labels;
     public static final String RESOURCE_LABEL_KEYS_KEY =
         AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;

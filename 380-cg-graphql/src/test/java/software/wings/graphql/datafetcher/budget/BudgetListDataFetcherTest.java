@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
@@ -35,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetServiceImpl budgetService;
   @Mock CeAccountExpirationChecker accountChecker;

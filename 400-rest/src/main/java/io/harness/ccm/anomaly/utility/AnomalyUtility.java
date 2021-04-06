@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.utility;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityKeys;
 import io.harness.ccm.anomaly.url.HarnessUrl;
@@ -16,6 +18,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class AnomalyUtility {
   public Map<String, String> getEntityMap(AnomalyEntity anomaly) {
     Map<String, String> substitutes = new HashMap<>();

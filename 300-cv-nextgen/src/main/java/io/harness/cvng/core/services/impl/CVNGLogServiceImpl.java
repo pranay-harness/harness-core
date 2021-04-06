@@ -2,6 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogType;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class CVNGLogServiceImpl implements CVNGLogService {
   @Inject private HPersistence hPersistence;
   @Inject private Clock clock;
@@ -42,22 +45,24 @@ public class CVNGLogServiceImpl implements CVNGLogService {
     callLogs.forEach(logRecord -> {
       CVNGLogRecord cvngLogRecord = CVNGLog.toCVNGLogRecord(logRecord);
       cvngLogRecord.setCreatedAt(clock.instant().toEpochMilli());
+      Instant startTime = Instant.ofEpochMilli(logRecord.getStartTime());
+      Instant endTime = Instant.ofEpochMilli(logRecord.getEndTime());
 
       Query<CVNGLog> cvngLogQuery = hPersistence.createQuery(CVNGLog.class)
                                         .filter(CVNGLogKeys.accountId, logRecord.getAccountId())
                                         .filter(CVNGLogKeys.logType, logRecord.getType())
                                         .filter(CVNGLogKeys.traceableType, logRecord.getTraceableType())
                                         .filter(CVNGLogKeys.traceableId, logRecord.getTraceableId())
-                                        .filter(CVNGLogKeys.endTime, logRecord.getEndTime())
-                                        .filter(CVNGLogKeys.startTime, logRecord.getStartTime());
+                                        .filter(CVNGLogKeys.endTime, endTime)
+                                        .filter(CVNGLogKeys.startTime, startTime);
 
       hPersistence.getDatastore(CVNGLog.class)
           .update(cvngLogQuery,
               hPersistence.createUpdateOperations(CVNGLog.class)
                   .setOnInsert(CVNGLogKeys.accountId, logRecord.getAccountId())
                   .setOnInsert(CVNGLogKeys.traceableId, logRecord.getTraceableId())
-                  .setOnInsert(CVNGLogKeys.startTime, logRecord.getStartTime())
-                  .setOnInsert(CVNGLogKeys.endTime, logRecord.getEndTime())
+                  .setOnInsert(CVNGLogKeys.startTime, startTime)
+                  .setOnInsert(CVNGLogKeys.endTime, endTime)
                   .setOnInsert(CVNGLogKeys.traceableType, logRecord.getTraceableType())
                   .setOnInsert(CVNGLogKeys.logType, logRecord.getType())
                   .setOnInsert(CVNGLogKeys.validUntil, CVNGLog.builder().build().getValidUntil())

@@ -19,4 +19,5 @@ public class AuditCommonConstants {
   public static final String TYPE = "type";
   public static final String CORRELATION_ID = "correlationId";
   public static final String USER_ID = "userId";
+  public static final String USERNAME = "username";
 }

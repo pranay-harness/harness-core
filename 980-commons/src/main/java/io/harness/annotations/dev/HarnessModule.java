@@ -23,6 +23,7 @@ public enum HarnessModule {
   _490_CE_COMMONS,
   _800_PIPELINE_SERVICE,
   _815_CG_TRIGGERS, // new module needs to be created when files are being moved
+  _820_PLATFORM_SERVICE,
   _830_NOTIFICATION_SERVICE,
   _840_NG_TRIGGERS,
   _850_EXECUTION_PLAN,

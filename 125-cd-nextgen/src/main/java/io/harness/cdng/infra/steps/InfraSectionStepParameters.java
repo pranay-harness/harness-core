@@ -1,5 +1,7 @@
 package io.harness.cdng.infra.steps;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -13,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDP)
 @Data
 @NoArgsConstructor
 @TypeAlias("infraSectionStepParameters")
@@ -22,8 +25,10 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
 
   @Builder(builderMethodName = "newBuilder")
   public InfraSectionStepParameters(InfrastructureDef infrastructureDefinition, InfraUseFromStage useFromStage,
-      EnvironmentYaml environment, ParameterField<String> environmentRef, String metadata, String childNodeID) {
-    super(infrastructureDefinition, useFromStage, environment, environmentRef, metadata);
+      EnvironmentYaml environment, ParameterField<String> environmentRef, boolean allowSimultaneousDeployments,
+      ParameterField<String> infrastructureKey, String metadata, String childNodeID) {
+    super(infrastructureDefinition, useFromStage, environment, allowSimultaneousDeployments, environmentRef,
+        infrastructureKey, metadata);
     this.childNodeID = childNodeID;
   }
 
@@ -31,6 +36,7 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
       PipelineInfrastructure infrastructure, String childNodeID) {
     return new InfraSectionStepParameters(infrastructure.getInfrastructureDefinition(),
         infrastructure.getUseFromStage(), infrastructure.getEnvironment(), infrastructure.getEnvironmentRef(),
+        infrastructure.isAllowSimultaneousDeployments(), infrastructure.getInfrastructureKey(),
         infrastructure.getMetadata(), childNodeID);
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -26,12 +27,14 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -70,11 +73,12 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     if (infraField == null) {
       throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
     }
-    PipelineInfrastructure actualInfraConfig = InfrastructurePmsPlanCreator.getActualInfraConfig(
-        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
 
-    PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
+    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
+    PipelineInfrastructure actualInfraConfig =
+        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
+
+    PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(pipelineInfrastructure, infraField);
     planCreationResponseMap.put(
         infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
     String infraSectionNodeChildId = infraStepNode.getUuid();
@@ -87,11 +91,17 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
 
     YamlNode infraNode = infraField.getNode();
 
-    PlanNode infraSectionPlanNode =
-        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraSectionNodeChildId,
-            ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer, infraField);
+    YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
+
+    PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
+        infraNode, infraSectionNodeChildId, pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
+
+    // Add dependency for resource constraint
+    if (pipelineInfrastructure.isAllowSimultaneousDeployments()) {
+      dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
+    }
 
     // Add dependency for execution
     YamlField executionField =
@@ -101,7 +111,27 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     }
     PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
     planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
+
+    planCreationResponseMap.put(
+        rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     return planCreationResponseMap;
+  }
+
+  private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
+    JsonNode resourceConstraintJsonNode =
+        ResourceConstraintUtility.getResourceConstraintJsonNode(obtainResourceUnitFromInfrastructure(infraNode));
+    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
+  }
+
+  private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
+    JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
+    String resourceUnit;
+    if (infrastructureKey == null) {
+      resourceUnit = generateUuid();
+    } else {
+      resourceUnit = infrastructureKey.asText();
+    }
+    return resourceUnit;
   }
 
   @Override

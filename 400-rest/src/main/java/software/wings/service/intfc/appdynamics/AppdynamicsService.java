@@ -1,5 +1,10 @@
 package software.wings.service.intfc.appdynamics;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
@@ -19,6 +24,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 4/17/17.
  */
+@OwnedBy(CV)
+@TargetModule(HarnessModule._360_CG_MANGER)
 public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId);
   List<NewRelicApplication> getApplications(@NotNull String settingId, String appId, String workflowExecutionId);

@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
@@ -32,17 +31,15 @@ public class K8sDeleteStepParameters extends K8sDeleteBaseStepInfo implements K8
   String description;
   ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sDeleteStepParameters(String name, String identifier, String description,
       ParameterField<String> skipCondition, DeleteResourcesWrapper deleteResources, ParameterField<String> timeout,
-      ParameterField<Boolean> skipDryRun, RollbackInfo rollbackInfo) {
+      ParameterField<Boolean> skipDryRun) {
     super(deleteResources, skipDryRun);
     this.name = name;
     this.identifier = identifier;
     this.timeout = timeout;
-    this.rollbackInfo = rollbackInfo;
     this.description = description;
     this.skipCondition = skipCondition;
   }

@@ -1,5 +1,9 @@
 package io.harness.batch.processing.pricing.data;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.pricing.client.AppSpotPricingClient;
 
@@ -16,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.Instant;
 import org.springframework.stereotype.Component;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @Component
 public class GoogleStoragePricingData {
@@ -52,7 +57,9 @@ public class GoogleStoragePricingData {
       if (lookup.containsKey(fieldName)) {
         return lookup.get(fieldName);
       }
-      log.error("field:'{}' is not present in GoogleStoragePricingData.Type, please add it.", fieldName);
+      if (isNotEmpty(fieldName)) {
+        log.warn("field:'{}' is not present in GoogleStoragePricingData.Type, please add it.", fieldName);
+      }
       return PD_STANDARD;
     }
   }

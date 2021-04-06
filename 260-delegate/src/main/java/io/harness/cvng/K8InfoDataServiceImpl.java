@@ -1,8 +1,10 @@
 package io.harness.cvng;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CV)
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8InfoDataServiceImpl implements K8InfoDataService {
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -63,7 +66,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       return rv;
     } catch (ApiException apiException) {
       log.error("failed to fetch namespaces", apiException);
-      throw new DataCollectionException(apiException.getResponseBody());
+      throw new DataCollectionException(apiException.getResponseBody(), apiException);
     }
   }
 
@@ -100,7 +103,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       return workloads;
     } catch (ApiException apiException) {
       log.error("failed to fetch pods", apiException);
-      throw new DataCollectionException(apiException.getResponseBody());
+      throw new DataCollectionException(apiException.getResponseBody(), apiException);
     }
   }
 

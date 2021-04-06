@@ -1,32 +1,29 @@
 package io.harness.outbox.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_EVENT_FILTER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
 import io.harness.manage.GlobalContextManager;
-import io.harness.ng.beans.PageRequest;
-import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.filter.OutboxEventFilter;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import java.util.List;
 
 @OwnedBy(PL)
 public class OutboxServiceImpl implements OutboxService {
   private final OutboxDao outboxDao;
   private final Gson gson;
-  private final PageRequest pageRequest;
 
   @Inject
   public OutboxServiceImpl(OutboxDao outboxDao, Gson gson) {
     this.outboxDao = outboxDao;
     this.gson = gson;
-    this.pageRequest = DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
   }
 
   @Override
@@ -47,18 +44,11 @@ public class OutboxServiceImpl implements OutboxService {
   }
 
   @Override
-  public PageResponse<OutboxEvent> list(PageRequest pageRequest) {
-    return outboxDao.list(getPageRequest(pageRequest));
-  }
-
-  private PageRequest getPageRequest(PageRequest pageRequest) {
-    if (pageRequest == null) {
-      pageRequest = this.pageRequest;
+  public List<OutboxEvent> list(OutboxEventFilter outboxEventFilter) {
+    if (outboxEventFilter == null) {
+      outboxEventFilter = DEFAULT_OUTBOX_EVENT_FILTER;
     }
-    if (isEmpty(pageRequest.getSortOrders())) {
-      pageRequest.setSortOrders(this.pageRequest.getSortOrders());
-    }
-    return pageRequest;
+    return outboxDao.list(outboxEventFilter);
   }
 
   @Override

@@ -69,7 +69,6 @@ public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo stepParameterInfo) {
     return K8sBGSwapServicesStepParameters.infoBuilder()
         .timeout(stepParameterInfo.getTimeout())
-        .rollbackInfo(stepParameterInfo.getRollbackInfo())
         .name(stepParameterInfo.getName())
         .identifier(stepParameterInfo.getIdentifier())
         .description(stepParameterInfo.getDescription())

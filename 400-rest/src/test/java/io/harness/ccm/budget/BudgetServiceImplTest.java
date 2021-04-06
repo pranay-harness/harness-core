@@ -1,5 +1,6 @@
 package io.harness.ccm.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SANDESH;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.Budget.BudgetBuilder;
@@ -61,6 +63,7 @@ import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
 
 @TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private BudgetDao budgetDao;

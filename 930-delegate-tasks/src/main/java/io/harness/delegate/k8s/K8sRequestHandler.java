@@ -31,12 +31,14 @@ public abstract class K8sRequestHandler {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                   .k8sNGTaskResponse(getTaskResponseOnFailure())
                    .errorMessage("Could not complete k8s task due to IO exception")
                    .build();
     } catch (TimeoutException ex) {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                   .k8sNGTaskResponse(getTaskResponseOnFailure())
                    .errorMessage("Timed out while waiting for k8s task to complete")
                    .build();
     } catch (InterruptedException ex) {
@@ -44,18 +46,21 @@ public abstract class K8sRequestHandler {
       Thread.currentThread().interrupt();
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                   .k8sNGTaskResponse(getTaskResponseOnFailure())
                    .errorMessage("Interrupted while waiting for k8s task to complete")
                    .build();
     } catch (WingsException ex) {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                   .k8sNGTaskResponse(getTaskResponseOnFailure())
                    .errorMessage(ExceptionUtils.getMessage(ex))
                    .build();
     } catch (Exception ex) {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                   .k8sNGTaskResponse(getTaskResponseOnFailure())
                    .errorMessage("Failed to complete K8s task. Please check execution logs.")
                    .build();
     }
@@ -72,6 +77,10 @@ public abstract class K8sRequestHandler {
         .k8sNGTaskResponse(taskResponse)
         .errorMessage("Failed to complete K8s task. Please check execution logs.")
         .build();
+  }
+
+  protected K8sNGTaskResponse getTaskResponseOnFailure() {
+    return null;
   }
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {

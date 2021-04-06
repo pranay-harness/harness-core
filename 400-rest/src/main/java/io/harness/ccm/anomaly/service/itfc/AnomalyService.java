@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.service.itfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -14,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public interface AnomalyService {
   /* anomalies on date */
   List<AnomalyEntity> list(String account, Instant date);

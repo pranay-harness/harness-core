@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -41,6 +43,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CE)
 public class ClusterRecordHandlerTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;
   @Mock ClusterRecordService clusterRecordService;

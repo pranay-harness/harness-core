@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.dao.AnomalyEntityDao;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.service.AnomalyDataQueryBuilder;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class AnomalyServiceImpl implements AnomalyService {
   @Autowired @Inject private AnomalyEntityDao anomalyEntityDao;
 

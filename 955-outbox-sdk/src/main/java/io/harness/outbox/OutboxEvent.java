@@ -9,6 +9,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.ResourceScope;
 
 import com.google.common.collect.ImmutableList;
@@ -19,6 +20,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -52,10 +54,26 @@ public class OutboxEvent implements PersistentIterable, PersistentRegularIterabl
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("blocked_createdAt_nextIteration_outbox_Idx")
-                 .field(OutboxEventKeys.blocked)
+                 .name("createdAt_blocked_attempts_outbox_Idx")
                  .field(OutboxEventKeys.createdAt)
+                 .field(OutboxEventKeys.blocked)
+                 .field(OutboxEventKeys.attempts)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("resourceType_createdAt_outbox_Idx")
+                 .field(OutboxEventKeys.RESOURCE_TYPE_KEY)
+                 .field(OutboxEventKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("eventType_createdAt_outbox_Idx")
+                 .field(OutboxEventKeys.eventType)
+                 .field(OutboxEventKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("blocked_nextIteration_createdAt_outbox_Idx")
+                 .field(OutboxEventKeys.blocked)
                  .field(OutboxEventKeys.nextIteration)
+                 .field(OutboxEventKeys.createdAt)
                  .build())
         .build();
   }
@@ -73,5 +91,10 @@ public class OutboxEvent implements PersistentIterable, PersistentRegularIterabl
   @Override
   public String getUuid() {
     return this.id;
+  }
+
+  @UtilityClass
+  public static final class OutboxEventKeys {
+    public static final String RESOURCE_TYPE_KEY = OutboxEventKeys.resource + "." + ResourceKeys.type;
   }
 }

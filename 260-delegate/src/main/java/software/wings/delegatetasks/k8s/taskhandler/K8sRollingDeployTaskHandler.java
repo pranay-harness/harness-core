@@ -120,8 +120,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    success = prepareForRolling(k8sDelegateTaskParams,
-        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare),
+    ExecutionLogCallback prepareLogCallback =
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare);
+    success = prepareForRolling(k8sDelegateTaskParams, prepareLogCallback,
         k8sRollingDeployTaskParameters.isInCanaryWorkflow(),
         k8sRollingDeployTaskParameters.getSkipVersioningForAllK8sObjects());
     if (!success) {
@@ -129,8 +130,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
-    List<K8sPod> existingPodList =
-        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
+    List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(
+        steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName, prepareLogCallback);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
@@ -178,31 +179,30 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams, executionLogCallback, client);
 
-    String loadBalancer = null;
     try {
-      loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
+      String loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
+      K8sRollingDeployResponse rollingSetupResponse =
+          K8sRollingDeployResponse.builder()
+              .releaseNumber(release.getNumber())
+              .k8sPodList(k8sTaskHelperBase.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
+                                                           allWorkloads, kubernetesConfig, releaseName),
+                  existingPodList))
+              .loadBalancer(loadBalancer)
+              .helmChartInfo(helmChartInfo)
+              .build();
+
+      saveRelease(k8sRollingDeployTaskParameters, Status.Succeeded);
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      return K8sTaskExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sTaskResponse(rollingSetupResponse)
+          .build();
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       saveRelease(k8sRollingDeployTaskParameters, Status.Failed);
       throw ex;
     }
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-    saveRelease(k8sRollingDeployTaskParameters, Status.Succeeded);
-
-    K8sRollingDeployResponse rollingSetupResponse =
-        K8sRollingDeployResponse.builder()
-            .releaseNumber(release.getNumber())
-            .k8sPodList(k8sTaskHelperBase.tagNewPods(
-                k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
-                existingPodList))
-            .loadBalancer(loadBalancer)
-            .helmChartInfo(helmChartInfo)
-            .build();
-
-    return K8sTaskExecutionResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sTaskResponse(rollingSetupResponse)
-        .build();
   }
 
   private void saveRelease(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters, Status status)
@@ -311,7 +311,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
     return true;
   }
 }

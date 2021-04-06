@@ -22,7 +22,7 @@ public class AuditEntry {
   @NotNull Action action;
   @NotNull ModuleType module;
   AuditEventData auditEventData;
-  String environmentIdentifier;
+  Environment environment;
   String oldYaml;
   String newYaml;
   long timestamp;

@@ -1,11 +1,15 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -54,6 +58,8 @@ import java.util.List;
 import java.util.Map;
 import org.mongodb.morphia.annotations.Transient;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class MapRouteState extends State {
   public static final String PCF_APP_NAME = "pcfAppName";
   public static final String INFRA_ROUTE = "infra.route";

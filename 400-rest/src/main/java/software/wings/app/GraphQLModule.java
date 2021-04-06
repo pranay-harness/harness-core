@@ -1,5 +1,10 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.setup.graphql.CeConnectorDataFetcher;
 import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
@@ -150,6 +155,9 @@ import software.wings.graphql.datafetcher.ssoProvider.SsoProviderConnectionDataF
 import software.wings.graphql.datafetcher.ssoProvider.SsoProviderDataFetcher;
 import software.wings.graphql.datafetcher.tag.AttachTagDataFetcher;
 import software.wings.graphql.datafetcher.tag.DetachTagDataFetcher;
+import software.wings.graphql.datafetcher.tag.TagConnectionDataFetcher;
+import software.wings.graphql.datafetcher.tag.TagDataFetcher;
+import software.wings.graphql.datafetcher.tag.TagUsageConnectionDataFetcher;
 import software.wings.graphql.datafetcher.tag.TagsDataFetcher;
 import software.wings.graphql.datafetcher.tag.TagsInUseConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.CreateTriggerDataFetcher;
@@ -200,6 +208,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Created a new module as part of code review comment
  */
+@OwnedBy(DX)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GraphQLModule extends AbstractModule {
   /***
    * This collection is mainly required to inject batched loader at app start time.
@@ -411,6 +421,9 @@ public class GraphQLModule extends AbstractModule {
 
     bindDataFetcherWithAnnotation(AttachTagDataFetcher.class);
     bindDataFetcherWithAnnotation(DetachTagDataFetcher.class);
+    bindDataFetcherWithAnnotation(TagConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(TagUsageConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(TagDataFetcher.class);
 
     binder()
         .bind(SecretManagerMutationDataFetcher.class)

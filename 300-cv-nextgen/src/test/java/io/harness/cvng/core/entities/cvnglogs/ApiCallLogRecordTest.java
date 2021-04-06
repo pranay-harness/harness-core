@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -18,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CV)
 public class ApiCallLogRecordTest {
   private String name;
   private String value;
@@ -81,7 +84,10 @@ public class ApiCallLogRecordTest {
   @Category(UnitTests.class)
   public void testToCVNGLogRecord() {
     ApiCallLogDTOField apiCallLogDTOField = ApiCallLogDTOField.builder().name(name).value(value).build();
-    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder().requestTime(requestTime).responseTime(responseTime).build();
+    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder()
+                                      .requestTime(requestTime.toEpochMilli())
+                                      .responseTime(responseTime.toEpochMilli())
+                                      .build();
     apiCallLogDTO.addFieldToRequest(apiCallLogDTOField);
     apiCallLogDTO.addFieldToResponse(apiCallLogDTOField);
 
@@ -106,8 +112,8 @@ public class ApiCallLogRecordTest {
     apiCallLogRecord.addFieldToRequest(apiCallLogField);
     apiCallLogRecord.addFieldToResponse(apiCallLogField);
     CVNGLogDTO cvngLogDTO = apiCallLogRecord.toCVNGLogDTO();
-    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequestTime()).isEqualTo(requestTime);
-    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponseTime()).isEqualTo(responseTime);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequestTime()).isEqualTo(requestTime.toEpochMilli());
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponseTime()).isEqualTo(responseTime.toEpochMilli());
     assertThat(((ApiCallLogDTO) cvngLogDTO).getRequests()).hasSize(1);
     assertThat(((ApiCallLogDTO) cvngLogDTO).getResponses()).hasSize(1);
     assertThat(((ApiCallLogDTO) cvngLogDTO).getRequests().get(0).getName()).isEqualTo(name);

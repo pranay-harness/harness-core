@@ -84,7 +84,6 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
     return K8sDeleteStepParameters.infoBuilder()
         .deleteResources(this.getDeleteResources())
         .skipDryRun(this.getSkipDryRun())
-        .rollbackInfo(stepParameterInfo.getRollbackInfo())
         .timeout(stepParameterInfo.getTimeout())
         .name(stepParameterInfo.getName())
         .description(stepParameterInfo.getDescription())
