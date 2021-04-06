@@ -23,12 +23,14 @@ public class NGRestUtils {
       if (response.isSuccessful()) {
         return response.body().getData();
       } else {
+        log.error("Error Response received: {}", response);
+        log.error("Body: {}", response.body());
         String errorMessage = "";
         try {
           ErrorDTO restResponse = JsonUtils.asObject(response.errorBody().string(), new TypeReference<ErrorDTO>() {});
           errorMessage = restResponse.getMessage();
         } catch (Exception e) {
-          log.debug("Error while converting rest response to ErrorDTO", e);
+          log.info("Error while converting rest response to ErrorDTO", e);
         }
         throw new InvalidRequestException(
             StringUtils.isEmpty(errorMessage) ? "Error occurred while performing this operation" : errorMessage);

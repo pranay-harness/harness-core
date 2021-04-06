@@ -12,4 +12,5 @@ public class ServiceHttpClientConfig {
   String baseUrl;
   @Builder.Default long connectTimeOutSeconds = 15;
   @Builder.Default long readTimeOutSeconds = 15;
+  @Builder.Default Boolean enableHttpLogging = false;
 }
