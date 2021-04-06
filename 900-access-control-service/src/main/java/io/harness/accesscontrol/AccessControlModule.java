@@ -108,7 +108,9 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
-    install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
+    if (config.getAggregatorConfiguration().isEnabled()) {
+      install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
+    }
 
     // TODO{phoenikx}  remove this later on
     install(AccessControlClientModule.getInstance(

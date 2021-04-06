@@ -55,6 +55,13 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_secret_access
+      name: Access a Secret
+      status: ACTIVE
+      allowedScopeLevels:
+        - account
+        - organization
+        - project
   - identifier: core_secret_edit
     name: Create or Edit a Secret
     status: ACTIVE

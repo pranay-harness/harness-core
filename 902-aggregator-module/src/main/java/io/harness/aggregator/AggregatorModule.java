@@ -80,67 +80,64 @@ public class AggregatorModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    if (configuration.isEnabled()) {
-      registerRequiredBindings();
+    registerRequiredBindings();
 
-      Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
-      Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
+    Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
+    Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
 
-      ChangeConsumer<RoleDBO> roleChangeConsumer = new RoleChangeConsumerImpl();
-      requestInjection(roleChangeConsumer);
+    ChangeConsumer<RoleDBO> roleChangeConsumer = new RoleChangeConsumerImpl();
+    requestInjection(roleChangeConsumer);
 
-      ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl();
-      requestInjection(roleAssignmentChangeConsumer);
+    ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl();
+    requestInjection(roleAssignmentChangeConsumer);
 
-      ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer = new ResourceGroupChangeConsumerImpl();
-      requestInjection(resourceGroupChangeConsumer);
+    ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer = new ResourceGroupChangeConsumerImpl();
+    requestInjection(resourceGroupChangeConsumer);
 
-      ChangeConsumer<UserGroupDBO> userGroupChangeConsumer = new UserGroupChangeConsumerImpl();
-      requestInjection(userGroupChangeConsumer);
+    ChangeConsumer<UserGroupDBO> userGroupChangeConsumer = new UserGroupChangeConsumerImpl();
+    requestInjection(userGroupChangeConsumer);
 
-      collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
-      collectionToConsumerMap.put(ROLES, roleChangeConsumer);
-      collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
-      collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
+    collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
+    collectionToConsumerMap.put(ROLES, roleChangeConsumer);
+    collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
+    collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
 
-      // configuring id deserializer
-      Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
-      idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
-      Deserializer<String> idDeserializer = idSerde.deserializer();
+    // configuring id deserializer
+    Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
+    idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
+    Deserializer<String> idDeserializer = idSerde.deserializer();
 
-      Map<String, String> valueDeserializerConfig =
-          Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
+    Map<String, String> valueDeserializerConfig = Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
 
-      // configuring role assignment deserializer
-      Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
-      roleAssignmentSerde.configure(valueDeserializerConfig, false);
-      collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
+    // configuring role assignment deserializer
+    Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
+    roleAssignmentSerde.configure(valueDeserializerConfig, false);
+    collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
 
-      // configuring role deserializer
-      Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
-      roleSerde.configure(valueDeserializerConfig, false);
-      collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
+    // configuring role deserializer
+    Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
+    roleSerde.configure(valueDeserializerConfig, false);
+    collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
 
-      // configuring resource group deserializer
-      Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
-      resourceGroupSerde.configure(valueDeserializerConfig, false);
-      collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
+    // configuring resource group deserializer
+    Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
+    resourceGroupSerde.configure(valueDeserializerConfig, false);
+    collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
 
-      // configuring resource group deserializer
-      Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
-      userGroupSerde.configure(valueDeserializerConfig, false);
-      collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
+    // configuring resource group deserializer
+    Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
+    userGroupSerde.configure(valueDeserializerConfig, false);
+    collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
 
-      AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
-          new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
+    AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
+        new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
 
-      // configuring debezium
-      ExecutorModule.getInstance().setExecutorService(this.executorService);
-      install(ExecutorModule.getInstance());
-      DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
-          getEngine(configuration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
-      executorService.submit(debeziumEngine);
-    }
+    // configuring debezium
+    ExecutorModule.getInstance().setExecutorService(this.executorService);
+    install(ExecutorModule.getInstance());
+    DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
+        getEngine(configuration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+    executorService.submit(debeziumEngine);
   }
 
   private static DebeziumEngine<ChangeEvent<String, String>> getEngine(
@@ -148,7 +145,7 @@ public class AggregatorModule extends AbstractModule {
     Properties props = new Properties();
     props.setProperty(CONNECTOR_NAME, debeziumConfig.getConnectorName());
     props.setProperty(OFFSET_STORAGE, MongoOffsetBackingStore.class.getName());
-    props.setProperty(OFFSET_STORAGE_FILE_FILENAME, debeziumConfig.getOffsetStorageFileName());
+    props.setProperty(OFFSET_STORAGE_FILE_FILENAME, MONGO_DB_CONNECTOR);
     props.setProperty(KEY_CONVERTER_SCHEMAS_ENABLE, debeziumConfig.getKeyConverterSchemasEnable());
     props.setProperty(VALUE_CONVERTER_SCHEMAS_ENABLE, debeziumConfig.getValueConverterSchemasEnable());
     props.setProperty(OFFSET_FLUSH_INTERVAL_MS, debeziumConfig.getOffsetFlushIntervalMillis());

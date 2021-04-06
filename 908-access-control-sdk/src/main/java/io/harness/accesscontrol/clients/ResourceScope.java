@@ -13,4 +13,12 @@ public class ResourceScope {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
+
+  public static ResourceScope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return ResourceScope.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .build();
+  }
 }

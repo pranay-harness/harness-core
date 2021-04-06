@@ -9,6 +9,8 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
@@ -17,7 +19,6 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
-import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
@@ -121,8 +122,9 @@ public class PlanExecutionResource {
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
 
-    accessControlClient.checkForAccessOrThrow(PMSPipelineDtoMapper.toPermissionCheckDTO(accountId, orgId, projectId,
-        executionSummaryEntity.getPipelineIdentifier(), PipelineRbacPermissions.PIPELINE_EXECUTE));
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()),
+        PipelineRbacPermissions.PIPELINE_EXECUTE);
 
     return ResponseDTO.newResponse(
         pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, null));

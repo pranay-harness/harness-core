@@ -1,7 +1,7 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -47,16 +47,9 @@ public class NGAccessControlCheckHandler implements MethodInterceptor {
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {
     NGAccessControlCheck ngAccessControlCheck = methodInvocation.getMethod().getAnnotation(NGAccessControlCheck.class);
     NGAccess ngAccess = getScopeIdentifiers(methodInvocation);
-    accessControlClient.checkForAccessOrThrow(PermissionCheckDTO.builder()
-                                                  .resourceScope(ResourceScope.builder()
-                                                                     .accountIdentifier(ngAccess.getAccountIdentifier())
-                                                                     .orgIdentifier(ngAccess.getOrgIdentifier())
-                                                                     .projectIdentifier(ngAccess.getProjectIdentifier())
-                                                                     .build())
-                                                  .resourceType(ngAccessControlCheck.resourceType())
-                                                  .resourceIdentifier(ngAccess.getIdentifier())
-                                                  .permission(ngAccessControlCheck.permission())
-                                                  .build());
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
+        Resource.of(ngAccessControlCheck.resourceType(), ngAccess.getIdentifier()), ngAccessControlCheck.permission());
     return methodInvocation.proceed();
   }
 }
