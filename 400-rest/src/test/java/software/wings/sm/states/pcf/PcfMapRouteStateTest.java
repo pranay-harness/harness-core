@@ -58,7 +58,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -140,6 +142,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfMapRouteStateTest extends WingsBaseTest {
   public static final String PCF_OLD_APP_NAME = "pcfOldAppName";
   private static final String BASE_URL = "https://env.harness.io/";
@@ -306,7 +309,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     FieldUtils.writeField(pcfRouteSwapState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", pcfStateHelper, true);
     FieldUtils.writeField(pcfSwitchBlueGreenRoutes, "pcfStateHelper", pcfStateHelper, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);

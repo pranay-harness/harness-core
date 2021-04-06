@@ -1,5 +1,6 @@
 package io.harness.functional.servicevariables;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.NATARAJA;
 
@@ -9,6 +10,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -66,6 +68,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+@OwnedBy(CDC)
 @Slf4j
 public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -213,7 +216,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
     log.info("Workflow execution completed");
 
     WorkflowExecution completedWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, false);
 
     log.info("Validation starts");
 

@@ -15,7 +15,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
@@ -106,6 +108,7 @@ import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
