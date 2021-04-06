@@ -100,7 +100,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     CliResponse response;
     TerraformInitCommandRequest terraformInitCommandRequest =
         TerraformInitCommandRequest.builder()
-            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
             .build();
     terraformClient.init(terraformInitCommandRequest, terraformExecuteStepRequest.getEnvVars(),
         terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -116,6 +116,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           TerraformRefreshCommandRequest.builder()
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .targets(terraformExecuteStepRequest.getTargets())
               .build();
       terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
@@ -173,6 +174,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           TerraformPlanCommandRequest.builder()
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .targets(terraformExecuteStepRequest.getTargets())
               .destroySet(false)
               .build();
@@ -194,7 +196,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     CliResponse response;
     TerraformInitCommandRequest terraformInitCommandRequest =
         TerraformInitCommandRequest.builder()
-            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
             .build();
     terraformClient.init(terraformInitCommandRequest, terraformExecuteStepRequest.getEnvVars(),
         terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -209,6 +211,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         TerraformRefreshCommandRequest.builder()
             .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
             .varParams(terraformExecuteStepRequest.getVarParams())
+            .uiLogs(terraformExecuteStepRequest.getUiLogs())
             .targets(terraformExecuteStepRequest.getTargets())
             .build();
     terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
@@ -225,7 +228,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     CliResponse response;
     TerraformInitCommandRequest terraformInitCommandRequest =
         TerraformInitCommandRequest.builder()
-            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+            .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
             .build();
     terraformClient.init(terraformInitCommandRequest, terraformExecuteStepRequest.getEnvVars(),
         terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -241,6 +244,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           TerraformRefreshCommandRequest.builder()
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .targets(terraformExecuteStepRequest.getTargets())
               .build();
       terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
@@ -252,6 +256,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           TerraformPlanCommandRequest.builder()
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .targets(terraformExecuteStepRequest.getTargets())
               .destroySet(true)
               .build();
