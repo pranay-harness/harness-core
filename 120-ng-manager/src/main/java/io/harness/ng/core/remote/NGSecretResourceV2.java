@@ -138,9 +138,8 @@ public class NGSecretResourceV2 {
   @ApiOperation(value = "Create a secret via yaml", nickname = "postSecretViaYaml")
   public ResponseDTO<SecretResponseWrapper> createViaYaml(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @NotNull String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @NotNull String projectIdentifier,
-      @Valid SecretRequestWrapper dto) {
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
     if (!Objects.equals(orgIdentifier, dto.getSecret().getOrgIdentifier())
         || !Objects.equals(projectIdentifier, dto.getSecret().getProjectIdentifier())) {
       throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
