@@ -213,6 +213,9 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     }
     accessControlMigrationService.save(
         migrationBuilder.endedAt(new Date()).metadata(roleAssignmentMetadataList).build());
+
+    log.info("successfully processed migration for account: {}", accountId);
+
     return true;
   }
 
