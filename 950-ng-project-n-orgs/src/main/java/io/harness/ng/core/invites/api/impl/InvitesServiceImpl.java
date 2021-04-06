@@ -358,7 +358,11 @@ public class InvitesServiceImpl implements InvitesService {
       return false;
     }
     UserInfo user = userOpt.get();
-    ngUserService.createUserProjectMap(invite, user);
+    try {
+      ngUserService.createUserProjectMap(invite, user);
+    } catch (Exception e) {
+      log.error("Couldn't create userprojectmap while completing invite for {}", invite.getEmail());
+    }
     markInviteApprovedAndDeleted(invite);
     return true;
   }
