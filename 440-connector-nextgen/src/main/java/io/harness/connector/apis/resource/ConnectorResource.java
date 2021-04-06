@@ -190,6 +190,7 @@ public class ConnectorResource {
   }
 
   @PUT
+  @Path("{identifier}")
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,

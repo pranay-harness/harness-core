@@ -1,8 +1,11 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.mockito.Mockito.mock;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
@@ -63,6 +66,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
 

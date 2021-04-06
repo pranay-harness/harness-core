@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorCatalogueItem;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
@@ -46,6 +47,7 @@ import org.springframework.data.domain.Page;
 
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
+  @Mock private AccessControlClient accessControlClient;
   @InjectMocks private ConnectorResource connectorResource;
   ConnectorResponseDTO connectorResponse;
   ConnectorInfoDTO connectorInfo;
@@ -89,7 +91,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void create() {
     doReturn(connectorResponse).when(connectorService).create(any(), any());
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.create(connectorRequest, accountIdentifier, projectIdentifier, orgIdentifier);
+        connectorResource.create(connectorRequest, accountIdentifier, null, null);
     Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -100,7 +102,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void update() {
     when(connectorService.update(any(), any())).thenReturn(connectorResponse);
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.update(connectorRequest, accountIdentifier, projectIdentifier, orgIdentifier, "identifier");
+        connectorResource.update(connectorRequest, accountIdentifier, null, null, "identifier");
     Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
