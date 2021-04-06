@@ -26,6 +26,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(DX)
 public class YamlGitConfigDTO {
   private String identifier;
+  private String name;
   private String accountIdentifier;
   private String projectIdentifier;
   private String organizationIdentifier;

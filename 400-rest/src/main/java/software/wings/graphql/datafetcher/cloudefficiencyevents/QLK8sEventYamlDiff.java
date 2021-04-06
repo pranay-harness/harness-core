@@ -18,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.K8S_EVENT_YAML_DIFF)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class QLK8sEventYamlDiff {
   QLK8sEventYamls data;

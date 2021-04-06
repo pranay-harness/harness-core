@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class CEExportDataQueryMetadata {
   private static final CEExportDataTableSchema schema = new CEExportDataTableSchema();

@@ -24,6 +24,7 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceHandler;
+import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -198,8 +199,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerYamlSdk(injector);
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
-
+    createConsumerThreadsToListenToEvents(environment, injector);
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(PMSEventConsumerService.class));
   }
 
   public static void registerObservers(Injector injector) {

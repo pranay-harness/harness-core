@@ -30,6 +30,11 @@ public class NGCommonEntityConstants {
   public static final String TYPE_KEY = "type";
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
+  public static final String MODULE_TYPE = "moduleType";
+  public static final String ENTITY_TYPE = "entityType";
+  public static final String SEARCH_TERM = "searchTerm";
+  public static final String PAGE = "page";
+  public static final String SIZE = "size";
 
   // TODO(UTSAV): Move to 340-ce-nextgen
   public static final String IS_EVENTS_ENABLED = "eventsEnabled";

@@ -29,7 +29,7 @@ public class ServiceResourceClientModule extends AbstractModule {
   }
 
   @Provides
-  private ServiceResourceClientHttpFactory secretManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
+  private ServiceResourceClientHttpFactory serviceResourceClientHttpFactory(KryoConverterFactory kryoConverterFactory) {
     return new ServiceResourceClientHttpFactory(
         this.ngManagerClientConfig, this.serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }

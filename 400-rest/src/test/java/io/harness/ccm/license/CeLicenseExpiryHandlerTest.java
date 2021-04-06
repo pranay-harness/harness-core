@@ -1,5 +1,6 @@
 package io.harness.ccm.license;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.license.CeLicenseInfo.CE_TRIAL_GRACE_PERIOD_DAYS;
 import static io.harness.rule.OwnerRule.HANTANG;
 
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -27,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CE)
 public class CeLicenseExpiryHandlerTest extends CategoryTest {
   private Account account;
 

@@ -220,6 +220,12 @@ replace_key_value baseUrls.ui $MANAGER_UI_URL
 
 replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
 
+replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
+
+replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+
+replace_key_value accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
+
 replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
 replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"

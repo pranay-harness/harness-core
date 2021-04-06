@@ -18,7 +18,9 @@ import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_SKU;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_REGION;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.CLOUD_PROVIDER;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
@@ -42,6 +44,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class CloudBillingIdFilter implements Filter<QLIdOperator, String> {
   private QLIdOperator operator;
   private String variable;

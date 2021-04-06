@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
+import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -19,11 +20,13 @@ import io.harness.gitsync.helpers.ScmUserHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
+import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.ScmClient;
@@ -64,9 +67,20 @@ public class SCMGitSyncHelper {
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
             .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-
             .build();
       case DELETE:
+        final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
+        if (deleteFileResponse.getStatus() != 0) {
+          throw new InvalidRequestException("Git push failed");
+        }
+        return ScmDeleteFileResponse.builder()
+            .accountIdentifier(infoForPush.getAccountId())
+            .orgIdentifier(infoForPush.getOrgIdentifier())
+            .projectIdentifier(infoForPush.getProjectIdentifier())
+            .filePath(infoForPush.getFilePath())
+            .pushToDefaultBranch(infoForPush.isDefault())
+            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
+            .build();
       case RENAME:
         throw new NotImplementedException("Not implemented");
       case MODIFY:
@@ -107,6 +121,12 @@ public class SCMGitSyncHelper {
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
     return InfoForGitPush.builder().filePath(pushInfo.getFilePath().getValue()).scmConnector(scmConnector).build();
+  }
+
+  private DeleteFileResponse doScmDeleteFile(GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
+    final GitFilePathDetails gitFilePathDetails =
+        GitFilePathDetails.builder().branch(infoForPush.getBranch()).filePath(infoForPush.getFilePath()).build();
+    return scmClient.deleteFile(infoForPush.getScmConnector(), gitFilePathDetails);
   }
 
   private CreateFileResponse doScmCreateFile(String yaml, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {

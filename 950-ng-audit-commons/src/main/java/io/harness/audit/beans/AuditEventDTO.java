@@ -42,9 +42,11 @@ public class AuditEventDTO {
   String environmentIdentifier;
 
   @NotNull @Valid ResourceDTO resource;
+
+  YamlDiffRecordDTO yamlDiffRecordDTO;
+
   @NotNull Action action;
 
-  YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
   Map<String, String> internalInfo;
