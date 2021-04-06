@@ -506,8 +506,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetDelegateSelectors() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("gcp").build()).build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withValue(GcpConfig.builder()
+                                                           .useDelegateSelectors(true)
+                                                           .delegateSelectors(Collections.singletonList("gcp"))
+                                                           .build())
+                                            .build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Collections.singletonList("gcp"));
 
     settingAttribute = aSettingAttribute()

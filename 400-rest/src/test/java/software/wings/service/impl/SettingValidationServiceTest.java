@@ -985,29 +985,29 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
 
-    gcpConfig.setDelegateSelector("delegate1");
+    gcpConfig.setDelegateSelectors(Collections.singletonList("delegate1"));
 
     // useDelegate = true, skipValidation = true
-    gcpConfig.setUseDelegate(true);
+    gcpConfig.setUseDelegateSelectors(true);
     gcpConfig.setSkipValidation(true);
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(0)).validateCredential(any(), any());
 
     // useDelegate = true, skipValidation = false
-    gcpConfig.setUseDelegate(true);
+    gcpConfig.setUseDelegateSelectors(true);
     gcpConfig.setSkipValidation(false);
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
 
     // useDelegate = false, skipValidation = true
-    gcpConfig.setUseDelegate(false);
+    gcpConfig.setUseDelegateSelectors(false);
     gcpConfig.setSkipValidation(true);
     assertThatExceptionOfType(InvalidArgumentsException.class).isThrownBy(() -> {
       settingValidationService.validate(attribute);
     });
 
     // useDelegate = false, skipValidation = false
-    gcpConfig.setUseDelegate(false);
+    gcpConfig.setUseDelegateSelectors(false);
     gcpConfig.setSkipValidation(false);
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(2)).validateCredential(any(), any());
@@ -1026,14 +1026,14 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
 
     // useDelegate = true, delegateSelector Provided
-    gcpConfig.setUseDelegate(true);
-    gcpConfig.setDelegateSelector("delegate1");
+    gcpConfig.setUseDelegateSelectors(true);
+    gcpConfig.setDelegateSelectors(Collections.singletonList("delegate1"));
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
 
     // useDelegate = true, no delegateSelector Provided
-    gcpConfig.setUseDelegate(true);
-    gcpConfig.setDelegateSelector(null);
+    gcpConfig.setUseDelegateSelectors(true);
+    gcpConfig.setDelegateSelectors(null);
     assertThatThrownBy(() -> settingValidationService.validate(attribute))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");
