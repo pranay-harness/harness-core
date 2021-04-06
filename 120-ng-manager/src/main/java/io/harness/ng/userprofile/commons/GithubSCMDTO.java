@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class GithubSCMDTO extends SourceCodeManagerDTO {
-  @JsonProperty("authentication") GithubAuthenticationDTO githubAuthenticationDTO;
+  @JsonProperty("authentication") GithubAuthenticationDTO authentication;
   @Override
   public SCMType getType() {
     return SCMType.GITHUB;

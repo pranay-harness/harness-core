@@ -145,7 +145,7 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return BitbucketSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .bitbucketAuthenticationDTO(bitbucketAuthenticationDTO)
+        .authentication(bitbucketAuthenticationDTO)
         .build();
   }
 
@@ -169,7 +169,7 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GithubSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .githubAuthenticationDTO(githubAuthenticationDTO)
+        .authentication(githubAuthenticationDTO)
         .build();
   }
 

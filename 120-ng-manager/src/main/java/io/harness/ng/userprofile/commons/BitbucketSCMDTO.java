@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class BitbucketSCMDTO extends SourceCodeManagerDTO {
-  @JsonProperty("authentication") BitbucketAuthenticationDTO bitbucketAuthenticationDTO;
+  @JsonProperty("authentication") BitbucketAuthenticationDTO authentication;
 
   @Override
   public SCMType getType() {

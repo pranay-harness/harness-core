@@ -3,6 +3,7 @@ package io.harness.ng.userprofile.commons;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.SourceCodeManagerAuthentication;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -26,4 +27,5 @@ public abstract class SourceCodeManagerDTO {
   Long createdAt;
   Long lastModifiedAt;
   public abstract SCMType getType();
+  public abstract SourceCodeManagerAuthentication getAuthentication();
 }
