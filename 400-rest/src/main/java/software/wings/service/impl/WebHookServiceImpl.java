@@ -333,7 +333,8 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          if (artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName) == null) {
+          if (artifactStreamName != null
+              && artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName) == null) {
             return prepareResponse(WebHookResponse.builder()
                                        .error("Artifact Source Name [" + artifactStreamName + "] does not exist")
                                        .build(),

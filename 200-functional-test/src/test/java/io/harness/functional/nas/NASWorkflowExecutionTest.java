@@ -276,6 +276,7 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
     json = json.replace("Test NAS Service_BUILD_NUMBER_PLACE_HOLDER", "1.1.0");
     json = json.replace("REPO_PLACE_HOLDER", "npm-internal");
     json = json.replace("PACKAGE_PLACE_HOLDER", "npm-app1");
+    json = json.replace("Test NAS Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER", artifactStream.getName());
     WebHookRequest webHookRequest = gson.fromJson(json, WebHookRequest.class);
 
     JsonPath response =
