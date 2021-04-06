@@ -125,6 +125,23 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
   }
 
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testDelete() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(bitbucketSCM));
+    when(sourceCodeManagerRepository.deleteByUserIdentifierAndName(any(), any()))
+        .thenReturn(delete(sourceCodeManagerList));
+    sourceCodeManagerService.delete(bitbucketSCM.getName());
+    assertThat(sourceCodeManagerList).hasSize(0);
+  }
+
+  private long delete(List<SourceCodeManager> sourceCodeManagerList) {
+    sourceCodeManagerList.remove(0);
+    return 1;
+  }
+
   private SourceCodeManager bitbucketSCMCreate() {
     BitbucketAuthentication bitbucketAuthentication = BitbucketSshAuthentication.builder().sshKeyRef(sshKeyRef).build();
     return BitbucketSCM.builder()
