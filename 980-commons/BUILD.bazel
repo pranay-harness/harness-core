@@ -50,6 +50,7 @@ java_library(
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_nimbusds_nimbus_jose_jwt",
         "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_okhttp3_logging_interceptor",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:commons_codec_commons_codec",
