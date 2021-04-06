@@ -39,6 +39,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -102,6 +103,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     assertThat(k8sDeleteRequest.isDeleteNamespacesForRelease()).isFalse();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
@@ -118,6 +120,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)

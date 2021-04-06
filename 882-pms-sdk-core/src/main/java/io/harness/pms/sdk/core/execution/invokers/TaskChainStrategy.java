@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplierSimple;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -64,7 +64,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
           (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+          buildResponseDataSupplierSimple(resumePackage.getResponseDataMap()));
       pmsNodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
@@ -73,7 +73,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
       TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+          buildResponseDataSupplierSimple(resumePackage.getResponseDataMap()));
       handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }

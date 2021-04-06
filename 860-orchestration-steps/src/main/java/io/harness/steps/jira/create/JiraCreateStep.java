@@ -15,10 +15,10 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
@@ -44,8 +44,8 @@ public class JiraCreateStep implements TaskExecutable<JiraCreateStepParameters, 
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, JiraCreateStepParameters stepParameters, Supplier<JiraTaskNGResponse> responseSupplier) {
+  public StepResponse handleTaskResult(Ambiance ambiance, JiraCreateStepParameters stepParameters,
+      ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }
 
