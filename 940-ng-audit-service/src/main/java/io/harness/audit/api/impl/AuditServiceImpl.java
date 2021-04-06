@@ -12,6 +12,7 @@ import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.ResourceDTO;
@@ -122,9 +123,8 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.environmentIdentifier)
-                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironments())) {
+      criteriaList.add(getEnvironmentCriteria(auditFilterPropertiesDTO.getEnvironments()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
@@ -202,6 +202,21 @@ public class AuditServiceImpl implements AuditService {
                               .is(principal.getType())
                               .and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                               .is(principal.getIdentifier());
+      criteriaList.add(criteria);
+    });
+    return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+  }
+
+  private Criteria getEnvironmentCriteria(List<Environment> environments) {
+    List<Criteria> criteriaList = new ArrayList<>();
+    environments.forEach(environment -> {
+      Criteria criteria = new Criteria();
+      if (environment.getType() != null) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_TYPE_KEY).is(environment.getType());
+      }
+      if (isNotEmpty(environment.getIdentifier())) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_IDENTIFIER_KEY).is(environment.getIdentifier());
+      }
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
