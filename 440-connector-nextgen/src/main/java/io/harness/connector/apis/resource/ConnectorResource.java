@@ -13,13 +13,14 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.accesscontrol.ConnectorAccessControlHelper;
 import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
@@ -27,7 +28,6 @@ import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -46,6 +46,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -79,11 +80,12 @@ public class ConnectorResource {
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final CEAwsSetupConfig ceAwsSetupConfig;
   private static final String CATEGORY_KEY = "category";
-  private final  AccessControlClient accessControlClient;
+  private final AccessControlClient accessControlClient;
 
   @Inject
   public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService,
-      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig, AccessControlClient accessControlClient) {
+      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig,
+      AccessControlClient accessControlClient) {
     this.connectorService = connectorService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.ceAwsSetupConfig = ceAwsSetupConfig;
@@ -138,6 +140,8 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
@@ -155,6 +159,8 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
       @Body ConnectorFilterPropertiesDTO connectorListFilter) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -163,35 +169,34 @@ public class ConnectorResource {
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    boolean hasAccess = ConnectorAccessControlHelper.checkForCreateAccess(accessControlClient,accountIdentifier,
-        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
-
-    if (hasAccess) {
-      if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
-        throw new InvalidRequestException(
-            String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
-      }
-      if (connector.getConnectorInfo().getConnectorType() == ConnectorType.LOCAL) {
-        throw new InvalidRequestException("Local Secret Manager creation not supported", USER);
-      }
-      return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
-    } else {
-      throw new AccessDeniedException("Insufficient permissions to perform this action", USER);
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    if (!Objects.equals(orgIdentifier, connector.getConnectorInfo().getOrgIdentifier())
+        || !Objects.equals(projectIdentifier, connector.getConnectorInfo().getProjectIdentifier())) {
+      throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
     }
+
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, EDIT_CONNECTOR_PERMISSION);
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
+    }
+    if (connector.getConnectorInfo().getConnectorType() == ConnectorType.LOCAL) {
+      throw new InvalidRequestException("Local Secret Manager creation not supported", USER);
+    }
+    return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
   }
 
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
-  public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return updateConnectorCheckRbac(connector, accountIdentifier, connector.getConnectorInfo().getProjectIdentifier(),
-        connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getIdentifier());
-  }
   @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = EDIT_CONNECTOR_PERMISSION)
-  private ResponseDTO<ConnectorResponseDTO> updateConnectorCheckRbac(@Valid @NotNull ConnectorDTO connector,
-      @AccountIdentifier String accountIdentifier, @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
-      @io.harness.accesscontrol.OrgIdentifier String orgIdentifier, @ResourceIdentifier String connectorIdentifier) {
+  public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
+      @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
