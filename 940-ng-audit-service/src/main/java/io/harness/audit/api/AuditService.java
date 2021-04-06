@@ -8,6 +8,8 @@ import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.ng.beans.PageRequest;
 
+import java.time.Instant;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
@@ -16,4 +18,8 @@ public interface AuditService {
 
   Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);
+
+  void purgeAuditsOlderThanTimestamp(String accountIdentifier, Instant timestamp);
+
+  Set<String> getUniqueAuditedAccounts();
 }

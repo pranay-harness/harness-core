@@ -584,6 +584,7 @@ public class K8sStepHelper {
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
+        .manifestType(manifestType)
         .succeedIfFileNotFound(false)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();

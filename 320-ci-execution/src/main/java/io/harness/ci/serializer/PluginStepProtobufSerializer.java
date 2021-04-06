@@ -1,7 +1,12 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
+
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
@@ -16,6 +21,8 @@ import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -74,12 +81,23 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginStepInfo.getDefaultTimeout());
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
 
+    Map<String, String> settings =
+        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
+    Map<String, String> envVarMap = new HashMap<>();
+    if (!isEmpty(settings)) {
+      for (Map.Entry<String, String> entry : settings.entrySet()) {
+        String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
+        envVarMap.put(key, entry.getValue());
+      }
+    }
+
     PluginStep pluginStep =
         PluginStep.newBuilder()
             .setContainerPort(port)
             .setImage(RunTimeInputHandler.resolveStringParameter(
                 "Image", "Plugin", identifier, pluginStepInfo.getImage(), true))
             .addAllEntrypoint(Optional.ofNullable(pluginStepInfo.getEntrypoint()).orElse(emptyList()))
+            .putAllEnvironment(envVarMap)
             .setContext(stepContext)
             .build();
 

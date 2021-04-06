@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +36,7 @@ public class ResourceScopeDTO {
   @NotNull @NotBlank String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
-  Map<String, String> labels;
+  @Size(max = 2) Map<String, String> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {

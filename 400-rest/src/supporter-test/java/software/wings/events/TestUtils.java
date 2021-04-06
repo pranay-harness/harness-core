@@ -1,5 +1,6 @@
 package software.wings.events;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.beans.User.Builder.anUser;
@@ -11,6 +12,9 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -30,7 +34,9 @@ import com.google.inject.Singleton;
 /**
  * @author rktummala on 12/05/18
  */
+@OwnedBy(PL)
 @Singleton
+@TargetModule(HarnessModule._990_COMMONS_TEST)
 public class TestUtils {
   @Inject private ScmSecret scmSecret;
 

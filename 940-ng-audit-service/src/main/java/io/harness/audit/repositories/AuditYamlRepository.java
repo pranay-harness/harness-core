@@ -11,7 +11,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @OwnedBy(PL)
 @HarnessRepo
-public interface AuditYamlRepository extends PagingAndSortingRepository<YamlDiffRecord, String> {
+public interface AuditYamlRepository
+    extends PagingAndSortingRepository<YamlDiffRecord, String>, AuditYamlRepositoryCustom {
   Optional<YamlDiffRecord> findByAuditId(String auditId);
   void deleteByAuditId(String auditId);
 }

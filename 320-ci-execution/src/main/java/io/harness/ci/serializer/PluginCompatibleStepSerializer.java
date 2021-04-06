@@ -1,4 +1,4 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
@@ -11,10 +11,12 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -75,7 +77,8 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, pluginCompatibleStep.getDefaultTimeout());
 
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
-
+    Map<String, String> envVarMap =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(pluginCompatibleStep, identifier, timeout);
     PluginStep pluginStep =
         PluginStep.newBuilder()
             .setContainerPort(port)
@@ -83,6 +86,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
             .addAllEntrypoint(
                 CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
+            .putAllEnvironment(envVarMap)
             .build();
 
     return UnitStep.newBuilder()

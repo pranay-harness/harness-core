@@ -55,7 +55,6 @@ import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
-import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -63,6 +62,7 @@ import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.serializer.ExecutionProtobufSerializer;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
@@ -186,8 +186,12 @@ public class K8BuildSetupUtils {
       String workDir, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys,
       Ambiance ambiance) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
-    ConnectorDetails harnessInternalImageRegistryConnectorDetails =
-        connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+    ConnectorDetails harnessInternalImageRegistryConnectorDetails = null;
+    if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
+      harnessInternalImageRegistryConnectorDetails =
+          connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+    }
+
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
     Map<String, String> gitEnvVars = getGitEnvVariables(gitConnector, ciCodebase);
 
@@ -258,11 +262,11 @@ public class K8BuildSetupUtils {
         LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
     List<SecretVariableDetails> secretVariableDetails =
         liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
-    CIK8ContainerParams liteEngineContainerParams = createLiteEngineContainerParams(ngAccess,
-        harnessInternalImageRegistryConnectorDetails, stepConnectors, liteEngineTaskStepInfo, k8PodDetails,
-        podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(),
-        logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), taskIds, logPrefix,
-        stepLogKeys, ambiance);
+    CIK8ContainerParams liteEngineContainerParams =
+        createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails, liteEngineTaskStepInfo,
+            k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(),
+            podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(),
+            podSetupInfo.getWorkDirPath(), taskIds, logPrefix, stepLogKeys, ambiance);
 
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
@@ -350,12 +354,11 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private CIK8ContainerParams createLiteEngineContainerParams(NGAccess ngAccess, ConnectorDetails connectorDetails,
-      Map<String, ConnectorConversionInfo> connectorRefs, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath,
-      String workDirPath, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys,
-      Ambiance ambiance) {
+  private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest,
+      Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
+      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath,
+      Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
     String accountId = AmbianceHelper.getAccountId(ambiance);

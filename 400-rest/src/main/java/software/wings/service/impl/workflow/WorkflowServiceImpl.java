@@ -649,7 +649,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                   .build();
 
           List<WorkflowExecution> workflowExecutions =
-              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false, false)
                   .getResponse();
 
           workflowExecutions.forEach(we -> we.setStateMachine(null));
@@ -1269,6 +1269,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .filter(this::phaseStepContainsStrategyForTimeoutOnly)
                                         .collect(toMap(PhaseStep::getSteps, PhaseStep::getFailureStrategies,
                                             (strategies1, strategies2) -> strategies1)));
+
+        if (isNotEmpty(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap())) {
+          stepsToStrategiesMap.putAll(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap()
+                                          .values()
+                                          .stream()
+                                          .map(WorkflowPhase::getPhaseSteps)
+                                          .flatMap(Collection::stream)
+                                          .filter(Objects::nonNull)
+                                          .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                                          .collect(toMap(PhaseStep::getSteps, PhaseStep::getFailureStrategies,
+                                              (strategies1, strategies2) -> strategies1)));
+        }
 
         validateStepsToStrategiesPairs(stepsToStrategiesMap);
       } else {

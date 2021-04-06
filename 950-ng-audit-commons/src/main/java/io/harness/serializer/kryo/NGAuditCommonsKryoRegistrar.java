@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditEventData;
+import io.harness.audit.beans.AuditSettingsDTO;
 import io.harness.audit.beans.AuthenticationInfoDTO;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.ResourceDTO;
@@ -22,7 +23,7 @@ public class NGAuditCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(AuditEventData.class, 17360);
     kryo.register(Principal.class, 17361);
     kryo.register(AuthenticationInfoDTO.class, 17362);
-
+    kryo.register(AuditSettingsDTO.class, 17363);
     kryo.register(YamlDiffRecordDTO.class, 17364);
     kryo.register(AuditEventDTO.class, 17365);
     kryo.register(AuditEntry.class, 17366);

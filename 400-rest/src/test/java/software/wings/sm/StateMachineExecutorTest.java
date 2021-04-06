@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.ABORT;
 import static io.harness.beans.ExecutionInterruptType.END_EXECUTION;
 import static io.harness.beans.ExecutionInterruptType.MARK_FAILED;
@@ -51,6 +52,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.FailureType;
@@ -104,8 +108,10 @@ import org.mockito.Mock;
 /**
  * Created by rishi on 2/25/17.
  */
+@OwnedBy(CDC)
 @Listeners(OrchestrationNotifyEventListener.class)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class StateMachineExecutorTest extends WingsBaseTest {
   private final String APP_ID = generateUuid();
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
@@ -933,7 +939,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)
@@ -987,7 +994,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)
@@ -1035,7 +1043,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)
@@ -1083,7 +1092,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)
@@ -1186,7 +1196,8 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
     when(workflow.getOrchestrationWorkflow()).thenReturn(new CanaryOrchestrationWorkflow());
-    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(
+             eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder()
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
                         .startTs(70L)

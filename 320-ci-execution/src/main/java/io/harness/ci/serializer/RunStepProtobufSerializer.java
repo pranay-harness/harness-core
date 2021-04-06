@@ -1,7 +1,10 @@
-package io.harness.beans.serializer;
+package io.harness.ci.serializer;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
@@ -21,6 +24,7 @@ import io.harness.yaml.core.timeout.TimeoutUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -93,6 +97,11 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         RunTimeInputHandler.resolveStringParameter("Command", "Run", identifier, runStepInfo.getCommand(), true));
 
     runStepBuilder.setContainerPort(port);
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      runStepBuilder.putAllEnvironment(envvars);
+    }
 
     UnitTestReport reports = runStepInfo.getReports();
     if (reports != null) {

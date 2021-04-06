@@ -68,7 +68,7 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public void checkForAccessOrThrow(PermissionCheckDTO permissionCheckDTO) {
+  public void checkForAccessOrThrow(ResourceScope resourceScope, Resource resource, String permission) {
     // do nothing
   }
 }
