@@ -104,16 +104,10 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   private String getAzureBillingMetaData(String accountId) {
-    // Enabled for all
-    List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE);
-    log.info("Setting att size {}", settingAttributes.size());
-    if (!settingAttributes.isEmpty()) {
-      SettingAttribute settingAttribute = settingAttributes.get(0);
-      BillingDataPipelineRecord billingDataPipelineRecord =
-          billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
-      log.info("BDPR {}", billingDataPipelineRecord);
-      return billingDataPipelineRecord.getDataSetId();
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()
+        && ceMetadataRecord.getAzureDataPresent()) {
+      return cloudBillingHelper.getDataSetId(accountId);
     }
     return null;
   }

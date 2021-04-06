@@ -1520,6 +1520,10 @@ public class BillingDataQueryBuilder {
         || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
       return false;
     }
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()
+        && ceMetadataRecord.getAzureDataPresent()) {
+      return false;
+    }
 
     List<QLBillingDataFilter> validFilters =
         filters.stream().filter(filter -> filter.getStartTime() != null).collect(Collectors.toList());
