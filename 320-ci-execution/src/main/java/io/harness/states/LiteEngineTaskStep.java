@@ -44,6 +44,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
@@ -53,7 +54,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -100,8 +100,8 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, Supplier<K8sTaskExecutionResponse> responseSupplier) {
+  public StepResponse handleTaskResult(Ambiance ambiance, LiteEngineTaskStepInfo stepParameters,
+      ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
     DependencyOutcome dependencyOutcome =

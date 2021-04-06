@@ -13,6 +13,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -39,6 +41,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.LinkedList;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +50,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sScaleStepTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepHelper k8sStepHelper;
@@ -167,6 +171,7 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
@@ -184,7 +189,7 @@ public class K8sScaleStepTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testHandleTaskResultFailed() {
+  public void testHandleTaskResultFailed() throws Exception {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
     K8sDeployResponse responseData = K8sDeployResponse.builder()
                                          .errorMessage("Execution failed.")

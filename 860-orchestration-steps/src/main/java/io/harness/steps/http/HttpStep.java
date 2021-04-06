@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -19,8 +18,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.utils.EngineExceptionUtils;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -31,6 +28,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
 
@@ -40,7 +38,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -90,49 +87,38 @@ public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResp
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, HttpStepParameters stepParameters, Supplier<HttpStepResponse> responseSupplier) {
+  public StepResponse handleTaskResult(Ambiance ambiance, HttpStepParameters stepParameters,
+      ThrowingSupplier<HttpStepResponse> responseSupplier) throws Exception {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    try {
-      HttpStepResponse httpStepResponse = responseSupplier.get();
+    HttpStepResponse httpStepResponse = responseSupplier.get();
 
-      Map<String, Object> outputVariables = stepParameters.getOutputVariables();
-      Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
+    Map<String, Object> outputVariables = stepParameters.getOutputVariables();
+    Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
-      boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
+    boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
 
-      HttpOutcome executionData = HttpOutcome.builder()
-                                      .httpUrl(stepParameters.getUrl().getValue())
-                                      .httpMethod(stepParameters.getMethod().getValue())
-                                      .httpResponseCode(httpStepResponse.getHttpResponseCode())
-                                      .httpResponseBody(httpStepResponse.getHttpResponseBody())
-                                      .status(httpStepResponse.getCommandExecutionStatus())
-                                      .errorMsg(httpStepResponse.getErrorMessage())
-                                      .outputVariables(outputVariablesEvaluated)
-                                      .build();
+    HttpOutcome executionData = HttpOutcome.builder()
+                                    .httpUrl(stepParameters.getUrl().getValue())
+                                    .httpMethod(stepParameters.getMethod().getValue())
+                                    .httpResponseCode(httpStepResponse.getHttpResponseCode())
+                                    .httpResponseBody(httpStepResponse.getHttpResponseBody())
+                                    .status(httpStepResponse.getCommandExecutionStatus())
+                                    .errorMsg(httpStepResponse.getErrorMessage())
+                                    .outputVariables(outputVariablesEvaluated)
+                                    .build();
 
-      // Just Place holder for now till we have assertions
-      if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
-        responseBuilder.status(Status.FAILED);
-        if (!assertionSuccessful) {
-          responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
-        }
-      } else {
-        responseBuilder.status(Status.SUCCEEDED);
-      }
-      responseBuilder.stepOutcome(
-          StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
-      return responseBuilder.build();
-    } catch (ErrorDataException ex) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) ex.getErrorResponseData();
+    // Just Place holder for now till we have assertions
+    if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
       responseBuilder.status(Status.FAILED);
-      responseBuilder.failureInfo(FailureInfo.newBuilder()
-                                      .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                                      .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                                          errorNotifyResponseData.getFailureTypes()))
-                                      .build());
-      return responseBuilder.build();
+      if (!assertionSuccessful) {
+        responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
+      }
+    } else {
+      responseBuilder.status(Status.SUCCEEDED);
     }
+    responseBuilder.stepOutcome(
+        StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
+    return responseBuilder.build();
   }
 
   public static boolean validateAssertions(HttpStepResponse httpStepResponse, HttpStepParameters stepParameters) {
