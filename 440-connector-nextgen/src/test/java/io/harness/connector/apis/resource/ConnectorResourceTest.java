@@ -51,6 +51,8 @@ public class ConnectorResourceTest extends CategoryTest {
   ConnectorInfoDTO connectorInfo;
   ConnectorDTO connectorRequest;
   String accountIdentifier = "accountIdentifier";
+  String projectIdentifier = "projectIdentifier";
+  String orgIdentifier = "orgIdentifier";
   ConnectorCatalogueResponseDTO catalogueResponseDTO;
   private final CatalogueHelper catalogueHelper = new CatalogueHelper();
 
@@ -87,7 +89,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void create() {
     doReturn(connectorResponse).when(connectorService).create(any(), any());
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.create(connectorRequest, accountIdentifier);
+        connectorResource.create(connectorRequest, accountIdentifier, projectIdentifier, orgIdentifier);
     Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -98,7 +100,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void update() {
     when(connectorService.update(any(), any())).thenReturn(connectorResponse);
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.update(connectorRequest, accountIdentifier);
+        connectorResource.update(connectorRequest, accountIdentifier, projectIdentifier, orgIdentifier, "identifier");
     Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }

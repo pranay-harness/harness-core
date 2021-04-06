@@ -196,7 +196,17 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier) {
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank @ResourceIdentifier String connectorIdentifier) {
+    if (!Objects.equals(orgIdentifier, connector.getConnectorInfo().getOrgIdentifier())
+        || !Objects.equals(projectIdentifier, connector.getConnectorInfo().getProjectIdentifier())) {
+      throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
+    }
+    if (!Objects.equals(connectorIdentifier, connector.getConnectorInfo().getIdentifier())) {
+      throw new InvalidRequestException(
+          "Invalid request, connector identifier in payload and params do not match.", USER);
+    }
+
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
