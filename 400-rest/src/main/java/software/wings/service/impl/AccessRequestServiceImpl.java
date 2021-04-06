@@ -15,16 +15,16 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import com.google.inject.Inject;
-import groovy.util.logging.Slf4j;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class AccessRequestServiceImpl implements AccessRequestService {
-  @Inject WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
 
@@ -98,18 +98,11 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   @Override
-  public void checkAndAutoUpdateAccessRequests() {
-    Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
-    query.filter("accessActive", true);
-    List<AccessRequest> accessRequestList = query.asList();
-    if (accessRequestList == null || accessRequestList.size() == 0) {
-      return;
+  public void checkAndUpdateAccessRequests(AccessRequest accessRequest) {
+    if (Instant.ofEpochMilli(accessRequest.getAccessEndAt()).isBefore(Instant.now())) {
+      updateStatusAccessRequest(accessRequest, false);
+      log.info("AccessRequest with id: {} has expired. accessActive updated to false", accessRequest.getUuid());
     }
-
-    accessRequestList.forEach(accessRequest -> {
-      if (Instant.ofEpochMilli(accessRequest.getAccessEndAt()).isBefore(Instant.now())) {
-        updateStatusAccessRequest(accessRequest, false);
-      }
-    });
+    return;
   }
 }

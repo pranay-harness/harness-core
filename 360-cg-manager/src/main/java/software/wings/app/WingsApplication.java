@@ -159,6 +159,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AccessRequestHandler;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
@@ -1000,6 +1001,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
+    injector.getInstance(AccessRequestHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

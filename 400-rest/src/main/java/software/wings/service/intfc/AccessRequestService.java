@@ -24,5 +24,5 @@ public interface AccessRequestService {
 
   boolean delete(String accessRequestId);
 
-  void checkAndAutoUpdateAccessRequests();
+  void checkAndUpdateAccessRequests(AccessRequest accessRequest);
 }
