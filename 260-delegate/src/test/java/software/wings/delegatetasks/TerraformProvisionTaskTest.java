@@ -23,6 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -35,7 +36,7 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.terraform.TerraformBaseHelper;
+import io.harness.delegate.task.terraform.TerraformBaseHelperImpl;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.filesystem.FileIo;
@@ -72,6 +73,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -85,7 +87,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private GitClientHelper gitClientHelper;
   @Mock private DelegateFileManager delegateFileManager;
   @Mock private EncryptDecryptHelper planEncryptDecryptHelper;
-  @Mock private TerraformBaseHelper terraformBaseHelper;
+  @InjectMocks private TerraformBaseHelperImpl terraformBaseHelper;
 
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
@@ -110,6 +112,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    initMocks(this);
     on(terraformProvisionTask).set("encryptionService", mockEncryptionService);
     on(terraformProvisionTask).set("gitClient", gitClient);
     on(terraformProvisionTask).set("logService", logService);

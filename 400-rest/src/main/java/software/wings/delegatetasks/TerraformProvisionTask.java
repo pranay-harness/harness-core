@@ -62,6 +62,7 @@ import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.terraform.TerraformHelperUtils;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -203,7 +204,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    String baseDir = resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
+    String baseDir = terraformBaseHelper.resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -222,7 +223,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
+    String scriptDirectory = terraformBaseHelper.resolveScriptDirectory(workingDir, parameters.getScriptPath());
     log.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -443,7 +444,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
-      File tfStateFile = getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
+      File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
@@ -681,11 +682,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
 
-  @NonNull
-  private String resolveBaseDir(String accountId, String entityId) {
-    return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
-  }
-
   @VisibleForTesting
   public void getCommandLineVariableParams(TerraformProvisionParameters parameters, File tfVariablesFile,
       StringBuilder executeParams, StringBuilder uiLogParams) throws IOException {
@@ -774,18 +770,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return targetArgs.toString();
   }
 
-  private File getTerraformStateFile(String scriptDirectory, String workspace) {
-    File tfStateFile = isEmpty(workspace)
-        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
-        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
-
-    if (tfStateFile.exists()) {
-      return tfStateFile;
-    }
-
-    return null;
-  }
-
   @VisibleForTesting
   public byte[] getTerraformPlanFile(String scriptDirectory, TerraformProvisionParameters parameters)
       throws IOException {
@@ -831,12 +815,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
 
     return null;
-  }
-
-  private String resolveScriptDirectory(String workingDir, String scriptPath) {
-    return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
-        .toString();
   }
 
   private void saveExecutionLog(

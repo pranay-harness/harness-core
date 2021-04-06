@@ -1,4 +1,4 @@
-package io.harness.delegate.terraform;
+package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -169,6 +169,15 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
         .destroy(TerraformDestroyCommandRequest.builder().targets(terraformExecuteStepRequest.getTargets()).build(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testsaveTerraformPlanContentToFile() {
+    // EncryptionConfig encryptionConfig, EncryptedRecordData encryptedTfPlan,
+    //      String scriptDirectory, String terraformOutputFileName
+    // terraformBaseHelper.saveTerraformPlanContentToFile();
   }
 
   private TerraformExecuteStepRequestBuilder getTerraformExecuteStepRequest() {
