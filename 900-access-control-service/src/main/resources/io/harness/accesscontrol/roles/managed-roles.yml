@@ -9,6 +9,7 @@ roles:
         - core_secret_view
         - core_secret_edit
         - core_secret_delete
+        - core_secret_access
         - core_connector_create
         - core_connector_view
         - core_connector_edit
@@ -51,9 +52,10 @@ roles:
         - core_organization_delete
         - core_project_view
         - core_project_create
-        - core_secret_delete
         - core_secret_view
         - core_secret_edit
+        - core_secret_delete
+        - core_secret_access
         - core_connector_create
         - core_connector_view
         - core_connector_edit
@@ -90,9 +92,10 @@ roles:
       permissions:
         - core_organization_view
         - core_organization_create
-        - core_secret_delete
         - core_secret_view
         - core_secret_edit
+        - core_secret_delete
+        - core_secret_access
         - core_connector_create
         - core_connector_view
         - core_connector_edit
@@ -126,6 +129,7 @@ roles:
       description: Execute a pipeline
       permissions:
         - core_secret_view
+        - core_secret_access
         - core_connector_view
         - core_connector_runtimeAccess
         - core_pipeline_view
