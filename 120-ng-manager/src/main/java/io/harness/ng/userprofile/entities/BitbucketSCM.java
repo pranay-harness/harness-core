@@ -44,10 +44,10 @@ public class BitbucketSCM extends SourceCodeManager {
     @Override
     public BitbucketSCM toSCMEntity(BitbucketSCMDTO sourceCodeManagerDTO) {
       BitbucketSCM bitbucketSCM = BitbucketSCM.builder()
-                                      .authType(sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getAuthType())
+                                      .authType(sourceCodeManagerDTO.getAuthentication().getAuthType())
                                       .authenticationDetails(BitbucketDTOToEntity.buildAuthenticationDetails(
-                                          sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getAuthType(),
-                                          sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getCredentials()))
+                                          sourceCodeManagerDTO.getAuthentication().getAuthType(),
+                                          sourceCodeManagerDTO.getAuthentication().getCredentials()))
                                       .build();
       setCommonFieldsEntity(bitbucketSCM, sourceCodeManagerDTO);
       return bitbucketSCM;
@@ -57,7 +57,7 @@ public class BitbucketSCM extends SourceCodeManager {
     public BitbucketSCMDTO toSCMDTO(BitbucketSCM sourceCodeManager) {
       BitbucketSCMDTO bitbucketSCMDTO =
           BitbucketSCMDTO.builder()
-              .bitbucketAuthenticationDTO(BitbucketEntityToDTO.buildBitbucketAuthentication(
+              .authentication(BitbucketEntityToDTO.buildBitbucketAuthentication(
                   sourceCodeManager.getAuthType(), sourceCodeManager.getAuthenticationDetails()))
               .build();
       setCommonFieldsDTO(sourceCodeManager, bitbucketSCMDTO);

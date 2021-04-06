@@ -43,10 +43,10 @@ public class GithubSCM extends SourceCodeManager {
     @Override
     public GithubSCM toSCMEntity(GithubSCMDTO sourceCodeManagerDTO) {
       GithubSCM githubSCM = GithubSCM.builder()
-                                .authType(sourceCodeManagerDTO.getGithubAuthenticationDTO().getAuthType())
+                                .authType(sourceCodeManagerDTO.getAuthentication().getAuthType())
                                 .authenticationDetails(GithubDTOToEntity.buildAuthenticationDetails(
-                                    sourceCodeManagerDTO.getGithubAuthenticationDTO().getAuthType(),
-                                    sourceCodeManagerDTO.getGithubAuthenticationDTO().getCredentials()))
+                                    sourceCodeManagerDTO.getAuthentication().getAuthType(),
+                                    sourceCodeManagerDTO.getAuthentication().getCredentials()))
                                 .build();
       setCommonFieldsEntity(githubSCM, sourceCodeManagerDTO);
       return githubSCM;
@@ -56,7 +56,7 @@ public class GithubSCM extends SourceCodeManager {
     public GithubSCMDTO toSCMDTO(GithubSCM sourceCodeManager) {
       GithubSCMDTO githubSCMDTO =
           GithubSCMDTO.builder()
-              .githubAuthenticationDTO(GithubEntityToDTO.buildGithubAuthentication(
+              .authentication(GithubEntityToDTO.buildGithubAuthentication(
                   sourceCodeManager.getAuthType(), sourceCodeManager.getAuthenticationDetails()))
               .build();
       setCommonFieldsDTO(sourceCodeManager, githubSCMDTO);
