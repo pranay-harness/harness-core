@@ -88,7 +88,6 @@ public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo
         .skipDryRun(skipDryRun)
         .skipSteadyStateCheck(skipSteadyStateCheck)
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())

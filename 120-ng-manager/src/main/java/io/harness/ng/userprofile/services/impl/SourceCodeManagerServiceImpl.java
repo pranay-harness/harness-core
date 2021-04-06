@@ -62,6 +62,15 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
     return null;
   }
 
+  @Override
+  public boolean delete(String name) {
+    Optional<String> userIdentifier = getUserIdentifier();
+    if (userIdentifier.isPresent()) {
+      return sourceCodeManagerRepository.deleteByUserIdentifierAndName(userIdentifier.get(), name) > 0;
+    }
+    return false;
+  }
+
   private Optional<String> getUserIdentifier() {
     Optional<String> userId = Optional.empty();
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null

@@ -21,7 +21,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "CEDataEntryKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class QLCEDataEntry implements QLData {
   Double totalCost;

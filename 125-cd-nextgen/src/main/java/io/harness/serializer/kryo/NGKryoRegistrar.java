@@ -1,5 +1,9 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.advisers.RollbackCustomStepParameters;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -90,6 +94,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(CDC)
 public class NGKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -186,5 +191,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(OpenshiftParamManifestOutcome.class, 12537);
     kryo.register(S3StoreConfig.class, 12538);
     kryo.register(GcsStoreConfig.class, 12539);
+    kryo.register(RollbackCustomStepParameters.class, 12540);
   }
 }

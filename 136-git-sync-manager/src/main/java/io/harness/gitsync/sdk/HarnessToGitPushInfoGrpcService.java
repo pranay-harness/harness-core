@@ -51,7 +51,11 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
               request.getFilePath(), request.getAccountId(), entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
       pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
-          .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build());
+          .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
+          .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
+          .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
+          .setAccountId(infoForPush.getAccountId())
+          .setYamlGitConfigId(infoForPush.getYamlGitConfigId());
 
     } catch (WingsException e) {
       final ByteString exceptionBytes =

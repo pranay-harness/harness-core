@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.Account.Builder.anAccount;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -22,6 +25,7 @@ import software.wings.beans.Application.Builder;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -60,6 +64,7 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
 
+@OwnedBy(DX)
 public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_TEAM = "TEAM";
   public static final String TAG_VALUE_TEAM1 = "TEAM1";
@@ -105,6 +110,10 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String WORKLOAD_TYPE_ACCOUNT1 = "WORKLOAD_TYPE_ACCOUNT1";
   public static final String TRIGGER_ID1_APP1_ACCOUNT1 = "TRIGGER_ID1_APP1_ACCOUNT1";
   public static final String TRIGGER_ID2_APP1_ACCOUNT1 = "TRIGGER_ID2_APP1_ACCOUNT1";
+  public static final String TAG1_ID_ACCOUNT1 = "TAG1_ID_ACCOUNT1";
+  public static final String TAG2_ID_ACCOUNT1 = "TAG2_ID_ACCOUNT1";
+  public static final String TAG_KEY = "TAG_KEY";
+  public static final String TAG_VALUE = "TAG_VALUE";
   public static final String ACCOUNT2_ID = "ACCOUNT2_ID";
   public static final String APP3_ID_ACCOUNT2 = "APP3_ID_ACCOUNT2";
   public static final String SERVICE4_ID_APP3_ACCOUNT2 = "SERVICE4_ID_APP3_ACCOUNT2";
@@ -326,6 +335,11 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
                                      .withCategory(SettingCategory.CONNECTOR)
                                      .build();
     settingsService.save(connector, false);
+  }
+
+  public void createTag(String accountId, String uuid, String key) {
+    HarnessTag tag = HarnessTag.builder().accountId(accountId).key(key).uuid(uuid).build();
+    harnessTagService.create(tag);
   }
 
   public void createCEConnector(String uuid, String accountId, String name, SettingValue settingValue) {

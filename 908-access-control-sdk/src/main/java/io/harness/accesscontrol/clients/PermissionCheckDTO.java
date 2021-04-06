@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
-@Builder
+@Builder(builderClassName = "Builder")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "PermissionCheck")
 @FieldDefaults(level = AccessLevel.PRIVATE)

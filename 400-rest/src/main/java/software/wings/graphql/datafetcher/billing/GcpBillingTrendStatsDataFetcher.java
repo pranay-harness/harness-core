@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {

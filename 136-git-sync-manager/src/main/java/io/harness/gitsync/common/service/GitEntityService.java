@@ -9,19 +9,28 @@ import io.harness.common.EntityReference;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
-import io.harness.gitsync.common.dtos.GitSyncProductDTO;
+import io.harness.gitsync.common.dtos.GitSyncRepoFilesListDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.EntityDetail;
 
+import java.util.List;
+
 @OwnedBy(DX)
 public interface GitEntityService {
-  GitSyncProductDTO list(String projectId, String orgId, String accountId, ModuleType moduleType, int size);
+  PageResponse<GitSyncEntityListDTO> getPageByType(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, String gitSyncConfigIdentifier, String branch, EntityType entityType, int page,
+      int size);
 
-  PageResponse<GitSyncEntityListDTO> getPageByType(
-      String projectId, String orgId, String accountId, EntityType entityType, int page, int size);
+  GitSyncRepoFilesListDTO listSummary(String projectIdentifier, String organizationIdentifier, String accountIdentifier,
+      ModuleType moduleType, String searchTerm, List<String> gitSyncConfigIdentifierList,
+      List<EntityType> entityTypeList, int size);
 
   GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType);
 
   boolean save(
       String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath, String commitId);
+
+  List<GitSyncEntityListDTO> listSummaryByRepoAndBranch(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, ModuleType moduleType, String searchTerm, String gitSyncConfigIdentifier, String branch,
+      List<EntityType> entityTypeList, int size);
 }

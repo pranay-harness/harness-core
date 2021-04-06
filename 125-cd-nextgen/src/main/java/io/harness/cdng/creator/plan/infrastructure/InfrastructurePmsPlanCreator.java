@@ -14,6 +14,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -166,7 +167,8 @@ public class InfrastructurePmsPlanCreator {
     }
 
     // Add Steps Node
-    PlanNode stepsNode = getStepsPlanNode(stepsYamlField, stepYamlFields.get(0).getNode().getUuid());
+    PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+        stepsYamlField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Provisioner Steps Element");
     responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
 
     // Add provisioner Node
@@ -199,20 +201,6 @@ public class InfrastructurePmsPlanCreator {
                 .setParameters(ByteString.copyFrom(
                     kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(infraStepNodeId).build())))
                 .build())
-        .skipGraphType(SkipType.SKIP_NODE)
-        .build();
-  }
-
-  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
-    StepParameters stepParameters =
-        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Provisioner Steps Element").build();
-    return PlanNode.builder()
-        .uuid(stepsYamlField.getNode().getUuid())
-        .identifier(YAMLFieldNameConstants.STEPS)
-        .stepType(NGSectionStep.STEP_TYPE)
-        .name(YAMLFieldNameConstants.STEPS)
-        .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }

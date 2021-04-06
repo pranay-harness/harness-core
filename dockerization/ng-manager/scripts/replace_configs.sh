@@ -220,6 +220,12 @@ replace_key_value baseUrls.ui $MANAGER_UI_URL
 
 replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
 
+replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
+
+replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+
+replace_key_value accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
+
 replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
 replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
@@ -236,15 +242,11 @@ replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
-replace_key_value outboxIteratorConfig.threadPoolSize "$OUTBOX_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value outboxPollConfig.initialDelayInSeconds "$OUTBOX_POLL_INITIAL_DELAY"
 
-replace_key_value outboxIteratorConfig.intervalInSeconds "$OUTBOX_ITERATOR_INTERVAL"
+replace_key_value outboxPollConfig.pollingIntervalInSeconds "$OUTBOX_POLL_INTERVAL"
 
-replace_key_value outboxIteratorConfig.targetIntervalInSeconds "$OUTBOX_ITERATOR_TARGET_INTERVAL"
-
-replace_key_value outboxIteratorConfig.acceptableNoAlertDelayInSeconds "$OUTBOX_ITERATOR_NO_ALERT_DELAY"
-
-replace_key_value outboxIteratorConfig.maximumOutboxEventHandlingAttempts "$OUTBOX_ITERATOR_MAX_ATTEMPTS"
+replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_RETRY_ATTEMPTS"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]

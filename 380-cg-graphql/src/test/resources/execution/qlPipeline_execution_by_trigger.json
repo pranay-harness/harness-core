@@ -34,5 +34,6 @@
       "status":"QUEUED",
       "approvalStepType":"USER_GROUP"
     }
-  ]
+  ],
+  "failureDetails":"failureDetails"
 }

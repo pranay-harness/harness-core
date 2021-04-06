@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
@@ -25,6 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "BitBucketSCMKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,10 +44,10 @@ public class BitbucketSCM extends SourceCodeManager {
     @Override
     public BitbucketSCM toSCMEntity(BitbucketSCMDTO sourceCodeManagerDTO) {
       BitbucketSCM bitbucketSCM = BitbucketSCM.builder()
-                                      .authType(sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getAuthType())
+                                      .authType(sourceCodeManagerDTO.getAuthentication().getAuthType())
                                       .authenticationDetails(BitbucketDTOToEntity.buildAuthenticationDetails(
-                                          sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getAuthType(),
-                                          sourceCodeManagerDTO.getBitbucketAuthenticationDTO().getCredentials()))
+                                          sourceCodeManagerDTO.getAuthentication().getAuthType(),
+                                          sourceCodeManagerDTO.getAuthentication().getCredentials()))
                                       .build();
       setCommonFieldsEntity(bitbucketSCM, sourceCodeManagerDTO);
       return bitbucketSCM;
@@ -55,7 +57,7 @@ public class BitbucketSCM extends SourceCodeManager {
     public BitbucketSCMDTO toSCMDTO(BitbucketSCM sourceCodeManager) {
       BitbucketSCMDTO bitbucketSCMDTO =
           BitbucketSCMDTO.builder()
-              .bitbucketAuthenticationDTO(BitbucketEntityToDTO.buildBitbucketAuthentication(
+              .authentication(BitbucketEntityToDTO.buildBitbucketAuthentication(
                   sourceCodeManager.getAuthType(), sourceCodeManager.getAuthenticationDetails()))
               .build();
       setCommonFieldsDTO(sourceCodeManager, bitbucketSCMDTO);

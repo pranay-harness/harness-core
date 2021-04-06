@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
@@ -32,16 +31,13 @@ public class K8sRollingRollbackStepParameters extends K8sRollingRollbackBaseStep
   ParameterField<String> skipCondition;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sRollingRollbackStepParameters(String name, String identifier, String description,
-      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
-      RollbackInfo rollbackInfo) {
+      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun) {
     super(skipDryRun);
     this.timeout = timeout;
     this.skipCondition = skipCondition;
-    this.rollbackInfo = rollbackInfo;
     this.name = name;
     this.identifier = identifier;
     this.name = name;

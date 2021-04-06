@@ -25,4 +25,5 @@ public class QLTagLink implements QLObject {
   private String value;
   private QLEntityType entityType;
   private String entityId;
+  private String appId;
 }

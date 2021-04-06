@@ -12,8 +12,10 @@ import io.harness.request.RequestMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,24 +30,27 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class AuditEventDTO {
+  String auditId;
   @NotNull @NotBlank String insertId;
   @Valid @NotNull ResourceScopeDTO resourceScope;
 
-  HttpRequestInfo httpRequestInfo;
-  RequestMetadata requestMetadata;
+  @Valid HttpRequestInfo httpRequestInfo;
+  @Valid RequestMetadata requestMetadata;
 
-  @NotNull Long timestamp;
+  @NotNull @Min(value = 0) Long timestamp;
 
   @NotNull @Valid AuthenticationInfoDTO authenticationInfo;
 
   @NotNull ModuleType module;
-  String environmentIdentifier;
+  @Valid Environment environment;
 
   @NotNull @Valid ResourceDTO resource;
+
+  @ApiModelProperty(hidden = true) @Valid YamlDiffRecordDTO yamlDiffRecordDTO;
+
   @NotNull Action action;
 
-  YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
-  Map<String, String> internalInfo;
+  @ApiModelProperty(hidden = true) Map<String, String> internalInfo;
 }

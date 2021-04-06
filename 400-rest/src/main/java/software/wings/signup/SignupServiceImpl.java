@@ -99,13 +99,13 @@ public class SignupServiceImpl implements SignupService {
   }
 
   @Override
-  public void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite) {
+  public void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite, String generatedPassword) {
     try {
       Map<String, String> templateModel = getTrialSignupCompletedTemplateModel(userInvite);
       String moduleName = getModuleName(userInvite);
       templateModel.put("module", moduleName);
       templateModel.put("email", userInvite.getEmail());
-      templateModel.put("password", userInvite.getPassword().toString());
+      templateModel.put("password", generatedPassword);
       String logo = getLogo(userInvite);
       templateModel.put("logo", logo);
       sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_LINKEDIN_TEMPLATE_NAME, templateModel);

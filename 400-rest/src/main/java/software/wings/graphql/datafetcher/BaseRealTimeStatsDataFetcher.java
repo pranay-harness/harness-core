@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -8,6 +9,7 @@ import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -36,6 +38,7 @@ import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
   default QLData getStackedData(NameService nameService, WingsPersistence wingsPersistence, List<String> groupBy,

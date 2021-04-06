@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -19,6 +20,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -63,6 +67,8 @@ import org.mockito.Mockito;
 /**
  * Created by sriram_parthasarathy on 12/7/17.
  */
+@OwnedBy(CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
   @Inject private WorkflowExecutionService workflowExecutionService;

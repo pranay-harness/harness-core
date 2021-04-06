@@ -7,6 +7,9 @@ import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionGraph;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
@@ -40,7 +43,6 @@ import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;
@@ -59,6 +61,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
   private static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()

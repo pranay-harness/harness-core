@@ -15,9 +15,13 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -29,6 +33,7 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
+import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -38,6 +43,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
@@ -91,12 +97,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
-  private final PMSYamlSchemaService pmsYamlSchemaService;
+  private PMSYamlSchemaService pmsYamlSchemaService;
+  private NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
+  private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
-  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_pipeline_edit")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
   public ResponseDTO<String> createPipeline(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -129,7 +137,7 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_view")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PMSPipelineResponseDTO> getPipelineByIdentifier(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -148,7 +156,7 @@ public class PipelineResource implements YamlSchemaResource {
   @PUT
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Update a Pipeline", nickname = "putPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_edit")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
   public ResponseDTO<String> updatePipeline(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -171,7 +179,7 @@ public class PipelineResource implements YamlSchemaResource {
   @DELETE
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Delete a pipeline", nickname = "softDeletePipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_delete")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_DELETE)
   public ResponseDTO<Boolean> deletePipeline(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -187,7 +195,7 @@ public class PipelineResource implements YamlSchemaResource {
   @POST
   @Path("/list")
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
-  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_pipeline_view")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<Page<PMSPipelineSummaryResponseDTO>> getListOfPipelines(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -216,7 +224,7 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/summary/{pipelineIdentifier}")
   @ApiOperation(value = "Gets Pipeline Summary of a pipeline", nickname = "getPipelineSummary")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = "core_pipeline_view")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PMSPipelineSummaryResponseDTO> getPipelineSummary(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -246,7 +254,7 @@ public class PipelineResource implements YamlSchemaResource {
   @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
-  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_pipeline_view")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -275,7 +283,7 @@ public class PipelineResource implements YamlSchemaResource {
         planExecutionSummaryDTOS
             .filter(e
                 -> accessControlClient.hasAccess(PMSPipelineDtoMapper.toPermissionCheckDTO(
-                    accountId, orgId, projectId, e.getPipelineIdentifier(), "core_pipeline_view")))
+                    accountId, orgId, projectId, e.getPipelineIdentifier(), PipelineRbacPermissions.PIPELINE_VIEW)))
             .toList();
 
     return ResponseDTO.newResponse(new PageImpl<>(allowedPipelineSummaries, pageRequest, size));
@@ -295,8 +303,8 @@ public class PipelineResource implements YamlSchemaResource {
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
 
-    accessControlClient.checkForAccessOrThrow(PMSPipelineDtoMapper.toPermissionCheckDTO(
-        accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), "core_pipeline_view"));
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
@@ -340,5 +348,20 @@ public class PipelineResource implements YamlSchemaResource {
   @ApiOperation(value = "Get Notification Schema", nickname = "getNotificationSchema")
   public ResponseDTO<NotificationRules> getNotificationSchema() {
     return ResponseDTO.newResponse(NotificationRules.builder().build());
+  }
+
+  @GET
+  @Path("/getExecutionNode")
+  @ApiOperation(value = "get execution node", nickname = "getExecutionNode")
+  public ResponseDTO<ExecutionNode> getExecutionNode(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam("nodeExecutionId") String nodeExecutionId) {
+    if (nodeExecutionId == null) {
+      return null;
+    }
+    return ResponseDTO.newResponse(
+        nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
   }
 }

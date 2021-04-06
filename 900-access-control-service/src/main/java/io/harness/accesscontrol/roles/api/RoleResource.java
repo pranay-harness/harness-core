@@ -6,6 +6,7 @@ import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
@@ -64,10 +65,12 @@ public class RoleResource {
 
   @GET
   @ApiOperation(value = "Get Roles", nickname = "getRoleList")
-  public ResponseDTO<PageResponse<RoleResponseDTO>> get(
-      @BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
+  public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
+      @BeanParam HarnessScopeParams harnessScopeParams,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    RoleFilter roleFilter = RoleFilter.builder().scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
+    RoleFilter roleFilter =
+        RoleFilter.builder().searchTerm(searchTerm).scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
     PageResponse<Role> pageResponse = roleService.list(pageRequest, roleFilter);
     return ResponseDTO.newResponse(pageResponse.map(roleDTOMapper::toResponseDTO));
   }

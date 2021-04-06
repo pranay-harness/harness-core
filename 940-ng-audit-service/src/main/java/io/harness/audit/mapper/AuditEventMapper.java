@@ -30,14 +30,15 @@ public class AuditEventMapper {
         .module(dto.getModule())
         .resource(ResourceMapper.fromDTO(dto.getResource()))
         .action(dto.getAction())
-        .yamlDiff(dto.getYamlDiff())
         .auditEventData(dto.getAuditEventData())
+        .environment(dto.getEnvironment())
         .internalInfo(internalInfo)
         .build();
   }
 
   public static AuditEventDTO toDTO(AuditEvent auditEvent) {
     return AuditEventDTO.builder()
+        .auditId(auditEvent.getId())
         .insertId(auditEvent.getInsertId())
         .resourceScope(ResourceScopeMapper.toDTO(auditEvent.getResourceScope()))
         .httpRequestInfo(auditEvent.getHttpRequestInfo())
@@ -47,8 +48,8 @@ public class AuditEventMapper {
         .module(auditEvent.getModule())
         .resource(ResourceMapper.toDTO(auditEvent.getResource()))
         .action(auditEvent.getAction())
-        .yamlDiff(auditEvent.getYamlDiff())
         .auditEventData(auditEvent.getAuditEventData())
+        .environment(auditEvent.getEnvironment())
         .build();
   }
 }
