@@ -9,5 +9,5 @@ import io.harness.audit.entities.YamlDiffRecord;
 public interface AuditYamlService {
   YamlDiffRecord get(String auditId);
   YamlDiffRecord save(YamlDiffRecord yamlDiffRecord);
-  YamlDiffRecord delete(String auditId);
+  boolean delete(String auditId);
 }

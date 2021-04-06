@@ -31,12 +31,14 @@ public class AuditEventMapper {
         .resource(ResourceMapper.fromDTO(dto.getResource()))
         .action(dto.getAction())
         .auditEventData(dto.getAuditEventData())
+        .environment(dto.getEnvironment())
         .internalInfo(internalInfo)
         .build();
   }
 
   public static AuditEventDTO toDTO(AuditEvent auditEvent) {
     return AuditEventDTO.builder()
+        .auditId(auditEvent.getId())
         .insertId(auditEvent.getInsertId())
         .resourceScope(ResourceScopeMapper.toDTO(auditEvent.getResourceScope()))
         .httpRequestInfo(auditEvent.getHttpRequestInfo())
@@ -47,6 +49,7 @@ public class AuditEventMapper {
         .resource(ResourceMapper.toDTO(auditEvent.getResource()))
         .action(auditEvent.getAction())
         .auditEventData(auditEvent.getAuditEventData())
+        .environment(auditEvent.getEnvironment())
         .build();
   }
 }

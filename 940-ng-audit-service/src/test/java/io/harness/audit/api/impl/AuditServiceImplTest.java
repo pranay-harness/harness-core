@@ -24,6 +24,7 @@ import io.harness.audit.Action;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.PrincipalType;
 import io.harness.audit.beans.ResourceDTO;
@@ -225,11 +226,12 @@ public class AuditServiceImplTest extends CategoryTest {
     String environmentIdentifier = randomAlphabetic(10);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
-    AuditFilterPropertiesDTO correctFilter = AuditFilterPropertiesDTO.builder()
-                                                 .modules(singletonList(ModuleType.CD))
-                                                 .actions(singletonList(action))
-                                                 .environmentIdentifiers(singletonList(environmentIdentifier))
-                                                 .build();
+    AuditFilterPropertiesDTO correctFilter =
+        AuditFilterPropertiesDTO.builder()
+            .modules(singletonList(ModuleType.CD))
+            .actions(singletonList(action))
+            .environments(singletonList(Environment.builder().identifier(environmentIdentifier).build()))
+            .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
     Criteria criteria = criteriaArgumentCaptor.getValue();
@@ -257,13 +259,12 @@ public class AuditServiceImplTest extends CategoryTest {
     assertEquals(1, actionList.size());
     assertEquals(action, actionList.get(0));
 
-    Document environmentIdentifierDocument = (Document) andList.get(3);
+    Document environmentDocument = (Document) andList.get(3);
+    BasicDBList environmentList = (BasicDBList) environmentDocument.get("$or");
+    assertEquals(1, environmentList.size());
+    Document environmentIdentifierDocument = (Document) environmentList.get(0);
     assertNotNull(environmentIdentifierDocument);
-    Document environmentIdentifierValueDocument =
-        (Document) environmentIdentifierDocument.get(AuditEventKeys.environmentIdentifier);
-    assertNotNull(environmentIdentifierValueDocument);
-    List<String> environmentIdentifierValueList = (List<String>) environmentIdentifierValueDocument.get("$in");
-    assertEquals(1, environmentIdentifierValueList.size());
-    assertEquals(environmentIdentifier, environmentIdentifierValueList.get(0));
+    assertEquals(
+        environmentIdentifier, environmentIdentifierDocument.getString(AuditEventKeys.ENVIRONMENT_IDENTIFIER_KEY));
   }
 }
