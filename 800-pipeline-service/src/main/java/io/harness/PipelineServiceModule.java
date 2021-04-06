@@ -60,6 +60,8 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -214,6 +216,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
     bind(JiraTaskHelperService.class).to(JiraTaskHelperServiceImpl.class);
+    bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
   }
