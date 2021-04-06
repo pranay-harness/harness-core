@@ -203,7 +203,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    String baseDir = resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
+    String baseDir = terraformBaseHelper.resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -222,7 +222,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
+    String scriptDirectory = terraformBaseHelper.resolveScriptDirectory(workingDir, parameters.getScriptPath());
     log.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -681,11 +681,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
 
-  @NonNull
-  private String resolveBaseDir(String accountId, String entityId) {
-    return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
-  }
-
   @VisibleForTesting
   public void getCommandLineVariableParams(TerraformProvisionParameters parameters, File tfVariablesFile,
       StringBuilder executeParams, StringBuilder uiLogParams) throws IOException {
@@ -831,12 +826,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
 
     return null;
-  }
-
-  private String resolveScriptDirectory(String workingDir, String scriptPath) {
-    return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
-        .toString();
   }
 
   private void saveExecutionLog(

@@ -4,11 +4,13 @@ import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
+import io.harness.git.model.AuthRequest;
 
 public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
   @Override
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters,
-      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress,
+      AuthRequest authRequest, String delegateId, String taskId) {
     return null;
   }
 }

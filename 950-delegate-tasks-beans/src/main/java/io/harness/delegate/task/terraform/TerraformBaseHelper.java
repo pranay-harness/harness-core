@@ -24,4 +24,8 @@ public interface TerraformBaseHelper {
 
   CliResponse executeTerraformDestroyStep(TerraformExecuteStepRequest terraformExecuteStepRequest)
       throws InterruptedException, IOException, TimeoutException;
+
+  String resolveBaseDir(String accountId, String provisionerId);
+
+  String resolveScriptDirectory(String workingDir, String scriptPath);
 }
