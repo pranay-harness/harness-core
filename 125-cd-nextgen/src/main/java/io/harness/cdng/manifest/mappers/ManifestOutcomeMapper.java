@@ -8,6 +8,7 @@ import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import static java.lang.String.format;
@@ -180,7 +181,7 @@ public class ManifestOutcomeMapper {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
 
       if (FetchType.BRANCH == gitStoreConfig.getGitFetchType()) {
-        if (!ParameterField.isNull(gitStoreConfig.getCommitId())) {
+        if (isNotEmpty(getParameterFieldValue(gitStoreConfig.getCommitId()))) {
           throw new InvalidArgumentsException(Pair.of("commitId", "Not allowed for gitFetchType: Branch"));
         }
 
@@ -191,7 +192,7 @@ public class ManifestOutcomeMapper {
       }
 
       if (FetchType.COMMIT == gitStoreConfig.getGitFetchType()) {
-        if (!ParameterField.isNull(gitStoreConfig.getBranch())) {
+        if (isNotEmpty(getParameterFieldValue(gitStoreConfig.getBranch()))) {
           throw new InvalidArgumentsException(Pair.of("branch", "Not allowed for gitFetchType: Commit"));
         }
 
