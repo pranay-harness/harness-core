@@ -26,7 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GithubSCMKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
