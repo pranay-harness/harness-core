@@ -45,8 +45,11 @@ import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logStreaming.LogStreamingStepClientFactory;
 import io.harness.logging.CommandExecutionStatus;
@@ -147,7 +150,8 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
             .resourceType("project")
             .build());
     if (!hasAccess) {
-      throw new InvalidRequestException("Rbac validation failed for Service step");
+      throw new AccessDeniedException(
+          "Validation for Service Step failed", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
   }
 
