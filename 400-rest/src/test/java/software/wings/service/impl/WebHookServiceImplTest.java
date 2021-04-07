@@ -185,7 +185,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, null).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -196,7 +196,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   public void shouldNotExecuteDisabledTrigger() {
     trigger.setDisabled(true);
 
-    Response response = webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build(), null);
+    Response response =
+        webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build(), httpHeaders);
 
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_SERVICE_UNAVAILABLE);
@@ -212,7 +213,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookTriggerCondition triggerCondition = (WebHookTriggerCondition) trigger.getCondition();
     triggerCondition.setCheckFileContentChanged(true);
 
-    Response response = webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build());
+    Response response =
+        webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build(), httpHeaders);
 
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
@@ -894,7 +896,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
         .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any(), anyMap());
 
     WebHookRequest request = WebHookRequest.builder().application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, null).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getRequestId()).isEqualTo(WORKFLOW_EXECUTION_ID);
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
@@ -1001,7 +1003,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts = Collections.singletonList(
         of("service", SERVICE_NAME, "buildNumber", BUILD_NO, "artifactVariables", parameterMap));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, null).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -1086,7 +1088,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
 
-    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest, null);
+    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest, httpHeaders);
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(400);
     assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);

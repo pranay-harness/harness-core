@@ -2984,7 +2984,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrProperty("releaseNo")
