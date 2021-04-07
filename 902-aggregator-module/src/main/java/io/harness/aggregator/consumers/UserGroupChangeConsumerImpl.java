@@ -64,7 +64,7 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
       return count;
 
     } else {
-      log.info("None of the relevant fields have changed for the user group");
+      log.debug("None of the relevant fields have changed for the user group");
     }
     return 0;
   }
