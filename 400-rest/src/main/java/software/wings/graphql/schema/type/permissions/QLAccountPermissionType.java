@@ -1,10 +1,14 @@
 package software.wings.graphql.schema.type.permissions;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLEnum;
 
+@OwnedBy(PL)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLAccountPermissionType implements QLEnum {
   CREATE_AND_DELETE_APPLICATION,
@@ -60,6 +64,11 @@ public enum QLAccountPermissionType implements QLEnum {
    * Manage Secret Managers
    */
   MANAGE_SECRET_MANAGERS,
+
+  /**
+   * Manage SSH and WinRM Connection
+   */
+  MANAGE_SSH_AND_WINRM,
 
   /**
    * Manage Authentication Settings
