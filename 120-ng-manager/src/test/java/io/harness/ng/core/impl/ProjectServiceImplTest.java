@@ -40,8 +40,10 @@ import io.harness.rule.Owner;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -199,8 +201,9 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
 
+    Set<String> orgIdentifiers = Collections.singleton(orgIdentifier);
     Page<Project> projectPage = projectService.list(accountIdentifier, unpaged(),
-        ProjectFilterDTO.builder().orgIdentifier(orgIdentifier).searchTerm(searchTerm).moduleType(CD).build());
+        ProjectFilterDTO.builder().orgIdentifiers(orgIdentifiers).searchTerm(searchTerm).moduleType(CD).build());
 
     verify(projectRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
 
@@ -209,7 +212,7 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     assertEquals(5, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(ProjectKeys.accountIdentifier));
-    assertEquals(orgIdentifier, criteriaObject.get(ProjectKeys.orgIdentifier));
+    assertTrue(criteriaObject.containsKey(ProjectKeys.orgIdentifier));
     assertTrue(criteriaObject.containsKey(ProjectKeys.deleted));
     assertTrue(criteriaObject.containsKey(ProjectKeys.modules));
 

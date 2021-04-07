@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,7 +190,9 @@ public class AccessControlMigrationHandler implements MessageListener {
       // adding project level roles to users
       List<Project> projects = projectService
                                    .list(accountId, Pageable.unpaged(),
-                                       ProjectFilterDTO.builder().orgIdentifier(organization.getIdentifier()).build())
+                                       ProjectFilterDTO.builder()
+                                           .orgIdentifiers(Collections.singleton(organization.getIdentifier()))
+                                           .build())
                                    .getContent();
       for (Project project : projects) {
         roleAssignmentMetadataList.add(
