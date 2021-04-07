@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.TAG_TYPE;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.BuildSpec;
