@@ -2,6 +2,13 @@ spec:
   execution:
     steps:
       - step:
+          name: "Jira Create"
+          identifier: jiraCreate
+          type: JiraCreate
+          timeout: 5m
+          spec:
+            fields: []
+      - step:
           name: "Jira Approval"
           identifier: jiraApproval
           type: JiraApproval
