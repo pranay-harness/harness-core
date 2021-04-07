@@ -5290,3 +5290,94 @@ go_repository(
     sum = "h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=",
     version = "v0.0.0-20181124163742-ca087b49e1da",
 )
+
+go_repository(
+    name = "com_github_git_chglog_git_chglog",
+    importpath = "github.com/git-chglog/git-chglog",
+    sum = "h1:8l4Aw3Jmx0pLKYMkY+1b6yBPgE+rzRtA5T3vqFyI2Z8=",
+    version = "v0.0.0-20190611050339-63a4e637021f",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_attrs",
+    importpath = "github.com/gobuffalo/attrs",
+    sum = "h1:hSkbZ9XSyjyBirMeqSqUrK+9HboWrweVlzRNqoBi2d4=",
+    version = "v0.0.0-20190224210810-a9411de4debd",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_depgen",
+    importpath = "github.com/gobuffalo/depgen",
+    sum = "h1:31atYa/UW9V5q8vMJ+W6wd64OaaTHUrCUXER358zLM4=",
+    version = "v0.1.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_envy",
+    importpath = "github.com/gobuffalo/envy",
+    sum = "h1:GlXgaiBkmrYMHco6t4j7SacKO4XUjvh5pwXh0f4uxXU=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_flect",
+    importpath = "github.com/gobuffalo/flect",
+    sum = "h1:3GQ53z7E3o00C/yy7Ko8VXqQXoJGLkrTQCLTF1EjoXU=",
+    version = "v0.1.3",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_genny",
+    importpath = "github.com/gobuffalo/genny",
+    sum = "h1:iQ0D6SpNXIxu52WESsD+KoQ7af2e3nCfnSBoSF/hKe0=",
+    version = "v0.1.1",
+)
+
+go_repository(
+    name = "com_github_hinshun_vt10x",
+    importpath = "github.com/hinshun/vt10x",
+    sum = "h1:WlZsjVhE8Af9IcZDGgJGQpNflI3+MJSBhsgT5PCtzBQ=",
+    version = "v0.0.0-20180616224451-1954e6464174",
+)
+
+go_repository(
+    name = "com_github_kballard_go_shellquote",
+    importpath = "github.com/kballard/go-shellquote",
+    sum = "h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=",
+    version = "v0.0.0-20180428030007-95032a82bc51",
+)
+
+go_repository(
+    name = "com_github_netflix_go_expect",
+    importpath = "github.com/Netflix/go-expect",
+    sum = "h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=",
+    version = "v0.0.0-20180615182759-c93bf25de8e8",
+)
+
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue",
+    importpath = "github.com/robinjoseph08/redisqueue",
+    sum = "h1:8pcVNqJNYuuZkc4z+mKFq06AA1I1xD3mo3x9yKeBuEQ=",
+    version = "v1.1.0",
+)
+
+go_repository(
+    name = "com_github_tsuyoshiwada_go_gitcmd",
+    importpath = "github.com/tsuyoshiwada/go-gitcmd",
+    sum = "h1:Y2l28Jr3vOEeYtxfVbMtVfOdAwuUqWaP9fvNKiBVeXY=",
+    version = "v0.0.0-20180205145712-5f1f5f9475df",
+)
+
+go_repository(
+    name = "in_gopkg_alecaivazis_survey_v1",
+    importpath = "gopkg.in/AlecAivazis/survey.v1",
+    sum = "h1:QoEEmn/d5BbuPIL2qvXwzJdttFFhRQFkaq+tEKb7SMI=",
+    version = "v1.8.5",
+)
+
+go_repository(
+    name = "in_gopkg_kyokomi_emoji_v1",
+    importpath = "gopkg.in/kyokomi/emoji.v1",
+    sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
+    version = "v1.5.1",
+)
