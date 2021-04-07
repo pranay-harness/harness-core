@@ -25,9 +25,11 @@ import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.PageUtils;
+import io.harness.utils.ScopeUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -36,11 +38,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -195,6 +199,20 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean deleteUser(String accountIdentifier, String orgIdentifier, String projectIdentifier, String userId) {
+    Optional<UserMembership> userMembershipOptional = ngUserService.getUserMembership(userId);
+    if (!userMembershipOptional.isPresent()) {
+      return false;
+    }
+    UserMembership userMembership = userMembershipOptional.get();
+    if (isUserPartofChildScope(accountIdentifier, orgIdentifier, projectIdentifier, userMembership)) {
+      String errorMessage = String.format("Please delete the user from the %ss in this %s and try again",
+          StringUtils.capitalize(
+              ScopeUtils.getImmediateNextScope(accountIdentifier, orgIdentifier).toString().toLowerCase()),
+          StringUtils.capitalize(ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
+                                     .toString()
+                                     .toLowerCase()));
+      throw new InvalidRequestException(errorMessage);
+    }
     List<RoleAssignmentResponseDTO> roleAssignments = getResponse(
         accessControlAdminClient.getFilteredRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, 0,
             DEFAULT_PAGE_SIZE,
@@ -213,6 +231,19 @@ public class UserServiceImpl implements UserService {
       ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier);
     }
     return successfullyDeleted;
+  }
+
+  private boolean isUserPartofChildScope(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, UserMembership userMembership) {
+    if (!isBlank(projectIdentifier)) {
+      return false;
+    }
+    if (!isBlank(orgIdentifier)) {
+      return userMembership.getScopes().stream().anyMatch(
+          scope -> orgIdentifier.equals(scope.getOrgIdentifier()) && !isBlank(scope.getProjectIdentifier()));
+    }
+    return userMembership.getScopes().stream().anyMatch(
+        scope -> accountIdentifier.equals(scope.getAccountIdentifier()) && !isBlank(scope.getOrgIdentifier()));
   }
 
   private Map<String, List<RoleBinding>> getUserRoleAssignmentMap(

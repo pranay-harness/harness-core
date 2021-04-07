@@ -33,6 +33,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.UserPrincipal;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -112,10 +114,13 @@ public class OrganizationEventHandler implements OutboxEventHandler {
     if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
       return false;
     }
-    String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
-    ngUserService.addUserToScope(userId,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
-        ORG_ADMIN_ROLE);
+    Principal principal = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal();
+    if (principal instanceof UserPrincipal) {
+      String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
+      ngUserService.addUserToScope(userId,
+          UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
+          ORG_ADMIN_ROLE);
+    }
     return true;
   }
 
