@@ -17,12 +17,10 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.validation.executable.ValidateOnExecution;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
-@ValidateOnExecution
 @NoArgsConstructor
 @OwnedBy(HarnessTeam.PL)
 public class PrivilegedAccessControlClientImpl implements AccessControlClient {
