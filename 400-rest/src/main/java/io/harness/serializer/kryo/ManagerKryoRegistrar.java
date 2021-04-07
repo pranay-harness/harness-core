@@ -1014,7 +1014,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
     kryo.register(ShellScriptParameters.class, 5186);
-    kryo.register(TerraformProvisionParameters.TerraformCommandUnit.class, 5525);
     kryo.register(TerraformProvisionParameters.class, 5342);
     kryo.register(DockerConfig.class, 5010);
     kryo.register(DynaTraceConfig.class, 5237);
