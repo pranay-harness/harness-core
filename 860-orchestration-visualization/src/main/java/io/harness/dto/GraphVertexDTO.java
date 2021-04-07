@@ -8,7 +8,6 @@ import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
@@ -23,7 +22,7 @@ import lombok.Builder;
 import lombok.Value;
 import org.bson.Document;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,7 +39,7 @@ public class GraphVertexDTO {
   Long lastUpdatedAt;
   String stepType;
   Status status;
-  FailureInfo failureInfo;
+  FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   Document stepParameters;

@@ -7,6 +7,7 @@ import io.harness.beans.DelegateInfo;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.GraphDelegateSelectionLogParams;
+import io.harness.dto.converter.FailureInfoDTOConverter;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.ExecutionStatus;
@@ -51,7 +52,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .taskIdToProgressDataMap(nodeExecution.getProgressDataMap())
         .status(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()))
-        .failureInfo(nodeExecution.getFailureInfo())
+        .failureInfo(FailureInfoDTOConverter.toFailureInfoDTO(nodeExecution.getFailureInfo()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
