@@ -202,9 +202,7 @@ public class ProjectServiceImpl implements ProjectService {
     if (projectFilterDTO == null) {
       return criteria;
     }
-    if (isNotBlank(projectFilterDTO.getOrgIdentifier())) {
-      criteria.and(ProjectKeys.orgIdentifier).is(projectFilterDTO.getOrgIdentifier());
-    }
+    criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
     if (projectFilterDTO.getModuleType() != null) {
       if (Boolean.TRUE.equals(projectFilterDTO.getHasModule())) {
         criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());
