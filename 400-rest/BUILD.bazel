@@ -262,7 +262,6 @@ shared_dependencies = [
     "@maven//:com_squareup_okhttp3_logging_interceptor",
     "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
-    "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
     "@maven//:com_squareup_retrofit2_converter_gson",
     "@maven//:com_squareup_retrofit2_converter_jackson",
