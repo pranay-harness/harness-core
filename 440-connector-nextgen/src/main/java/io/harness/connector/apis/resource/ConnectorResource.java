@@ -15,6 +15,8 @@ import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -64,6 +66,7 @@ import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotBlank;
 import retrofit2.http.Body;
 
+@OwnedBy(HarnessTeam.DX)
 @Api("/connectors")
 @Path("/connectors")
 @Produces({"application/json", "text/yaml", "text/html"})
