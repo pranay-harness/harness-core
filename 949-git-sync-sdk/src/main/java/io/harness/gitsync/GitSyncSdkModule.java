@@ -1,9 +1,13 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 
 import io.harness.SCMJavaClientModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.events.GitSyncConfigEventMessageListener;
+import io.harness.gitsync.gittoharness.ChangeSetHelperService;
+import io.harness.gitsync.gittoharness.ChangeSetHelperServiceImpl;
 import io.harness.gitsync.gittoharness.ChangeSetInterceptorService;
 import io.harness.gitsync.gittoharness.GitToHarnessProcessor;
 import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
@@ -17,6 +21,7 @@ import io.harness.ng.core.event.MessageListener;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+@OwnedBy(DX)
 public class GitSyncSdkModule extends AbstractModule {
   private static volatile GitSyncSdkModule instance;
 
@@ -37,6 +42,7 @@ public class GitSyncSdkModule extends AbstractModule {
     bind(GitToHarnessProcessor.class).to(GitToHarnessProcessorImpl.class);
     bind(ChangeSetInterceptorService.class).to(NoOpChangeSetInterceptorServiceImpl.class);
     bind(EntityKeySource.class).to(EntityLookupHelper.class);
+    bind(ChangeSetHelperService.class).to(ChangeSetHelperServiceImpl.class);
     bind(MessageListener.class)
         .annotatedWith(Names.named(GIT_CONFIG_STREAM))
         .to(GitSyncConfigEventMessageListener.class);

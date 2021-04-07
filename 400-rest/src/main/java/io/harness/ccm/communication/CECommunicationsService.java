@@ -1,11 +1,18 @@
 package io.harness.ccm.communication;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public interface CECommunicationsService {
   CECommunications get(String accountId, String email, CommunicationType type);
   List<CECommunications> list(String accountId, String email);

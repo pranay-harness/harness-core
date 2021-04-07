@@ -1,5 +1,7 @@
 package io.harness.serializer;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -8,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class CiExecutionRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -18,6 +21,7 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

@@ -1,5 +1,8 @@
 package io.harness.cvng.beans.stackdriver;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@OwnedBy(CV)
 public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
   public static final String DSL = StackdriverDashboardRequest.readDSL(
       "stackdriver-dashboards-details.datacollection", StackdriverDashboardRequest.class);

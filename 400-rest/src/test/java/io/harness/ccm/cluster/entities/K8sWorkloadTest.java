@@ -1,10 +1,12 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -12,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CE)
 public class K8sWorkloadTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)

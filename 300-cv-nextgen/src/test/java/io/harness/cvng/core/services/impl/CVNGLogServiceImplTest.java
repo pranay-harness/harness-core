@@ -9,6 +9,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
@@ -36,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CV)
 public class CVNGLogServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private CVNGLogService cvngLogService;
@@ -136,10 +139,12 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     cvngLogs.getContent().forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
-      assertThat(((ApiCallLogDTO) logRecord).getResponseTime()).isEqualTo(responseTime.minusSeconds(timeCounter[0]));
-      assertThat(((ApiCallLogDTO) logRecord).getRequestTime()).isEqualTo(requestTime.minusSeconds(timeCounter[0]));
-      assertThat(logRecord.getStartTime()).isEqualTo(startTime);
-      assertThat(logRecord.getEndTime()).isEqualTo(endTime);
+      assertThat(((ApiCallLogDTO) logRecord).getResponseTime())
+          .isEqualTo(responseTime.minusSeconds(timeCounter[0]).toEpochMilli());
+      assertThat(((ApiCallLogDTO) logRecord).getRequestTime())
+          .isEqualTo(requestTime.minusSeconds(timeCounter[0]).toEpochMilli());
+      assertThat(logRecord.getStartTime()).isEqualTo(startTime.toEpochMilli());
+      assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.ONBOARDING);
       assertThat(logRecord.getType()).isEqualTo(CVNGLogType.API_CALL_LOG);
       assertThat(logRecord.getCreatedAt()).isLessThan(lastCreatedAt[0]);
@@ -170,10 +175,12 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     (cvngLogs.getContent()).forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
-      assertThat(((ApiCallLogDTO) logRecord).getRequestTime()).isEqualTo(requestTime.minusSeconds(timeCounter[0]));
-      assertThat(((ApiCallLogDTO) logRecord).getResponseTime()).isEqualTo(responseTime.minusSeconds(timeCounter[0]));
-      assertThat(logRecord.getStartTime()).isEqualTo(startTime);
-      assertThat(logRecord.getEndTime()).isEqualTo(endTime);
+      assertThat(((ApiCallLogDTO) logRecord).getRequestTime())
+          .isEqualTo(requestTime.minusSeconds(timeCounter[0]).toEpochMilli());
+      assertThat(((ApiCallLogDTO) logRecord).getResponseTime())
+          .isEqualTo(responseTime.minusSeconds(timeCounter[0]).toEpochMilli());
+      assertThat(logRecord.getStartTime()).isEqualTo(startTime.toEpochMilli());
+      assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.VERIFICATION_TASK);
       timeCounter[0] += 10;
     });
@@ -185,10 +192,10 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     return ApiCallLogDTO.builder()
         .accountId(accountId)
         .traceableId(traceableId)
-        .requestTime(requestTime)
-        .responseTime(responseTime)
-        .startTime(startTime)
-        .endTime(endTime)
+        .requestTime(requestTime.toEpochMilli())
+        .responseTime(responseTime.toEpochMilli())
+        .startTime(startTime.toEpochMilli())
+        .endTime(endTime.toEpochMilli())
         .createdAt(createdAt)
         .traceableType(TraceableType.VERIFICATION_TASK)
         .build();
@@ -200,10 +207,10 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     return ApiCallLogDTO.builder()
         .accountId(accountId)
         .traceableId(traceableId)
-        .requestTime(requestTime)
-        .responseTime(responseTime)
-        .startTime(startTime)
-        .endTime(endTime)
+        .requestTime(requestTime.toEpochMilli())
+        .responseTime(responseTime.toEpochMilli())
+        .startTime(startTime.toEpochMilli())
+        .endTime(endTime.toEpochMilli())
         .createdAt(createdAt)
         .traceableType(TraceableType.ONBOARDING)
         .build();

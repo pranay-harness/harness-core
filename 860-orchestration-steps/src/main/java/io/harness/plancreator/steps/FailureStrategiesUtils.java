@@ -1,12 +1,20 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.NGFailureType;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualFailureSpecConfig;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
+import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -18,6 +26,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class FailureStrategiesUtils {
   public Map<FailureStrategyActionConfig, Collection<FailureType>> priorityMergeFailureStrategies(
       List<FailureStrategyConfig> stepFailureStrategies, List<FailureStrategyConfig> stepGroupFailureStrategies,
@@ -73,5 +82,56 @@ public class FailureStrategiesUtils {
       });
     }
     return invertedMap.asMap();
+  }
+
+  public void validateRetryFailureAction(RetryFailureActionConfig retryAction) {
+    ParameterField<Integer> retryCount = retryAction.getSpecConfig().getRetryCount();
+    if (retryCount.isExpression()) {
+      throw new InvalidRequestException("RetryCount fixed value is not given.");
+    }
+    if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
+      throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
+    }
+
+    FailureStrategyActionConfig actionUnderRetry = retryAction.getSpecConfig().getOnRetryFailure().getAction();
+
+    if (!validateActionAfterRetryFailure(actionUnderRetry)) {
+      throw new InvalidRequestException("Retry action cannot have post retry failure action as Retry");
+    }
+    // validating Retry -> Manual Intervention -> Retry
+    if (actionUnderRetry.getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
+      if (validateRetryActionUnderManualAction(
+              ((ManualInterventionFailureActionConfig) actionUnderRetry).getSpecConfig())) {
+        throw new InvalidRequestException(
+            "Retry Action cannot be applied under Manual Action which itself is in Retry Action");
+      }
+    }
+  }
+
+  public void validateManualInterventionFailureAction(ManualInterventionFailureActionConfig actionConfig) {
+    FailureStrategyActionConfig actionUnderManualIntervention = actionConfig.getSpecConfig().getOnTimeout().getAction();
+    if (actionUnderManualIntervention.getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
+      throw new InvalidRequestException("Manual Action cannot be applied as PostTimeOut Action");
+    }
+    // validating Manual Intervention -> Retry -> Manual Intervention
+    if (actionUnderManualIntervention.getType().equals(NGFailureActionType.RETRY)) {
+      if (FailureStrategiesUtils.validateManualActionUnderRetryAction(
+              ((RetryFailureActionConfig) actionUnderManualIntervention).getSpecConfig())) {
+        throw new InvalidRequestException(
+            "Manual Action cannot be applied under Retry Action which itself is in Manual Action");
+      }
+    }
+  }
+
+  public boolean validateActionAfterRetryFailure(FailureStrategyActionConfig action) {
+    return action.getType() != NGFailureActionType.RETRY;
+  }
+
+  public boolean validateManualActionUnderRetryAction(RetryFailureSpecConfig retrySpecConfig) {
+    return retrySpecConfig.getOnRetryFailure().getAction().getType().equals(NGFailureActionType.MANUAL_INTERVENTION);
+  }
+
+  public boolean validateRetryActionUnderManualAction(ManualFailureSpecConfig manualSpecConfig) {
+    return manualSpecConfig.getOnTimeout().getAction().getType().equals(NGFailureActionType.RETRY);
   }
 }

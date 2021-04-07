@@ -1,6 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Used for getting details of CRD workload types that we don't watch.
  */
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CrdWorkloadFetcher {
@@ -100,8 +103,12 @@ public class CrdWorkloadFetcher {
                                      .withNamespace(workloadRef.getNamespace())
                                      .withUid(workloadRef.getUid())
                                      .build();
+    // there is no definite spec.schema for CRD, defaulting to 1.
+    // Ref:
+    // https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition
+    Integer replicas = 1;
     if (tripped) {
-      return Workload.of(workloadRef.getKind(), knownMetadata);
+      return Workload.of(workloadRef.getKind(), knownMetadata, replicas);
     }
     try {
       String apiVersion = workloadRef.getApiVersion();
@@ -122,8 +129,8 @@ public class CrdWorkloadFetcher {
       JSON json = apiClient.getJSON();
       HavingMetadataObject havingMetadataObject =
           json.deserialize(json.serialize(workloadObject), HavingMetadataObject.class);
-      return Workload.of(
-          workloadRef.getKind(), Optional.ofNullable(havingMetadataObject.getMetadata()).orElse(knownMetadata));
+      return Workload.of(workloadRef.getKind(),
+          Optional.ofNullable(havingMetadataObject.getMetadata()).orElse(knownMetadata), replicas);
     } catch (ApiException e) {
       log.warn(
           "Encountered ApiException fetching custom workload, code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
@@ -132,11 +139,11 @@ public class CrdWorkloadFetcher {
         tripped = true;
       }
       // fallback to return a workload with the metadata we already know (without others like labels)
-      return Workload.of(workloadRef.getKind(), knownMetadata);
+      return Workload.of(workloadRef.getKind(), knownMetadata, replicas);
     } catch (Exception e) {
       log.warn("Encountered error trying to fetch custom workload details", e);
       // fallback to return a workload with the metadata we already know (without others like labels)
-      return Workload.of(workloadRef.getKind(), knownMetadata);
+      return Workload.of(workloadRef.getKind(), knownMetadata, replicas);
     }
   }
 }

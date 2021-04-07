@@ -1,5 +1,8 @@
 package io.harness.gitsync.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoServiceImplBase {
   @Inject HarnessToGitHelperService harnessToGitHelperService;
   @Inject KryoSerializer kryoSerializer;
@@ -47,7 +51,11 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
               request.getFilePath(), request.getAccountId(), entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
       pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
-          .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build());
+          .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
+          .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
+          .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
+          .setAccountId(infoForPush.getAccountId())
+          .setYamlGitConfigId(infoForPush.getYamlGitConfigId());
 
     } catch (WingsException e) {
       final ByteString exceptionBytes =

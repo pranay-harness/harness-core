@@ -24,9 +24,15 @@ if [ "${STEP}" == "dockerization" ]; then
   GCP=""
 fi
 
+# Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
+# to generate full call-graph for Test Intelligence
+if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
+  export CACHE_TEST_RESULTS=yes
+fi
+
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
+  bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
   exit 0
 fi
 
@@ -43,6 +49,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
+  //110-change-data-capture:module \
   //120-ng-manager:module \
   //125-cd-nextgen:module \
   //130-resource-group:module \
@@ -123,6 +130,7 @@ BAZEL_MODULES="\
   //945-ng-audit-client:module \
   //949-git-sync-sdk:module \
   //950-command-library-common:module \
+  //950-cg-ng-shared-orchestration-beans:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
@@ -328,6 +336,7 @@ build_proto_module() {
 
 build_bazel_application 260-delegate
 
+build_bazel_application_module 110-change-data-capture
 build_bazel_application_module 120-ng-manager
 build_bazel_application_module 160-model-gen-tool
 build_bazel_application_module 210-command-library-server
@@ -396,6 +405,7 @@ build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 950-command-library-common
+build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api

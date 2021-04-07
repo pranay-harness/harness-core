@@ -6,6 +6,8 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PL
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -30,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<ExecutionElement> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 

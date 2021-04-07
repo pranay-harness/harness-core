@@ -9,7 +9,7 @@ import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -77,7 +77,7 @@ public class ACLResource {
 
   private void checkForValidContextOrThrow(io.harness.security.dto.Principal principalInContext) {
     if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
-      throw new AccessDeniedException("Missing principal in context.", USER);
+      throw new InvalidRequestException("Missing principal in context.", USER);
     }
   }
 

@@ -92,6 +92,7 @@ interface Execution {
   cause: Cause
   notes: String
   tags: [DeploymentTag]
+  failureDetails: String
 }
 
 type DeploymentTag {
@@ -140,6 +141,8 @@ type WorkflowExecution implements Execution {
   notes: String
 
   tags: [DeploymentTag]
+
+  failureDetails: String
 }
 
 # Type for pipeline execution
@@ -176,6 +179,8 @@ type PipelineExecution implements Execution {
 
   memberExecutions: ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")
+
+  failureDetails: String
 }
 
 interface PipelineStageExecution {

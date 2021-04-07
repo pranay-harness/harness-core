@@ -2,6 +2,8 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -40,6 +42,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sNodeInfoTasklet implements Tasklet {
   private JobParameters parameters;
@@ -100,7 +103,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
     Map<String, String> metaData = new HashMap<>();
     CloudProvider k8SCloudProvider =
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
-    String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId());
+    String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId(), k8SCloudProvider);
     if (CloudProvider.UNKNOWN == k8SCloudProvider) {
       return InstanceInfo.builder().metaData(metaData).build();
     }
@@ -185,10 +188,18 @@ public class K8sNodeInfoTasklet implements Tasklet {
   }
 
   @VisibleForTesting
-  public String getCloudProviderInstanceId(String providerId) {
+  public String getCloudProviderInstanceId(String providerId, CloudProvider k8SCloudProvider) {
     if (null == providerId) {
       return "";
     }
-    return providerId.substring(providerId.lastIndexOf('/') + 1);
+    if (k8SCloudProvider == CloudProvider.AZURE) {
+      // ProviderID:
+      // azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_cetest1_eastus/providers/Microsoft.Compute/virtualMachines/aks-agentpool-41737416-1
+      // ProviderID:
+      // azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_ce-dev-cluster2_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-agentpool-14257926-vmss/virtualMachines/1
+      return providerId.toLowerCase();
+    } else {
+      return providerId.substring(providerId.lastIndexOf('/') + 1);
+    }
   }
 }

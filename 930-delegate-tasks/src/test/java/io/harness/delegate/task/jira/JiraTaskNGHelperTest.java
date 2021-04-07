@@ -53,6 +53,15 @@ public class JiraTaskNGHelperTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  public void shouldGetStatuses() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_STATUSES);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getStatuses(params);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
   public void shouldGetIssue() {
     JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_ISSUE);
     jiraTaskNGHelper.getJiraTaskResponse(params);
@@ -71,10 +80,28 @@ public class JiraTaskNGHelperTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  public void shouldGetIssueUpdateMetadata() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_ISSUE_UPDATE_METADATA);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getIssueUpdateMetadata(params);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
   public void shouldCreateIssue() {
     JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.CREATE_ISSUE);
     jiraTaskNGHelper.getJiraTaskResponse(params);
     verify(jiraTaskNGHandler).createIssue(params);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateIssue() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.UPDATE_ISSUE);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).updateIssue(params);
   }
 
   private JiraTaskNGParameters setupMocksForAction(JiraActionNG action) {

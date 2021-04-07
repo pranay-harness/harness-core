@@ -1,6 +1,6 @@
 package io.harness.steps.resourcerestraint.service;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
@@ -13,6 +13,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -26,8 +28,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.ResourceRestraintInstanceRepository;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 
@@ -45,11 +47,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class ResourceRestraintServiceImpl implements ResourceRestraintService {
-  private static final String PLAN = "PLAN";
-
   @Inject private ResourceRestraintInstanceRepository restraintInstanceRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
@@ -94,7 +94,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
     boolean finished;
     String releaseEntityId = instance.getReleaseEntityId();
 
-    if (PLAN.equals(instance.getReleaseEntityType())) {
+    if (PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(instance.getReleaseEntityType())) {
       try {
         PlanExecution planExecution = planExecutionService.get(releaseEntityId);
         finished = planExecution != null && StatusUtils.finalStatuses().contains(planExecution.getStatus());

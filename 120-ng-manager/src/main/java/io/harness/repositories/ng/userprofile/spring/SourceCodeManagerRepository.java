@@ -8,9 +8,12 @@ import io.harness.ng.userprofile.entities.SourceCodeManager;
 
 import java.util.List;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @OwnedBy(PL)
 @HarnessRepo
+@Transactional
 public interface SourceCodeManagerRepository extends PagingAndSortingRepository<SourceCodeManager, String> {
   List<SourceCodeManager> findByUserIdentifier(String userIdentifier);
+  long deleteByUserIdentifierAndName(String userIdentifier, String name);
 }

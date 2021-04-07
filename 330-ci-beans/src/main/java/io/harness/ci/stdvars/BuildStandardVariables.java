@@ -1,6 +1,6 @@
 package io.harness.ci.stdvars;
 
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,7 +15,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("buildStandardVariables")
 @JsonTypeName("buildStandardVariables")
-public class BuildStandardVariables implements SweepingOutput {
+public class BuildStandardVariables implements ExecutionSweepingOutput {
   public static final String BUILD_VARIABLE = "build";
   GitVariables git;
   Long number;

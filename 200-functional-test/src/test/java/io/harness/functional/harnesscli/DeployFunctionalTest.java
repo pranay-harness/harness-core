@@ -1,11 +1,13 @@
 package io.harness.functional.harnesscli;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.generator.EnvironmentGenerator.Environments.FUNCTIONAL_TEST;
 import static io.harness.generator.ServiceGenerator.Services.K8S_V2_TEST;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -57,6 +59,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Slf4j
 public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -304,7 +307,8 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
                           .<String>getJsonObject("resource.status")
                           .equals(status));
 
-    WorkflowExecution runningWorkflowExecution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    WorkflowExecution runningWorkflowExecution =
+        workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     log.info("Execution Status : " + runningWorkflowExecution.getStatus());
     assertThat(ExecutionStatus.RUNNING).isEqualTo(runningWorkflowExecution.getStatus());
 

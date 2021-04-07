@@ -3,7 +3,7 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.interrupts.RepairActionCode;
+import io.harness.beans.RepairActionCode;
 
 import software.wings.yaml.BaseYamlWithType;
 

@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.common.SwaggerConstants;
@@ -21,6 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DELETE)
@@ -60,7 +64,6 @@ public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
         .name(baseStepParameterInfo.getName())
         .description(baseStepParameterInfo.getDescription())
         .skipCondition(baseStepParameterInfo.getSkipCondition())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
         .skipDryRun(skipDryRun)
         .build();

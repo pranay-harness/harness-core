@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.steps.barriers.BarrierInitializer;
+import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 
 import com.google.common.collect.Sets;
 import java.util.HashMap;
@@ -18,7 +19,8 @@ public class OrchestrationStepsModuleEventHandlerRegistrar {
   public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         new HashMap<>();
-    engineEventHandlersMap.put(OrchestrationEventType.ORCHESTRATION_START, Sets.newHashSet(BarrierInitializer.class));
+    engineEventHandlersMap.put(OrchestrationEventType.ORCHESTRATION_START,
+        Sets.newHashSet(BarrierInitializer.class, ResourceRestraintInitializer.class));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     return engineEventHandlersMap;

@@ -40,8 +40,6 @@ public class ApprovalInstanceResponseMapper {
         .id(instance.getId())
         .type(instance.getType())
         .status(instance.getStatus())
-        .approvalMessage(instance.getApprovalMessage())
-        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .deadline(instance.getDeadline())
         .details(toApprovalInstanceDetailsDTO(instance))
         .createdAt(instance.getCreatedAt())
@@ -62,6 +60,8 @@ public class ApprovalInstanceResponseMapper {
 
   private ApprovalInstanceDetailsDTO toHarnessApprovalInstanceDetailsDTO(HarnessApprovalInstance instance) {
     return HarnessApprovalInstanceDetailsDTO.builder()
+        .approvalMessage(instance.getApprovalMessage())
+        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .approvers(instance.getApprovers())
         .approvalActivities(instance.getApprovalActivities())
         .approverInputs(
@@ -77,7 +77,7 @@ public class ApprovalInstanceResponseMapper {
   }
 
   private ApprovalInstanceDetailsDTO toJiraApprovalInstanceDetailsDTO(JiraApprovalInstance instance) {
-    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(instance.getAccountIdentifier(),
+    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(instance.getAccountId(),
         instance.getOrgIdentifier(), instance.getProjectIdentifier(), instance.getConnectorRef());
 
     return JiraApprovalInstanceDetailsDTO.builder()

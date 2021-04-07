@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
@@ -35,7 +34,6 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;
   Map<String, String> headers;
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
@@ -44,7 +42,7 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   public HttpStepParameters(ParameterField<String> url, ParameterField<String> method,
       ParameterField<String> requestBody, ParameterField<String> assertion, String name, String identifier,
       ParameterField<String> description, ParameterField<String> skipCondition, ParameterField<String> timeout,
-      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, String> headers,
+      Map<String, Object> outputVariables, Map<String, String> headers,
       ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(url, method, requestBody, assertion);
     this.name = name;
@@ -52,7 +50,6 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
     this.description = description;
     this.skipCondition = skipCondition;
     this.timeout = timeout;
-    this.rollbackInfo = rollbackInfo;
     this.outputVariables = outputVariables;
     this.headers = headers;
     this.delegateSelectors = delegateSelectors;

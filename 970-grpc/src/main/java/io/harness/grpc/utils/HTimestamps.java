@@ -1,5 +1,7 @@
 package io.harness.grpc.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DataFormatException;
 
 import com.google.protobuf.Timestamp;
@@ -13,6 +15,7 @@ import lombok.experimental.UtilityClass;
 /**
  * Utility class to handle mapping between {@link Timestamp} and java timestamp types.
  */
+@OwnedBy(HarnessTeam.CE)
 @UtilityClass
 @ParametersAreNonnullByDefault
 public class HTimestamps {

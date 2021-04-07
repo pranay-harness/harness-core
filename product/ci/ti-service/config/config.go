@@ -44,6 +44,13 @@ type Config struct {
 		// will try to create a direct connection to mongodb.
 		ConnStr string `envconfig:"TI_SERVICE_MONGODB_CONN_STR"`
 	}
+
+	// Variables required to talk to redis as part of the events framework
+	EventsFramework struct {
+		RedisUrl      string `envconfig:"EVENTS_FRAMEWORK_REDIS_URL"`
+		EnvNamespace  string `envconfig:"EVENTS_FRAMEWORK_ENV_NAMESPACE"`
+		RedisPassword string `envconfig:"EVENTS_FRAMEWORK_REDIS_PASSWORD"`
+	}
 }
 
 // Load loads the configuration from the environment.

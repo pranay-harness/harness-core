@@ -45,7 +45,6 @@ public class ECRStepInfo implements PluginCompatibleStep {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -67,23 +66,17 @@ public class ECRStepInfo implements PluginCompatibleStep {
   private ParameterField<Map<String, String>> buildArgs;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "account",
-      "region", "imageName", "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "account", "region", "imageName",
+      "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
   public ECRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> account,
-      ParameterField<String> region, ParameterField<String> imageName, ParameterField<List<String>> tags,
-      ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
-      ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs) {
+      ContainerResource resources, ParameterField<String> account, ParameterField<String> region,
+      ParameterField<String> imageName, ParameterField<List<String>> tags, ParameterField<String> context,
+      ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
+      ParameterField<Map<String, String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko-ecr:latest"));
-
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/kaniko-ecr:latest");
-    }
     this.resources = resources;
     this.account = account;
     this.region = region;

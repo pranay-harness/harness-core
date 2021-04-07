@@ -1,5 +1,11 @@
 package io.harness.ccm.anomaly.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -16,6 +22,8 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @FieldNameConstants(innerTypeName = "AnomalyEntityKeys")
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class AnomalyEntity {
   String id;
   String accountId;
@@ -55,6 +63,7 @@ public class AnomalyEntity {
   boolean slackDailyNotification;
   boolean slackInstantNotification;
   boolean slackWeeklyNotification;
+  boolean newEntity;
 
   public EntityType getEntityType() {
     if (workloadName != null) {
@@ -157,7 +166,8 @@ public class AnomalyEntity {
       REPORTED_BY("reportedby", DataType.STRING),
       SLACK_INSTANT_NOTIFICATION("slackInstantNotification", DataType.BOOLEAN),
       SLACK_DAILY_NOTIFICATION("slackDailyNotification", DataType.BOOLEAN),
-      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN);
+      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN),
+      NEW_ENTITY("newentity", DataType.BOOLEAN);
 
       private DataType dataType;
       private String fieldName;
@@ -219,6 +229,8 @@ public class AnomalyEntity {
     public static final DbColumn slackDailyNotification;
     public static final DbColumn slackWeeklyNotification;
 
+    public static final DbColumn newEntity;
+
     static {
       spec = new DbSpec();
       schema = spec.addDefaultSchema();
@@ -259,6 +271,8 @@ public class AnomalyEntity {
       slackInstantNotification = table.addColumn("slackInstantNotification");
       slackDailyNotification = table.addColumn("slackDailyNotification");
       slackWeeklyNotification = table.addColumn("slackWeeklyNotification");
+
+      newEntity = table.addColumn("newentity");
     }
   }
 }

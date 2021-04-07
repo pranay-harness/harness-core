@@ -84,18 +84,20 @@ import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.userprofile.commons.SCMType;
+import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
 import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
+import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
-import io.harness.outbox.OutboxEventIteratorConfiguration;
+import io.harness.ng.userprofile.services.impl.UserInfoServiceImpl;
+import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
-import io.harness.redesign.services.CustomExecutionService;
-import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
@@ -216,8 +218,8 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public OutboxEventIteratorConfiguration getOutboxEventIteratorConfiguration() {
-    return appConfig.getOutboxIteratorConfig();
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    return appConfig.getOutboxPollConfig();
   }
 
   @Override
@@ -246,7 +248,6 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
-    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
@@ -362,6 +363,7 @@ public class NextGenModule extends AbstractModule {
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
+    bind(UserInfoService.class).to(UserInfoServiceImpl.class);
 
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
@@ -376,6 +378,8 @@ public class NextGenModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.GITLAB).to(GitlabSCMMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.AWS_CODE_COMMIT).to(AwsCodeCommitSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
   }

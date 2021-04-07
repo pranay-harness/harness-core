@@ -13,6 +13,7 @@ import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.redis.RedisConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -48,6 +49,7 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("eventsConfig") private EventsConfig eventsConfig;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty("iteratorsConfig") private AccessControlIteratorsConfig iteratorsConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;

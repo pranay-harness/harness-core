@@ -23,10 +23,11 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
-	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
+	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
+	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
-	javaAgentArg = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
+	javaAgentArg = "-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
 	tiConfigPath = ".ticonfig.yaml"
 )
 
@@ -104,7 +105,7 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 // Execute commands with timeout and retry handling
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	var err, errCg error
-	cgDir := fmt.Sprintf(outDir, r.tmpFilePath)
+	cgDir := fmt.Sprintf(cgDir, r.tmpFilePath)
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
 			st := time.Now()
@@ -161,11 +162,14 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 		return "", err
 	}
 	data := fmt.Sprintf(`outDir: %s
-logLevel: 0
-logConsole: false
+logLevel: 6
+logConsole: true
 writeTo: COVERAGE_JSON
-instrPackages: %s
-testAnnotations: %s`, dir, r.packages, r.annotations)
+instrPackages: %s`, dir, r.packages)
+	// Add test annotations if they were provided
+	if r.annotations != "" {
+		data = data + "\n" + fmt.Sprintf("testAnnotations: %s", r.annotations)
+	}
 	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
 	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
 	err = ioutil.WriteFile(iniFile, []byte(data), 0644)
@@ -185,7 +189,7 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		// TODO -- Aman - check if instumentation is required here too.
-		return fmt.Sprintf("%s %s -am %s", mvnCmd, r.args, instrArg), nil
+		return fmt.Sprintf("%s %s -am -DargLine=%s", mvnCmd, r.args, instrArg), nil
 	}
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
@@ -203,7 +207,7 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 		ut = append(ut, t.Class)
 	}
 	testStr := strings.Join(ut, ",")
-	return fmt.Sprintf("%s %s -Dtest=%s -am %s", mvnCmd, r.args, testStr, instrArg), nil
+	return fmt.Sprintf("%s %s -Dtest=%s -am -DargLine=%s", mvnCmd, r.args, testStr, instrArg), nil
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
@@ -212,7 +216,9 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+	// Don't run all the tests for now. TODO: Needs to be fixed
+	// defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+	defaultCmd := fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\"")
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -235,18 +241,45 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		pkgs = append(pkgs, t.Pkg)
 		clss = append(clss, t.Class)
 	}
-	rules := []string{} // List of bazel rules to execute
+	rulesM := make(map[string]struct{})
+	rules := []string{} // List of unique bazel rules to be executed
 	for i := 0; i < len(pkgs); i++ {
 		c := fmt.Sprintf("%s query 'attr(name, %s.%s, //...)'", bazelCmd, pkgs[i], clss[i])
 		cmdArgs := []string{"-c", c}
 		resp, err := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-		if err != nil {
+		if err != nil || len(resp) == 0 {
 			r.log.Errorw(fmt.Sprintf("could not find an appropriate rule for pkgs %s and class %s", pkgs[i], clss[i]),
 				"index", i, "command", c, zap.Error(err))
-			// Run all the tests
-			return defaultCmd, nil
+			// Hack to get bazel rules for portal
+			// TODO: figure out how to generically get rules to be executed from a package and a class
+			// Example commands:
+			//     find . -path "*pkg.class"
+			//     export fullname=$(bazelisk query path.java)
+			//     bazelisk query "attr('srcs', $fullname, ${fullname//:*/}:*)" --output=label_kind | grep "java_test rule"
+			c = fmt.Sprintf(
+				"export fullname=$(%s query `find . -path '*%s/%s*' | sed -e \"s/^\\.\\///g\"`)\n"+
+					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
+				bazelCmd, strings.Replace(pkgs[i], ".", "/", -1), clss[i], bazelCmd)
+			cmdArgs = []string{"-c", c}
+			resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+			if err2 != nil || len(resp2) == 0 {
+				r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for pkgs %s and class %s", pkgs[i], clss[i]))
+				continue
+				// TODO: if we can't figure out a rule, we should run the default command.
+				// Not returning error for now to avoid running all the tests most of the time.
+				// return defaultCmd, nil
+			}
+			t := strings.Fields(string(resp2))
+			resp = []byte(t[2])
 		}
-		rules = append(rules, strings.TrimSuffix(string(resp), "\n"))
+		r := strings.TrimSuffix(string(resp), "\n")
+		if _, ok := rulesM[r]; !ok {
+			rules = append(rules, r)
+			rulesM[r] = struct{}{}
+		}
+	}
+	if len(rules) == 0 {
+		return fmt.Sprintf("echo \"Could not find any relevant test rules. Skipping the run\""), nil
 	}
 	testList := strings.Join(rules, " ")
 	return fmt.Sprintf("%s %s %s %s", bazelCmd, r.args, bazelInstrArg, testList), nil
@@ -305,7 +338,8 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
 	}
 
-	command := fmt.Sprintf("set -e\n%s\n%s\n%s", r.preCommand, testCmd, r.postCommand)
+	// TMPDIR needs to be set for some build tools like bazel
+	command := fmt.Sprintf("set -e\nexport TMPDIR=%s\n%s\n%s\n%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand)
 	logCmd, err := utils.GetLoggableCmd(command)
 	if err != nil {
 		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))

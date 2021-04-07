@@ -1,10 +1,12 @@
 package io.harness.steps.approval.step.jira.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -24,9 +26,10 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("KeyValuesCriteriaSpec")
 @TypeAlias("keyValuesCriteriaSpec")
 public class KeyValuesCriteriaSpec implements CriteriaSpec {
-  @NotNull
+  @YamlSchemaTypes({string})
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   private ParameterField<Boolean> matchAnyCondition;
+
   @NotNull private List<Condition> conditions;
 
   @Override

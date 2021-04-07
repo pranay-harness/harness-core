@@ -1,11 +1,16 @@
 package io.harness.ccm.setup.util;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.math.BigDecimal;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(CE)
 public class InfraSetUpUtils {
   private static final String EXTERNAL_ID_TEMPLATE = "harness:%s:%s";
   private static final String LINKED_ACCOUNT_ARN_TEMPLATE = "arn:aws:iam::%s:role/%s";

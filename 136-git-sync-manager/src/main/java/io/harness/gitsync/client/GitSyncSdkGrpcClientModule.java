@@ -1,6 +1,9 @@
 package io.harness.gitsync.client;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitToHarnessServiceGrpc;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -20,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLException;
 
+@OwnedBy(DX)
 public class GitSyncSdkGrpcClientModule extends AbstractModule {
   private static GitSyncSdkGrpcClientModule instance;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");

@@ -132,6 +132,12 @@ public class CustomFieldExpressionHelper {
             .fieldName(azureFields.get(9).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
+    viewFieldHashMap.put("AZURE.Instance Id",
+        ViewField.builder()
+            .fieldId(azureFields.get(10).getFieldId())
+            .fieldName(azureFields.get(10).getFieldId())
+            .identifier(ViewFieldIdentifier.AZURE)
+            .build());
 
     List<QLCEViewField> clusterFields = ViewFieldUtils.getClusterFields();
     viewFieldHashMap.put("CLUSTER.Cluster Name",

@@ -1,8 +1,16 @@
 package io.harness.delegate.task.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.WARN;
 
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -37,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(CDP)
 public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -66,6 +75,10 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
       for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
         FetchFilesResult gitFetchFilesResult;
+        executionLogCallback.saveExecutionLog(
+            color(format("Fetching %s files with identifier: %s", gitFetchFilesConfig.getManifestType(),
+                      gitFetchFilesConfig.getIdentifier()),
+                White, Bold));
 
         try {
           gitFetchFilesResult =

@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -15,6 +16,7 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -68,6 +70,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class SecretCrudServiceImpl implements SecretCrudService {
@@ -165,10 +168,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     Optional<Secret> secretV2Optional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (secretV2Optional.isPresent()) {
-      return Optional.ofNullable(getResponseWrapper(secretV2Optional.get()));
-    }
-    return Optional.empty();
+    return secretV2Optional.map(this::getResponseWrapper);
   }
 
   @Override

@@ -6,6 +6,8 @@ import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -29,6 +31,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class NodeWatcher implements ResourceEventHandler<V1Node> {
@@ -42,6 +45,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
 
   private static final String NODE_EVENT_MSG = "Node: {}, action: {}";
   private static final String ERROR_PUBLISH_MSG = "Error publishing V1Node.{} event.";
+  private static final String AZURE_SEARCH_STRING = "azure:";
 
   @Inject
   public NodeWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -99,7 +103,10 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
       log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
       DateTime creationTimestamp = node.getMetadata().getCreationTimestamp();
-      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      // Interim fix to back fill data for existing Azure clusters
+      Boolean isAzure = node.getSpec().getProviderID().startsWith(AZURE_SEARCH_STRING);
+      if (isAzure || !isClusterSeen || creationTimestamp == null
+          || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
         publishNodeInfo(node);
       } else {
         publishedNodes.add(node.getMetadata().getUid());

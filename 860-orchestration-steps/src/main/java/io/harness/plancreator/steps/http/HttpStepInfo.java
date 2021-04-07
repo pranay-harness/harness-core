@@ -1,5 +1,8 @@
 package io.harness.plancreator.steps.http;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
@@ -39,6 +42,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
+@OwnedBy(PIPELINE)
 public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visitable, WithRollbackInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String identifier;
@@ -96,7 +100,6 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
         .requestBody(getRequestBody())
         .delegateSelectors(ParameterField.createValueField(
             CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
         .url(getUrl())
         .name(baseStepParameterInfo.getName())

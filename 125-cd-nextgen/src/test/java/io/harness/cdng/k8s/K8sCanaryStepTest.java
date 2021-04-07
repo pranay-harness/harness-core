@@ -34,6 +34,7 @@ import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -83,7 +84,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
@@ -154,6 +155,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
         .hasMessageContaining("Instance selection percentage value cannot be less than 1");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)

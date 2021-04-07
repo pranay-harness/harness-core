@@ -34,12 +34,13 @@ if [[ "" != "$NG_MANAGER_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_URL"
 fi
 
-if [[ "" != "$ADDON_IMAGE_TAG" ]]; then
-  yq write -i $CONFIG_FILE ciExecutionServiceConfig.addonImageTag "$ADDON_IMAGE_TAG"
+if [[ "" != "$ADDON_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.addonImage "$ADDON_IMAGE"
 fi
-if [[ "" != "$LE_IMAGE_TAG" ]]; then
-  yq write -i $CONFIG_FILE ciExecutionServiceConfig.liteEngineImageTag "$LE_IMAGE_TAG"
+if [[ "" != "$LE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.liteEngineImage "$LE_IMAGE"
 fi
+
 if [[ "" != "$DEFAULT_MEMORY_LIMIT" ]]; then
   yq write -i $CONFIG_FILE ciExecutionServiceConfig.defaultMemoryLimit "$DEFAULT_MEMORY_LIMIT"
 fi

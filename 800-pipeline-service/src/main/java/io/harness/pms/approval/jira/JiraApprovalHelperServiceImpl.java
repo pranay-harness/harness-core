@@ -15,6 +15,7 @@ import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskMode;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -26,9 +27,9 @@ import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
@@ -47,7 +48,7 @@ import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance.JiraApprovalInstanceKeys;
-import io.harness.steps.approval.step.jira.evaluation.ConditionEvaluationHelper;
+import io.harness.steps.approval.step.jira.evaluation.CriteriaEvaluator;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -56,10 +57,10 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.mapping.Mapper;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -91,18 +92,18 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
 
   @Override
   public void handlePollingEvent(JiraApprovalInstance entity) {
-    log.info(
-        "Polling Approval status for Jira Approval Instance {} approval type {}", entity.getId(), entity.getType());
-    try {
+    try (AutoLogContext ignore = entity.autoLogContext()) {
+      log.info("Polling jira approval status");
+
       String instanceId = entity.getId();
-      String accountIdentifier = entity.getAccountIdentifier();
+      String accountIdentifier = entity.getAccountId();
       String orgIdentifier = entity.getOrgIdentifier();
       String projectIdentifier = entity.getProjectIdentifier();
       String issueKey = entity.getIssueKey();
       String connectorRef = entity.getConnectorRef();
 
       validateField(instanceId, ApprovalInstanceKeys.id);
-      validateField(accountIdentifier, ApprovalInstanceKeys.accountIdentifier);
+      validateField(accountIdentifier, ApprovalInstanceKeys.accountId);
       validateField(orgIdentifier, ApprovalInstanceKeys.orgIdentifier);
       validateField(projectIdentifier, ApprovalInstanceKeys.projectIdentifier);
       validateField(issueKey, JiraApprovalInstanceKeys.issueKey);
@@ -112,7 +113,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
           prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef);
       JiraTaskNGResponse jiraTaskNGResponse = fetchJiraTaskResponse(accountIdentifier, jiraTaskNGParameters);
       if (isNull(jiraTaskNGResponse.getIssue())) {
-        throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse", USER_SRE);
+        throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse");
       }
       checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), entity);
     } catch (Exception ex) {
@@ -125,36 +126,39 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     try {
       if (isNull(jiraApprovalInstance.getApprovalCriteria())
           || isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
-        throw new InvalidRequestException("Approval criteria can't be missing");
+        throw new InvalidRequestException("Approval criteria can't be empty");
       }
+
       CriteriaSpecDTO approvalCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
-      boolean approvalEvaluationResult = ConditionEvaluationHelper.evaluateCondition(issue, approvalCriteriaSpec);
+      boolean approvalEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, approvalCriteriaSpec);
       if (approvalEvaluationResult) {
-        log.info("Approval Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
+        log.info("Approval criteria has been met");
         updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.APPROVED);
         waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
             JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
         return;
       }
 
-      if (!isNull(jiraApprovalInstance.getApprovalCriteria())
-          && !isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
-        CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
-        boolean rejectionEvaluationResult = ConditionEvaluationHelper.evaluateCondition(issue, rejectionCriteriaSpec);
-        if (rejectionEvaluationResult) {
-          log.info("Rejection Criteria for JiraApprovalInstance {} has been met", jiraApprovalInstance.getId());
-          updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);
-          waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
-              JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
-        }
+      if (isNull(jiraApprovalInstance.getRejectionCriteria())
+          || isNull(jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO())) {
+        throw new InvalidRequestException("Rejection criteria can't be empty");
+      }
+
+      CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO();
+      boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
+      if (rejectionEvaluationResult) {
+        log.info("Rejection criteria for has been met");
+        updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);
+        waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
+            JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
       }
     } catch (Exception e) {
-      throw new HarnessJiraException("Error while evaluating Approval/Rejection criteria", e, USER_SRE);
+      throw new HarnessJiraException("Error while evaluating approval/rejection criteria", e, USER_SRE);
     }
   }
 
-  private JiraTaskNGParameters prepareJiraTaskParameters(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String issueId, String connectorRef) throws IOException {
+  private JiraTaskNGParameters prepareJiraTaskParameters(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String issueId, String connectorRef) {
     JiraConnectorDTO jiraConnectorDTO =
         getJiraConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorRef);
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
@@ -202,6 +206,10 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
                     .setParked(false)
                     .setType(TaskType.newBuilder().setType(software.wings.beans.TaskType.JIRA_TASK_NG.name()).build())
                     .build())
+            .addAllSelectors(jiraTaskNGParameters.getDelegateSelectors()
+                                 .stream()
+                                 .map(s -> TaskSelector.newBuilder().setSelector(s).build())
+                                 .collect(Collectors.toList()))
             .addAllLogKeys(CollectionUtils.emptyIfNull(null))
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder().build())
             .setSelectionTrackingLogEnabled(true);
@@ -224,7 +232,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
 
       if (!connectorDTO.isPresent()) {
         throw new InvalidRequestException(
-            String.format("Connector not found for identifier : [%s]", connectorIdentifierRef), WingsException.USER);
+            String.format("Connector not found for identifier : [%s]", connectorIdentifierRef));
       }
       ConnectorInfoDTO connectorInfoDTO = connectorDTO.get().getConnectorInfo();
       ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
@@ -232,10 +240,10 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
         return (JiraConnectorDTO) connectorConfigDTO;
       }
       throw new HarnessJiraException(
-          format("Connector of other then Jira type was found : [%s] ", connectorIdentifierRef), USER_SRE);
+          format("Connector of other then Jira type was found : [%s] ", connectorIdentifierRef));
     } catch (Exception e) {
       throw new HarnessJiraException(
-          format("Error while getting connector information : [%s]", connectorIdentifierRef), USER_SRE);
+          format("Error while getting connector information : [%s]", connectorIdentifierRef));
     }
   }
 

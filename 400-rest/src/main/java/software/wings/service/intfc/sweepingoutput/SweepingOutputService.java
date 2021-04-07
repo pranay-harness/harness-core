@@ -3,9 +3,9 @@ package software.wings.service.intfc.sweepingoutput;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.deployment.InstanceDetails;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.InstanceElement;
 import software.wings.sm.StateExecutionInstance;

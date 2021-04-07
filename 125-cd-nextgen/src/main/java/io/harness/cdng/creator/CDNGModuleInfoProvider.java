@@ -1,5 +1,7 @@
 package io.harness.cdng.creator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -31,6 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Inject OutcomeService outcomeService;
 
@@ -96,14 +99,11 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
                                                                 .map(StepOutcomeRef::getInstanceId)
                                                                 .collect(Collectors.toList()));
       for (Outcome outcome : outcomes) {
-        if (outcome instanceof EnvironmentOutcome) {
-          EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) outcome;
-          cdPipelineModuleInfoBuilder.envIdentifier(environmentOutcome.getIdentifier())
-              .environmentType(environmentOutcome.getEnvironmentType());
-        }
         if (outcome instanceof InfrastructureOutcome) {
           InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcome;
-          cdPipelineModuleInfoBuilder.infrastructureType(infrastructureOutcome.getKind());
+          cdPipelineModuleInfoBuilder.envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
+              .environmentType(infrastructureOutcome.getEnvironment().getEnvironmentType())
+              .infrastructureType(infrastructureOutcome.getKind());
         }
       }
     }

@@ -1,6 +1,11 @@
 package software.wings.beans.appmanifest;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.manifest.CustomSourceConfig;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -32,6 +37,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ApplicationManifestKeys")
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
+@OwnedBy(CDP)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ApplicationManifest extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -80,6 +87,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .customSourceConfig(CustomSourceConfig.cloneFrom(this.customSourceConfig))
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
+                                       .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;

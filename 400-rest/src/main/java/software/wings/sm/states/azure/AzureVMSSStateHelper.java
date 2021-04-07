@@ -124,6 +124,8 @@ public class AzureVMSSStateHelper {
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactStream.fetchArtifactStreamAttributes(featureFlagService);
 
+    String subscriptionId = artifactStreamAttributes.getSubscriptionId();
+    String resourceGroupName = artifactStreamAttributes.getAzureResourceGroup();
     String osType = artifactStreamAttributes.getOsType();
     String imageType = artifactStreamAttributes.getImageType();
     String galleryName = artifactStreamAttributes.getAzureImageGalleryName();
@@ -134,6 +136,8 @@ public class AzureVMSSStateHelper {
         .imageOSType(AzureMachineImageArtifactDTO.OSType.valueOf(osType))
         .imageType(AzureMachineImageArtifactDTO.ImageType.valueOf(imageType))
         .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .subscriptionId(subscriptionId)
+                             .resourceGroupName(resourceGroupName)
                              .definitionName(imageDefinitionName)
                              .galleryName(galleryName)
                              .version(imageVersion)
@@ -552,11 +556,12 @@ public class AzureVMSSStateHelper {
         .build();
   }
 
-  public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
+  public ArtifactStreamMapper getConnectorMapper(ExecutionContext context, Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactStream.fetchArtifactStreamAttributes(featureFlagService);
+    Service service = getServiceByAppId(context, context.getAppId());
 
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
     artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
@@ -564,6 +569,7 @@ public class AzureVMSSStateHelper {
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
     artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
     artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
   }
 
@@ -631,9 +637,9 @@ public class AzureVMSSStateHelper {
     return listItems.stream().filter(item -> !tempItemsSet.add(item)).collect(Collectors.toSet());
   }
 
-  public UserDataSpecification getUserDataSpecification(ExecutionContext context) {
+  public Optional<UserDataSpecification> getUserDataSpecification(ExecutionContext context) {
     String appId = context.getAppId();
     Service service = getServiceByAppId(context, appId);
-    return serviceResourceService.getUserDataSpecification(appId, service.getUuid());
+    return Optional.ofNullable(serviceResourceService.getUserDataSpecification(appId, service.getUuid()));
   }
 }

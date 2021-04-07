@@ -1,5 +1,7 @@
 load("//:tools/bazel/aeriform.bzl", "aeriform")
 
+aeriform("//110-change-data-capture:module")
+
 aeriform("//120-ng-manager:module")
 
 aeriform("//120-ng-manager:tests")
@@ -77,6 +79,10 @@ aeriform("//350-event-xxxxxxxxtests")
 aeriform("//360-cg-manager:module")
 
 aeriform("//370-users-syncbridge:module")
+
+aeriform("//375-ce-graphql:module")
+
+aeriform("//375-ce-graphql:tests")
 
 aeriform("//380-cg-graphql:module")
 
@@ -261,6 +267,10 @@ aeriform("//940-secret-manager-client:module")
 aeriform("//945-ng-audit-client:module")
 
 aeriform("//949-git-sync-sdk:module")
+
+aeriform("//949-git-sync-sdk:tests")
+
+aeriform("//950-cg-ng-shared-orchestration-beans:module")
 
 aeriform("//950-command-library-common:module")
 

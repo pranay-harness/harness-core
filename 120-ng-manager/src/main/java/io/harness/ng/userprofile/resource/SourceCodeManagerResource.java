@@ -14,9 +14,11 @@ import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import retrofit2.http.Body;
 
@@ -38,5 +40,12 @@ public class SourceCodeManagerResource {
   @ApiOperation(value = "save source code manager", nickname = "saveSourceCodeManagers")
   public ResponseDTO<SourceCodeManagerDTO> save(@NotNull @Body @Valid SourceCodeManagerDTO sourceCodeManagerDTO) {
     return ResponseDTO.newResponse(sourceCodeManagerService.save(sourceCodeManagerDTO));
+  }
+
+  @DELETE
+  @Path("{identifier}")
+  @ApiOperation(value = "delete source code manager", nickname = "deleteSourceCodeManagers")
+  public ResponseDTO<Boolean> delete(@NotNull @PathParam("identifier") String sourceCodeManagerName) {
+    return ResponseDTO.newResponse(sourceCodeManagerService.delete(sourceCodeManagerName));
   }
 }

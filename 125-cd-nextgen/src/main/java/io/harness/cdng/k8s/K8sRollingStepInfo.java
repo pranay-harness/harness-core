@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingStepInfoVisitorHelper;
@@ -23,6 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -72,7 +76,6 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return K8sRollingStepParameters.infoBuilder()
         .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .name(baseStepParameterInfo.getName())
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())

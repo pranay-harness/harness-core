@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
@@ -18,6 +19,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -91,6 +93,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDP)
 public class K8sStepHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -665,5 +668,35 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gcsHelmStoreDelegateConfig.getBucketName()).isEqualTo(bucketName);
     assertThat(gcsHelmStoreDelegateConfig.getFolderPath()).isEqualTo(folderPath);
     assertThat(gcsHelmStoreDelegateConfig.getGcpConnector()).isEqualTo(gcpConnectorDTO);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetTimeoutValue() {
+    K8sRollingStepParameters definedValue =
+        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
+    K8sRollingStepParameters nullValue =
+        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.ofNull()).build();
+    assertThat(K8sStepHelper.getTimeoutValue(definedValue)).isEqualTo("15m");
+    assertThat(K8sStepHelper.getTimeoutValue(nullValue)).isEqualTo("10m");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetTimeoutInMin() {
+    K8sRollingStepParameters value =
+        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
+    assertThat(K8sStepHelper.getTimeoutInMin(value)).isEqualTo(15);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetTimeoutInMillis() {
+    K8sRollingStepParameters value =
+        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
+    assertThat(K8sStepHelper.getTimeoutInMillis(value)).isEqualTo(900000);
   }
 }

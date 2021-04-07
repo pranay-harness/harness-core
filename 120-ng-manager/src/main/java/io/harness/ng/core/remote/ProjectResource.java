@@ -3,6 +3,12 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.accesscontrol.PlatformPermissions.CREATE_PROJECT_PERMISSION;
+import static io.harness.ng.core.accesscontrol.PlatformPermissions.DELETE_PROJECT_PERMISSION;
+import static io.harness.ng.core.accesscontrol.PlatformPermissions.EDIT_PROJECT_PERMISSION;
+import static io.harness.ng.core.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.core.accesscontrol.PlatformResourceTypes.ORGANIZATION;
+import static io.harness.ng.core.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -14,6 +20,10 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -73,10 +83,11 @@ public class ProjectResource {
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_PROJECT_PERMISSION)
   public ResponseDTO<ProjectResponse> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
-      @NotNull @Valid ProjectRequest projectDTO) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER)
+      @ResourceIdentifier String orgIdentifier, @NotNull @Valid ProjectRequest projectDTO) {
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO.getProject());
     return ResponseDTO.newResponse(createdProject.getVersion().toString(), toResponseWrapper(createdProject));
   }
@@ -84,9 +95,12 @@ public class ProjectResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
-  public ResponseDTO<ProjectResponse> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  public ResponseDTO<ProjectResponse> get(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
+          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier) {
     Optional<Project> projectOptional = projectService.get(accountIdentifier, orgIdentifier, identifier);
     if (!projectOptional.isPresent()) {
       throw new NotFoundException(
@@ -98,9 +112,10 @@ public class ProjectResource {
 
   @GET
   @ApiOperation(value = "Get Project list", nickname = "getProjectList")
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<PageResponse<ProjectResponse>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @ResourceIdentifier String orgIdentifier,
       @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
       @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
@@ -126,11 +141,12 @@ public class ProjectResource {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a project by identifier", nickname = "putProject")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = EDIT_PROJECT_PERMISSION)
   public ResponseDTO<ProjectResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
-      @NotNull @Valid ProjectRequest projectDTO) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER)
+      @OrgIdentifier String orgIdentifier, @NotNull @Valid ProjectRequest projectDTO) {
     projectDTO.getProject().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Project updatedProject =
         projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO.getProject());
@@ -140,10 +156,12 @@ public class ProjectResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a project by identifier", nickname = "deleteProject")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = DELETE_PROJECT_PERMISSION)
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
+          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(
         accountIdentifier, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
