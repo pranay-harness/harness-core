@@ -102,7 +102,6 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
   private final String ACTIVITY_ID = "activityId";
   private final String INFRA_ID = "infraId";
-
   private final String SUBSCRIPTION_ID = "subscriptionId";
   private final String RESOURCE_GROUP = "resourceGroup";
   private final String APP_NAME = "testWebApp";
