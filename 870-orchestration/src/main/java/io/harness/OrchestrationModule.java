@@ -2,6 +2,8 @@ package io.harness;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
@@ -54,6 +56,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationModule extends AbstractModule implements ServersModule {
   private static OrchestrationModule instance;
   private final OrchestrationModuleConfig config;
@@ -76,8 +79,8 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance(config));
 
-    bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
-    bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
+    bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
+    bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).in(Singleton.class);
