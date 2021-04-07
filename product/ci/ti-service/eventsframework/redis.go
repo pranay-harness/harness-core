@@ -5,8 +5,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/robinjoseph08/redisqueue"
 	"time"
+
+	"github.com/robinjoseph08/redisqueue"
 
 	"github.com/golang/protobuf/proto"
 	pb "github.com/wings-software/portal/950-events-api/proto"
@@ -15,8 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type MergeCallbackFn func(ctx context.Context, commits []string, accountId, repo string, files []types.File) error
-
+type MergeCallbackFn func(ctx context.Context, commits []string, accountId, repo, branch string, files []types.File) error
 type RedisBroker struct {
 	consumer *redisqueue.Consumer
 	log      *zap.SugaredLogger
@@ -84,6 +84,8 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(
 		switch x := dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Push:
 			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
+			// todo - Vistaar -- populate branch with appropriate value from payload
+			branch := "master"
 			commitList := []string{}
 			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
 				commitList = append(commitList, c.GetSha())
@@ -94,7 +96,7 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(
 				// TODO: (vistaar) figure out how to get list of files here
 				r.log.Infow("got a push webhook payload", "commitList", commitList,
 					"account_id", accountId, "repo", repo)
-				err := fn(ctx, commitList, accountId, repo, []types.File{})
+				err := fn(ctx, commitList, accountId, repo, branch, []types.File{})
 				if err != nil {
 					return err
 				}

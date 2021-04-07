@@ -373,37 +373,56 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 	// query for partial callgraph for the filter -(repo + branch) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
-	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
+	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for" +
+				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	// this will delete all the relations create by older commits for current pull request
-	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
+	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph " +
+				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection and %d records from relns collection", r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+	mdb.Log.Infow(
+		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
+			r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
 	// dump new relations and nodes to db
-	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection", len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+	mdb.Log.Infow(
+		fmt.Sprintf("writing %d records in nodes and %d records in relations collection",
+			len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
 	_, err = mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to write partial cg in nodes collection for repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to write partial cg in nodes collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	_, err = mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to write partial cg in relns collection for repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to write partial cg in relns collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	return nil
 }
 
 // todo(Aman): Figure out a way to automatically update updatedBy and updatedAt fields. Manually updating it is not scalable.
-// MergeCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
+// todo aman -- ["vcs_info.repo" : repo] this filter needs to be added to all the queries. Currently it will not work as we
+// don't have repo and branch populated in master callgraph uploaded in db
+// MergePartialCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
 // It also cleans up the nodes which have been deleted in the PR from nodes and relations collections.
-func (mdb *MongoDb) MergeCallbackFn(ctx context.Context, commits []string, accountId, branch, repo string, files []types.File) error {
+func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accountId, repo, branch string, files []types.File) error {
 	mdb.Log.Infow(fmt.Sprintf("merging cg from commits [%v]", commits), "branch", branch, "repo", repo)
 	// update field branch of nodes which have commit_id in `commits` list
 	filter := bson.M{"vcs_info.commit_id": bson.M{"$in": commits}}
-	update := bson.M{"vcs_info.branch": branch}
+	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+
 	_, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in nodes collection for repo: %s, in branch: %s, commits: %v",
@@ -415,7 +434,6 @@ func (mdb *MongoDb) MergeCallbackFn(ctx context.Context, commits []string, accou
 		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in relns collection for repo: %s, in branch: %s, commits: %v",
 			repo, branch, commits))
 	}
-
 	deletedF := []string{}
 	for _, f := range files {
 		if f.Status == types.FileDeleted {
@@ -448,16 +466,14 @@ func (mdb *MongoDb) MergeCallbackFn(ctx context.Context, commits []string, accou
 	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", nids), "branch", branch, "repo", repo)
 
 	// delete nodes with id in nids
-	// todo aman -- ["vcs_info.repo" : repo] needs to be added to filter.
 	delFilter := bson.M{"id": bson.M{"$in": nids}}
 	r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
 	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection", r.DeletedCount), "branch", branch, "repo", repo)
-	// delete relations with id in nids
-	// todo aman -- ["vcs_info.repo" : repo] needs to be added to filter.
+	// delete relations with source in nids
 	delFilter = bson.M{"source": bson.M{"$in": nids}}
-	r, err = mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection", r.DeletedCount), "branch", branch, "repo", repo)
-	// remove entries with source in nids from relations table
+	r, err = mdb.Database.Collection(relnsColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	mdb.Log.Infow(fmt.Sprintf("deleted %d records from relations collection", r.DeletedCount), "branch", branch, "repo", repo)
+	// update tests fields which containers nids in relations
 	filter = bson.M{"tests": bson.M{"$in": nids}}
 	update = bson.M{"$pull": bson.M{"tests": bson.M{"$in": nids}}}
 	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
@@ -466,10 +482,5 @@ func (mdb *MongoDb) MergeCallbackFn(ctx context.Context, commits []string, accou
 			err,
 			fmt.Sprintf("failed to remove relations for deleted files for repo: %s, in branch: %s", repo, branch))
 	}
-	return nil
-}
-
-func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accountId, repo string, files []types.File) error {
-	fmt.Println("running")
 	return nil
 }

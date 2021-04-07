@@ -17,5 +17,5 @@ type TiDB interface {
 
 	// MergePartialCg merges a partial cg corresponding to a list of commits and a repo to the
 	// master call graph.
-	MergePartialCg(ctx context.Context, commits []string, accountId, repo string, files []types.File) error
+	MergePartialCg(ctx context.Context, commits []string, accountId, repo, branch string, files []types.File) error
 }
