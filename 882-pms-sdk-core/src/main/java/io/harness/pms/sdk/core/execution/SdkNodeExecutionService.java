@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.execution;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface SdkNodeExecutionService {
   void queueNodeExecution(NodeExecutionProto nodeExecution);
 
