@@ -9,12 +9,15 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import static java.lang.Boolean.TRUE;
+
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -49,6 +52,9 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
+import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
+import io.harness.ng.accesscontrol.user.UserService;
+import io.harness.ng.accesscontrol.user.UserServiceImpl;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -85,6 +91,7 @@ import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.userprofile.commons.SCMType;
+import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
 import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
@@ -93,6 +100,7 @@ import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
 import io.harness.ng.userprofile.services.impl.UserInfoServiceImpl;
+import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -282,6 +290,8 @@ public class NextGenModule extends AbstractModule {
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
+    install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
+
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -340,13 +350,25 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
-    install(new AccessControlAdminClientModule(appConfig.getAccessControlAdminClientConfiguration(), "NextGenManager"));
     install(new ResourceGroupModule(
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule());
-    install(new ResourceGroupClientModule(
-        appConfig.getResourceGroupClientConfig(), appConfig.getResourceGroupClientSecret(), NG_MANAGER.getServiceId()));
+    install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
+        appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
+    if (TRUE.equals(appConfig.getAccessControlAdminClientConfiguration().getMockAccessControlService())) {
+      AccessControlAdminClientConfiguration accessControlAdminClientConfiguration =
+          AccessControlAdminClientConfiguration.builder()
+              .accessControlServiceConfig(appConfig.getNgManagerClientConfig())
+              .accessControlServiceSecret(appConfig.getNextGenConfig().getNgManagerServiceSecret())
+              .build();
+      install(new AccessControlAdminClientModule(accessControlAdminClientConfiguration, NG_MANAGER.getServiceId()));
+    } else {
+      install(new AccessControlAdminClientModule(
+          appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
+    }
+    install(new MockRoleAssignmentModule());
+    bind(UserService.class).to(UserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
@@ -370,7 +392,6 @@ public class NextGenModule extends AbstractModule {
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
-
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 
@@ -381,6 +402,7 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.GITLAB).to(GitlabSCMMapper.class);
+    sourceCodeManagerMapBinder.addBinding(SCMType.AWS_CODE_COMMIT).to(AwsCodeCommitSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
   }

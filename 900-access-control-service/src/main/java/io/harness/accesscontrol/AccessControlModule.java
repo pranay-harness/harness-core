@@ -38,9 +38,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.ng.core.UserClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;

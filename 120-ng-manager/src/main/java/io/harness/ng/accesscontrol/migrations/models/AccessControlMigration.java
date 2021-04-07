@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "AccessControlMigrationKeys")
-@Document("accesscontrolMigrations")
+@Document("accessControlMigrations")
 @Entity(value = "accessControlMigrations", noClassnameStored = true)
 @TypeAlias("accessControlMigrations")
 @StoreIn(NG_MANAGER)

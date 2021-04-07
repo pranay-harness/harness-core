@@ -18,6 +18,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -125,6 +126,13 @@ public class TagHelper {
         Pipeline pipeline = persistence.get(Pipeline.class, entityId);
         if (pipeline != null) {
           appId = pipeline.getAppId();
+        }
+        break;
+      case PROVISIONER:
+        InfrastructureProvisioner infrastructureProvisioner =
+            persistence.get(InfrastructureProvisioner.class, entityId);
+        if (infrastructureProvisioner != null) {
+          appId = infrastructureProvisioner.getAppId();
         }
         break;
       default:

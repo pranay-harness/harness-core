@@ -10,6 +10,11 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>390-db-migration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>400-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

@@ -32,9 +32,7 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
@@ -68,17 +66,15 @@ public class ProjectServiceImplTest extends CategoryTest {
   private ProjectServiceImpl projectService;
   private TransactionTemplate transactionTemplate;
   private OutboxService outboxService;
-  private NgUserService ngUserService;
 
   @Before
   public void setup() {
     projectRepository = mock(ProjectRepository.class);
     organizationService = mock(OrganizationService.class);
-    ngUserService = mock(NgUserService.class);
     transactionTemplate = mock(TransactionTemplate.class);
     outboxService = mock(OutboxService.class);
-    projectService = spy(new ProjectServiceImpl(
-        projectRepository, organizationService, transactionTemplate, ngUserService, outboxService));
+    projectService =
+        spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate, outboxService));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -103,7 +99,6 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.save(project)).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
-    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     projectService.create(accountIdentifier, orgIdentifier, projectDTO);
     try {
