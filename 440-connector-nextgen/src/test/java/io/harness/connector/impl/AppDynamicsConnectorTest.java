@@ -94,7 +94,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
     doNothing().when(connectorService).assurePredefined(any(), any());

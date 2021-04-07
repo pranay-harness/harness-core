@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.persistance.GitSyncablePersistenceConfig;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationPersistenceConfig;
 import io.harness.pms.sdk.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
@@ -19,10 +20,11 @@ public class NextGenPersistenceModule extends SpringPersistenceModule {
   protected Class<?>[] getConfigClasses() {
     Class<?>[] resultClasses;
     if (withPMS) {
-      resultClasses = new Class<?>[] {
-          SpringPersistenceConfig.class, PmsSdkPersistenceConfig.class, AccessControlMigrationPersistenceConfig.class};
+      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, PmsSdkPersistenceConfig.class,
+          AccessControlMigrationPersistenceConfig.class, GitSyncablePersistenceConfig.class};
     } else {
-      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, AccessControlMigrationPersistenceConfig.class};
+      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, AccessControlMigrationPersistenceConfig.class,
+          GitSyncablePersistenceConfig.class};
     }
     return resultClasses;
   }

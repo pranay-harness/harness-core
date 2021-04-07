@@ -1,8 +1,14 @@
 package io.harness.connector;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.EntityType;
+import io.harness.Microservice;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.connector.entities.Connector;
+import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
@@ -10,6 +16,11 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -21,6 +32,7 @@ import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
@@ -51,6 +63,8 @@ import io.dropwizard.jackson.Jackson;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -92,6 +106,8 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
             .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(GitAwarePersistence.class)
+            .toInstance(new GitAwarePersistenceImpl<Connector, ConnectorDTO>(Connector.class, ConnectorDTO.class));
       }
     });
     modules.add(mongoTypeModule(annotations));
@@ -148,6 +164,36 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
+      }
+
+      @Provides
+      @Singleton
+      GitAwarePersistence<Connector, ConnectorDTO> gitAwarePersistence() {
+        return new GitAwarePersistenceImpl<>(Connector.class, ConnectorDTO.class);
+      }
+    });
+
+    modules.add(new AbstractGitSyncSdkModule() {
+      @Override
+      public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+        final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+        Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+        gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                              .yamlClass(ConnectorDTO.class)
+                                              .entityClass(Connector.class)
+                                              .entityHelperClass(ConnectorGitSyncHelper.class)
+                                              .build());
+        return GitSyncSdkConfiguration.builder()
+            .gitSyncSortOrder(sortOrder)
+            //            .grpcClientConfig(config.getGrpcClientConfig())
+            //            .grpcServerConfig(config.getGrpcServerConfig())
+            .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
+            .microservice(Microservice.CORE)
+            //            .scmConnectionConfig(config.getScmConnectionConfig())
+            .eventsRedisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .serviceHeader(NG_MANAGER)
+            .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+            .build();
       }
     });
     return modules;

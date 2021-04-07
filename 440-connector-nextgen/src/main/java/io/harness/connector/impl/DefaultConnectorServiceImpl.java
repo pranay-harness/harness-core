@@ -46,6 +46,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.ngexception.ConnectorValidationException;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -205,7 +206,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
     try {
-      savedConnectorEntity = connectorRepository.save(connectorEntity);
+      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO);
       connectorEntityReferenceHelper.createSetupUsageForSecret(
           connectorRequestDTO.getConnectorInfo(), accountIdentifier, false);
     } catch (DuplicateKeyException ex) {
@@ -273,7 +274,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
     Connector updatedConnector;
     try {
-      updatedConnector = connectorRepository.save(newConnector);
+      updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
@@ -337,7 +338,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     checkThatTheConnectorIsNotUsedByOthers(existingConnector);
     existingConnector.setDeleted(true);
-    connectorRepository.save(existingConnector);
+    connectorRepository.save(existingConnector, null, ChangeType.DELETE);
     return true;
   }
 

@@ -252,8 +252,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .build());
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
-        .grpcClientConfig(config.getGrpcClientConfig())
-        .grpcServerConfig(config.getGrpcServerConfig())
+        .grpcClientConfig(config.getGitGrpcClientConfigs().get(Microservice.CORE))
+        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
         .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
         .microservice(Microservice.CORE)
         .scmConnectionConfig(config.getScmConnectionConfig())

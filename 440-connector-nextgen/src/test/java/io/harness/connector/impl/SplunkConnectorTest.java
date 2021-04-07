@@ -90,7 +90,7 @@ public class SplunkConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(connector)).thenReturn(connector);
+    when(connectorRepository.save(connector, connectorRequest)).thenReturn(connector);
     when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
     doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());

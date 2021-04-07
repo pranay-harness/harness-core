@@ -52,6 +52,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.repositories.ConnectorRepository;
@@ -372,7 +373,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
       KubernetesClusterConfig connector = getConnectorEntity();
       connector.setName(name + System.currentTimeMillis());
       connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
   }
 

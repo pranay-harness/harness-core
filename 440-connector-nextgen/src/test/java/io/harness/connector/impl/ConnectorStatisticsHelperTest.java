@@ -15,6 +15,7 @@ import io.harness.connector.utils.DockerConnectorTestHelper;
 import io.harness.connector.utils.KubernetesConnectorTestHelper;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.Scope;
+import io.harness.git.model.ChangeType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -42,28 +43,28 @@ public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
       Connector connector = KubernetesConnectorTestHelper.createK8sConnector(
           accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
 
     for (int i = 0; i < 3; i++) {
       Connector connector = AWSConnectorTestHelper.createAWSConnector(
           accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
 
     for (int i = 0; i < 4; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
           accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
 
     for (int i = 0; i < 6; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
           accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
 
     ConnectorStatistics connectorStatistics =

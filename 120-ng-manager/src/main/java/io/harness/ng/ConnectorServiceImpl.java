@@ -38,6 +38,7 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -323,7 +324,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       Connector connector =
           getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
       setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.NONE);
     } catch (Exception ex) {
       log.error("Error saving the connector status for the connector {}",
           String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
@@ -400,7 +401,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (connectorValidationResult != null) {
       setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
     }
-    connectorRepository.save(connector);
+    connectorRepository.save(connector, ChangeType.NONE);
   }
 
   private void setActivityDetailInTheConnector(Connector connector, long activityTime) {
