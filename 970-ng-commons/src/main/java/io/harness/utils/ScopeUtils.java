@@ -1,6 +1,8 @@
 package io.harness.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.Scope.ORGANIZATION;
+import static io.harness.beans.Scope.PROJECT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -27,5 +29,13 @@ public class ScopeUtils {
   public static Scope getMostSignificantScope(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return Scope.of(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  public static Scope getImmediateNextScope(String accountIdentifier, String orgIdentifier) {
+    Scope scope = Scope.of(accountIdentifier, orgIdentifier, null);
+    if (scope.equals(ORGANIZATION)) {
+      return PROJECT;
+    }
+    return ORGANIZATION;
   }
 }

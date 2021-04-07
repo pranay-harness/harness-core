@@ -271,6 +271,7 @@ public class NgUserServiceImpl implements NgUserService {
       return;
     }
     scopes.remove(scope);
+    userMembershipRepository.save(userMembership);
     boolean isUserRemovedFromAccount =
         scopes.stream().noneMatch(scope1 -> scope1.getAccountIdentifier().equals(accountIdentifier));
     if (isUserRemovedFromAccount) {
