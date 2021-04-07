@@ -1,20 +1,18 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.auditevent.OrganizationCreateEvent;
 import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
 import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
@@ -24,15 +22,10 @@ import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -42,6 +35,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -60,18 +54,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
-  private final NgUserService ngUserService;
   private final TransactionTemplate transactionTemplate;
-  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
-      NgUserService ngUserService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
-    this.ngUserService = ngUserService;
     this.transactionTemplate = transactionTemplate;
   }
 
@@ -97,28 +88,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       Organization savedOrganization = organizationRepository.save(organization);
       outboxService.save(
           new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
-      createUserProjectMap(organization);
       return savedOrganization;
     }));
-  }
-
-  private void createUserProjectMap(Organization organization) {
-    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(organization.getAccountIdentifier())
-                      .orgIdentifier(organization.getIdentifier())
-                      .name(ORGANIZATION_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(organization.getAccountIdentifier())
-                                          .orgIdentifier(organization.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
-    }
   }
 
   @Override
@@ -137,7 +108,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (Boolean.TRUE.equals(existingOrganization.getHarnessManaged())) {
         throw new InvalidRequestException(
             String.format("Update operation not supported for Default Organization (identifier: [%s])", identifier),
-            USER);
+            WingsException.USER);
       }
       Organization organization = toOrganization(organizationDTO);
       organization.setAccountIdentifier(accountIdentifier);
@@ -154,7 +125,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         return updatedOrganization;
       }));
     }
-    throw new InvalidRequestException(String.format("Organization with identifier [%s] not found", identifier), USER);
+    throw new InvalidRequestException(
+        String.format("Organisation with identifier [%s] not found", identifier), WingsException.USER);
   }
 
   @Override
@@ -190,8 +162,8 @@ public class OrganizationServiceImpl implements OrganizationService {
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
-    if (isNotEmpty(organizationFilterDTO.getIdentifiers())) {
-      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
+    if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
+      criteria.and(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
     }
     return criteria;
   }

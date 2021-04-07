@@ -17,6 +17,7 @@ java_library(
         "//888-pms-client:module",
         "//908-access-control-admin-client:module",
         "//930-ng-core-clients:module",
+        "//940-feature-flag:module",
         "//940-resource-group-beans:module",
         "//950-events-api:module",
         "//950-events-api/src/main/proto:950_events_api_proto",

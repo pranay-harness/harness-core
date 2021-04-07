@@ -1,9 +1,9 @@
 package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -51,7 +51,7 @@ import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
 public class ResourceGroupModule extends AbstractModule {
   private static final String RESOURCE_GROUP_CLIENT = "ng-manager";
   private static final String RESOURCE_GROUP_CONSUMER_GROUP = "resource-group";

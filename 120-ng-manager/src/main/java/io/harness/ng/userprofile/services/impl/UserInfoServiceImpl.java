@@ -4,12 +4,12 @@ package io.harness.ng.userprofile.services.impl;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
 import java.util.Optional;
@@ -22,7 +22,7 @@ public class UserInfoServiceImpl implements UserInfoService {
   public UserInfo get() {
     Optional<String> userEmail = getUserEmail();
     if (userEmail.isPresent()) {
-      Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserFromEmail(userEmail.get()));
+      Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserByEmailId(userEmail.get()));
       return userInfo.get();
     } else {
       throw new IllegalStateException("user login required");

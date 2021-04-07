@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
@@ -12,7 +15,6 @@ import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
 import io.harness.serializer.morphia.EventMorphiaRegistrar;
-import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
@@ -26,6 +28,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PL)
 public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -62,7 +65,6 @@ public class ManagerRegistrars {
           .add(DelegateServiceBeansMorphiaRegistrar.class)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(EventMorphiaRegistrar.class)
-          .add(InvitesMorphiaRegistrar.class)
           .add(LimitsMorphiaRegistrar.class)
           .add(ManagerMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)

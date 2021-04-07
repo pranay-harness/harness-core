@@ -22,7 +22,6 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.UserClientModule;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
@@ -52,6 +51,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
+import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
 
@@ -151,8 +151,8 @@ public class NotificationServiceModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class);
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getTarget(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getAuthority()));
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority()));
 
     install(VersionModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
