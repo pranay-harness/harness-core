@@ -102,13 +102,11 @@ public class ProjectServiceImpl implements ProjectService {
     project.setAccountIdentifier(accountIdentifier);
     try {
       validate(project);
-
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         Project savedProject = projectRepository.save(project);
         outboxService.save(new ProjectCreateEvent(project.getAccountIdentifier(), ProjectMapper.writeDTO(project)));
         log.info(String.format("Project with identifier %s and orgIdentifier %s was successfully created",
             project.getIdentifier(), projectDTO.getOrgIdentifier()));
-        performActionsPostProjectCreation(project);
         return savedProject;
       }));
     } catch (DuplicateKeyException ex) {
@@ -117,15 +115,6 @@ public class ProjectServiceImpl implements ProjectService {
               project.getIdentifier(), orgIdentifier),
           USER_SRE, ex);
     }
-  }
-
-  private void performActionsPostProjectCreation(Project project) {
-    log.info(String.format(
-        "Performing actions post project creation for project with identifier %s and orgIdentifier %s ...",
-        project.getIdentifier(), project.getOrgIdentifier()));
-    log.info(String.format(
-        "Successfully completed actions post project creation for project with identifier %s and orgIdentifier %s",
-        project.getIdentifier(), project.getOrgIdentifier()));
   }
 
   @Override
