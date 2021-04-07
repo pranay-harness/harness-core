@@ -3,12 +3,16 @@ package io.harness.engine.executions.node;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
+import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
+import io.harness.pms.contracts.plan.AddExecutableResponseResponse;
 import io.harness.pms.contracts.plan.AdviserResponseRequest;
 import io.harness.pms.contracts.plan.AdviserResponseResponse;
 import io.harness.pms.contracts.plan.EventErrorRequest;
 import io.harness.pms.contracts.plan.EventErrorResponse;
 import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
 import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
+import io.harness.pms.contracts.plan.HandleStepResponseRequest;
+import io.harness.pms.contracts.plan.HandleStepResponseResponse;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
@@ -46,6 +50,23 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
       log.error("Error while queuing delegate task", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
+  }
+
+  @Override
+  public void addExecutableResponse(
+      AddExecutableResponseRequest request, StreamObserver<AddExecutableResponseResponse> responseObserver) {
+    pmsNodeExecutionService.addExecutableResponse(request.getNodeExecutionId(), request.getStatus(),
+        request.getExecutableResponse(), request.getCallbackIdsList());
+    responseObserver.onNext(AddExecutableResponseResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void handleStepResponse(
+      HandleStepResponseRequest request, StreamObserver<HandleStepResponseResponse> responseObserver) {
+    pmsNodeExecutionService.handleStepResponse(request.getNodeExecutionId(), request.getStepResponse());
+    responseObserver.onNext(HandleStepResponseResponse.newBuilder().build());
+    responseObserver.onCompleted();
   }
 
   @Override
