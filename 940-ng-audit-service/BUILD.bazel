@@ -12,7 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//:lombok",
-        "//908-access-control-sdk:module",
+        "//948-access-control-sdk:module",
         "//950-ng-audit-commons:module",
         "//955-filters-sdk:module",
         "//960-persistence:module",
