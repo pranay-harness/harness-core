@@ -6,6 +6,10 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.USER_LOCKED_NOTIFICATION;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 
@@ -44,6 +48,8 @@ import org.passay.PasswordData;
 @Slf4j
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LoginSettingsServiceImpl implements LoginSettingsService {
   static final int DEFAULT_LOCK_OUT_PERIOD = 24;
   static final boolean NOTIFY_USER = true;
@@ -99,6 +105,16 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     return loginSettings;
   }
 
+  public LoginSettings getLoginSettingsWithId(String loginSettingsId) {
+    LoginSettings loginSettings =
+        wingsPersistence.createQuery(LoginSettings.class).field(LoginSettingKeys.uuid).equal(loginSettingsId).get();
+    if (loginSettings == null) {
+      throw new WingsException(
+          String.format("Login settings not found for loginSettingsId: {}", loginSettingsId), USER);
+    }
+    return loginSettings;
+  }
+
   @Override
   public LoginSettings updatePasswordExpirationPolicy(
       String accountId, PasswordExpirationPolicy newPasswordExpirationPolicy) {
@@ -138,6 +154,16 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     loginSettings.setPasswordStrengthPolicy(passwordStrengthPolicy);
   }
 
+  private void auditLoginSettings(String accountId, LoginSettings loginSettings) {
+    PasswordStrengthPolicy passwordStrengthPolicy = loginSettings.getPasswordStrengthPolicy();
+    PasswordExpirationPolicy passwordExpirationPolicy = loginSettings.getPasswordExpirationPolicy();
+    loginSettings.setPasswordStrengthPolicy(null);
+    loginSettings.setPasswordExpirationPolicy(null);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, loginSettings, Event.Type.UPDATE);
+    loginSettings.setPasswordStrengthPolicy(passwordStrengthPolicy);
+    loginSettings.setPasswordExpirationPolicy(passwordExpirationPolicy);
+  }
+
   @Override
   public LoginSettings updateUserLockoutPolicy(String accountId, UserLockoutPolicy newUserLockoutPolicy) {
     validateUserLockoutPolicy(newUserLockoutPolicy);
@@ -149,6 +175,18 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
   private LoginSettings updateAndGetLoginSettings(String accountId, UpdateOperations<LoginSettings> operations) {
     updateLoginSettings(accountId, operations);
     return getLoginSettings(accountId);
+  }
+
+  private LoginSettings updateAndGetLoginSettings(
+      String loginSettingsId, String accountId, UpdateOperations<LoginSettings> operations) {
+    updateLoginSettingsWithId(loginSettingsId, operations);
+    return getLoginSettingsWithId(loginSettingsId);
+  }
+
+  private void updateLoginSettingsWithId(String loginSettingsId, UpdateOperations<LoginSettings> operations) {
+    Query<LoginSettings> query =
+        wingsPersistence.createQuery(LoginSettings.class).filter(LoginSettingKeys.uuid, loginSettingsId);
+    wingsPersistence.update(query, operations);
   }
 
   private void updateLoginSettings(String accountId, UpdateOperations<LoginSettings> operations) {
@@ -194,6 +232,22 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
       return new PasswordStrengthViolations(passwordStrengthViolationsList, true);
     }
     return new PasswordStrengthViolations(new ArrayList<>(), false);
+  }
+
+  @Override
+  public LoginSettings updateLoginSettings(String loginSettingsId, String accountId, LoginSettings newLoginSettings) {
+    validatePasswordExpirationPolicy(newLoginSettings.getPasswordExpirationPolicy());
+    validatePasswordStrengthPolicy(newLoginSettings.getPasswordStrengthPolicy());
+    validateUserLockoutPolicy(newLoginSettings.getUserLockoutPolicy());
+
+    UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
+    setUnset(operations, LoginSettingKeys.passwordExpirationPolicy, newLoginSettings.getPasswordExpirationPolicy());
+    setUnset(operations, LoginSettingKeys.passwordStrengthPolicy, newLoginSettings.getPasswordStrengthPolicy());
+    setUnset(operations, LoginSettingKeys.userLockoutPolicy, newLoginSettings.getUserLockoutPolicy());
+    LoginSettings loginSettings = updateAndGetLoginSettings(loginSettingsId, accountId, operations);
+    auditLoginSettings(accountId, loginSettings);
+    log.info("Auditing updation of LoginSettings for account={}", accountId);
+    return loginSettings;
   }
 
   private List<PasswordStrengthViolation> getPasswordStrengthCheckViolationsInternal(

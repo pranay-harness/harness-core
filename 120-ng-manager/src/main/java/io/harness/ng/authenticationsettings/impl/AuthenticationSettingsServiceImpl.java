@@ -13,9 +13,6 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSett
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 
 import software.wings.beans.loginSettings.LoginSettings;
-import software.wings.beans.loginSettings.PasswordExpirationPolicy;
-import software.wings.beans.loginSettings.PasswordStrengthPolicy;
-import software.wings.beans.loginSettings.UserLockoutPolicy;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -79,18 +76,9 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public void updatePasswordStrengthSettings(String accountId, PasswordStrengthPolicy passwordStrengthPolicy) {
-    getResponse(managerClient.updatePasswordStrengthSettings(accountId, passwordStrengthPolicy));
-  }
-
-  @Override
-  public void updateExpirationSettings(String accountId, PasswordExpirationPolicy passwordExpirationPolicy) {
-    getResponse(managerClient.updateExpirationSettings(accountId, passwordExpirationPolicy));
-  }
-
-  @Override
-  public void updateLockoutSettings(String accountId, UserLockoutPolicy userLockoutPolicy) {
-    getResponse(managerClient.updateLockoutSettings(accountId, userLockoutPolicy));
+  public LoginSettings updateLoginSettings(
+      String loginSettingsId, String accountIdentifier, LoginSettings loginSettings) {
+    return getResponse(managerClient.updateLoginSettings(loginSettingsId, accountIdentifier, loginSettings));
   }
 
   private List<NGAuthSettings> buildAuthSettingsList(SSOConfig ssoConfig, String accountIdentifier) {
@@ -98,11 +86,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     AuthenticationMechanism authenticationMechanism = ssoConfig.getAuthenticationMechanism();
     if (authenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
       LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
-      settingsList.add(UsernamePasswordSettings.builder()
-                           .passwordExpirationPolicy(loginSettings.getPasswordExpirationPolicy())
-                           .userLockoutPolicy(loginSettings.getUserLockoutPolicy())
-                           .passwordStrengthPolicy(loginSettings.getPasswordStrengthPolicy())
-                           .build());
+      settingsList.add(UsernamePasswordSettings.builder().loginSettings(loginSettings).build());
       if (isOauthEnabled(ssoConfig)) {
         OauthSettings oAuthSettings = (OauthSettings) (ssoConfig.getSsoSettings().get(0));
         settingsList.add(OAuthSettings.builder()
