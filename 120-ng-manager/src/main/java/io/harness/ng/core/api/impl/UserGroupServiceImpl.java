@@ -275,15 +275,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private Criteria createScopeCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountIdentifier)) {
-      criteria.and(UserGroupKeys.accountIdentifier).is(accountIdentifier);
-    }
-    if (isNotEmpty(orgIdentifier)) {
-      criteria.and(UserGroupKeys.orgIdentifier).is(orgIdentifier);
-    }
-    if (isNotEmpty(projectIdentifier)) {
-      criteria.and(UserGroupKeys.projectIdentifier).is(projectIdentifier);
-    }
+    criteria.and(UserGroupKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(UserGroupKeys.orgIdentifier).is(orgIdentifier);
+    criteria.and(UserGroupKeys.projectIdentifier).is(projectIdentifier);
     return criteria;
   }
 
