@@ -2,6 +2,7 @@ package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -25,8 +26,11 @@ import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
 import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
 import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.dto.OrganizationRequest;
+import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.security.SourcePrincipalContextData;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -40,18 +44,22 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 public class OrganizationEventHandler implements OutboxEventHandler {
+  private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
   private final ObjectMapper yamlObjectMapper;
+  private final NgUserService ngUserService;
 
   @Inject
   public OrganizationEventHandler(ObjectMapper objectMapper,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService,
+      NgUserService ngUserService) {
     this.objectMapper = objectMapper;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
     this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
+    this.ngUserService = ngUserService;
   }
 
   public boolean handle(OutboxEvent outboxEvent) {
@@ -97,7 +105,20 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
-    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
+    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext)
+        && setupOrgForUserAuthz(
+            accountIdentifier, organizationCreateEvent.getOrganization().getIdentifier(), globalContext);
+  }
+
+  private boolean setupOrgForUserAuthz(String accountIdentifier, String orgIdentifier, GlobalContext globalContext) {
+    if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
+      return false;
+    }
+    String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
+    ngUserService.addUserToScope(userId,
+        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
+        ORG_ADMIN_ROLE);
+    return true;
   }
 
   private boolean handleOrganizationUpdateEvent(OutboxEvent outboxEvent) throws IOException {

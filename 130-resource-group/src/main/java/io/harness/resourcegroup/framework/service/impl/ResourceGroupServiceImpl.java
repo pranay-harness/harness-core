@@ -1,5 +1,6 @@
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -17,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -38,13 +40,13 @@ import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
-import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupBuilder;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,8 +71,12 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
+@OwnedBy(PL)
 public class ResourceGroupServiceImpl implements ResourceGroupService {
   private static final String DEFAULT_COLOR = "#0063F7";
+  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
+  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  private static final String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
   ResourceGroupValidatorService staticResourceGroupValidatorService;
   ResourceGroupValidatorService dynamicResourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
@@ -97,23 +103,39 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    ResourceGroup createdResourceGroup = create(resourceGroup);
+    ResourceGroup createdResourceGroup;
+    try {
+      createdResourceGroup = create(resourceGroup);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(
+          String.format("A resource group with identifier %s already exists at the specified scope",
+              resourceGroup.getIdentifier()),
+          USER_SRE, ex);
+    }
+    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
+  }
+
+  @Override
+  public ResourceGroupResponse createManagedResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO) {
+    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    resourceGroup.setHarnessManaged(true);
+    ResourceGroup createdResourceGroup = null;
+    try {
+      createdResourceGroup = create(resourceGroup);
+    } catch (DuplicateKeyException ex) {
+      log.error("Resource group with identifier {}/{} already present",
+          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier), resourceGroupDTO.getIdentifier());
+    }
     return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
   }
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
     preprocessResourceGroup(resourceGroup);
     if (validate(resourceGroup)) {
-      try {
-        ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
-        publishEvent(resourceGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
-        return savedResourceGroup;
-      } catch (DuplicateKeyException ex) {
-        throw new DuplicateFieldException(
-            String.format("A resource group with identifier %s already exists at the specified scope",
-                resourceGroup.getIdentifier()),
-            USER_SRE, ex);
-      }
+      ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
+      publishEvent(resourceGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
+      return savedResourceGroup;
     }
     log.error("PreValidations failed for resource group {}", resourceGroup);
     throw new InvalidRequestException("Prevalidation Checks failed for the resource group");
@@ -175,10 +197,14 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
+    if ((isBlank(resourceGroup.getIdentifier()) || resourceGroup.getIdentifier().charAt(0) == '_')
+        && !TRUE.equals(resourceGroup.getHarnessManaged())) {
+      throw new InvalidRequestException(
+          "Identifiers starting with _ are only allowed for Harness managed resource group");
+    }
     if (TRUE.equals(resourceGroup.getFullScopeSelected()) && isNotEmpty(resourceGroup.getResourceSelectors())) {
       return false;
     }
-
     boolean isValid = staticResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     isValid = isValid && dynamicResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     return isValid;
@@ -187,9 +213,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Optional<ResourceGroup> resourceGroupOpt =
-        resourceGroupRepository
-            .findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
-                identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
+        resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
+            identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     if (resourceGroupOpt.isPresent()) {
       ResourceGroup resourceGroup = resourceGroupOpt.get();
       RoleAssignmentFilterDTO roleAssignmentFilterDTO =
@@ -212,7 +237,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
 
   @Override
   @SuppressWarnings("PMD")
-  public Optional<ResourceGroupResponse> find(
+  public Optional<ResourceGroupResponse> get(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     accountIdentifier = StringUtils.stripToNull(accountIdentifier);
     orgIdentifier = StringUtils.stripToNull(orgIdentifier);
@@ -222,35 +247,54 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       throw new NullPointerException("Account Identifier can't be null");
     }
     Optional<ResourceGroup> resourceGroupOpt =
-        resourceGroupRepository
-            .findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
-                identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
+        resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
+            identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
+    if (!resourceGroupOpt.isPresent() && identifier.equals(DEFAULT_RESOURCE_GROUP_IDENTIFIER)) {
+      Optional.ofNullable(createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
+    }
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
+  }
+
+  private ResourceGroupResponse createDefaultResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ResourceGroupDTO resourceGroupDTO =
+        ResourceGroupDTO.builder()
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .name(DEFAULT_RESOURCE_GROUP_NAME)
+            .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+            .description(String.format(DESCRIPTION_FORMAT,
+                ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
+                    .toString()
+                    .toLowerCase()))
+            .resourceSelectors(Collections.emptyList())
+            .fullScopeSelected(true)
+            .build();
+    return createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO);
   }
 
   @Override
   public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    if (resourceGroup.getHarnessManaged().equals(TRUE)) {
-      return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
-    }
-    resourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
     Optional<ResourceGroup> resourceGroupOpt =
-        resourceGroupRepository
-            .findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
-                resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
-                resourceGroup.getProjectIdentifier(), false);
+        resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
+            resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
+            resourceGroup.getProjectIdentifier(), false);
     if (!resourceGroupOpt.isPresent()) {
       return Optional.empty();
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
+    if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
+      throw new InvalidRequestException("Can't update managed resource group");
+    }
     savedResourceGroup.setName(resourceGroup.getName());
     savedResourceGroup.setColor(resourceGroup.getColor());
     savedResourceGroup.setTags(resourceGroup.getTags());
     savedResourceGroup.setDescription(resourceGroup.getDescription());
     if (validate(resourceGroup)) {
       savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
-      savedResourceGroup.setResourceSelectors(resourceGroup.getResourceSelectors());
+      savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
     }
     resourceGroup = resourceGroupRepository.save(savedResourceGroup);
     publishEvent(resourceGroup, EventsFrameworkMetadataConstants.UPDATE_ACTION);
@@ -312,15 +356,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     String resourceType = resourcePrimaryKey.getResourceType();
     Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
                             .is(resourcePrimaryKey.getAccountIdentifier())
+                            .and(ResourceGroupKeys.orgIdentifier)
+                            .is(resourcePrimaryKey.getOrgIdentifier())
                             .and(ResourceGroupKeys.deleted)
+                            .and(ResourceGroupKeys.projectIdentifier)
+                            .is(resourcePrimaryKey.getProjectIdentifer())
                             .is(false);
-
-    if (isNotBlank(resourcePrimaryKey.getOrgIdentifier())) {
-      criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
-    }
-    if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-      criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
-    }
 
     if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {
       return criteria;
@@ -335,34 +376,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   public boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey) {
     String resourceType = resourcePrimaryKey.getResourceType();
     if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      String description = String.format("All the resources in this %s are included in this resource group.",
-          StringUtils.capitalize(resourcePrimaryKey.getResourceType().toLowerCase()));
-
-      ResourceGroupBuilder resourceGroupBuilder = ResourceGroup.builder()
-                                                      .accountIdentifier(resourcePrimaryKey.getAccountIdentifier())
-                                                      .orgIdentifier(resourcePrimaryKey.getOrgIdentifier())
-                                                      .projectIdentifier(resourcePrimaryKey.getProjectIdentifer())
-                                                      .name(resourcePrimaryKey.getResourceIdetifier())
-                                                      .description(description)
-                                                      .harnessManaged(true)
-                                                      .fullScopeSelected(true);
-      String resourceGroupIdentifier = String.format("_%s", resourcePrimaryKey.getResourceIdetifier());
-      boolean created = false;
-      int counter = 1;
-      do {
-        ResourceGroup resourceGroup = resourceGroupBuilder.identifier(resourceGroupIdentifier).build();
-        try {
-          create(resourceGroup);
-          created = true;
-        } catch (DuplicateFieldException e) {
-          log.info("Identifier {} for default resource group already taken", resourceGroupIdentifier);
-        } catch (Exception e) {
-          log.info("Failed to create default resource groups", e);
-          break;
-        }
-        resourceGroupIdentifier = String.format("_%s_%d", resourcePrimaryKey.getResourceIdetifier(), counter++);
-      } while (!created);
-      return created;
+      createDefaultResourceGroup(resourcePrimaryKey.getAccountIdentifier(), resourcePrimaryKey.getOrgIdentifier(),
+          resourcePrimaryKey.getProjectIdentifer());
     }
     return true;
   }
@@ -399,15 +414,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (resourceHierarchyChanged) {
       Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
                               .is(resourcePrimaryKey.getAccountIdentifier())
+                              .and(ResourceGroupKeys.orgIdentifier)
+                              .is(resourcePrimaryKey.getOrgIdentifier())
+                              .and(ResourceGroupKeys.projectIdentifier)
+                              .is(resourcePrimaryKey.getProjectIdentifer())
                               .and(ResourceGroupKeys.deleted)
                               .is(true);
-
-      if (isNotBlank(resourcePrimaryKey.getOrgIdentifier())) {
-        criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
-      }
-      if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-        criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
-      }
       Update update = new Update().set(ResourceGroupKeys.deleted, false);
       return resourceGroupRepository.update(criteria, update);
     }

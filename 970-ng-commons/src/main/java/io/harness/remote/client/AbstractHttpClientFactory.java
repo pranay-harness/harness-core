@@ -36,6 +36,7 @@ import okhttp3.ConnectionPool;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -92,7 +93,8 @@ public abstract class AbstractHttpClientFactory {
     if (this.kryoConverterFactory != null) {
       retrofitBuilder.addConverterFactory(kryoConverterFactory);
     }
-    retrofitBuilder.client(getUnsafeOkHttpClient(baseUrl, this.clientMode));
+    retrofitBuilder.client(getUnsafeOkHttpClient(
+        baseUrl, this.clientMode, Boolean.TRUE.equals(this.serviceHttpClientConfig.getEnableHttpLogging())));
     if (this.enableCircuitBreaker) {
       retrofitBuilder.addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()));
     }
@@ -117,26 +119,31 @@ public abstract class AbstractHttpClientFactory {
     return objMapper;
   }
 
-  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode) {
+  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode, boolean addHttpLogging) {
     try {
-      return Http
-          .getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
-              serviceHttpClientConfig.getReadTimeOutSeconds())
-          .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(true)
-          .addInterceptor(getAuthorizationInterceptor(clientMode))
-          .addInterceptor(getCorrelationIdInterceptor())
-          .addInterceptor(getRequestContextInterceptor())
-          .addInterceptor(chain -> {
-            Request original = chain.request();
+      OkHttpClient.Builder builder =
+          Http.getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
+                  serviceHttpClientConfig.getReadTimeOutSeconds())
+              .connectionPool(new ConnectionPool())
+              .retryOnConnectionFailure(true)
+              .addInterceptor(getAuthorizationInterceptor(clientMode))
+              .addInterceptor(getCorrelationIdInterceptor())
+              .addInterceptor(getRequestContextInterceptor());
+      if (addHttpLogging) {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        builder.addInterceptor(loggingInterceptor);
+      }
+      builder.addInterceptor(chain -> {
+        Request original = chain.request();
 
-            // Request customization: add connection close headers
-            Request.Builder requestBuilder = original.newBuilder().header("Connection", "close");
+        // Request customization: add connection close headers
+        Request.Builder requestBuilder = original.newBuilder().header("Connection", "close");
 
-            Request request = requestBuilder.build();
-            return chain.proceed(request);
-          })
-          .build();
+        Request request = requestBuilder.build();
+        return chain.proceed(request);
+      });
+      return builder.build();
     } catch (Exception e) {
       throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }

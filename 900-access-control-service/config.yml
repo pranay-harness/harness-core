@@ -93,6 +93,7 @@ accessControlClient:
     baseUrl: ${ACCESS_CONTROL_SERVICE_BASE_URL:-http://localhost:9006/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   accessControlServiceSecret: ${ACCESS_CONTROL_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 resourceGroupClient:
@@ -100,6 +101,7 @@ resourceGroupClient:
     baseUrl: ${RESOURCE_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   resourceGroupServiceSecret: ${RESOURCE_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 userClient:
@@ -107,6 +109,7 @@ userClient:
     baseUrl: ${USER_CLIENT_BASE_URL:-http://localhost:3457/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userServiceSecret: ${USER_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 userGroupClient:
@@ -114,6 +117,7 @@ userGroupClient:
     baseUrl: ${USER_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userGroupServiceSecret: ${USER_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 decisionModuleConfig:
