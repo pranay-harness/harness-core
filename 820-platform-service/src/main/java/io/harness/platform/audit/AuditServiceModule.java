@@ -1,7 +1,11 @@
 package io.harness.platform.audit;
 
+import static io.harness.AuthorizationServiceHeader.AUDIT_SERVICE;
+import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.AuditFilterModule;
 import io.harness.audit.api.AuditService;
@@ -103,6 +107,8 @@ public class AuditServiceModule extends AbstractModule {
     bind(AuditYamlService.class).to(AuditYamlServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
     bind(AuditSettingsService.class).to(AuditSettingsServiceImpl.class);
+    install(
+        AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfig(), AUDIT_SERVICE.getServiceId()));
   }
 
   @Provides
