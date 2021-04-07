@@ -45,7 +45,7 @@ import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.event.PipelineEntityCRUDStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
-import io.harness.pms.jira.JiraTaskHelperServiceImpl;
+import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
@@ -74,7 +74,7 @@ import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
-import io.harness.steps.jira.JiraTaskHelperService;
+import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.yaml.YamlSdkModule;
@@ -215,7 +215,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
-    bind(JiraTaskHelperService.class).to(JiraTaskHelperServiceImpl.class);
+    bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();

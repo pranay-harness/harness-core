@@ -24,10 +24,10 @@ metrics:
     included: true
   - name: Apdex
     type: APDEX
-    path: SELECT average(`apm.service.transaction.apdex`) FROM Metric
-    validationPath: SELECT average(`apm.service.transaction.apdex`) FROM Metric
-    responseJsonPath: results.[0].average
-    validationResponseJsonPath: total.results.[0].average
+    path: SELECT apdex(`apm.service.transaction.apdex`) FROM Metric
+    validationPath: SELECT apdex(`apm.service.transaction.apdex`) FROM Metric
+    responseJsonPath: results.[0].score
+    validationResponseJsonPath: total.results.[0].score
     included: true
 
 

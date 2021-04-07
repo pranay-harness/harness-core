@@ -1,7 +1,10 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData.PrunedInstanceDataBuilder;
+import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.NIKUNJ;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +15,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -20,6 +25,7 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -66,6 +72,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
+@OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
 public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @InjectMocks private K8sPodEventTasklet k8sPodEventTasklet;
@@ -93,6 +100,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
+  private static final String CLOUD_PROVIDER_INSTANCE_ID_AZURE_VMSS =
+      "azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_ce-dev-cluster2_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-agentpool-14257926-vmss/virtualMachines/1";
   private static final String ACCOUNT_ID = "account_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
@@ -135,7 +144,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
 
-    PrunedInstanceData instanceData = getNodeInstantData();
+    PrunedInstanceData instanceData = getNodeInstantData(CloudProvider.GCP);
     when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
@@ -240,7 +249,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfo() throws Exception {
-    PrunedInstanceData instanceData = getNodeInstantData();
+    PrunedInstanceData instanceData = getNodeInstantData(CloudProvider.GCP);
     when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
@@ -285,10 +294,59 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = NIKUNJ)
+  @Category(UnitTests.class)
+  public void shouldCreateInstancePodInfoAzure() throws Exception {
+    PrunedInstanceData instanceData = getNodeInstantData(CloudProvider.AZURE);
+    when(instanceDataService.fetchPrunedInstanceDataWithName(
+             ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+        .thenReturn(instanceData);
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
+    when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(ACCOUNT_ID, CLOUD_PROVIDER_ID, NAMESPACE, POD_NAME, label))
+        .thenReturn(harnessServiceInfo());
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
+    Map<String, Quantity> limitQuantity = new HashMap<>();
+    limitQuantity.put("cpu", getQuantity(CPU_LIMIT_AMOUNT, "M"));
+    limitQuantity.put("memory", getQuantity(MEMORY_LIMIT_AMOUNT, "M"));
+    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
+    PublishedMessage k8sPodInfoMessage =
+        getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
+            NAMESPACE, label, SAMPLE_MAP, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
+    io.harness.ccm.commons.beans.Resource infoResource = instanceInfo.getResource();
+    io.harness.ccm.commons.beans.Resource limitResource = instanceInfo.getResourceLimit();
+    Map<String, String> metaData = instanceInfo.getMetaData();
+    assertThat(instanceInfo).isNotNull();
+    assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(limitResource.getMemoryMb()).isEqualTo(2.0);
+    assertThat(limitResource.getCpuUnits()).isEqualTo(2048.0);
+    assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo(WORKLOAD_NAME);
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
+        .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
+        .isEqualTo(String.valueOf((double) CPU_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.NODE_POOL_NAME)).isEqualTo(NODE_POOL_NAME);
+    assertThat(instanceInfo.getNamespaceLabels()).isEqualTo(encodeDotsInKey(SAMPLE_MAP));
+    assertThat(instanceInfo.getNamespaceLabels()).isNotEqualTo(SAMPLE_MAP);
+    assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(AZURE.name());
+    assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID))
+        .isEqualTo(CLOUD_PROVIDER_INSTANCE_ID_AZURE_VMSS.toLowerCase());
+    verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
+  }
+
+  @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfoWithKubeProxyWorkload() throws Exception {
-    PrunedInstanceData instanceData = getNodeInstantData();
+    PrunedInstanceData instanceData = getNodeInstantData(CloudProvider.GCP);
     when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
         .thenReturn(instanceData);
@@ -326,22 +384,29 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
-  private PrunedInstanceData getNodeInstantData() {
+  private PrunedInstanceData getNodeInstantData(CloudProvider cloudProvider) {
     Map<String, String> nodeMetaData = new HashMap<>();
     nodeMetaData.put(InstanceMetaDataConstants.REGION, InstanceMetaDataConstants.REGION);
     nodeMetaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
     nodeMetaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
     nodeMetaData.put(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME);
+    PrunedInstanceDataBuilder instanceData = PrunedInstanceData.builder();
     io.harness.ccm.commons.beans.Resource instanceResource = io.harness.ccm.commons.beans.Resource.builder()
                                                                  .cpuUnits((double) CPU_AMOUNT)
                                                                  .memoryMb((double) MEMORY_AMOUNT)
                                                                  .build();
-    return PrunedInstanceData.builder()
-        .instanceId(NODE_NAME)
-        .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)
-        .totalResource(instanceResource)
-        .metaData(nodeMetaData)
-        .build();
+    if (CloudProvider.GCP == cloudProvider) {
+      nodeMetaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
+      instanceData.cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID);
+    } else if (CloudProvider.AZURE == cloudProvider) {
+      nodeMetaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AZURE.name());
+      instanceData.cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID_AZURE_VMSS.toLowerCase());
+    } else if (CloudProvider.AWS == cloudProvider) {
+      nodeMetaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+      instanceData.cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID);
+    }
+
+    return instanceData.instanceId(NODE_NAME).totalResource(instanceResource).metaData(nodeMetaData).build();
   }
 
   private Quantity getQuantity(long amount, String unit) {

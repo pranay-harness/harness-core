@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -21,7 +20,6 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -31,9 +29,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.function.Supplier;
 
 @OwnedBy(CDP)
 public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesStepParameters, K8sDeployResponse> {
@@ -84,37 +82,31 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, Supplier<K8sDeployResponse> responseSupplier) {
-    try {
-      K8sDeployResponse executionResponse = responseSupplier.get();
-      StepResponseBuilder stepResponseBuilder =
-          StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters,
+      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+    K8sDeployResponse executionResponse = responseSupplier.get();
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-      if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return stepResponseBuilder.status(Status.FAILED)
-            .failureInfo(
-                FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
-            .build();
-      }
-
-      // Save BGSwapServices Outcome only if you are in forward phase. We use this in rollback to check if we need to
-      // run this step or not.
-      if (!StepUtils.isStepInRollbackSection(ambiance)) {
-        K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
-        stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                            .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
-                                            .outcome(bgSwapServicesOutcome)
-                                            .group(StepOutcomeGroup.STAGE.name())
-                                            .build());
-      }
-
-      return stepResponseBuilder.status(Status.SUCCEEDED).build();
-    } catch (ErrorDataException ex) {
-      return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
+    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return stepResponseBuilder.status(Status.FAILED)
+          .failureInfo(
+              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();
     }
+
+    // Save BGSwapServices Outcome only if you are in forward phase. We use this in rollback to check if we need to
+    // run this step or not.
+    if (!StepUtils.isStepInRollbackSection(ambiance)) {
+      K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
+      stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
+                                          .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
+                                          .outcome(bgSwapServicesOutcome)
+                                          .group(StepOutcomeGroup.STAGE.name())
+                                          .build());
+    }
+
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override

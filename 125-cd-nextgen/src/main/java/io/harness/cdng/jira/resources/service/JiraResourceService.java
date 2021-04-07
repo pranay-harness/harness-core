@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.jira.JiraIssueCreateMetadataNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
 import io.harness.jira.JiraStatusNG;
 
@@ -18,4 +19,6 @@ public interface JiraResourceService {
       IdentifierRef jiraConnectorRef, String orgId, String projectId, String projectKey, String issueType);
   JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId, String projectId,
       String projectKey, String issueType, String expand, boolean fetchStatus);
+  JiraIssueUpdateMetadataNG getIssueUpdateMetadata(
+      IdentifierRef jiraConnectorRef, String orgId, String projectId, String issueKey);
 }

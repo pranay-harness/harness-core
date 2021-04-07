@@ -22,6 +22,8 @@ import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
@@ -31,6 +33,7 @@ import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
 import io.harness.network.Http;
+import io.harness.network.NoopHostnameVerifier;
 import io.harness.yaml.YamlRepresenter;
 import io.harness.yaml.YamlUtils;
 
@@ -80,10 +83,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import lombok.extern.slf4j.Slf4j;
@@ -108,11 +109,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by brett on 2/22/17
- */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesHelperService {
   @Inject private OidcTokenRetriever oidcTokenRetriever;
 
@@ -274,12 +273,7 @@ public class KubernetesHelperService {
       httpClientBuilder.followSslRedirects(true);
 
       if (config.isTrustCerts()) {
-        httpClientBuilder.hostnameVerifier(new HostnameVerifier() {
-          @Override
-          public boolean verify(String s, SSLSession sslSession) {
-            return true;
-          }
-        });
+        httpClientBuilder.hostnameVerifier(new NoopHostnameVerifier());
       }
 
       TrustManager[] trustManagers = SSLUtils.trustManagers(config);

@@ -468,3 +468,8 @@ func (mdb *MongoDb) MergeCallbackFn(ctx context.Context, commits []string, accou
 	}
 	return nil
 }
+
+func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accountId, repo string, files []types.File) error {
+	fmt.Println("running")
+	return nil
+}

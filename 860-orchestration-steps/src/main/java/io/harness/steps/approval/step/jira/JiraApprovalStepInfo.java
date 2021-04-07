@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
@@ -14,7 +15,9 @@ import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -33,7 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_APPROVAL)
 @TypeAlias("jiraApprovalStepInfo")
-public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
+public class JiraApprovalStepInfo extends ApprovalBaseStepInfo implements WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
@@ -75,5 +78,10 @@ public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
   @Override
   public boolean validateStageFailureStrategy() {
     return false;
+  }
+
+  @Override
+  public List<ParameterField<String>> extractConnectorRefs() {
+    return Lists.newArrayList(connectorRef);
   }
 }

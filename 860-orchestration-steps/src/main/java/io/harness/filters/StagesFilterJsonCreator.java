@@ -1,7 +1,9 @@
-package io.harness.pms.sdk.core.pipeline.filters;
+package io.harness.filters;
 
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StagesFilterJsonCreator {
   public Map<String, YamlField> getDependencies(YamlField stagesYamlNode) {
     Map<String, YamlField> dependencies = new HashMap<>();

@@ -248,7 +248,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
     ArtifactStreamMapper artifactStreamMapper =
         ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
-    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(artifact);
+    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(context, artifact);
 
     doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
         .when(azureVMSSStateHelper)
@@ -258,7 +258,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   public void mockUserDataSpecification() {
     UserDataSpecification userDataSpecification =
         UserDataSpecification.builder().data("startup command").serviceId("service-id").build();
-    doReturn(userDataSpecification).when(azureVMSSStateHelper).getUserDataSpecification(any());
+    doReturn(Optional.ofNullable(userDataSpecification)).when(azureVMSSStateHelper).getUserDataSpecification(any());
   }
 
   private String getAppSettingsJSON() {
@@ -288,7 +288,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
   private ArtifactStreamMapper mockGetArtifactStreamMapper() {
     ArtifactStreamMapper mockArtifactStreamMapper = mock(ArtifactStreamMapper.class);
-    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any());
+    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any(), any());
     return mockArtifactStreamMapper;
   }
 

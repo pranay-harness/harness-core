@@ -15,6 +15,7 @@ import io.harness.steps.approval.step.harness.beans.ApproverInputInfoDTO;
 import io.harness.steps.approval.step.harness.beans.ApproversDTO;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalAction;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivity;
+import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityDTO;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
 
 import java.util.ArrayList;
@@ -102,7 +103,11 @@ public class HarnessApprovalInstance extends ApprovalInstance {
     List<ApproverInput> approverInputs =
         fetchLastApprovalActivity().map(HarnessApprovalActivity::getApproverInputs).orElse(null);
     return HarnessApprovalOutcome.builder()
-        .approvalActivities(approvalActivities)
+        .approvalActivities(approvalActivities == null
+                ? null
+                : approvalActivities.stream()
+                      .map(HarnessApprovalActivityDTO::fromHarnessApprovalActivity)
+                      .collect(Collectors.toList()))
         .approverInputs(approverInputs == null
                 ? Collections.emptyMap()
                 : approverInputs.stream().collect(Collectors.toMap(ApproverInput::getName, ApproverInput::getValue)))

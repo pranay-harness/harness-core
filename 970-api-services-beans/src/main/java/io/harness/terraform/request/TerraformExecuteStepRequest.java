@@ -8,7 +8,6 @@ import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -20,10 +19,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @OwnedBy(CDP)
 public class TerraformExecuteStepRequest {
-  File tfBackendConfigsFile;
-  File tfOutputsFile;
+  String tfBackendConfigsFile;
+  String tfOutputsFile;
   List<String> tfVarFilePaths;
   String varParams; // Needed to send inline variable values in CG
+  String uiLogs; // Needed to NOT log secrets in CG
   @Nonnull @NotEmpty String scriptDirectory;
   Map<String, String> envVars;
   List<String> targets;

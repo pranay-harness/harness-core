@@ -47,8 +47,12 @@ import io.harness.jira.JiraFieldSchemaNG;
 import io.harness.jira.JiraFieldTypeNG;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.jira.JiraIssueTransitionNG;
+import io.harness.jira.JiraIssueTransitionRequestNG;
+import io.harness.jira.JiraIssueTransitionsNG;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraIssueTypeNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
 import io.harness.jira.JiraProjectData;
 import io.harness.jira.JiraProjectNG;
@@ -57,6 +61,7 @@ import io.harness.jira.JiraStatusCategory;
 import io.harness.jira.JiraStatusCategoryNG;
 import io.harness.jira.JiraStatusNG;
 import io.harness.jira.JiraTimeTrackingFieldNG;
+import io.harness.jira.JiraUpdateIssueRequestNG;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -301,5 +306,10 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JiraStatusCategoryNG.class, 97012);
     kryo.register(JiraStatusNG.class, 97013);
     kryo.register(JiraTimeTrackingFieldNG.class, 97014);
+    kryo.register(JiraIssueTransitionNG.class, 97015);
+    kryo.register(JiraIssueTransitionRequestNG.class, 97016);
+    kryo.register(JiraIssueTransitionsNG.class, 97017);
+    kryo.register(JiraIssueUpdateMetadataNG.class, 97018);
+    kryo.register(JiraUpdateIssueRequestNG.class, 97019);
   }
 }

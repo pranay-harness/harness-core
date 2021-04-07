@@ -58,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
@@ -110,7 +111,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     AzureWebAppSlotSetupParameters slotSetupParameters =
         buildSlotSetupParams(context, azureAppServiceStateData, activity);
     ArtifactStreamMapper artifactStreamMapper =
-        azureVMSSStateHelper.getConnectorMapper(azureAppServiceStateData.getArtifact());
+        azureVMSSStateHelper.getConnectorMapper(context, azureAppServiceStateData.getArtifact());
     populateContainerArtifactDetails(context, slotSetupParameters, artifactStreamMapper);
     return AzureTaskExecutionRequest.builder()
         .azureConfigDTO(azureVMSSStateHelper.createAzureConfigDTO(azureAppServiceStateData.getAzureConfig()))
@@ -377,8 +378,9 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
 
   private void provideStartupCommand(
       ExecutionContext context, AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
-    UserDataSpecification userDataSpecification = azureVMSSStateHelper.getUserDataSpecification(context);
-    slotSetupParametersBuilder.startupCommand(userDataSpecification.getData());
+    Optional<UserDataSpecification> userDataSpecification = azureVMSSStateHelper.getUserDataSpecification(context);
+    userDataSpecification.ifPresent(
+        dataSpecification -> slotSetupParametersBuilder.startupCommand(dataSpecification.getData()));
   }
 
   private void provideInstanceElementDetails(

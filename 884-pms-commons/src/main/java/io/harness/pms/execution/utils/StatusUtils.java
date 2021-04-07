@@ -40,7 +40,7 @@ public class StatusUtils {
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
-  private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
+  private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
 
   private final EnumSet<Status> RESUMABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, APPROVAL_WAITING,
       RESOURCE_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING);

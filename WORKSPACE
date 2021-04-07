@@ -1462,10 +1462,11 @@ maven_install(
         "com.segment.backo:backo:1.0.0",
         "com.smoketurner:dropwizard-swagger:1.3.17-1",
         "com.splunk:splunk:1.6.3.0",
-        "com.squareup.okhttp3:logging-interceptor:3.9.1",
+        "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.9.0",
-        "com.squareup.okio:okio:1.13.0",
+        "com.squareup.okhttp3:okhttp:4.9.1",
+        "com.squareup.okhttp3:mockwebxxxxxxxx4.9.1",
+        "com.squareup.okio:okio:2.8.0",
         "com.squareup.retrofit2:adapter-rxjava:2.7.2",
         "com.squareup.retrofit2:converter-gson:2.3.0",
         "com.squareup.retrofit2:converter-jackson:2.2.0",
@@ -1946,10 +1947,10 @@ maven_install(
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
         "org.apache.avro:avro:1.9.2",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.2.31",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.32",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.4.32",
         "org.lz4:lz4-java:1.6.0",
         "org.xerial.snappy:snappy-java:1.1.7.3",
         "com.github.daniel-shuy:kafka-protobuf-serde:2.2.0",
@@ -1964,10 +1965,6 @@ maven_install(
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
         "org.apache.avro:avro:1.9.2",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.71",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.2.31",
         "org.lz4:lz4-java:1.6.0",
         "org.springframework.boot:spring-boot-autoconfigure:2.1.6.RELEASE",
         "org.springframework.boot:spring-boot:2.3.2.RELEASE",
@@ -2054,32 +2051,8 @@ maven_install(
 maven_install(
     name = "delegate",
     artifacts = [
-        "com.squareup.okhttp3:logging-interceptor:3.14.3",
-        "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
-)
-
-maven_install(
-    name = "batch",
-    artifacts = [
-        "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -5316,4 +5289,95 @@ go_repository(
     importpath = "github.com/robbiet480/go.sns",
     sum = "h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=",
     version = "v0.0.0-20181124163742-ca087b49e1da",
+)
+
+go_repository(
+    name = "com_github_git_chglog_git_chglog",
+    importpath = "github.com/git-chglog/git-chglog",
+    sum = "h1:8l4Aw3Jmx0pLKYMkY+1b6yBPgE+rzRtA5T3vqFyI2Z8=",
+    version = "v0.0.0-20190611050339-63a4e637021f",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_attrs",
+    importpath = "github.com/gobuffalo/attrs",
+    sum = "h1:hSkbZ9XSyjyBirMeqSqUrK+9HboWrweVlzRNqoBi2d4=",
+    version = "v0.0.0-20190224210810-a9411de4debd",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_depgen",
+    importpath = "github.com/gobuffalo/depgen",
+    sum = "h1:31atYa/UW9V5q8vMJ+W6wd64OaaTHUrCUXER358zLM4=",
+    version = "v0.1.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_envy",
+    importpath = "github.com/gobuffalo/envy",
+    sum = "h1:GlXgaiBkmrYMHco6t4j7SacKO4XUjvh5pwXh0f4uxXU=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_flect",
+    importpath = "github.com/gobuffalo/flect",
+    sum = "h1:3GQ53z7E3o00C/yy7Ko8VXqQXoJGLkrTQCLTF1EjoXU=",
+    version = "v0.1.3",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_genny",
+    importpath = "github.com/gobuffalo/genny",
+    sum = "h1:iQ0D6SpNXIxu52WESsD+KoQ7af2e3nCfnSBoSF/hKe0=",
+    version = "v0.1.1",
+)
+
+go_repository(
+    name = "com_github_hinshun_vt10x",
+    importpath = "github.com/hinshun/vt10x",
+    sum = "h1:WlZsjVhE8Af9IcZDGgJGQpNflI3+MJSBhsgT5PCtzBQ=",
+    version = "v0.0.0-20180616224451-1954e6464174",
+)
+
+go_repository(
+    name = "com_github_kballard_go_shellquote",
+    importpath = "github.com/kballard/go-shellquote",
+    sum = "h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=",
+    version = "v0.0.0-20180428030007-95032a82bc51",
+)
+
+go_repository(
+    name = "com_github_netflix_go_expect",
+    importpath = "github.com/Netflix/go-expect",
+    sum = "h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=",
+    version = "v0.0.0-20180615182759-c93bf25de8e8",
+)
+
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue",
+    importpath = "github.com/robinjoseph08/redisqueue",
+    sum = "h1:8pcVNqJNYuuZkc4z+mKFq06AA1I1xD3mo3x9yKeBuEQ=",
+    version = "v1.1.0",
+)
+
+go_repository(
+    name = "com_github_tsuyoshiwada_go_gitcmd",
+    importpath = "github.com/tsuyoshiwada/go-gitcmd",
+    sum = "h1:Y2l28Jr3vOEeYtxfVbMtVfOdAwuUqWaP9fvNKiBVeXY=",
+    version = "v0.0.0-20180205145712-5f1f5f9475df",
+)
+
+go_repository(
+    name = "in_gopkg_alecaivazis_survey_v1",
+    importpath = "gopkg.in/AlecAivazis/survey.v1",
+    sum = "h1:QoEEmn/d5BbuPIL2qvXwzJdttFFhRQFkaq+tEKb7SMI=",
+    version = "v1.8.5",
+)
+
+go_repository(
+    name = "in_gopkg_kyokomi_emoji_v1",
+    importpath = "gopkg.in/kyokomi/emoji.v1",
+    sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
+    version = "v1.5.1",
 )

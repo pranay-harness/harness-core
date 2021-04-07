@@ -44,7 +44,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
-import static software.wings.common.ProvisionerConstants.ARM_ROLLBACK;
+import static software.wings.common.ProvisionerConstants.GENERIC_ROLLBACK_NAME_FORMAT;
 import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -1597,7 +1597,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         rollbackProvisionerNodes.add(GraphNode.builder()
                                          .type(stateType.name())
                                          .rollback(true)
-                                         .name("Rollback " + step.getName())
+                                         .name(format(GENERIC_ROLLBACK_NAME_FORMAT, step.getName()))
                                          .properties(propertiesMap)
                                          .build());
       }
@@ -1641,7 +1641,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       rollbackProvisionerNodes.add(GraphNode.builder()
                                        .type(stateType.name())
                                        .rollback(true)
-                                       .name(ARM_ROLLBACK)
+                                       .name(format(GENERIC_ROLLBACK_NAME_FORMAT, step.getName()))
                                        .properties(propertiesMap)
                                        .build());
     });

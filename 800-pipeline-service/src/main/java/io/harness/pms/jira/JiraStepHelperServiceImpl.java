@@ -14,17 +14,22 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
+import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
-import io.harness.steps.jira.JiraTaskHelperService;
+import io.harness.steps.jira.JiraIssueOutcome;
+import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
@@ -32,13 +37,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
-public class JiraTaskHelperServiceImpl implements JiraTaskHelperService {
+public class JiraStepHelperServiceImpl implements JiraStepHelperService {
   private final ConnectorResourceClient connectorResourceClient;
   private final SecretManagerClientService secretManagerClientService;
   private final KryoSerializer kryoSerializer;
 
   @Inject
-  public JiraTaskHelperServiceImpl(ConnectorResourceClient connectorResourceClient,
+  public JiraStepHelperServiceImpl(ConnectorResourceClient connectorResourceClient,
       SecretManagerClientService secretManagerClientService, KryoSerializer kryoSerializer) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretManagerClientService = secretManagerClientService;
@@ -81,5 +86,17 @@ public class JiraTaskHelperServiceImpl implements JiraTaskHelperService {
             .stream()
             .map(s -> TaskSelector.newBuilder().setSelector(s).build())
             .collect(Collectors.toList()));
+  }
+
+  @Override
+  public StepResponse prepareStepResponse(ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
+    JiraTaskNGResponse taskResponse = responseSupplier.get();
+    return StepResponse.builder()
+        .status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name("issue")
+                         .outcome(new JiraIssueOutcome(taskResponse.getIssue()))
+                         .build())
+        .build();
   }
 }
