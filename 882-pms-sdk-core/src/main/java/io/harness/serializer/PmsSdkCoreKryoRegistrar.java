@@ -8,7 +8,6 @@ import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviserParameters;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviserParameters;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
@@ -38,7 +37,6 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(ManualInterventionAdviserParameters.class, 3107);
     kryo.register(OnMarkSuccessAdviserParameters.class, 3108);
     kryo.register(OnAbortAdviserParameters.class, 3109);
-    kryo.register(NextStepAdviserParameters.class, 3110);
 
     // New classes here
     kryo.register(PlanNode.class, 88201);

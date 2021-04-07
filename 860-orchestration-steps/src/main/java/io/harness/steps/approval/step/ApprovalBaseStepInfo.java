@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
-import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
@@ -20,7 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("approvalBaseStepInfo")
-public abstract class ApprovalBaseStepInfo implements PMSStepInfo, WithRollbackInfo {
+public abstract class ApprovalBaseStepInfo implements PMSStepInfo {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 }

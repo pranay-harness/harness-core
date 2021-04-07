@@ -1,5 +1,9 @@
 package io.harness.plancreator.steps.barrier;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -25,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @JsonTypeName(StepSpecTypeConstants.BARRIER)
 @TypeAlias("barrierStepInfo")
+@OwnedBy(PIPELINE)
 public class BarrierStepInfo implements PMSStepInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @JsonProperty("barrierRef") @NotNull String identifier;
@@ -47,7 +52,7 @@ public class BarrierStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParameters() {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return BarrierStepParameters.builder().identifier(identifier).build();
   }
 }

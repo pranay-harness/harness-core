@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.adviser.nextstep;
+package io.harness.advisers.nextstep;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
