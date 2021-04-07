@@ -7,6 +7,7 @@ import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.common.helper.GitObjectIdHelper;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.persistance.GitSyncableEntity;
+import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -20,7 +21,7 @@ public class EntityObjectIdUtils {
   private static YAMLMapper yamlMapper = new YAMLMapper().enable(YAMLGenerator.Feature.MINIMIZE_QUOTES);
 
   public static String getObjectIdOfYaml(YamlDTO yamlObject) {
-    final String yamlString = EntityToYamlStringUtils.getYamlString(yamlObject);
+    final String yamlString = NGYamlUtils.getYamlString(yamlObject);
     return GitObjectIdHelper.getObjectIdForString(yamlString);
   }
 
