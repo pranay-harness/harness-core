@@ -1,5 +1,7 @@
 package software.wings.yaml.handler;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -13,6 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -45,6 +49,8 @@ import org.mockito.Mockito;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
+@OwnedBy(CDC)
+@TargetModule(_870_CG_YAML_BEANS)
 public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;

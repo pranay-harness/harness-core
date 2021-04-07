@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
@@ -27,6 +28,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -118,6 +120,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Singleton
 @Slf4j

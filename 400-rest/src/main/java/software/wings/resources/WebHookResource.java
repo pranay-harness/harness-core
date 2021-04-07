@@ -1,6 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._815_CG_TRIGGERS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.WebHookRequest;
 import software.wings.security.annotations.ApiKeyAuthorized;
@@ -23,6 +29,8 @@ import javax.ws.rs.core.Response;
 @Api("webhooks")
 @Path("/webhooks")
 @Produces("application/json")
+@OwnedBy(CDC)
+@TargetModule(_815_CG_TRIGGERS)
 @ApiKeyAuthorized(allowEmptyApiKey = true, skipAuth = true)
 public class WebHookResource {
   @Inject private WebHookService webHookService;

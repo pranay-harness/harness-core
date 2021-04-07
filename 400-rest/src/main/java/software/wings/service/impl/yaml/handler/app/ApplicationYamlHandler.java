@@ -1,10 +1,14 @@
 package software.wings.service.impl.yaml.handler.app;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
@@ -27,6 +31,8 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 @Singleton
+@OwnedBy(CDC)
+@TargetModule(_870_CG_YAML_BEANS)
 public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Application> {
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;

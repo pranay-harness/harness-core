@@ -4,6 +4,8 @@
 
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -45,6 +47,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -115,6 +119,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class AppServiceTest extends WingsBaseTest {
   /**
    * The Query.
