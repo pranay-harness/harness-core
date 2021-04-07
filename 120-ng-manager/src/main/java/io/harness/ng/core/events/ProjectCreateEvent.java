@@ -1,4 +1,4 @@
-package io.harness.ng.core.auditevent;
+package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
@@ -25,14 +25,17 @@ public class ProjectCreateEvent implements Event {
     this.accountIdentifier = accountIdentifier;
   }
 
+  @Override
   public ResourceScope getResourceScope() {
     return new ProjectScope(accountIdentifier, project.getOrgIdentifier(), project.getIdentifier());
   }
 
+  @Override
   public Resource getResource() {
     return Resource.builder().identifier(project.getIdentifier()).type(PROJECT).build();
   }
 
+  @Override
   public String getEventType() {
     return "ProjectCreated";
   }

@@ -1,4 +1,4 @@
-package io.harness.ng.core.auditevent;
+package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
@@ -16,24 +16,30 @@ import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Getter
 @NoArgsConstructor
-public class ProjectDeleteEvent implements Event {
-  private ProjectDTO project;
+public class ProjectUpdateEvent implements Event {
+  private ProjectDTO newProject;
+  private ProjectDTO oldProject;
+
   private String accountIdentifier;
 
-  public ProjectDeleteEvent(String accountIdentifier, ProjectDTO project) {
-    this.project = project;
+  public ProjectUpdateEvent(String accountIdentifier, ProjectDTO newProject, ProjectDTO oldProject) {
+    this.newProject = newProject;
+    this.oldProject = oldProject;
     this.accountIdentifier = accountIdentifier;
   }
 
+  @Override
   public ResourceScope getResourceScope() {
-    return new ProjectScope(accountIdentifier, project.getOrgIdentifier(), project.getIdentifier());
+    return new ProjectScope(accountIdentifier, newProject.getOrgIdentifier(), newProject.getIdentifier());
   }
 
+  @Override
   public Resource getResource() {
-    return Resource.builder().identifier(project.getIdentifier()).type(PROJECT).build();
+    return Resource.builder().identifier(oldProject.getIdentifier()).type(PROJECT).build();
   }
 
+  @Override
   public String getEventType() {
-    return "ProjectDeleted";
+    return "ProjectUpdated";
   }
 }
