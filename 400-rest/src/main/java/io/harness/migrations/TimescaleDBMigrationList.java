@@ -17,6 +17,7 @@ import io.harness.migrations.timescaledb.AddIndexToInstanceV2Migration;
 import io.harness.migrations.timescaledb.AddIndicesForCostEvents;
 import io.harness.migrations.timescaledb.AddInstancesDeployedToDeployment;
 import io.harness.migrations.timescaledb.AddMaxUtilColumns;
+import io.harness.migrations.timescaledb.AddNewentityToAnomalies;
 import io.harness.migrations.timescaledb.AddNonComputeCostColumnToBillingData;
 import io.harness.migrations.timescaledb.AddPercentagesToCostEvents;
 import io.harness.migrations.timescaledb.AddRequestColumnToBillingData;
@@ -110,6 +111,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(45, CreateDeploymentStageTable.class))
         .add(Pair.of(46, AddAlertTypeColumnToBudgetAlerts.class))
         .add(Pair.of(47, AddActualInstanceIdToK8sUtilizationData.class))
+        .add(Pair.of(48, AddNewentityToAnomalies.class))
         .build();
   }
 }
