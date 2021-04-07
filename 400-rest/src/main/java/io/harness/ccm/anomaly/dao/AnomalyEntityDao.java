@@ -209,6 +209,9 @@ public class AnomalyEntityDao {
           case SLACK_WEEKLY_NOTIFICATION:
             anomalyBuilder.slackWeeklyNotification(resultSet.getBoolean(field.getFieldName()));
             break;
+          case NEW_ENTITY:
+            anomalyBuilder.newEntity(resultSet.getBoolean(field.getFieldName()));
+            break;
           case REGION:
             break;
           case TIME_GRANULARITY:
@@ -308,6 +311,7 @@ public class AnomalyEntityDao {
                .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
                .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
                .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+               .addColumn(AnomaliesDataTableSchema.newEntity, ((Boolean) anomaly.isNewEntity()).toString())
                .validate()
                .toString()
         + " ON CONFLICT "
