@@ -8,9 +8,6 @@ import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.interrupts.statusupdate.InterventionWaitStepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -40,11 +37,9 @@ import java.util.concurrent.TimeUnit;
 public class InterventionWaitAdviserResponseHandler implements AdviserResponseHandler {
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private PlanExecutionService planExecutionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private TimeoutEngine timeoutEngine;
-  @Inject private InterventionWaitStepStatusUpdate interventionWaitStepStatusUpdate;
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
@@ -73,12 +68,6 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
                                .ambiance(nodeExecution.getAmbiance())
                                .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .build());
-    interventionWaitStepStatusUpdate.onStepStatusUpdate(
-        StepStatusUpdateInfo.builder()
-            .nodeExecutionId(nodeExecution.getUuid())
-            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
-            .status(INTERVENTION_WAITING)
-            .build());
   }
 
   private long getTimeoutInMillis(Duration duration) {

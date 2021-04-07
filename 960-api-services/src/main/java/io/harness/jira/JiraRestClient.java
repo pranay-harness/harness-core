@@ -37,6 +37,6 @@ public interface JiraRestClient {
 
   @POST("issue") Call<JiraIssueNG> createIssue(@Body JiraCreateIssueRequestNG createIssueRequest);
 
-  @PUT("issue/{issueId}")
+  @PUT("issue/{issueKey}")
   Call<Void> updateIssue(@Path("issueKey") String issueKey, @Body JiraUpdateIssueRequestNG updateIssueRequest);
 }

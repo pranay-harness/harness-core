@@ -15,8 +15,6 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.interrupts.statusupdate.PausedStepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.engine.resume.EngineResumeAllCallback;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -37,7 +35,6 @@ public class PauseAllInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private PausedStepStatusUpdate pausedStepStatusUpdate;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
@@ -86,12 +83,6 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
-    pausedStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                                  .planExecutionId(interrupt.getPlanExecutionId())
-                                                  .nodeExecutionId(nodeExecutionId)
-                                                  .interruptId(interrupt.getUuid())
-                                                  .status(Status.PAUSED)
-                                                  .build());
     waitNotifyEngine.waitForAllOn(
         publisherName, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
     return interrupt;
