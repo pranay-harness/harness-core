@@ -5,9 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.loginSettings.LoginSettings;
-import software.wings.beans.loginSettings.PasswordExpirationPolicy;
-import software.wings.beans.loginSettings.PasswordStrengthPolicy;
-import software.wings.beans.loginSettings.UserLockoutPolicy;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
@@ -22,6 +19,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.PL)
@@ -34,18 +32,6 @@ public interface AuthSettingsManagerClient {
 
   @GET("/api/ng/login-settings/username-password")
   Call<RestResponse<LoginSettings>> getUserNamePasswordSettings(@Query("accountId") @NotEmpty String accountId);
-
-  @PUT("/api/ng/login-settings/username-password/update-password-strength-settings")
-  Call<RestResponse<LoginSettings>> updatePasswordStrengthSettings(@Query("accountId") @NotEmpty String accountId,
-      @Body @NotNull @Valid PasswordStrengthPolicy passwordStrengthPolicy);
-
-  @PUT("/api/ng/login-settings/username-password/update-expiration-settings")
-  Call<RestResponse<LoginSettings>> updateExpirationSettings(@Query("accountId") @NotEmpty String accountId,
-      @Body @NotNull @Valid PasswordExpirationPolicy passwordExpirationPolicy);
-
-  @PUT("/api/ng/login-settings/username-password/update-lockout-settings")
-  Call<RestResponse<LoginSettings>> updateLockoutSettings(
-      @Query("accountId") @NotEmpty String accountId, @Body @NotNull @Valid UserLockoutPolicy userLockoutPolicy);
 
   @GET("/api/ng/accounts/two-factor-enabled")
   Call<RestResponse<Boolean>> twoFactorEnabled(@Query("accountId") @NotEmpty String accountId);
@@ -60,4 +46,8 @@ public interface AuthSettingsManagerClient {
   @PUT("/api/ng/sso/assign-auth-mechanism")
   Call<RestResponse<SSOConfig>> updateAuthMechanism(@Query("accountId") @NotEmpty String accountId,
       @Query("authMechanism") AuthenticationMechanism authenticationMechanism);
+
+  @PUT("/api/ng/login-settings/{loginSettingsId}")
+  Call<RestResponse<LoginSettings>> updateLoginSettings(@Path("loginSettingsId") String loginSettingsId,
+      @Query("accountId") @NotEmpty String accountId, @Body @NotNull @Valid LoginSettings loginSettings);
 }

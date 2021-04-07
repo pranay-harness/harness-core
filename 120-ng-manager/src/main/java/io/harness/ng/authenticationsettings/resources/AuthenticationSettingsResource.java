@@ -7,9 +7,7 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
 import io.harness.rest.RestResponse;
 
-import software.wings.beans.loginSettings.PasswordExpirationPolicy;
-import software.wings.beans.loginSettings.PasswordStrengthPolicy;
-import software.wings.beans.loginSettings.UserLockoutPolicy;
+import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 
 import com.google.inject.Inject;
@@ -22,6 +20,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -50,33 +49,14 @@ public class AuthenticationSettingsResource {
   }
 
   @PUT
-  @Path("/username-password/update-password-expiration-settings")
-  @ApiOperation(value = "Update Password expiration settings", nickname = "updateExpirationSettings")
-  public RestResponse<Boolean> updateExpirationSettings(
+  @Path("/login-settings/{loginSettingsId}")
+  @ApiOperation(value = "Update login settings - lockout, expiration, strength", nickname = "putLoginSettings")
+  public RestResponse<LoginSettings> updateLoginSettings(@PathParam("loginSettingsId") String loginSettingsId,
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
-      @NotNull @Valid PasswordExpirationPolicy passwordExpirationPolicy) {
-    authenticationSettingsService.updateExpirationSettings(accountIdentifier, passwordExpirationPolicy);
-    return new RestResponse<>(true);
-  }
-
-  @PUT
-  @Path("/username-password/update-user-lockout-settings")
-  @ApiOperation(value = "Update user lockout settings", nickname = "updateLockoutSettings")
-  public RestResponse<Boolean> updateLockoutSettings(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
-      @NotNull @Valid UserLockoutPolicy userLockoutPolicy) {
-    authenticationSettingsService.updateLockoutSettings(accountIdentifier, userLockoutPolicy);
-    return new RestResponse<>(true);
-  }
-
-  @PUT
-  @Path("/username-password/update-password-strength-settings")
-  @ApiOperation(value = "Update Password strength settings", nickname = "updatePasswordStrengthSettings")
-  public RestResponse<Boolean> updatePasswordStrengthSettings(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
-      @NotNull @Valid PasswordStrengthPolicy passwordStrengthPolicy) {
-    authenticationSettingsService.updatePasswordStrengthSettings(accountIdentifier, passwordStrengthPolicy);
-    return new RestResponse<>(true);
+      @NotNull @Valid LoginSettings loginSettings) {
+    LoginSettings updatedLoginSettings =
+        authenticationSettingsService.updateLoginSettings(loginSettingsId, accountIdentifier, loginSettings);
+    return new RestResponse<>(updatedLoginSettings);
   }
 
   @PUT
