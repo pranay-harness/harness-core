@@ -3,6 +3,7 @@ package io.harness.eventsframework.schemas.entity;
 import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
+option go_package = "970_ng_commons";
 
 message InputSetReferenceProtoDTO {
   google.protobuf.StringValue accountIdentifier = 1;
