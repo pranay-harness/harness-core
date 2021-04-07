@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
@@ -10,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Repository;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -54,11 +56,12 @@ import org.jetbrains.annotations.NotNull;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GitWebhookTriggerRepoFilter implements TriggerFilter {
   // TODO: This should come from scm parsing service
   private static final String AWS_CODECOMMIT_URL_PATTERN = "https://git-codecommit.%s.amazonaws.com/v1/repos/%s";
   private final NGTriggerService ngTriggerService;
-  private final GitProviderDataObtainmentManager gitProviderDataObtainmentManager;
+  private final GitProviderDataObtainmentManager additionalDataObtainmentManager;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
@@ -95,7 +98,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
           .build();
     } else {
       // fetches additional information
-      gitProviderDataObtainmentManager.acquireProviderData(filterRequestData);
+      additionalDataObtainmentManager.acquireProviderData(filterRequestData);
       addDetails(mappingResponseBuilder, filterRequestData, eligibleTriggers);
     }
 
