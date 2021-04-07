@@ -22,7 +22,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -124,7 +123,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 
@@ -257,11 +255,11 @@ public class SettingValidationService {
 
     if (settingValue instanceof GcpConfig) {
       GcpConfig gcpConfig = (GcpConfig) settingValue;
-      if (!gcpConfig.isUseDelegate() && gcpConfig.isSkipValidation()) {
+      if (!gcpConfig.isUseDelegateSelectors() && gcpConfig.isSkipValidation()) {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
-      if (gcpConfig.isUseDelegate() && StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+      if (gcpConfig.isUseDelegateSelectors() && isEmpty(gcpConfig.getDelegateSelectors())) {
         throw new InvalidArgumentsException(
             "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }
@@ -370,7 +368,7 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    if (isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
     }
   }

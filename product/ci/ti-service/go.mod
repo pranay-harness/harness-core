@@ -16,6 +16,7 @@ require (
 	github.com/kamva/mgm/v3 v3.1.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mattn/go-zglob v0.0.3
+	github.com/robinjoseph08/redisqueue v1.1.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
 	go.mongodb.org/mongo-driver v1.3.4

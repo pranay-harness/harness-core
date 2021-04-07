@@ -16,6 +16,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.GcpConfig;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class GcbTaskParamsTest extends CategoryTest {
   @Before
   public void setUp() {
     capabilities.add(buildHttpConnectionExecutionCapability("GCS_URL", null));
-    when(gcpConfig.isUseDelegate()).thenReturn(false);
+    when(gcpConfig.isUseDelegateSelectors()).thenReturn(false);
     when(gcpConfig.fetchRequiredExecutionCapabilities(null)).thenReturn(capabilities);
   }
 
@@ -46,8 +47,8 @@ public class GcbTaskParamsTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnListOfExecutionCapabilitiesWithSelectorCapability() {
-    when(gcpConfig.isUseDelegate()).thenReturn(true);
-    when(gcpConfig.getDelegateSelector()).thenReturn(DELEGATE_SELECTOR);
+    when(gcpConfig.isUseDelegateSelectors()).thenReturn(true);
+    when(gcpConfig.getDelegateSelectors()).thenReturn(Collections.singletonList(DELEGATE_SELECTOR));
 
     assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities(null)).hasSize(2);
     SelectorCapability selector = (SelectorCapability) gcbTaskParam.fetchRequiredExecutionCapabilities(null)

@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -29,7 +29,7 @@ import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class AsyncStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
@@ -79,6 +79,8 @@ public class AsyncStrategy implements ExecuteStrategy {
   private Status extractStatus(AsyncExecutableResponse response) {
     if (response.getMode() == AsyncExecutableMode.APPROVAL_WAITING_MODE) {
       return Status.APPROVAL_WAITING;
+    } else if (response.getMode() == AsyncExecutableMode.RESOURCE_WAITING_MODE) {
+      return Status.RESOURCE_WAITING;
     }
     return Status.ASYNC_WAITING;
   }

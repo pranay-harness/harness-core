@@ -3,12 +3,15 @@ package io.harness.accesscontrol.clients;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
 @OwnedBy(HarnessTeam.PL)
+@JsonInclude(Include.NON_NULL)
 public class ResourceScope {
   private String accountIdentifier;
   private String orgIdentifier;

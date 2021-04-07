@@ -81,7 +81,8 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//360-cg-manager:module",
+        "//260-delegate:module_deploy.jar",
+        "//360-cg-manager:module_deploy.jar",
     ],
     deps = test_dependencies,
 )

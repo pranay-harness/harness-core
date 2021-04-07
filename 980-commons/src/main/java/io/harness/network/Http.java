@@ -6,6 +6,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
@@ -40,11 +43,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
 
-/**
- * Created by anubhaw on 5/2/17.
- */
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
@@ -230,7 +231,7 @@ public class Http {
       OkHttpClient.Builder builder =
           getOkHttpClientBuilder()
               .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) getTrustManagers()[0])
-              .hostnameVerifier((s, sslSession) -> true)
+              .hostnameVerifier(new NoopHostnameVerifier())
               .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
               .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
 
@@ -249,6 +250,7 @@ public class Http {
       String url, long connectTimeOutSeconds, long readTimeOutSeconds) {
     try {
       OkHttpClient.Builder builder = Http.getOkHttpClientBuilder()
+                                         .hostnameVerifier(new NoopHostnameVerifier())
                                          .connectTimeout(connectTimeOutSeconds, TimeUnit.SECONDS)
                                          .readTimeout(readTimeOutSeconds, TimeUnit.SECONDS);
 
@@ -432,7 +434,7 @@ public class Http {
   }
 
   public static OkHttpClient.Builder getOkHttpClientWithProxyAuthSetup() {
-    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    OkHttpClient.Builder builder = new OkHttpClient.Builder().hostnameVerifier(new NoopHostnameVerifier());
 
     String user = getProxyUserName();
     if (isNotEmpty(user)) {

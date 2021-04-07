@@ -15,8 +15,11 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logStreaming.LogStreamingStepClientFactory;
 import io.harness.logging.CommandExecutionStatus;
@@ -141,7 +144,8 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
             .resourceType("project")
             .build());
     if (!hasAccess) {
-      throw new InvalidRequestException("Rbac validation failed for Infrastructure step");
+      throw new AccessDeniedException(
+          "Validation for Infrastructure Step failed", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
   }
 }

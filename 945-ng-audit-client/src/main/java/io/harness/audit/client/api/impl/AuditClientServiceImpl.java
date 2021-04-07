@@ -64,6 +64,7 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .environment(auditEntry.getEnvironment())
                                                     .yamlDiffRecordDTO(yamlDiffRecordDTO)
                                                     .timestamp(auditEntry.getTimestamp());
+
     if (principal != null) {
       auditEventDTOBuilder.authenticationInfo(fromSecurityPrincipal(principal));
     }

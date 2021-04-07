@@ -1,6 +1,7 @@
 package software.wings.service.impl.gcp;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -40,9 +41,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
@@ -54,12 +55,10 @@ public class GcpHelperServiceManager {
   @Inject private EncryptionService encryptionService;
 
   public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       validateDelegateSelector(gcpConfig);
       GcpValidationRequest gcpValidationRequest =
-          GcpValidationRequest.builder()
-              .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
-              .build();
+          GcpValidationRequest.builder().delegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors())).build();
       GcpTaskParameters gcpTaskParameters =
           GcpTaskParameters.builder().gcpTaskType(GcpTaskType.VALIDATE).gcpRequest(gcpValidationRequest).build();
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(), gcpTaskParameters);
@@ -72,7 +71,8 @@ public class GcpHelperServiceManager {
     } else {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+      gcpHelperService.getGkeContainerService(
+          gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     }
   }
 
@@ -84,7 +84,7 @@ public class GcpHelperServiceManager {
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {
-    if (StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+    if (isEmpty(gcpConfig.getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Found. Unable to validate", USER);
     }
   }

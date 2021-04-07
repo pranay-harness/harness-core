@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
+import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -16,6 +17,7 @@ import io.harness.steps.jira.beans.JiraField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_CREATE)
 @TypeAlias("jiraCreateStepInfo")
-public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo {
+public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo, WithConnectorRef {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 
@@ -64,6 +66,11 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo {
         .fields(
             fields == null ? null : fields.stream().collect(Collectors.toMap(JiraField::getName, JiraField::getValue)))
         .build();
+  }
+
+  @Override
+  public List<ParameterField<String>> extractConnectorRefs() {
+    return Lists.newArrayList(connectorRef);
   }
 
   @Override

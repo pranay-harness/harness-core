@@ -20,6 +20,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
@@ -47,6 +49,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,6 +58,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sBGSwapServicesStepTest extends CategoryTest {
   @Mock private K8sStepHelper k8sStepHelper;
   @Mock private OutcomeService outcomeService;
@@ -168,6 +172,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThat(taskRequest.getSkipTaskRequest().getMessage()).isEqualTo(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
@@ -184,6 +189,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
@@ -200,6 +206,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThat(response.getStepOutcomes()).isEmpty();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)

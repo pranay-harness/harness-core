@@ -9,8 +9,10 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.AccessDeniedException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -64,8 +66,9 @@ public class PipelineRbacHelper {
         resourceTypeErrors.add(accessControlDTO.getResourceIdentifier());
         errors.put(accessControlDTO.getResourceType(), resourceTypeErrors);
       }
-      throw new InvalidRequestException(
-          String.format("Rbac Access to the following resources missing: [%s]", errors.toString()));
+      throw new AccessDeniedException(
+          String.format("Access to the following resources missing: [%s]", errors.toString()),
+          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
   }
 
@@ -75,13 +78,10 @@ public class PipelineRbacHelper {
         && identifierRef.getMetadata().getOrDefault("new", "false").equals("true")) {
       return PermissionCheckDTO.builder()
           .permission(PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityDetail.getType(), true))
-          .resourceIdentifier(identifierRef.getIdentifier())
-          .resourceScope(ResourceScope.builder()
-                             .accountIdentifier(identifierRef.getAccountIdentifier())
-                             .orgIdentifier(identifierRef.getOrgIdentifier())
-                             .projectIdentifier(identifierRef.getProjectIdentifier())
-                             .build())
-          .resourceType(PipelineReferredEntityPermissionHelper.getEntityName(entityDetail.getType()))
+          .resourceIdentifier(
+              PipelineReferredEntityPermissionHelper.getParentResourceIdentifierForCreate(identifierRef))
+          .resourceScope(PipelineReferredEntityPermissionHelper.getResourceScopeForCreate(identifierRef))
+          .resourceType(PipelineReferredEntityPermissionHelper.getEntityTypeForCreate(identifierRef))
           .build();
     }
     return PermissionCheckDTO.builder()

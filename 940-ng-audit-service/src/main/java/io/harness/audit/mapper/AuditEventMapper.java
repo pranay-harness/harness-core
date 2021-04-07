@@ -9,6 +9,7 @@ import io.harness.audit.entities.AuditEvent;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.mapper.KeyValuePairMapper;
 
+import java.time.Instant;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
@@ -25,7 +26,7 @@ public class AuditEventMapper {
         .resourceScope(ResourceScopeMapper.fromDTO(dto.getResourceScope()))
         .httpRequestInfo(dto.getHttpRequestInfo())
         .requestMetadata(dto.getRequestMetadata())
-        .timestamp(dto.getTimestamp())
+        .timestamp(Instant.ofEpochMilli(dto.getTimestamp()))
         .authenticationInfo(AuthenticationInfoMapper.fromDTO(dto.getAuthenticationInfo()))
         .module(dto.getModule())
         .resource(ResourceMapper.fromDTO(dto.getResource()))
@@ -43,7 +44,7 @@ public class AuditEventMapper {
         .resourceScope(ResourceScopeMapper.toDTO(auditEvent.getResourceScope()))
         .httpRequestInfo(auditEvent.getHttpRequestInfo())
         .requestMetadata(auditEvent.getRequestMetadata())
-        .timestamp(auditEvent.getTimestamp())
+        .timestamp(auditEvent.getTimestamp().toEpochMilli())
         .authenticationInfo(AuthenticationInfoMapper.toDTO(auditEvent.getAuthenticationInfo()))
         .module(auditEvent.getModule())
         .resource(ResourceMapper.toDTO(auditEvent.getResource()))
