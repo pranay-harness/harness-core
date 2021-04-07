@@ -12,6 +12,8 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
@@ -21,17 +23,14 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 
+import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
@@ -113,8 +112,8 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
 
   @Override
   public SSOConfig uploadSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
-      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
-      String logoutUrl) {
+                                      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
+                                      String logoutUrl) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
@@ -131,7 +130,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     //    }
 
     SSOConfig ssoConfig = getResponse(managerClient.uploadSAMLMetadata(
-        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+            accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
     return ssoConfig;
   }
 }
