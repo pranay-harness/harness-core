@@ -2,6 +2,8 @@ package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
+import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
 import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
@@ -21,11 +23,11 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
-import io.harness.ng.core.auditevent.OrganizationCreateEvent;
-import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
-import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
-import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.dto.OrganizationRequest;
+import io.harness.ng.core.events.OrganizationCreateEvent;
+import io.harness.ng.core.events.OrganizationDeleteEvent;
+import io.harness.ng.core.events.OrganizationRestoreEvent;
+import io.harness.ng.core.events.OrganizationUpdateEvent;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
@@ -33,7 +35,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.security.SourcePrincipalContextData;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -48,17 +49,14 @@ public class OrganizationEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
-  private final ObjectMapper yamlObjectMapper;
   private final NgUserService ngUserService;
 
   @Inject
-  public OrganizationEventHandler(ObjectMapper objectMapper,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService,
-      NgUserService ngUserService) {
-    this.objectMapper = objectMapper;
+  public OrganizationEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      AuditClientService auditClientService, NgUserService ngUserService) {
+    this.objectMapper = ngDefaultObjectMapper;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
-    this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
     this.ngUserService = ngUserService;
   }
 
@@ -98,7 +96,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.CREATE)
             .module(ModuleType.CORE)
-            .newYaml(yamlObjectMapper.writeValueAsString(
+            .newYaml(getYamlString(
                 OrganizationRequest.builder().organization(organizationCreateEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
@@ -133,16 +131,19 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
     OrganizationUpdateEvent organizationUpdateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), OrganizationUpdateEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.UPDATE)
-                                .module(ModuleType.CORE)
-                                .newYaml(organizationUpdateEvent.getNewOrganization().toString())
-                                .oldYaml(organizationUpdateEvent.getOldOrganization().toString())
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
-                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.UPDATE)
+            .module(ModuleType.CORE)
+            .newYaml(getYamlString(
+                OrganizationRequest.builder().organization(organizationUpdateEvent.getNewOrganization()).build()))
+            .oldYaml(getYamlString(
+                OrganizationRequest.builder().organization(organizationUpdateEvent.getOldOrganization()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
 
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
@@ -163,7 +164,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.DELETE)
             .module(ModuleType.CORE)
-            .newYaml(yamlObjectMapper.writeValueAsString(
+            .newYaml(getYamlString(
                 OrganizationRequest.builder().organization(organizationDeleteEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
@@ -190,7 +191,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.RESTORE)
             .module(ModuleType.CORE)
-            .newYaml(yamlObjectMapper.writeValueAsString(
+            .newYaml(getYamlString(
                 OrganizationRequest.builder().organization(organizationRestoreEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))

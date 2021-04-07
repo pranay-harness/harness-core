@@ -1,4 +1,4 @@
-package io.harness.ng.core.auditevent;
+package io.harness.ng.core.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
@@ -25,14 +25,17 @@ public class OrganizationRestoreEvent implements Event {
     this.accountIdentifier = accountIdentifier;
   }
 
+  @Override
   public ResourceScope getResourceScope() {
     return new OrgScope(accountIdentifier, organization.getIdentifier());
   }
 
+  @Override
   public Resource getResource() {
     return Resource.builder().identifier(organization.getIdentifier()).type(ORGANIZATION).build();
   }
 
+  @Override
   public String getEventType() {
     return "OrganizationRestored";
   }
