@@ -7,6 +7,7 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
+import io.harness.engine.executions.node.PmsNodeExecutionService;
 import io.harness.engine.executions.node.PmsNodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
@@ -29,7 +30,6 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -96,11 +96,11 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
     bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
     bind(PmsEngineExpressionService.class).to(PmsEngineExpressionServiceImpl.class).in(Singleton.class);
+    bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
 
     if (!config.isWithPMS()) {
       bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
       if (!config.isPipelineService()) {
-        bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
         bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
         bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
         bind(PMSInterruptService.class).to(PMSInterruptServiceImpl.class).in(Singleton.class);

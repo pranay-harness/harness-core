@@ -29,7 +29,7 @@ import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
@@ -50,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
-public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService {
+public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;

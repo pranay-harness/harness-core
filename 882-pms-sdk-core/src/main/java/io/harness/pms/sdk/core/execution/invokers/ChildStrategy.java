@@ -14,8 +14,8 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -30,7 +30,7 @@ import java.util.Map;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildStrategy implements ExecuteStrategy {
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
 
   @Override
@@ -38,8 +38,8 @@ public class ChildStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
-    ChildExecutableResponse response = childExecutable.obtainChild(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+    ChildExecutableResponse response = childExecutable.obtainChild(
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(nodeExecution, invokerPackage.getNodes(), response);
   }
 
@@ -48,11 +48,11 @@ public class ChildStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
-    Map<String, ResponseData> accumulateResponses = pmsNodeExecutionService.accumulateResponses(
+    Map<String, ResponseData> accumulateResponses = nodeExecutionService.accumulateResponses(
         ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     StepResponse stepResponse = childExecutable.handleChildResponse(
-        ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
-    pmsNodeExecutionService.handleStepResponse(
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
+    nodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
@@ -76,8 +76,8 @@ public class ChildStrategy implements ExecuteStrategy {
                                                 .setNotifyId(childInstanceId)
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
-    pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+    nodeExecutionService.queueNodeExecution(childNodeExecution);
+    nodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
   }
 }

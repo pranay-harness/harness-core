@@ -20,8 +20,8 @@ import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -42,7 +42,7 @@ import java.util.Objects;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildChainStrategy implements ExecuteStrategy {
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
@@ -53,7 +53,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
     ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
     ChildChainExecutableResponse childChainResponse;
     childChainResponse = childChainExecutable.executeFirstChild(nodeExecution.getAmbiance(),
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+        nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(nodeExecution, invokerPackage.getNodes(), childChainResponse);
   }
 
@@ -66,7 +66,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
     if (!lastChildChainExecutableResponse.getSuspend()) {
-      accumulatedResponse = pmsNodeExecutionService.accumulateResponses(
+      accumulatedResponse = nodeExecutionService.accumulateResponses(
           ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     }
     byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();
@@ -75,14 +75,14 @@ public class ChildChainStrategy implements ExecuteStrategy {
     if (lastChildChainExecutableResponse.getLastLink() || lastChildChainExecutableResponse.getSuspend()
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
-      pmsNodeExecutionService.handleStepResponse(
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
+      nodeExecutionService.handleStepResponse(
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       ChildChainExecutableResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
           accumulatedResponse);
       handleResponse(nodeExecution, resumePackage.getNodes(), chainResponse);
     }
@@ -117,20 +117,20 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                                 .setNotifyId(childInstanceId)
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
-    pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
+    nodeExecutionService.queueNodeExecution(childNodeExecution);
 
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+    nodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
         Collections.singletonList(childInstanceId));
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+    nodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
 
     PlanNodeProto planNode = nodeExecution.getNode();
-    pmsNodeExecutionService.resumeNodeExecution(nodeExecution.getUuid(),
+    nodeExecutionService.resumeNodeExecution(nodeExecution.getUuid(),
         Collections.singletonMap(ignoreNotifyId,
             StepResponseNotifyData.builder()
                 .nodeUuid(planNode.getUuid())

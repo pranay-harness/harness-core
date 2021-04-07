@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private AdviserRegistry adviserRegistry;
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private KryoSerializer kryoSerializer;
@@ -94,23 +94,23 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         currFacilitatorResponse =
-            facilitator.facilitate(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            facilitator.facilitate(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
                 obtainment.getParameters().toByteArray(), inputPackage);
         if (currFacilitatorResponse != null) {
           break;
         }
       }
       if (currFacilitatorResponse == null) {
-        pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
+        sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
             FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
         return true;
       }
-      pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
+      sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
           FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       return true;
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);
-      pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
+      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }
   }
@@ -134,7 +134,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       return true;
     } catch (Exception ex) {
       log.error("Error while starting execution", ex);
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
   }
@@ -159,7 +159,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+        sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
         return true;
       }
 
@@ -171,7 +171,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
   }
@@ -204,16 +204,16 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       }
 
       if (adviserResponse != null) {
-        pmsNodeExecutionService.handleAdviserResponse(
+        sdkNodeExecutionService.handleAdviserResponse(
             nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
       } else {
-        pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
+        sdkNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
             AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
       }
       return true;
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
-      pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
+      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }
   }

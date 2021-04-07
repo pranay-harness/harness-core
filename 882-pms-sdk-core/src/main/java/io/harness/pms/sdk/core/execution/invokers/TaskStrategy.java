@@ -18,8 +18,8 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.StringOutcome;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -35,7 +35,7 @@ import org.apache.commons.collections4.CollectionUtils;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class TaskStrategy implements ExecuteStrategy {
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private StrategyHelper strategyHelper;
 
@@ -44,8 +44,8 @@ public class TaskStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskRequest task = taskExecutable.obtainTask(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+    TaskRequest task = taskExecutable.obtainTask(
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, nodeExecution, task);
   }
 
@@ -56,13 +56,13 @@ public class TaskStrategy implements ExecuteStrategy {
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     StepResponse stepResponse = null;
     try {
-      stepResponse = taskExecutable.handleTaskResult(ambiance,
-          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+      stepResponse =
+          taskExecutable.handleTaskResult(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+              buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     } catch (Exception e) {
       stepResponse = strategyHelper.handleException(e);
     }
-    pmsNodeExecutionService.handleStepResponse(
+    nodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
@@ -73,14 +73,14 @@ public class TaskStrategy implements ExecuteStrategy {
 
   private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
-      pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
+      nodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
           ExecutableResponse.newBuilder()
               .setSkipTask(SkipTaskExecutableResponse.newBuilder()
                                .setMessage(taskRequest.getSkipTaskRequest().getMessage())
                                .build())
               .build(),
           Collections.emptyList());
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+      nodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
                   .status(SKIPPED)
@@ -95,10 +95,10 @@ public class TaskStrategy implements ExecuteStrategy {
     }
 
     String taskId = Preconditions.checkNotNull(
-        pmsNodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
+        nodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
 
     // Update Execution Node Instance state to TASK_WAITING
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
+    nodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
         ExecutableResponse.newBuilder()
             .setTask(
                 TaskExecutableResponse.newBuilder()

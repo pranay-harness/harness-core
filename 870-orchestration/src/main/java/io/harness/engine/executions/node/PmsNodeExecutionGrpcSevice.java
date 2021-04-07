@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBase {
   @Inject private OrchestrationEngine engine;
-  @Inject private PmsNodeExecutionServiceImpl pmsNodeExecutionService;
+  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private ResponseDataMapper responseDataMapper;
 
   @Override

@@ -20,7 +20,7 @@ import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -62,7 +62,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
         InProcessServerBuilder.forName(serverName).directExecutor().addService(serviceImpl).build().start());
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
     NodeExecutionProtoServiceBlockingStub stub = NodeExecutionProtoServiceGrpc.newBlockingStub(channel);
-    PmsNodeExecutionService pmsNodeExecutionService = new PmsNodeExecutionServiceGrpcImpl();
+    SdkNodeExecutionService pmsNodeExecutionService = new SdkNodeExecutionServiceImpl();
     on(pmsNodeExecutionService).set("nodeExecutionProtoServiceBlockingStub", stub);
     on(pmsNodeExecutionService).set("stepRegistry", stepRegistry);
     on(eventListener).set("pmsNodeExecutionService", pmsNodeExecutionService);
