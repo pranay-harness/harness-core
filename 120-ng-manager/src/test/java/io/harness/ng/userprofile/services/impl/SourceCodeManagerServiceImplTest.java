@@ -19,6 +19,11 @@ import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentic
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
@@ -26,6 +31,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.userprofile.commons.AwsCodeCommitSCMDTO;
 import io.harness.ng.userprofile.commons.BitbucketSCMDTO;
 import io.harness.ng.userprofile.commons.GithubSCMDTO;
 import io.harness.ng.userprofile.commons.GitlabSCMDTO;
@@ -61,6 +67,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   private String userIdentifier;
   private String name;
   private String sshKeyRef;
+  private String accessKey;
+  private String accessKeyRef;
+  private String secretKeyRef;
 
   @Before
   public void setup() {
@@ -73,6 +82,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     SourcePrincipalContextBuilder.setSourcePrincipal(principal);
     name = "some-name";
     sshKeyRef = "ssh-ref";
+    accessKey = "access-key";
+    accessKeyRef = "access-key-ref";
+    secretKeyRef = "secret-key-ref";
   }
 
   @Test
@@ -119,6 +131,17 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Category(UnitTests.class)
   public void testSaveGitlab() {
     SourceCodeManagerDTO sourceCodeManagerDTO = gitlabSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testSaveAwsCodeCommit() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = awsCodeCommitSCMDTOCreate();
     when(sourceCodeManagerRepository.save(any()))
         .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
     SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
@@ -211,6 +234,27 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
         .userIdentifier(userIdentifier)
         .name(name)
         .authentication(gitlabAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManagerDTO awsCodeCommitSCMDTOCreate() {
+    AwsCodeCommitAuthenticationDTO awsCodeCommitAuthenticationDTO =
+        AwsCodeCommitAuthenticationDTO.builder()
+            .authType(AwsCodeCommitAuthType.HTTPS)
+            .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+                             .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                             .httpCredentialsSpec(AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                      .accessKey(accessKey)
+                                                      .accessKeyRef(SecretRefHelper.createSecretRef(accessKeyRef))
+                                                      .secretKeyRef(SecretRefHelper.createSecretRef(secretKeyRef))
+                                                      .build())
+                             .build())
+            .build();
+
+    return AwsCodeCommitSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(awsCodeCommitAuthenticationDTO)
         .build();
   }
 }

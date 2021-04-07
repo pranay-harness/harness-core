@@ -18,6 +18,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import retrofit2.http.Body;
 
@@ -42,8 +43,9 @@ public class SourceCodeManagerResource {
   }
 
   @DELETE
+  @Path("{identifier}")
   @ApiOperation(value = "delete source code manager", nickname = "deleteSourceCodeManagers")
-  public ResponseDTO<Boolean> delete(@NotNull @Body String sourceCodeManagerName) {
+  public ResponseDTO<Boolean> delete(@NotNull @PathParam("identifier") String sourceCodeManagerName) {
     return ResponseDTO.newResponse(sourceCodeManagerService.delete(sourceCodeManagerName));
   }
 }
