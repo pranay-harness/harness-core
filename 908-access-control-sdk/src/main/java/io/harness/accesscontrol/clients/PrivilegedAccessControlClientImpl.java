@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
-@ValidateOnExecution
 @NoArgsConstructor
 @OwnedBy(HarnessTeam.PL)
 public class PrivilegedAccessControlClientImpl implements AccessControlClient {
