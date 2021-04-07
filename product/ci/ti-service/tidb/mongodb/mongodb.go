@@ -422,7 +422,6 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accoun
 	// update field branch of nodes which have commit_id in `commits` list
 	filter := bson.M{"vcs_info.commit_id": bson.M{"$in": commits}}
 	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
-
 	_, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in nodes collection for repo: %s, in branch: %s, commits: %v",
@@ -434,6 +433,8 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accoun
 		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in relns collection for repo: %s, in branch: %s, commits: %v",
 			repo, branch, commits))
 	}
+
+	// handle deletion of files and corresponding entries from nodes and relations table.
 	deletedF := []string{}
 	for _, f := range files {
 		if f.Status == types.FileDeleted {
@@ -443,7 +444,8 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accoun
 	n, err := utils.ParseFileNames(deletedF)
 	cond := []interface{}{}
 	for _, v := range n {
-		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
+		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class})
+		//cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
 	}
 	filter = bson.M{"$or": cond}
 	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, filter, &options.FindOptions{})
@@ -455,7 +457,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accoun
 	nids := []int{}
 	for cur.Next(ctx) {
 		var node Node
-		err := cur.Decode(&node)
+		err = cur.Decode(&node)
 		if err != nil {
 			return errors.Wrap(
 				err,
