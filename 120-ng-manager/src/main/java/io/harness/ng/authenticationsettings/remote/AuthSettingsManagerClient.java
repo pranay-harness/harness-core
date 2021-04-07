@@ -4,15 +4,15 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.http.*;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.security.authentication.SSOConfig;
 
 import java.util.Set;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
+import retrofit2.http.*;
 
 @OwnedBy(HarnessTeam.PL)
 public interface AuthSettingsManagerClient {
@@ -31,7 +31,17 @@ public interface AuthSettingsManagerClient {
   @Multipart
   @POST("/api/ng/sso/saml-idp-metadata-upload")
   Call<RestResponse<SSOConfig>> uploadSAMLMetadata(@Query("accountId") String accountId,
-                                                   @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
-                                                   @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
-                                                   @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+      @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
+      @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
+      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+
+  @Multipart
+  @PUT("/api/ng/sso/saml-idp-metadata-upload")
+  Call<RestResponse<SSOConfig>> updateSAMLMetadata(@Query("accountId") String accountId,
+      @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
+      @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
+      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+
+  @DELETE("/api/ng/sso/delete-saml-idp-metadata")
+  Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") @NotEmpty String accountIdentifier);
 }

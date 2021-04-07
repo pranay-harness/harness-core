@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -21,6 +23,7 @@ import java.io.InputStream;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @Api(value = "/ng/sso", hidden = true)
@@ -60,5 +63,28 @@ public class SSOResourceNG {
       @FormDataParam("logoutUrl") String logoutUrl) {
     return new RestResponse<>(ssoService.uploadSamlConfiguration(
         accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
+  @PUT
+  @Path("saml-idp-metadata-upload")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+      @FormDataParam("logoutUrl") String logoutUrl) {
+    return new RestResponse<>(ssoService.updateSamlConfiguration(
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
+  @DELETE
+  @Path("delete-saml-idp-metadata")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> deleteSamlMetaData(@QueryParam("accountId") String accountId) {
+    return new RestResponse<SSOConfig>(ssoService.deleteSamlConfiguration(accountId));
   }
 }
