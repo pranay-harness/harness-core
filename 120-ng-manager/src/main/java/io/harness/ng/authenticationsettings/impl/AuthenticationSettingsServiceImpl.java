@@ -24,10 +24,14 @@ import software.wings.security.authentication.SSOConfig;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
@@ -98,5 +102,36 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   private boolean isOauthEnabled(SSOConfig ssoConfig) {
     List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
     return !ssoSettings.isEmpty() && ssoSettings.get(0).getType().equals(SSOType.OAUTH);
+  }
+
+  private RequestBody createPartFromString(String string) {
+    if (string == null) {
+      return null;
+    }
+    return RequestBody.create(MultipartBody.FORM, string);
+  }
+
+  @Override
+  public SSOConfig uploadSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
+      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
+      String logoutUrl) {
+    RequestBody displayNamePart = createPartFromString(displayName);
+    RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
+    RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
+    RequestBody logoutUrlPart = createPartFromString(logoutUrl);
+
+    //    HashMap<String, RequestBody> map = new HashMap<>();
+    //    map.put("displayName", displayNamePart);
+    //    map.put("authorizationEnabled", authorizationEnabledPart);
+    //    if(groupMembershipAttrPart!=null) {
+    //      map.put("groupMembershipAttr", groupMembershipAttrPart);
+    //    }
+    //    if(logoutUrl!=null){
+    //      map.put("logoutUrl",logoutUrlPart);
+    //    }
+
+    SSOConfig ssoConfig = getResponse(managerClient.uploadSAMLMetadata(
+        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    return ssoConfig;
   }
 }
