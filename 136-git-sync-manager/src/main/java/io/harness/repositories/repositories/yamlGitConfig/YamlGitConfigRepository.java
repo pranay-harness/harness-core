@@ -13,11 +13,11 @@ import org.springframework.data.repository.CrudRepository;
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
 public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, String> {
-  Long removeByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndUuid(
-      String accountId, String organizationIdentifier, String projectIdentifier, Scope scope, String uuid);
+  Long deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndIdentifier(
+      String accountId, String organizationIdentifier, String projectIdentifier, Scope scope, String identifier);
 
-  Optional<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
-      String accountId, String organizationIdentifier, String projectIdentifier, String uuid);
+  Optional<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountId, String organizationIdentifier, String projectIdentifier, String identifier);
 
   List<YamlGitConfig> findByGitConnectorRefAndRepoAndBranchAndAccountId(
       String gitConnectorId, String repo, String branchName, String accountId);

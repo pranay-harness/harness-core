@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/db/timescaledb"
+	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
@@ -27,6 +29,8 @@ type serverCommand struct {
 
 func (c *serverCommand) run(*kingpin.ParseContext) error {
 	godotenv.Load(c.envfile)
+
+	ctx := context.Background()
 
 	// build initial log
 	logBuilder := logs.NewBuilder().Verbose(true).WithDeployment("ti-service").
@@ -88,10 +92,30 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			log.Errorw("unable to connect to mongo DB")
 			return errors.New("unable to connect to mongo DB")
 		}
+
+		// Test intelligence is configured. Start up redis watcher for watching push events
+		if config.EventsFramework.RedisUrl != "" {
+			log.Infow("connecting to redis for receiving events", "url", config.EventsFramework.RedisUrl)
+			rdb, err := eventsframework.New(config.EventsFramework.RedisUrl,
+				config.EventsFramework.RedisPassword,
+				log)
+			if err != nil {
+				log.Errorw("could not establish connection with events framework Redis")
+				return errors.New("could not establish connection with events framework Redis")
+			}
+			topic := fmt.Sprintf("%s:streams:webhook_request_payload_data", config.EventsFramework.EnvNamespace)
+			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
+			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg)
+			rdb.Run()
+			log.Infow("done registering webhook consumer")
+		} else {
+			log.Errorw("events framework redis URL not configured")
+			// TODO: (vistaar) Remove this once redis client is stable
+			//return errors.New("events framework redis URL not configured")
+		}
 	} else {
 		log.Errorw("mongo DB not configured properly")
-		// TODO: remove this comment once we have test intelligence dependencies running in environments.
-		// return errors.New("mongo db info not configured")
+		return errors.New("mongo db info not configured")
 	}
 
 	// create the http server.
@@ -103,7 +127,6 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 
 	// trap the os signal to gracefully shutdown the
 	// http server.
-	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt)
@@ -121,7 +144,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	}()
 
-	log.Info("server listening at %s", config.Server.Bind)
+	log.Info(fmt.Sprintf("server listening at %s", config.Server.Bind))
 
 	// starts the http server.
 	err = server.ListenAndServe(ctx)

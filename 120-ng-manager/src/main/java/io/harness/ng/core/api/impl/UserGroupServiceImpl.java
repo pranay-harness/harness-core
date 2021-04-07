@@ -1,7 +1,6 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
@@ -244,9 +243,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void validateFilter(UserGroupFilterDTO filter) {
-    if (isEmpty(filter.getIdentifierFilter()) && isEmpty(filter.getDatabaseIdFilter())) {
-      throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be empty");
-    }
     if (isNotEmpty(filter.getIdentifierFilter()) && isNotEmpty(filter.getDatabaseIdFilter())) {
       throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be provided");
     }

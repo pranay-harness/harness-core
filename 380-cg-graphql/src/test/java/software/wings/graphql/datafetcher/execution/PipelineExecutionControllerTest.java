@@ -37,7 +37,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -137,6 +136,8 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
 
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
+
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
@@ -155,6 +156,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
@@ -173,6 +175,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
@@ -346,6 +349,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
@@ -367,6 +371,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);

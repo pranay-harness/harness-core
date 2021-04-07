@@ -20,6 +20,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
@@ -44,7 +45,6 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -89,7 +89,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.beans.EnvironmentType")
-@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("io.harness.beans.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")

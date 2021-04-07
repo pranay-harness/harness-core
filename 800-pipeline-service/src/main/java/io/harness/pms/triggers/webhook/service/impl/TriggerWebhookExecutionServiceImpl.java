@@ -1,5 +1,6 @@
 package io.harness.pms.triggers.webhook.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -9,6 +10,7 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -22,7 +24,7 @@ import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookConfirmationHelper;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,6 +37,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @Slf4j
+@OwnedBy(PIPELINE)
 public class TriggerWebhookExecutionServiceImpl
     implements io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService,
                MongoPersistenceIterator.Handler<TriggerWebhookEvent> {

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Mockito.spy;
@@ -11,13 +12,13 @@ import static org.mockito.Mockito.spy;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.rule.Owner;
-import io.harness.scope.ResourceScope;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     AuditFilterPropertiesDTO invalidScopeFilter =
         AuditFilterPropertiesDTO.builder()
-            .scopes(singletonList(ResourceScope.builder().accountIdentifier(accountIdentifier + "K").build()))
+            .scopes(singletonList(ResourceScopeDTO.builder().accountIdentifier(accountIdentifier + "K").build()))
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidScopeFilter);
@@ -59,7 +60,7 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
     String randomValue = randomAlphabetic(10);
     AuditFilterPropertiesDTO invalidResourceFilter =
         AuditFilterPropertiesDTO.builder()
-            .resources(singletonList(Resource.builder().identifier(identifier).build()))
+            .resources(singletonList(ResourceDTO.builder().identifier(identifier).build()))
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidResourceFilter);
@@ -69,12 +70,11 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
     }
     AuditFilterPropertiesDTO invalidResourceLabelsFilter =
         AuditFilterPropertiesDTO.builder()
-            .resources(
-                singletonList(Resource.builder()
-                                  .identifier(identifier)
-                                  .type(resourceType)
-                                  .labels(singletonList(KeyValuePair.builder().key("").value(randomValue).build()))
-                                  .build()))
+            .resources(singletonList(ResourceDTO.builder()
+                                         .identifier(identifier)
+                                         .type(resourceType)
+                                         .labels(singletonMap("", randomValue))
+                                         .build()))
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidResourceLabelsFilter);
@@ -96,6 +96,22 @@ public class AuditFilterPropertiesValidatorTest extends CategoryTest {
             .build();
     try {
       auditFilterPropertiesValidator.validate(accountIdentifier, invalidPrincipalFilter);
+      fail();
+    } catch (InvalidRequestException exception) {
+      // continue
+    }
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testInvalidEnvironmentAuditFilter() {
+    String accountIdentifier = randomAlphabetic(10);
+    String identifier = randomAlphabetic(10);
+    AuditFilterPropertiesDTO invalidEnvironmentFilter =
+        AuditFilterPropertiesDTO.builder().environments(singletonList(Environment.builder().build())).build();
+    try {
+      auditFilterPropertiesValidator.validate(accountIdentifier, invalidEnvironmentFilter);
       fail();
     } catch (InvalidRequestException exception) {
       // continue

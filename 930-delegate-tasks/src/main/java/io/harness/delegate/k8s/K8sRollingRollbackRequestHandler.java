@@ -1,9 +1,11 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
@@ -25,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {

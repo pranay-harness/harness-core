@@ -1,5 +1,6 @@
 package io.harness.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.constants.Constants.BITBUCKET_SERVER_HEADER_KEY;
 import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
@@ -13,6 +14,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CommitDetails;
 import io.harness.beans.HeaderConfig;
 import io.harness.beans.IssueCommentWebhookEvent;
@@ -49,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
   @Inject private final SCMGrpc.SCMBlockingStub scmBlockingStub;
 

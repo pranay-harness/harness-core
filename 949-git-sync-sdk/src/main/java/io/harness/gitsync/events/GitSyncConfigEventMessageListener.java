@@ -1,7 +1,9 @@
 package io.harness.gitsync.events;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class GitSyncConfigEventMessageListener implements MessageListener {
   // todo(abhinav): same event listener can be used if we at some point make any change to yaml git config and cache in
   // sdk.

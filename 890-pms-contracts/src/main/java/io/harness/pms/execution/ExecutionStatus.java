@@ -26,7 +26,8 @@ public enum ExecutionStatus {
   @JsonProperty("Aborted") ABORTED(Sets.newHashSet(Status.ABORTED, Status.DISCONTINUING), "Aborted"),
   @JsonProperty("Queued") QUEUED(Sets.newHashSet(Status.QUEUED), "Queued"),
   @JsonProperty("Paused") PAUSED(Sets.newHashSet(Status.PAUSED), "Paused"),
-  @JsonProperty("Waiting") WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING, Status.APPROVAL_WAITING), "Waiting"),
+  @JsonProperty("Waiting")
+  WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING, Status.APPROVAL_WAITING, Status.RESOURCE_WAITING), "Waiting"),
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
   @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended"),
   @JsonProperty("Skipped") SKIPPED(Sets.newHashSet(Status.SKIPPED), "Skipped");

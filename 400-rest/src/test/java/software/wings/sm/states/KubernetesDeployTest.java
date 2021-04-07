@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -53,6 +54,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -136,6 +140,8 @@ import org.mongodb.morphia.Key;
 /**
  * Created by brett on 3/10/17
  */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class KubernetesDeployTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String PHASE_NAME = "phaseName";
@@ -286,7 +292,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(kubernetesDeploy, "secretManager", secretManager, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
@@ -38,6 +39,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -93,6 +97,8 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebHookServiceImplTest extends WingsBaseTest {
   private static final String API_KEY = "API_KEY";
   @Mock private TriggerService triggerService;
@@ -196,6 +202,23 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_SERVICE_UNAVAILABLE);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError().contains("Trigger rejected")).isTrue();
+    assertThat(webHookResponse.getStatus()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteTriggerWithFilesChangedManually() {
+    WebHookTriggerCondition triggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+    triggerCondition.setCheckFileContentChanged(true);
+
+    Response response = webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError())
+        .isEqualTo("Trigger configured with deploy only if files changed option cannot be executed by manual trigger");
     assertThat(webHookResponse.getStatus()).isNullOrEmpty();
   }
 

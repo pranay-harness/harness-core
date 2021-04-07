@@ -214,7 +214,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -686,7 +685,7 @@ java_binary(
 )
 
 test_dependencies = [
-    "@delegate//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_okhttp3_okhttp",
 ] + [
     "//400-rest:supporter-test",
     "//955-alert-beans:module",

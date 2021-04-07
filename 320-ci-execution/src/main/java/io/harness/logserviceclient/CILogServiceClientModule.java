@@ -1,11 +1,14 @@
 package io.harness.logserviceclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.LogServiceConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
 
+@OwnedBy(HarnessTeam.CI)
 public class CILogServiceClientModule extends AbstractModule {
   LogServiceConfig logServiceConfig;
 

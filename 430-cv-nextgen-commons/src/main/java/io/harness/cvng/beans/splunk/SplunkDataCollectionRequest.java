@@ -1,5 +1,8 @@
 package io.harness.cvng.beans.splunk;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
@@ -12,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
+@OwnedBy(CV)
 public abstract class SplunkDataCollectionRequest extends DataCollectionRequest<SplunkConnectorDTO> {
   @Override
   public Map<String, String> collectionHeaders() {

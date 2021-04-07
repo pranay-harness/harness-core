@@ -11,6 +11,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -25,11 +29,9 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -39,8 +41,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase {
-  private static final String CLAIMANT_ID = generateUuid();
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
   private static final String RESOURCE_UNIT = generateUuid();
 
@@ -53,14 +55,15 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
 
   @Before
   public void setUp() {
+    ResourceConstraint resourceConstraint = ResourceConstraint.builder()
+                                                .accountId(generateUuid())
+                                                .capacity(1)
+                                                .strategy(Constraint.Strategy.FIFO)
+                                                .uuid(generateUuid())
+                                                .build();
     ConstraintId constraintId = new ConstraintId(RESOURCE_RESTRAINT_ID);
-    when(restraintService.get(any(), any()))
-        .thenReturn(ResourceConstraint.builder()
-                        .accountId(generateUuid())
-                        .capacity(1)
-                        .strategy(Constraint.Strategy.FIFO)
-                        .uuid(generateUuid())
-                        .build());
+    when(restraintService.getByNameAndAccountId(any(), any())).thenReturn(resourceConstraint);
+    when(restraintService.get(any(), any())).thenReturn(resourceConstraint);
     doReturn(Constraint.builder()
                  .id(constraintId)
                  .spec(Constraint.Spec.builder().limits(1).strategy(Constraint.Strategy.FIFO).build())
@@ -84,12 +87,10 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                             .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
@@ -120,12 +121,10 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                             .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ENSURE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
 
     doReturn(Collections.emptyList())

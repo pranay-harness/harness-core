@@ -5,7 +5,6 @@ import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
-import io.harness.serializer.morphia.converters.SweepingOutputConverter;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -36,8 +35,5 @@ public class OrchestrationBeansRegistrars {
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
-      ImmutableSet.<Class<? extends TypeConverter>>builder()
-          .addAll(PersistenceRegistrars.morphiaConverters)
-          .add(SweepingOutputConverter.class)
-          .build();
+      ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(PersistenceRegistrars.morphiaConverters).build();
 }

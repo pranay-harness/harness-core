@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sApplyStepInfoVisitorHelper;
@@ -24,6 +27,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -71,7 +75,6 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
         .filePaths(this.getFilePaths())
         .skipDryRun(this.getSkipDryRun())
         .skipSteadyStateCheck(skipSteadyStateCheck)
-        .rollbackInfo(stepParameterInfo.getRollbackInfo())
         .timeout(stepParameterInfo.getTimeout())
         .name(stepParameterInfo.getName())
         .identifier(stepParameterInfo.getIdentifier())

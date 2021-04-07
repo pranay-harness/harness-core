@@ -1,5 +1,8 @@
 package io.harness.gitsync.persistance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.IsGitSyncEnabled;
@@ -14,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 @ParametersAreNonnullByDefault
 @Singleton
+@OwnedBy(DX)
 public class EntityLookupHelper implements EntityKeySource {
   private final @NonNull Cache<Object, Object> keyCache;
   HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;

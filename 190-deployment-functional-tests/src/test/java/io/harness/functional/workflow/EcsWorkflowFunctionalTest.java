@@ -1,5 +1,6 @@
 package io.harness.functional.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
@@ -20,6 +21,7 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
@@ -76,6 +78,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 @Slf4j
 public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -373,7 +376,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                           .equals(ExecutionStatus.SUCCESS.name()));
 
     WorkflowExecution completedWorkflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, false);
     log.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
     assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
   }

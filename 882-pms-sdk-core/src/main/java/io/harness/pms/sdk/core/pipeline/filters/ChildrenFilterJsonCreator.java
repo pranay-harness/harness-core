@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
@@ -10,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<T> {
   public abstract Map<String, YamlField> getDependencies(FilterCreationContext filterCreationContext);
   public abstract PipelineFilter getFilterForGivenField();
@@ -30,5 +33,5 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
     return new ArrayList<>();
   }
 
-  abstract int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children);
+  public abstract int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children);
 }

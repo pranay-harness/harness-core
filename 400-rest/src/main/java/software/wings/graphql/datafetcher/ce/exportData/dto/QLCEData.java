@@ -20,7 +20,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class QLCEData implements QLData {
   List<QLCEDataEntry> data;

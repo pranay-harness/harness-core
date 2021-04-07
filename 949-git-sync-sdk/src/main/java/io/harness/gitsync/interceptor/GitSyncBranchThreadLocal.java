@@ -1,12 +1,18 @@
 package io.harness.gitsync.interceptor;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(DX)
 public class GitSyncBranchThreadLocal {
   public static class Guard implements AutoCloseable {
-    private GitBranchInfo old;
-    Guard(GitBranchInfo gitBranchInfo) {
+    private GitEntityInfo old;
+
+    Guard(GitEntityInfo gitBranchInfo) {
       old = get();
       set(gitBranchInfo);
     }
@@ -17,13 +23,13 @@ public class GitSyncBranchThreadLocal {
     }
   }
 
-  public static Guard gitBranchGuard(GitBranchInfo gitBranchInfo) {
+  public static Guard gitBranchGuard(GitEntityInfo gitBranchInfo) {
     return new Guard(gitBranchInfo);
   }
 
-  public static final ThreadLocal<GitBranchInfo> GitSyncThreadLocal = new ThreadLocal<>();
+  public static final ThreadLocal<GitEntityInfo> GitSyncThreadLocal = new ThreadLocal<>();
 
-  public static void set(GitBranchInfo gitBranchInfo) {
+  public static void set(GitEntityInfo gitBranchInfo) {
     GitSyncThreadLocal.set(gitBranchInfo);
   }
 
@@ -31,7 +37,7 @@ public class GitSyncBranchThreadLocal {
     GitSyncThreadLocal.remove();
   }
 
-  public static GitBranchInfo get() {
+  public static GitEntityInfo get() {
     return GitSyncThreadLocal.get();
   }
 }

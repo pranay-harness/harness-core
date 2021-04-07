@@ -11,12 +11,14 @@ import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -49,12 +51,15 @@ public class ExpiryHelper {
         }
       }
 
-      NodeExecution updatedNodeExecution =
-          nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.EXPIRED,
-              ops
-              -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis())
-                     .set(NodeExecutionKeys.unitProgresses, unitProgressList));
-      engine.endTransition(updatedNodeExecution, null);
+      StepResponseProto expiredStepResponse = StepResponseProto.newBuilder()
+                                                  .setStatus(Status.EXPIRED)
+                                                  .setFailureInfo(FailureInfo.newBuilder()
+                                                                      .setErrorMessage("Node Expired")
+                                                                      .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                                                      .build())
+                                                  .addAllUnitProgress(unitProgressList)
+                                                  .build();
+      engine.handleStepResponse(nodeExecution.getUuid(), expiredStepResponse);
       return interrupt.getUuid();
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(

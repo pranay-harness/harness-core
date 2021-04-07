@@ -6,7 +6,7 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.ProjectIdentifier;
@@ -52,16 +52,9 @@ public class ACLTestResource {
   public ResponseDTO<String> get(@QueryParam("account") @AccountIdentifier String account,
       @QueryParam("org") @OrgIdentifier String org, @QueryParam("project") @ProjectIdentifier String project,
       @QueryParam("resourceIdentifier") @ResourceIdentifier String resourceIdentifier) {
-    accessControlClient.checkForAccessOrThrow(PermissionCheckDTO.builder()
-                                                  .resourceType("SECRET")
-                                                  .resourceIdentifier(resourceIdentifier)
-                                                  .resourceScope(ResourceScope.builder()
-                                                                     .accountIdentifier(account)
-                                                                     .orgIdentifier(org)
-                                                                     .projectIdentifier(project)
-                                                                     .build())
-                                                  .permission("core_secret_create")
-                                                  .build());
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(account, org, project), Resource.of("SECRET", resourceIdentifier), "core_secret_create");
+
     return ResponseDTO.newResponse("accessible");
   }
 }

@@ -10,10 +10,9 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-
-import java.util.function.Supplier;
 
 /**
  * Use this interface when your task spawns a task. The queuing of the task will be taken care by the framework itself.
@@ -31,7 +30,8 @@ public interface TaskExecutable<T extends StepParameters, R extends ResponseData
     extends Step<T>, Abortable<T, TaskExecutableResponse> {
   TaskRequest obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, Supplier<R> responseDataSupplier);
+  StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, ThrowingSupplier<R> responseDataSupplier)
+      throws Exception;
 
   default void handleAbort(Ambiance ambiance, T stepParameters, TaskExecutableResponse executableResponse) {
     // NOOP : By default this is noop as task abortion is handled by the PMS but you are free to override it

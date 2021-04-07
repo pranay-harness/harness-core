@@ -7,15 +7,13 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
-import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.List;
+import io.swagger.annotations.ApiModelProperty;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -31,24 +29,27 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class AuditEventDTO {
+  String auditId;
   @NotNull @NotBlank String insertId;
-  @Valid @NotNull ResourceScope resourceScope;
+  @Valid @NotNull ResourceScopeDTO resourceScope;
 
-  HttpRequestInfo httpRequestInfo;
-  RequestMetadata requestMetadata;
+  @Valid HttpRequestInfo httpRequestInfo;
+  @Valid RequestMetadata requestMetadata;
 
   @NotNull Long timestamp;
 
-  @NotNull @Valid AuthenticationInfo authenticationInfo;
+  @NotNull @Valid AuthenticationInfoDTO authenticationInfo;
 
   @NotNull ModuleType module;
-  String environmentIdentifier;
+  @Valid Environment environment;
 
-  @NotNull @Valid Resource resource;
+  @NotNull @Valid ResourceDTO resource;
+
+  @ApiModelProperty(hidden = true) @Valid YamlDiffRecordDTO yamlDiffRecordDTO;
+
   @NotNull Action action;
 
-  YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
-  List<KeyValuePair> additionalInfo;
+  @ApiModelProperty(hidden = true) Map<String, String> internalInfo;
 }

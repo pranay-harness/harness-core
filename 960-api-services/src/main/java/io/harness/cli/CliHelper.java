@@ -1,9 +1,11 @@
 package io.harness.cli;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -22,6 +24,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class CliHelper {
   @Nonnull
   public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
@@ -36,6 +39,7 @@ public class CliHelper {
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog(loggingCommand, LogLevel.INFO, RUNNING);
 
+    StringBuilder errorLogs = new StringBuilder();
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
                                           .command("/bin/sh", "-c", command)
@@ -48,11 +52,16 @@ public class CliHelper {
                                             protected void processLine(String line) {
                                               log.error(line);
                                               executionLogCallback.saveExecutionLog(line, LogLevel.ERROR);
+                                              errorLogs.append(line);
                                             }
                                           });
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
-    return CliResponse.builder().commandExecutionStatus(status).output(processResult.outputUTF8()).build();
+    return CliResponse.builder()
+        .commandExecutionStatus(status)
+        .output(processResult.outputUTF8())
+        .error(errorLogs.toString())
+        .build();
   }
 }

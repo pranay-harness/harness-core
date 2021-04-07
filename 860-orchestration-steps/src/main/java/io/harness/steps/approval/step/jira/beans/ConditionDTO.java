@@ -11,15 +11,14 @@ import io.harness.pms.yaml.ParameterField;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @Data
 @Builder
 public class ConditionDTO {
-  @NotEmpty String key;
+  @NotNull String key;
   @NotNull String value;
-  @NotNull Operator op;
+  @NotNull Operator operator;
 
   public static ConditionDTO fromCondition(Condition condition) {
     if (condition == null) {
@@ -33,12 +32,12 @@ public class ConditionDTO {
     if (isBlank(condition.getKey())) {
       throw new InvalidRequestException("Key Can't be empty");
     }
-    return ConditionDTO.builder().key(condition.getKey()).value(valueString).op(condition.getOp()).build();
+    return ConditionDTO.builder().key(condition.getKey()).value(valueString).operator(condition.getOperator()).build();
   }
 
   @Override
   public String toString() {
     return "ConditionDTO{"
-        + "key='" + key + '\'' + ", value='" + value + '\'' + ", op=" + op + '}';
+        + "key='" + key + '\'' + ", value='" + value + '\'' + ", operator=" + operator + '}';
   }
 }

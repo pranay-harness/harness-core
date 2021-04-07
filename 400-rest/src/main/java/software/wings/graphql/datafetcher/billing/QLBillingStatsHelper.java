@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
@@ -313,7 +313,7 @@ public class QLBillingStatsHelper {
         boolean valid = false;
         CECluster ceCluster = ceClusterDao.getCECluster(entityId);
         if (null != ceCluster && ceCluster.getAccountId().equals(accountId)) {
-          valid = true;
+          continue;
         }
         ClusterRecord clusterRecord = clusterRecordService.get(entityId);
         Cluster cluster = null;

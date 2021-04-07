@@ -17,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sGcpInfraMapping implements InfraMapping {
   @Id private String uuid;
   private String accountId;
-  private String k8sConnector;
+  private String gcpConnector;
   private String namespace;
   private String cluster;
 

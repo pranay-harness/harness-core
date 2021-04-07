@@ -1,6 +1,9 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
@@ -9,6 +12,7 @@ import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
+import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
@@ -21,11 +25,13 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class OrchestrationStepsModuleRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
+          .add(PipelineServiceUtilKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
@@ -39,6 +45,7 @@ public class OrchestrationStepsModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(OrchestrationStepsMorphiaRegistrar.class)
+          .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .build();

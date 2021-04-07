@@ -12,11 +12,15 @@ import static io.harness.eraro.Status.UNAUTHORIZED;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.base.Splitter;
 
 /**
  * The enum Error codes.
  */
+@OwnedBy(HarnessTeam.DX)
 public enum ErrorCode {
   DEFAULT_ERROR_CODE,
 
@@ -65,6 +69,8 @@ public enum ErrorCode {
   TOKEN_ALREADY_REFRESHED_ONCE(UNAUTHORIZED),
 
   ACCESS_DENIED(FORBIDDEN),
+
+  NG_ACCESS_DENIED(FORBIDDEN),
 
   INVALID_CREDENTIAL(UNAUTHORIZED),
 
@@ -365,6 +371,8 @@ public enum ErrorCode {
 
   INVALID_TERRAFORM_TARGETS_REQUEST(Status.OK),
 
+  TERRAFORM_EXECUTION_ERROR,
+
   FILE_READ_FAILED,
 
   FILE_SIZE_EXCEEDS_LIMIT,
@@ -494,7 +502,10 @@ public enum ErrorCode {
   UNRESOLVED_EXPRESSIONS_ERROR,
   KRYO_HANDLER_NOT_FOUND_ERROR,
   DELEGATE_ERROR_HANDLER_EXCEPTION,
-  UNEXPECTED_TYPE_ERROR;
+  UNEXPECTED_TYPE_ERROR,
+  EXCEPTION_HANDLER_NOT_FOUND,
+  CONNECTOR_NOT_FOUND_EXCEPTION,
+  GCP_SERVER_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -42,7 +42,7 @@ import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(DX)
-public class GitCommandCallback implements NotifyCallback {
+public class GitCommandCallback implements OldNotifyCallback {
   private String accountId;
   private String changeSetId;
   private GitCommandType gitCommandType;

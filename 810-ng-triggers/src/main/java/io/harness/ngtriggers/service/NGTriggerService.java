@@ -1,5 +1,8 @@
 package io.harness.ngtriggers.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -11,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PIPELINE)
 public interface NGTriggerService {
   NGTriggerEntity create(NGTriggerEntity ngTriggerEntity);
 
@@ -27,7 +31,7 @@ public interface NGTriggerService {
       String accountId, String orgIdentifier, String projectIdentifier);
 
   List<NGTriggerEntity> findTriggersForCustomWehbook(
-      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled);
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);
@@ -38,4 +42,6 @@ public interface NGTriggerService {
   List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountId, List<String> fqns);
 
   void validateTriggerConfig(TriggerDetails triggerDetails);
+  boolean deleteAllForPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 }

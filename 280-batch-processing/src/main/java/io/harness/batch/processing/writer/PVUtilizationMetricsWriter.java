@@ -1,7 +1,9 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class PVUtilizationMetricsWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
 
@@ -49,6 +52,8 @@ public class PVUtilizationMetricsWriter extends EventWriter implements ItemWrite
                   .accountId(accountId)
                   .instanceId(pvMetric.getName())
                   .instanceType(K8S_PVC.name())
+                  .actualInstanceId(
+                      pvMetric.getName()) // pvMetric.getName() is of the format "namespace/name" from the delegate
                   .clusterId(pvMetric.getClusterId())
                   .settingId(pvMetric.getCloudProviderId())
                   .storageRequestValue(avgStorageRequestValue)

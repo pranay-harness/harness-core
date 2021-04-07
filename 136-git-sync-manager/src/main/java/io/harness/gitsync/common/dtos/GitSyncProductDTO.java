@@ -10,9 +10,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "GitSyncProductDTOKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
 public class GitSyncProductDTO {

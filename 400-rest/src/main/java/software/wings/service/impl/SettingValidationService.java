@@ -18,10 +18,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -39,7 +39,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
@@ -124,7 +123,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 
@@ -182,16 +180,20 @@ public class SettingValidationService {
                                                           .settingAttribute(settingAttribute)
                                                           .sshVaultConfig(sshVaultConfig)
                                                           .build();
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .accountId(settingAttribute.getAccountId())
-                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, settingAttribute.getAppId())
-                                      .data(TaskData.builder()
-                                                .async(false)
-                                                .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
-                                                .parameters(new Object[] {request})
-                                                .timeout(TimeUnit.MINUTES.toMillis(2))
-                                                .build())
-                                      .build();
+      DelegateTask delegateTask =
+          DelegateTask.builder()
+              .accountId(settingAttribute.getAccountId())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD,
+                  isBlank(settingAttribute.getAppId()) || settingAttribute.getAppId().equals(GLOBAL_APP_ID)
+                      ? SCOPE_WILDCARD
+                      : settingAttribute.getAppId())
+              .data(TaskData.builder()
+                        .async(false)
+                        .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
+                        .parameters(new Object[] {request})
+                        .timeout(TimeUnit.MINUTES.toMillis(2))
+                        .build())
+              .build();
       try {
         DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -253,11 +255,11 @@ public class SettingValidationService {
 
     if (settingValue instanceof GcpConfig) {
       GcpConfig gcpConfig = (GcpConfig) settingValue;
-      if (!gcpConfig.isUseDelegate() && gcpConfig.isSkipValidation()) {
+      if (!gcpConfig.isUseDelegateSelectors() && gcpConfig.isSkipValidation()) {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
-      if (gcpConfig.isUseDelegate() && StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+      if (gcpConfig.isUseDelegateSelectors() && isEmpty(gcpConfig.getDelegateSelectors())) {
         throw new InvalidArgumentsException(
             "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }
@@ -366,7 +368,7 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    if (isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
     }
   }
@@ -398,8 +400,11 @@ public class SettingValidationService {
     SettingValue settingValue = settingAttribute.getValue();
     Preconditions.checkArgument(((KubernetesClusterConfig) settingValue).isSkipValidation() == false);
 
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(settingAttribute.getAccountId())
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .appId(SCOPE_WILDCARD)
+                                          .build();
     ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
 
     String namespace = "default";

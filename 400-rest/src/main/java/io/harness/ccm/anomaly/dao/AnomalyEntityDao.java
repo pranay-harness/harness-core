@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class AnomalyEntityDao {
   static final int MAX_RETRY = 3;
@@ -206,6 +209,9 @@ public class AnomalyEntityDao {
           case SLACK_WEEKLY_NOTIFICATION:
             anomalyBuilder.slackWeeklyNotification(resultSet.getBoolean(field.getFieldName()));
             break;
+          case NEW_ENTITY:
+            anomalyBuilder.newEntity(resultSet.getBoolean(field.getFieldName()));
+            break;
           case REGION:
             break;
           case TIME_GRANULARITY:
@@ -305,6 +311,7 @@ public class AnomalyEntityDao {
                .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
                .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
                .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+               .addColumn(AnomaliesDataTableSchema.newEntity, ((Boolean) anomaly.isNewEntity()).toString())
                .validate()
                .toString()
         + " ON CONFLICT "

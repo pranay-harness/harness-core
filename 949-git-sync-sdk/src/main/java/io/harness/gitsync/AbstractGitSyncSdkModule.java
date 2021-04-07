@@ -1,7 +1,12 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
+import io.harness.SCMGrpcClientModule;
+import io.harness.ScmConnectionConfig;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -9,14 +14,12 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
-import io.harness.gitsync.beans.NGDTO;
+import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.scm.SCMGrpcClientModule;
-import io.harness.scm.ScmConnectionConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+@OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   private static final String GIT_SYNC_SDK = "GitSyncSdk";
   @Override
@@ -65,7 +69,7 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
         getGitSyncSdkConfiguration().getGitSyncEntitiesConfiguration();
     gitSyncEntitiesConfiguration.forEach(gitSyncEntitiesConfig -> {
       final Class<? extends GitSyncableEntity> entityClass = gitSyncEntitiesConfig.getEntityClass();
-      final Class<? extends NGDTO> yamlClass = gitSyncEntitiesConfig.getYamlClass();
+      final Class<? extends YamlDTO> yamlClass = gitSyncEntitiesConfig.getYamlClass();
       Class<? extends EntityGitPersistenceHelperService<?, ?>> entityHelperClass =
           gitSyncEntitiesConfig.getEntityHelperClass();
 
@@ -77,9 +81,9 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
     });
   }
 
-  <B extends GitSyncableEntity, Y extends NGDTO> AnnotatedBindingBuilder<GitAwarePersistence<B, Y>> bindGitAware(
+  <B extends GitSyncableEntity, Y extends YamlDTO> AnnotatedBindingBuilder<GitAwarePersistence<B, Y>> bindGitAware(
       Class<B> beanClass, Class<Y> yamlClass) {
-    ParameterizedType type = Types.newParameterizedType(NGDTO.class, yamlClass, beanClass);
+    ParameterizedType type = Types.newParameterizedType(YamlDTO.class, yamlClass, beanClass);
     TypeLiteral<GitAwarePersistence<B, Y>> typeLiteral = (TypeLiteral<GitAwarePersistence<B, Y>>) TypeLiteral.get(type);
     return bind(typeLiteral);
   }

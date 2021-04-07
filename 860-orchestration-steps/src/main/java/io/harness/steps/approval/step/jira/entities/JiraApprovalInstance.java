@@ -32,7 +32,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("jiraApprovalInstances")
 public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String connectorRef;
-  @NotEmpty String projectKey;
   @NotEmpty String issueKey;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
@@ -43,14 +42,10 @@ public class JiraApprovalInstance extends ApprovalInstance {
     }
 
     String issueKey = stepParameters.getIssueKey().getValue();
-    String projectKey = stepParameters.getProjectKey().getValue();
     String connectorRef = stepParameters.getConnectorRef().getValue();
 
     if (isBlank(issueKey)) {
       throw new InvalidRequestException("issueKey can't be empty");
-    }
-    if (isBlank(projectKey)) {
-      throw new InvalidRequestException("projectKey can't be empty");
     }
     if (isBlank(connectorRef)) {
       throw new InvalidRequestException("connectorRef can't be empty");
@@ -58,7 +53,6 @@ public class JiraApprovalInstance extends ApprovalInstance {
 
     JiraApprovalInstance instance =
         JiraApprovalInstance.builder()
-            .projectKey(projectKey)
             .connectorRef(connectorRef)
             .issueKey(issueKey)
             .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getApprovalCriteria()))

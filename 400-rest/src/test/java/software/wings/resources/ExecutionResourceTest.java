@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
@@ -23,6 +24,9 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -45,6 +49,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ExecutionResourceTest extends CategoryTest {
   private static final AppService appService = mock(AppService.class);
   private static final AuthService authService = mock(AuthService.class);
@@ -91,7 +97,7 @@ public class ExecutionResourceTest extends CategoryTest {
     when(appService.list(anyObject())).thenReturn(applicationPageResponse);
 
     PageResponse<WorkflowExecution> workflowExecutionPageResponse = aPageResponse().build();
-    when(workflowExecutionService.listExecutions(anyObject(), eq(true), eq(true), eq(true), eq(true)))
+    when(workflowExecutionService.listExecutions(anyObject(), eq(true), eq(true), eq(true), eq(true), eq(true)))
         .thenReturn(workflowExecutionPageResponse);
 
     RestResponse<PageResponse<WorkflowExecution>> actual =
@@ -119,7 +125,7 @@ public class ExecutionResourceTest extends CategoryTest {
                                               .workflowType(WorkflowType.ORCHESTRATION)
                                               .build();
     doNothing().when(authService).authorizeAppAccess(anyString(), anyString(), any(User.class), any());
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(workflowExecution);
 
     RestResponse<WorkflowExecution> actual = resources.client()

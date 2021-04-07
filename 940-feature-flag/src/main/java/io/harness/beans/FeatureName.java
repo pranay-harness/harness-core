@@ -175,6 +175,7 @@ public enum FeatureName {
   NG_HELM_SOURCE_REPO,
   ENHANCED_GCR_CONNECTIVITY_CHECK,
   SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
+  USE_TF_CLIENT,
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
   AWS_SM_ASSUME_IAM_ROLE,
   SERVICE_DASHBOARD_NG,

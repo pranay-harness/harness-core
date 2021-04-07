@@ -2,6 +2,10 @@ package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.InfrastructureMapper;
@@ -10,7 +14,12 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logStreaming.LogStreamingStepClientFactory;
 import io.harness.logging.CommandExecutionStatus;
@@ -20,7 +29,11 @@ import io.harness.logging.UnitStatus;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -29,11 +42,15 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.rbac.CDNGRbacPermissions;
+import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.executable.SyncExecutableWithRbac;
+import io.harness.walktree.visitor.SimpleVisitorFactory;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.Set;
 
 @OwnedBy(PIPELINE)
 public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParameters> {
@@ -44,6 +61,10 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   @Inject private EnvironmentService environmentService;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Inject private SimpleVisitorFactory simpleVisitorFactory;
+  @Inject private AccessControlClient accessControlClient;
+  @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   @Override
   public Class<InfraStepParameters> getStepParametersClass() {
@@ -100,5 +121,31 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   }
 
   @Override
-  public void validateResources(Ambiance ambiance, InfraStepParameters stepParameters) {}
+  public void validateResources(Ambiance ambiance, InfraStepParameters stepParameters) {
+    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      return;
+    }
+    PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
+        executionPrincipalInfo.getPrincipalType());
+    Set<EntityDetailProtoDTO> entityDetails =
+        entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getPipelineInfrastructure());
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
+    boolean hasAccess = accessControlClient.hasAccess(principal, principalType,
+        PermissionCheckDTO.builder()
+            .permission(CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION)
+            .resourceIdentifier(projectIdentifier)
+            .resourceScope(
+                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
+            .resourceType("project")
+            .build());
+    if (!hasAccess) {
+      throw new AccessDeniedException(
+          "Validation for Infrastructure Step failed", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    }
+  }
 }

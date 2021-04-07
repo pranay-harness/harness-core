@@ -38,6 +38,11 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
   String expand;
   // Fetch status along with create metadata.
   boolean fetchStatus;
+
+  // Transition to do while updating (optional).
+  String transitionToStatus; // required in a transition
+  String transitionName; // optional - find a particular transition that goes to desired status
+
   // Fields sent while creating/updating issue.
   Map<String, String> fields;
 

@@ -41,8 +41,8 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     if (nodeExecution.getParentId() == null) {
       return true;
     }
-    List<NodeExecution> flowingChildren =
-        nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), StatusUtils.flowingStatuses());
+    List<NodeExecution> flowingChildren = nodeExecutionService.findByParentIdAndStatusIn(
+        nodeExecution.getParentId(), StatusUtils.unpausableChildStatuses());
     if (isEmpty(flowingChildren)) {
       Interrupt interrupt = interruptService.get(interruptId);
       // Update Status

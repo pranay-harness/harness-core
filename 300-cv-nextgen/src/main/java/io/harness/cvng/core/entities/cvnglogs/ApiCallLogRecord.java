@@ -1,5 +1,7 @@
 package io.harness.cvng.core.entities.cvnglogs;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
@@ -14,6 +16,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CV)
 public class ApiCallLogRecord extends CVNGLogRecord {
   private List<ApiCallLogField> requests;
   private List<ApiCallLogField> responses;
@@ -51,10 +54,11 @@ public class ApiCallLogRecord extends CVNGLogRecord {
   }
 
   public static CVNGLogRecord toCVNGLogRecord(CVNGLogDTO logRecordDTO) {
-    ApiCallLogRecord apiCallLogRecord = ApiCallLogRecord.builder()
-                                            .requestTime(((ApiCallLogDTO) logRecordDTO).getRequestTime())
-                                            .responseTime(((ApiCallLogDTO) logRecordDTO).getResponseTime())
-                                            .build();
+    ApiCallLogRecord apiCallLogRecord =
+        ApiCallLogRecord.builder()
+            .requestTime(Instant.ofEpochMilli(((ApiCallLogDTO) logRecordDTO).getRequestTime()))
+            .responseTime(Instant.ofEpochMilli(((ApiCallLogDTO) logRecordDTO).getResponseTime()))
+            .build();
 
     (((ApiCallLogDTO) logRecordDTO).getRequests())
         .stream()
@@ -85,8 +89,11 @@ public class ApiCallLogRecord extends CVNGLogRecord {
 
   @Override
   public CVNGLogDTO toCVNGLogDTO() {
-    ApiCallLogDTO apiCallLogDTO =
-        ApiCallLogDTO.builder().requestTime(requestTime).responseTime(responseTime).createdAt(getCreatedAt()).build();
+    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder()
+                                      .requestTime(requestTime.toEpochMilli())
+                                      .responseTime(responseTime.toEpochMilli())
+                                      .createdAt(getCreatedAt())
+                                      .build();
     getRequests().forEach(logRecord -> apiCallLogDTO.addFieldToRequest(toApiCallLogDTOField(logRecord)));
     getResponses().forEach(logRecord -> apiCallLogDTO.addFieldToResponse(toApiCallLogDTOField(logRecord)));
     return apiCallLogDTO;

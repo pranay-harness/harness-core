@@ -77,7 +77,10 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -101,7 +104,6 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ContainerServiceElement;
@@ -230,6 +232,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";
@@ -407,7 +410,7 @@ public class HelmDeployStateTest extends CategoryTest {
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(emptyList());
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any())).thenReturn(containerServiceParams);
     when(artifactCollectionUtils.fetchContainerImageDetails(any(), any())).thenReturn(ImageDetails.builder().build());

@@ -1,9 +1,13 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.InstanceDataDao;
 import io.harness.ccm.commons.beans.Resource;
@@ -22,6 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(HarnessModule._490_CE_COMMONS)
+@OwnedBy(CE)
 public class InstanceDataDaoTest extends WingsBaseTest {
   @Inject InstanceDataDao instanceDataDao;
   private static final String ACCOUNT_ID = "accountId";

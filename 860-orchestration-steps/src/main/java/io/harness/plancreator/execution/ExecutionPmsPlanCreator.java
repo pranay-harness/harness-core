@@ -1,12 +1,13 @@
 package io.harness.plancreator.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.plancreator.beans.PlanCreationConstants;
-import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PIPELINE)
 public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
@@ -64,13 +66,12 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
                                         .build();
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
-        .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER)
+        .identifier(OrchestrationConstants.EXECUTION_NODE_IDENTIFIER)
         .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
-        .name(PlanCreationConstants.EXECUTION_NODE_NAME)
+        .name(OrchestrationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
         .skipExpressionChain(false)
         .build();
   }

@@ -2,6 +2,8 @@ package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.rbac.CDNGRbacPermissions.SERVICE_CREATE_PERMISSION;
+import static io.harness.rbac.CDNGRbacPermissions.SERVICE_UPDATE_PERMISSION;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static software.wings.beans.Service.ServiceKeys;
@@ -11,6 +13,16 @@ import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -22,6 +34,8 @@ import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.pms.rbac.NGResourceType;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -53,6 +67,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@NextGenManagerAuth
 @Api("/servicesV2")
 @Path("/servicesV2")
 @Produces({"application/json", "text/yaml", "text/html"})
@@ -63,16 +78,19 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ServiceResourceV2 {
   private final ServiceEntityService serviceEntityService;
+  private final AccessControlClient accessControlClient;
 
   @GET
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getServiceV2")
-  public ResponseDTO<ServiceResponse> get(@PathParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  @NGAccessControlCheck(resourceType = NGResourceType.SERVICE, permission = "core_service_view")
+  public ResponseDTO<ServiceResponse> get(@PathParam("serviceIdentifier") @ResourceIdentifier String serviceIdentifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<ServiceEntity> serviceEntity =
         serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
@@ -87,6 +105,9 @@ public class ServiceResourceV2 {
   @ApiOperation(value = "Create a Service", nickname = "createServiceV2")
   public ResponseDTO<ServiceResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_CREATE_PERMISSION);
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
@@ -99,6 +120,11 @@ public class ServiceResourceV2 {
   public ResponseDTO<PageResponse<ServiceResponse>> createServices(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+    for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+          Resource.NONE, SERVICE_CREATE_PERMISSION);
+    }
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
             .map(serviceRequestDTO -> ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO))
@@ -110,11 +136,12 @@ public class ServiceResourceV2 {
   @DELETE
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Delete a service by identifier", nickname = "deleteServiceV2")
+  @NGAccessControlCheck(resourceType = NGResourceType.SERVICE, permission = "core_service_delete")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @PathParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+      @PathParam("serviceIdentifier") @ResourceIdentifier String serviceIdentifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
     return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
         serviceIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
@@ -124,6 +151,9 @@ public class ServiceResourceV2 {
   public ResponseDTO<ServiceResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -137,6 +167,9 @@ public class ServiceResourceV2 {
   public ResponseDTO<ServiceResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
@@ -146,11 +179,12 @@ public class ServiceResourceV2 {
 
   @GET
   @ApiOperation(value = "Gets Service list for a project", nickname = "getServiceListForProjectV2")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = "core_service_view")
   public ResponseDTO<PageResponse<ServiceResponse>> listServicesForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);

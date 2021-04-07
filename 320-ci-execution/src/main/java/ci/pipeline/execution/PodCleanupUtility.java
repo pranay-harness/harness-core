@@ -2,6 +2,8 @@ package ci.pipeline.execution;
 
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class PodCleanupUtility {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;

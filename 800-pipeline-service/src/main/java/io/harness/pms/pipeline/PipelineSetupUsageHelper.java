@@ -97,7 +97,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
           continue;
         }
         IdentifierRef identifierRef =
-            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, accountIdentifier, projectIdentifier);
+            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, orgIdentifier, projectIdentifier);
         entityDetails.add(EntityDetail.builder()
                               .name(referredUsage.getReferredEntity().getName())
                               .type(referredUsage.getReferredEntity().getType())

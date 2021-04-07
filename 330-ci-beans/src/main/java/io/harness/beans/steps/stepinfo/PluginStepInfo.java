@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -50,10 +51,16 @@ public class PluginStepInfo implements CIStepInfo {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  private List<String> entrypoint;
+
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources"})
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "settings", "image", "connectorRef", "entrypoint", "resources"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
-      ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources) {
+      ParameterField<String> image, ParameterField<String> connectorRef, List<String> entrypoint,
+      ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -61,6 +68,7 @@ public class PluginStepInfo implements CIStepInfo {
     this.settings = settings;
     this.image = image;
     this.connectorRef = connectorRef;
+    this.entrypoint = entrypoint;
     this.resources = resources;
   }
 

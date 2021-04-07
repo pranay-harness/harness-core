@@ -40,8 +40,6 @@ public class ApprovalInstanceResponseMapper {
         .id(instance.getId())
         .type(instance.getType())
         .status(instance.getStatus())
-        .approvalMessage(instance.getApprovalMessage())
-        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .deadline(instance.getDeadline())
         .details(toApprovalInstanceDetailsDTO(instance))
         .createdAt(instance.getCreatedAt())
@@ -62,6 +60,8 @@ public class ApprovalInstanceResponseMapper {
 
   private ApprovalInstanceDetailsDTO toHarnessApprovalInstanceDetailsDTO(HarnessApprovalInstance instance) {
     return HarnessApprovalInstanceDetailsDTO.builder()
+        .approvalMessage(instance.getApprovalMessage())
+        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .approvers(instance.getApprovers())
         .approvalActivities(instance.getApprovalActivities())
         .approverInputs(

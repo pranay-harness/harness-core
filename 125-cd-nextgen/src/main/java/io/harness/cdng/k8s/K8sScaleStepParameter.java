@@ -1,8 +1,10 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
@@ -18,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,15 +32,13 @@ public class K8sScaleStepParameter extends K8sScaleBaseStepInfo implements K8sSt
   String description;
   ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sScaleStepParameter(String name, String identifier, String description, ParameterField<String> skipCondition,
       ParameterField<String> timeout, ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload, RollbackInfo rollbackInfo) {
+      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload) {
     super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck);
     this.timeout = timeout;
-    this.rollbackInfo = rollbackInfo;
     this.name = name;
     this.identifier = identifier;
     this.description = description;

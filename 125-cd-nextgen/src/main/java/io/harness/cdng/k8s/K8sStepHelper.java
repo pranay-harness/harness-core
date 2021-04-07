@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -13,7 +14,6 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
@@ -72,6 +72,7 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.GcpK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -99,12 +100,12 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -123,12 +124,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@OwnedBy(HarnessTeam.CDP)
+@OwnedBy(CDP)
 @Singleton
 public class K8sStepHelper {
   private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
@@ -455,6 +455,18 @@ public class K8sStepHelper {
             .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
             .build();
 
+      case KUBERNETES_GCP:
+        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
+        ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
+        KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
+
+        return GcpK8sInfraDelegateConfig.builder()
+            .namespace(k8sGcpInfrastructure.getNamespace())
+            .cluster(k8sGcpInfrastructure.getCluster())
+            .gcpConnectorDTO((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
+            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .build();
+
       default:
         throw new UnsupportedOperationException(
             format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
@@ -472,7 +484,7 @@ public class K8sStepHelper {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
-                            .timeout(getTimeout(k8sStepParameters))
+                            .timeout(getTimeoutInMillis(k8sStepParameters))
                             .async(true)
                             .build();
 
@@ -510,8 +522,8 @@ public class K8sStepHelper {
     for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
       if (ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind())) {
         String validationMessage = format("Values YAML with Id [%s]", valuesManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
-            ambiance, valuesManifest.getIdentifier(), valuesManifest.getStore(), validationMessage);
+        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(ambiance, valuesManifest.getIdentifier(),
+            valuesManifest.getStore(), validationMessage, ManifestType.VALUES);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -519,8 +531,9 @@ public class K8sStepHelper {
     for (OpenshiftParamManifestOutcome openshiftParamManifest : openshiftParamManifests) {
       if (ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind())) {
         String validationMessage = format("Openshift Param file with Id [%s]", openshiftParamManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
-            ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(), validationMessage);
+        GitFetchFilesConfig gitFetchFilesConfig =
+            getGitFetchFilesConfig(ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(),
+                validationMessage, ManifestType.OpenshiftParam);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -531,7 +544,7 @@ public class K8sStepHelper {
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
-                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .timeout(getTimeoutInMillis(k8sStepParameters))
                                   .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
@@ -554,7 +567,7 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig getGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage) {
+      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
@@ -567,10 +580,11 @@ public class K8sStepHelper {
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
     GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, ManifestType.VALUES);
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
+        .manifestType(manifestType)
         .succeedIfFileNotFound(false)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();
@@ -689,7 +703,7 @@ public class K8sStepHelper {
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
       K8sStepParameters k8sStepParameters, PassThroughData passThroughData,
-      Supplier<ResponseData> responseDataSupplier) {
+      ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataSupplier.get();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
@@ -768,12 +782,20 @@ public class K8sStepHelper {
     return HelmCommandFlag.builder().valueMap(commandsValueMap).build();
   }
 
-  public static int getTimeout(K8sStepParameters stepParameters) {
-    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+  public static int getTimeoutInMin(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
+  }
+
+  public static long getTimeoutInMillis(K8sStepParameters stepParameters) {
+    String timeout = getTimeoutValue(stepParameters);
+    return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeout);
+  }
+
+  public static String getTimeoutValue(K8sStepParameters stepParameters) {
+    return stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
         ? StepConstants.defaultTimeout
         : stepParameters.getTimeout().getValue();
-
-    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
   }
 
   public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {
@@ -794,34 +816,14 @@ public class K8sStepHelper {
     stepResponseBuilder.status(Status.FAILED)
         .failureInfo(
             FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sDeployResponse)).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
     return stepResponseBuilder;
   }
 
   public static StepResponseBuilder getDelegateErrorFailureResponseBuilder(
       K8sStepParameters k8sStepParameters, ErrorNotifyResponseData responseData) {
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder()
-            .status(Status.FAILED)
-            .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
-    return stepResponseBuilder;
+    return StepResponse.builder()
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
   }
 
   public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {

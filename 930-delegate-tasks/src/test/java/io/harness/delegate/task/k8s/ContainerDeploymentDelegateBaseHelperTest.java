@@ -1,5 +1,7 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -18,7 +20,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.task.gcp.helpers.GkeClusterHelper;
+import io.harness.encryption.SecretRefData;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
@@ -44,9 +56,12 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDP)
 public class ContainerDeploymentDelegateBaseHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private GkeClusterHelper gkeClusterHelper;
+  @Mock private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Mock LogCallback logCallback;
 
   @Spy @InjectMocks ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
@@ -76,6 +91,90 @@ public class ContainerDeploymentDelegateBaseHelperTest extends CategoryTest {
     verify(kubernetesContainerService, times(1))
         .getContainerInfosWhenReady(
             kubernetesConfig, "daemonSet-name", 0, -1, 30, existingPods, true, logCallback, true, 0, "default");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateDirectKubernetesConfig() {
+    KubernetesClusterConfigDTO clusterConfigDTO =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                            .build())
+            .build();
+    DirectK8sInfraDelegateConfig config = DirectK8sInfraDelegateConfig.builder()
+                                              .namespace("default")
+                                              .kubernetesClusterConfigDTO(clusterConfigDTO)
+                                              .build();
+
+    KubernetesConfig expectedKubernetesConfig = KubernetesConfig.builder().username("test".toCharArray()).build();
+    doReturn(expectedKubernetesConfig)
+        .when(k8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(eq(clusterConfigDTO), eq("default"));
+
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(config);
+    assertThat(kubernetesConfig).isEqualTo(expectedKubernetesConfig);
+
+    verify(k8sYamlToDelegateDTOMapper, times(1))
+        .createKubernetesConfigFromClusterConfig(eq(clusterConfigDTO), eq("default"));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateGcpManualCredentialsKubernetesConfig() {
+    char[] secret = "secret".toCharArray();
+    GcpK8sInfraDelegateConfig config =
+        GcpK8sInfraDelegateConfig.builder()
+            .cluster("cluster1")
+            .namespace("default")
+            .gcpConnectorDTO(
+                GcpConnectorDTO.builder()
+                    .credential(GcpConnectorCredentialDTO.builder()
+                                    .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                                    .config(GcpManualDetailsDTO.builder()
+                                                .secretKeyRef(SecretRefData.builder().decryptedValue(secret).build())
+                                                .build())
+                                    .build())
+                    .build())
+            .build();
+
+    KubernetesConfig expectedKubernetesConfig = KubernetesConfig.builder().password(secret).build();
+    doReturn(expectedKubernetesConfig)
+        .when(gkeClusterHelper)
+        .getCluster(eq(secret), eq(false), eq("cluster1"), eq("default"));
+
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(config);
+    assertThat(kubernetesConfig).isEqualTo(expectedKubernetesConfig);
+
+    verify(gkeClusterHelper, times(1)).getCluster(eq(secret), eq(false), eq("cluster1"), eq("default"));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateGcpInheritFromDelegateKubernetesConfig() {
+    GcpK8sInfraDelegateConfig config =
+        GcpK8sInfraDelegateConfig.builder()
+            .cluster("cluster1")
+            .namespace("default")
+            .gcpConnectorDTO(GcpConnectorDTO.builder()
+                                 .credential(GcpConnectorCredentialDTO.builder()
+                                                 .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                                                 .build())
+                                 .build())
+            .build();
+
+    KubernetesConfig expectedKubernetesConfig = KubernetesConfig.builder().username("test".toCharArray()).build();
+    doReturn(expectedKubernetesConfig)
+        .when(gkeClusterHelper)
+        .getCluster(eq(null), eq(true), eq("cluster1"), eq("default"));
+
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(config);
+    assertThat(kubernetesConfig).isEqualTo(expectedKubernetesConfig);
+
+    verify(gkeClusterHelper, times(1)).getCluster(eq(null), eq(true), eq("cluster1"), eq("default"));
   }
 
   private List<? extends HasMetadata> getMockedControllers() {

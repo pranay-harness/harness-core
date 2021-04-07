@@ -50,4 +50,5 @@ type TagLink {
   value: String
   entityId: String
   entityType: TagEntityType
+  appId: String
 }

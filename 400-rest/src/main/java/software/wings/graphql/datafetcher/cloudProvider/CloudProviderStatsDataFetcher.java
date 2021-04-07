@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {

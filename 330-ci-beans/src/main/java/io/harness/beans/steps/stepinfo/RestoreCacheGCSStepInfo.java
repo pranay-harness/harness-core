@@ -44,7 +44,6 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -54,21 +53,15 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket",
       "failIfKeyNotFound", "archiveFormat"})
   public RestoreCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
-      ParameterField<String> bucket, ParameterField<Boolean> failIfKeyNotFound,
-      ParameterField<ArchiveFormat> archiveFormat) {
+      ContainerResource resources, ParameterField<String> key, ParameterField<String> bucket,
+      ParameterField<Boolean> failIfKeyNotFound, ParameterField<ArchiveFormat> archiveFormat) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/cache:latest"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/cache:latest");
-    }
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;

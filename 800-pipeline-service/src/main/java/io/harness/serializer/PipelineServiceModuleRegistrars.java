@@ -30,7 +30,7 @@ public class PipelineServiceModuleRegistrars {
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .add(PMSPipelineMorphiaRegistrar.class)
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .add(FiltersMorphiaRegistrar.class)

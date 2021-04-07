@@ -118,6 +118,7 @@ EOF""" % code,
             #Additional
             visibility = ["//visibility:public"],
             jvm_flags = [
+                "$(HARNESS_ARGS)",
                 "-Xmx2G",
                 "-XX:+HeapDumpOnOutOfMemoryError",
                 "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",

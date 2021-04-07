@@ -9,13 +9,13 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;

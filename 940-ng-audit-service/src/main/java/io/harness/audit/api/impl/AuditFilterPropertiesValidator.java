@@ -5,15 +5,17 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
-import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 
 @OwnedBy(PL)
@@ -39,6 +41,9 @@ public class AuditFilterPropertiesValidator {
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
     }
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironments())) {
+      verifyEnvironments(auditFilterPropertiesDTO.getEnvironments());
+    }
     verifyTimeFilter(auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime());
   }
 
@@ -53,13 +58,23 @@ public class AuditFilterPropertiesValidator {
     });
   }
 
-  private void verifyScopes(String accountIdentifier, List<ResourceScope> resourceScopes) {
+  private void verifyEnvironments(List<Environment> environments) {
+    if (isNotEmpty(environments)) {
+      environments.forEach(environment -> {
+        if (environment.getType() == null && isEmpty(environment.getIdentifier())) {
+          throw new InvalidRequestException("Invalid environment filter with missing both type and identifier.");
+        }
+      });
+    }
+  }
+
+  private void verifyScopes(String accountIdentifier, List<ResourceScopeDTO> resourceScopes) {
     if (isNotEmpty(resourceScopes)) {
       resourceScopes.forEach(resourceScope -> verifyScope(accountIdentifier, resourceScope));
     }
   }
 
-  private void verifyScope(String accountIdentifier, ResourceScope resourceScope) {
+  private void verifyScope(String accountIdentifier, ResourceScopeDTO resourceScope) {
     if (!accountIdentifier.equals(resourceScope.getAccountIdentifier())) {
       throw new InvalidRequestException(String.format(
           "Invalid resource scope filter with accountIdentifier %s.", resourceScope.getAccountIdentifier()));
@@ -76,38 +91,47 @@ public class AuditFilterPropertiesValidator {
       throw new InvalidRequestException(
           "Invalid resource scope filter with labels present but missing projectIdentifier.");
     }
-    List<KeyValuePair> labels = resourceScope.getLabels();
+    Map<String, String> labels = resourceScope.getLabels();
     if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
+      labels.forEach((key, value) -> {
+        if (isEmpty(key)) {
           throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
         }
-        if (isEmpty(label.getValue())) {
+        if (isEmpty(value)) {
           throw new InvalidRequestException(
               "Invalid resource scope filter with missing value in resource scope labels.");
+        }
+        if (AuditCommonConstants.ACCOUNT_IDENTIFIER.equals(key) || AuditCommonConstants.ORG_IDENTIFIER.equals(key)
+            || AuditCommonConstants.PROJECT_IDENTIFIER.equals(key)) {
+          throw new InvalidRequestException(
+              String.format("Invalid resource scope filter with key as %s in resource scope labels.", key));
         }
       });
     }
   }
 
-  private void verifyResources(List<Resource> resources) {
+  private void verifyResources(List<ResourceDTO> resources) {
     if (isNotEmpty(resources)) {
       resources.forEach(this::verifyResource);
     }
   }
 
-  private void verifyResource(Resource resource) {
+  private void verifyResource(ResourceDTO resource) {
     if (isEmpty(resource.getType())) {
       throw new InvalidRequestException("Invalid resource filter with missing resource type.");
     }
-    List<KeyValuePair> labels = resource.getLabels();
+    Map<String, String> labels = resource.getLabels();
     if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
+      labels.forEach((key, value) -> {
+        if (isEmpty(key)) {
           throw new InvalidRequestException("Invalid resource filter with missing key in resource labels.");
         }
-        if (isEmpty(label.getValue())) {
+        if (isEmpty(value)) {
           throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
+        }
+        if (AuditCommonConstants.TYPE.equals(key) || AuditCommonConstants.IDENTIFIER.equals(key)) {
+          throw new InvalidRequestException(
+              String.format("Invalid resource scope filter with key as %s in resource labels.", key));
         }
       });
     }

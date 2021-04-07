@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -22,7 +23,7 @@ public class ServiceResourceClientHttpFactory
     extends AbstractHttpClientFactory implements Provider<ServiceResourceClient> {
   public ServiceResourceClientHttpFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, ClientMode.PRIVILEGED);
     log.info("secretManagerConfig {}", ngManagerConfig);
   }
 
