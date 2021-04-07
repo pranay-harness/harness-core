@@ -100,7 +100,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     LoginSettings loginSettings =
         wingsPersistence.createQuery(LoginSettings.class).field(LoginSettingKeys.accountId).equal(accountId).get();
     if (loginSettings == null) {
-      throw new WingsException(String.format("Login settings not found for account Id: {}", accountId), USER);
+      throw new WingsException(String.format("Login settings not found for account Id: %s", accountId), USER);
     }
     return loginSettings;
   }
@@ -110,7 +110,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
         wingsPersistence.createQuery(LoginSettings.class).field(LoginSettingKeys.uuid).equal(loginSettingsId).get();
     if (loginSettings == null) {
       throw new WingsException(
-          String.format("Login settings not found for loginSettingsId: {}", loginSettingsId), USER);
+          String.format("Login settings not found for loginSettingsId: %s", loginSettingsId), USER);
     }
     return loginSettings;
   }
