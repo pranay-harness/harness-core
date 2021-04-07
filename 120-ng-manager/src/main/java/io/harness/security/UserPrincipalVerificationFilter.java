@@ -11,7 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Singleton;

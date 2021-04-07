@@ -1,7 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.security.PermissionAttribute.PermissionType;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -46,6 +49,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by anubhaw on 3/28/16.
  */
+@OwnedBy(PL)
 public interface UserService extends OwnedByAccount {
   /**
    * Consider the following characters in email as illegal and prohibit trial signup with the following characters
@@ -213,6 +217,8 @@ public interface UserService extends OwnedByAccount {
    * @return
    */
   User getUserByEmail(String email);
+
+  List<User> getUsersByEmail(List<String> emailIds, String accountId);
 
   User getUserByEmail(String email, String accountId);
 
@@ -544,7 +550,7 @@ public interface UserService extends OwnedByAccount {
 
   boolean isUserPresent(String userId);
 
-  List<User> getUsers(List<String> userIds);
+  List<User> getUsers(List<String> userIds, String accountId);
 
   String sanitizeUserName(String name);
 

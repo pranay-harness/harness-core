@@ -11,7 +11,6 @@ import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -37,16 +36,11 @@ import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -86,21 +80,17 @@ public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
   private final OutboxService outboxService;
-  private final NgUserService ngUserService;
   private final TransactionTemplate transactionTemplate;
-  private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, NgUserService ngUserService,
-      OutboxService outboxService) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
-    this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
-    this.ngUserService = ngUserService;
+    this.outboxService = outboxService;
   }
 
   @Override
@@ -133,31 +123,9 @@ public class ProjectServiceImpl implements ProjectService {
     log.info(String.format(
         "Performing actions post project creation for project with identifier %s and orgIdentifier %s ...",
         project.getIdentifier(), project.getOrgIdentifier()));
-    createUserProjectMap(project);
     log.info(String.format(
         "Successfully completed actions post project creation for project with identifier %s and orgIdentifier %s",
         project.getIdentifier(), project.getOrgIdentifier()));
-  }
-
-  private void createUserProjectMap(Project project) {
-    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(project.getAccountIdentifier())
-                      .orgIdentifier(project.getOrgIdentifier())
-                      .projectIdentifier(project.getIdentifier())
-                      .name(PROJECT_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(project.getAccountIdentifier())
-                                          .orgIdentifier(project.getOrgIdentifier())
-                                          .projectIdentifier(project.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
-    }
   }
 
   @Override

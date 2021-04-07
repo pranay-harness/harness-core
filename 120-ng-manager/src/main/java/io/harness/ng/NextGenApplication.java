@@ -44,8 +44,8 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -338,6 +338,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -387,7 +388,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);

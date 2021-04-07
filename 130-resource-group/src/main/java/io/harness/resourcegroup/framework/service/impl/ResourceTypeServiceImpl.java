@@ -1,9 +1,12 @@
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceTypeMapper;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.model.Scope;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 
 import com.google.inject.Inject;
@@ -15,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PL)
 public class ResourceTypeServiceImpl implements ResourceTypeService {
   Map<String, ResourceValidator> resourceValidators;
 

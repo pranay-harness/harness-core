@@ -22,5 +22,5 @@ public class NotificationServiceConfiguration {
   @JsonProperty("mongo") MongoConfig mongoConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
-  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("delegateServiceGrpcConfig") private GrpcClientConfig delegateServiceGrpcConfig;
 }
