@@ -6,8 +6,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.sm.StateType;
 
 import lombok.extern.slf4j.Slf4j;
