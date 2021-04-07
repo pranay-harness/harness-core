@@ -20,6 +20,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "AccessCheckRequest")
 public class AccessCheckRequestDTO {
-  @NotEmpty @Size(max = 1000) List<PermissionCheckDTO> permissions;
+  @NotEmpty @Size(max = 1000) @Valid List<PermissionCheckDTO> permissions;
   @Valid @Nullable Principal principal;
 }
