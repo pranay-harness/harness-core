@@ -13,7 +13,6 @@
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
         <developerConnection>scm:git:git@github.com:wings-software/portal.git</developerConnection>
         <url>https://github.com/wings-software/portal</url>
-    </scm>
     <properties>
         <alpnboot.version>8.1.13.v20181017</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
