@@ -4,8 +4,8 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.migrations.OnPrimaryManagerMigration;
 import io.harness.persistence.HPersistence;
@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
-@TargetModule(HarnessModule._390_DB_MIGRATION)
+@OwnedBy(HarnessTeam.CDP)
 public class MigrationServiceImplTest extends WingsBaseTest {
   @Inject MigrationServiceImpl migrationService;
   @Inject private HPersistence persistence;

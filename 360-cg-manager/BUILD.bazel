@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
     "//370-users-syncbridge:module",
+    "//390-db-migration:module",
     "//400-rest:module",
     "//:lombok",
 ]
@@ -28,6 +29,7 @@ java_binary(
     main_class = "software.wings.app.WingsApplication",
     visibility = ["//visibility:public"],
     runtime_deps = [
+        "//390-db-migration:module",
         "//400-rest:module",
     ],
     deps = shared_dependencies,
