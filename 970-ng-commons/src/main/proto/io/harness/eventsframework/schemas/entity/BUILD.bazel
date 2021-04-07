@@ -1,0 +1,33 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "970_ng_commons_proto",
+    srcs = [
+        "entity_detail.proto",
+        "entity_scope_info.proto",
+        "entity_type.proto",
+        "identifier_ref.proto",
+        "input_set_ref.proto",
+        "scope.proto",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_protobuf//:wrappers_proto",
+    ],
+)
+
+go_proto_library(
+    name = "970_ng_commons_go_proto",
+    importpath = "github.com/wings-software/portal/970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity",
+    proto = ":970_ng_commons_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":970_ng_commons_go_proto"],
+    importpath = "github.com/wings-software/portal/970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity",
+    visibility = ["//visibility:public"],
+)
