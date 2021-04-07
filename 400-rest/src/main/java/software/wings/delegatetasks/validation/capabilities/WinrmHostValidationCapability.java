@@ -10,6 +10,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -41,7 +42,11 @@ public class WinrmHostValidationCapability implements ExecutionCapability {
     if (validationInfo.isExecuteOnDelegate()) {
       return "localhost";
     }
-    return validationInfo.getPublicDns();
+    final StringBuilder basisBuilder = new StringBuilder().append(validationInfo.getPublicDns());
+    if (AuthenticationScheme.KERBEROS == winRmConnectionAttributes.getAuthenticationScheme()) {
+      return basisBuilder.append(":kerberos").toString();
+    }
+    return basisBuilder.toString();
   }
 
   @Override
