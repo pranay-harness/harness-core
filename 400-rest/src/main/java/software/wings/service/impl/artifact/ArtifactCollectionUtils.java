@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
@@ -27,6 +28,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.ArtifactoryBuildServiceImpl.MANUAL_PULL_ARTIFACTORY_LIMIT;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import static java.lang.String.format;
@@ -35,6 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.beans.Cd1SetupFields;
@@ -122,6 +125,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -319,7 +323,7 @@ public class ArtifactCollectionUtils {
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStream.getArtifactStreamType())
             .buildSourceRequestType(requestType)
-            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType, isCollection))
             .isCollection(isCollection);
 
     if (isCollection) {
@@ -651,10 +655,11 @@ public class ArtifactCollectionUtils {
     }
   }
 
-  public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
-    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS == requestType
-        ? ARTIFACT_RETENTION_SIZE
-        : -1;
+  public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType, boolean isCollection) {
+    if (ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS == requestType) {
+      return isCollection ? ARTIFACT_RETENTION_SIZE : MANUAL_PULL_ARTIFACTORY_LIMIT;
+    }
+    return -1;
   }
 
   public BuildSourceParameters getBuildSourceParameters(ArtifactStream artifactStream,
@@ -687,7 +692,7 @@ public class ArtifactCollectionUtils {
             .settingValue(settingValue)
             .encryptedDataDetails(encryptedDataDetails)
             .buildSourceRequestType(requestType)
-            .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(getLimit(artifactStream.getArtifactStreamType(), requestType, isCollection))
             .isCollection(isCollection)
             .shouldFetchSecretFromCache(failedCronAttempts < 2 || failedCronAttempts % 5 != 0);
 
@@ -984,7 +989,7 @@ public class ArtifactCollectionUtils {
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStream.getArtifactStreamType())
             .buildSourceRequestType(requestType)
-            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType, true))
             .isCollection(true);
 
     buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
