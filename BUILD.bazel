@@ -49,17 +49,17 @@ java_library(
 )
 
 modules = [
-#    "//420-delegate-service",
-#    "//430-cv-nextgen-commons",
-#    "//440-connector-nextgen",
+    "//420-delegate-service",
+    "//430-cv-nextgen-commons",
+    "//440-connector-nextgen",
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
-#    "//800-pipeline-service",
-#    "//810-ng-triggers",
+    "//800-pipeline-service",
+    "//810-ng-triggers",
     "//820-platform-service",
     "//830-notification-service",
-#    "//850-execution-plan",
+    "//850-execution-plan",
     "//850-ng-pipeline-commons",
 #    "//860-orchestration-steps",
 #    "//860-orchestration-visualization",
