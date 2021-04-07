@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.service.intfc.SSOService;
@@ -17,13 +18,12 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.InputStream;
 
 @Api(value = "/ng/sso", hidden = true)
 @Path("/ng/sso")
@@ -49,4 +49,19 @@ public class SSOResourceNG {
   public RestResponse<SSOConfig> getAccountAccessManagementSettings(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(ssoService.getAccountAccessManagementSettings(accountId));
   }
+
+  @POST
+  @Path("saml-idp-metadata-upload")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
+                                                    @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
+                                                    @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+                                                    @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+                                                    @FormDataParam("logoutUrl") String logoutUrl) {
+    return new RestResponse<>(ssoService.uploadSamlConfiguration(
+            accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
 }

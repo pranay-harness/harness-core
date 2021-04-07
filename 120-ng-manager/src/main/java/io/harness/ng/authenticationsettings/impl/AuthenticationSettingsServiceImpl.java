@@ -12,6 +12,8 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
@@ -21,6 +23,7 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 
+import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -98,5 +101,36 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   private boolean isOauthEnabled(SSOConfig ssoConfig) {
     List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
     return !ssoSettings.isEmpty() && ssoSettings.get(0).getType().equals(SSOType.OAUTH);
+  }
+
+  private RequestBody createPartFromString(String string) {
+    if (string == null) {
+      return null;
+    }
+    return RequestBody.create(MultipartBody.FORM, string);
+  }
+
+  @Override
+  public SSOConfig uploadSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
+                                      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
+                                      String logoutUrl) {
+    RequestBody displayNamePart = createPartFromString(displayName);
+    RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
+    RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
+    RequestBody logoutUrlPart = createPartFromString(logoutUrl);
+
+    //    HashMap<String, RequestBody> map = new HashMap<>();
+    //    map.put("displayName", displayNamePart);
+    //    map.put("authorizationEnabled", authorizationEnabledPart);
+    //    if(groupMembershipAttrPart!=null) {
+    //      map.put("groupMembershipAttr", groupMembershipAttrPart);
+    //    }
+    //    if(logoutUrl!=null){
+    //      map.put("logoutUrl",logoutUrlPart);
+    //    }
+
+    SSOConfig ssoConfig = getResponse(managerClient.uploadSAMLMetadata(
+            accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    return ssoConfig;
   }
 }
