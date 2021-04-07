@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
+import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
@@ -41,6 +42,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
     filterJsonCreators.add(new DeploymentStageFilterJsonCreator());
+    filterJsonCreators.add(new CDPMSStepFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
 
     return filterJsonCreators;

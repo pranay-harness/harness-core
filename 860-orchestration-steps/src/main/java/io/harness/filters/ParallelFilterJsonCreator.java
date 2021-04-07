@@ -1,27 +1,28 @@
-package io.harness.pms.sdk.core.pipeline.filters;
+package io.harness.filters;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.pipeline.filters.ChildrenFilterJsonCreator;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlField> {
   @Override
   public Map<String, YamlField> getDependencies(FilterCreationContext filterCreationContext) {
-    return Optional.of(filterCreationContext.getCurrentField().getNode().asArray())
-        .orElse(Collections.emptyList())
-        .stream()
-        .map(el -> el.getField("stage"))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toMap(field -> field.getNode().getUuid(), field -> field));
+    List<YamlField> dependencyNodeIdsList =
+        PlanCreatorUtils.getDependencyNodeIdsForParallelNode(filterCreationContext.getCurrentField());
+    return dependencyNodeIdsList.stream().collect(
+        Collectors.toMap(yamlField -> yamlField.getNode().getUuid(), yamlField -> yamlField));
   }
 
   @Override
@@ -30,7 +31,7 @@ public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlFie
   }
 
   @Override
-  int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
+  public int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
     return children.size();
   }
 
