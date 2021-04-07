@@ -6,6 +6,8 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.SCMGrpcClientModule;
 import io.harness.ScmConnectionConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -54,6 +56,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   protected Injector injector;
@@ -83,6 +86,9 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+            .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
             .toInstance(mock(NoOpProducer.class));
       }
     });

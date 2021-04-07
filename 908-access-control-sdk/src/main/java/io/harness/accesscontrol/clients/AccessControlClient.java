@@ -1,11 +1,14 @@
 package io.harness.accesscontrol.clients;
 
 import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(HarnessTeam.PL)
 public interface AccessControlClient {
   /**
    * @param principal identifier of the principal for which permission is to be checked
@@ -57,10 +60,5 @@ public interface AccessControlClient {
    */
   boolean hasAccess(@Valid @NotNull PermissionCheckDTO permissionCheckDTO);
 
-  /**
-   * since this API takes no principal, it is taken up from the request context
-   * @param permissionCheckDTO permission to check for the principal
-   * Throws {AccessDeniedException} if principal does not have the above permission, otherwise does nothing
-   */
-  void checkForAccessOrThrow(@Valid @NotNull PermissionCheckDTO permissionCheckDTO);
+  void checkForAccessOrThrow(ResourceScope resourceScope, Resource resource, String permission);
 }

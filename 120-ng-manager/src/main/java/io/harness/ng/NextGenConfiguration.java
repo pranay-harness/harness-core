@@ -15,7 +15,7 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
-import io.harness.outbox.OutboxEventIteratorConfiguration;
+import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -80,7 +80,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
-  @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
+  @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
   @JsonProperty("resourceGroupClientConfig") private ServiceHttpClientConfig resourceGroupClientConfig;
   @JsonProperty("resourceGroupClientSecret") private String resourceGroupClientSecret;

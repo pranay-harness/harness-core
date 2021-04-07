@@ -37,6 +37,9 @@ enum AsyncExecutableMode {
 
   // Step is shown as waiting on approval while waiting for async callback to complete
   APPROVAL_WAITING_MODE = 1;
+
+  // Step is shown as waiting on resource while waiting for async callback to complete
+  RESOURCE_WAITING_MODE = 2;
 }
 
 message ChildExecutableResponse {

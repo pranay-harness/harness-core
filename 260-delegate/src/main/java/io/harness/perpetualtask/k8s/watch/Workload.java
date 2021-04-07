@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import javax.annotation.Nullable;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CE)
@@ -14,4 +15,5 @@ import lombok.Value;
 public class Workload {
   String kind;
   V1ObjectMeta objectMeta;
+  @Nullable Integer replicas;
 }

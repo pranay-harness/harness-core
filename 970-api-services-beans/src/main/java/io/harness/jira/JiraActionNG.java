@@ -8,8 +8,10 @@ import io.harness.annotations.dev.OwnedBy;
 public enum JiraActionNG {
   VALIDATE_CREDENTIALS("Validate Credentials"),
   GET_PROJECTS("Get Projects"),
+  GET_STATUSES("Get Statuses"),
   GET_ISSUE("Get Issue"),
   GET_ISSUE_CREATE_METADATA("Get Issue Create Metadata"),
+  GET_ISSUE_UPDATE_METADATA("Get Issue Update Metadata"),
   CREATE_ISSUE("Create Issue"),
   UPDATE_ISSUE("Update Issue");
 

@@ -1,5 +1,8 @@
 package io.harness.cvng.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapabilityHelper;
@@ -12,6 +15,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.io.Resources;
@@ -25,13 +29,16 @@ import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @Data
 @SuperBuilder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
+@OwnedBy(CV)
 public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implements ExecutionCapabilityDemander {
   private ConnectorInfoDTO connectorInfoDTO;
+  @JsonIgnore
   public T getConnectorConfigDTO() {
     return (T) connectorInfoDTO.getConnectorConfig();
   }

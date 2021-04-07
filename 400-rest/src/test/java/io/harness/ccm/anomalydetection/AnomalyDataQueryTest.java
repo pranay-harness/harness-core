@@ -1,10 +1,14 @@
 package io.harness.ccm.anomalydetection;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.SANDESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.anomaly.service.AnomalyDataQueryBuilder;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
@@ -26,7 +30,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(CE)
 public class AnomalyDataQueryTest extends CategoryTest {
   static String gcpSkuQuery =
       "SELECT t0.*,actualcost - expectedcost AS difference FROM anomalies t0 WHERE ((t0.accountid = 'ACCOUNT_ID') AND (t0.anomalytime >= '1970-01-01T00:00:00Z') AND (t0.anomalytime <= '1970-01-11T00:00:00Z') AND (t0.gcpskudescription IN ('SKU_DES1','SKU_DES2','SKU_DES3') )) ORDER BY t0.anomalytime ASC,difference DESC";

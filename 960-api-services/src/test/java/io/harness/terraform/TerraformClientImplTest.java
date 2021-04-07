@@ -104,12 +104,9 @@ public class TerraformClientImplTest extends CategoryTest {
     TerraformPlanCommandRequest terraformPlanCommandRequest =
         TerraformPlanCommandRequest.builder().destroySet(true).build();
 
-    String command =
-        format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
-            TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), "-target="),
-            TerraformHelperUtils.generateCommandFlagsString(
-                terraformPlanCommandRequest.getVarFilePaths(), "-var-file="))
-        + terraformPlanCommandRequest.getVarParams();
+    String command = format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
+        TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), "-target="),
+        TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getVarFilePaths(), "-var-file="));
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
@@ -130,12 +127,41 @@ public class TerraformClientImplTest extends CategoryTest {
     String command = "terraform refresh -input=false "
         + TerraformHelperUtils.generateCommandFlagsString(terraformRefreshCommandRequest.getTargets(), "-target=")
         + TerraformHelperUtils.generateCommandFlagsString(
-            terraformRefreshCommandRequest.getVarFilePaths(), "-var-file=")
-        + terraformRefreshCommandRequest.getVarParams();
+            terraformRefreshCommandRequest.getVarFilePaths(), "-var-file=");
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
             eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+
+    CliResponse actualResponse = terraformClientImpl.refresh(
+        terraformRefreshCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+
+    assertThat(actualResponse).isEqualTo(cliResponse);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testRefreshCommandWithVarParams() throws InterruptedException, IOException, TimeoutException {
+    CliResponse cliResponse = getCliResponse();
+    TerraformRefreshCommandRequest terraformRefreshCommandRequest =
+        TerraformRefreshCommandRequest.builder()
+            .targets(Arrays.asList("127.0.0.1"))
+            .varFilePaths(Arrays.asList("file1.txt"))
+            .varParams("-var='instance_name=tf-instance'")
+            .uiLogs("-var='instance_name=HarnessSecret:[instance_name]")
+            .build();
+    String command = "terraform refresh -input=false "
+        + TerraformHelperUtils.generateCommandFlagsString(terraformRefreshCommandRequest.getTargets(), "-target=")
+        + TerraformHelperUtils.generateCommandFlagsString(
+            terraformRefreshCommandRequest.getVarFilePaths(), "-var-file=");
+    String loggingCommand = command + terraformRefreshCommandRequest.getUiLogs();
+    command = command + terraformRefreshCommandRequest.getVarParams();
+
+    doReturn(cliResponse)
+        .when(cliHelper)
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(loggingCommand), any());
 
     CliResponse actualResponse = terraformClientImpl.refresh(
         terraformRefreshCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);

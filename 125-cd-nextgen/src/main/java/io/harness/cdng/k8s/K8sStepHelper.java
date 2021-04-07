@@ -100,12 +100,12 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -124,7 +124,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -585,6 +584,7 @@ public class K8sStepHelper {
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
+        .manifestType(manifestType)
         .succeedIfFileNotFound(false)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();
@@ -703,7 +703,7 @@ public class K8sStepHelper {
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
       K8sStepParameters k8sStepParameters, PassThroughData passThroughData,
-      Supplier<ResponseData> responseDataSupplier) {
+      ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataSupplier.get();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
@@ -816,34 +816,14 @@ public class K8sStepHelper {
     stepResponseBuilder.status(Status.FAILED)
         .failureInfo(
             FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sDeployResponse)).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
     return stepResponseBuilder;
   }
 
   public static StepResponseBuilder getDelegateErrorFailureResponseBuilder(
       K8sStepParameters k8sStepParameters, ErrorNotifyResponseData responseData) {
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder()
-            .status(Status.FAILED)
-            .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
-
-    if (k8sStepParameters.getRollbackInfo() != null) {
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name("RollbackOutcome")
-              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
-              .build());
-    }
-
-    return stepResponseBuilder;
+    return StepResponse.builder()
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
   }
 
   public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {

@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 
@@ -20,6 +22,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @FieldNameConstants(innerTypeName = "AnomalyEntityKeys")
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class AnomalyEntity {
   String id;

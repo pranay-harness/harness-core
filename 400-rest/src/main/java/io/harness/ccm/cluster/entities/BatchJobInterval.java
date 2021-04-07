@@ -3,7 +3,9 @@ package io.harness.ccm.cluster.entities;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public final class BatchJobInterval
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

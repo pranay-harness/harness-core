@@ -113,15 +113,16 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    success = prepareForRolling(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
-        k8sRollingDeployRequest.isInCanaryWorkflow(), k8sRollingDeployRequest.isSkipResourceVersioning());
+    LogCallback prepareLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress);
+    success = prepareForRolling(k8sDelegateTaskParams, prepareLogCallback, k8sRollingDeployRequest.isInCanaryWorkflow(),
+        k8sRollingDeployRequest.isSkipResourceVersioning());
     if (!success) {
       return getFailureResponse();
     }
 
-    List<K8sPod> existingPodList =
-        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
+    List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(
+        steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName, prepareLogCallback);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
@@ -160,30 +161,29 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
     k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams, executionLogCallback, client);
 
-    String loadBalancer = null;
     try {
-      loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
+      String loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
+      K8sRollingDeployResponse rollingSetupResponse =
+          K8sRollingDeployResponse.builder()
+              .releaseNumber(release.getNumber())
+              .k8sPodList(k8sTaskHelperBase.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
+                                                           managedWorkloads, kubernetesConfig, releaseName),
+                  existingPodList))
+              .loadBalancer(loadBalancer)
+              .build();
+
+      saveRelease(k8sRollingDeployRequest, Status.Succeeded);
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      return K8sDeployResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sNGTaskResponse(rollingSetupResponse)
+          .build();
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       saveRelease(k8sRollingDeployRequest, Status.Failed);
       throw ex;
     }
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-    saveRelease(k8sRollingDeployRequest, Status.Succeeded);
-
-    K8sRollingDeployResponse rollingSetupResponse =
-        K8sRollingDeployResponse.builder()
-            .releaseNumber(release.getNumber())
-            .k8sPodList(k8sTaskHelperBase.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
-                                                         managedWorkloads, kubernetesConfig, releaseName),
-                existingPodList))
-            .loadBalancer(loadBalancer)
-            .build();
-
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sNGTaskResponse(rollingSetupResponse)
-        .build();
   }
 
   private void saveRelease(K8sRollingDeployRequest k8sRollingDeployRequest, Status status) throws YamlException {
@@ -290,7 +290,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
     return true;
   }
 }

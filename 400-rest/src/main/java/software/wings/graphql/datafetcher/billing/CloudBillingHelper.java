@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class CloudBillingHelper {
   @Inject private MainConfiguration mainConfiguration;

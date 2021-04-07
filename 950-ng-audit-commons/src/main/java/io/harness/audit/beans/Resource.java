@@ -10,6 +10,7 @@ import io.harness.ng.core.common.beans.KeyValuePair;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -23,5 +24,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Resource {
   @NotNull @NotEmpty String type;
   @NotNull @NotEmpty String identifier;
-  List<KeyValuePair> labels;
+  @Size(max = 10) List<KeyValuePair> labels;
 }

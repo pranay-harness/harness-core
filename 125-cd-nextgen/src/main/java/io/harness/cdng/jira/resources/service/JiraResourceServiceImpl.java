@@ -23,7 +23,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueCreateMetadataNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
+import io.harness.jira.JiraStatusNG;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -70,6 +72,15 @@ public class JiraResourceServiceImpl implements JiraResourceService {
   }
 
   @Override
+  public List<JiraStatusNG> getStatuses(
+      IdentifierRef jiraConnectorRef, String orgId, String projectId, String projectKey, String issueType) {
+    JiraTaskNGParametersBuilder paramsBuilder =
+        JiraTaskNGParameters.builder().action(JiraActionNG.GET_STATUSES).projectKey(projectKey).issueType(issueType);
+    JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
+    return jiraTaskResponse.getStatuses();
+  }
+
+  @Override
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId,
       String projectId, String projectKey, String issueType, String expand, boolean fetchStatus) {
     JiraTaskNGParametersBuilder paramsBuilder = JiraTaskNGParameters.builder()
@@ -80,6 +91,15 @@ public class JiraResourceServiceImpl implements JiraResourceService {
                                                     .fetchStatus(fetchStatus);
     JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
     return jiraTaskResponse.getIssueCreateMetadata();
+  }
+
+  @Override
+  public JiraIssueUpdateMetadataNG getIssueUpdateMetadata(
+      IdentifierRef jiraConnectorRef, String orgId, String projectId, String issueKey) {
+    JiraTaskNGParametersBuilder paramsBuilder =
+        JiraTaskNGParameters.builder().action(JiraActionNG.GET_ISSUE_UPDATE_METADATA).issueKey(issueKey);
+    JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
+    return jiraTaskResponse.getIssueUpdateMetadata();
   }
 
   private JiraTaskNGResponse obtainJiraTaskNGResponse(

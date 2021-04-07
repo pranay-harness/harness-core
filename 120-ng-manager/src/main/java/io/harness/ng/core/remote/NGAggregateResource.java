@@ -35,7 +35,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.HashSet;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -136,24 +136,44 @@ public class NGAggregateResource {
         accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)));
   }
 
-  @POST
+  @GET
   @Path("acl/usergroups")
-  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateDTOList")
+  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateList")
   public ResponseDTO<PageResponse<UserGroupAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
-      @Body AggregateACLRequest aggregateACLRequest) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    if (aggregateACLRequest == null) {
-      aggregateACLRequest =
-          AggregateACLRequest.builder().resourceGroupFilter(new HashSet<>()).roleFilter(new HashSet<>()).build();
-    }
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
-        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
+        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm));
+  }
+
+  @POST
+  @Path("acl/usergroups/filter")
+  @ApiOperation(value = "Get Aggregated User Group list with filter", nickname = "getUserGroupAggregateListsWithFilter")
+  public ResponseDTO<List<UserGroupAggregateDTO>> list(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Body AggregateACLRequest aggregateACLRequest) {
+    return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
+        accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
+  }
+
+  @GET
+  @Path("acl/usergroups/{identifier}")
+  @ApiOperation(value = "Get Aggregated User Group", nickname = "getUserGroupAggregate")
+  public ResponseDTO<UserGroupAggregateDTO> list(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(aggregateUserGroupService.getAggregatedUserGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }

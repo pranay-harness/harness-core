@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.graphql;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesIdFilter.AnomaliesIdFilterBuilder;
 import io.harness.ccm.anomaly.graphql.AnomaliesTimeFilter.AnomaliesTimeFilterBuilder;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public interface AnomaliesFilter extends Filter {
   Logger log = LoggerFactory.getLogger(AnomaliesFilter.class);
 

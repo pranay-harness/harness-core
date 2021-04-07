@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
@@ -21,6 +22,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sCanaryBaseHandler;
@@ -59,6 +61,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -122,30 +125,41 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> allPods = k8sCanaryBaseHandler.getAllPods(
-        canaryHandlerConfig, k8sCanaryDeployTaskParameters.getReleaseName(), timeoutInMillis);
-    HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
-        k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), canaryHandlerConfig.getManifestFilesDirectory());
+    ExecutionLogCallback wrapUpLogCallback = getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp);
 
-    k8sCanaryBaseHandler.wrapUp(
-        canaryHandlerConfig.getClient(), k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
+    try {
+      List<K8sPod> allPods = k8sCanaryBaseHandler.getAllPods(
+          canaryHandlerConfig, k8sCanaryDeployTaskParameters.getReleaseName(), timeoutInMillis);
+      HelmChartInfo helmChartInfo =
+          k8sTaskHelper.getHelmChartDetails(k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(),
+              canaryHandlerConfig.getManifestFilesDirectory());
 
-    ReleaseHistory releaseHistory = canaryHandlerConfig.getReleaseHistory();
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(canaryHandlerConfig.getKubernetesConfig(),
-        k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      k8sCanaryBaseHandler.wrapUp(canaryHandlerConfig.getClient(), k8sDelegateTaskParams, wrapUpLogCallback);
 
-    K8sCanaryDeployResponse k8sCanaryDeployResponse =
-        K8sCanaryDeployResponse.builder()
-            .releaseNumber(canaryHandlerConfig.getCurrentRelease().getNumber())
-            .k8sPodList(allPods)
-            .currentInstances(canaryHandlerConfig.getTargetInstances())
-            .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
-            .helmChartInfo(helmChartInfo)
-            .build();
-    return K8sTaskExecutionResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sTaskResponse(k8sCanaryDeployResponse)
-        .build();
+      ReleaseHistory releaseHistory = canaryHandlerConfig.getReleaseHistory();
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(canaryHandlerConfig.getKubernetesConfig(),
+          k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+
+      K8sCanaryDeployResponse k8sCanaryDeployResponse =
+          K8sCanaryDeployResponse.builder()
+              .releaseNumber(canaryHandlerConfig.getCurrentRelease().getNumber())
+              .k8sPodList(allPods)
+              .currentInstances(canaryHandlerConfig.getTargetInstances())
+              .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
+              .helmChartInfo(helmChartInfo)
+              .build();
+      wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      return K8sTaskExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sTaskResponse(k8sCanaryDeployResponse)
+          .build();
+    } catch (Exception e) {
+      wrapUpLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
+          canaryHandlerConfig, k8sCanaryDeployTaskParameters.getReleaseName());
+      throw e;
+    }
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {

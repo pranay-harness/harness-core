@@ -1,9 +1,13 @@
 package software.wings.graphql.datafetcher.k8sLabel;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
@@ -36,6 +40,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject private K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
 

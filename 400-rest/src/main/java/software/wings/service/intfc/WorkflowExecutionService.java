@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -63,6 +65,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowExecutionService extends StateStatusUpdate {
   HIterator<WorkflowExecution> executions(String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields);
 
@@ -72,7 +75,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       Query<WorkflowExecution> query, FindOptions findOptions, boolean includeGraph);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,
-      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus);
+      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus, boolean withFailureDetails);
 
   WorkflowExecution triggerPipelineExecution(
       @NotNull String appId, @NotNull String pipelineId, ExecutionArgs executionArgs, Trigger trigger);
@@ -87,7 +90,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger);
 
-  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate);
+  WorkflowExecution getExecutionDetails(
+      @NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate, boolean withFailureDetails);
 
   WorkflowExecution getExecutionWithoutSummary(@NotNull String appId, @NotNull String workflowExecutionId);
 
@@ -297,4 +301,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   ExecutionStatus fetchWorkflowExecutionStatus(String appId, String workflowExecutionId);
 
   WorkflowExecution fetchWorkflowExecution(String appId, String workflowExecutionId, String... projectedFields);
+
+  String fetchFailureDetails(String appId, String workflowExecutionId);
+
+  void populateFailureDetails(WorkflowExecution workflowExecution);
 }

@@ -19,13 +19,13 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -123,6 +123,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(deleteRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
@@ -137,13 +138,12 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
-    K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder()
-                                                 .rollbackInfo(RollbackInfo.builder().identifier("rollback").build())
-                                                 .build();
+    K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
     K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
                                               .errorMessage("Execution failed.")
                                               .commandExecutionStatus(FAILURE)
@@ -153,7 +153,6 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     StepResponse response = deleteStep.finalizeExecution(ambiance, stepParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
-    assertThat(response.getStepOutcomes()).isNotNull();
   }
 
   @Test

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.ce.activePods;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -46,6 +50,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class CeActivePodCountDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;

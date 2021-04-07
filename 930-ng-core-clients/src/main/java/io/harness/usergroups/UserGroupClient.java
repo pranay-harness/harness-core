@@ -18,7 +18,7 @@ import retrofit2.http.Query;
 
 @OwnedBy(PL)
 public interface UserGroupClient {
-  String USER_GROUP_BASEURI = "/user-groups";
+  String USER_GROUP_BASEURI = "user-groups";
 
   @GET(USER_GROUP_BASEURI + "/{identifier}")
   Call<ResponseDTO<UserGroupDTO>> getUserGroup(@Path("identifier") String identifier,

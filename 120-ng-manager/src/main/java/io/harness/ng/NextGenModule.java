@@ -90,8 +90,10 @@ import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
-import io.harness.outbox.OutboxEventIteratorConfiguration;
+import io.harness.ng.userprofile.services.impl.UserInfoServiceImpl;
+import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
@@ -216,8 +218,8 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public OutboxEventIteratorConfiguration getOutboxEventIteratorConfiguration() {
-    return appConfig.getOutboxIteratorConfig();
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    return appConfig.getOutboxPollConfig();
   }
 
   @Override
@@ -363,6 +365,7 @@ public class NextGenModule extends AbstractModule {
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
+    bind(UserInfoService.class).to(UserInfoServiceImpl.class);
 
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))

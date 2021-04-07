@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class K8sTaskParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   private String accountId;

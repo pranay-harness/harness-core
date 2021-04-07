@@ -28,12 +28,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by bzane on 2/28/17
  */
 @JsonTypeName("GCP")
+@FieldNameConstants(innerTypeName = "GcpConfigKeys")
 @Data
 @Builder
 @ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
@@ -48,6 +50,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   private boolean useDelegate;
   private String delegateSelector;
+  private boolean useDelegateSelectors;
+  private List<String> delegateSelectors;
   private boolean skipValidation;
 
   public GcpConfig() {
@@ -56,16 +60,18 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
       String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector,
-      boolean skipValidation) {
+      boolean useDelegateSelectors, List<String> delegateSelectors, boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
         serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
     this.accountId = accountId;
     this.ccmConfig = ccmConfig;
     this.encryptedServiceAccountKeyFileContent = encryptedServiceAccountKeyFileContent;
+    this.delegateSelectors = delegateSelectors;
+    this.useDelegateSelectors = useDelegateSelectors;
+    this.skipValidation = skipValidation;
     this.delegateSelector = delegateSelector;
     this.useDelegate = useDelegate;
-    this.skipValidation = skipValidation;
   }
 
   @Override
@@ -85,17 +91,21 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
     private String serviceAccountKeyFileContent;
     private boolean useDelegate;
     private String delegateSelector;
+    private boolean useDelegateSelectors;
+    private List<String> delegateSelectors;
     private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
         UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector,
-        boolean skipValidation) {
+        boolean useDelegateSelectors, List<String> delegateSelectors, boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
+      this.delegateSelectors = delegateSelectors;
+      this.useDelegateSelectors = useDelegateSelectors;
+      this.skipValidation = skipValidation;
       this.delegateSelector = delegateSelector;
       this.useDelegate = useDelegate;
-      this.skipValidation = skipValidation;
     }
   }
 }

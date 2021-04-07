@@ -2,7 +2,9 @@ package io.harness.ccm.billing.preaggregated;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
@@ -14,6 +16,7 @@ import lombok.experimental.UtilityClass;
 @Value
 @UtilityClass
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class PreAggregatedTableSchema {
   public static final String defaultTableName = "<Project>.<DataSet>.<TableName>";
   public static final DbSpec spec;

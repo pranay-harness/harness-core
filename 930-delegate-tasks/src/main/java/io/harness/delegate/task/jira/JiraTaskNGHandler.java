@@ -8,7 +8,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.jira.JiraClient;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
+import io.harness.jira.JiraStatusNG;
 
 import com.google.inject.Singleton;
 import java.util.List;
@@ -36,6 +38,12 @@ public class JiraTaskNGHandler {
     return JiraTaskNGResponse.builder().projects(projects).build();
   }
 
+  public JiraTaskNGResponse getStatuses(JiraTaskNGParameters params) {
+    JiraClient jiraClient = getJiraClient(params);
+    List<JiraStatusNG> statuses = jiraClient.getStatuses(params.getProjectKey(), params.getIssueType());
+    return JiraTaskNGResponse.builder().statuses(statuses).build();
+  }
+
   public JiraTaskNGResponse getIssue(JiraTaskNGParameters params) {
     JiraClient jiraClient = getJiraClient(params);
     JiraIssueNG issue = jiraClient.getIssue(params.getIssueKey());
@@ -49,6 +57,12 @@ public class JiraTaskNGHandler {
     return JiraTaskNGResponse.builder().issueCreateMetadata(createMetadata).build();
   }
 
+  public JiraTaskNGResponse getIssueUpdateMetadata(JiraTaskNGParameters params) {
+    JiraClient jiraClient = getJiraClient(params);
+    JiraIssueUpdateMetadataNG updateMetadata = jiraClient.getIssueUpdateMetadata(params.getIssueKey());
+    return JiraTaskNGResponse.builder().issueUpdateMetadata(updateMetadata).build();
+  }
+
   public JiraTaskNGResponse createIssue(JiraTaskNGParameters params) {
     JiraClient jiraClient = getJiraClient(params);
     JiraIssueNG issue = jiraClient.createIssue(params.getProjectKey(), params.getIssueType(), params.getFields());
@@ -56,8 +70,10 @@ public class JiraTaskNGHandler {
   }
 
   public JiraTaskNGResponse updateIssue(JiraTaskNGParameters params) {
-    // TODO: implement this method
-    throw new UnsupportedOperationException("Update operation not supported");
+    JiraClient jiraClient = getJiraClient(params);
+    JiraIssueNG issue = jiraClient.updateIssue(
+        params.getIssueKey(), params.getTransitionToStatus(), params.getTransitionName(), params.getFields());
+    return JiraTaskNGResponse.builder().issue(issue).build();
   }
 
   private JiraClient getJiraClient(JiraTaskNGParameters parameters) {

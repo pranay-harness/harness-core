@@ -75,7 +75,6 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
         .filePaths(this.getFilePaths())
         .skipDryRun(this.getSkipDryRun())
         .skipSteadyStateCheck(skipSteadyStateCheck)
-        .rollbackInfo(stepParameterInfo.getRollbackInfo())
         .timeout(stepParameterInfo.getTimeout())
         .name(stepParameterInfo.getName())
         .identifier(stepParameterInfo.getIdentifier())

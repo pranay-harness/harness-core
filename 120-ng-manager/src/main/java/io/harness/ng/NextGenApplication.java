@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -13,7 +14,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.SCMGrpcClientModule;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
@@ -47,7 +47,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
-import io.harness.outbox.OutboxEventIteratorHandler;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -59,8 +59,8 @@ import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
@@ -132,8 +132,8 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
+@OwnedBy(PL)
 @Slf4j
-@OwnedBy(HarnessTeam.PL)
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
@@ -279,7 +279,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
-    injector.getInstance(OutboxEventIteratorHandler.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -327,7 +326,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
-        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
@@ -338,6 +337,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

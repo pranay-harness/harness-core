@@ -331,4 +331,8 @@ unifiedTableTableSchema = [
             "name": "azureResource",
             "type": "STRING"
         },
+        {
+            "name": "azureVMProviderId",
+            "type": "STRING"
+        },
     ]

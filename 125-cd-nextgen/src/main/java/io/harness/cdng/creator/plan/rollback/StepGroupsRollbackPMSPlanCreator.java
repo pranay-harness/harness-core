@@ -1,12 +1,14 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
-import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
@@ -20,8 +22,12 @@ import io.harness.pms.yaml.YamlUtils;
 
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 public class StepGroupsRollbackPMSPlanCreator {
   public static PlanCreationResponse createStepGroupsRollbackPlanNode(YamlField executionStepsField) {
+    if (executionStepsField == null) {
+      return PlanCreationResponse.builder().build();
+    }
     List<YamlNode> stepsArrayFields = executionStepsField.getNode().asArray();
 
     YamlNode stageNode =
@@ -72,8 +78,9 @@ public class StepGroupsRollbackPMSPlanCreator {
     if (EmptyPredicate.isNotEmpty(childChainStepParameters.getChildNodes())) {
       PlanNode stepGroupsRollbackNode =
           PlanNode.builder()
-              .uuid(executionStepsField.getNode().getUuid() + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX)
-              .name("Step Groups Rollback")
+              .uuid(
+                  executionStepsField.getNode().getUuid() + OrchestrationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_SUFFIX)
+              .name(OrchestrationConstants.STEP_GROUPS_ROLLBACK_NODE_NAME)
               .identifier(PlanCreatorConstants.STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER)
               .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
               .stepParameters(childChainStepParameters)
@@ -82,6 +89,7 @@ public class StepGroupsRollbackPMSPlanCreator {
                       .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                       .build())
               .skipGraphType(SkipType.SKIP_NODE)
+              .skipExpressionChain(true)
               .build();
       PlanCreationResponse finalResponse =
           PlanCreationResponse.builder().node(stepGroupsRollbackNode.getUuid(), stepGroupsRollbackNode).build();

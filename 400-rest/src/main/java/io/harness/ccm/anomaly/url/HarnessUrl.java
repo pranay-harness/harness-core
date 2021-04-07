@@ -2,7 +2,9 @@ package io.harness.ccm.anomaly.url;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.utility.AnomalyUtility;
 import io.harness.data.structure.EmptyPredicate;
@@ -20,6 +22,7 @@ import org.apache.http.client.utils.URIBuilder;
 @UtilityClass
 @Slf4j
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class HarnessUrl {
   static final String SETTING_PATH = "account/%1$s/continuous-efficiency/settings";
   static final String PATH_TEMPLATE = "/account/%1$s/continuous-efficiency/%2$s/insights";

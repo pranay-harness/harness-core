@@ -30,9 +30,11 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
@@ -40,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class K8sWorkloadHistogramDataFetcher
     extends AbstractObjectDataFetcher<QLK8SWorkloadHistogramData, QLK8sWorkloadParameters> {
@@ -72,10 +74,12 @@ public class K8sWorkloadHistogramDataFetcher
       PartialHistogramAggragator.aggregateInto(partialRecommendationHistograms, cpuHistograms, memoryHistograms);
     }
 
+    final Set<String> commonContainerNames = new HashSet<>(cpuHistograms.keySet());
+    commonContainerNames.retainAll(memoryHistograms.keySet());
+
     // Convert to the output format
     List<QLContainerHistogramData> containerHistogramDataList =
-        cpuHistograms.keySet()
-            .stream()
+        commonContainerNames.stream()
             .map(containerName -> {
               Histogram memoryHistogram = memoryHistograms.get(containerName);
               HistogramCheckpoint memoryHistogramCp = memoryHistogram.saveToCheckpoint();

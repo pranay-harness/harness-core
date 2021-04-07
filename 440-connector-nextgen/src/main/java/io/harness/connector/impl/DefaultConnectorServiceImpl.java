@@ -14,6 +14,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
@@ -45,6 +47,7 @@ import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
@@ -81,6 +84,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
@@ -463,6 +467,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
       }
       return validationFailureBuilder.build();
+    } catch (WingsException wingsException) {
+      // handle flows which are registered to error handlng framework
+      throw wingsException;
     } catch (Exception ex) {
       log.info("Encountered Error while validating the connector {}",
           String.format(CONNECTOR_STRING, connectorInfo.getIdentifier(), accountIdentifier,

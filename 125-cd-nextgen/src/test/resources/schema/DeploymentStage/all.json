@@ -835,6 +835,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "HoldingScope": {
+      "type": "object",
+      "required": [
+        "nodeSetupId",
+        "scope"
+      ],
+      "properties": {
+        "nodeSetupId": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "HttpHeaderConfig": {
       "type": "object",
       "properties": {
@@ -1123,6 +1139,44 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JiraUpdateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "issueKey"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JiraField"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "issueKey": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "transitionTo": {
+              "$ref": "#/definitions/TransitionTo"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "K8SDirectInfrastructure": {
@@ -1938,6 +1992,9 @@
     "PipelineInfrastructure": {
       "type": "object",
       "properties": {
+        "allowSimultaneousDeployments": {
+          "type": "boolean"
+        },
         "environment": {
           "$ref": "#/definitions/EnvironmentYaml"
         },
@@ -1946,6 +2003,9 @@
         },
         "infrastructureDefinition": {
           "$ref": "#/definitions/InfrastructureDef"
+        },
+        "infrastructureKey": {
+          "type": "string"
         },
         "useFromStage": {
           "$ref": "#/definitions/InfraUseFromStage"
@@ -1968,6 +2028,46 @@
           ]
         }
       ]
+    },
+    "ResourceConstraintStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "acquireMode",
+            "holdingScope",
+            "name",
+            "permits",
+            "resourceUnit"
+          ],
+          "properties": {
+            "acquireMode": {
+              "type": "string",
+              "enum": [
+                "ENSURE",
+                "ACCUMULATE"
+              ]
+            },
+            "holdingScope": {
+              "$ref": "#/definitions/HoldingScope"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permits": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "resourceUnit": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "RetryFailureActionConfig": {
       "allOf": [
@@ -2555,6 +2655,21 @@
       "type": "object",
       "properties": {
         "delegateSelectors": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TransitionTo": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "transitionName": {
           "type": "string"
         }
       },

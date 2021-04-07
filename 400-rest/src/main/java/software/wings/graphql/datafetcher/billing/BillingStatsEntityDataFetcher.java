@@ -49,7 +49,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
 public class BillingStatsEntityDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCCMAggregationFunction, QLBillingDataFilter,
@@ -189,8 +189,7 @@ public class BillingStatsEntityDataFetcher
       String additionalInfo = "";
 
       // Number fields should be null initially, will help in debugging without harm.
-      // TODO(utsav): TEMPORARY; change to 0D after testing
-      Double defaultDoubleValue = -1D;
+      Double defaultDoubleValue = 0D;
       Double storageCost = defaultDoubleValue;
       Double memoryBillingAmount = defaultDoubleValue;
       Double cpuBillingAmount = defaultDoubleValue;

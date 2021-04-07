@@ -1145,7 +1145,14 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Owner(developers = OwnerRule.TMACARI)
   @Category(UnitTests.class)
   public void testGetConnectorMapper() {
+    String appId = "appUUID";
+    DeploymentExecutionContext executionContext = mock(DeploymentExecutionContext.class);
+    Application application = new Application();
+    application.setUuid(appId);
+    Service service = Service.builder().uuid("serviceUUID").artifactType(ArtifactType.DOCKER).build();
     Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").build();
+    doReturn(service).when(azureVMSSStateHelper).getServiceByAppId(executionContext, appId);
+    doReturn(appId).when(executionContext).getAppId();
 
     ArtifactStream artifactStream = mock(ArtifactStream.class);
     doReturn(artifactStream).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
@@ -1155,7 +1162,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
     doReturn(ArtifactStreamType.DOCKER.name()).when(artifactStreamAttributes).getArtifactStreamType();
     doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(any());
 
-    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
+    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
   }
 }

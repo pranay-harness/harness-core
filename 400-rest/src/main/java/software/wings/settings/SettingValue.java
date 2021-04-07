@@ -20,9 +20,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(CDP)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
+@FieldNameConstants(innerTypeName = "SettingValueKeys")
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;

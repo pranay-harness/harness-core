@@ -31,5 +31,5 @@ public class SampleBean implements UuidAware, PersistentEntity, GitSyncableEntit
   String orgIdentifier;
   String identifier;
   String name;
-  String objectId;
+  String objectIdOfYaml;
 }

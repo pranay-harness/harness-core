@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -21,7 +20,6 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
@@ -30,9 +28,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.function.Supplier;
 
 @OwnedBy(HarnessTeam.CDP)
 public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepParameters, K8sDeployResponse> {
@@ -93,29 +91,22 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters, Supplier<K8sDeployResponse> responseSupplier) {
-    try {
-      K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
-      StepResponseBuilder responseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters,
+      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+    K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, responseBuilder)
-            .build();
-      }
-
-      if (!StepUtils.isStepInRollbackSection(ambiance)) {
-        executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_CANARY_DELETE_OUTCOME,
-            K8sCanaryDeleteOutcome.builder().build(), StepOutcomeGroup.STAGE.name());
-      }
-
-      return responseBuilder.status(Status.SUCCEEDED).build();
-    } catch (ErrorDataException ex) {
-      return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) ex.getErrorResponseData())
-          .build();
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, responseBuilder).build();
     }
+
+    if (!StepUtils.isStepInRollbackSection(ambiance)) {
+      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_CANARY_DELETE_OUTCOME,
+          K8sCanaryDeleteOutcome.builder().build(), StepOutcomeGroup.STAGE.name());
+    }
+
+    return responseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override

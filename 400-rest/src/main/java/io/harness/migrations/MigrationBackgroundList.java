@@ -68,6 +68,7 @@ import io.harness.migrations.all.FetchAndSaveAccounts;
 import io.harness.migrations.all.FetchAndSaveAccounts2;
 import io.harness.migrations.all.FixDuplicatedHarnessGroups;
 import io.harness.migrations.all.GCPMarketplaceCustomerMigration;
+import io.harness.migrations.all.GcpConfigMultipleDelegateMigration;
 import io.harness.migrations.all.HelmStateTimeoutMigration;
 import io.harness.migrations.all.InfraMappingToDefinitionMigration;
 import io.harness.migrations.all.InitInfraProvisionerCounters;
@@ -315,6 +316,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(188, MoveDelegateNameToDelegateSelectorsMigration.class))
         .add(Pair.of(189, CleanupOrphanInfraMappings.class))
         .add(Pair.of(190, InstanceSyncPerpetualTaskInfoMigration.class))
+        .add(Pair.of(191, GcpConfigMultipleDelegateMigration.class))
         .build();
   }
 }

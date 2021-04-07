@@ -28,6 +28,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -35,6 +36,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Api(value = "/ng/users", hidden = true)
 @Path("/ng/users")
@@ -95,6 +97,14 @@ public class UserResourceNG {
   @GET
   public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
     User user = userService.getUserByEmail(emailId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @PUT
+  @Path("/user")
+  public RestResponse<Optional<UserInfo>> updateUser(@Body UserInfo userInfo) {
+    User user = convertNgUserToUserWithNameUpdated(userInfo);
+    user = userService.update(user);
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
@@ -163,5 +173,14 @@ public class UserResourceNG {
                 .orElse(false))
         .accountIds(user.getAccountIds())
         .build();
+  }
+
+  private User convertNgUserToUserWithNameUpdated(UserInfo userInfo) {
+    if (userInfo == null) {
+      return null;
+    }
+    User user = userService.getUserByEmail(userInfo.getEmail());
+    user.setName(userInfo.getName());
+    return user;
   }
 }

@@ -51,12 +51,12 @@ public class GcrBuildServiceImpl implements GcrBuildService {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       log.info("[GCR Delegate Selection] Get builds for image " + artifactStreamAttributes.getImageName()
-          + " with selectors " + gcpConfig.getDelegateSelector());
+          + " with selectors " + gcpConfig.getDelegateSelectors());
       return wrapNewBuildsWithLabels(
           gcrApiService
               .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
                              gcpHelperService.getBasicAuthHeader(
-                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate())),
+                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors())),
                   artifactStreamAttributes.getImageName(), 50)
               .stream()
               .map(ArtifactConfigMapper::toBuildDetails)
@@ -72,7 +72,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public List<JobDetails> getJobs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     log.info("[GCR Delegate Selection] Get Jobs " + parentJobName.orElse("NONE") + " with selectors "
-        + gcpConfig.getDelegateSelector());
+        + gcpConfig.getDelegateSelectors());
     return Lists.newArrayList();
   }
 
@@ -90,7 +90,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[GCR Delegate Selection] Get Plans with selectors " + config.getDelegateSelector());
+    log.info("[GCR Delegate Selection] Get Plans with selectors " + config.getDelegateSelectors());
     return getJobs(config, encryptionDetails, Optional.empty())
         .stream()
         .collect(Collectors.toMap(JobDetails::getJobName, JobDetails::getJobName));
@@ -111,13 +111,14 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     log.info("[GCR Delegate Selection] Validate artifact source for image " + artifactStreamAttributes.getImageName()
-        + " with selectors " + config.getDelegateSelector());
+        + " with selectors " + config.getDelegateSelectors());
     try {
       // Decrypt gcpConfig
       encryptionService.decrypt(config, encryptionDetails, false);
       return gcrApiService.verifyImageName(
           GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
-              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegate())),
+              gcpHelperService.getBasicAuthHeader(
+                  config.getServiceAccountKeyFileContent(), config.isUseDelegateSelectors())),
           artifactStreamAttributes.getImageName());
     } catch (IOException e) {
       log.error("Could not verify Artifact source", e);

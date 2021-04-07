@@ -6,7 +6,9 @@ import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @Singleton
 @OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public class ClusterRecordDao {
   public static final String cloudProviderField = ClusterRecordKeys.cluster + "."
       + "cloudProviderId";

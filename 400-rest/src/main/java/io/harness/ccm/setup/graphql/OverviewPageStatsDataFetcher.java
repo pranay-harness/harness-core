@@ -3,7 +3,9 @@ package io.harness.ccm.setup.graphql;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class OverviewPageStatsDataFetcher
     extends AbstractObjectDataFetcher<QLCEOverviewStatsData, QLNoOpQueryParameters> {
   @Inject HPersistence persistence;
