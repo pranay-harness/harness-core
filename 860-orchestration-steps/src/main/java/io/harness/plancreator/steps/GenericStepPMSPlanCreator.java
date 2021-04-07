@@ -9,6 +9,7 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.advisers.rollback.OnFailRollbackAdviser;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.OnFailRollbackParameters.OnFailRollbackParametersBuilder;
@@ -18,6 +19,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
 import io.harness.plancreator.beans.OrchestrationConstants;
+import io.harness.plancreator.steps.common.WithRollbackInfo;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
@@ -35,7 +38,6 @@ import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdvi
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviserParameters;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
@@ -45,7 +47,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -81,7 +82,6 @@ import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
-  private static final String DEFAULT_TIMEOUT = "10m";
   @Inject protected KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
@@ -111,10 +111,6 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     List<AdviserObtainment> adviserObtainmentFromMetaData = getAdviserObtainmentFromMetaData(ctx.getCurrentField());
 
-    if (stepElement.getTimeout() != null && stepElement.getTimeout().isExpression()) {
-      throw new InvalidRequestException("Timeout field must be resolved in step: " + stepElement.getIdentifier());
-    }
-
     if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
       if (((WithRollbackInfo) stepElement.getStepSpecType()).validateStageFailureStrategy() && !isStepInsideRollback) {
         // Failure strategy should be present.
@@ -131,20 +127,21 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
               "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
         }
       }
-
-      String timeout = DEFAULT_TIMEOUT;
-      if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
-        timeout = stepElement.getTimeout().getValue().getTimeoutString();
-      }
-      BaseStepParameterInfo baseStepParameterInfo = BaseStepParameterInfo.builder()
-                                                        .timeout(ParameterField.createValueField(timeout))
-                                                        .description(stepElement.getDescription())
-                                                        .skipCondition(stepElement.getSkipCondition())
-                                                        .name(stepElement.getName())
-                                                        .identifier(stepElement.getIdentifier())
-                                                        .build();
+      stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
+      BaseStepParameterInfo baseStepParameterInfo =
+          BaseStepParameterInfo.builder()
+              .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElement.getTimeout())))
+              .description(stepElement.getDescription())
+              .skipCondition(stepElement.getSkipCondition())
+              .name(stepElement.getName())
+              .identifier(stepElement.getIdentifier())
+              .build();
       stepParameters =
           ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
+
+      if (stepElement.getStepSpecType() instanceof PMSStepInfo) {
+        stepParameters = ((PMSStepInfo) stepElement.getStepSpecType()).getStepParametersInfo(stepElement);
+      }
     }
     PlanNode stepPlanNode =
         PlanNode.builder()
