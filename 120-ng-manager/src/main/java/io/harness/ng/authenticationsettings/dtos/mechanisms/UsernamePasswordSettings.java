@@ -9,6 +9,7 @@ import software.wings.beans.loginSettings.UserLockoutPolicy;
 import software.wings.security.authentication.AuthenticationMechanism;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -26,6 +27,15 @@ public class UsernamePasswordSettings extends NGAuthSettings {
   @NotNull @Valid private UserLockoutPolicy userLockoutPolicy;
   @NotNull @Valid private PasswordExpirationPolicy passwordExpirationPolicy;
   @NotNull @Valid private PasswordStrengthPolicy passwordStrengthPolicy;
+
+  public UsernamePasswordSettings(@JsonProperty("userLockoutPolicy") UserLockoutPolicy userLockoutPolicy,
+      @JsonProperty("passwordExpirationPolicy") PasswordExpirationPolicy passwordExpirationPolicy,
+      @JsonProperty("passwordStrengthPolicy") PasswordStrengthPolicy passwordStrengthPolicy) {
+    super(AuthenticationMechanism.USER_PASSWORD);
+    this.userLockoutPolicy = userLockoutPolicy;
+    this.passwordExpirationPolicy = passwordExpirationPolicy;
+    this.passwordStrengthPolicy = passwordStrengthPolicy;
+  }
 
   @Override
   public AuthenticationMechanism getSettingsType() {

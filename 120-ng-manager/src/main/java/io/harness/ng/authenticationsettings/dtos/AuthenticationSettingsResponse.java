@@ -4,6 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.NGAuthSettings;
 
+import software.wings.security.authentication.AuthenticationMechanism;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Set;
@@ -17,5 +19,6 @@ import lombok.Data;
 public class AuthenticationSettingsResponse {
   List<NGAuthSettings> ngAuthSettings;
   Set<String> whitelistedDomains;
+  AuthenticationMechanism authenticationMechanism;
   boolean twoFactorEnabled;
 }

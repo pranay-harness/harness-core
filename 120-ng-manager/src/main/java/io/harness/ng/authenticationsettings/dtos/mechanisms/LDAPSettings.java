@@ -9,6 +9,7 @@ import software.wings.beans.sso.LdapUserSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import javax.validation.Valid;
@@ -29,6 +30,15 @@ public class LDAPSettings extends NGAuthSettings {
   @Valid List<LdapUserSettings> userSettingsList;
 
   @Valid List<LdapGroupSettings> groupSettingsList;
+
+  public LDAPSettings(@JsonProperty("connectionSettings") LdapConnectionSettings connectionSettings,
+      @JsonProperty("userSettingsList") List<LdapUserSettings> userSettingsList,
+      @JsonProperty("groupSettingsList") List<LdapGroupSettings> groupSettingsList) {
+    super(AuthenticationMechanism.LDAP);
+    this.connectionSettings = connectionSettings;
+    this.userSettingsList = userSettingsList;
+    this.groupSettingsList = groupSettingsList;
+  }
 
   @Override
   public AuthenticationMechanism getSettingsType() {

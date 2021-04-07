@@ -16,5 +16,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public abstract class NGAuthSettings {
   @JsonProperty("settingsType") protected AuthenticationMechanism settingsType;
 
+  public NGAuthSettings(AuthenticationMechanism settingsType) {
+    this.settingsType = settingsType;
+  }
+
   public abstract AuthenticationMechanism getSettingsType();
 }
