@@ -6,13 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
-import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
-import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
-import io.harness.secretmanagerclient.dto.LocalConfigDTO;
-import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
-import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
-import io.harness.secretmanagerclient.dto.VaultConfigDTO;
-import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.*;
 
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.VaultConfig;
@@ -28,6 +22,8 @@ public class SecretManagerConfigMapper {
         return VaultConfigMapper.fromDTO((VaultConfigDTO) dto);
       case GCP_KMS:
         return GcpKmsConfigMapper.fromDTO((GcpKmsConfigDTO) dto);
+      case KMS:
+        return AwsKmsConfigMapper.fromDTO((AwsKmsConfigDTO) dto);
       case LOCAL:
         return LocalConfigMapper.fromDTO((LocalConfigDTO) dto);
       default:

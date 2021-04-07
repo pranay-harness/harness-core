@@ -122,6 +122,11 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
             gcpSecretsManagerService.validateSecretsManagerConfig(
                 accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+          case KMS://TODO:Shashank: Add validation for AWS_Kms
+            gcpSecretsManagerService.validateSecretsManagerConfig(
+                    accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
+            return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+
           case LOCAL:
             localSecretManagerService.validateLocalEncryptionConfig(
                 accountIdentifier, (LocalEncryptionConfig) secretManagerConfigOptional.get());

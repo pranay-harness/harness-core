@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import static io.harness.ng.AwsKmsConfigDTOMapper.getAwsKmsConfigDTO;
 import static io.harness.ng.GcpKmsConfigDTOMapper.getGcpKmsConfigDTO;
 import static io.harness.ng.LocalConfigDTOMapper.getLocalConfigDTO;
 import static io.harness.ng.VaultConfigDTOMapper.getVaultConfigDTO;
@@ -7,6 +8,7 @@ import static io.harness.ng.VaultConfigDTOMapper.getVaultConfigDTO;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -24,6 +26,8 @@ public class SecretManagerConfigDTOMapper {
         return getVaultConfigDTO(accountIdentifier, connectorRequestDTO, (VaultConnectorDTO) connectorConfigDTO);
       case GCP_KMS:
         return getGcpKmsConfigDTO(accountIdentifier, connectorRequestDTO, (GcpKmsConnectorDTO) connectorConfigDTO);
+      case AWS_KMS:
+        return getAwsKmsConfigDTO(accountIdentifier, connectorRequestDTO, (AwsKmsConnectorDTO) connectorConfigDTO);
       case LOCAL:
         return getLocalConfigDTO(accountIdentifier, connectorRequestDTO, (LocalConnectorDTO) connectorConfigDTO);
       default:
