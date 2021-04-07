@@ -1,11 +1,14 @@
-package io.harness.pms.sdk.core.pipeline.filters;
+package io.harness.filters;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.pipeline.filters.ChildrenFilterJsonCreator;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -20,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<PipelineInfoConfig> {
   @Override
   public Class<PipelineInfoConfig> getFieldClass() {
@@ -72,7 +76,7 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
   }
 
   @Override
-  int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
+  public int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
     return StagesFilterJsonCreator.getStagesCount(children);
   }
 }
