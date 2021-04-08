@@ -7,13 +7,14 @@ import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.common.SwaggerConstants;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -59,18 +60,18 @@ public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
-    return K8sCanaryDeleteStepParameters.infoBuilder()
-        .name(baseStepParameterInfo.getName())
-        .description(baseStepParameterInfo.getDescription())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
-        .timeout(baseStepParameterInfo.getTimeout())
-        .skipDryRun(skipDryRun)
-        .build();
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(YamlTypes.K8S_CANARY_DELETE).build();
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_CANARY_DELETE).build();
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+    return K8sCanaryDeleteStepParameters.infoBuilder()
+        .name(stepElementConfig.getName())
+        .description(stepElementConfig.getDescription())
+        .skipCondition(stepElementConfig.getSkipCondition())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
+        .skipDryRun(skipDryRun)
+        .build();
   }
 }
