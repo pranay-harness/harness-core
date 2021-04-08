@@ -1,20 +1,21 @@
-package io.harness.pms.sdk.core.execution.invokers;
-import io.harness.logStreaming.ILogStreamingStepClient;
-import io.harness.logStreaming.LogStreamingStepClientFactory;
+package io.harness.logstreaming;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import io.harness.logstreaming.LogLine;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.time.Instant;
 
-public class NGManagerLogCallback implements LogCallback {
-  ILogStreamingStepClient logStreamingClient;
-  String logSuffix;
+@OwnedBy(HarnessTeam.PIPELINE)
+public class NGLogCallback implements LogCallback {
+  private final ILogStreamingStepClient logStreamingClient;
+  private final String logSuffix;
 
-  public NGManagerLogCallback(LogStreamingStepClientFactory logStreamingStepClientFactory, Ambiance ambiance,
-      String logSuffix, boolean shouldOpenStream) {
+  public NGLogCallback(LogStreamingStepClientFactory logStreamingStepClientFactory, Ambiance ambiance, String logSuffix,
+      boolean shouldOpenStream) {
     this.logStreamingClient = logStreamingStepClientFactory.getLogStreamingStepClient(ambiance);
     this.logSuffix = logSuffix;
     if (shouldOpenStream) {

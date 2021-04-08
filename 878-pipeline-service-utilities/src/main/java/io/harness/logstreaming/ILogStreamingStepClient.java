@@ -1,7 +1,9 @@
-package io.harness.logStreaming;
+package io.harness.logstreaming;
 
-import io.harness.logstreaming.LogLine;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface ILogStreamingStepClient {
   /**
    * Open new log stream on log streaming service.

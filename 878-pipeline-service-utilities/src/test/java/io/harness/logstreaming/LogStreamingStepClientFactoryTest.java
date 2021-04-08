@@ -1,4 +1,4 @@
-package io.harness.logStreaming;
+package io.harness.logstreaming;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 
@@ -6,8 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.steps.StepUtils;
@@ -15,6 +16,7 @@ import io.harness.steps.StepUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class LogStreamingStepClientFactoryTest extends CategoryTest {
   private static final String SERVICE_TOKEN = "token";
   private static final String ACCOUNT_ID = "accountId";

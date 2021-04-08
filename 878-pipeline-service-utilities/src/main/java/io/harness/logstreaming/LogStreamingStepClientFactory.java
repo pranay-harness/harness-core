@@ -1,17 +1,13 @@
-package io.harness.logStreaming;
+package io.harness.logstreaming;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logstreaming.LogStreamingClient;
-import io.harness.logstreaming.LogStreamingHelper;
-import io.harness.logstreaming.LogStreamingSanitizer;
-import io.harness.logstreaming.LogStreamingServiceConfiguration;
-import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.network.SafeHttpCall;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.steps.StepUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -21,8 +17,9 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.jetbrains.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class LogStreamingStepClientFactory {
   @Inject LogStreamingServiceConfiguration logStreamingServiceConfiguration;
@@ -51,7 +48,7 @@ public class LogStreamingStepClientFactory {
           .logStreamingClient(logStreamingClient)
           .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(secrets).build())
           .baseLogKey(LogStreamingHelper.generateLogBaseKey(StepUtils.generateLogAbstractions(ambiance)))
-          .accountId(AmbianceUtils.getAccountId(ambiance))
+          .accountId(accountId)
           .token(accountIdToTokenCache.get(accountId))
           .build();
     } catch (Exception exception) {
@@ -59,8 +56,7 @@ public class LogStreamingStepClientFactory {
     }
   }
 
-  @VisibleForTesting
-  protected String retrieveLogStreamingAccountToken(String accountId) throws IOException {
+  private String retrieveLogStreamingAccountToken(String accountId) throws IOException {
     return SafeHttpCall.executeWithExceptions(logStreamingServiceRestClient.retrieveAccountToken(
         logStreamingServiceConfiguration.getServiceToken(), accountId));
   }

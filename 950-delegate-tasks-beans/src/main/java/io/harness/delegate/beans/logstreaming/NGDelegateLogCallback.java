@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitProgress.CommandUnitProgressBuilder;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.exception.InvalidRequestException;
@@ -11,12 +13,13 @@ import io.harness.logstreaming.LogLine;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 
-public class NGLogCallback implements LogCallback {
+@OwnedBy(HarnessTeam.CDP)
+public class NGDelegateLogCallback implements LogCallback {
   private ILogStreamingTaskClient iLogStreamingTaskClient;
   private String commandUnitName;
   private CommandUnitsProgress commandUnitsProgress;
 
-  public NGLogCallback(ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName,
+  public NGDelegateLogCallback(ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName,
       boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
     if (iLogStreamingTaskClient == null) {
       throw new InvalidRequestException(

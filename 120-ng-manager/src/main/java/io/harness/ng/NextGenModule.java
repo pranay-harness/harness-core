@@ -45,6 +45,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -256,7 +257,10 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
-    bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
+    bind(LogStreamingServiceRestClient.class)
+        .toProvider(NGLogStreamingClientFactory.builder()
+                        .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
+                        .build());
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
