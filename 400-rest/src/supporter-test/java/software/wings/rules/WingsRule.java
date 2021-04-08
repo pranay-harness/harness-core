@@ -18,6 +18,8 @@ import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
 import io.harness.NoopStatement;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -74,7 +76,6 @@ import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.JobsFrequencyConfig;
-import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
@@ -125,6 +126,8 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@Deprecated
 public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   protected ClosingFactory closingFactory = new ClosingFactory();
 
@@ -360,7 +363,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       }
     });
 
-    modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());

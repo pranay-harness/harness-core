@@ -5,7 +5,9 @@ import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.User;
@@ -14,6 +16,7 @@ import software.wings.security.UserThreadLocal;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Optional;
@@ -21,6 +24,8 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 @OwnedBy(PL)
+@Singleton
+@TargetModule(HarnessModule._970_RBAC_CORE)
 public class ApiBlocker implements MethodInterceptor {
   @Inject Injector injector;
 
