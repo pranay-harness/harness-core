@@ -1,5 +1,6 @@
 package io.harness.ng.core.user.service.impl;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
@@ -15,6 +16,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.user.spring.UserProjectMapRepository;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -85,15 +88,21 @@ public class UserMembershipMigrationService implements Managed {
 
   private void userMembershipMigrationJob() {
     log.info("Starting migration of UserProjectMap to UserMembership");
-    Criteria criteria = Criteria.where(UserProjectMapKeys.migrated).exists(false);
-    Optional<UserProjectMap> userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
-    while (userProjectMapOptional.isPresent()) {
-      UserProjectMap userProjectMap = userProjectMapOptional.get();
-      handleMigration(userProjectMap);
-      userProjectMap.setMigrated(true);
-      userProjectMapRepository.save(userProjectMap);
-      userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
+    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
+    try {
+      Criteria criteria = Criteria.where(UserProjectMapKeys.migrated).exists(false);
+      Optional<UserProjectMap> userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
+      while (userProjectMapOptional.isPresent()) {
+        UserProjectMap userProjectMap = userProjectMapOptional.get();
+        handleMigration(userProjectMap);
+        userProjectMap.setMigrated(true);
+        userProjectMapRepository.save(userProjectMap);
+        userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
+      }
+    } catch (Exception exception) {
+      log.error("Exception occurred during migration of UserProjectMap to UserMembership", exception);
     }
+    SecurityContextBuilder.unsetCompleteContext();
     log.info("Completed migration of UserProjectMap to UserMembership");
   }
 
