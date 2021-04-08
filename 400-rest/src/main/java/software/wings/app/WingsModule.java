@@ -99,6 +99,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
@@ -890,8 +891,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(MainConfiguration.class).toInstance(configuration);
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
-    RetryOnExceptionInterceptor retryOnExceptionInterceptor = new RetryOnExceptionInterceptor();
-    requestInjection(retryOnExceptionInterceptor);
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
     // Retry On Exception Binding ends
     bind(SchedulerConfig.class)
@@ -1287,8 +1288,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
-    ApiBlocker apiBlocker = new ApiBlocker();
-    requestInjection(apiBlocker);
+    ProviderMethodInterceptor apiBlocker = new ProviderMethodInterceptor(getProvider(ApiBlocker.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
 
     switch (configuration.getExecutionLogsStorageMode()) {
