@@ -3,6 +3,8 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -29,8 +31,8 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.UserClientModule;
 import io.harness.ng.core.account.remote.AccountClientModule;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
@@ -38,10 +40,12 @@ import io.harness.persistence.UserProvider;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
+import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
+import io.harness.pms.event.PipelineEntityCRUDStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
-import io.harness.pms.jira.JiraTaskHelperServiceImpl;
+import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
@@ -56,6 +60,8 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -67,10 +73,13 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
-import io.harness.steps.jira.JiraTaskHelperService;
+import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.user.UserClientModule;
+import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
@@ -175,6 +184,8 @@ public class PipelineServiceModule extends AbstractModule {
         YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
+    install(new UserGroupClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
@@ -189,6 +200,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
+    bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
@@ -209,7 +221,16 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
-    bind(JiraTaskHelperService.class).to(JiraTaskHelperServiceImpl.class);
+    bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
+    bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+
+    registerEventsFrameworkMessageListeners();
+  }
+
+  private void registerEventsFrameworkMessageListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
+        .to(PipelineEntityCRUDStreamListener.class);
   }
 
   @Provides

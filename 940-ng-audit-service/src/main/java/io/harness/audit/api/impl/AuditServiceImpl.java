@@ -12,6 +12,7 @@ import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.ResourceDTO;
@@ -30,13 +31,16 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.TransactionException;
@@ -91,6 +95,7 @@ public class AuditServiceImpl implements AuditService {
                                           .accountIdentifier(auditEventDTO.getResourceScope().getAccountIdentifier())
                                           .oldYaml(auditEventDTO.getYamlDiffRecordDTO().getOldYaml())
                                           .newYaml(auditEventDTO.getYamlDiffRecordDTO().getNewYaml())
+                                          .timestamp(Instant.ofEpochMilli(auditEventDTO.getTimestamp()))
                                           .build();
       auditYamlService.save(yamlDiffRecord);
     }
@@ -122,19 +127,20 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.environmentIdentifier)
-                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironments())) {
+      criteriaList.add(getEnvironmentCriteria(auditFilterPropertiesDTO.getEnvironments()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
     }
     criteriaList.add(
         Criteria.where(AuditEventKeys.timestamp)
-            .gte(auditFilterPropertiesDTO.getStartTime() == null ? 0 : auditFilterPropertiesDTO.getStartTime()));
+            .gte(Instant.ofEpochMilli(
+                auditFilterPropertiesDTO.getStartTime() == null ? 0 : auditFilterPropertiesDTO.getStartTime())));
     criteriaList.add(Criteria.where(AuditEventKeys.timestamp)
-                         .lte(auditFilterPropertiesDTO.getEndTime() == null ? currentTimeMillis()
-                                                                            : auditFilterPropertiesDTO.getEndTime()));
+                         .lte(Instant.ofEpochMilli(auditFilterPropertiesDTO.getEndTime() == null
+                                 ? currentTimeMillis()
+                                 : auditFilterPropertiesDTO.getEndTime())));
     return new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
   }
 
@@ -202,6 +208,34 @@ public class AuditServiceImpl implements AuditService {
                               .is(principal.getType())
                               .and(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                               .is(principal.getIdentifier());
+      criteriaList.add(criteria);
+    });
+    return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
+  }
+
+  @Override
+  public void purgeAuditsOlderThanTimestamp(String accountIdentifier, Instant timestamp) {
+    auditRepository.delete(Criteria.where(AuditEventKeys.timestamp)
+                               .lte(timestamp)
+                               .and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
+                               .is(accountIdentifier));
+  }
+
+  @Override
+  public Set<String> getUniqueAuditedAccounts() {
+    return new HashSet<>(auditRepository.fetchDistinctAccountIdentifiers());
+  }
+
+  private Criteria getEnvironmentCriteria(List<Environment> environments) {
+    List<Criteria> criteriaList = new ArrayList<>();
+    environments.forEach(environment -> {
+      Criteria criteria = new Criteria();
+      if (environment.getType() != null) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_TYPE_KEY).is(environment.getType());
+      }
+      if (isNotEmpty(environment.getIdentifier())) {
+        criteria.and(AuditEventKeys.ENVIRONMENT_IDENTIFIER_KEY).is(environment.getIdentifier());
+      }
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));

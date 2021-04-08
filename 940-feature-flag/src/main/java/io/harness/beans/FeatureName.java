@@ -97,6 +97,7 @@ public enum FeatureName {
   NEW_RELIC_CV_TASK,
   NEWRELIC_24_7_CV_TASK,
   NEXT_GEN_ENABLED,
+  NG_AUTH_SETTINGS,
   NG_RBAC_ENABLED,
   NG_ACCESS_CONTROL_MIGRATION,
   NG_DASHBOARDS,
@@ -173,7 +174,6 @@ public enum FeatureName {
   NG_BARRIERS,
   NG_HELM_SOURCE_REPO,
   ENHANCED_GCR_CONNECTIVITY_CHECK,
-  SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
   USE_TF_CLIENT,
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
   AWS_SM_ASSUME_IAM_ROLE,

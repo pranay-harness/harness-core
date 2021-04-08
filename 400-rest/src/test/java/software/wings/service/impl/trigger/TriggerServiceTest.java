@@ -1,10 +1,12 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.HINGER;
@@ -101,6 +103,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -178,7 +181,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
@@ -207,6 +209,7 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._960_API_SERVICES)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
@@ -240,7 +243,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
 
   @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
-  @Inject @InjectMocks private TriggerService triggerService;
+  @Inject @InjectMocks private TriggerServiceImpl triggerService;
 
   Trigger webhookConditionTrigger = buildWebhookCondTrigger();
 
@@ -3172,8 +3175,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
-    triggerService.triggerExecutionPostArtifactCollectionAsync(ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID,
-        Collections.singletonList(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build()));
+    triggerService.triggerExecutionPostArtifactCollectionAsync(
+        ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()));
     verify(workflowExecutionService, times(1))
         .triggerEnvExecution(eq(APP_ID), anyString(), argsArgumentCaptor.capture(), eq(trigger));
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
@@ -3493,10 +3496,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldNotTriggerForAllArtifactsWhenLastCollectedIsSelected() {
-    Artifact artifact =
-        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
-    Artifact artifact2 =
-        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact = anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 = anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
     Trigger trigger = buildArtifactTrigger();
     ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
     artifactTriggerCondition.setArtifactFilter(null);
@@ -3526,10 +3527,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldTriggerForAllArtifactsWhenTriggeringArtifactIsSelected() {
-    Artifact artifact =
-        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
-    Artifact artifact2 =
-        Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact = anArtifact().withUuid(ARTIFACT_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 = anArtifact().withUuid(ARTIFACT_ID + 2).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
     Trigger trigger = buildArtifactTrigger();
     ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
     artifactTriggerCondition.setArtifactFilter(null);
@@ -3711,12 +3710,12 @@ public class TriggerServiceTest extends WingsBaseTest {
     appManifest.setUuid(MANIFEST_ID);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
     when(artifactService.getArtifactByBuildNumber(artifactStream, "FILTER", false))
-        .thenReturn(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build());
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).build());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID,
-        Collections.singletonList(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build()));
+    triggerService.triggerExecutionPostArtifactCollectionAsync(
+        ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()));
     verify(workflowExecutionService, times(1))
         .triggerEnvExecution(eq(APP_ID), anyString(), argsArgumentCaptor.capture(), eq(trigger));
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
@@ -3741,5 +3740,17 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isInstanceOf(DeploymentFreezeException.class)
         .hasMessage("Master Deployment Freeze is active. No deployments are allowed.");
     verify(deploymentFreezeUtils, never()).sendTriggerRejectedNotification(eq(ACCOUNT_ID), eq(APP_ID), any(), anyMap());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldAddAllTheCollectedArtifactsWhenThereAreNoSelections() {
+    List<Artifact> collectedArtifacts = asList(anArtifact().withRevision("1").build(),
+        anArtifact().withRevision("2").build(), anArtifact().withRevision("3").build());
+    List<Artifact> selectedArtifacts = new ArrayList<>();
+    triggerService.addArtifactsFromSelectionsTriggeringArtifactSource(
+        APP_ID, Trigger.builder().build(), selectedArtifacts, collectedArtifacts);
+    assertThat(selectedArtifacts).containsAll(collectedArtifacts);
   }
 }

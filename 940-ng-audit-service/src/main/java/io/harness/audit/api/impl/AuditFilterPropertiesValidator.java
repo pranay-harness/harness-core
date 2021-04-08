@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.AuditCommonConstants;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
@@ -40,6 +41,9 @@ public class AuditFilterPropertiesValidator {
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
     }
+    if (isNotEmpty(auditFilterPropertiesDTO.getEnvironments())) {
+      verifyEnvironments(auditFilterPropertiesDTO.getEnvironments());
+    }
     verifyTimeFilter(auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime());
   }
 
@@ -52,6 +56,16 @@ public class AuditFilterPropertiesValidator {
         throw new InvalidRequestException("Invalid principal filter with missing principal identifier.");
       }
     });
+  }
+
+  private void verifyEnvironments(List<Environment> environments) {
+    if (isNotEmpty(environments)) {
+      environments.forEach(environment -> {
+        if (environment.getType() == null && isEmpty(environment.getIdentifier())) {
+          throw new InvalidRequestException("Invalid environment filter with missing both type and identifier.");
+        }
+      });
+    }
   }
 
   private void verifyScopes(String accountIdentifier, List<ResourceScopeDTO> resourceScopes) {

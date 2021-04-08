@@ -67,15 +67,15 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
+import io.harness.invites.remote.InviteAcceptResponse;
+import io.harness.invites.remote.NgInviteClient;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
-import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
-import io.harness.ng.core.invites.client.NgInviteClient;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.UuidAware;
 import io.harness.remote.client.NGRestUtils;
@@ -664,6 +664,14 @@ public class UserServiceImpl implements UserService {
     }
 
     return user;
+  }
+
+  @Override
+  public List<User> getUsersByEmail(List<String> emailIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field(UserKeys.email).in(emailIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   @Override
@@ -2323,8 +2331,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<User> getUsers(List<String> userIds) {
-    return wingsPersistence.createQuery(User.class).field("uuid").in(userIds).asList();
+  public List<User> getUsers(List<String> userIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   private void loadSupportAccounts(User user) {
@@ -2614,7 +2625,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addUserPrincipal(Map<String, String> claims, User user) {
-    UserPrincipal userPrincipal = new UserPrincipal(user.getUuid(), user.getEmail(), user.getDefaultAccountId());
+    UserPrincipal userPrincipal =
+        new UserPrincipal(user.getUuid(), user.getEmail(), user.getName(), user.getDefaultAccountId());
     Map<String, String> userClaims = userPrincipal.getJWTClaims();
     if (userClaims != null) {
       claims.putAll(userClaims);

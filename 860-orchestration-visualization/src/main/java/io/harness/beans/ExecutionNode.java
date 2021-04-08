@@ -3,10 +3,10 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dto.FailureInfoDTO;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
@@ -33,7 +33,7 @@ public class ExecutionNode {
   Long endTs;
   String stepType;
   ExecutionStatus status;
-  FailureInfo failureInfo;
+  FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   List<ExecutableResponse> executableResponses;

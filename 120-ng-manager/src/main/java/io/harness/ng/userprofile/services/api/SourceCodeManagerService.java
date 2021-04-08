@@ -11,4 +11,6 @@ import java.util.List;
 public interface SourceCodeManagerService {
   List<SourceCodeManagerDTO> get();
   SourceCodeManagerDTO save(SourceCodeManagerDTO sourceCodeManagerDTO);
+  SourceCodeManagerDTO update(String sourceCodeManagerIdentifier, SourceCodeManagerDTO sourceCodeManagerDTO);
+  boolean delete(String scmIdentifier);
 }

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -19,6 +21,11 @@ import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentic
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
@@ -26,6 +33,9 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.userprofile.commons.AwsCodeCommitSCMDTO;
+import io.harness.ng.userprofile.commons.AzureDevOpsSCMDTO;
 import io.harness.ng.userprofile.commons.BitbucketSCMDTO;
 import io.harness.ng.userprofile.commons.GithubSCMDTO;
 import io.harness.ng.userprofile.commons.GitlabSCMDTO;
@@ -48,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,6 +72,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   private String userIdentifier;
   private String name;
   private String sshKeyRef;
+  private String accessKey;
+  private String accessKeyRef;
+  private String secretKeyRef;
 
   @Before
   public void setup() {
@@ -73,6 +87,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     SourcePrincipalContextBuilder.setSourcePrincipal(principal);
     name = "some-name";
     sshKeyRef = "ssh-ref";
+    accessKey = "access-key";
+    accessKeyRef = "access-key-ref";
+    secretKeyRef = "secret-key-ref";
   }
 
   @Test
@@ -117,12 +134,101 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void testSaveAzureDevOps() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = azureDevOpsSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testSaveGitlab() {
     SourceCodeManagerDTO sourceCodeManagerDTO = gitlabSCMDTOCreate();
     when(sourceCodeManagerRepository.save(any()))
         .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
     SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
     assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testSaveAwsCodeCommit() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = awsCodeCommitSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testDelete() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(bitbucketSCM));
+    when(sourceCodeManagerRepository.deleteByUserIdentifierAndName(any(), any()))
+        .thenReturn(delete(sourceCodeManagerList));
+    sourceCodeManagerService.delete(bitbucketSCM.getName());
+    assertThat(sourceCodeManagerList).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdateIfIdentifierIsNull() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.of(bitbucketSCM));
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    assertThatThrownBy(() -> sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Source code manager identifier cannot be null");
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdateIfIdentifierIsNotPresent() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    bitbucketSCM.setId("some-id");
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.empty());
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    assertThatThrownBy(() -> sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(format("Cannot find Source code manager with scm identifier [%s]", bitbucketSCM.getId()));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    bitbucketSCM.setId("some-id");
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.of(bitbucketSCM));
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    SourceCodeManagerDTO updateSCM = sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO);
+    assertThat(updateSCM).isEqualTo(bitbucketSCMDTO);
+  }
+
+  private SourceCodeManager save(SourceCodeManagerDTO sourceCodeManagerDTO) {
+    SourceCodeManager sourceCodeManager =
+        scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO);
+    sourceCodeManager.setId("some-id");
+    return sourceCodeManager;
+  }
+
+  private long delete(List<SourceCodeManager> sourceCodeManagerList) {
+    sourceCodeManagerList.remove(0);
+    return 1;
   }
 
   private SourceCodeManager bitbucketSCMCreate() {
@@ -145,7 +251,7 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return BitbucketSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .bitbucketAuthenticationDTO(bitbucketAuthenticationDTO)
+        .authentication(bitbucketAuthenticationDTO)
         .build();
   }
 
@@ -169,7 +275,21 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GithubSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .githubAuthenticationDTO(githubAuthenticationDTO)
+        .authentication(githubAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManagerDTO azureDevOpsSCMDTOCreate() {
+    GithubAuthenticationDTO githubAuthenticationDTO =
+        GithubAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(
+                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .build();
+    return AzureDevOpsSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(githubAuthenticationDTO)
         .build();
   }
 
@@ -194,6 +314,27 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
         .userIdentifier(userIdentifier)
         .name(name)
         .authentication(gitlabAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManagerDTO awsCodeCommitSCMDTOCreate() {
+    AwsCodeCommitAuthenticationDTO awsCodeCommitAuthenticationDTO =
+        AwsCodeCommitAuthenticationDTO.builder()
+            .authType(AwsCodeCommitAuthType.HTTPS)
+            .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+                             .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                             .httpCredentialsSpec(AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                      .accessKey(accessKey)
+                                                      .accessKeyRef(SecretRefHelper.createSecretRef(accessKeyRef))
+                                                      .secretKeyRef(SecretRefHelper.createSecretRef(secretKeyRef))
+                                                      .build())
+                             .build())
+            .build();
+
+    return AwsCodeCommitSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(awsCodeCommitAuthenticationDTO)
         .build();
   }
 }

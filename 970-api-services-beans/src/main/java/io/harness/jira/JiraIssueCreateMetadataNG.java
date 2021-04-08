@@ -4,9 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.jira.deserializer.JiraCreateMetadataDeserializer;
+import io.harness.jira.deserializer.JiraIssueCreateMetadataDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -17,15 +18,14 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.codehaus.jackson.annotate.JsonTypeName;
 
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("JiraCreateMeta")
-@JsonDeserialize(using = JiraCreateMetadataDeserializer.class)
+@JsonDeserialize(using = JiraIssueCreateMetadataDeserializer.class)
 public class JiraIssueCreateMetadataNG {
   Map<String, JiraProjectNG> projects = new HashMap<>();
 

@@ -4,11 +4,12 @@ import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.core.accesscontrol.PlatformPermissions.DELETE_ORGANIZATION_PERMISSION;
-import static io.harness.ng.core.accesscontrol.PlatformPermissions.EDIT_ORGANIZATION_PERMISSION;
-import static io.harness.ng.core.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
-import static io.harness.ng.core.accesscontrol.PlatformResourceTypes.ACCOUNT;
-import static io.harness.ng.core.accesscontrol.PlatformResourceTypes.ORGANIZATION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.CREATE_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ACCOUNT;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -81,7 +82,7 @@ public class OrganizationResource {
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  @NGAccessControlCheck(resourceType = ACCOUNT, permission = EDIT_ORGANIZATION_PERMISSION)
+  @NGAccessControlCheck(resourceType = ACCOUNT, permission = CREATE_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
       @NotNull @Valid OrganizationRequest organizationDTO) {

@@ -1,9 +1,9 @@
 syntax = "proto3";
-import "google/protobuf/any.proto";
 
 package io.harness.eventsframework.featureflag;
 
 option java_multiple_files = true;
+option go_package = "950_events_api";
 
 message FeatureFlagChangeDTO {
   string accountId = 1;

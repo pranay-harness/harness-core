@@ -1,9 +1,9 @@
 package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -19,6 +19,7 @@ import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.outbox.api.OutboxService;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
@@ -51,7 +52,7 @@ import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
 public class ResourceGroupModule extends AbstractModule {
   private static final String RESOURCE_GROUP_CLIENT = "ng-manager";
   private static final String RESOURCE_GROUP_CONSUMER_GROUP = "resource-group";
@@ -66,6 +67,7 @@ public class ResourceGroupModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    requireBinding(OutboxService.class);
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceGroupValidatorService.class)
         .annotatedWith(Names.named("StaticResourceValidator"))

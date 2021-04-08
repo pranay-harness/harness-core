@@ -1,5 +1,6 @@
 package io.harness.functional.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
 
@@ -18,6 +19,7 @@ import static software.wings.sm.StateType.SERVICENOW_CREATE_UPDATE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -62,6 +64,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ServiceNowCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -136,7 +139,7 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
     log.info("Workflow completed successfully: {}", savedWorkflow.getUuid());
 
     WorkflowExecution completedExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), false);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), false, false);
 
     log.info("Workflow execution details fetched successfully: {}", savedWorkflow.getUuid());
 

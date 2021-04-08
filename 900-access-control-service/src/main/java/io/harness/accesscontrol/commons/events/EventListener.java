@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -22,11 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class EventListener implements Runnable {
   private final Consumer redisConsumer;
   private final Set<EventConsumer> eventConsumers;
+  private final RedisPersistentLocker redisPersistentLocker;
+  private final String consumerGroupName;
 
   @Inject
-  public EventListener(Consumer redisConsumer, Set<EventConsumer> eventConsumers) {
+  public EventListener(Consumer redisConsumer, Set<EventConsumer> eventConsumers,
+      RedisPersistentLocker redisPersistentLocker, String consumerGroupName) {
     this.redisConsumer = redisConsumer;
     this.eventConsumers = eventConsumers;
+    this.redisPersistentLocker = redisPersistentLocker;
+    this.consumerGroupName = consumerGroupName;
   }
 
   public abstract String getListenerName();
@@ -35,12 +42,22 @@ public abstract class EventListener implements Runnable {
   public void run() {
     log.info("Started the consumer: " + getListenerName());
     SecurityContextBuilder.setContext(new ServicePrincipal(ACCESS_CONTROL_SERVICE.getServiceId()));
+    AcquiredLock acquiredLock = null;
     try {
       while (!Thread.currentThread().isInterrupted()) {
+        acquiredLock = redisPersistentLocker.tryToAcquireLock(consumerGroupName, Duration.ofMinutes(2));
+        if (acquiredLock == null) {
+          Thread.sleep(1000);
+          continue;
+        }
         pollAndProcessMessages();
+        redisPersistentLocker.destroy(acquiredLock);
       }
     } catch (Exception ex) {
       log.error(getListenerName() + " unexpectedly stopped", ex);
+      if (acquiredLock != null) {
+        redisPersistentLocker.destroy(acquiredLock);
+      }
     }
     SecurityContextBuilder.unsetCompleteContext();
   }

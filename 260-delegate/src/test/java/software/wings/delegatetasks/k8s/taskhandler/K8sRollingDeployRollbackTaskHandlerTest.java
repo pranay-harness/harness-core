@@ -1,13 +1,19 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -18,10 +24,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -127,6 +135,23 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testRollbackInitThrownException() throws Exception {
+    InvalidRequestException thrownException = new InvalidRequestException("failed to init");
+
+    doThrow(thrownException).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+
+    assertThatThrownBy(()
+                           -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+                               k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams))
+        .isEqualTo(thrownException);
+
+    verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testRollbackRollbackFailed() throws Exception {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(false)
@@ -154,5 +179,30 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(() -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(null, null))
         .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalPostProcessThrownException() throws Exception {
+    InvalidRequestException thrownException = new InvalidRequestException("failed post process");
+
+    doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+    doReturn(true)
+        .when(k8sRollingRollbackBaseHandler)
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+
+    doThrow(thrownException).when(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
+
+    assertThatThrownBy(()
+                           -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+                               k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams))
+        .isEqualTo(thrownException);
+
+    verify(k8sRollingRollbackBaseHandler)
+        .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
+    verify(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
+    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    verify(logCallback, never()).saveExecutionLog(anyString(), any(LogLevel.class), eq(CommandExecutionStatus.SUCCESS));
   }
 }

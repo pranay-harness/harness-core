@@ -27,8 +27,8 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
   public InfraSectionStepParameters(InfrastructureDef infrastructureDefinition, InfraUseFromStage useFromStage,
       EnvironmentYaml environment, ParameterField<String> environmentRef, boolean allowSimultaneousDeployments,
       ParameterField<String> infrastructureKey, String metadata, String childNodeID) {
-    super(infrastructureDefinition, useFromStage, environment, allowSimultaneousDeployments, environmentRef,
-        infrastructureKey, metadata);
+    super(infrastructureDefinition, useFromStage, environment, allowSimultaneousDeployments, infrastructureKey,
+        environmentRef, metadata);
     this.childNodeID = childNodeID;
   }
 

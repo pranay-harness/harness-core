@@ -16,11 +16,21 @@ import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Singleton;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
+@Singleton
 public class AmazonServiceExceptionHandler implements ExceptionHandler {
+  // Create list of exceptions that will be handled by this exception handler
+  // and use it while registering to map binder
+  public static Set<Class<? extends Exception>> exceptions() {
+    return ImmutableSet.<Class<? extends Exception>>builder().add(AmazonServiceException.class).build();
+  }
+
   @Override
   public WingsException handleException(Exception exception) {
     // TODO this is just a sample handler, doesn't cover exhaustive list of AWS exceptions

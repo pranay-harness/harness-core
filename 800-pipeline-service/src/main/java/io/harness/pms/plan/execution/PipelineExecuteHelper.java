@@ -140,6 +140,8 @@ public class PipelineExecuteHelper {
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
     }
+    pipelineRbacServiceImpl.validateStaticallyReferredEntitiesInYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     PreFlightEntity preFlightEntity =
         PreFlightMapper.toEmptyEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     PreFlightEntity preFlightEntitySaved = preFlightRepository.save(preFlightEntity);

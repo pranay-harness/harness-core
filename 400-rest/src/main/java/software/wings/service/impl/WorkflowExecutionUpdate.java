@@ -11,7 +11,9 @@ import static software.wings.sm.StateType.PHASE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
@@ -74,6 +76,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
 
@@ -478,7 +481,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
     try {
       WorkflowExecution workflowExecution =
-          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true);
+          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true, false);
       log.info("Breakdown refresh happened for workflow execution {}", workflowExecution.getUuid());
     } catch (Exception e) {
       log.error("Error in breakdown refresh", e);

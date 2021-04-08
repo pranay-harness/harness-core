@@ -1,13 +1,15 @@
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.ResourceGroup;
-import io.harness.resourcegroup.model.Scope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.google.inject.Inject;
@@ -20,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@OwnedBy(PL)
 public class StaticResourceGroupValidatorServiceImpl implements ResourceGroupValidatorService {
   Map<String, ResourceValidator> resourceValidators;
 
@@ -31,7 +34,8 @@ public class StaticResourceGroupValidatorServiceImpl implements ResourceGroupVal
 
   @Override
   public boolean isResourceGroupValid(ResourceGroup resourceGroup) {
-    Scope scope = Scope.ofResourceGroup(resourceGroup);
+    Scope scope = Scope.of(
+        resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier());
     Map<String, List<String>> resourceTypeMap =
         resourceGroup.getResourceSelectors()
             .stream()

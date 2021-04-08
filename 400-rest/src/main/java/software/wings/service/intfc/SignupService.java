@@ -16,7 +16,7 @@ import java.util.Map;
 public interface SignupService {
   void sendTrialSignupCompletedEmail(UserInvite userInvite);
 
-  void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite);
+  void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite, String generatedPassword);
 
   void sendEmail(UserInvite userInvite, String templateName, Map<String, String> templateModel);
 

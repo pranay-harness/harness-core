@@ -90,13 +90,12 @@ public class MarketoSignupHandler implements SignupHandler {
     userInvite.setPassword(password);
     userInvite.setPasswordHash(hashpw(generatedPassword, BCrypt.gensalt()));
     signupService.validateName(userInvite.getName());
-    userInvite.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
     userService.saveUserInvite(userInvite);
 
     // No user and account is created till here. Once this call is made, only then the account and user's are created.
     // This call returns a user object setting bearer token in it and directly logs in the user.
     User user = userService.completeTrialSignupAndSignIn(userInvite);
-    signupService.sendLinkedInTrialSignupCompletedEmail(userInvite);
+    signupService.sendLinkedInTrialSignupCompletedEmail(userInvite, generatedPassword);
     return user;
   }
 }

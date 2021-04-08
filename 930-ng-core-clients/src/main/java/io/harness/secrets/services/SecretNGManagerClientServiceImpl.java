@@ -12,8 +12,6 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.annotation.EncryptableSetting;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -24,11 +22,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretNGManagerClientServiceImpl implements SecretManagerClientService {
   private final SecretNGManagerClient secretManagerClient;
-
-  @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting encryptableSetting) {
-    throw new UnsupportedOperationException("This method no longer supported.");
-  }
 
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {

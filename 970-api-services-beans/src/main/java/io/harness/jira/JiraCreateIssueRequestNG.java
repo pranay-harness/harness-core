@@ -6,10 +6,8 @@ import static java.util.Collections.singletonMap;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.jira.deserializer.JiraIssueTypeDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -23,7 +21,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonDeserialize(using = JiraIssueTypeDeserializer.class)
 public class JiraCreateIssueRequestNG {
   @NotNull Map<String, Object> fields = new HashMap<>();
 

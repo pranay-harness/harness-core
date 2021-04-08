@@ -18,10 +18,12 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -32,7 +34,6 @@ import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.ng.core.environment.services.EnvironmentService;
-import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -103,9 +104,9 @@ public class EnvironmentResourceV2 {
   @ApiOperation(value = "Create an Environment", nickname = "createEnvironmentV2")
   public ResponseDTO<EnvironmentResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(
-        CDNGRbacUtility.getPermissionDTO(accountId, environmentRequestDTO.getOrgIdentifier(),
-            environmentRequestDTO.getProjectIdentifier(), ENVIRONMENT_CREATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
+                                                  environmentRequestDTO.getProjectIdentifier()),
+        Resource.NONE, ENVIRONMENT_CREATE_PERMISSION);
 
     Environment environmentEntity = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment createdEnvironment = environmentService.create(environmentEntity);
@@ -131,9 +132,9 @@ public class EnvironmentResourceV2 {
   public ResponseDTO<EnvironmentResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(
-        CDNGRbacUtility.getPermissionDTO(accountId, environmentRequestDTO.getOrgIdentifier(),
-            environmentRequestDTO.getProjectIdentifier(), ENVIRONMENT_UPDATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
+                                                  environmentRequestDTO.getProjectIdentifier()),
+        Resource.NONE, ENVIRONMENT_UPDATE_PERMISSION);
 
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
@@ -148,9 +149,9 @@ public class EnvironmentResourceV2 {
   public ResponseDTO<EnvironmentResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(
-        CDNGRbacUtility.getPermissionDTO(accountId, environmentRequestDTO.getOrgIdentifier(),
-            environmentRequestDTO.getProjectIdentifier(), ENVIRONMENT_UPDATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
+                                                  environmentRequestDTO.getProjectIdentifier()),
+        Resource.NONE, ENVIRONMENT_UPDATE_PERMISSION);
 
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);

@@ -9,6 +9,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
@@ -38,12 +40,14 @@ import io.harness.yaml.core.StepElement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
@@ -102,6 +106,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     //    assertThat(taskType.getType()).isEqualTo("CI_BUILD");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -119,6 +124,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -137,6 +143,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -168,6 +175,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)

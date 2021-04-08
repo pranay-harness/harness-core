@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.commons.SourceCodeManagerDTO;
 import io.harness.ng.userprofile.entities.SourceCodeManager;
@@ -16,6 +17,7 @@ import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
 import com.google.inject.Inject;
+import com.hazelcast.util.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,12 +56,48 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
         sourceCodeManager = sourceCodeManagerRepository.save(
             scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
       } catch (DuplicateKeyException e) {
-        throw new DuplicateFieldException(
-            format("Source Code Manager with name [%s] already exists", sourceCodeManagerDTO.getName()));
+        throw new DuplicateFieldException(format("Source Code Manager with userId [%s], name [%s] already exists",
+            userIdentifier.get(), sourceCodeManagerDTO.getName()));
       }
       return scmMapBinder.get(sourceCodeManager.getType()).toSCMDTO(sourceCodeManager);
     }
     return null;
+  }
+
+  @Override
+  public SourceCodeManagerDTO update(String sourceCodeManagerIdentifier, SourceCodeManagerDTO sourceCodeManagerDTO) {
+    Preconditions.checkNotNull(sourceCodeManagerIdentifier, "Source code manager identifier cannot be null");
+    Optional<String> userIdentifier = getUserIdentifier();
+    if (userIdentifier.isPresent()) {
+      sourceCodeManagerDTO.setId(sourceCodeManagerIdentifier);
+      Optional<SourceCodeManager> savedSCM = sourceCodeManagerRepository.findById(sourceCodeManagerDTO.getId());
+      if (savedSCM.isPresent()) {
+        SourceCodeManager toUpdateSCM =
+            scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO);
+        toUpdateSCM.setId(savedSCM.get().getId());
+
+        try {
+          toUpdateSCM = sourceCodeManagerRepository.save(toUpdateSCM);
+        } catch (DuplicateKeyException e) {
+          throw new DuplicateFieldException(format("Source Code Manager with userId [%s], name [%s] already exists",
+              userIdentifier.get(), sourceCodeManagerDTO.getName()));
+        }
+        return scmMapBinder.get(toUpdateSCM.getType()).toSCMDTO(toUpdateSCM);
+      } else {
+        throw new InvalidRequestException(
+            format("Cannot find Source code manager with scm identifier [%s]", sourceCodeManagerDTO.getId()));
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public boolean delete(String name) {
+    Optional<String> userIdentifier = getUserIdentifier();
+    if (userIdentifier.isPresent()) {
+      return sourceCodeManagerRepository.deleteByUserIdentifierAndName(userIdentifier.get(), name) > 0;
+    }
+    return false;
   }
 
   private Optional<String> getUserIdentifier() {

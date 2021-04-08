@@ -19,6 +19,8 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
@@ -33,7 +35,6 @@ import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.rbac.NGResourceType;
-import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -104,8 +105,9 @@ public class ServiceResourceV2 {
   @ApiOperation(value = "Create a Service", nickname = "createServiceV2")
   public ResponseDTO<ServiceResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(CDNGRbacUtility.getPermissionDTO(accountId,
-        serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(), SERVICE_CREATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_CREATE_PERMISSION);
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
@@ -119,8 +121,9 @@ public class ServiceResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
-      accessControlClient.checkForAccessOrThrow(CDNGRbacUtility.getPermissionDTO(accountId,
-          serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(), SERVICE_CREATE_PERMISSION));
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+          Resource.NONE, SERVICE_CREATE_PERMISSION);
     }
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
@@ -148,8 +151,9 @@ public class ServiceResourceV2 {
   public ResponseDTO<ServiceResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(CDNGRbacUtility.getPermissionDTO(accountId,
-        serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(), SERVICE_UPDATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -163,8 +167,9 @@ public class ServiceResourceV2 {
   public ResponseDTO<ServiceResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
-    accessControlClient.checkForAccessOrThrow(CDNGRbacUtility.getPermissionDTO(accountId,
-        serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier(), SERVICE_UPDATE_PERMISSION));
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
+        Resource.NONE, SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);

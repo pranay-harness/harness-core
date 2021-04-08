@@ -25,6 +25,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -122,6 +123,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(deleteRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
@@ -136,6 +138,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)

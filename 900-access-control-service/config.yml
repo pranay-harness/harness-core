@@ -64,6 +64,21 @@ eventsConfig:
     password: ${EVENTS_CONFIG_REDIS_PASSWORD:-""}
   enabled: true
 
+redisLockConfig:
+  sentinel: ${LOCK_CONFIG_USE_SENTINEL:-false}
+  masterName: ${LOCK_CONFIG_SENTINEL_MASTER_NAME:-test}
+  redisUrl: ${LOCK_CONFIG_REDIS_URL:-redis://localhost:6379}
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ${LOCK_CONFIG_ENV_NAMESPACE:-""}
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  userName: ${LOCK_CONFIG_REDIS_USERNAME:-""}
+  password: ${LOCK_CONFIG_REDIS_PASSWORD:-""}
+
 iteratorsConfig:
   resourceGroupIteratorConfig:
     enabled: ${RESOURCE_GROUP_ITERATOR_ENABLED:-true}
@@ -78,6 +93,7 @@ accessControlClient:
     baseUrl: ${ACCESS_CONTROL_SERVICE_BASE_URL:-http://localhost:9006/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   accessControlServiceSecret: ${ACCESS_CONTROL_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 resourceGroupClient:
@@ -85,6 +101,7 @@ resourceGroupClient:
     baseUrl: ${RESOURCE_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   resourceGroupServiceSecret: ${RESOURCE_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 userClient:
@@ -92,6 +109,7 @@ userClient:
     baseUrl: ${USER_CLIENT_BASE_URL:-http://localhost:3457/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userServiceSecret: ${USER_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 userGroupClient:
@@ -99,6 +117,7 @@ userGroupClient:
     baseUrl: ${USER_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userGroupServiceSecret: ${USER_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 decisionModuleConfig:

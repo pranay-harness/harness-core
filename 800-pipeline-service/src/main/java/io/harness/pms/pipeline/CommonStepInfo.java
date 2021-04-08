@@ -51,6 +51,12 @@ public class CommonStepInfo {
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
           .build();
+  StepInfo jiraUpdateStepInfo =
+      StepInfo.newBuilder()
+          .setName("Jira Update")
+          .setType(StepSpecTypeConstants.JIRA_UPDATE)
+          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
@@ -74,6 +80,7 @@ public class CommonStepInfo {
         stepInfos.add(harnessApprovalStepInfo);
         stepInfos.add(jiraApprovalStepInfo);
         stepInfos.add(jiraCreateStepInfo);
+        stepInfos.add(jiraUpdateStepInfo);
       }
 
       featureName = FeatureName.NG_BARRIERS.name();

@@ -23,8 +23,8 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
+import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
@@ -143,7 +143,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
         .deploymentMode(DeployMode.LOCAL)
         .serviceName("ci")
         .engineSteps(ExecutionRegistrar.getEngineSteps())
-        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
         .build();

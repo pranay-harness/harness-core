@@ -206,15 +206,13 @@ public class CILiteEngineStepGroupUtils {
 
     Map<String, String> settings = new HashMap<>();
     settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
-    PluginStepInfo step =
-        PluginStepInfo.builder()
-            .identifier(GIT_CLONE_STEP_ID)
-            .image(ParameterField.createValueField(
-                ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
-            .connectorRef(ParameterField.createValueField(ciExecutionServiceConfig.getDefaultInternalImageConnector()))
-            .name(GIT_CLONE_STEP_NAME)
-            .settings(ParameterField.createValueField(settings))
-            .build();
+    PluginStepInfo step = PluginStepInfo.builder()
+                              .identifier(GIT_CLONE_STEP_ID)
+                              .image(ParameterField.createValueField(
+                                  ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
+                              .name(GIT_CLONE_STEP_NAME)
+                              .settings(ParameterField.createValueField(settings))
+                              .build();
 
     String uuid = generateUuid();
     StepElementConfig stepElementConfig = StepElementConfig.builder()

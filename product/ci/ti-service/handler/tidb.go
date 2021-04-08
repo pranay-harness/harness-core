@@ -64,7 +64,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 
 		// Write changed file information to timescaleDB
 		err = db.WriteDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, orgId,
-			projectId, pipelineId, buildId, stageId, stepId, req.Files)
+			projectId, pipelineId, buildId, stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write changed file information", "account_id", accountId,

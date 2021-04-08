@@ -42,4 +42,6 @@ public interface NGTriggerService {
   List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountId, List<String> fqns);
 
   void validateTriggerConfig(TriggerDetails triggerDetails);
+  boolean deleteAllForPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 }

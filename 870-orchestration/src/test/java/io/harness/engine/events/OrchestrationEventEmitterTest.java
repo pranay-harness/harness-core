@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandlerProxy;
@@ -19,6 +21,7 @@ import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandlerProxy;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 
@@ -30,9 +33,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEventEmitterTest extends OrchestrationTestBase {
   @InjectMocks @Inject private OrchestrationEventEmitter eventEmitter;
-  @InjectMocks @Inject private OrchestrationEventListener eventListener;
+  @InjectMocks @Inject private SdkOrchestrationEventListener eventListener;
   @Mock OrchestrationEventHandlerRegistry registry;
 
   @Inject private Injector injector;

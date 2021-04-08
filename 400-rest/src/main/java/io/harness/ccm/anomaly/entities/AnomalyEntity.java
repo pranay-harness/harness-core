@@ -63,6 +63,7 @@ public class AnomalyEntity {
   boolean slackDailyNotification;
   boolean slackInstantNotification;
   boolean slackWeeklyNotification;
+  boolean newEntity;
 
   public EntityType getEntityType() {
     if (workloadName != null) {
@@ -165,7 +166,8 @@ public class AnomalyEntity {
       REPORTED_BY("reportedby", DataType.STRING),
       SLACK_INSTANT_NOTIFICATION("slackInstantNotification", DataType.BOOLEAN),
       SLACK_DAILY_NOTIFICATION("slackDailyNotification", DataType.BOOLEAN),
-      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN);
+      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN),
+      NEW_ENTITY("newentity", DataType.BOOLEAN);
 
       private DataType dataType;
       private String fieldName;
@@ -227,6 +229,8 @@ public class AnomalyEntity {
     public static final DbColumn slackDailyNotification;
     public static final DbColumn slackWeeklyNotification;
 
+    public static final DbColumn newEntity;
+
     static {
       spec = new DbSpec();
       schema = spec.addDefaultSchema();
@@ -267,6 +271,8 @@ public class AnomalyEntity {
       slackInstantNotification = table.addColumn("slackInstantNotification");
       slackDailyNotification = table.addColumn("slackDailyNotification");
       slackWeeklyNotification = table.addColumn("slackWeeklyNotification");
+
+      newEntity = table.addColumn("newentity");
     }
   }
 }

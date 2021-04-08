@@ -1,6 +1,9 @@
 package io.harness.notification;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Inject;
@@ -10,6 +13,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,6 +30,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+@OwnedBy(PL)
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.notification"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "notification-channel")
@@ -62,6 +68,11 @@ public class NotificationChannelPersistenceConfig extends AbstractMongoConfigura
   @Bean
   MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
     return new MongoTransactionManager(dbFactory);
+  }
+
+  @Override
+  protected Collection<String> getMappingBasePackages() {
+    return Collections.singleton("io.harness");
   }
 
   @Bean(name = "notification-channel")

@@ -11,8 +11,13 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
@@ -58,10 +63,9 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-/**
- * Created by rsingh on 8/01/17.
- */
 @Singleton
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class ElkDelegateServiceImpl implements ElkDelegateService {
   public static final int MAX_RECORDS = 10000;
 
@@ -316,7 +320,7 @@ final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
 OkHttpClient.Builder builder = getOkHttpClientBuilder();
 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-builder.hostnameVerifier((hostname, session) -> true);
+builder.hostnameVerifier(new NoopHostnameVerifier());
 
 return builder;
 }

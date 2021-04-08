@@ -388,3 +388,8 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
 	return nil
 }
+
+func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
+	fmt.Println("running")
+	return nil
+}

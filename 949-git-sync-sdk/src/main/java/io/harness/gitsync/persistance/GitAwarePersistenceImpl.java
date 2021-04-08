@@ -16,10 +16,10 @@ import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
-import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -159,7 +159,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     if (changeType != ChangeType.NONE
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
-      final String yamlString = EntityToYamlStringUtils.getYamlString(yaml);
+      final String yamlString = NGYamlUtils.getYamlString(yaml);
 
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);

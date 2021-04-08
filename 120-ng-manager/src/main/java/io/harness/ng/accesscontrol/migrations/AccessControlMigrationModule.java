@@ -6,16 +6,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAOImpl;
-import io.harness.ng.accesscontrol.migrations.events.AccessControlMigrationFeatureFlagEventListener;
+import io.harness.ng.accesscontrol.migrations.events.AccessControlMigrationHandler;
 import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationServiceImpl;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.remote.UserClient;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.user.remote.UserClient;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -41,7 +41,7 @@ public class AccessControlMigrationModule extends AbstractModule {
     bind(AccessControlMigrationDAO.class).to(AccessControlMigrationDAOImpl.class).in(Scopes.SINGLETON);
     bind(MessageListener.class)
         .annotatedWith(Names.named("access_control_migration" + EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-        .to(AccessControlMigrationFeatureFlagEventListener.class);
+        .to(AccessControlMigrationHandler.class);
   }
 
   public void registerRequiredBindings() {

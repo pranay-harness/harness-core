@@ -1,26 +1,22 @@
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
-proto_library(
+harness_grpc_library(
     name = "950_events_api_proto",
-    srcs = glob(["**/*.proto"]),
-    strip_import_prefix = "",
     visibility = ["//visibility:public"],
     deps = [
-        "//970-ng-commons/src/main/proto:970_ng_commons_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/consumer:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/producer:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud/account:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud/organization:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud/project:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud/resourcegroup:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entityactivity:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entitysetupusage:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/featureflag:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/useraccountmembership:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads:950_events_api_proto",
+        "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
         "//product/ci/scm/proto:ciscmpb_proto",
-        "@com_google_protobuf//:any_proto",
-        "@com_google_protobuf//:descriptor_proto",
-        "@com_google_protobuf//:duration_proto",
-        "@com_google_protobuf//:timestamp_proto",
-        "@com_google_protobuf//:wrappers_proto",
-    ],
-)
-
-java_proto_library(
-    name = "950_events_api_java_proto",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":950_events_api_proto",
     ],
 )

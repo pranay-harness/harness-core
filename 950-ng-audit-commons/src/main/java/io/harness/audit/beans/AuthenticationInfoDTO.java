@@ -1,16 +1,21 @@
 package io.harness.audit.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.AuditCommonConstants;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.security.dto.UserPrincipal;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -22,7 +27,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "AuthenticationInfoKeys")
 public class AuthenticationInfoDTO {
   @NotNull @Valid Principal principal;
-  Map<String, String> labels;
+  @Size(max = 5) Map<String, String> labels;
 
   public static AuthenticationInfoDTO fromSecurityPrincipal(io.harness.security.dto.Principal principal) {
     if (principal == null) {
@@ -30,6 +35,18 @@ public class AuthenticationInfoDTO {
     }
     switch (principal.getType()) {
       case USER:
+        UserPrincipal userPrincipal = (UserPrincipal) principal;
+        Map<String, String> labels = new HashMap<>();
+        if (isNotEmpty(userPrincipal.getUsername())) {
+          labels.put(AuditCommonConstants.USERNAME, userPrincipal.getUsername());
+        }
+        if (isNotEmpty(userPrincipal.getName())) {
+          labels.put(AuditCommonConstants.USER_ID, userPrincipal.getName());
+        }
+        return AuthenticationInfoDTO.builder()
+            .principal(Principal.fromSecurityPrincipal(principal))
+            .labels(labels)
+            .build();
       case API_KEY:
       case SERVICE:
         return AuthenticationInfoDTO.builder().principal(Principal.fromSecurityPrincipal(principal)).build();

@@ -38,13 +38,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.ng.core.UserClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
@@ -69,6 +70,13 @@ public class AccessControlModule extends AbstractModule {
       instance = new AccessControlModule(config);
     }
     return instance;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  public RedisConfig redisLockConfig() {
+    return config.getRedisLockConfig();
   }
 
   @Provides
@@ -108,7 +116,9 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
-    install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
+    if (config.getAggregatorConfiguration().isEnabled()) {
+      install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
+    }
 
     // TODO{phoenikx}  remove this later on
     install(AccessControlClientModule.getInstance(

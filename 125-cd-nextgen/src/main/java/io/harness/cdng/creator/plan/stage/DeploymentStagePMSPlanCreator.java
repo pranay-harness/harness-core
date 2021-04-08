@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
@@ -12,15 +13,16 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -33,6 +35,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
@@ -55,6 +58,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
       PlanCreationContext ctx, StageElementConfig field) {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
+
+    // Validate Stage Failure strategy.
+    validateFailureStrategy(field);
 
     // Adding service child
     YamlField serviceField =
@@ -180,5 +186,20 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
+  }
+
+  private void validateFailureStrategy(StageElementConfig stageElementConfig) {
+    // Failure strategy should be present.
+    List<FailureStrategyConfig> stageFailureStrategies = stageElementConfig.getFailureStrategies();
+    if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+      throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+    }
+
+    // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+    // error type is involved
+    if (!GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies)) {
+      throw new InvalidRequestException(
+          "There should be a Failure strategy that contains one error type as AnyOther, with no other error type along with it in that Failure Strategy.");
+    }
   }
 }

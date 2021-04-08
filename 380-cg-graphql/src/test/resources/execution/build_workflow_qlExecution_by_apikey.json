@@ -28,5 +28,6 @@
       "name":"myworkflow",
       "value":"Workflow"
     }
-  ]
+  ],
+  "failureDetails":null
 }

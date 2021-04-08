@@ -3,14 +3,16 @@ package io.harness;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventListener;
-import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.node.NodeExecutionServiceImpl;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
 import io.harness.govern.ProviderModule;
@@ -24,6 +26,7 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceHandler;
+import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -37,9 +40,6 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
@@ -59,7 +59,6 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMo
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.ProgressUpdateService;
@@ -106,6 +105,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
 @Slf4j
 @OwnedBy(PIPELINE)
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {
@@ -198,17 +198,27 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerYamlSdk(injector);
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
-
+    createConsumerThreadsToListenToEvents(environment, injector);
     MaintenanceController.forceMaintenance(false);
   }
 
-  public static void registerObservers(Injector injector) {
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(PMSEventConsumerService.class));
+  }
+
+  private static void registerObservers(Injector injector) {
     // Register Pipeline Observers
     PMSPipelineServiceImpl pmsPipelineService =
         (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
+
+    NodeExecutionServiceImpl nodeExecutionService =
+        (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(PlanExecutionService.class)));
   }
+
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
@@ -259,14 +269,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
-
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

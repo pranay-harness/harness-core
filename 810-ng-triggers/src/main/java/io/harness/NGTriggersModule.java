@@ -28,8 +28,8 @@ public class NGTriggersModule extends AbstractModule {
   protected void configure() {
     install(SCMJavaClientModule.getInstance());
     bind(NGTriggerService.class).to(NGTriggerServiceImpl.class);
-    MapBinder<String, GitProviderBaseDataObtainer> mapBinder =
-        MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class);
-    mapBinder.addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name()).to(AwsCodeCommitDataObtainer.class);
+    MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class)
+        .addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name())
+        .to(AwsCodeCommitDataObtainer.class);
   }
 }
