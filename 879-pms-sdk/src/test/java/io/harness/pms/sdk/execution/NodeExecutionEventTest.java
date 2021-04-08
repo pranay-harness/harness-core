@@ -8,6 +8,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -19,8 +21,8 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -38,6 +40,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeExecutionEventTest extends PmsSdkTestBase {
   private static final String NODE_EXECUTION_ID = generateUuid();
 
