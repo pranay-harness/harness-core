@@ -730,3 +730,13 @@ java_library(
 )
 
 run_tests()
+
+load("//:macros.bzl", "sonarqube_test")
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = glob(["src/main/**/*.java"]),
+    targets = [
+        ":module",
+    ],
+)
