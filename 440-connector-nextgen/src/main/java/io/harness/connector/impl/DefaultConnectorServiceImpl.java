@@ -452,8 +452,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       validationResult = connectionValidator.validate(
           connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
-      log.info("Test Connection failed for connector with identifier[{}] in account[{}]", connectorInfo.getIdentifier(),
-          accountIdentifier, ex);
+      log.error("Test Connection failed for connector with identifier[{}] in account[{}]",
+          connectorInfo.getIdentifier(), accountIdentifier, ex);
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = ex.getMessage();
