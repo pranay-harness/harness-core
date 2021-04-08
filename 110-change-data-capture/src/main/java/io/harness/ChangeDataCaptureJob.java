@@ -10,11 +10,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CE)
 public class ChangeDataCaptureJob implements Runnable {
+  @Inject private Provider<ChangeDataCaptureBulkSyncTask> changeDataCaptureBulkSyncTaskProvider;
   @Inject private Provider<ChangeDataCaptureTask> changeDataCaptureTaskProvider;
   private ChangeDataCaptureTask changeDataCaptureTask;
+  private ChangeDataCaptureBulkSyncTask changeDataCaptureBulkSyncTask;
   @Override
   public void run() {
+    changeDataCaptureBulkSyncTask = changeDataCaptureBulkSyncTaskProvider.get();
+    changeDataCaptureBulkSyncTask.run();
+
     changeDataCaptureTask = changeDataCaptureTaskProvider.get();
+
     try {
       changeDataCaptureTask.run();
     } catch (RuntimeException e) {
