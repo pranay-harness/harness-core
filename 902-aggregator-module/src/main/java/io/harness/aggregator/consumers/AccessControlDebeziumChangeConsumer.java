@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.connect.source.SourceRecord;
 
@@ -31,28 +32,38 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     this.collectionToConsumerMap = collectionToConsumerMap;
   }
 
+  private void handleChangeEvent(ChangeEvent<String, String> changeEvent) {
+    String id = idDeserializer.deserialize(null, changeEvent.key().getBytes());
+    Optional<String> collectionNameOptional = getCollectionName(changeEvent.destination());
+    Optional<OpType> opTypeOptional =
+        getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
+    if (StringUtils.isEmpty(id) || !collectionNameOptional.isPresent() || !opTypeOptional.isPresent()) {
+      log.error("Unable to get id / collection name/ operation type from event: {}, ignoring it", changeEvent);
+      return;
+    }
+
+    String collectionName = collectionNameOptional.get();
+    OpType opType = opTypeOptional.get();
+    Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(collectionName);
+    Optional.ofNullable(deserializer).ifPresent(des -> {
+      ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
+      log.info("Processing {} event for entity: {} in collection: {}", opType, id, collectionName);
+      Optional.ofNullable(changeConsumer)
+          .ifPresent(consumer -> consumer.consumeEvent(opType, id, deserialize(changeEvent)));
+    });
+  }
+
   @SneakyThrows
   @Override
   public void handleBatch(List<ChangeEvent<String, String>> list,
       DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> recordCommitter) {
     for (ChangeEvent<String, String> changeEvent : list) {
-      String id = idDeserializer.deserialize(null, changeEvent.key().getBytes());
-      Optional<String> collectionNameOptional = getCollectionName(changeEvent.destination());
-      Optional<OpType> opTypeOptional =
-          getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
-      if (!collectionNameOptional.isPresent() || !opTypeOptional.isPresent()) {
-        log.error("Unable to get collection name/ operation type from event: {}, ignoring it", changeEvent);
-        continue;
+      try {
+        handleChangeEvent(changeEvent);
+      } catch (Exception ex) {
+        log.error("Error occurred while processing change event: {}", changeEvent);
+        throw ex;
       }
-
-      String collectionName = collectionNameOptional.get();
-      OpType opType = opTypeOptional.get();
-      Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(collectionName);
-      Optional.ofNullable(deserializer).ifPresent(des -> {
-        ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
-        Optional.ofNullable(changeConsumer)
-            .ifPresent(consumer -> consumer.consumeEvent(opType, id, deserialize(changeEvent)));
-      });
       recordCommitter.markProcessed(changeEvent);
     }
     recordCommitter.markBatchFinished();
