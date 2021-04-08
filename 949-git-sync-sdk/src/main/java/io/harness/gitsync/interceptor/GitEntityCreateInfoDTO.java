@@ -16,8 +16,8 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "GitEntityCreateInfoKeys")
 @OwnedBy(DX)
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class GitEntityCreateInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
