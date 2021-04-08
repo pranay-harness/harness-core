@@ -90,11 +90,7 @@ public class InternalContainerParamsProvider {
     Map<String, String> map = new HashMap<>();
     map.putAll(volumeToMountPath);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
-    String arg = String.format("%s %s %s %s %s %s", LITE_ENGINE_ARGS, STAGE_ARG_COMMAND, INPUT_ARG_PREFIX,
-        serializedLiteEngineTaskStepInfo, TMP_PATH_ARG_PREFIX, TMP_PATH);
-    if (serviceGrpcPortList != null && serviceGrpcPortList.size() > 0) {
-      arg += String.format(" %s %s", GRPC_SERVICE_PORT_PREFIX, StringUtils.join(serviceGrpcPortList, " "));
-    }
+    String arg = LITE_ENGINE_ARGS;
 
     List<String> args = new ArrayList<>(Collections.singletonList(arg));
     // TODO: set connector & image secret

@@ -1,8 +1,6 @@
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
@@ -19,8 +17,6 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
-import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
-import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
 import io.harness.ci.serializer.PluginStepProtobufSerializer;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
@@ -56,6 +52,7 @@ import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,16 +81,22 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
-    StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS));
-    StepLogKeyDetails stepLogKeyDetails = (StepLogKeyDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS));
+    String runtimeId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    String logKey = getLogKey(ambiance);
     String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
-    log.info("Waiting on response for task id {} and step Id {}", stepTaskDetails.getTaskIds().get(stepIdentifier),
-        stepIdentifier);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+
+    // TODO set timeout from step
+    String parkedTaskId = queueParkedDelegateTask(ambiance, 360000, accountId, ciDelegateTaskExecutor);
+    UnitStep unitStep = serialiseStep(
+        stepParameters, parkedTaskId, logKey, stepIdentifier, getPort(ambiance, stepIdentifier), accountId);
+    String liteEngineTaskId =
+        queueDelegateTask(ambiance, 360000, accountId, ciDelegateTaskExecutor, unitStep, runtimeId);
+
     return AsyncExecutableResponse.newBuilder()
-        .addCallbackIds(stepTaskDetails.getTaskIds().get(stepIdentifier))
-        .addAllLogKeys(CollectionUtils.emptyIfNull(stepLogKeyDetails.getLogKeys().get(stepIdentifier)))
+        .addCallbackIds(parkedTaskId)
+        .addCallbackIds(liteEngineTaskId)
+        .addAllLogKeys(CollectionUtils.emptyIfNull(Arrays.asList(logKey)))
         .build();
   }
 
@@ -101,8 +104,21 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, CIStepInfo stepParameters, Map<String, ResponseData> responseDataMap) {
     String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
-    StepStatusTaskResponseData stepStatusTaskResponseData =
-        (StepStatusTaskResponseData) responseDataMap.values().iterator().next();
+
+    StepStatusTaskResponseData stepStatusTaskResponseData = filterStepResponse(responseDataMap);
+    if (stepStatusTaskResponseData == null) {
+      log.error("stepStatusTaskResponseData should not be null for step {}", stepIdentifier);
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder().addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE)).build())
+          .build();
+    }
+
+    return buildAndReturnStepResponse(stepStatusTaskResponseData, stepIdentifier);
+  }
+
+  private StepResponse buildAndReturnStepResponse(
+      StepStatusTaskResponseData stepStatusTaskResponseData, String stepIdentifier) {
     StepStatus stepStatus = stepStatusTaskResponseData.getStepStatus();
 
     log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepIdentifier);

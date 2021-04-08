@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
@@ -56,6 +57,7 @@ import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
@@ -271,6 +273,7 @@ public class K8BuildSetupUtils {
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
     // user input containers with custom entry point
+    consumePortDetails(ambiance, podSetupInfo.getPodSetupParams().getContainerDefinitionInfos());
     for (ContainerDefinitionInfo containerDefinitionInfo :
         podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
       CIK8ContainerParams cik8ContainerParams =
@@ -279,6 +282,14 @@ public class K8BuildSetupUtils {
       containerParams.add(cik8ContainerParams);
     }
     return containerParams;
+  }
+
+  private void consumePortDetails(Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos) {
+    Map<String, List<Integer>> portDetails = containerDefinitionInfos.stream().collect(
+        Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getPorts));
+
+    executionSweepingOutputResolver.consume(ambiance, PORT_DETAILS,
+        ContainerPortDetails.builder().portDetails(portDetails).build(), StepOutcomeGroup.STAGE.name());
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,

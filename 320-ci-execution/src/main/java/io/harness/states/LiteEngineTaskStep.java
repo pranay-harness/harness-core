@@ -1,9 +1,11 @@
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
@@ -11,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
+import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
@@ -24,6 +27,7 @@ import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
@@ -106,12 +110,23 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
     DependencyOutcome dependencyOutcome =
         getDependencyOutcome(ambiance, stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
+    LiteEnginePodDetailsOutcome liteEnginePodDetailsOutcome =
+        getPodDetailsOutcome(k8sTaskExecutionResponse.getK8sTaskResponse());
+
     StepResponse.StepOutcome stepOutcome =
         StepResponse.StepOutcome.builder().name(DEPENDENCY_OUTCOME).outcome(dependencyOutcome).build();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info(
           "LiteEngineTaskStep pod creation task executed successfully with response [{}]", k8sTaskExecutionResponse);
-      return StepResponse.builder().status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+      return StepResponse.builder()
+          .status(Status.SUCCEEDED)
+          .stepOutcome(stepOutcome)
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .name(POD_DETAILS_OUTCOME)
+                           .group(StepOutcomeGroup.STAGE.name())
+                           .outcome(liteEnginePodDetailsOutcome)
+                           .build())
+          .build();
 
     } else {
       log.error("LiteEngineTaskStep execution finished with status [{}] and response [{}]",
@@ -124,6 +139,14 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
       return stepResponseBuilder.build();
     }
+  }
+
+  private LiteEnginePodDetailsOutcome getPodDetailsOutcome(CiK8sTaskResponse ciK8sTaskResponse) {
+    if (ciK8sTaskResponse != null && ciK8sTaskResponse.getPodStatus() != null) {
+      String ip = ciK8sTaskResponse.getPodStatus().getIp();
+      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).build();
+    }
+    throw new CIStageExecutionException("Pod creation failed, make sure to have sufficient resources");
   }
 
   private DependencyOutcome getDependencyOutcome(
@@ -214,7 +237,8 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
     // TODO replace identifier as key in case two steps can have same identifier
     long timeout = TimeoutUtils.getTimeoutInSeconds(
         stepElement.getTimeout(), ((CIStepInfo) stepElement.getStepSpecType()).getDefaultTimeout());
-    String taskId = queueDelegateTask(ambiance, timeout, accountId, ciDelegateTaskExecutor);
+    // String taskId = queueDelegateTask(ambiance, timeout, accountId, ciDelegateTaskExecutor);
+    String taskId = generateUuid();
     taskIds.put(stepElement.getIdentifier(), taskId);
   }
 
