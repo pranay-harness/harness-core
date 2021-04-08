@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type MergeCallbackFn func(ctx context.Context, commits []string, accountId, repo, branch string, files []types.File) error
+type MergeCallbackFn func(ctx context.Context, req types.MergePartialCgRequest) error
 type RedisBroker struct {
 	consumer *redisqueue.Consumer
 	log      *zap.SugaredLogger
@@ -85,7 +85,6 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(
 		case *scmpb.ParseWebhookResponse_Push:
 			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
 			// todo - Vistaar -- populate branch with appropriate value from payload
-			branch := "master"
 			commitList := []string{}
 			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
 				commitList = append(commitList, c.GetSha())
@@ -96,7 +95,18 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(
 				// TODO: (vistaar) figure out how to get list of files here
 				r.log.Infow("got a push webhook payload", "commitList", commitList,
 					"account_id", accountId, "repo", repo)
-				err := fn(ctx, commitList, accountId, repo, branch, []types.File{})
+				diff := types.DiffInfo{
+					CommitId: "commit_id",
+					Files: []types.File{},
+				}
+				req := types.MergePartialCgRequest{
+					AccountId: accountId,
+					Branch: "branch",
+					Repo: repo,
+					Diff: diff,
+				}
+
+				err := fn(ctx, req)
 				if err != nil {
 					return err
 				}

@@ -155,3 +155,15 @@ type TiConfig struct {
 		Ignore []string `json:"ignore"`
 	}
 }
+
+type DiffInfo struct {
+	CommitId string
+	Files    []File
+}
+
+type MergePartialCgRequest struct {
+	AccountId string
+	Repo      string
+	Branch    string
+	Diff      DiffInfo
+}

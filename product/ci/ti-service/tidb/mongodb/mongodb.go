@@ -378,7 +378,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	if err != nil {
 		return errors.Wrap(
 			err,
-			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for" +
+			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for"+
 				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	// this will delete all the relations create by older commits for current pull request
@@ -387,7 +387,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	if err != nil {
 		return errors.Wrap(
 			err,
-			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph " +
+			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
 	}
 	mdb.Log.Infow(
@@ -417,21 +417,25 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 // don't have repo and branch populated in master callgraph uploaded in db
 // MergePartialCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
 // It also cleans up the nodes which have been deleted in the PR from nodes and relations collections.
-func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accountId, repo, branch string, files []types.File) error {
-	mdb.Log.Infow(fmt.Sprintf("merging cg from commits [%v]", commits), "branch", branch, "repo", repo)
-	// update field `branch` of nodes which have commit_id in `commits` list
-	filter := bson.M{"vcs_info.commit_id": bson.M{"$in": commits}}
+func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
+	commit := req.Diff.CommitId
+	branch := req.Branch
+	repo := req.Repo
+	files := req.Diff.Files
+	mdb.Log.Infow(fmt.Sprintf("merging cg from commit [%s]", commit), "branch", branch, "repo", repo)
+	// update field `branch` of nodes which have commit_id in `commit` list
+	filter := bson.M{"vcs_info.commit_id": commit}
 	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
 	_, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in nodes collection for repo: %s, in branch: %s, commits: %v",
-			repo, branch, commits))
+		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in nodes collection for repo: %s, in branch: %s, commit: %v",
+			repo, branch, commit))
 	}
-	// update field `branch` of relations which have commit_id in `commits` list
+	// update field `branch` of relations which have commit_id in `commit` list
 	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in relns collection for repo: %s, in branch: %s, commits: %v",
-			repo, branch, commits))
+		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in relns collection for repo: %s, in branch: %s, commit: %v",
+			repo, branch, commit))
 	}
 
 	// handle deletion of files and corresponding entries from nodes and relations table.
