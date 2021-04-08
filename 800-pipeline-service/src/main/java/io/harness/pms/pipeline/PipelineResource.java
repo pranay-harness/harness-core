@@ -69,7 +69,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -271,14 +270,8 @@ public class PipelineResource implements YamlSchemaResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(PipelineExecutionSummaryDtoMapper::toDto);
-    List<PipelineExecutionSummaryDTO> allowedPipelineSummaries =
-        planExecutionSummaryDTOS
-            .filter(e
-                -> accessControlClient.hasAccess(PMSPipelineDtoMapper.toPermissionCheckDTO(
-                    accountId, orgId, projectId, e.getPipelineIdentifier(), "core_pipeline_view")))
-            .toList();
 
-    return ResponseDTO.newResponse(new PageImpl<>(allowedPipelineSummaries, pageRequest, size));
+    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
 
   @GET
