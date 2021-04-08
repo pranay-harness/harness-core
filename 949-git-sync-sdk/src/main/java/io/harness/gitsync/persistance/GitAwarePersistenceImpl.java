@@ -29,9 +29,11 @@ import java.util.Map;
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
 @Singleton
@@ -59,6 +61,52 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
     // todo(abhinav): do we have to do anything extra if git sync is not there?
     return mongoTemplate.find(query, entityClass);
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Query query, Update update,
+      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    final B object = mongoTemplate.findOne(query, entityClass);
+    if (object == null) {
+      return null;
+    }
+    return update(query, update, changeType, projectIdentifier, orgIdentifier, accountId, entityClass);
+  }
+
+  // In this method it is assumed that project id, org id and account id will not be updated for the entity.
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B update(Query query, Update update, ChangeType changeType,
+      String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    final B objectToUpdate = mongoTemplate.findOne(query, entityClass);
+    if (objectToUpdate == null) {
+      return null;
+    }
+
+    final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
+    final EntityDetail entityDetail =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityDetail(objectToUpdate);
+
+    if (changeType != ChangeType.NONE && isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
+      final Supplier<Y> yamlFromEntity =
+          gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToUpdate);
+      final String yamlString = EntityToYamlStringUtils.getYamlString(yamlFromEntity.get());
+      final ScmPushResponse scmPushResponse =
+          scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
+      final String objectIdOfYaml = scmPushResponse.getObjectId();
+      final EntityGitBranchMetadata entityGitBranchMetadata =
+          getEntityGitBranchMetadata(gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml);
+      // todo(abhinav): do not hardcode.
+      update.addToSet("objectIdOfYaml", objectIdOfYaml);
+      final B modifiedObject =
+          mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), entityClass);
+      processGitBranchMetadata(modifiedObject, changeType, gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml,
+          entityGitBranchMetadata);
+      gitSyncMsvcHelper.postPushInformationToGitMsvc(gitBranchInfo, entityDetail, scmPushResponse);
+    }
+    return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), entityClass);
   }
 
   @Override
@@ -108,7 +156,8 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     final EntityDetail entityDetail =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityDetail(objectToSave);
     B savedObject;
-    if (isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
+    if (changeType != ChangeType.NONE
+        && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
       final String yamlString = EntityToYamlStringUtils.getYamlString(yaml);
 

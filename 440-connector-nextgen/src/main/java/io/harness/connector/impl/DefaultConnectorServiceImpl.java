@@ -125,7 +125,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
-    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
+    Page<Connector> connectors =
+        connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
@@ -140,7 +141,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
-    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
+    Page<Connector> connectors =
+        connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
@@ -230,7 +232,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   private Page<Connector> getConnectorsWithGivenNames(
-      Object accountIdentifier, Object orgIdentifier, Object projectIdentifier, Object name) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Object name) {
     Criteria criteria = new Criteria()
                             .and(ConnectorKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -240,7 +242,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                             .is(projectIdentifier)
                             .and(ConnectorKeys.name)
                             .is(name);
-    return connectorRepository.findAll(criteria, Pageable.unpaged());
+    return connectorRepository.findAll(
+        criteria, Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override
@@ -506,7 +509,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       criteria.and(ConnectorKeys.fullyQualifiedIdentifier).is(fqn);
       Update update = new Update();
       update.set(ConnectorKeys.heartbeatPerpetualTaskId, perpetualTaskId);
-      connectorRepository.update(new Query(criteria), update);
+      connectorRepository.update(new Query(criteria), update, ChangeType.NONE, connectorProjectIdentifier,
+          connectorOrgIdentifier, accountIdentifier);
     } catch (Exception ex) {
       log.info("{} Exception while saving perpetual task id for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
           String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,

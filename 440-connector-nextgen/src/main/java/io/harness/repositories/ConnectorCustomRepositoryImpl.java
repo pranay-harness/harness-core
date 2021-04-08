@@ -21,7 +21,6 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -37,6 +36,7 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   private MongoTemplate mongoTemplate;
   private GitAwarePersistence gitAwarePersistence;
 
+  // todo(abhinav): This method is not yet migrated because of find By fqn
   @Override
   public Page<Connector> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
@@ -46,8 +46,22 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   }
 
   @Override
-  public Connector update(Query query, Update update) {
-    return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Connector.class);
+  public Page<Connector> findAll(
+      Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
+    Query query = new Query(criteria).with(pageable);
+    List<Connector> connectors =
+        gitAwarePersistence.find(query, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+    return PageableExecutionUtils.getPage(connectors, pageable,
+        ()
+            -> gitAwarePersistence.count(Query.of(query).limit(-1).skip(-1), projectIdentifier, orgIdentifier,
+                accountIdentifier, Connector.class));
+  }
+
+  @Override
+  public Connector update(Query query, Update update, ChangeType changeType, String projectIdentifier,
+      String orgIdentifier, String accountIdentifier) {
+    return gitAwarePersistence.findAndModify(
+        query, update, changeType, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
   }
 
   @Override
@@ -67,7 +81,8 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
         .ofNullable(gitAwarePersistence.find(query(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier)
                                                        .is(fullyQualifiedIdentifier)
                                                        .and(ConnectorKeys.deleted)
-                                                       .is(!notDeleted)),
+                                                       .is(!notDeleted))
+                                                 .limit(1),
             projectIdentifier, orgIdentifier, accountIdentifier, Connector.class))
         .map(l -> isEmpty(l) ? null : l.get(0));
   }
