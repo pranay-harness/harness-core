@@ -30,13 +30,14 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 
 	response, _, err := client.Contents.Find(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref)
 	if err != nil {
-		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "Hash", response.Hash, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-	log.Infow("Findfile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "Hash", response.Hash, "elapsed_time_ms", utils.TimeSince(start))
+	log.Infow("Findfile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "commit id", response.Sha, "blob id", response.BlobID, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FileContent{
 		Content:  string(response.Data),
-		ObjectId: string(response.Hash),
+		CommitId: string(response.Sha),
+		BlobId:   string(response.BlobID),
 		Path:     fileRequest.Path,
 	}
 	return out, nil
@@ -50,7 +51,7 @@ func BatchFindFile(ctx context.Context, fileRequests *pb.GetBatchFileRequest, lo
 	for _, request := range fileRequests.FindRequest {
 		file, err := FindFile(ctx, request, log)
 		if err != nil {
-			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", *request.GetProvider(), "slug", request.GetSlug, "path", request.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", *request.GetProvider(), "slug", request.GetSlug(), "path", request.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 			return nil, err
 		}
 		store = append(store, file)
@@ -107,18 +108,24 @@ func UpdateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 
 	ref, err := gitclient.GetValidRef(fileRequest.GetRef(), fileRequest.GetBranch())
 	if err != nil {
-		log.Errorw("Deletefile failure, bad ref/branch", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("UpdateFile failure, bad ref/branch", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	inputParams := new(scm.ContentParams)
 	inputParams.Data = []byte(fileRequest.GetContent())
 	inputParams.Message = fileRequest.GetMessage()
 	inputParams.Branch = fileRequest.GetBranch()
-	inputParams.Sha = fileRequest.GetSha()
-	inputParams.Ref = ref
+	// github uses blob id for update check, others use commit id
+	switch fileRequest.GetProvider().Hook.(type) {
+	case *pb.Provider_Github:
+		inputParams.BlobID = fileRequest.GetBlobId()
+	default:
+		inputParams.Sha = fileRequest.GetCommitId()
+	}
+
 	inputParams.Signature = scm.Signature{
-		Name:  fileRequest.GetSignature().Name,
-		Email: fileRequest.GetSignature().Email,
+		Name:  fileRequest.GetSignature().GetName(),
+		Email: fileRequest.GetSignature().GetEmail(),
 	}
 	response, err := client.Contents.Update(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
 	if err != nil {
@@ -154,7 +161,13 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 	file, _, err := client.Contents.Find(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref)
 	if err == nil {
 		log.Infow("PushFile calling UpdateFile", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath())
-		fileRequest.Sha = file.Hash
+		// github uses blob id for update check, others use commit id
+		switch fileRequest.GetProvider().Hook.(type) {
+		case *pb.Provider_Github:
+			fileRequest.BlobId = file.BlobID
+		default:
+			fileRequest.CommitId = file.Sha
+		}
 		updateResponse, err := UpdateFile(ctx, fileRequest, log)
 		if err != nil {
 			log.Errorw("PushFile failure, UpdateFile failed", "provider", *fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
@@ -172,12 +185,13 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 	}
 	file, _, err = client.Contents.Find(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref)
 	if err != nil {
-		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "Hash", file.Hash, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("UpsertFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
 	out.Path = fileRequest.GetPath()
-	out.ObjectId = string(file.Hash)
+	out.CommitId = string(file.Sha)
+	out.BlobId = string(file.BlobID)
 	out.Content = string(file.Data)
 
 	return out, nil
@@ -199,8 +213,8 @@ func CreateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 	inputParams.Message = fileRequest.GetMessage()
 	inputParams.Branch = fileRequest.GetBranch()
 	inputParams.Signature = scm.Signature{
-		Name:  fileRequest.GetSignature().Name,
-		Email: fileRequest.GetSignature().Email,
+		Name:  fileRequest.GetSignature().GetName(),
+		Email: fileRequest.GetSignature().GetEmail(),
 	}
 	response, err := client.Contents.Create(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
 	if err != nil {
@@ -279,6 +293,7 @@ func convertChange(from *scm.Change) *pb.FileChange {
 		Added:    from.Added,
 		Deleted:  from.Deleted,
 		Renamed:  from.Renamed,
-		ObjectId: from.Hash,
+		CommitId: from.Sha,
+		BlobId:   from.BlobID,
 	}
 }
