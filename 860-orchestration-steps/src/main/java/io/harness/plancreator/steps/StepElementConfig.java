@@ -1,15 +1,17 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
-import io.harness.yaml.core.intfc.WithSkipCondition;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +27,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @TypeAlias("stepElementConfig")
-public class StepElementConfig implements WithSkipCondition {
+@OwnedBy(CDC)
+public class StepElementConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;

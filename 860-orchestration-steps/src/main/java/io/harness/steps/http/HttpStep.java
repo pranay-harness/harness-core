@@ -13,6 +13,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -42,37 +43,39 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResponse> {
+public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Class<HttpStepParameters> getStepParametersClass() {
-    return HttpStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
-  public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
+  public TaskRequest obtainTask(
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     int socketTimeoutMillis = (int) NGTimeConversionHelper.convertTimeStringToMilliseconds("10m");
     if (stepParameters.getTimeout() != null && stepParameters.getTimeout().getValue() != null) {
       socketTimeoutMillis =
           (int) NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue());
     }
+    HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
     HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
-                                                                  .url(stepParameters.getUrl().getValue())
-                                                                  .method(stepParameters.getMethod().getValue())
+                                                                  .url(httpStepParameters.getUrl().getValue())
+                                                                  .method(httpStepParameters.getMethod().getValue())
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
-    if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
+    if (EmptyPredicate.isNotEmpty(httpStepParameters.getHeaders())) {
       List<HttpHeaderConfig> headers = new ArrayList<>();
-      stepParameters.getHeaders().keySet().forEach(
-          key -> headers.add(HttpHeaderConfig.builder().key(key).value(stepParameters.getHeaders().get(key)).build()));
+      httpStepParameters.getHeaders().keySet().forEach(key
+          -> headers.add(HttpHeaderConfig.builder().key(key).value(httpStepParameters.getHeaders().get(key)).build()));
       httpTaskParametersNgBuilder.requestHeader(headers);
     }
 
-    if (stepParameters.getRequestBody() != null) {
-      httpTaskParametersNgBuilder.body(stepParameters.getRequestBody().getValue());
+    if (httpStepParameters.getRequestBody() != null) {
+      httpTaskParametersNgBuilder.body(httpStepParameters.getRequestBody().getValue());
     }
 
     final TaskData taskData =
@@ -83,23 +86,24 @@ public class HttpStep implements TaskExecutable<HttpStepParameters, HttpStepResp
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
-        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
+        TaskSelectorYaml.toTaskSelector(httpStepParameters.delegateSelectors.getValue()));
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, HttpStepParameters stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<HttpStepResponse> responseSupplier) throws Exception {
     StepResponseBuilder responseBuilder = StepResponse.builder();
     HttpStepResponse httpStepResponse = responseSupplier.get();
 
-    Map<String, Object> outputVariables = stepParameters.getOutputVariables();
+    HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
+    Map<String, Object> outputVariables = httpStepParameters.getOutputVariables();
     Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
-    boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
+    boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
 
     HttpOutcome executionData = HttpOutcome.builder()
-                                    .httpUrl(stepParameters.getUrl().getValue())
-                                    .httpMethod(stepParameters.getMethod().getValue())
+                                    .httpUrl(httpStepParameters.getUrl().getValue())
+                                    .httpMethod(httpStepParameters.getMethod().getValue())
                                     .httpResponseCode(httpStepResponse.getHttpResponseCode())
                                     .httpResponseBody(httpStepResponse.getHttpResponseBody())
                                     .status(httpStepResponse.getCommandExecutionStatus())

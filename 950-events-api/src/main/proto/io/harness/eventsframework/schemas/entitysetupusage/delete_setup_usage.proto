@@ -1,9 +1,9 @@
 syntax = "proto3";
 package io.harness.eventsframework.schemas.entitysetupusage;
-import "io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 
 option java_multiple_files = true;
-option go_package = "950_events_api_proto";
+option go_package = "950_events_api";
 
 message DeleteSetupUsageDTO {
   string accountIdentifier = 1;

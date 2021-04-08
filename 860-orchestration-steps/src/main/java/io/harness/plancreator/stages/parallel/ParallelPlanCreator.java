@@ -2,6 +2,7 @@ package io.harness.plancreator.stages.parallel;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -10,7 +11,6 @@ import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;

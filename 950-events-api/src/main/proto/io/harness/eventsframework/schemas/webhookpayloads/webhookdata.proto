@@ -4,7 +4,7 @@ import "product/ci/scm/proto/scm.proto";
 package io.harness.eventsframework.webhookpayloads.webhookdata;
 
 option java_multiple_files = true;
-option go_package = "950_events_api_proto";
+option go_package = "950_events_api";
 
 message WebhookDTO {
   string jsonPayload = 1;

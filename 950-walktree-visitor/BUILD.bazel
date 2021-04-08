@@ -10,7 +10,6 @@ java_library(
     deps = [
         "//:lombok",
         "//950-events-api:module",
-        "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
         "//960-ng-core-beans:module",
         "//970-ng-commons:module",

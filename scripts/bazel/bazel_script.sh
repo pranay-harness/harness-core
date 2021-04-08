@@ -79,6 +79,7 @@ BAZEL_MODULES="\
   //420-delegate-service:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //445-cg-connectors:module \
   //450-ce-views:module \
   //460-capability:module \
   //490-ce-commons:module \
@@ -364,6 +365,7 @@ build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
+build_bazel_module 445-cg-connectors
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability
 build_bazel_module 490-ce-commons

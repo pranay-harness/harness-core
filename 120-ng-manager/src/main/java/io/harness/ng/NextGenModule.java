@@ -347,10 +347,10 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
-    install(new ResourceGroupModule(
-        appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule());
+    install(new ResourceGroupModule(
+        appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
         appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
     if (TRUE.equals(appConfig.getAccessControlAdminClientConfiguration().getMockAccessControlService())) {

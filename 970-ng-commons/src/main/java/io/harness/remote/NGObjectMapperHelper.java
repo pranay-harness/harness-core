@@ -1,8 +1,11 @@
 package io.harness.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.UnexpectedException;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
 
@@ -16,12 +19,16 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(DX)
 @UtilityClass
 public class NGObjectMapperHelper {
-  public void configureNGObjectMapper(final ObjectMapper mapper) {
+  public static final ObjectMapper ngDefaultObjectMapper = configureNGObjectMapper(Jackson.newObjectMapper());
+
+  public ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
     mapper.setSubtypeResolver(subtypeResolver);
@@ -41,5 +48,14 @@ public class NGObjectMapperHelper {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new HarnessJacksonModule());
+    return mapper;
+  }
+
+  public Object clone(Object object) {
+    try {
+      return ngDefaultObjectMapper.readValue(ngDefaultObjectMapper.writeValueAsString(object), object.getClass());
+    } catch (Exception exception) {
+      throw new UnexpectedException("Exception occurred while copying object.", exception);
+    }
   }
 }

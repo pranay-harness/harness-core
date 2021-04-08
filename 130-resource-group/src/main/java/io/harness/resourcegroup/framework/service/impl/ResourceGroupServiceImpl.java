@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ACCOUNT;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
@@ -12,7 +13,6 @@ import static io.harness.utils.PageUtils.getPageRequest;
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
@@ -20,19 +20,18 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.entity_crud.resourcegroup.ResourceGroupEntityChangeDTO;
-import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.outbox.api.OutboxService;
+import io.harness.remote.NGObjectMapperHelper;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.spring.ResourceGroupRepository;
+import io.harness.resourcegroup.events.ResourceGroupCreateEvent;
+import io.harness.resourcegroup.events.ResourceGroupDeleteEvent;
+import io.harness.resourcegroup.events.ResourceGroupUpdateEvent;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
@@ -46,13 +45,13 @@ import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,12 +61,16 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -80,24 +83,29 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   ResourceGroupValidatorService staticResourceGroupValidatorService;
   ResourceGroupValidatorService dynamicResourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
-  Producer eventProducer;
+  OutboxService outboxService;
   Map<String, ResourceValidator> resourceValidators;
   AccessControlAdminClient accessControlAdminClient;
+  TransactionTemplate transactionTemplate;
+
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public ResourceGroupServiceImpl(
       @Named("StaticResourceValidator") ResourceGroupValidatorService staticResourceGroupValidatorService,
       @Named("DynamicResourceValidator") ResourceGroupValidatorService dynamicResourceGroupValidatorService,
       @Named("resourceValidatorMap") Map<String, ResourceValidator> resourceValidators,
-      ResourceGroupRepository resourceGroupRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AccessControlAdminClient accessControlAdminClient) {
+      ResourceGroupRepository resourceGroupRepository, OutboxService outboxService,
+      AccessControlAdminClient accessControlAdminClient,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.staticResourceGroupValidatorService = staticResourceGroupValidatorService;
     this.dynamicResourceGroupValidatorService = dynamicResourceGroupValidatorService;
     this.resourceValidators = resourceValidators;
     this.resourceGroupRepository = resourceGroupRepository;
-    this.eventProducer = eventProducer;
+    this.outboxService = outboxService;
     this.accessControlAdminClient = accessControlAdminClient;
+    this.transactionTemplate = transactionTemplate;
   }
 
   @Override
@@ -133,41 +141,15 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   private ResourceGroup create(ResourceGroup resourceGroup) {
     preprocessResourceGroup(resourceGroup);
     if (validate(resourceGroup)) {
-      ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
-      publishEvent(resourceGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
-      return savedResourceGroup;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
+        outboxService.save(new ResourceGroupCreateEvent(
+            savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
+        return savedResourceGroup;
+      }));
     }
     log.error("PreValidations failed for resource group {}", resourceGroup);
     throw new InvalidRequestException("Prevalidation Checks failed for the resource group");
-  }
-
-  private void publishEvent(ResourceGroup resourceGroup, String action) {
-    try {
-      eventProducer.send(
-          Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", resourceGroup.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.RESOURCE_GROUP,
-                  EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(getResourceGroupPayload(resourceGroup))
-              .build());
-    } catch (ProducerShutdownException e) {
-      log.error(
-          "Failed to send event to events framework for resourcegroup Identifier {}", resourceGroup.getIdentifier(), e);
-    }
-  }
-
-  private ByteString getResourceGroupPayload(ResourceGroup resourceGroup) {
-    ResourceGroupEntityChangeDTO.Builder resourceGroupEntityChangeDTOBuilder =
-        ResourceGroupEntityChangeDTO.newBuilder()
-            .setIdentifier(resourceGroup.getIdentifier())
-            .setAccountIdentifier(resourceGroup.getAccountIdentifier());
-    if (isNotBlank(resourceGroup.getOrgIdentifier())) {
-      resourceGroupEntityChangeDTOBuilder.setOrgIdentifier(resourceGroup.getOrgIdentifier());
-    }
-    if (isNotBlank(resourceGroup.getProjectIdentifier())) {
-      resourceGroupEntityChangeDTOBuilder.setProjectIdentifier(resourceGroup.getProjectIdentifier());
-    }
-    return resourceGroupEntityChangeDTOBuilder.build().toByteString();
   }
 
   @Override
@@ -229,8 +211,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
             "There exists role assignments with this resource group. Please delete them first and then try again");
       }
       resourceGroup.setDeleted(true);
-      resourceGroupRepository.save(resourceGroup);
-      publishEvent(resourceGroupOpt.get(), EventsFrameworkMetadataConstants.DELETE_ACTION);
+      Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        resourceGroupRepository.save(resourceGroup);
+        outboxService.save(new ResourceGroupDeleteEvent(accountIdentifier, ResourceGroupMapper.toDTO(resourceGroup)));
+        return true;
+      }));
     }
     return true;
   }
@@ -288,6 +273,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
+    ResourceGroup oldResourceGroup = (ResourceGroup) NGObjectMapperHelper.clone(savedResourceGroup);
     savedResourceGroup.setName(resourceGroup.getName());
     savedResourceGroup.setColor(resourceGroup.getColor());
     savedResourceGroup.setTags(resourceGroup.getTags());
@@ -296,8 +282,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
       savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
     }
-    resourceGroup = resourceGroupRepository.save(savedResourceGroup);
-    publishEvent(resourceGroup, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+    resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
+      outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
+          ResourceGroupMapper.toDTO(updatedResourceGroup), ResourceGroupMapper.toDTO(oldResourceGroup)));
+      return updatedResourceGroup;
+    }));
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
   }
 

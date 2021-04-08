@@ -19,6 +19,7 @@ import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.outbox.api.OutboxService;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
@@ -66,6 +67,7 @@ public class ResourceGroupModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    requireBinding(OutboxService.class);
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceGroupValidatorService.class)
         .annotatedWith(Names.named("StaticResourceValidator"))

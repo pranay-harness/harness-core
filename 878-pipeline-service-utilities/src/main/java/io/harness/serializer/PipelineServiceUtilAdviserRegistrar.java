@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserWithRollback;
+import io.harness.advisers.nextstep.NextStepAdviser;
 import io.harness.advisers.retry.RetryAdviserWithRollback;
 import io.harness.advisers.rollback.OnFailRollbackAdviser;
 import io.harness.annotations.dev.OwnedBy;
@@ -21,6 +22,7 @@ public class PipelineServiceUtilAdviserRegistrar {
     advisersMap.put(RetryAdviserWithRollback.ADVISER_TYPE, RetryAdviserWithRollback.class);
     advisersMap.put(OnFailRollbackAdviser.ADVISER_TYPE, OnFailRollbackAdviser.class);
     advisersMap.put(ManualInterventionAdviserWithRollback.ADVISER_TYPE, ManualInterventionAdviserWithRollback.class);
+    advisersMap.put(NextStepAdviser.ADVISER_TYPE, NextStepAdviser.class);
     return advisersMap;
   }
 }

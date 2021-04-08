@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	pb "github.com/wings-software/portal/950-events-api/proto"
+	pb "github.com/wings-software/portal/950-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
