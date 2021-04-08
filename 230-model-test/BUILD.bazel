@@ -3,7 +3,6 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
     name = "module",
-    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
