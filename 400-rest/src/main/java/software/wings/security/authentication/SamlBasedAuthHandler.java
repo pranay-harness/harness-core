@@ -238,7 +238,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
     SamlResponse samlResponse = samlClient.decodeAndValidateSamlResponse(samlResponseString);
     String nameId = samlResponse.getNameID();
     try {
-      User user = authenticationUtils.getUser(nameId);
+      User user = authenticationUtils.getUser();
       validateUser(user, samlSettings.getAccountId());
       return user;
     } catch (WingsException e) {
