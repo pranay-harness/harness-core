@@ -116,6 +116,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.signup.SignupModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -272,6 +273,8 @@ public class NextGenModule extends AbstractModule {
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
     install(new InviteModule(this.appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());

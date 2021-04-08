@@ -250,6 +250,8 @@ aeriform("//920-delegate-agent-beans:tests")
 
 aeriform("//920-delegate-service-beans:module")
 
+aeriform("//920-ng-signup:module")
+
 aeriform("//930-delegate-tasks:module")
 
 aeriform("//930-delegate-tasks:tests")
@@ -305,8 +307,6 @@ aeriform("//950-ng-core:tests")
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
-
-aeriform("//950-ng-signup:module")
 
 aeriform("//950-timeout-engine:module")
 

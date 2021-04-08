@@ -5,6 +5,8 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
+    "//:lombok",
+    "//930-ng-core-clients:module",
     "//960-ng-core-beans:module",
 ]
 
