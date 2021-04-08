@@ -51,11 +51,12 @@ import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.logStreaming.LogStreamingStepClientFactory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -69,7 +70,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -158,8 +158,8 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
   @Override
   public TaskChainResponse startChainLinkAfterRbac(
       Ambiance ambiance, ServiceStepParameters stepParameters, StepInputPackage inputPackage) {
-    NGManagerLogCallback ngManagerLogCallback =
-        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, true);
+    NGLogCallback ngManagerLogCallback =
+        new NGLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, true);
     ngManagerLogCallback.saveExecutionLog("Starting Service Step");
 
     ngManagerLogCallback.saveExecutionLog("Processing Manifests");
@@ -209,8 +209,8 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
   public TaskChainResponse executeNextLink(Ambiance ambiance, ServiceStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
-    NGManagerLogCallback ngManagerLogCallback =
-        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
+    NGLogCallback ngManagerLogCallback =
+        new NGLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
     DelegateResponseData notifyResponseData = (DelegateResponseData) responseSupplier.get();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
     int currentIndex = serviceStepPassThroughData.getCurrentIndex();
@@ -248,8 +248,8 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     long startTime = System.currentTimeMillis();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
-    NGManagerLogCallback managerLogCallback =
-        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
+    NGLogCallback managerLogCallback =
+        new NGLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
     ResponseData data = responseDataSupplier.get();
     if (data != null) {
       // Artifact task executed
@@ -309,7 +309,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
 
   @VisibleForTesting
   ServiceOutcome createServiceOutcome(Ambiance ambiance, ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes,
-      long expressionFunctorToken, NGManagerLogCallback managerLogCallback) throws IOException {
+      long expressionFunctorToken, NGLogCallback managerLogCallback) throws IOException {
     ServiceEntity serviceEntity = getServiceEntity(serviceConfig, ambiance);
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
@@ -346,7 +346,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
   }
 
   private void handlePublishingStageOverrides(ServiceOutcomeBuilder outcomeBuilder, ManifestsOutcome manifestsOutcome,
-      ServiceConfig serviceConfig, long expressionFunctorToken, NGManagerLogCallback managerLogCallback) {
+      ServiceConfig serviceConfig, long expressionFunctorToken, NGLogCallback managerLogCallback) {
     if (serviceConfig.getStageOverrides() == null) {
       return;
     }
@@ -466,7 +466,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
   }
 
   private void handleArtifactOutcome(ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes,
-      ServiceConfig serviceConfig, NGManagerLogCallback managerLogCallback) {
+      ServiceConfig serviceConfig, NGLogCallback managerLogCallback) {
     ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
     Map<String, Map<String, Object>> artifactsMap = new HashMap<>();
     for (ArtifactOutcome artifactOutcome : artifactOutcomes) {

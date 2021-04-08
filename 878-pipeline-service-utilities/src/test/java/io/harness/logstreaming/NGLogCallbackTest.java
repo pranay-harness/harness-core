@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.execution.invokers;
+package io.harness.logstreaming;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 
@@ -9,9 +9,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.logStreaming.LogStreamingStepClientFactory;
-import io.harness.logStreaming.LogStreamingStepClientImpl;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -24,20 +24,21 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class NGManagerLogCallbackTest extends CategoryTest {
-  private static String LOG_SUFFIX = "logSuffix";
+@OwnedBy(HarnessTeam.PIPELINE)
+public class NGLogCallbackTest extends CategoryTest {
+  private static final String LOG_SUFFIX = "logSuffix";
 
   @Mock LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Mock LogStreamingStepClientImpl logStreamingStepClient;
 
-  private NGManagerLogCallback ngManagerLogCallback;
+  private NGLogCallback ngManagerLogCallback;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     Ambiance ambiance = Ambiance.newBuilder().build();
     when(logStreamingStepClientFactory.getLogStreamingStepClient(ambiance)).thenReturn(logStreamingStepClient);
-    ngManagerLogCallback = new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, LOG_SUFFIX, false);
+    ngManagerLogCallback = new NGLogCallback(logStreamingStepClientFactory, ambiance, LOG_SUFFIX, false);
   }
 
   @After
