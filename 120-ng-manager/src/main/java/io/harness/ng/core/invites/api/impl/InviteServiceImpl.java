@@ -176,7 +176,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
-    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail(), invite.getAccountIdentifier());
+    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
     if (!userOptional.isPresent()) {
       return false;
     }
@@ -267,7 +267,7 @@ public class InviteServiceImpl implements InviteService {
     }
 
     Invite invite = inviteOptional.get();
-    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail(), invite.getAccountIdentifier());
+    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail());
     markInviteApproved(invite);
     return InviteAcceptResponse.builder()
         .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
@@ -416,7 +416,7 @@ public class InviteServiceImpl implements InviteService {
     }
     Invite invite = inviteOpt.get();
     String email = invite.getEmail();
-    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email, invite.getAccountIdentifier());
+    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
     Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exits");
     UserInfo user = userOpt.get();
     Scope scope = Scope.builder()

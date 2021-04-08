@@ -19,7 +19,7 @@ public interface NgUserService {
 
   Optional<UserInfo> getUserById(String userId);
 
-  Optional<UserInfo> getUserFromEmail(String emailIds, String accountIdentifier);
+  Optional<UserInfo> getUserFromEmail(String emailIds);
 
   List<UserInfo> getUsersFromEmail(List<String> emailIds, String accountIdentifier);
 
