@@ -14,6 +14,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
+import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
 import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
 import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
@@ -83,6 +84,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         sourceCodeManagerMapBinder.addBinding(SCMType.GITLAB).to(GitlabSCMMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.GITHUB).to(GithubSCMMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.AWS_CODE_COMMIT).to(AwsCodeCommitSCMMapper.class);
+        sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
       }
     });
     modules.add(new ProviderModule() {
