@@ -389,7 +389,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	return nil
 }
 
-func (mdb *MongoDb) MergePartialCg(ctx context.Context, commits []string, accountId, repo string, files []types.File) error {
+func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
 	fmt.Println("running")
 	return nil
 }
