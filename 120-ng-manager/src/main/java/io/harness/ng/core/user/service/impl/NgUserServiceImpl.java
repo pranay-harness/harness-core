@@ -2,7 +2,6 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.toList;
@@ -86,12 +85,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembershipRepository.findAll(criteria);
   }
 
-  public Optional<UserInfo> getUserFromEmail(String email, String accountIdentifier) {
-    List<UserInfo> users = getUsersFromEmail(Collections.singletonList(email), accountIdentifier);
-    if (isEmpty(users)) {
-      return Optional.empty();
-    }
-    return Optional.of(users.get(0));
+  public Optional<UserInfo> getUserFromEmail(String email) {
+    return RestClientUtils.getResponse(userClient.getUserByEmailId(email));
   }
 
   @Override
