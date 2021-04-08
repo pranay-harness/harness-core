@@ -41,6 +41,7 @@ import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.licensing.NGLicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -373,6 +374,7 @@ public class NextGenModule extends AbstractModule {
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
     install(new MockRoleAssignmentModule());
+    install(new NGLicenseModule());
     bind(UserService.class).to(UserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);

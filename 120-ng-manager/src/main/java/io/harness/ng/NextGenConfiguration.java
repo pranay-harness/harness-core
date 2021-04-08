@@ -50,6 +50,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String SIGNUP_PACKAGE = "io.harness.signup";
   public static final String MOCKSERVER_PACKAGE = "io.harness.ng.core.acl.mockserver";
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
+  public static final String LICENSE_PACKAGE = "io.harness.licensing.api.resource";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -105,7 +106,7 @@ public class NextGenConfiguration extends Configuration {
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
         OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, RESOURCEGROUP_PACKAGE, SIGNUP_PACKAGE,
-        MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE);
+        MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
