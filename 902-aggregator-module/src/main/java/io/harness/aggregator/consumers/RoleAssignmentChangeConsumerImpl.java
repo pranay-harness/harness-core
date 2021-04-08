@@ -105,6 +105,8 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
 
   @Override
   public long consumeCreateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
+    assert aclService != null && roleService != null && resourceGroupService != null && scopeService != null
+        && userGroupService != null;
     Optional<Role> roleOptional = roleService.get(
         roleAssignmentDBO.getRoleIdentifier(), roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER);
     Optional<ResourceGroup> resourceGroupOptional = resourceGroupService.get(

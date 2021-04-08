@@ -51,6 +51,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     Optional.ofNullable(deserializer).ifPresent(des -> {
       ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
       log.info("Processing {} event for entity: {} in collection: {}", opType, id, collectionName);
+      log.info("Deserialized value: {}", deserialize(changeEvent));
       Optional.ofNullable(changeConsumer)
           .ifPresent(consumer -> consumer.consumeEvent(opType, id, deserialize(changeEvent)));
     });

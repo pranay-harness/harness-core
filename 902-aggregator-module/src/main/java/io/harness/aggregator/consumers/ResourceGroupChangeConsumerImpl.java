@@ -32,6 +32,7 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
 
   @Override
   public long consumeUpdateEvent(String id, ResourceGroupDBO resourceGroupDBO) {
+    assert aclService != null && roleService != null && resourceGroupService != null;
     if (Optional.ofNullable(resourceGroupDBO.getResourceSelectors()).filter(x -> !x.isEmpty()).isPresent()) {
       List<ACL> aclsWithThisResourceGroup = aclService.getByResourceGroup(resourceGroupDBO.getScopeIdentifier(),
           resourceGroupDBO.getIdentifier(), Boolean.TRUE.equals(resourceGroupDBO.getManaged()));

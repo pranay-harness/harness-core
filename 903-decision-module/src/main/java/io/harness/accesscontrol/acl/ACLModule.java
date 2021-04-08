@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 @OwnedBy(HarnessTeam.PL)
 public class ACLModule extends AbstractModule {
@@ -22,7 +23,7 @@ public class ACLModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(ACLService.class).to(ACLServiceImpl.class);
-    bind(ACLDAO.class).to(ACLDAOImpl.class);
+    bind(ACLService.class).to(ACLServiceImpl.class).in(Scopes.SINGLETON);
+    bind(ACLDAO.class).to(ACLDAOImpl.class).in(Scopes.SINGLETON);
   }
 }
