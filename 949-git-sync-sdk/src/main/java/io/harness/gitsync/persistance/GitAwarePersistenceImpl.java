@@ -46,26 +46,46 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Inject private GitSyncMsvcHelper gitSyncMsvcHelper;
 
   @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(
+      @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    return mongoTemplate.count(query, entityClass);
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(
       @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    return mongoTemplate.find(query, entityClass);
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(
+      @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    updateQueryIfGitSyncEnabled(query, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    return mongoTemplate.exists(query, entityClass);
+  }
+
+  private void updateQueryIfGitSyncEnabled(
+      @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, EntityType entityType) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       //
       final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
       final List<String> objectId;
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null) {
         objectId = gitBranchingHelper.getObjectIdForDefaultBranchAndScope(
-            projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+            projectIdentifier, orgIdentifier, accountId, entityType);
       } else {
         objectId = gitBranchingHelper.getObjectIdForYamlGitConfigBranchAndScope(gitBranchInfo.getYamlGitConfigId(),
-            gitBranchInfo.getBranch(), projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+            gitBranchInfo.getBranch(), projectIdentifier, orgIdentifier, accountId, entityType);
       }
 
       // todo(abhinav): find way to not hardcode objectId;
       query.addCriteria(Criteria.where("objectId").in(objectId));
-      return mongoTemplate.find(query, entityClass);
     }
-    // todo(abhinav): do we have to do anything extra if git sync is not there?
-    return mongoTemplate.find(query, entityClass);
   }
 
   @Override

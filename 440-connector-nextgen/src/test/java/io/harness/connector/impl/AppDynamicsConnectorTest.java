@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -41,6 +43,7 @@ import org.mockito.Spy;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@OwnedBy(DX)
 public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
@@ -117,7 +120,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAppDynamicsConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+             anyString(), anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(appDynamicsConfig));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);

@@ -1,9 +1,15 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
@@ -26,6 +32,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @GitSyncableHarnessRepo
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository {
   private MongoTemplate mongoTemplate;
   private GitAwarePersistence gitAwarePersistence;
@@ -54,14 +61,23 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   }
 
   @Override
-  public Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(
-      String fullyQualifiedIdentifier, boolean notDeleted) {
-    return Optional.empty();
+  public Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier,
+      String projectIdentifier, String orgIdentifier, String accountIdentifier, boolean notDeleted) {
+    return Optional
+        .ofNullable(gitAwarePersistence.find(query(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier)
+                                                       .is(fullyQualifiedIdentifier)
+                                                       .and(ConnectorKeys.deleted)
+                                                       .is(!notDeleted)),
+            projectIdentifier, orgIdentifier, accountIdentifier, Connector.class))
+        .map(l -> isEmpty(l) ? null : l.get(0));
   }
 
   @Override
-  public boolean existsByFullyQualifiedIdentifier(String fullyQualifiedIdentifier) {
-    return false;
+  public boolean existsByFullyQualifiedIdentifier(
+      String fullyQualifiedIdentifier, String projectIdentifier, String orgIdentifier, String accountId) {
+    return gitAwarePersistence.exists(
+        query(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier)), projectIdentifier,
+        orgIdentifier, accountId, Connector.class);
   }
 
   @Override

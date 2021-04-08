@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -14,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
@@ -82,6 +84,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
@@ -104,8 +107,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> connector =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
     return connector.map(connectorMapper::writeDTO);
   }
 
@@ -248,7 +251,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier,
+            connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -325,8 +329,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> existingConnectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
@@ -375,7 +379,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    return !connectorRepository.existsByFullyQualifiedIdentifier(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override
@@ -434,8 +439,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
 
-    Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
 
     if (connectorOptional.isPresent()) {
       return connectorOptional.get();

@@ -1,5 +1,8 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.git.model.ChangeType;
@@ -15,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 //@NoRepositoryBean
+@OwnedBy(DX)
 public interface ConnectorCustomRepository {
   Page<Connector> findAll(Criteria criteria, Pageable pageable);
 
@@ -24,9 +28,11 @@ public interface ConnectorCustomRepository {
 
   <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn);
 
-  Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
+  Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier,
+      String projectIdentifier, String orgIdentifier, String accountIdentifier, boolean notDeleted);
 
-  boolean existsByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
+  boolean existsByFullyQualifiedIdentifier(
+      String fullyQualifiedIdentifier, String projectIdentifier, String orgIdentifier, String accountId);
 
   Connector save(Connector objectToSave, ConnectorDTO yaml);
 

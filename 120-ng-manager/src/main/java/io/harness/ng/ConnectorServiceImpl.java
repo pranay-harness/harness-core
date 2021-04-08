@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -12,6 +13,7 @@ import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NgAutoLogContext;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -59,6 +61,7 @@ import org.springframework.data.domain.Page;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorService defaultConnectorService;
   private final ConnectorService secretManagerConnectorService;
@@ -218,8 +221,8 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
       String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      Optional<Connector> connectorOptional =
-          connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+      Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
       if (connectorOptional.isPresent()) {
         Connector connector = connectorOptional.get();
         boolean isConnectorHeartbeatDeleted = deleteConnectorHeartbeatTask(
@@ -337,8 +340,8 @@ public class ConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
 
-    Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
 
     return connectorOptional.orElseThrow(
         ()

@@ -1,5 +1,8 @@
 package io.harness.gitsync.persistance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 import io.harness.springdata.HMongoTemplate;
 
@@ -28,15 +31,14 @@ import org.springframework.guice.annotation.GuiceModule;
 @EnableMongoRepositories(basePackages = {"io.harness.repositories"},
     includeFilters = @ComponentScan.Filter(GitSyncableHarnessRepo.class), mongoTemplateRef = "primary")
 @EnableMongoAuditing
+@OwnedBy(DX)
 public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoConfig;
   private final Injector injector;
-  //    private final GitAwarePersistence gitAwarePersistence;
 
   public GitSyncablePersistenceConfig(Injector injector) {
     this.injector = injector;
     this.mongoConfig = injector.getInstance(Key.get(MongoConfig.class));
-    // this.gitAwarePersistence = injector.getInstance(Key.get(GitAwarePersistence.class));
   }
 
   @Override
@@ -64,11 +66,6 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
-  ////
-  //    @Bean
-  //    public GitAwarePersistence gitAwarePersistence() {
-  //        return new GitAwarePersistenceImpl();
-  //    }
 
   @Bean
   MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
