@@ -2,6 +2,7 @@ package io.harness.plancreator.steps.resourceconstraint;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -49,7 +50,7 @@ public class ResourceConstraintStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParameters() {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return ResourceRestraintStepParameters.builder()
         .name(name)
         .resourceUnit(resourceUnit)

@@ -138,7 +138,7 @@ func TestUpdateFile(t *testing.T) {
 			Branch: "main",
 		},
 		Content: "data",
-		Sha:     "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
 			Email: "tp@harness.io",

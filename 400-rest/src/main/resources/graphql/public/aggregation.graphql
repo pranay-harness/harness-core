@@ -33,6 +33,7 @@ enum EntityType {
   TRIGGER
   ARTIFACT
   COLLABORATION_PROVIDER
+  PROVISIONER
 }
 
 type Filter {

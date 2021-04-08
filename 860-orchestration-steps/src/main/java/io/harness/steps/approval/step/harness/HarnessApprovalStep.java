@@ -14,6 +14,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.repositories.ApprovalInstanceRepository;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
@@ -29,6 +30,7 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
 
   @Inject private ApprovalInstanceRepository approvalInstanceRepository;
   @Inject private ApprovalInstanceService approvalInstanceService;
+  @Inject private ApprovalNotificationHandler approvalNotificationHandler;
 
   @Override
   public Class<HarnessApprovalStepParameters> getStepParametersClass() {
@@ -40,7 +42,8 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
       Ambiance ambiance, HarnessApprovalStepParameters stepParameters, StepInputPackage inputPackage) {
     HarnessApprovalInstance approvalInstance = HarnessApprovalInstance.fromStepParameters(ambiance, stepParameters);
     approvalInstance = approvalInstanceRepository.save(approvalInstance);
-    // TODO: Send notifications
+    approvalNotificationHandler.sendNotification(approvalInstance, ambiance);
+
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(approvalInstance.getId())
         .setMode(AsyncExecutableMode.APPROVAL_WAITING_MODE)

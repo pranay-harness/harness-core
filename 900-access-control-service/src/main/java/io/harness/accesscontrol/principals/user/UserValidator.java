@@ -10,8 +10,8 @@ import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.remote.UserClient;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.user.remote.UserClient;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
@@ -48,8 +48,7 @@ public class UserValidator implements PrincipalValidator {
   public ValidationResult validatePrincipal(Principal principal, String scopeIdentifier) {
     String userId = principal.getPrincipalIdentifier();
     return Failsafe.with(retryPolicy).get(() -> {
-      Optional<UserInfo> userOptional =
-          RestClientUtils.getResponse(userClient.getUsersByIds(Lists.newArrayList(userId))).stream().findFirst();
+      Optional<UserInfo> userOptional = RestClientUtils.getResponse(userClient.getUserById(userId));
       if (!userOptional.isPresent()) {
         return ValidationResult.builder()
             .valid(false)

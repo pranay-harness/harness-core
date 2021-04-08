@@ -1,5 +1,7 @@
 package io.harness.pms.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -12,6 +14,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
@@ -25,6 +28,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.serializer.kryo.serializers.AdviserResponseKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.AmbianceKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.ExecutableResponseSerializer;
+import io.harness.pms.serializer.kryo.serializers.FailureDataKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.FailureInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.InterruptConfigKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
@@ -38,6 +42,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsContractsKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -63,5 +68,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(InterruptConfig.class, InterruptConfigKryoSerializer.getInstance(), 2620);
     kryo.register(SdkResponseEventRequest.class, SdkResponseEventRequestKryoSerializer.getInstance(), 2621);
     kryo.register(NodeRunInfo.class, NodeRunInfoKryoSerializer.getInstance(), 2622);
+    kryo.register(FailureData.class, FailureDataKryoSerializer.getInstance(), 2623);
   }
 }

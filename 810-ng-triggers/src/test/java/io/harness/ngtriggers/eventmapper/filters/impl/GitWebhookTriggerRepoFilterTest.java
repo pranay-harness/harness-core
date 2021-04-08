@@ -1,7 +1,10 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
@@ -9,6 +12,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PRWebhookEvent;
 import io.harness.beans.Repository;
 import io.harness.category.element.UnitTests;
@@ -16,6 +20,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.ngtriggers.NgTriggersTestHelper;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -32,7 +37,6 @@ import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +44,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PIPELINE)
 public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
   @Mock private NGTriggerService ngTriggerService;
   @Mock private GitProviderDataObtainmentManager dataObtainmentManager;
@@ -151,8 +156,8 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
                            .build())
             .build();
 
-    triggerDetailsList = Arrays.asList(details1, details2, details3);
-    connectors = Arrays.asList(connectorResponseDTO1, connectorResponseDTO2, connectorResponseDTO3);
+    triggerDetailsList = asList(details1, details2, details3);
+    connectors = asList(connectorResponseDTO1, connectorResponseDTO2, connectorResponseDTO3);
   }
 
   @Before
@@ -250,5 +255,43 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
         .filter(connector -> connector.getConnectorFQN().equals(fqn))
         .findFirst()
         .orElse(null);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldFilterAWSCodecommitTrigger() {
+    Repository repository = Repository.builder().id("arn:aws:codecommit:eu-central-1:44864EXAMPLE:test").build();
+    List<ConnectorResponseDTO> connectors = asList(NgTriggersTestHelper.getAwsCodeCommitRegionConnectorResponsesDTO(),
+        NgTriggersTestHelper.getAwsCodeCommitRepoConnectorResponsesDTO(),
+        NgTriggersTestHelper.getAwsCodeCommitRepoConnectorResponsesDTO2());
+
+    doReturn(connectors).when(ngTriggerService).fetchConnectorsByFQN(eq("acc"), anyList());
+
+    List<TriggerDetails> triggerDetails = asList(NgTriggersTestHelper.getAwsRepoTriggerDetails(),
+        NgTriggersTestHelper.getAwsRegionTriggerDetails(), NgTriggersTestHelper.getAwsRepoTriggerDetails2());
+
+    FilterRequestData filterRequestData =
+        FilterRequestData.builder()
+            .projectFqn("acc/org/proj")
+            .webhookPayloadData(WebhookPayloadData.builder()
+                                    .originalEvent(TriggerWebhookEvent.builder()
+                                                       .accountId("acc")
+                                                       .orgIdentifier("org")
+                                                       .projectIdentifier("proj")
+                                                       .sourceRepoType("AWS_CODECOMMIT")
+                                                       .build())
+                                    .webhookEvent(PRWebhookEvent.builder().repository(repository).build())
+                                    .repository(repository)
+                                    .build())
+            .details(triggerDetails)
+            .build();
+    WebhookEventMappingResponse webhookEventMappingResponse = filter.applyFilter(filterRequestData);
+    assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
+    triggerDetails = webhookEventMappingResponse.getTriggers();
+    assertThat(triggerDetails.size()).isEqualTo(2);
+    assertThat(triggerDetails)
+        .containsOnly(
+            NgTriggersTestHelper.getAwsRepoTriggerDetails(), NgTriggersTestHelper.getAwsRegionTriggerDetails());
   }
 }

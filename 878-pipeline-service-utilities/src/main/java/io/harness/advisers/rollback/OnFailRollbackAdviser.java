@@ -11,6 +11,8 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
@@ -31,9 +33,14 @@ public class OnFailRollbackAdviser implements Adviser {
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     OnFailRollbackParameters onFailRollbackParameters = extractParameters(advisingEvent);
     String nextNodeId = onFailRollbackParameters.getStrategyToUuid().get(onFailRollbackParameters.getStrategy());
-    executionSweepingOutputService.consume(advisingEvent.getNodeExecution().getAmbiance(),
-        YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
-        YAMLFieldNameConstants.PIPELINE_GROUP);
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(advisingEvent.getNodeExecution().getAmbiance(),
+            RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY));
+    if (!optionalSweepingOutput.isFound()) {
+      executionSweepingOutputService.consume(advisingEvent.getNodeExecution().getAmbiance(),
+          YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
+          YAMLFieldNameConstants.PIPELINE_GROUP);
+    }
     return null;
   }
 

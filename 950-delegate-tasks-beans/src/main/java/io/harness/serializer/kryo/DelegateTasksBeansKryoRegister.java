@@ -319,6 +319,7 @@ import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
@@ -681,7 +682,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(UnitProgressData.class, 95001);
     kryo.register(ChecksumType.class, 5065);
     kryo.register(TerraformCommand.class, 5524);
-
+    kryo.register(TerraformCommandUnit.class, 5525);
     kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
     kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
 

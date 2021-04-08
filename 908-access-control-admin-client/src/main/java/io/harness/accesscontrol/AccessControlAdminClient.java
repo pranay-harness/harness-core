@@ -7,6 +7,7 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestD
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
@@ -18,12 +19,14 @@ import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.PL)
 public interface AccessControlAdminClient {
   String ROLE_ASSIGNMENTS_API = "roleassignments";
+  String ROLE_API = "roles";
 
   @GET(ROLE_ASSIGNMENTS_API)
   Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> getRoleAssignments(
@@ -53,16 +56,37 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Body RoleAssignmentDTO roleAssignmentDTO);
 
+  @POST(ROLE_ASSIGNMENTS_API + "/multi")
+  Call<ResponseDTO<List<RoleAssignmentResponseDTO>>> createMultiRoleAssignment(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
+
+  @PUT(ROLE_ASSIGNMENTS_API + "/{identifier}")
+  Call<ResponseDTO<RoleAssignmentResponseDTO>> updateRoleAssignment(
+      @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Body RoleAssignmentDTO roleAssignmentDTO);
+
   @DELETE(ROLE_ASSIGNMENTS_API + "/{identifier}")
   Call<ResponseDTO<RoleAssignmentResponseDTO>> deleteRoleAssignment(@Path("identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
-  @POST(ROLE_ASSIGNMENTS_API + "/multi")
-  Call<ResponseDTO<List<RoleAssignmentResponseDTO>>> createMulti(
+  @GET(ROLE_API)
+  Call<ResponseDTO<PageResponse<RoleResponseDTO>>> getRoles(
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
+      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size);
+
+  @GET(ROLE_API + "/{identifier}")
+  Call<ResponseDTO<PageResponse<RoleResponseDTO>>> getRole(
+      @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 }

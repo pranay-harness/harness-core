@@ -71,7 +71,7 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
       log.info("{} ACLs created", count);
       return count;
     } else {
-      log.info("None of the relevant fields have changed for resource group: {}", id);
+      log.debug("None of the relevant fields have changed for resource group: {}", id);
     }
     return 0;
   }

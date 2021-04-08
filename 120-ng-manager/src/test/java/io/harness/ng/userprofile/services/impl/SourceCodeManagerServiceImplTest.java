@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,7 +33,9 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.userprofile.commons.AwsCodeCommitSCMDTO;
+import io.harness.ng.userprofile.commons.AzureDevOpsSCMDTO;
 import io.harness.ng.userprofile.commons.BitbucketSCMDTO;
 import io.harness.ng.userprofile.commons.GithubSCMDTO;
 import io.harness.ng.userprofile.commons.GitlabSCMDTO;
@@ -54,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -129,6 +134,17 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void testSaveAzureDevOps() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = azureDevOpsSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testSaveGitlab() {
     SourceCodeManagerDTO sourceCodeManagerDTO = gitlabSCMDTOCreate();
     when(sourceCodeManagerRepository.save(any()))
@@ -158,6 +174,56 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
         .thenReturn(delete(sourceCodeManagerList));
     sourceCodeManagerService.delete(bitbucketSCM.getName());
     assertThat(sourceCodeManagerList).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdateIfIdentifierIsNull() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.of(bitbucketSCM));
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    assertThatThrownBy(() -> sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Source code manager identifier cannot be null");
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdateIfIdentifierIsNotPresent() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    bitbucketSCM.setId("some-id");
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.empty());
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    assertThatThrownBy(() -> sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(format("Cannot find Source code manager with scm identifier [%s]", bitbucketSCM.getId()));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate() {
+    SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
+    bitbucketSCM.setId("some-id");
+    when(sourceCodeManagerRepository.findById(any())).thenReturn(Optional.of(bitbucketSCM));
+    SourceCodeManagerDTO bitbucketSCMDTO = scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM);
+    bitbucketSCMDTO.setName("updated-name");
+    when(sourceCodeManagerRepository.save(any())).thenReturn(save(bitbucketSCMDTO));
+    SourceCodeManagerDTO updateSCM = sourceCodeManagerService.update(bitbucketSCMDTO.getId(), bitbucketSCMDTO);
+    assertThat(updateSCM).isEqualTo(bitbucketSCMDTO);
+  }
+
+  private SourceCodeManager save(SourceCodeManagerDTO sourceCodeManagerDTO) {
+    SourceCodeManager sourceCodeManager =
+        scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO);
+    sourceCodeManager.setId("some-id");
+    return sourceCodeManager;
   }
 
   private long delete(List<SourceCodeManager> sourceCodeManagerList) {
@@ -207,6 +273,20 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
                 GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return GithubSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(githubAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManagerDTO azureDevOpsSCMDTOCreate() {
+    GithubAuthenticationDTO githubAuthenticationDTO =
+        GithubAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(
+                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .build();
+    return AzureDevOpsSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .authentication(githubAuthenticationDTO)

@@ -33,12 +33,14 @@ directories:
   420-delegate-service
   430-cv-nextgen-commons
   440-connector-nextgen
+  445-cg-connectors
   450-ce-views
   460-capability
   470-alert
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
+  815-cg-triggers
   820-platform-service
   830-notification-service
   835-notification-senders

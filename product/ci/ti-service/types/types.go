@@ -157,13 +157,13 @@ type TiConfig struct {
 }
 
 type DiffInfo struct {
-	CommitId string
-	Files    []File
+	Sha   string
+	Files []File
 }
 
 type MergePartialCgRequest struct {
-	AccountId string
-	Repo      string
-	Branch    string
-	Diff      DiffInfo
+	AccountId    string
+	Repo         string
+	TargetBranch string
+	Diff         DiffInfo
 }

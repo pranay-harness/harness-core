@@ -1,6 +1,9 @@
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
+import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
+import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,16 +22,18 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
-import io.harness.ng.core.auditevent.ProjectCreateEvent;
-import io.harness.ng.core.auditevent.ProjectDeleteEvent;
-import io.harness.ng.core.auditevent.ProjectRestoreEvent;
-import io.harness.ng.core.auditevent.ProjectUpdateEvent;
 import io.harness.ng.core.dto.ProjectRequest;
+import io.harness.ng.core.events.ProjectCreateEvent;
+import io.harness.ng.core.events.ProjectDeleteEvent;
+import io.harness.ng.core.events.ProjectRestoreEvent;
+import io.harness.ng.core.events.ProjectUpdateEvent;
+import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.security.SourcePrincipalContextData;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -38,18 +43,19 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 public class ProjectEventHandler implements OutboxEventHandler {
+  private static final String PROJECT_ADMIN_ROLE = "_project_admin";
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
-  private final ObjectMapper yamlObjectMapper;
+  private final NgUserService ngUserService;
 
   @Inject
-  public ProjectEventHandler(ObjectMapper objectMapper,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
-    this.objectMapper = objectMapper;
+  public ProjectEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      AuditClientService auditClientService, NgUserService ngUserService) {
+    this.objectMapper = ngDefaultObjectMapper;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
-    this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
+    this.ngUserService = ngUserService;
   }
 
   public boolean handle(OutboxEvent outboxEvent) {
@@ -87,17 +93,35 @@ public class ProjectEventHandler implements OutboxEventHandler {
         EventsFrameworkMetadataConstants.CREATE_ACTION);
     ProjectCreateEvent projectCreateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), ProjectCreateEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.CREATE)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectCreateEvent.getProject()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
-                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
-    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.CREATE)
+            .module(ModuleType.CORE)
+            .newYaml(getYamlString(ProjectRequest.builder().project(projectCreateEvent.getProject()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
+    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext)
+        && setupProjectForUserAuthz(
+            accountIdentifier, orgIdentifier, projectCreateEvent.getProject().getIdentifier(), globalContext);
+  }
+
+  private boolean setupProjectForUserAuthz(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, GlobalContext globalContext) {
+    if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
+      return false;
+    }
+    String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
+    ngUserService.addUserToScope(userId,
+        UserMembership.Scope.builder()
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .build(),
+        PROJECT_ADMIN_ROLE);
+    return true;
   }
 
   private boolean handleProjectUpdateEvent(OutboxEvent outboxEvent) throws IOException {
@@ -115,18 +139,17 @@ public class ProjectEventHandler implements OutboxEventHandler {
         EventsFrameworkMetadataConstants.UPDATE_ACTION);
     ProjectUpdateEvent projectUpdateEvent =
         objectMapper.readValue(outboxEvent.getEventData(), ProjectUpdateEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.UPDATE)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectUpdateEvent.getNewProject()).build()))
-                                .oldYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectUpdateEvent.getOldProject()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
-                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.UPDATE)
+            .module(ModuleType.CORE)
+            .newYaml(getYamlString(ProjectRequest.builder().project(projectUpdateEvent.getNewProject()).build()))
+            .oldYaml(getYamlString(ProjectRequest.builder().project(projectUpdateEvent.getOldProject()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
@@ -145,16 +168,16 @@ public class ProjectEventHandler implements OutboxEventHandler {
         EventsFrameworkMetadataConstants.DELETE_ACTION);
     ProjectDeleteEvent projectDeleteEvent =
         objectMapper.readValue(outboxEvent.getEventData(), ProjectDeleteEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.DELETE)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
-                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.DELETE)
+            .module(ModuleType.CORE)
+            .newYaml(getYamlString(ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
@@ -173,16 +196,16 @@ public class ProjectEventHandler implements OutboxEventHandler {
         EventsFrameworkMetadataConstants.RESTORE_ACTION);
     ProjectRestoreEvent projectRestoreEvent =
         objectMapper.readValue(outboxEvent.getEventData(), ProjectRestoreEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.RESTORE)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    ProjectRequest.builder().project(projectRestoreEvent.getProject()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
-                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.RESTORE)
+            .module(ModuleType.CORE)
+            .newYaml(getYamlString(ProjectRequest.builder().project(projectRestoreEvent.getProject()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 

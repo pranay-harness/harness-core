@@ -107,15 +107,6 @@ grpcServer:
       certFilePath: cert.pem
     - port: 9979
 
-smtp:
-  type: SMTP
-  host: host_placeholder
-  port: 465
-  fromAddress: noreply@harness.io
-  useSSL: true
-  username: smtp_username_placeholder
-  password: "smtp_password_placeholder"
-
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12101
@@ -136,8 +127,6 @@ shouldDeployWithGitSync: false
 
 shouldConfigureWithPMS: false
 
-ngManagerPublicBaseUrl: http://localhost:7457/
-
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
   secretKey: ce_aws_secretKey_placeholder
@@ -147,11 +136,6 @@ ceAwsSetupConfig:
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
-
-baseUrls:
-  ngManager: http://localhost:7457/
-  ui: http://localhost:8080/
-  ngUi: http://localhost:8080/ng/#/
 
 resourceGroupConfig:
   ng-manager:
@@ -164,25 +148,42 @@ resourceGroupConfig:
     baseUrl: http://localhost:3457/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-accessControlClient:
-  enableAccessControl: false
+resourceGroupClientConfig:
+  serviceConfig:
+    baseUrl: http://localhost:7457/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+notificationClient:
+  messageBroker:
+    type: MONGO
+    uri: mongodb://localhost:27017/notification
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+  httpClient:
+    baseUrl: http://localhost:9005/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  secrets:
+    notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+accessControlClient:
+  enableAccessControl: false
+
 accessControlAdminClient:
   accessControlServiceConfig:
-    baseUrl: http://localhost:9006
+    baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
-resourceGroupClientConfig:
-  baseUrl: ${RESOURCE_GROUP_CLIENT_BASE_URL:-https://localhost:7090}
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
-resourceGroupClientSecret: ${RESOURCE_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+  mockAccessControlService: true
 
 scmConnectionConfig:
   url: localhost:8091

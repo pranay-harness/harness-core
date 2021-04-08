@@ -41,9 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import org.apache.commons.text.StrSubstitutor;
 
-@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class SlackServiceImpl implements ChannelService {
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -90,7 +90,7 @@ public class SlackServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse processingResponse = send(Collections.singletonList(webhookUrl), TEST_SLACK_TEMPLATE,
         Collections.emptyMap(), slackSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)) {
+    if (NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)) {
       throw new NotificationException(
           "Invalid webhook Url encountered while processing Test Connection request " + webhookUrl, DEFAULT_ERROR_CODE,
           USER);
@@ -126,7 +126,7 @@ public class SlackServiceImpl implements ChannelService {
     } else {
       processingResponse = slackSender.send(slackWebhookUrls, message, notificationId);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);

@@ -3,9 +3,9 @@ syntax = "proto3";
 package io.harness.gitsync;
 
 import "google/protobuf/wrappers.proto";
-import "io/harness/eventsframework/schemas/entity/entity_type.proto";
-import "io/harness/eventsframework/schemas/entity/entity_detail.proto";
-import "io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
 
 option java_multiple_files = true;
 

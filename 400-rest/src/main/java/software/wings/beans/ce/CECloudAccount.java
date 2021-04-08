@@ -30,8 +30,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceCloudAccount", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
 @StoreIn("events")
-@ChangeDataCapture(
-    table = "awsTruthTable", dataStore = "events", fields = {"accountId", "infraAccountId", "accountName"})
+@ChangeDataCapture(table = "awsTruthTable", dataStore = "events",
+    fields = {"accountId", "infraAccountId", "accountName"}, handler = "TimeScaleDBChangeHandler")
 @OwnedBy(HarnessTeam.CE)
 public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

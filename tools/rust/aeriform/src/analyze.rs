@@ -533,6 +533,7 @@ fn check_for_promotion(
         let dependent_target_module = if dependent_class.target_module.is_some() {
             let dependent_target_module = modules.get(dependent_class.target_module.as_ref().unwrap());
             if dependent_target_module.is_none() {
+                issue = true;
                 results.push(target_module_needed(dependent_class));
                 return ();
             }
@@ -702,6 +703,7 @@ fn check_for_demotion(
             let dependee_target_module = if dependee_class.target_module.is_some() {
                 let dependee_target_module = modules.get(dependee_class.target_module.as_ref().unwrap());
                 if dependee_target_module.is_none() {
+                    issue = true;
                     results.push(target_module_needed(dependee_class));
                     return ();
                 }

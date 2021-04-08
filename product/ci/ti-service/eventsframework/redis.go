@@ -5,18 +5,21 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/robinjoseph08/redisqueue"
+	"strings"
 	"time"
 
-	"github.com/robinjoseph08/redisqueue"
-
 	"github.com/golang/protobuf/proto"
-	pb "github.com/wings-software/portal/950-events-api/proto"
+	pb "github.com/wings-software/portal/950-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
+	"github.com/wings-software/portal/product/ci/ti-service/config"
+	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
 
 type MergeCallbackFn func(ctx context.Context, req types.MergePartialCgRequest) error
+
 type RedisBroker struct {
 	consumer *redisqueue.Consumer
 	log      *zap.SugaredLogger
@@ -48,15 +51,17 @@ func (r *RedisBroker) Register(topic string, fn func(msg *redisqueue.Message) er
 }
 
 func (r *RedisBroker) Run() {
-	r.consumer.Run()
+	go func() {
+		r.consumer.Run()
+	}()
 }
 
 // Callback which will be invoked for merging of partial call graph
-func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn) {
-	r.Register(topic, r.getCallback(ctx, fn))
+func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn, db db.Db, config config.Config) {
+	r.Register(topic, r.getCallback(ctx, fn, db, config))
 }
 
-func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(msg *redisqueue.Message) error {
+func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db.Db, config config.Config) func(msg *redisqueue.Message) error {
 	return func(msg *redisqueue.Message) error {
 		var accountId string
 		var webhookResp interface{}
@@ -73,41 +78,46 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn) func(
 		dto := pb.WebhookDTO{}
 		decoded, err := base64.StdEncoding.DecodeString(webhookResp.(string))
 		if err != nil {
-			r.log.Errorw("could not b64 decode webhook resp data", zap.Error(err))
+			r.log.Errorw("could not b64 decode webhook resp data", "account_id", accountId, zap.Error(err))
 			return err
 		}
 		err = proto.Unmarshal(decoded, &dto)
 		if err != nil {
-			r.log.Errorw("could not unmarshal webhook response data")
+			r.log.Errorw("could not unmarshal webhook response data", "account_id", accountId, zap.Error(err))
 			return errors.New("could not unmarshal webhook response data")
 		}
 		switch x := dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Push:
 			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
-			// todo - Vistaar -- populate branch with appropriate value from payload
+			p := dto.GetParsedResponse().GetPush().GetRef()
+			pList := strings.Split(p, "/")
+			branch := pList[len(pList)-1]
+			if len(p) == 0 || len(branch) == 0 {
+				r.log.Errorw("could not get any branch or repo", "account_id", accountId, "branch", branch, "repo", repo)
+				return errors.New("could not get a branch or repo in the webhook push payload")
+			}
+			req := types.MergePartialCgRequest{AccountId: accountId, TargetBranch: branch, Repo: repo}
 			commitList := []string{}
 			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
 				commitList = append(commitList, c.GetSha())
 			}
-			if len(commitList) == 0 {
-				r.log.Warnw("no commits received in webhook payload, skipping merge")
+			commitList = append(commitList, "sha")
+			// Get list of files corresponding to these sha values
+			req.Diff, err = db.GetDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, commitList)
+			if err != nil {
+				r.log.Errorw("could not get changed files list", "account_id", accountId, "commitList", commitList, zap.Error(err))
+				return err
+			}
+			if len(req.Diff.Sha) == 0 {
+				r.log.Warnw("commit info is empty, skipping merge")
 			} else {
-				// TODO: (vistaar) figure out how to get list of files here
-				r.log.Infow("got a push webhook payload", "commitList", commitList,
-					"account_id", accountId, "repo", repo)
-				diff := types.DiffInfo{
-					CommitId: "commit_id",
-					Files: []types.File{},
-				}
-				req := types.MergePartialCgRequest{
-					AccountId: accountId,
-					Branch: "branch",
-					Repo: repo,
-					Diff: diff,
-				}
-
+				r.log.Infow("got a push webhook payload", "account_id", accountId,
+					"repo", repo, "commit_file_mapping", req.Diff,
+					"branch", req.TargetBranch)
 				err := fn(ctx, req)
 				if err != nil {
+					r.log.Errorw("could not merge partial call graph to master", "account_id", accountId,
+						"repo", repo, "branch", req.TargetBranch, zap.Error(err))
 					return err
 				}
 			}

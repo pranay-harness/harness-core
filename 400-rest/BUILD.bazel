@@ -32,7 +32,6 @@ shared_dependencies = [
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-api:module",
-    "//950-events-api/src/main/proto:950_events_api_java_proto",
     "//950-events-api/src/main/proto:950_events_api_proto",
     "//950-events-framework:module",
     "//950-ng-core:module",

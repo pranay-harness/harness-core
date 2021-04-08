@@ -16,10 +16,10 @@ import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
-import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -86,7 +86,7 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
     B savedObject;
     if (isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
-      final String yamlString = EntityToYamlStringUtils.getYamlString(yaml);
+      final String yamlString = NGYamlUtils.getYamlString(yaml);
 
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
@@ -151,7 +151,7 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
                                            .and(EntityGitBranchMetadataKeys.entityType)
                                            .is(entityDetail.getType().name())
                                            .and(EntityGitBranchMetadataKeys.accountId)
-                                           .is(gitBranchInfo.getAccountId())
+                                           .is(entityDetail.getEntityRef().getAccountIdentifier())
                                            .is(scmPushResponse.getYamlGitConfigId())
                                            .and(EntityGitBranchMetadataKeys.objectId)
                                            .is(objectIdOfYaml)),
@@ -163,7 +163,7 @@ public class GitAwarePersistenceImpl<B extends GitSyncableEntity, Y extends Yaml
     mongoTemplate
         .save(EntityGitBranchMetadata.builder()
                   .objectId(objectIdOfYaml)
-                  .accountId(gitBranchInfo.getAccountId())
+                  .accountId(entityDetail.getEntityRef().getAccountIdentifier())
                   .orgIdentifier(objectToSave.getOrgIdentifier()))
         .projectIdentifier(objectToSave.getProjectIdentifier())
         .branch(gitBranchInfo.getBranch())

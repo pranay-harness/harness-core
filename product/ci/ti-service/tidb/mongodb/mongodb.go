@@ -418,8 +418,8 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 // MergePartialCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
 // It also cleans up the nodes which have been deleted in the PR from nodes and relations collections.
 func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
-	commit := req.Diff.CommitId
-	branch := req.Branch
+	commit := req.Diff.Sha
+	branch := req.TargetBranch
 	repo := req.Repo
 	files := req.Diff.Files
 

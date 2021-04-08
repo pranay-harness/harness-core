@@ -1,5 +1,8 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.notification.templates.PredefinedTemplate;
 
@@ -10,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PIPELINE)
 @Singleton
 @Slf4j
 public class NotificationTemplateRegistrar implements Runnable {
@@ -19,13 +23,14 @@ public class NotificationTemplateRegistrar implements Runnable {
   public void run() {
     try {
       int timout = 1;
-      List<PredefinedTemplate> templates = new ArrayList<>(
-          Arrays.asList(PredefinedTemplate.PIPELINE_PLAIN_SLACK, PredefinedTemplate.PIPELINE_PLAIN_EMAIL,
-              PredefinedTemplate.PIPELINE_PLAIN_PAGERDUTY, PredefinedTemplate.PIPELINE_PLAIN_MSTEAMS,
-              PredefinedTemplate.STAGE_PLAIN_SLACK, PredefinedTemplate.STAGE_PLAIN_EMAIL,
-              PredefinedTemplate.STAGE_PLAIN_PAGERDUTY, PredefinedTemplate.STAGE_PLAIN_MSTEAMS,
-              PredefinedTemplate.STEP_PLAIN_EMAIL, PredefinedTemplate.STEP_PLAIN_SLACK,
-              PredefinedTemplate.STEP_PLAIN_MSTEAMS, PredefinedTemplate.STEP_PLAIN_PAGERDUTY));
+      List<PredefinedTemplate> templates = new ArrayList<>(Arrays.asList(PredefinedTemplate.PIPELINE_PLAIN_SLACK,
+          PredefinedTemplate.PIPELINE_PLAIN_EMAIL, PredefinedTemplate.PIPELINE_PLAIN_PAGERDUTY,
+          PredefinedTemplate.PIPELINE_PLAIN_MSTEAMS, PredefinedTemplate.STAGE_PLAIN_SLACK,
+          PredefinedTemplate.STAGE_PLAIN_EMAIL, PredefinedTemplate.STAGE_PLAIN_PAGERDUTY,
+          PredefinedTemplate.STAGE_PLAIN_MSTEAMS, PredefinedTemplate.STEP_PLAIN_EMAIL,
+          PredefinedTemplate.STEP_PLAIN_SLACK, PredefinedTemplate.STEP_PLAIN_MSTEAMS,
+          PredefinedTemplate.STEP_PLAIN_PAGERDUTY, PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_SLACK,
+          PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL));
       while (true) {
         List<PredefinedTemplate> unprocessedTemplate = new ArrayList<>();
         for (PredefinedTemplate template : templates) {
