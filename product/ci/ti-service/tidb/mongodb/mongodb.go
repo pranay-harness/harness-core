@@ -428,12 +428,12 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	filter := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
 	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, filter)
 	if err != nil {
-		return formatError(err, "failed to get all records in nodes collection for ", repo, branch, commit)
+		return formatError(err, "failed to get all records in nodes collection", repo, branch, commit)
 	}
 	if err = cur.All(ctx, &allNodes); err != nil {
-		return formatError(err, "failed to get iterate on records using cursor in nodes collection for ", repo, branch, commit)
+		return formatError(err, "failed to iterate on records using cursor in nodes collection", repo, branch, commit)
 	}
-	allNIds := []int{}
+	var allNIds []int
 	for _, v := range allNodes {
 		allNIds = append(allNIds, v.Id)
 	}
@@ -442,7 +442,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	delFilter := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "id": bson.M{"$in": allNIds}}
 	_, err = mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
 	if err != nil {
-		return formatError(err, "failed to delete records in nodes collection for", repo, branch, commit)
+		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
 
 	// move nodes from destBranch to sourceBranch
@@ -458,10 +458,10 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	filter = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
 	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
 	if err != nil {
-		return formatError(err, "failed to get all records in relations collection for", repo, branch, commit)
+		return formatError(err, "failed to get all records in relations collection", repo, branch, commit)
 	}
 	if err = cur.All(ctx, &allRel); err != nil {
-		return formatError(err, "failed to get all records in relations collection for", repo, branch, commit)
+		return formatError(err, "failed to get all records in relations collection", repo, branch, commit)
 	}
 	var allRIds []int
 	relMap := make(map[int]Relation)
@@ -479,13 +479,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merge relations from destBranch to sourceBranch
 	relToMerge := []Relation{}
-	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": allRIds}}
+	filter = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$nin": allRIds}}
 	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
 	if err != nil {
-		return formatError(err, "failed to get records in relations collection ", repo, branch, commit)
+		return formatError(err, "failed to get records in relations collection", repo, branch, commit)
 	}
 	if err = cur.All(ctx, &relToMerge); err != nil {
-		return formatError(err, "failed to get all records in relations collection ", repo, branch, commit)
+		return formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
 	}
 	var operations []mongo.WriteModel
 	for _, relation := range relToMerge {
@@ -516,14 +516,14 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	filter = bson.M{"$or": cond}
 	cur, err = mdb.Database.Collection(nodeColl).Find(ctx, filter, &options.FindOptions{})
 	if err != nil {
-		return formatError(err, "failed to query nodes coll for deleted files for", repo, branch, commit)
+		return formatError(err, "failed to query nodes coll for deleted files", repo, branch, commit)
 	}
 	nids := []int{} // nids is list of ids of nodes which are deleted
 	for cur.Next(ctx) {
 		var node Node
 		err = cur.Decode(&node)
 		if err != nil {
-			return formatError(err, "failed to fetch node for deleted files for", repo, branch, commit)
+			return formatError(err, "failed to fetch node for deleted files", repo, branch, commit)
 		}
 		nids = append(nids, node.Id)
 	}
@@ -548,7 +548,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	update = bson.M{"$pull": bson.M{"tests": bson.M{"$in": nids}}}
 	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
 	if err != nil {
-		return formatError(err, "failed to get records in relations collection for", repo, branch, commit)
+		return formatError(err, "failed to get records in relations collection", repo, branch, commit)
 	}
 	return nil
 }
@@ -556,7 +556,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 func formatError(err error, msg, repo, branch, commit string) error {
 	return errors.Wrap(
 		err,
-		fmt.Sprintf("%s repo: %s, in branch: %s, commit: %v",
+		fmt.Sprintf("%s, repo: %s, in branch: %s, commit: %v",
 			msg, repo, branch, commit))
 }
 
