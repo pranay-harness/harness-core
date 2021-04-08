@@ -20,8 +20,6 @@ import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
-import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
-import io.harness.pms.contracts.plan.ResumeNodeExecutionResponse;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.tasks.BinaryResponseData;
@@ -72,14 +70,6 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
       log.error("Error while queuing delegate task", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
-  }
-
-  @Override
-  public void resumeNodeExecution(
-      ResumeNodeExecutionRequest request, StreamObserver<ResumeNodeExecutionResponse> responseObserver) {
-    engine.resume(request.getNodeExecutionId(), request.getResponseMap(), request.getAsyncError());
-    responseObserver.onNext(ResumeNodeExecutionResponse.newBuilder().build());
-    responseObserver.onCompleted();
   }
 
   @Override

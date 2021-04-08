@@ -6,14 +6,14 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
-import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.queue.Queuable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -30,12 +30,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = false)
 @TypeAlias("SdkResponseEvent")
 public class SdkResponseEvent extends Queuable {
-  SdkResponseEventType sdkResponseEventType;
-  SdkResponseEventRequest sdkResponseEventRequest;
+  @Singular List<SdkResponseEventInternal> sdkResponseEventInternals;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = new HashMap<>();
-    logContext.put(SdkResponseEventKeys.sdkResponseEventRequest, sdkResponseEventType.name());
     return new AutoLogContext(logContext, OVERRIDE_NESTS);
   }
 }

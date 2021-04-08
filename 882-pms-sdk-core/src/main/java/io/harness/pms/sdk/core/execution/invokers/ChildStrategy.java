@@ -9,6 +9,8 @@ import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -20,6 +22,7 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
+import io.harness.steps.StrategyUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -32,6 +35,7 @@ import java.util.Map;
 public class ChildStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
+  @Inject private StrategyUtils strategyUtils;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -76,8 +80,13 @@ public class ChildStrategy implements ExecuteStrategy {
                                                 .setNotifyId(childInstanceId)
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
-    pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
-        ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
+
+    QueueNodeExecutionRequest queueNodeExecutionRequest =
+        strategyUtils.getQueueNodeExecutionRequest(childNodeExecution);
+    AddExecutableResponseRequest addExecutableResponseRequest =
+        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+            ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
+    pmsNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
+        nodeExecution.getUuid(), queueNodeExecutionRequest, addExecutableResponseRequest);
   }
 }

@@ -12,6 +12,9 @@ import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -30,6 +33,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StrategyUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
@@ -46,6 +50,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private StrategyUtils strategyUtils;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -117,29 +122,37 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                                 .setNotifyId(childInstanceId)
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
-    pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
 
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
-        ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
-        Collections.singletonList(childInstanceId));
+    QueueNodeExecutionRequest queueNodeExecutionRequest =
+        strategyUtils.getQueueNodeExecutionRequest(childNodeExecution);
+    AddExecutableResponseRequest addExecutableResponseRequest =
+        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+            ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
+            Collections.singletonList(childInstanceId));
+    pmsNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
+        nodeExecution.getUuid(), queueNodeExecutionRequest, addExecutableResponseRequest);
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
-        ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
-
+    AddExecutableResponseRequest addExecutableResponseRequest =
+        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+            ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
     PlanNodeProto planNode = nodeExecution.getNode();
-    pmsNodeExecutionService.resumeNodeExecution(nodeExecution.getUuid(),
-        Collections.singletonMap(ignoreNotifyId,
-            StepResponseNotifyData.builder()
-                .nodeUuid(planNode.getUuid())
-                .identifier(planNode.getIdentifier())
-                .group(planNode.getGroup())
-                .status(SUSPENDED)
-                .description("Ignoring Execution as next child found to be null")
-                .build()),
-        false);
+    ResumeNodeExecutionRequest resumeNodeExecutionRequest =
+        strategyUtils.getResumeNodeExecutionRequest(nodeExecution.getUuid(),
+            Collections.singletonMap(ignoreNotifyId,
+                StepResponseNotifyData.builder()
+                    .nodeUuid(planNode.getUuid())
+                    .identifier(planNode.getIdentifier())
+                    .group(planNode.getGroup())
+                    .status(SUSPENDED)
+                    .description("Ignoring Execution as next child found to be null")
+                    .build()),
+            false);
+
+    pmsNodeExecutionService.addExecutableResponseAndResumeNode(
+        nodeExecution.getUuid(), addExecutableResponseRequest, resumeNodeExecutionRequest);
   }
 
   private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {

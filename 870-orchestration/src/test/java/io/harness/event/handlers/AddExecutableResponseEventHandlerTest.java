@@ -8,7 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
-import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.execution.SdkResponseEventInternal;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -34,7 +34,7 @@ public class AddExecutableResponseEventHandlerTest {
   public void testHandleEvent() {
     AddExecutableResponseRequest request = AddExecutableResponseRequest.newBuilder().build();
     addExecutableResponseEventHandler.handleEvent(
-        SdkResponseEvent.builder()
+        SdkResponseEventInternal.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
             .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)

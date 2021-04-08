@@ -7,6 +7,9 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -22,6 +25,12 @@ import lombok.NonNull;
 @OwnedBy(CDC)
 public interface PmsNodeExecutionService {
   void queueNodeExecution(NodeExecutionProto nodeExecution);
+
+  void queueNodeExecutionAndAddExecutableResponse(String currentNodeExecutionId,
+      QueueNodeExecutionRequest queueNodeExecutionRequest, AddExecutableResponseRequest addExecutableResponseRequest);
+
+  void addExecutableResponseAndResumeNode(String currentNodeExecutionId,
+      AddExecutableResponseRequest addExecutableResponseRequest, ResumeNodeExecutionRequest resumeNodeExecutionRequest);
 
   String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest task);
 
