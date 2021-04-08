@@ -81,7 +81,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   @Override
   public UpdateFileResponse updateFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     final FileModifyRequest.Builder fileModifyRequestBuilder = getFileModifyRequest(scmConnector, gitFileDetails);
-    final FileModifyRequest fileModifyRequest = fileModifyRequestBuilder.setSha(gitFileDetails.getOldFileSha()).build();
+    final FileModifyRequest fileModifyRequest =
+        fileModifyRequestBuilder.setBlobId(gitFileDetails.getOldFileSha()).build();
     return scmBlockingStub.updateFile(fileModifyRequest);
   }
 
@@ -212,7 +213,7 @@ public class SCMServiceGitClientImpl implements ScmClient {
         .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setPath(gitFilePathDetails.getFilePath())
         .setBranch(gitFilePathDetails.getBranch())
-        .setObjectId(fileContent.getObjectId())
+        .setBlobId(fileContent.getBlobId())
         .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
         .build();
   }
