@@ -77,6 +77,7 @@ public class ManagerRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(DelegateTasksBeansRegistrars.morphiaConverters)
+          .addAll(CgOrchestrationRegistrars.morphiaConverters)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
