@@ -15,6 +15,7 @@ import com.google.inject.Scopes;
 
 @OwnedBy(PL)
 public class UserClientModule extends AbstractModule {
+  private static UserClientModule instance;
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final String clientId;
@@ -23,6 +24,15 @@ public class UserClientModule extends AbstractModule {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+  }
+
+  public static UserClientModule getInstance(
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new UserClientModule(serviceHttpClientConfig, serviceSecret, clientId);
+    }
+
+    return instance;
   }
 
   @Provides
