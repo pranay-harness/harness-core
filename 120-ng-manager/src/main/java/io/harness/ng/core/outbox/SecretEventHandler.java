@@ -74,7 +74,7 @@ public class SecretEventHandler implements OutboxEventHandler {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
     SecretUpdateEvent secretUpdateEvent = objectMapper.readValue(outboxEvent.getEventData(), SecretUpdateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.CREATE)
+                                .action(Action.UPDATE)
                                 .module(ModuleType.CORE)
                                 .newYaml(NGYamlUtils.getYamlString(
                                     SecretRequestWrapper.builder().secret(secretUpdateEvent.getNewSecret()).build()))
@@ -92,7 +92,7 @@ public class SecretEventHandler implements OutboxEventHandler {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
     SecretDeleteEvent secretDeleteEvent = objectMapper.readValue(outboxEvent.getEventData(), SecretDeleteEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.CREATE)
+                                .action(Action.DELETE)
                                 .module(ModuleType.CORE)
                                 .newYaml(NGYamlUtils.getYamlString(
                                     SecretRequestWrapper.builder().secret(secretDeleteEvent.getSecret()).build()))
