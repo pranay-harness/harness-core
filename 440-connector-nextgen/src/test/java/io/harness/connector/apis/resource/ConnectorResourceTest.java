@@ -11,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorCatalogueItem;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
@@ -44,6 +46,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(HarnessTeam.DX)
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @InjectMocks private ConnectorResource connectorResource;
@@ -87,7 +90,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void create() {
     doReturn(connectorResponse).when(connectorService).create(any(), any());
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.create(connectorRequest, accountIdentifier);
+        connectorResource.create(connectorRequest, accountIdentifier, null);
     Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -98,7 +101,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void update() {
     when(connectorService.update(any(), any())).thenReturn(connectorResponse);
     ResponseDTO<ConnectorResponseDTO> connectorResponseDTO =
-        connectorResource.update(connectorRequest, accountIdentifier);
+        connectorResource.update(connectorRequest, accountIdentifier, null);
     Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorResponseDTO.getData()).isNotNull();
   }
@@ -109,7 +112,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void get() {
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorResponse));
     ConnectorResponseDTO connectorRequestDTO =
-        connectorResource.get("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier")
+        connectorResource.get("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null)
             .getData();
     Mockito.verify(connectorService, times(1)).get(any(), any(), any(), any());
     assertThat(connectorRequestDTO).isNotNull();
@@ -130,7 +133,7 @@ public class ConnectorResourceTest extends CategoryTest {
              0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier, searchTerm, false))
         .thenReturn(page);
     ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
-        0, 100, accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null);
+        0, 100, accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null, null);
     Mockito.verify(connectorService, times(1))
         .list(eq(0), eq(100), eq(accountIdentifier), eq(null), eq(orgIdentifier), eq(projectIdentifier),
             eq(filterIdentifier), eq(searchTerm), eq(false));
@@ -142,8 +145,8 @@ public class ConnectorResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void delete() {
     when(connectorService.delete(any(), any(), any(), any())).thenReturn(true);
-    ResponseDTO<Boolean> result =
-        connectorResource.delete("accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
+    ResponseDTO<Boolean> result = connectorResource.delete(
+        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null);
     Mockito.verify(connectorService, times(1)).delete(any(), any(), any(), any());
     assertThat(result.getData()).isTrue();
   }
