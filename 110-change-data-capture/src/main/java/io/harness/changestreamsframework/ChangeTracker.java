@@ -44,12 +44,12 @@ public class ChangeTracker {
   private ReadPreference readPreference;
   private ClientSession clientSession;
 
-  private String getCollectionName(Class<? extends PersistentEntity> clazz) {
+  public String getCollectionName(Class<? extends PersistentEntity> clazz) {
     return clazz.getAnnotation(Entity.class).value();
   }
 
-  private String getChangeDataCaptureDataStore(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotationsByType(ChangeDataCapture.class)[0].dataStore();
+  public String getChangeDataCaptureDataStore(Class<? extends PersistentEntity> clazz) {
+    return clazz.getAnnotation(ChangeDataCapture.class).dataStore();
   }
 
   private MongoClientURI mongoClientUri(String dataStore) {
@@ -71,7 +71,7 @@ public class ChangeTracker {
         MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
   }
 
-  private MongoDatabase connectToMongoDatabase(String dataStore) {
+  public MongoDatabase connectToMongoDatabase(String dataStore) {
     MongoClientURI uri = mongoClientUri(dataStore);
     mongoClient = new MongoClient(uri);
     if (readPreference.getClass() == ReadPreference.secondaryPreferred().getClass()) {
