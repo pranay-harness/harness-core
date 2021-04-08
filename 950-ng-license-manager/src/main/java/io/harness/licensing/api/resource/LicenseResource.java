@@ -4,6 +4,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.AccountLicensesDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
+import io.harness.licensing.beans.modules.StartTrialRequestDTO;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -105,8 +106,7 @@ public class LicenseResource {
   @Path("trial")
   @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
   public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
-    return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, moduleType));
+      @NotNull @Valid @Body StartTrialRequestDTO startTrialRequestDTO) {
+    return ResponseDTO.newResponse(licenseService.startTrialLicense(startTrialRequestDTO));
   }
 }
