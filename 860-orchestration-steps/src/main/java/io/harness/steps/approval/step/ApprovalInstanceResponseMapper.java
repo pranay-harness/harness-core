@@ -60,6 +60,8 @@ public class ApprovalInstanceResponseMapper {
 
   private ApprovalInstanceDetailsDTO toHarnessApprovalInstanceDetailsDTO(HarnessApprovalInstance instance) {
     return HarnessApprovalInstanceDetailsDTO.builder()
+        .approvalMessage(instance.getApprovalMessage())
+        .includePipelineExecutionHistory(instance.isIncludePipelineExecutionHistory())
         .approvers(instance.getApprovers())
         .approvalActivities(instance.getApprovalActivities())
         .approverInputs(

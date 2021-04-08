@@ -15,8 +15,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -150,8 +150,9 @@ public class JiraIssueNG {
       case NUMBER:
         return valueNode.doubleValue();
       case DATE:
-        return Date.from(
-            Instant.from(LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER).atStartOfDay()));
+        return Date.from(LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER)
+                             .atStartOfDay(ZoneOffset.UTC)
+                             .toInstant());
       case DATETIME:
         return Date.from(ZonedDateTime.parse(valueNode.textValue(), JiraConstantsNG.DATETIME_FORMATTER).toInstant());
       case OPTION:

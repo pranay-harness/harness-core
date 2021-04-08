@@ -720,11 +720,9 @@ public class TriggerServiceImpl implements TriggerService {
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
             List<HelmChart> helmCharts = new ArrayList<>();
-            if (isNotEmpty(trigger.getArtifactSelections())) {
-              log.info("Artifact selections found collecting artifacts as per artifactStream selections");
-              addArtifactsFromSelectionsTriggeringArtifactSource(
-                  trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
-            }
+            addArtifactsFromSelectionsTriggeringArtifactSource(
+                trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
+
             if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
               addHelmChartsFromSelections(appId, trigger, helmCharts);
             }
@@ -767,12 +765,18 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void addArtifactsFromSelectionsTriggeringArtifactSource(
+  @VisibleForTesting
+  void addArtifactsFromSelectionsTriggeringArtifactSource(
       String appId, Trigger trigger, List<Artifact> artifactSelections, List<Artifact> triggeringArtifacts) {
     if (isEmpty(trigger.getArtifactSelections())) {
+      log.info(
+          "Artifact selections not found for trigger with name: {}, triggerId: {} used to trigger {}. Collecting all artifacts.",
+          trigger.getName(), trigger.getUuid(),
+          trigger.getWorkflowType() == PIPELINE ? trigger.getPipelineName() : trigger.getWorkflowName());
       artifactSelections.addAll(triggeringArtifacts);
       return;
     }
+    log.info("Artifact selections found collecting artifacts as per artifactStream selections");
     trigger.getArtifactSelections().forEach(artifactSelection -> {
       if (artifactSelection.getType() == LAST_COLLECTED) {
         addLastCollectedArtifact(appId, artifactSelection, artifactSelections);

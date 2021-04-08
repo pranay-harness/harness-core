@@ -7,13 +7,14 @@ import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.common.SwaggerConstants;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -66,13 +67,13 @@ public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo stepParameterInfo) {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return K8sBGSwapServicesStepParameters.infoBuilder()
-        .timeout(stepParameterInfo.getTimeout())
-        .name(stepParameterInfo.getName())
-        .identifier(stepParameterInfo.getIdentifier())
-        .description(stepParameterInfo.getDescription())
-        .skipCondition(stepParameterInfo.getSkipCondition())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
+        .name(stepElementConfig.getName())
+        .identifier(stepElementConfig.getIdentifier())
+        .description(stepElementConfig.getDescription())
+        .skipCondition(stepElementConfig.getSkipCondition())
         .skipDryRun(skipDryRun)
         .build();
   }

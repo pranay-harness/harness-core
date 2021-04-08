@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -42,13 +43,13 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ApprovalInstanceHandler")
             .poolSize(2)
-            .interval(ofMinutes(1))
+            .interval(ofSeconds(30))
             .build(),
         ApprovalInstanceHandler.class,
         MongoPersistenceIterator.<ApprovalInstance, SpringFilterExpander>builder()
             .clazz(ApprovalInstance.class)
             .fieldName(ApprovalInstanceKeys.nextIteration)
-            .targetInterval(ofMinutes(1))
+            .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofMinutes(1))
             .handler(this)
             .filterExpander(query

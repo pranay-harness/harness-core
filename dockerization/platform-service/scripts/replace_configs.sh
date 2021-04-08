@@ -2,7 +2,7 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 
-#yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -22,7 +22,6 @@ if [[ "" != "$SERVER_PORT" ]]; then
 else
   yq write -i $CONFIG_FILE server.applicationConnectors[0].port "9005"
 fi
-
 
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
@@ -106,11 +105,11 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$GRPC_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE notificationServiceConfig.grpcClient.target $GRPC_MANAGER_TARGET
+  yq write -i $CONFIG_FILE notificationServiceConfig.delegateServiceGrpcConfig.target $GRPC_MANAGER_TARGET
 fi
 
 if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE notificationServiceConfig.grpcClient.authority $GRPC_MANAGER_AUTHORITY
+  yq write -i $CONFIG_FILE notificationServiceConfig.delegateServiceGrpcConfig.authority $GRPC_MANAGER_AUTHORITY
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then

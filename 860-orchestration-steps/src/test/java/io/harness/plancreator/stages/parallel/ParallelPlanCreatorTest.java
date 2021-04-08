@@ -5,8 +5,10 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -20,6 +22,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ParallelPlanCreatorTest extends CategoryTest {
   @Test
   @Owner(developers = SAHIL)
@@ -38,9 +41,7 @@ public class ParallelPlanCreatorTest extends CategoryTest {
     YamlField parallelNode = stagesNode.getNode().asArray().get(0).getField("parallel");
     YamlField childNode = parallelNode.getNode().asArray().get(0).getField("stage");
 
-    ParallelPlanCreator parallelPlanCreator = new ParallelPlanCreator();
-    List<YamlField> result =
-        parallelPlanCreator.getDependencyNodeIdsList(PlanCreationContext.builder().currentField(parallelNode).build());
+    List<YamlField> result = PlanCreatorUtils.getDependencyNodeIdsForParallelNode(parallelNode);
 
     assertThat(result).isNotEmpty();
     assertThat(result.size()).isEqualTo(1);

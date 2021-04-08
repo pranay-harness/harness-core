@@ -40,7 +40,7 @@ public class AuditSettingsResource {
   @Inject private final AuditSettingsService auditSettingsService;
 
   @PUT
-  @ApiOperation(value = "Update Audit Retention Period", nickname = "updateAuditRetentionPeriod")
+  @ApiOperation(value = "Update Audit Settings for an account", nickname = "putAuditSettings")
   public ResponseDTO<AuditSettingsDTO> update(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY)
                                               String accountIdentifier, @NotNull AuditSettingsDTO auditSettingsDTO) {
     AuditSettingsDTO updatedAuditSettingsDTO =

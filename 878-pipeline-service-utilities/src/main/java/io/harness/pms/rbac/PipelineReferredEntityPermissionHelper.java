@@ -23,7 +23,7 @@ public class PipelineReferredEntityPermissionHelper {
   public String getPermissionForGivenType(EntityType entityType, boolean isNew) {
     String permission = "runtimeAccess";
     if (isNew) {
-      permission = "create";
+      permission = "edit";
     }
     if (coreEntityTypeToPermissionEntityName.containsKey(entityType)) {
       return String.format(

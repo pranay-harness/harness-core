@@ -1,8 +1,10 @@
 package io.harness.pms.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
-import io.harness.pms.serializer.json.JsonOrchestrationIgnore;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@OwnedBy(PIPELINE)
 public class ParameterField<T> implements VisitorFieldWrapper {
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 
@@ -91,7 +94,6 @@ public class ParameterField<T> implements VisitorFieldWrapper {
   }
 
   @JsonIgnore
-  @JsonOrchestrationIgnore
   public Object getJsonFieldValue() {
     if (expression) {
       StringBuilder result = new StringBuilder(expressionValue);
@@ -114,7 +116,6 @@ public class ParameterField<T> implements VisitorFieldWrapper {
 
   @Override
   @JsonIgnore
-  @JsonOrchestrationIgnore
   public VisitorFieldType getVisitorFieldType() {
     return VISITOR_FIELD_TYPE;
   }

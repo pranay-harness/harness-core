@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -11,6 +12,7 @@ import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.user.remote.UserSearchFilter;
 
 import software.wings.beans.User;
 import software.wings.service.intfc.UserService;
@@ -18,8 +20,10 @@ import software.wings.service.intfc.UserService;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -37,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
-@Api(value = "/ng/users", hidden = true)
-@Path("/ng/users")
+@Api(value = "/ng/user", hidden = true)
+@Path("/ng/user")
 @Produces("application/json")
 @Consumes("application/json")
 @NextGenManagerAuth
@@ -70,32 +74,32 @@ public class UserResourceNG {
     return new RestResponse<>(pageResponse);
   }
 
-  @POST
-  @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsersByIds(List<String> userIds) {
-    return new RestResponse<>(convertUserToNgUser(userService.getUsers(userIds)));
+  @GET
+  @Path("/{userId}")
+  public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
+    User user = userService.get(userId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
   @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
-    }
-    return new RestResponse<>(usernames);
-  }
-
-  @GET
-  public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
+  @Path("email/{emailId}")
+  public RestResponse<Optional<UserInfo>> getUserByEmailId(@PathParam("emailId") String emailId) {
     User user = userService.getUserByEmail(emailId);
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @POST
+  @Path("/batch")
+  public RestResponse<List<UserInfo>> listUsers(
+      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+    Set<User> userSet = new HashSet<>();
+    if (!isEmpty(userSearchFilter.getUserIds())) {
+      userSet.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
+    }
+    if (!isEmpty(userSearchFilter.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    }
+    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }
 
   @PUT
@@ -146,13 +150,7 @@ public class UserResourceNG {
 
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
-        .map(user
-            -> UserInfo.builder()
-                   .email(user.getEmail())
-                   .name(user.getName())
-                   .uuid(user.getUuid())
-                   .accountIds(user.getAccountIds())
-                   .build())
+        .map(user -> UserInfo.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build())
         .collect(Collectors.toList());
   }
 
@@ -169,7 +167,6 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
-        .accountIds(user.getAccountIds())
         .build();
   }
 

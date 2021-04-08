@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -8,6 +9,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.ErrorDataException;
@@ -20,6 +22,7 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StrategyHelper {
@@ -39,18 +42,26 @@ public class StrategyHelper {
   }
 
   public StepResponse handleException(Exception ex) {
-    // For Backward Compatibility extracting the first message and setting this
-    // TODO (prashant) : Modify the failure info structure and adopt for arrays maintaining backward compatibility
     List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(ex);
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.FAILED);
-    if (!EmptyPredicate.isEmpty(responseMessages)) {
-      ResponseMessage targetMessage = responseMessages.get(0);
-      stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
-                                          .setErrorMessage(targetMessage.getMessage())
-                                          .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                                              targetMessage.getFailureTypes()))
-                                          .build());
+    List<FailureData> failureDataList =
+        responseMessages.stream()
+            .map(rm
+                -> FailureData.newBuilder()
+                       .setCode(rm.getCode().name())
+                       .setLevel(rm.getLevel().name())
+                       .setMessage(emptyIfNull(rm.getMessage()))
+                       .addAllFailureTypes(
+                           EngineExceptionUtils.transformToOrchestrationFailureTypes(rm.getFailureTypes()))
+                       .build())
+            .collect(Collectors.toList());
+
+    FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder().addAllFailureData(failureDataList);
+    if (!EmptyPredicate.isEmpty(failureDataList)) {
+      FailureData failureData = failureDataList.get(0);
+      failureInfoBuilder.setErrorMessage(emptyIfNull(failureData.getMessage()))
+          .addAllFailureTypes(failureData.getFailureTypesList());
     }
-    return stepResponseBuilder.build();
+    return stepResponseBuilder.failureInfo(failureInfoBuilder.build()).build();
   }
 }

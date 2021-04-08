@@ -8,10 +8,9 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelp
 import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.StepSpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.common.script.ExecutionTarget;
 import io.harness.steps.common.script.ShellScriptBaseStepInfo;
@@ -83,7 +82,7 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public StepSpecParameters getStepSpecParameters() {
     return ShellScriptStepParameters.infoBuilder()
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
@@ -91,11 +90,6 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
         .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
         .shellType(getShell())
         .source(getSource())
-        .timeout(baseStepParameterInfo.getTimeout())
-        .name(baseStepParameterInfo.getName())
-        .identifier(baseStepParameterInfo.getIdentifier())
-        .description(baseStepParameterInfo.getDescription())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
         .delegateSelectors(ParameterField.createValueField(
             CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
         .build();
