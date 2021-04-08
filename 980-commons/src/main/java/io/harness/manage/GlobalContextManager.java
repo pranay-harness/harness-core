@@ -3,10 +3,14 @@ package io.harness.manage;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.logging.AutoLogContext;
+import io.harness.serializer.KryoSerializer;
+import io.harness.virtualstack.VirtualStackRequest;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -16,6 +20,7 @@ import org.slf4j.MDC;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class GlobalContextManager {
   private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
 
@@ -62,6 +67,18 @@ public class GlobalContextManager {
   public static GlobalContextGuard initGlobalContextGuard(GlobalContext globalContext) {
     if (globalContext == null) {
       globalContext = new GlobalContext();
+    }
+    return new GlobalContextGuard(globalContext);
+  }
+
+  public static GlobalContextGuard initGlobalContextGuard(
+      KryoSerializer kryoSerializer, VirtualStackRequest virtualStackRequest) {
+    GlobalContext globalContext = null;
+    if (virtualStackRequest == null || virtualStackRequest.getGlobalContext() == null) {
+      globalContext = new GlobalContext();
+    } else {
+      globalContext =
+          (GlobalContext) kryoSerializer.asInflatedObject(virtualStackRequest.getGlobalContext().toByteArray());
     }
     return new GlobalContextGuard(globalContext);
   }
