@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(DX)
@@ -52,5 +53,11 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, ChangeType changeType, Class<B> entityClass) {
     return mongoTemplate.save(objectToSave);
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Query query, Update update,
+      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
+    return mongoTemplate.findAndModify(query, update, entityClass);
   }
 }
