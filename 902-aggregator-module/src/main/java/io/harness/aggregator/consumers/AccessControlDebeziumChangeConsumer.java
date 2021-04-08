@@ -2,6 +2,8 @@ package io.harness.aggregator.consumers;
 
 import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.aggregator.OpType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Singleton;
 import io.debezium.embedded.EmbeddedEngineChangeEvent;
@@ -18,6 +20,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.ChangeConsumer<ChangeEvent<String, String>> {
   private static final String OP_FIELD = "__op";
   private final Deserializer<String> idDeserializer;
@@ -70,11 +73,10 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   }
 
   private <T extends AccessControlEntity> T deserialize(ChangeEvent<String, String> changeEvent) {
-    Deserializer<? extends AccessControlEntity> deserializer =
-        collectionToDeserializerMap.get(getCollectionName(changeEvent.destination()).orElse(""));
-    if (deserializer == null) {
-      return null;
-    }
+    Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(
+        getCollectionName(changeEvent.destination())
+            .orElseThrow(() -> new IllegalStateException("No deserializer found for " + changeEvent.destination())));
+
     return (T) deserializer.deserialize(null, getValue(changeEvent));
   }
 
