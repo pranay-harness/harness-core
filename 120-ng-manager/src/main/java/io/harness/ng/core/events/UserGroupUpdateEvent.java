@@ -37,7 +37,7 @@ public class UserGroupUpdateEvent implements Event {
     } else if (isEmpty(newUserGroup.getProjectIdentifier())) {
       return new OrgScope(accountIdentifier, newUserGroup.getOrgIdentifier());
     }
-    return new ProjectScope(accountIdentifier, newUserGroup.getOrgIdentifier(), newUserGroup.getIdentifier());
+    return new ProjectScope(accountIdentifier, newUserGroup.getOrgIdentifier(), newUserGroup.getProjectIdentifier());
   }
 
   @Override

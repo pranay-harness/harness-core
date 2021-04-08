@@ -35,7 +35,7 @@ public class UserGroupDeleteEvent implements Event {
     } else if (isEmpty(userGroup.getProjectIdentifier())) {
       return new OrgScope(accountIdentifier, userGroup.getOrgIdentifier());
     }
-    return new ProjectScope(accountIdentifier, userGroup.getOrgIdentifier(), userGroup.getIdentifier());
+    return new ProjectScope(accountIdentifier, userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
   }
 
   @Override

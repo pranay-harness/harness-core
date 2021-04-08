@@ -38,7 +38,8 @@ public class ResourceGroupUpdateEvent implements Event {
     } else if (isEmpty(newResourceGroup.getProjectIdentifier())) {
       return new OrgScope(accountIdentifier, newResourceGroup.getOrgIdentifier());
     }
-    return new ProjectScope(accountIdentifier, newResourceGroup.getOrgIdentifier(), newResourceGroup.getIdentifier());
+    return new ProjectScope(
+        accountIdentifier, newResourceGroup.getOrgIdentifier(), newResourceGroup.getProjectIdentifier());
   }
 
   @Override
