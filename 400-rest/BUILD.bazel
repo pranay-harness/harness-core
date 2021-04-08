@@ -688,7 +688,6 @@ java_library(
 
 java_library(
     name = "supporter-test",
-    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
