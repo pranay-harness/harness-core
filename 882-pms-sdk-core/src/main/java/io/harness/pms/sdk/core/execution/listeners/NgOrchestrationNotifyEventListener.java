@@ -1,17 +1,22 @@
-package io.harness.waiter;
+package io.harness.pms.sdk.core.execution.listeners;
 
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.version.VersionInfoManager;
+import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyEventListener;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public final class NgOrchestrationNotifyEventListener extends NotifyEventListener {
   public static final String NG_ORCHESTRATION = "ng_orchestration";
 

@@ -1,6 +1,8 @@
 package io.harness.event.handlers;
 
-import io.harness.engine.executions.node.PmsNodeExecutionServiceImpl;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.execution.SdkResponseEvent;
 
@@ -8,12 +10,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class HandleStepResponseEventHandler implements SdkResponseEventHandler {
-  @Inject private PmsNodeExecutionServiceImpl nodeExecutionService;
+  @Inject private OrchestrationEngine engine;
 
   @Override
   public void handleEvent(SdkResponseEvent event) {
     HandleStepResponseRequest request = event.getSdkResponseEventRequest().getHandleStepResponseRequest();
-    nodeExecutionService.handleStepResponse(request.getNodeExecutionId(), request.getStepResponse());
+    engine.handleStepResponse(request.getNodeExecutionId(), request.getStepResponse());
   }
 }
