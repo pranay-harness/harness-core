@@ -1,7 +1,6 @@
 package io.harness.pms.sdk;
 
 import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE;
-import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE_IN_PROCESS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -46,13 +45,10 @@ class PmsSdkProviderModule extends AbstractModule {
   protected void configure() {
     bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
     bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
+    bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
+    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     if (config.getDeploymentMode() == REMOTE) {
       bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
-    }
-
-    if (config.getDeploymentMode() == REMOTE || config.getDeploymentMode() == REMOTE_IN_PROCESS) {
-      bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
-      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     }
 
     if (config.getExecutionSummaryModuleInfoProviderClass() != null) {
@@ -70,12 +66,6 @@ class PmsSdkProviderModule extends AbstractModule {
   public FilterCreationResponseMerger filterCreationResponseMerger() {
     return config.getFilterCreationResponseMerger();
   }
-  //
-  //  @Provides
-  //  @Singleton
-  //  public ServiceManager serviceManager(Set<Service> services) {
-  //    return new ServiceManager(services);
-  //  }
 
   @Provides
   @Singleton
