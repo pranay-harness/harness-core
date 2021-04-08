@@ -332,9 +332,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     if (!featureFlagOptional.isPresent()) {
       return Optional.empty();
     }
-    persistence.save(featureFlag);
+    FeatureFlag existingFeatureFlag = featureFlagOptional.get();
+    existingFeatureFlag.setAccountIds(featureFlag.getAccountIds());
+    existingFeatureFlag.setEnabled(featureFlag.isEnabled());
+    existingFeatureFlag.setName(featureFlag.getName());
+    existingFeatureFlag.setObsolete(featureFlag.isObsolete());
+    persistence.save(existingFeatureFlag);
     if (featureFlagsToSendEvent.contains(FeatureName.valueOf(featureFlagName))) {
-      FeatureFlag existingFeatureFlag = featureFlagOptional.get();
       Set<String> existingAccounts =
           existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
       Set<String> newAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
