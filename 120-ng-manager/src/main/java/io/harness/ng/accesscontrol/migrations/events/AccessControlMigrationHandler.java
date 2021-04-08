@@ -216,7 +216,7 @@ public class AccessControlMigrationHandler implements MessageListener {
                         .projectIdentifier(projectIdentifier)
                         .orgIdentifier(orgIdentifier)
                         .build();
-      ngUserService.addUserToScope(user, scope, null, false);
+      ngUserService.addUserToScope(user, scope, false);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("Usermembership entry map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
           orgIdentifier, projectIdentifier, user.getUuid());

@@ -116,12 +116,12 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public void addUserToScope(UserInfo user, Scope scope) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, getDefaultRoleIdentifier(scope), true);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, String roleIdentifier, boolean postCreation) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, roleIdentifier, postCreation);
+  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation);
   }
 
   @Override
@@ -131,20 +131,7 @@ public class NgUserServiceImpl implements NgUserService {
       return;
     }
     UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, roleIdentifier, true);
-  }
-
-  private void addUserToScope(
-      String userId, String emailId, Scope scope, String roleIdentifier, boolean addUserToParentScope) {
-    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
-    UserMembership userMembership = userMembershipOptional.orElseGet(
-        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
-    if (!userMembership.getScopes().contains(scope)) {
-      userMembership.getScopes().add(scope);
-      //    Adding user to the account for signin flow to work
-      addUserToAccount(userId, scope);
-    }
-    userMembership = userMembershipRepository.save(userMembership);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
     if (!StringUtils.isBlank(roleIdentifier)) {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .roleIdentifier(roleIdentifier)
@@ -162,6 +149,18 @@ public class NgUserServiceImpl implements NgUserService {
             ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
       }
     }
+  }
+
+  private void addUserToScope(String userId, String emailId, Scope scope, boolean addUserToParentScope) {
+    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
+    UserMembership userMembership = userMembershipOptional.orElseGet(
+        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
+    if (!userMembership.getScopes().contains(scope)) {
+      userMembership.getScopes().add(scope);
+      //    Adding user to the account for signin flow to work
+      addUserToAccount(userId, scope);
+    }
+    userMembership = userMembershipRepository.save(userMembership);
     if (addUserToParentScope) {
       addUserToParentScope(userMembership, userId, scope);
     }

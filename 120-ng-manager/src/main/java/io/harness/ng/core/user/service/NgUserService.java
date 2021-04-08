@@ -37,7 +37,7 @@ public interface NgUserService {
 
   void addUserToScope(String user, Scope scope, String roleIdentifier);
 
-  void addUserToScope(UserInfo user, Scope scope, String roleIdentifier, boolean postCreation);
+  void addUserToScope(UserInfo user, Scope scope, boolean postCreation);
 
   boolean isUserInAccount(String accountId, String userId);
 
