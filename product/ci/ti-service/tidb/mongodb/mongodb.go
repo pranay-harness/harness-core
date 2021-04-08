@@ -422,20 +422,109 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	branch := req.Branch
 	repo := req.Repo
 	files := req.Diff.Files
-	mdb.Log.Infow(fmt.Sprintf("merging cg from commit [%s]", commit), "branch", branch, "repo", repo)
-	// update field `branch` of nodes which have commit_id in `commit` list
-	filter := bson.M{"vcs_info.commit_id": commit}
+
+	// get all the nids which are already present in dest branch.
+	var allNodes []Node
+	filter := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, filter)
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get all records in nodes collection for repo: %s, in branch: %s, commit: %v",
+			repo, branch, commit))
+	}
+	if err = cur.All(ctx, &allNodes); err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get all records in nodes collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+	allNIds := []int{}
+	for _, v := range allNodes {
+		allNIds = append(allNIds, v.Id)
+	}
+
+	// delete nodes from source branch which are already present in dest branch
+	delFilter := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "id": bson.M{"$in": allNIds}}
+	_, err = mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete records in nodes collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+
+	// move nodes from destBranch to sourceBranch
+	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$nin": allNIds}}
 	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
-	_, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
+	_, err = mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in nodes collection for repo: %s, in branch: %s, commit: %v",
 			repo, branch, commit))
 	}
-	// update field `branch` of relations which have commit_id in `commit` list
-	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
+
+	// get all the source ids which are already present in dest branch.
+	var allRel []Relation
+	filter = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to merge cg in relns collection for repo: %s, in branch: %s, commit: %v",
-			repo, branch, commit))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get all records in relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+	if err = cur.All(ctx, &allRel); err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get all records in relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+	var allRIds []int
+	relMap := make(map[int]Relation)
+	for _, v := range allRel {
+		allRIds = append(allRIds, v.Source)
+		relMap[v.Source] = v
+	}
+
+	// delete relations from source branch which are already present in dest branch
+	delFilter = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "source": bson.M{"$in": allRIds}}
+	_, err = mdb.Database.Collection(relnsColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete records in relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+
+	// merge relations from destBranch to sourceBranch
+	relToMerge := []Relation{}
+	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": allRIds}}
+	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get records in relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+	if err = cur.All(ctx, &relToMerge); err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to get all records in relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
+	}
+	var operations []mongo.WriteModel
+	for _, relation := range relToMerge {
+		operation := mongo.NewUpdateOneModel()
+		operation.SetFilter(bson.M{"source": relation.Source})
+		operation.SetUpdate(bson.M{"$set": bson.M{"tests": merge(relation.Tests, relMap[relation.Source].Tests)}})
+		operations = append(operations, operation)
+	}
+	_, err = mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to merge relations collection for repo: %s, in branch: %s, commit: %v",
+				repo, branch, commit))
 	}
 
 	// handle deletion of files and corresponding entries from nodes and relations table.
@@ -453,7 +542,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		//cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
 	}
 	filter = bson.M{"$or": cond}
-	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, filter, &options.FindOptions{})
+	cur, err = mdb.Database.Collection(nodeColl).Find(ctx, filter, &options.FindOptions{})
 	if err != nil {
 		return errors.Wrap(
 			err,
@@ -473,7 +562,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", nids), "branch", branch, "repo", repo)
 
 	// delete nodes with id in nids
-	delFilter := bson.M{"id": bson.M{"$in": nids}}
+	delFilter = bson.M{"id": bson.M{"$in": nids}}
 	r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(
@@ -500,4 +589,21 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 			fmt.Sprintf("failed to remove relations for deleted files for repo: %s, in branch: %s", repo, branch))
 	}
 	return nil
+}
+
+func merge(tests []int, tests2 []int) []int {
+	relMap := make(map[int]bool)
+	for _, test := range tests {
+		relMap[test] = true
+	}
+	for _, test := range tests2 {
+		relMap[test] = true
+	}
+	keys := make([]int, len(relMap))
+	i := 0
+	for k := range relMap {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
