@@ -17,7 +17,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@FieldNameConstants(innerTypeName = "AwsKmsConnectorKeys")//Shashank: What's this?
+@FieldNameConstants(innerTypeName = "AwsKmsConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector")

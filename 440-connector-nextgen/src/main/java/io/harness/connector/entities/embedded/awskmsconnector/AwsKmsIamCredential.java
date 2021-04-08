@@ -15,5 +15,5 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.awskmsconnector.AwsKmsIamCredential")
 public class AwsKmsIamCredential implements AwsKmsCredentialSpec {
-  private Set<String> delegateSelectors;//TODO:Shashank: Shoudl we delete?
+  private Set<String> delegateSelectors;//TODO: Shashank: Shoudl we delete?
 }

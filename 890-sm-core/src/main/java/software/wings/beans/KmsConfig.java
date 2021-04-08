@@ -1,15 +1,10 @@
 package software.wings.beans;
 
-import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
-import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
-import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
-import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
-import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.expression.SecretString.SECRET_MASK;
-import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
-import static io.harness.security.encryption.SecretManagerType.KMS;
-
+import com.amazonaws.auth.STSSessionCredentialsProvider;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.Lists;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -18,27 +13,27 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.delegate.task.utils.KmsUtils;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.BaseAwsKmsConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
+import lombok.*;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
-import com.amazonaws.auth.STSSessionCredentialsProvider;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.FieldNameConstants;
-import lombok.experimental.SuperBuilder;
+
+import static io.harness.beans.SecretManagerCapabilities.*;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
+import static io.harness.security.encryption.SecretManagerType.KMS;
 
 @Data
 @SuperBuilder
@@ -132,6 +127,31 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
-    throw new UnsupportedOperationException();
+    AwsKmsConfigDTO awsKmsConfigDTO = AwsKmsConfigDTO.builder()
+            .name(getName())
+            .isDefault(isDefault())
+            .encryptionType(getEncryptionType())
+            .build();
+
+    BaseAwsKmsConfigDTO baseAwsKmsConfigDTO = populateBaseAwsKmsConfigDTO();
+
+    SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), awsKmsConfigDTO);
+    if (!maskSecrets) {
+      baseAwsKmsConfigDTO.setKmsArn(getKmsArn());
+      if(isNotEmpty(getAccessKey()) && isNotEmpty(getSecretKey())) {
+        AwsKmsManualCredentialConfig manualCredential = (AwsKmsManualCredentialConfig) baseAwsKmsConfigDTO.getCredential();
+        manualCredential.setAccessKey(getAccessKey());
+        manualCredential.setSecretKey(getSecretKey());
+      }
+    }
+    awsKmsConfigDTO.setBaseAwsKmsConfigDTO(baseAwsKmsConfigDTO);
+    return awsKmsConfigDTO;
+  }
+
+  private BaseAwsKmsConfigDTO populateBaseAwsKmsConfigDTO() {
+    return BaseAwsKmsConfigDTO.builder()
+                            .name(getName())
+                            .region(getRegion())
+                            .build();
   }
 }

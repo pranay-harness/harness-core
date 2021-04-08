@@ -1,30 +1,37 @@
 package io.harness.connector.mappers.secretmanagermapper;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
+import io.harness.connector.entities.embedded.awskmsconnector.*;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector.AwsKmsConnectorBuilder;
-import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsManualCredential;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorCredentialDTO;
-import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
-import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
-import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.delegate.beans.connector.awskmsconnector.*;
 import io.harness.exception.InvalidRequestException;
+
+import javax.inject.Inject;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 public class AwsKmsDTOToEntity implements ConnectorDTOToEntityMapper<AwsKmsConnectorDTO, AwsKmsConnector> {
+  @Inject
+  private AwsKmsMappingHelper helper;
+
   @Override
   public AwsKmsConnector toConnectorEntity(AwsKmsConnectorDTO connectorDTO) {
-    AwsKmsConnectorBuilder builder = AwsKmsConnector.builder();
+    AwsKmsConnectorBuilder builder;
     AwsKmsConnectorCredentialDTO credential = connectorDTO.getCredential();
     AwsKmsCredentialType credentialType = credential.getCredentialType();
     switch (credentialType){
       case MANUAL_CONFIG:
-        builder = buildManualConfig(credential);
+        builder = helper.buildManualConfig((AwsKmsCredentialSpecManualConfigDTO) credential.getConfig());
         break;
-        //TODO: Shashank: Implement for IAM and STS
+      case ASSUME_IAM_ROLE:
+        builder = helper.buildIAMConfig((AwsKmsCredentialSpecAssumeIAMDTO)credential.getConfig());
+        break;
+      case ASSUME_STS_ROLE:
+        builder = helper.buildSTSConfig((AwsKmsCredentialSpecAssumeSTSDTO)credential.getConfig());
+        break;
+
       default:
         throw new InvalidRequestException("Invalid Credential type.");
     }
@@ -35,14 +42,5 @@ public class AwsKmsDTOToEntity implements ConnectorDTOToEntityMapper<AwsKmsConne
         .isDefault(connectorDTO.isDefault())
         .build();
 
-  }
-
-  private AwsKmsConnectorBuilder buildManualConfig(AwsKmsConnectorCredentialDTO credential) {
-    AwsKmsCredentialSpecManualConfigDTO credentialConfig = (AwsKmsCredentialSpecManualConfigDTO) credential.getConfig();
-    AwsKmsManualCredential build = AwsKmsManualCredential.builder()
-                                                      .secretKey(credentialConfig.getSecretKey())
-                                                      .accessKey(credentialConfig.getAccessKey())
-                                                      .build();
-    return AwsKmsConnector.builder().credentialSpec(build);
   }
 }

@@ -11,7 +11,7 @@ public class AwsKmsConnectorValidationParamsProvider implements ConnectorValidat
   public ConnectorValidationParams getConnectorValidationParams(ConnectorInfoDTO connectorConfigDTO,
       String connectorName, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return AwsKmsValidationParams.builder()
-        .awsKmsConnectorDTO((AwsConnectorDTO) connectorConfigDTO.getConnectorConfig())
+        .awsKmsConnectorDTO((AwsKmsConnectorDTO) connectorConfigDTO.getConnectorConfig())
         .connectorName(connectorName)
         .build();
   }

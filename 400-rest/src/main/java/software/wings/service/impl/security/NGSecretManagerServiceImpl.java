@@ -33,13 +33,11 @@ import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.GcpSecretsManagerService;
-import software.wings.service.intfc.security.LocalSecretManagerService;
-import software.wings.service.intfc.security.NGSecretManagerService;
-import software.wings.service.intfc.security.VaultService;
+import software.wings.service.intfc.security.*;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -56,6 +54,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   private final VaultService vaultService;
   private final LocalSecretManagerService localSecretManagerService;
   private final GcpSecretsManagerService gcpSecretsManagerService;
+  private final KmsService kmsService;
   private final SecretManagerConfigService secretManagerConfigService;
   private final WingsPersistence wingsPersistence;
 
@@ -94,6 +93,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           gcpSecretsManagerService.saveGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
           return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(
+                  secretManagerConfig.getAccountId(), (KmsConfig) secretManagerConfig);
+          return secretManagerConfig;
         case LOCAL:
           localSecretManagerService.saveLocalEncryptionConfig(
               secretManagerConfig.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
@@ -122,9 +125,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
             gcpSecretsManagerService.validateSecretsManagerConfig(
                 accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
-          case KMS://TODO:Shashank: Add validation for AWS_Kms
-            gcpSecretsManagerService.validateSecretsManagerConfig(
-                    accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
+          case KMS:
+            kmsService.validateSecretsManagerConfig(
+                    accountIdentifier, (KmsConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
 
           case LOCAL:
@@ -267,6 +270,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         case GCP_KMS:
           gcpSecretsManagerService.updateGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
+          return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(secretManagerConfig.getAccountId(),(KmsConfig) secretManagerConfig);
           return secretManagerConfig;
         default:
           throw new UnsupportedOperationException("Secret Manager not supported.");

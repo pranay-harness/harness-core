@@ -42,6 +42,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.VaultService;
 
@@ -58,6 +59,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   private VaultService vaultService;
   @Mock private LocalSecretManagerService localSecretManagerService;
   @Mock private GcpSecretsManagerService gcpSecretsManagerService;
+  @Mock private KmsService kmsService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private WingsPersistence wingsPersistence;
   private NGSecretManagerServiceImpl ngSecretManagerService;
@@ -71,7 +73,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     secretManagerConfigService = mock(SecretManagerConfigService.class);
     wingsPersistence = mock(WingsPersistence.class);
     ngSecretManagerServiceTest = new NGSecretManagerServiceImpl(vaultService, localSecretManagerService,
-        gcpSecretsManagerService, secretManagerConfigService, wingsPersistence);
+        gcpSecretsManagerService, kmsService, secretManagerConfigService, wingsPersistence);
     ngSecretManagerService = spy(ngSecretManagerServiceTest);
   }
 

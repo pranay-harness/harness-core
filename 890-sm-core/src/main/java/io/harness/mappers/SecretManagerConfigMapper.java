@@ -8,7 +8,10 @@ import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.*;
 
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigUpdateDTO;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 
 import lombok.experimental.UtilityClass;
@@ -39,6 +42,8 @@ public class SecretManagerConfigMapper {
             (VaultConfig) secretManagerConfig, (VaultConfigUpdateDTO) dto, secretsPresentInSecretManager);
       case GCP_KMS:
         return GcpKmsConfigMapper.applyUpdate((GcpKmsConfig) secretManagerConfig, (GcpKmsConfigUpdateDTO) dto);
+      case KMS:
+        return AwsKmsConfigMapper.applyUpdate((KmsConfig) secretManagerConfig, (AwsKmsConfigUpdateDTO) dto);
       default:
         throw new UnsupportedOperationException("Secret Manager not supported");
     }

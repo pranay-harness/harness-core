@@ -14,6 +14,7 @@ import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.awskms.*;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -35,5 +36,15 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
     kryo.register(GcpKmsConfigUpdateDTO.class, 543221);
 
     kryo.register(SSHTaskParams.class, 543225);
+
+    kryo.register(AwsKmsConfigDTO.class, 543283);
+    kryo.register(AwsKmsConfigUpdateDTO.class, 543284);
+    kryo.register(BaseAwsKmsConfigDTO.class, 543287);
+
+    kryo.register(AwsKmsCredentialSpecConfig.class, 543295);
+    kryo.register(AwsKmsIamCredentialConfig.class, 543296);
+    kryo.register(AwsKmsManualCredentialConfig.class, 543297);
+    kryo.register(AwsKmsStsCredentialConfig.class, 543298);
+
   }
 }

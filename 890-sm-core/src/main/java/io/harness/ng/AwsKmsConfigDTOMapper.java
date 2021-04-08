@@ -2,10 +2,9 @@ package io.harness.ng;
 
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
-import io.harness.secretmanagerclient.dto.AwsKmsConfigDTO;
-import io.harness.secretmanagerclient.dto.AwsKmsConfigUpdateDTO;
-import io.harness.secretmanagerclient.dto.BaseAwsKmsConfigDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.*;
+import io.harness.exception.InvalidRequestException;
+import io.harness.secretmanagerclient.dto.awskms.*;
 import io.harness.security.encryption.EncryptionType;
 import lombok.experimental.UtilityClass;
 
@@ -46,10 +45,51 @@ public class AwsKmsConfigDTOMapper {
   private static BaseAwsKmsConfigDTO buildBaseProperties(AwsKmsConnectorDTO awsKmsConnectorDTO) {
     return BaseAwsKmsConfigDTO.builder()
             .region(awsKmsConnectorDTO.getRegion())
-            //.accessKey(awsKmsConnectorDTO.getAccessKey())
-            //.secretKey(awsKmsConnectorDTO.getSecretKey())
             .kmsArn(awsKmsConnectorDTO.getKmsArn())
-            .region(awsKmsConnectorDTO.getRegion()).build();
+            .name(awsKmsConnectorDTO.getName())
+            .credential(populateCredentials(awsKmsConnectorDTO))
+            .credentialType(awsKmsConnectorDTO.getCredential().getCredentialType())
+            .build();
   }
 
+  private static AwsKmsCredentialSpecConfig populateCredentials(AwsKmsConnectorDTO awsKmsConnectorDTO) {
+    AwsKmsConnectorCredentialDTO credential = awsKmsConnectorDTO.getCredential();
+    AwsKmsCredentialType credentialType = credential.getCredentialType();
+    AwsKmsCredentialSpecConfig awsKmsCredentialSpecConfig;
+    switch (credentialType){
+      case MANUAL_CONFIG:
+        awsKmsCredentialSpecConfig = buildManualConfig((AwsKmsCredentialSpecManualConfigDTO) credential.getConfig());
+        break;
+      case ASSUME_IAM_ROLE:
+        awsKmsCredentialSpecConfig = buildIamConfig((AwsKmsCredentialSpecAssumeIAMDTO) credential.getConfig());
+        break;
+      case ASSUME_STS_ROLE:
+        awsKmsCredentialSpecConfig = buildStsConfig((AwsKmsCredentialSpecAssumeSTSDTO) credential.getConfig());
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Credential type.");
+    }
+    return awsKmsCredentialSpecConfig;
+  }
+
+  private static AwsKmsCredentialSpecConfig buildManualConfig(AwsKmsCredentialSpecManualConfigDTO configDTO) {
+    return AwsKmsManualCredentialConfig.builder()
+            .accessKey(configDTO.getAccessKey())
+            .secretKey(configDTO.getSecretKey())
+            .build();
+  }
+
+  private static AwsKmsCredentialSpecConfig buildIamConfig(AwsKmsCredentialSpecAssumeIAMDTO configDTO) {
+    return AwsKmsIamCredentialConfig.builder()
+            .delegateSelectors(configDTO.getDelegateSelectors())
+            .build();
+  }
+
+  private static AwsKmsCredentialSpecConfig buildStsConfig(AwsKmsCredentialSpecAssumeSTSDTO configDTO) {
+    return AwsKmsStsCredentialConfig.builder()
+            .delegateSelectors(configDTO.getDelegateSelectors())
+            .externalName(configDTO.getExternalName())
+            .roleArn(configDTO.getRoleArn())
+            .build();
+  }
 }

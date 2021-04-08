@@ -3,9 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.eraro.ErrorCode.*;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
@@ -19,12 +17,14 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.security.KmsService;
@@ -322,6 +322,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
     return kmsConfig;
   }
+
+  @Override
+  public void validateSecretsManagerConfig(String accountId, KmsConfig kmsConfig) {
+      validateKms(accountId, kmsConfig);
+  }
+
 
   private void decryptKmsConfigSecrets(KmsConfig kmsConfig) {
     if (kmsConfig != null) {

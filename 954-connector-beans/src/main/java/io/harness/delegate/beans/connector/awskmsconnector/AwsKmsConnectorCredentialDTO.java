@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("AwsKmsConnectorCredential")
-@JsonDeserialize(using = GcpCredentialDTODeserializer.class)
+@JsonDeserialize(using = AwsKmsCredentialDTODeserializer.class)//TODO: Shashank Change this to use AwsDeserializer.
 public class AwsKmsConnectorCredentialDTO {
   @NotNull @JsonProperty("type")
   AwsKmsCredentialType credentialType;

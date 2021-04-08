@@ -1,7 +1,9 @@
-package io.harness.secretmanagerclient.dto;
+package io.harness.secretmanagerclient.dto.awskms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -12,13 +14,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-@ToString(exclude = {"add fields here"})//TODO: Shashank: Add fields here
+@ToString
 @EqualsAndHashCode
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseAwsKmsConfigDTO {
-  String accessKey;
-  String secretKey;
+  AwsKmsCredentialType credentialType;
+  AwsKmsCredentialSpecConfig credential;
+  String name;
   String kmsArn;
   String region;
-  boolean isDefault;
 }
