@@ -8,6 +8,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -58,6 +59,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                             .setPlanExecutionId(savedPlanExecution.getUuid())
                             .setMetadata(metadata)
                             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                            .setStartTs(HTimestamps.fromMillis(System.currentTimeMillis()))
                             .build();
     eventEmitter.emitEvent(
         OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());

@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/ambiance/level.proto";
 import "io/harness/pms/contracts/plan/execution_metadata.proto";
+import "google/protobuf/timestamp.proto";
 
 message Ambiance {
   map<string, string> setupAbstractions = 1;
@@ -13,4 +14,5 @@ message Ambiance {
   string planExecutionId = 3;
   io.harness.pms.contracts.plan.ExecutionMetadata metadata = 4;
   int64 expressionFunctorToken = 5;
+  google.protobuf.Timestamp startTs = 6;
 }
