@@ -40,6 +40,7 @@ directories:
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
+  815-cg-triggers
   820-platform-service
   830-notification-service
   835-notification-senders

@@ -32,6 +32,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.ng.userprofile.commons.AwsCodeCommitSCMDTO;
+import io.harness.ng.userprofile.commons.AzureDevOpsSCMDTO;
 import io.harness.ng.userprofile.commons.BitbucketSCMDTO;
 import io.harness.ng.userprofile.commons.GithubSCMDTO;
 import io.harness.ng.userprofile.commons.GitlabSCMDTO;
@@ -129,6 +130,17 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void testSaveAzureDevOps() {
+    SourceCodeManagerDTO sourceCodeManagerDTO = azureDevOpsSCMDTOCreate();
+    when(sourceCodeManagerRepository.save(any()))
+        .thenReturn(scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
+    SourceCodeManagerDTO savedSourceCodeManager = sourceCodeManagerService.save(sourceCodeManagerDTO);
+    assertThat(savedSourceCodeManager).isEqualTo(sourceCodeManagerDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testSaveGitlab() {
     SourceCodeManagerDTO sourceCodeManagerDTO = gitlabSCMDTOCreate();
     when(sourceCodeManagerRepository.save(any()))
@@ -207,6 +219,20 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
                 GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
     return GithubSCMDTO.builder()
+        .userIdentifier(userIdentifier)
+        .name(name)
+        .authentication(githubAuthenticationDTO)
+        .build();
+  }
+
+  private SourceCodeManagerDTO azureDevOpsSCMDTOCreate() {
+    GithubAuthenticationDTO githubAuthenticationDTO =
+        GithubAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(
+                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .build();
+    return AzureDevOpsSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
         .authentication(githubAuthenticationDTO)

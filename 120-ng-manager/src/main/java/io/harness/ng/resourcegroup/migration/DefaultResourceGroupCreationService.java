@@ -1,5 +1,6 @@
 package io.harness.ng.resourcegroup.migration;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +14,8 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.utils.ScopeUtils;
 
 import com.google.inject.Inject;
@@ -44,39 +47,45 @@ public class DefaultResourceGroupCreationService {
     int pageSize = 50;
     Page<Organization> organizationPage;
     Criteria orgCriteria = Criteria.where(OrganizationKeys.deleted).is(Boolean.FALSE);
-    while (!Thread.currentThread().isInterrupted()) {
-      Pageable pageable = PageRequest.of(pageCounter, pageSize);
-      organizationPage = organizationService.list(orgCriteria, pageable);
-      if (!organizationPage.hasContent()) {
-        break;
-      }
-      for (Organization organization : organizationPage.getContent()) {
-        //      create account level default resourcegroup if not already created
-        String accountIdentifier = organization.getAccountIdentifier();
-        if (!accountIds.contains(accountIdentifier)) {
-          createDefaultResourceGroup(accountIdentifier, null, null);
-          accountIds.add(accountIdentifier);
+    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
+    try {
+      while (!Thread.currentThread().isInterrupted()) {
+        Pageable pageable = PageRequest.of(pageCounter, pageSize);
+        organizationPage = organizationService.list(orgCriteria, pageable);
+        if (!organizationPage.hasContent()) {
+          break;
         }
+        for (Organization organization : organizationPage.getContent()) {
+          //      create account level default resourcegroup if not already created
+          String accountIdentifier = organization.getAccountIdentifier();
+          if (!accountIds.contains(accountIdentifier)) {
+            createDefaultResourceGroup(accountIdentifier, null, null);
+            accountIds.add(accountIdentifier);
+          }
 
-        //        Create orglevel default resourcegroup
-        String orgIdentifier = organization.getIdentifier();
-        createDefaultResourceGroup(accountIdentifier, orgIdentifier, null);
+          //        Create orglevel default resourcegroup
+          String orgIdentifier = organization.getIdentifier();
+          createDefaultResourceGroup(accountIdentifier, orgIdentifier, null);
 
-        //        Create project level default resourcegroup
-        Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier)
-                                       .is(accountIdentifier)
-                                       .and(ProjectKeys.orgIdentifier)
-                                       .is(orgIdentifier)
-                                       .and(ProjectKeys.deleted)
-                                       .is(Boolean.FALSE);
-        List<Project> projects = projectService.list(projectCriteria);
-        projects.forEach(project -> {
-          String projectIdentifier = project.getIdentifier();
-          createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
-        });
+          //        Create project level default resourcegroup
+          Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier)
+                                         .is(accountIdentifier)
+                                         .and(ProjectKeys.orgIdentifier)
+                                         .is(orgIdentifier)
+                                         .and(ProjectKeys.deleted)
+                                         .is(Boolean.FALSE);
+          List<Project> projects = projectService.list(projectCriteria);
+          projects.forEach(project -> {
+            String projectIdentifier = project.getIdentifier();
+            createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
+          });
+        }
+        pageCounter++;
       }
-      pageCounter++;
+    } catch (Exception exception) {
+      log.error("Couldn't complete default resource group creation. Exception occurred", exception);
     }
+    SecurityContextBuilder.unsetCompleteContext();
     if (Thread.currentThread().isInterrupted()) {
       log.error("Couldn't complete default resource group creation. Thread interrupted");
     } else {
