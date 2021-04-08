@@ -9,7 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
-import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.execution.SdkResponseEventInternal;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -34,7 +34,7 @@ public class QueueNodeExecutionEventHandlerTest extends OrchestrationTestBase {
   @Ignore("This was a noop test will improve on this")
   public void testHandleEvent() {
     queueNodeExecutionEventHandler.handleEvent(
-        SdkResponseEvent.builder()
+        SdkResponseEventInternal.builder()
             .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                          .setQueueNodeExecutionRequest(QueueNodeExecutionRequest.newBuilder().build())
                                          .build())

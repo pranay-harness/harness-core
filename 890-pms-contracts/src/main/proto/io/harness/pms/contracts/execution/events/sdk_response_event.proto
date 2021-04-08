@@ -15,6 +15,7 @@ message SdkResponseEventRequest {
     QueueNodeExecutionRequest queueNodeExecutionRequest = 2;
     AddExecutableResponseRequest addExecutableResponseRequest = 4;
     HandleStepResponseRequest handleStepResponseRequest = 5;
+    ResumeNodeExecutionRequest resumeNodeExecutionRequest = 6;
   }
   string nodeExecutionId = 3;
 }
@@ -41,9 +42,16 @@ message HandleStepResponseRequest {
   steps.io.StepResponseProto stepResponse = 2;
 }
 
+message ResumeNodeExecutionRequest {
+  string nodeExecutionId = 1;
+  map<string, bytes> response = 2;
+  bool asyncError = 3;
+}
+
 enum SdkResponseEventType {
   UNKNOWN_EVENT_TYPE = 0;
   QUEUE_NODE = 1;
   ADD_EXECUTABLE_RESPONSE = 2;
   HANDLE_STEP_RESPONSE = 3;
+  RESUME_NODE_EXECUTION = 4;
 }
