@@ -35,7 +35,7 @@ public class ResourceGroupDeleteEvent implements Event {
     } else if (isEmpty(resourceGroup.getProjectIdentifier())) {
       return new OrgScope(accountIdentifier, resourceGroup.getOrgIdentifier());
     }
-    return new ProjectScope(accountIdentifier, resourceGroup.getOrgIdentifier(), resourceGroup.getIdentifier());
+    return new ProjectScope(accountIdentifier, resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier());
   }
 
   @Override
