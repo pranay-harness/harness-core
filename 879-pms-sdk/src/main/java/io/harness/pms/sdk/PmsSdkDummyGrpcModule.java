@@ -8,6 +8,10 @@ import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc.InterruptProtoServiceBlockingStub;
+import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc;
+import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -32,5 +36,11 @@ public class PmsSdkDummyGrpcModule extends AbstractModule {
 
     bind(new TypeLiteral<InterruptProtoServiceBlockingStub>() {
     }).toInstance(InterruptProtoServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+
+    bind(new TypeLiteral<SweepingOutputServiceBlockingStub>() {
+    }).toInstance(SweepingOutputServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+
+    bind(new TypeLiteral<OutcomeProtoServiceBlockingStub>() {
+    }).toInstance(OutcomeProtoServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
   }
 }
