@@ -28,7 +28,9 @@ public enum PredefinedTemplate {
   STEP_PLAIN_SLACK("notification_templates/step/slack/plain_text.txt", "pms_step_slack_plain"),
   STEP_PLAIN_EMAIL("notification_templates/step/email/plain_text.txt", "pms_step_email_plain"),
   STEP_PLAIN_PAGERDUTY("notification_templates/step/pagerduty/plain_text.txt", "pms_step_pagerduty_plain"),
-  STEP_PLAIN_MSTEAMS("notification_templates/step/msteams/plain_text.txt", "pms_step_msteams_plain");
+  STEP_PLAIN_MSTEAMS("notification_templates/step/msteams/plain_text.txt", "pms_step_msteams_plain"),
+  HARNESS_APPROVAL_NOTIFICATION_SLACK("notification_templates/approval/slack/plain_text.txt", "harness_approval_slack"),
+  HARNESS_APPROVAL_NOTIFICATION_EMAIL("notification_templates/approval/email/plain_text.txt", "harness_approval_email");
 
   private String path;
   private String identifier;
