@@ -47,6 +47,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.licensing.LicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -398,6 +399,7 @@ public class NextGenModule extends AbstractModule {
     }
     install(new MockRoleAssignmentModule());
     install(TelemetryModule.getInstance());
+    install(new LicenseModule());
     bind(UserService.class).to(UserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);

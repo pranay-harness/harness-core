@@ -144,6 +144,7 @@ BAZEL_MODULES="\
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-ng-license-manager:module \
   //950-log-client:module \
   //950-telemetry:module \
   //950-timeout-engine:module \
@@ -166,6 +167,7 @@ BAZEL_MODULES="\
   //960-expression-service:module \
   //960-ng-core-beans:module \
   //960-ng-signup-beans:module \
+  //960-ng-license-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
