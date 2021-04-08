@@ -8,18 +8,9 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
-<<<<<<< HEAD
-import static java.lang.Boolean.TRUE;
-=======
 
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> [CDNG-5669]: added delegateSelector in git builder vaariants
-=======
-import io.harness.AccessControlClientConfiguration;
->>>>>>> [CDNG-5543]: Added create api arbac
-=======
->>>>>>> [CDNG-5543]: removed access control provide from ng module
+import static java.lang.Boolean.TRUE;
+
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
