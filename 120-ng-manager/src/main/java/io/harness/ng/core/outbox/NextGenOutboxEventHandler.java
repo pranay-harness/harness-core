@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 import static io.harness.audit.ResourceTypeConstants.RESOURCE_GROUP;
+import static io.harness.audit.ResourceTypeConstants.SECRET;
 import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -19,17 +20,19 @@ import lombok.extern.slf4j.Slf4j;
 public class NextGenOutboxEventHandler implements OutboxEventHandler {
   private final OrganizationEventHandler organizationEventHandler;
   private final ProjectEventHandler projectEventHandler;
+  private final SecretEventHandler secretEventHandler;
   private final UserGroupEventHandler userGroupEventHandler;
   private final ResourceGroupEventHandler resourceGroupEventHandler;
 
   @Inject
   public NextGenOutboxEventHandler(OrganizationEventHandler organizationEventHandler,
       ProjectEventHandler projectEventHandler, UserGroupEventHandler userGroupEventHandler,
-      ResourceGroupEventHandler resourceGroupEventHandler) {
+      ResourceGroupEventHandler resourceGroupEventHandler, SecretEventHandler secretEventHandler) {
     this.organizationEventHandler = organizationEventHandler;
     this.projectEventHandler = projectEventHandler;
     this.userGroupEventHandler = userGroupEventHandler;
     this.resourceGroupEventHandler = resourceGroupEventHandler;
+    this.secretEventHandler = secretEventHandler;
   }
 
   @Override
@@ -44,6 +47,8 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
           return userGroupEventHandler.handle(outboxEvent);
         case RESOURCE_GROUP:
           return resourceGroupEventHandler.handle(outboxEvent);
+        case SECRET:
+          return secretEventHandler.handle(outboxEvent);
         default:
           return true;
       }
