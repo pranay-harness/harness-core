@@ -359,8 +359,11 @@ public class OrchestrationEngine {
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
-    PlanNodeProto node = nodeExecution.getNode();
+    if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
+      return;
+    }
 
+    PlanNodeProto node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainmentsList())) {
       endNodeExecution(nodeExecution, status, nodeExecution.getAdviserResponse());
       return;

@@ -40,6 +40,17 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
+  public InterruptCheck checkAbortAllPresent(String planExecutionId) {
+    String message = null;
+    List<Interrupt> interrupts = fetchAllInterrupts(planExecutionId);
+    boolean abortAllPresent = interrupts.stream().anyMatch(i -> i.getType() == InterruptType.ABORT_ALL);
+    if (abortAllPresent) {
+      message = "ABORT_ALL interrupt found";
+    }
+    return InterruptCheck.builder().proceed(!abortAllPresent).reason(message).build();
+  }
+
+  @Override
   public Interrupt get(String interruptId) {
     return interruptRepository.findById(interruptId)
         .orElseThrow(() -> new InvalidRequestException("Interrupt Not found for id: " + interruptId));

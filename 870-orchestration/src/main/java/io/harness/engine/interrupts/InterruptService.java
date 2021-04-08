@@ -28,4 +28,6 @@ public interface InterruptService {
   Interrupt save(@Valid Interrupt interrupt);
 
   Interrupt get(String interruptId);
+
+  InterruptCheck checkAbortAllPresent(String planExecutionId);
 }
