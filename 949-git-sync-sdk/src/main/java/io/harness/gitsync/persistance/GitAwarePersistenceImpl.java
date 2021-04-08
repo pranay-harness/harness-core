@@ -16,6 +16,7 @@ import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
+import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
@@ -90,9 +91,8 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityDetail(objectToUpdate);
 
     if (changeType != ChangeType.NONE && isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
-      final Supplier<Y> yamlFromEntity =
-          gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToUpdate);
-      final String yamlString = EntityToYamlStringUtils.getYamlString(yamlFromEntity.get());
+      final String yamlString = EntityToYamlStringUtils.getYamlString(
+          objectToUpdate, gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()));
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
       final String objectIdOfYaml = scmPushResponse.getObjectId();
