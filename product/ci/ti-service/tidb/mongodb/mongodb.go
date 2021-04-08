@@ -431,7 +431,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		return formatError(err, "failed to get all records in nodes collection for ", repo, branch, commit)
 	}
 	if err = cur.All(ctx, &allNodes); err != nil {
-		return formatError(err, "failed to get iterate on records using cursoe in nodes collection for ", repo, branch, commit)
+		return formatError(err, "failed to get iterate on records using cursor in nodes collection for ", repo, branch, commit)
 	}
 	allNIds := []int{}
 	for _, v := range allNodes {
