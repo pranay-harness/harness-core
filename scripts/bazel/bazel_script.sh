@@ -85,6 +85,7 @@ BAZEL_MODULES="\
   //490-ce-commons:module \
   //800-pipeline-service:module \
   //810-ng-triggers:module \
+  //815-cg-triggers:module \
   //820-platform-service:module \
   //830-notification-service:module \
   //835-notification-senders:module \
@@ -370,6 +371,7 @@ build_bazel_module 450-ce-views
 build_bazel_module 460-capability
 build_bazel_module 490-ce-commons
 build_bazel_module 810-ng-triggers
+build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
 build_bazel_module 835-notification-senders
 build_bazel_module 850-execution-plan
