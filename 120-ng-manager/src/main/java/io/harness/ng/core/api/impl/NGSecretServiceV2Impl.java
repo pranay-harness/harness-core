@@ -1,8 +1,11 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -16,11 +19,16 @@ import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
+import io.harness.ng.core.events.SecretCreateEvent;
+import io.harness.ng.core.events.SecretDeleteEvent;
+import io.harness.ng.core.events.SecretUpdateEvent;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
+import io.harness.outbox.api.OutboxService;
+import io.harness.remote.NGObjectMapperHelper;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
@@ -29,23 +37,29 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final SecretRepository secretRepository;
@@ -53,6 +67,25 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private final SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private final NGSecretActivityService ngSecretActivityService;
+
+  private final OutboxService outboxService;
+  private final TransactionTemplate transactionTemplate;
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+
+  @Inject
+  public NGSecretServiceV2Impl(SecretRepository secretRepository, SecretManagerClientService secretManagerClientService,
+      DelegateGrpcClientWrapper delegateGrpcClientWrapper, SshKeySpecDTOHelper sshKeySpecDTOHelper,
+      NGSecretActivityService ngSecretActivityService, OutboxService outboxService,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+    this.secretRepository = secretRepository;
+    this.outboxService = outboxService;
+    this.secretManagerClientService = secretManagerClientService;
+    this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
+    this.sshKeySpecDTOHelper = sshKeySpecDTOHelper;
+    this.ngSecretActivityService = ngSecretActivityService;
+    this.transactionTemplate = transactionTemplate;
+  }
 
   @Override
   public boolean validateTheIdentifierIsUnique(
@@ -73,9 +106,12 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     Optional<Secret> secretV2Optional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent()) {
-      secretRepository.delete(secretV2Optional.get());
-      deleteSecretActivities(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-      return true;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        secretRepository.delete(secretV2Optional.get());
+        deleteSecretActivities(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        outboxService.save(new SecretDeleteEvent(accountIdentifier, secretV2Optional.get().toDTO()));
+        return true;
+      }));
     }
     return false;
   }
@@ -92,14 +128,17 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public Secret create(String accountIdentifier, @Valid SecretDTOV2 dto, boolean draft) {
-    Secret secret = dto.toEntity();
+  public Secret create(String accountIdentifier, @Valid SecretDTOV2 secretDTO, boolean draft) {
+    Secret secret = secretDTO.toEntity();
     secret.setDraft(draft);
     secret.setAccountIdentifier(accountIdentifier);
     try {
-      Secret savedSecret = secretRepository.save(secret);
-      createSecretCreationActivity(accountIdentifier, dto);
-      return savedSecret;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        Secret savedSecret = secretRepository.save(secret);
+        createSecretCreationActivity(accountIdentifier, secretDTO);
+        outboxService.save(new SecretCreateEvent(accountIdentifier, savedSecret.toDTO()));
+        return savedSecret;
+      }));
     } catch (DuplicateKeyException duplicateKeyException) {
       throw new DuplicateFieldException(
           "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
@@ -115,12 +154,14 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public Secret update(String accountIdentifier, @Valid SecretDTOV2 dto, boolean draft) {
-    Optional<Secret> secretOptional =
-        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+  public Secret update(String accountIdentifier, @Valid SecretDTOV2 secretDTO, boolean draft) {
+    Optional<Secret> secretOptional = get(
+        accountIdentifier, secretDTO.getOrgIdentifier(), secretDTO.getProjectIdentifier(), secretDTO.getIdentifier());
     if (secretOptional.isPresent()) {
       Secret oldSecret = secretOptional.get();
-      Secret newSecret = dto.toEntity();
+      Secret oldSecretClone = (Secret) NGObjectMapperHelper.clone(oldSecret);
+
+      Secret newSecret = secretDTO.toEntity();
       oldSecret.setDescription(newSecret.getDescription());
       oldSecret.setName(newSecret.getName());
       oldSecret.setTags(newSecret.getTags());
@@ -128,13 +169,16 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       oldSecret.setDraft(oldSecret.isDraft() && draft);
       oldSecret.setType(newSecret.getType());
       try {
-        secretRepository.save(oldSecret);
+        return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+          secretRepository.save(oldSecret);
+          outboxService.save(new SecretUpdateEvent(accountIdentifier, oldSecret.toDTO(), oldSecretClone.toDTO()));
+          createSecretUpdateActivity(accountIdentifier, secretDTO);
+          return oldSecret;
+        }));
       } catch (DuplicateKeyException duplicateKeyException) {
         throw new DuplicateFieldException(
             "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
       }
-      createSecretUpdateActivity(accountIdentifier, dto);
-      return oldSecret;
     }
     throw new InvalidRequestException("No such secret found", USER_SRE);
   }
