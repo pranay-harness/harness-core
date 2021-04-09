@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
@@ -7,6 +8,7 @@ import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -37,6 +39,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("BuildAndPushGCR")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gcrStepInfo")
+@OwnedBy(CI)
 public class GCRStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
@@ -105,11 +108,6 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

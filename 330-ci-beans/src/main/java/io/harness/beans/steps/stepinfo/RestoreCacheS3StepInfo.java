@@ -1,9 +1,11 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -31,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("RestoreCacheS3")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("restoreCacheS3StepInfo")
+@OwnedBy(CI)
 public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
 
@@ -86,11 +89,6 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

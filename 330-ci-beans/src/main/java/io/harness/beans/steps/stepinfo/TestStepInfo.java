@@ -1,7 +1,9 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -28,6 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("testStepInfo")
+@OwnedBy(CI)
 public class TestStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
@@ -65,11 +68,6 @@ public class TestStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

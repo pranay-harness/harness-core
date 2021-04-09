@@ -1,7 +1,9 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -26,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("buildEnvSetupStepInfo")
+@OwnedBy(CI)
 public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
 
@@ -59,11 +62,6 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

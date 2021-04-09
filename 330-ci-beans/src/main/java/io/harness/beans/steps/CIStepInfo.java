@@ -1,5 +1,8 @@
 package io.harness.beans.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -13,7 +16,6 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
-import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 
@@ -26,7 +28,8 @@ import java.util.List;
               RestoreCacheGCSStepInfo.class, RestoreCacheS3StepInfo.class, RunStepInfo.class,
               SaveCacheGCSStepInfo.class, SaveCacheS3StepInfo.class, UploadToGCSStepInfo.class,
               UploadToS3StepInfo.class, UploadToArtifactoryStepInfo.class, RunTestsStepInfo.class})
-public interface CIStepInfo extends StepSpecType, GenericStepInfo {
+@OwnedBy(CI)
+public interface CIStepInfo extends StepSpecType {
   int MIN_RETRY = 0;
   int MAX_RETRY = 5;
   long DEFAULT_TIMEOUT = Duration.ofHours(2).getSeconds();
