@@ -71,7 +71,6 @@ directories:
   909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
-  915-pms-delegate-service-driver
   920-delegate-agent-beans
   920-delegate-service-beans
   920-ng-signup

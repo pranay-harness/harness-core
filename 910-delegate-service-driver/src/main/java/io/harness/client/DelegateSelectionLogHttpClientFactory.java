@@ -1,5 +1,7 @@
-package io.harness.delegatelog.client;
+package io.harness.client;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
@@ -12,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DelegateSelectionLogHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<DelegateSelectionLogHttpClient> {
   public DelegateSelectionLogHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,

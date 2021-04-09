@@ -11,11 +11,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.client.DelegateSelectionLogHttpClientModule;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
-import io.harness.delegatelog.client.DelegateSelectionLogHttpClientModule;
 import io.harness.engine.StepTypeLookupService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.filter.FilterType;
@@ -72,7 +72,7 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
-import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
@@ -136,7 +136,7 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
-    install(PmsDelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(true));
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("PIPELINE")
                                                 .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())

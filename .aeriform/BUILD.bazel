@@ -242,8 +242,6 @@ aeriform("//910-delegate-task-grpc-service:module")
 
 aeriform("//910-delegate-task-grpc-service:tests")
 
-aeriform("//915-pms-delegate-service-driver:module")
-
 aeriform("//920-delegate-agent-beans:module")
 
 aeriform("//920-delegate-agent-beans:tests")
