@@ -6,7 +6,9 @@ import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -50,8 +52,9 @@ public class PipelineRbacServiceImpl implements PipelineRbacService {
         errors.put(accessControlDTO.getResourceType(), resourceTypeErrors);
       }
 
-      throw new InvalidRequestException(
-          String.format("Access to the following resources missing: [%s]", errors.toString()));
+      throw new AccessDeniedException(
+          String.format("Access to the following resources missing: [%s]", errors.toString()),
+          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
   }
 }

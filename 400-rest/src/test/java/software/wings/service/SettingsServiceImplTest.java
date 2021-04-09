@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -16,11 +18,14 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -59,17 +64,23 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -78,6 +89,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.shell.AccessType;
 
@@ -90,16 +102,24 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
 import software.wings.beans.ValidationResult;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.AmiArtifactStream;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
@@ -112,6 +132,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.SettingServiceHelper;
@@ -119,21 +140,28 @@ import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
+import software.wings.verification.CVConfiguration;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -155,6 +183,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingsServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Mock private WingsPersistence mockWingsPersistence;
@@ -175,6 +205,13 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private ApplicationManifestService applicationManifestService;
+  @Mock private EnvironmentService envService;
+  @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private ServiceVariableService serviceVariableService;
+  @Mock private WorkflowService workflowService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 
@@ -327,6 +364,278 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     settingsService.delete(APP_ID, SETTING_ID);
     verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldDeleteCloudProvider() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(artifactStreamService.listBySettingId(anyString())).thenReturn(new ArrayList<>());
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    settingsService.delete(APP_ID, SETTING_ID);
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void deleteCloudProviderThrowsError() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.CLOUD_PROVIDER)
+                                            .withValue(AwsConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(artifactStreamService.listBySettingId(anyString()))
+        .thenReturn(Lists.newArrayList(
+            AmiArtifactStream.builder().name("ami-1").build(), AmiArtifactStream.builder().name("ami-2").build()));
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Cloud provider [SETTING_NAME] is referenced by 2 Artifact Sources [ami-1, ami-2].");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldDeleteSetting() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.SETTING)
+                                            .withValue(StringValue.Builder.aStringValue().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(infrastructureDefinitionService.listNamesByConnectionAttr(any(), any())).thenReturn(null);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+
+    settingsService.delete(APP_ID, SETTING_ID);
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void deleteSettingThrowsError() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.SETTING)
+                                            .withValue(StringValue.Builder.aStringValue().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(infrastructureDefinitionService.listNamesByConnectionAttr(any(), any()))
+        .thenReturn(Lists.newArrayList("infra-1", "infra-2"));
+
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Attribute [SETTING_NAME] is referenced by 2  Infrastructure Definitions [infra-1, infra-2].");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldDeleteAzureArtifactsSetting() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+                                            .withValue(AzureArtifactsPATConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(artifactStreamService.listBySettingId(anyString())).thenReturn(null);
+    settingsService.delete(APP_ID, SETTING_ID);
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void throwExceptionWhenDeleteAzureArtifactsSetting() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+                                            .withValue(AzureArtifactsPATConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(artifactStreamService.listBySettingId(anyString()))
+        .thenReturn(
+            Lists.newArrayList(AzureArtifactsArtifactStream.builder().name("az-1").sourceName("az-source-1").build(),
+                AzureArtifactsArtifactStream.builder().name("az-2").sourceName("az-source-2").build()));
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector [SETTING_NAME] is referenced by 2 Artifact Sources [az-source-1, az-source-2].");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldDeleteHelmConnectorSetting() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.HELM_REPO)
+                                            .withValue(HttpHelmRepoConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(applicationManifestService.getAllByConnectorId(anyString(), anyString(), any())).thenReturn(null);
+    settingsService.delete(APP_ID, SETTING_ID);
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenDeleteHelmConnectorSetting() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.HELM_REPO)
+                                            .withValue(HttpHelmRepoConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(applicationManifestService.getAllByConnectorId(anyString(), anyString(), any()))
+        .thenReturn(
+            Lists.newArrayList(ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).serviceId("s1").build(),
+                ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).serviceId("s2").build(),
+                ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).envId("e1").build(),
+                ApplicationManifest.builder()
+                    .storeType(StoreType.HelmChartRepo)
+                    .serviceId("skip-service")
+                    .envId("e2")
+                    .build()));
+    when(serviceResourceService.getNames(anyString(), eq(Lists.newArrayList("s1", "s2"))))
+        .thenReturn(Lists.newArrayList("service1", "service2"));
+    when(envService.getNames(anyString(), eq(Lists.newArrayList("e1", "e2"))))
+        .thenReturn(Lists.newArrayList("env-1", "env-2"));
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Helm Connector [SETTING_NAME] is referenced by [2] service(s) [service1, service2] and by [2] override in environment(s) [env-1, env-2] ");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowServiceGuardReferenceErrorWhenDeletingConnector() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid("ID")
+                                            .withAppId("APP_ID")
+                                            .withAccountId("ACCOUNT_ID")
+                                            .withName("SETTING_NAME")
+                                            .withCategory(SettingCategory.HELM_REPO)
+                                            .withValue(HttpHelmRepoConfig.builder().build())
+                                            .build();
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    CVConfiguration c1 = new CVConfiguration();
+    c1.setName("cv-1");
+    CVConfiguration c2 = new CVConfiguration();
+    c2.setName("cv-2");
+    Query<CVConfiguration> query = mock(Query.class);
+    when(mockWingsPersistence.createQuery(CVConfiguration.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    when(query.asList()).thenReturn(Lists.newArrayList(c1, c2));
+    when(settingServiceHelper.userHasPermissionsToChangeEntity(eq(settingAttribute), anyString(), any()))
+        .thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(applicationManifestService.getAllByConnectorId(anyString(), anyString(), any())).thenReturn(null);
+    assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Connector SETTING_NAME is referenced by 2 Service Guard(s). Sources [cv-1, cv-2].");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testPruneBySettingAttribute() throws IllegalAccessException {
+    mockWingsPersistence = spy(wingsPersistence);
+    FieldUtils.writeField(settingsService, "wingsPersistence", mockWingsPersistence, true);
+    Query<ArtifactStream> artifactStreamQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.filter(any(), any())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.asList())
+        .thenReturn(Lists.newArrayList(DockerArtifactStream.builder().accountId(ACCOUNT_ID).uuid("art1").build(),
+            DockerArtifactStream.builder().accountId(ACCOUNT_ID).uuid("art2").build()));
+    when(artifactStreamServiceBindingService.fetchArtifactServiceVariableByArtifactStreamId(any(), any()))
+        .thenReturn(Collections.singletonList(
+            ServiceVariable.builder().allowedList(Lists.newArrayList("art1", "art2")).build()))
+        .thenReturn(null);
+    when(artifactStreamServiceBindingService.listWorkflows(anyString()))
+        .thenReturn(null)
+        .thenReturn(Collections.singletonList(
+            aWorkflow()
+                .linkedArtifactStreamIds(Collections.singletonList("art1"))
+                .orchestrationWorkflow(
+                    aCanaryOrchestrationWorkflow()
+                        .withUserVariables(Collections.singletonList(aVariable().allowedValues("art1,art2").build()))
+                        .build())
+                .build()));
+    settingsService.pruneBySettingAttribute(APP_ID, SETTING_ID);
+    verify(artifactStreamService, times(2)).pruneArtifactStream(any());
+    verify(auditServiceHelper, times(2)).reportDeleteForAuditing(anyString(), any());
+    verify(serviceVariableService, times(1)).updateWithChecks(anyString(), anyString(), any());
+    verify(workflowService, times(1)).updateUserVariables(anyString(), anyString(), anyList());
+    verify(workflowService, times(1)).updateWorkflow(any(), eq(false));
   }
 
   /**

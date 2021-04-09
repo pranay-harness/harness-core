@@ -18,6 +18,8 @@ import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
+import io.harness.gitsync.persistance.GitAwareRepository;
+import io.harness.gitsync.persistance.GitAwareRepositoryImpl;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
 
@@ -75,6 +77,9 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
 
       bindGitAware(entityClass, yamlClass).toInstance(new GitAwarePersistenceImpl(entityClass, yamlClass));
 
+      bindGitRepository(entityClass, yamlClass)
+          .toInstance(new GitAwareRepositoryImpl<>(new GitAwarePersistenceImpl(entityClass, yamlClass)));
+
       final MapBinder<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMapBinder =
           MapBinder.newMapBinder(binder(), String.class, EntityGitPersistenceHelperService.class);
       gitPersistenceHelperServiceMapBinder.addBinding(entityClass.getCanonicalName()).to(entityHelperClass);
@@ -83,8 +88,15 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
 
   <B extends GitSyncableEntity, Y extends YamlDTO> AnnotatedBindingBuilder<GitAwarePersistence<B, Y>> bindGitAware(
       Class<B> beanClass, Class<Y> yamlClass) {
-    ParameterizedType type = Types.newParameterizedType(YamlDTO.class, yamlClass, beanClass);
+    ParameterizedType type = Types.newParameterizedType(GitAwarePersistence.class, yamlClass, beanClass);
     TypeLiteral<GitAwarePersistence<B, Y>> typeLiteral = (TypeLiteral<GitAwarePersistence<B, Y>>) TypeLiteral.get(type);
+    return bind(typeLiteral);
+  }
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> AnnotatedBindingBuilder<GitAwareRepository<B, Y>> bindGitRepository(
+      Class<B> beanClass, Class<Y> yamlClass) {
+    ParameterizedType type = Types.newParameterizedType(GitAwareRepository.class, yamlClass, beanClass);
+    TypeLiteral<GitAwareRepository<B, Y>> typeLiteral = (TypeLiteral<GitAwareRepository<B, Y>>) TypeLiteral.get(type);
     return bind(typeLiteral);
   }
 

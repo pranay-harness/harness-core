@@ -3,10 +3,8 @@ package io.harness.steps.common.script;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
-import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.plancreator.steps.common.StepSpecParameters;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -26,12 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("shellScriptStepParameters")
 @OwnedBy(HarnessTeam.CDC)
-public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements StepParameters {
-  String name;
-  String identifier;
-  String type = StepSpecTypeConstants.SHELL_SCRIPT;
-  String description;
-  ParameterField<String> skipCondition;
+public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements StepSpecParameters {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   Map<String, Object> outputVariables;
   Map<String, Object> environmentVariables;
@@ -39,37 +32,13 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
-      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, String name, String identifier, String type,
-      String description, ParameterField<String> skipCondition, ParameterField<String> timeout,
+      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, ParameterField<String> timeout,
       Map<String, Object> outputVariables, Map<String, Object> environmentVariables,
       ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(shellType, source, executionTarget, onDelegate);
-    this.name = name;
-    this.identifier = identifier;
-    this.type = type;
-    this.description = description;
-    this.skipCondition = skipCondition;
     this.timeout = timeout;
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
-    this.type = StepSpecTypeConstants.SHELL_SCRIPT;
     this.delegateSelectors = delegateSelectors;
-  }
-
-  @Override
-  public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(ShellScriptStepParameters.infoBuilder()
-                                                       .environmentVariables(environmentVariables)
-                                                       .executionTarget(getExecutionTarget())
-                                                       .onDelegate(getOnDelegate())
-                                                       .outputVariables(outputVariables)
-                                                       .shellType(getShell())
-                                                       .source(getSource())
-                                                       .timeout(getTimeout())
-                                                       .name(getName())
-                                                       .identifier(getIdentifier())
-                                                       .description(getDescription())
-                                                       .skipCondition(getSkipCondition())
-                                                       .build());
   }
 }

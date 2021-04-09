@@ -1,10 +1,11 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
-import "io/harness/eventsframework/producer/message.proto";
+import "950-events-api/src/main/proto/io/harness/eventsframework/producer/message.proto";
 package io.harness.eventsframework.consumer;
 
 option java_multiple_files = true;
+option go_package = "950_events_api";
 
 message Message {
   string id = 1;

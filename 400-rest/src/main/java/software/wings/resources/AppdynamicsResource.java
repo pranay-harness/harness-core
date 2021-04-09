@@ -52,7 +52,7 @@ import retrofit2.http.Body;
 @Produces("application/json")
 @Scope(SETTING)
 @OwnedBy(CV)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AppdynamicsResource {
   @Inject private AppdynamicsService appdynamicsService;
 

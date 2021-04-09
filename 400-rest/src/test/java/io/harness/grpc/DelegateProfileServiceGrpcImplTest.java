@@ -19,6 +19,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
@@ -34,6 +38,7 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
@@ -42,6 +47,7 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.UserService;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import io.grpc.Channel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -64,6 +70,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -80,6 +88,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
   private DelegateProfileService delegateProfileService;
 
+  @Inject KryoSerializer kryoSerializer;
+
   @Before
   public void setUp() throws Exception {
     Logger mockClientLogger = mock(Logger.class);
@@ -92,13 +102,14 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
     DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub =
         DelegateProfileServiceGrpc.newBlockingStub(channel);
-    delegateProfileServiceGrpcClient = new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub);
+    delegateProfileServiceGrpcClient =
+        new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub, kryoSerializer);
 
     delegateProfileService = mock(DelegateProfileService.class);
     UserService userService = mock(UserService.class);
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(new User());
     DelegateProfileServiceGrpcImpl delegateProfileServiceGrpcImpl =
-        new DelegateProfileServiceGrpcImpl(delegateProfileService, userService);
+        new DelegateProfileServiceGrpcImpl(delegateProfileService, userService, kryoSerializer);
 
     Server server = InProcessServerBuilder.forName(serverName)
                         .directExecutor()

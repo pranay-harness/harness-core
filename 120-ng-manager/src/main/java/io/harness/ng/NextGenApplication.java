@@ -7,7 +7,7 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 
@@ -23,7 +23,6 @@ import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
-import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
@@ -44,8 +43,8 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -53,9 +52,6 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -75,7 +71,6 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -228,7 +223,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
-    registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     registerRequestContextFilter(environment);
@@ -338,6 +332,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -381,19 +376,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerEtagFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(EtagFilter.class));
-  }
-
-  private void registerQueueListeners(Injector injector, NextGenConfiguration appConfig) {
-    log.info("Initializing queue listeners...");
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
-    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
-    if (appConfig.getShouldConfigureWithPMS()) {
-      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

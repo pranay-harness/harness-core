@@ -10,12 +10,13 @@ import io.harness.jira.deserializer.JiraIssueDeserializer;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +36,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
@@ -148,8 +150,9 @@ public class JiraIssueNG {
       case NUMBER:
         return valueNode.doubleValue();
       case DATE:
-        return Date.from(
-            Instant.from(LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER).atStartOfDay()));
+        return Date.from(LocalDate.parse(valueNode.textValue(), JiraConstantsNG.DATE_FORMATTER)
+                             .atStartOfDay(ZoneOffset.UTC)
+                             .toInstant());
       case DATETIME:
         return Date.from(ZonedDateTime.parse(valueNode.textValue(), JiraConstantsNG.DATETIME_FORMATTER).toInstant());
       case OPTION:

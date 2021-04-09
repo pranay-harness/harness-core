@@ -32,9 +32,7 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
@@ -42,8 +40,10 @@ import io.harness.rule.Owner;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,17 +68,15 @@ public class ProjectServiceImplTest extends CategoryTest {
   private ProjectServiceImpl projectService;
   private TransactionTemplate transactionTemplate;
   private OutboxService outboxService;
-  private NgUserService ngUserService;
 
   @Before
   public void setup() {
     projectRepository = mock(ProjectRepository.class);
     organizationService = mock(OrganizationService.class);
-    ngUserService = mock(NgUserService.class);
     transactionTemplate = mock(TransactionTemplate.class);
     outboxService = mock(OutboxService.class);
-    projectService = spy(new ProjectServiceImpl(
-        projectRepository, organizationService, transactionTemplate, ngUserService, outboxService));
+    projectService =
+        spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate, outboxService));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -103,7 +101,6 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.save(project)).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
-    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     projectService.create(accountIdentifier, orgIdentifier, projectDTO);
     try {
@@ -204,8 +201,9 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
 
+    Set<String> orgIdentifiers = Collections.singleton(orgIdentifier);
     Page<Project> projectPage = projectService.list(accountIdentifier, unpaged(),
-        ProjectFilterDTO.builder().orgIdentifier(orgIdentifier).searchTerm(searchTerm).moduleType(CD).build());
+        ProjectFilterDTO.builder().orgIdentifiers(orgIdentifiers).searchTerm(searchTerm).moduleType(CD).build());
 
     verify(projectRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
 
@@ -214,7 +212,7 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     assertEquals(5, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(ProjectKeys.accountIdentifier));
-    assertEquals(orgIdentifier, criteriaObject.get(ProjectKeys.orgIdentifier));
+    assertTrue(criteriaObject.containsKey(ProjectKeys.orgIdentifier));
     assertTrue(criteriaObject.containsKey(ProjectKeys.deleted));
     assertTrue(criteriaObject.containsKey(ProjectKeys.modules));
 

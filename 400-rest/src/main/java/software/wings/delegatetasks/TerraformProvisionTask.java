@@ -48,6 +48,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TerraformCommandExecutionException;
@@ -75,7 +76,6 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
 import software.wings.service.impl.yaml.GitClientHelper;
@@ -287,7 +287,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         try {
           log.info(format("Using TFClient for Running Terraform Commands for account %s", parameters.getAccountId()));
           code = executeWithTerraformClient(parameters, tfBackendConfigsFile, tfOutputsFile, scriptDirectory,
-              workingDir, tfVarDirectory, inlineVarParams, envVars, logCallback, planJsonLogOutputStream);
+              workingDir, tfVarDirectory, inlineVarParams, uiLogs, envVars, logCallback, planJsonLogOutputStream);
         } catch (TerraformCommandExecutionException exception) {
           log.warn(exception.getMessage());
           code = 0;
@@ -529,17 +529,19 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   private int executeWithTerraformClient(TerraformProvisionParameters parameters, File tfBackendConfigsFile,
       File tfOutputsFile, String scriptDirectory, String workingDir, String tfVarDirectory, String varParams,
-      Map<String, String> envVars, LogCallback logCallback, PlanJsonLogOutputStream planJsonLogOutputStream)
+      String uiLogs, Map<String, String> envVars, LogCallback logCallback,
+      PlanJsonLogOutputStream planJsonLogOutputStream)
       throws InterruptedException, IOException, TimeoutException, TerraformCommandExecutionException {
     CliResponse response;
 
     TerraformExecuteStepRequest terraformExecuteStepRequest =
         TerraformExecuteStepRequest.builder()
-            .tfBackendConfigsFile(tfBackendConfigsFile)
-            .tfOutputsFile(tfOutputsFile)
+            .tfBackendConfigsFile(tfBackendConfigsFile.getAbsolutePath())
+            .tfOutputsFile(tfOutputsFile.getAbsolutePath())
             .tfVarFilePaths(TerraformTaskUtils.fetchAndBuildAllTfVarFilesPaths(
                 System.getProperty(USER_DIR_KEY), parameters.getTfVarSource(), workingDir, tfVarDirectory))
             .varParams(varParams)
+            .uiLogs(uiLogs)
             .scriptDirectory(scriptDirectory)
             .envVars(envVars)
             .targets(parameters.getTargets())

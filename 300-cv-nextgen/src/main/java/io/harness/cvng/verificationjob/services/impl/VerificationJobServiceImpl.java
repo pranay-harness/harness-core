@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
@@ -48,6 +50,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
   @Inject private NextGenService nextGenService;
@@ -338,8 +341,8 @@ public class VerificationJobServiceImpl implements VerificationJobService {
                                                 .identifier(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID)
                                                 .dataSources(Arrays.asList(DataSourceType.values()))
                                                 .monitoringSources(Arrays.asList("ALL"))
-                                                .serviceIdentifier("${service}")
-                                                .envIdentifier("${environment}")
+                                                .serviceIdentifier(VerificationJobDTO.RUNTIME_PARAMS_STRING)
+                                                .envIdentifier(VerificationJobDTO.RUNTIME_PARAMS_STRING)
                                                 .duration("15m")
                                                 .isDefaultJob(true)
                                                 .build();

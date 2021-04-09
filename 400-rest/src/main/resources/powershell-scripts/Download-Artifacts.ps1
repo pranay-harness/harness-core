@@ -4,5 +4,6 @@ $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + 
 
 Write-Host "Starting Deployment [id:" $releaseId "]"
 Write-Host "Downloading artifact file - URL: ${artifact.url} to File: " $artifactFilename
+$ProgressPreference = 'SilentlyContinue'
 Invoke-WebRequest -Uri "${artifact.url}" -OutFile $artifactFilename
 Write-Host "Done."

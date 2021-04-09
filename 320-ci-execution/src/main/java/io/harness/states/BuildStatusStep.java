@@ -22,9 +22,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -100,7 +100,7 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
 
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, BuildStatusUpdateParameter stepParameters,
-      Supplier<BuildStatusPushResponse> responseSupplier) {
+      ThrowingSupplier<BuildStatusPushResponse> responseSupplier) throws Exception {
     BuildStatusPushResponse executionResponse = responseSupplier.get();
     if (executionResponse.getStatus() == BuildStatusPushResponse.Status.SUCCESS) {
       return StepResponse.builder().status(Status.SUCCEEDED).build();

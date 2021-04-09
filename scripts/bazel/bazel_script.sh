@@ -79,11 +79,13 @@ BAZEL_MODULES="\
   //420-delegate-service:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //445-cg-connectors:module \
   //450-ce-views:module \
   //460-capability:module \
   //490-ce-commons:module \
   //800-pipeline-service:module \
   //810-ng-triggers:module \
+  //815-cg-triggers:module \
   //820-platform-service:module \
   //830-notification-service:module \
   //835-notification-senders:module \
@@ -118,6 +120,7 @@ BAZEL_MODULES="\
   //920-delegate-agent-beans:module \
   //920-delegate-service-beans/src/main/proto:all \
   //920-delegate-service-beans:module \
+  //920-ng-signup:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //955-delegate-beans/src/main/proto:all \
@@ -139,7 +142,6 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
-  //950-ng-signup:module \
   //950-log-client:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
@@ -364,10 +366,12 @@ build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
+build_bazel_module 445-cg-connectors
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability
 build_bazel_module 490-ce-commons
 build_bazel_module 810-ng-triggers
+build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
 build_bazel_module 835-notification-senders
 build_bazel_module 850-execution-plan

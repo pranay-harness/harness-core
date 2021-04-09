@@ -8,17 +8,20 @@ import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class JiraTaskNGHelper {
   private final JiraTaskNGHandler jiraTaskNGHandler;
   private final SecretDecryptionService secretDecryptionService;
+
+  @Inject
+  public JiraTaskNGHelper(JiraTaskNGHandler jiraTaskNGHandler, SecretDecryptionService secretDecryptionService) {
+    this.jiraTaskNGHandler = jiraTaskNGHandler;
+    this.secretDecryptionService = secretDecryptionService;
+  }
 
   public JiraTaskNGResponse getJiraTaskResponse(JiraTaskNGParameters params) {
     decryptRequestDTOs(params);
@@ -33,6 +36,8 @@ public class JiraTaskNGHelper {
         return jiraTaskNGHandler.getIssue(params);
       case GET_ISSUE_CREATE_METADATA:
         return jiraTaskNGHandler.getIssueCreateMetadata(params);
+      case GET_ISSUE_UPDATE_METADATA:
+        return jiraTaskNGHandler.getIssueUpdateMetadata(params);
       case CREATE_ISSUE:
         return jiraTaskNGHandler.createIssue(params);
       case UPDATE_ISSUE:

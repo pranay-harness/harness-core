@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivity;
+import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -19,7 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("HarnessApprovalOutcome")
 @TypeAlias("harnessApprovalOutcome")
 public class HarnessApprovalOutcome implements Outcome {
-  List<HarnessApprovalActivity> approvalActivities;
+  List<HarnessApprovalActivityDTO> approvalActivities;
   Map<String, String> approverInputs;
 
   @Override

@@ -216,7 +216,9 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+	// Don't run all the tests for now. TODO: Needs to be fixed
+	// defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+	defaultCmd := fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\"")
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -239,18 +241,45 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		pkgs = append(pkgs, t.Pkg)
 		clss = append(clss, t.Class)
 	}
-	rules := []string{} // List of bazel rules to execute
+	rulesM := make(map[string]struct{})
+	rules := []string{} // List of unique bazel rules to be executed
 	for i := 0; i < len(pkgs); i++ {
 		c := fmt.Sprintf("%s query 'attr(name, %s.%s, //...)'", bazelCmd, pkgs[i], clss[i])
 		cmdArgs := []string{"-c", c}
 		resp, err := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-		if err != nil {
+		if err != nil || len(resp) == 0 {
 			r.log.Errorw(fmt.Sprintf("could not find an appropriate rule for pkgs %s and class %s", pkgs[i], clss[i]),
 				"index", i, "command", c, zap.Error(err))
-			// Run all the tests
-			return defaultCmd, nil
+			// Hack to get bazel rules for portal
+			// TODO: figure out how to generically get rules to be executed from a package and a class
+			// Example commands:
+			//     find . -path "*pkg.class"
+			//     export fullname=$(bazelisk query path.java)
+			//     bazelisk query "attr('srcs', $fullname, ${fullname//:*/}:*)" --output=label_kind | grep "java_test rule"
+			c = fmt.Sprintf(
+				"export fullname=$(%s query `find . -path '*%s/%s*' | sed -e \"s/^\\.\\///g\"`)\n"+
+					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
+				bazelCmd, strings.Replace(pkgs[i], ".", "/", -1), clss[i], bazelCmd)
+			cmdArgs = []string{"-c", c}
+			resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+			if err2 != nil || len(resp2) == 0 {
+				r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for pkgs %s and class %s", pkgs[i], clss[i]))
+				continue
+				// TODO: if we can't figure out a rule, we should run the default command.
+				// Not returning error for now to avoid running all the tests most of the time.
+				// return defaultCmd, nil
+			}
+			t := strings.Fields(string(resp2))
+			resp = []byte(t[2])
 		}
-		rules = append(rules, strings.TrimSuffix(string(resp), "\n"))
+		r := strings.TrimSuffix(string(resp), "\n")
+		if _, ok := rulesM[r]; !ok {
+			rules = append(rules, r)
+			rulesM[r] = struct{}{}
+		}
+	}
+	if len(rules) == 0 {
+		return fmt.Sprintf("echo \"Could not find any relevant test rules. Skipping the run\""), nil
 	}
 	testList := strings.Join(rules, " ")
 	return fmt.Sprintf("%s %s %s %s", bazelCmd, r.args, bazelInstrArg, testList), nil

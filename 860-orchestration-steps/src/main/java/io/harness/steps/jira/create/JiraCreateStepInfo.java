@@ -4,18 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
+import io.harness.filters.WithConnectorRef;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.beans.JiraField;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_CREATE)
 @TypeAlias("jiraCreateStepInfo")
-public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo {
+public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 
@@ -53,11 +55,11 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo {
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return JiraCreateStepParameters.builder()
         .name(name)
         .identifier(identifier)
-        .timeout(baseStepParameterInfo.getTimeout())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
         .connectorRef(connectorRef)
         .projectKey(projectKey)
         .issueType(issueType)
@@ -67,7 +69,7 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithRollbackInfo {
   }
 
   @Override
-  public boolean validateStageFailureStrategy() {
-    return false;
+  public List<ParameterField<String>> extractConnectorRefs() {
+    return Lists.newArrayList(connectorRef);
   }
 }

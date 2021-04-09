@@ -1,6 +1,9 @@
 package io.harness.pms.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.springdata.HMongoTemplate;
@@ -14,6 +17,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,6 +38,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+@OwnedBy(PIPELINE)
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.pms.sdk"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "pmsSdkMongoTemplate")
@@ -68,6 +74,11 @@ public class PmsSdkPersistenceConfig extends AbstractMongoConfiguration {
   @Override
   protected String getDatabaseName() {
     return new MongoClientURI(mongoConfig.getUri()).getDatabase();
+  }
+
+  @Override
+  protected Collection<String> getMappingBasePackages() {
+    return Collections.singleton("io.harness");
   }
 
   @Bean(name = "pmsSdkMongoTemplate")

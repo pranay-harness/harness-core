@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.jira.JiraIssueCreateMetadataNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
 import io.harness.jira.JiraStatusNG;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -95,5 +96,19 @@ public class JiraResource {
     JiraIssueCreateMetadataNG createMetadata = jiraResourceService.getIssueCreateMetadata(
         connectorRef, orgId, projectId, projectKey, issueType, expand, fetchStatus);
     return ResponseDTO.newResponse(createMetadata);
+  }
+
+  @GET
+  @Path("updateMetadata")
+  @ApiOperation(value = "Get jira issue update metadata", nickname = "getJiraIssueUpdateMetadata")
+  public ResponseDTO<JiraIssueUpdateMetadataNG> getIssueUpdateMetadata(
+      @NotNull @QueryParam("connectorRef") String jiraConnectorRef,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("issueKey") String issueKey) {
+    IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
+    JiraIssueUpdateMetadataNG updateMetadata =
+        jiraResourceService.getIssueUpdateMetadata(connectorRef, orgId, projectId, issueKey);
+    return ResponseDTO.newResponse(updateMetadata);
   }
 }

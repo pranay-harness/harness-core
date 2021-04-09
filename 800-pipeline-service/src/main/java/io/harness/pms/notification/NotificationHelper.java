@@ -168,7 +168,7 @@ public class NotificationHelper {
     return sb.toString();
   }
 
-  private String generateUrl(Ambiance ambiance) {
+  public String generateUrl(Ambiance ambiance) {
     // Todo: Take module name from request
     return String.format("%s/account/%s/cd/orgs/%s/projects/%s/pipelines/%s/executions/%s/pipeline",
         pipelineServiceConfiguration.getPipelineServiceBaseUrl(), AmbianceUtils.getAccountId(ambiance),

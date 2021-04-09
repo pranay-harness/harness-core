@@ -37,6 +37,7 @@ import org.apache.commons.collections4.CollectionUtils;
 public class TaskStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
+  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -53,9 +54,14 @@ public class TaskStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
-    StepResponse stepResponse =
-        taskExecutable.handleTaskResult(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+    StepResponse stepResponse = null;
+    try {
+      stepResponse = taskExecutable.handleTaskResult(ambiance,
+          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+    } catch (Exception e) {
+      stepResponse = strategyHelper.handleException(e);
+    }
     pmsNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }

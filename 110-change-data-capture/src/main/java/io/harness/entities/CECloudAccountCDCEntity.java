@@ -15,7 +15,7 @@ public class CECloudAccountCDCEntity implements CDCEntity<CECloudAccount> {
   @Inject TimeScaleDBChangeHandler timeScaleDBChangeHandler;
 
   @Override
-  public ChangeHandler getTimescaleChangeHandler() {
+  public ChangeHandler getTimescaleChangeHandler(String handlerClass) {
     return timeScaleDBChangeHandler;
   }
 

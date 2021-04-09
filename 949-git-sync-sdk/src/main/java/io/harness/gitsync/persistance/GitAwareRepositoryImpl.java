@@ -13,13 +13,13 @@ import org.springframework.util.Assert;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
-public class GitAwareRepositoryImpl<T extends GitSyncableEntity, Y extends YamlDTO, ID>
-    implements GitAwareRepository<T, Y, ID> {
-  private final GitAwarePersistence gitAwarePersistence;
+public class GitAwareRepositoryImpl<T extends GitSyncableEntity, Y extends YamlDTO>
+    implements GitAwareRepository<T, Y> {
+  private final GitAwarePersistence<T, Y> gitAwarePersistence;
 
   @Override
   public T save(T entity, Y yaml) {
     Assert.notNull(entity, "Entity must not be null!");
-    return (T) gitAwarePersistence.save(entity, yaml);
+    return gitAwarePersistence.save(entity, yaml);
   }
 }

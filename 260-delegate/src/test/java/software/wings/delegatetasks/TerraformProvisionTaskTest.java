@@ -37,6 +37,7 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -189,8 +190,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForApply();
 
     // regular apply
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, false);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.APPLY);
   }
@@ -207,9 +208,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC1_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
     setupForApply();
 
-    TerraformProvisionParameters terraformProvisionParameters =
-        createTerraformProvisionParameters(false, false, encryptedPlanContent,
-            TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, false);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, encryptedPlanContent, TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform apply", "terraform output");
@@ -227,9 +227,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC2_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
     setupForApply();
 
-    TerraformProvisionParameters terraformProvisionParameters =
-        createTerraformProvisionParameters(false, false, encryptedPlanContent,
-            TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, true);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, encryptedPlanContent, TerraformCommandUnit.Apply, TerraformCommand.APPLY, false, true);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform apply", "terraform output");
     verify(terraformExecutionData, TerraformCommand.APPLY);
@@ -246,7 +245,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // run plan only and execute terraform show command
     byte[] terraformPlan = "terraformPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
-        true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, false);
+        true, true, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, false);
     doReturn(terraformPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
@@ -270,7 +269,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     // run plan only and execute terraform show command
     byte[] terraformPlan = "terraformPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
-        true, true, null, TerraformProvisionParameters.TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, true);
+        true, true, null, TerraformCommandUnit.Apply, TerraformCommand.APPLY, true, true);
     doReturn(terraformPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
@@ -318,8 +317,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForDestroyTests();
 
     // regular destroy with no plan exported
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, false);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, null, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.DESTROY);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform destroy");
@@ -338,8 +337,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForDestroyTests();
 
     // regular destroy with no plan exported
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, true);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, null, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, true);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.DESTROY);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform destroy");
@@ -362,9 +361,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC1_destroyUsingPlan() throws InterruptedException, TimeoutException, IOException {
     setupForDestroyTests();
 
-    TerraformProvisionParameters terraformProvisionParameters =
-        createTerraformProvisionParameters(false, false, encryptedPlanContent,
-            TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, false);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, encryptedPlanContent, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.DESTROY);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform refresh", "terraform apply");
@@ -383,9 +381,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForDestroyTests();
 
     byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
-    TerraformProvisionParameters terraformProvisionParameters =
-        createTerraformProvisionParameters(false, false, encryptedPlanContent,
-            TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, true);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        false, false, encryptedPlanContent, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, false, true);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformCommand.DESTROY);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform apply");
@@ -398,8 +395,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForDestroyTests();
 
     byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(true, true, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, true, false);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        true, true, null, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, true, false);
     doReturn(terraformDestroyPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
@@ -422,8 +419,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     setupForDestroyTests();
 
     byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
-    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(true, true, null,
-        TerraformProvisionParameters.TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, true, true);
+    TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(
+        true, true, null, TerraformCommandUnit.Destroy, TerraformCommand.DESTROY, true, true);
     doReturn(terraformDestroyPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
@@ -463,9 +460,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   }
 
   private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
-      boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan,
-      TerraformProvisionParameters.TerraformCommandUnit commandUnit, TerraformCommand command,
-      boolean saveTerraformJson, boolean skipRefresh) {
+      boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan, TerraformCommandUnit commandUnit,
+      TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh) {
     Map<String, String> backendConfigs = new HashMap<>();
     backendConfigs.put("var1", "value1");
 

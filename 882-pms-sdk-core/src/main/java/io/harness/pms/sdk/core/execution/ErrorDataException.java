@@ -9,11 +9,14 @@ import io.harness.tasks.ErrorResponseData;
 import lombok.Getter;
 
 public class ErrorDataException extends WingsException {
+  private static final String MESSAGE_ARG = "message";
+
   @Getter ErrorResponseData errorResponseData;
 
   public ErrorDataException(ErrorResponseData errorResponseData) {
     super(errorResponseData.getErrorMessage(), null, TASK_FAILURE_ERROR, Level.ERROR, null,
         errorResponseData.getFailureTypes());
     this.errorResponseData = errorResponseData;
+    super.param(MESSAGE_ARG, errorResponseData.getErrorMessage());
   }
 }

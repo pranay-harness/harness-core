@@ -9,8 +9,12 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//908-access-control-admin-client:module",
+        "//940-notification-client:module",
         "//960-ng-core-beans:module",
+        "//960-notification-beans:module",
         "//960-persistence:module",
+        "//980-commons:module",
         "@maven//:com_auth0_java_jwt",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

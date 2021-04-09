@@ -29,7 +29,6 @@ import io.harness.terraform.request.TerraformPlanCommandRequest;
 import io.harness.terraform.request.TerraformRefreshCommandRequest;
 
 import com.google.inject.Inject;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -84,7 +83,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
     Mockito.verify(terraformClient, times(1))
         .init(TerraformInitCommandRequest.builder()
-                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
@@ -119,7 +118,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
     Mockito.verify(terraformClient, times(1))
         .init(TerraformInitCommandRequest.builder()
-                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
@@ -156,7 +155,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
     Mockito.verify(terraformClient, times(1))
         .init(TerraformInitCommandRequest.builder()
-                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile().getAbsolutePath())
+                  .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
@@ -174,8 +173,8 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
   private TerraformExecuteStepRequestBuilder getTerraformExecuteStepRequest() {
     return TerraformExecuteStepRequest.builder()
-        .tfBackendConfigsFile(new File("backendConfigFile"))
-        .tfOutputsFile(new File("outputfile"))
+        .tfBackendConfigsFile("backendConfigFile.txt")
+        .tfOutputsFile("outputfile.txt")
         .scriptDirectory("scriptDirectory")
         .envVars(new HashMap<>())
         .workspace("workspace")

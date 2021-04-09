@@ -16,7 +16,7 @@ public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
   String filePath;
-  String accountId;
   String commitMsg;
+  boolean createPr;
   String lastObjectId; // required in case of update file
 }

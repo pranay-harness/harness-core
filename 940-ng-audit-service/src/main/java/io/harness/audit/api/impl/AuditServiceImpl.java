@@ -215,8 +215,7 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public void purgeAuditsOlderThanTimestamp(String accountIdentifier, Instant timestamp) {
-    auditRepository.delete(new Criteria()
-                               .where(AuditEventKeys.timestamp)
+    auditRepository.delete(Criteria.where(AuditEventKeys.timestamp)
                                .lte(timestamp)
                                .and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                                .is(accountIdentifier));

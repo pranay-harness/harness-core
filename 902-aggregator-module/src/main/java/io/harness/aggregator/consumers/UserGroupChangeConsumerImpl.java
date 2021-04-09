@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +17,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
-@NoArgsConstructor
-@AllArgsConstructor
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO> {
-  @Inject private ACLService aclService;
+  private final ACLService aclService;
 
   @Override
   public long consumeUpdateEvent(String id, UserGroupDBO userGroupDBO) {
@@ -64,7 +64,7 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
       return count;
 
     } else {
-      log.info("None of the relevant fields have changed for the user group");
+      log.debug("None of the relevant fields have changed for the user group");
     }
     return 0;
   }

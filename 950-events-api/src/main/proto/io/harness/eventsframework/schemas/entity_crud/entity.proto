@@ -4,6 +4,7 @@ package io.harness.eventsframework.entity_crud;
 import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
+option go_package = "950_events_api";
 
 message EntityChangeDTO {
   google.protobuf.StringValue identifier = 1;

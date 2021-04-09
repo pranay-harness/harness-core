@@ -405,7 +405,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
         .thenReturn(true);
 
     authRuleFilter.filter(requestContext);
-    verify(requestContext).getHeaderString(API_KEY_HEADER);
+    verify(requestContext, times(2)).getHeaderString(API_KEY_HEADER);
   }
 
   @Test
@@ -435,7 +435,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
 
     authRuleFilter.filter(requestContext);
     assertThat(requestContext.getMethod()).isEqualTo("GET");
-    verify(requestContext, times(2)).getHeaderString(API_KEY_HEADER);
+    verify(requestContext, times(3)).getHeaderString(API_KEY_HEADER);
     verify(whitelistService).checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class));
     User user = UserThreadLocal.get();
     assertThat(user).isNotNull();
