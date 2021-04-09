@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
@@ -23,6 +24,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.RequestExecutor;
@@ -37,6 +39,7 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,7 +90,10 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
         DelegateTaskPackage.builder().delegateId(delegateId).data(taskData).build(), null, null, null);
 
     MockitoAnnotations.initMocks(this);
+    setupMocks();
+  }
 
+  private void setupMocks() throws Exception {
     when(future.cancel(anyBoolean())).thenReturn(true);
     FieldUtils.writeField(dataCollectionTask, "future", future, true);
     FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
@@ -110,6 +116,7 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
         .startMinute(0)
         .responseDefinition(logDefinition)
         .headers(header)
+        .stateType(StateType.LOG_VERIFICATION)
         .stateExecutionId("12345asdaf")
         .baseUrl("http://ec2-34-227-84-170.compute-1.amazonaws.com:9200/integration-test/")
         .shouldDoHostBasedFiltering(true)
@@ -166,6 +173,80 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     maskPatterns.forEach(
         maskPatternsMap -> assertThat(((Map<String, String>) maskPatternsMap).containsKey("decryptedApiKey")).isTrue());
     callsList.forEach(call -> assertThat(call.request().url().toString().contains("apiKey=decryptedApiKey")));
+
+    verify(logAnalysisStoreService, times(1))
+        .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyString(), any(List.class));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchDatadogLogs_validateStartEndTime() throws Exception {
+    // setup
+    long startMin = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+    String textLoad = Resources.toString(
+        CustomLogDataCollectionTaskTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+    String searchUrl = "_search?pretty=true&q=*&size=5&startTime=${start_time}&endTime=${end_time}";
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
+    responseMappers.put("timestamp",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.timestamp"))
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+            .build());
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("host")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.host"))
+            .build());
+    responseMappers.put("logMessage",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("logMessage")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.title"))
+            .build());
+    Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
+    logDefinition.put(searchUrl, responseMappers);
+    setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
+    dataCollectionInfo.setStateType(StateType.DATA_DOG_LOG);
+    dataCollectionInfo.setStartMinute((int) startMin);
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.CUSTOM_LOG_COLLECTION_TASK.name())
+                            .parameters(new Object[] {dataCollectionInfo})
+                            .timeout(TimeUnit.MINUTES.toMillis(1 + 120))
+                            .build();
+
+    dataCollectionTask = new CustomLogDataCollectionTask(
+        DelegateTaskPackage.builder().delegateId(generateUuid()).data(taskData).build(), null, null, null);
+    setupMocks();
+    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
+    when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
+             anyString(), anyString(), anyString(), anyString(), any(List.class)))
+        .thenReturn(true);
+    when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(textLoad);
+    // execute
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
+    Runnable r = dataCollectionTask.getDataCollector(taskResult);
+    r.run();
+
+    // verify
+    // verify
+    ArgumentCaptor<Map> maskPatternsCaptor = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
+
+    verify(requestExecutor, times(3))
+        .executeRequest(any(ThirdPartyApiCallLog.class), requestCaptor.capture(), maskPatternsCaptor.capture());
+    List<Map> maskPatterns = maskPatternsCaptor.getAllValues();
+    List<Call> callsList = requestCaptor.getAllValues();
+    maskPatterns.forEach(
+        maskPatternsMap -> assertThat(((Map<String, String>) maskPatternsMap).containsKey("decryptedApiKey")).isTrue());
+    callsList.forEach(call -> {
+      String startTimeParam = call.request().url().queryParameter("startTime");
+      String endTimeParam = call.request().url().queryParameter("endTime");
+      assertThat(startTimeParam).isEqualTo(String.valueOf(startMin * 60000));
+      assertThat(endTimeParam).isEqualTo(String.valueOf((startMin + 1) * 60000));
+    });
 
     verify(logAnalysisStoreService, times(1))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
