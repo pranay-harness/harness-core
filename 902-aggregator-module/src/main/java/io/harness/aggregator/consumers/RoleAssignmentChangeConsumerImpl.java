@@ -86,8 +86,6 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       long count = aclService.saveAll(acls);
       log.info("Updated {} ACLs", count);
       return count;
-    } else {
-      log.debug("None of the relevant fields have changed for role assignment: {}", id);
     }
     return 0;
   }
