@@ -1,10 +1,13 @@
 package io.harness.accesscontrol.permissions;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
 import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
 import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.utils.RetryUtils;
@@ -25,6 +28,7 @@ import net.jodah.failsafe.RetryPolicy;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @ValidateOnExecution
@@ -88,8 +92,20 @@ public class PermissionServiceImpl implements PermissionService {
     //    if (!permissionUpdate.getAllowedScopeLevels().equals(currentPermission.getAllowedScopeLevels())) {
     //      throw new InvalidRequestException("Cannot change the the scopes at which this permission can be used.");
     //    }
-    permissionUpdate.setVersion(currentPermission.getVersion());
-    return permissionDao.update(permissionUpdate);
+    if (PermissionStatus.INACTIVE.equals(permissionUpdate.getStatus())) {
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        boolean updateSuccessful = roleService.removePermissionFromRoles(permissionUpdate.getIdentifier());
+        if (!updateSuccessful) {
+          throw new UnexpectedException(String.format(
+              "The removal of permissions from role has failed for permission, %s", permissionUpdate.getIdentifier()));
+        }
+        permissionUpdate.setVersion(currentPermission.getVersion());
+        return permissionDao.update(permissionUpdate);
+      }));
+    } else {
+      permissionUpdate.setVersion(currentPermission.getVersion());
+      return permissionDao.update(permissionUpdate);
+    }
   }
 
   @Override

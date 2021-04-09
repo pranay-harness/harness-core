@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
@@ -13,6 +12,10 @@ import static software.wings.metrics.MetricType.ERROR;
 import static software.wings.metrics.MetricType.RESP_TIME;
 import static software.wings.metrics.MetricType.THROUGHPUT;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
@@ -76,6 +79,8 @@ import org.slf4j.Logger;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class DatadogState extends AbstractMetricAnalysisState {
   @Inject @SchemaIgnore private transient DatadogService datadogService;
   private static final int DATA_COLLECTION_RATE_MINS = 5;
@@ -461,7 +466,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   public static Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics) {
     Map<String, TimeSeriesMetricDefinition> metricTypeMap = new HashMap<>();
     for (Metric metric : metrics) {
-      metricTypeMap.put(replaceDotWithUnicode(metric.getDisplayName()),
+      metricTypeMap.put(metric.getDisplayName(),
           TimeSeriesMetricDefinition.builder()
               .metricName(metric.getDisplayName())
               .metricType(MetricType.valueOf(metric.getMlMetricType()))
