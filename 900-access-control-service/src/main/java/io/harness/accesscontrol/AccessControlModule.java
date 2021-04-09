@@ -1,7 +1,6 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
-import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
@@ -41,16 +40,19 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.lock.PersistentLockModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
@@ -125,6 +127,9 @@ public class AccessControlModule extends AbstractModule {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
     install(PersistentLockModule.getInstance());
+    Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
+    morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
     install(new TransactionOutboxModule());
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());

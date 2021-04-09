@@ -33,6 +33,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
@@ -112,6 +113,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+    registerRequestContextFilter(environment);
     registerIterators(injector);
     registerManagedBeans(appConfig, environment, injector);
     registerAuthFilters(appConfig, environment, injector);
@@ -170,6 +172,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerAuthFilters(
