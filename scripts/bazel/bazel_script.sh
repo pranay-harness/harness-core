@@ -105,12 +105,6 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
-  //900-access-control-service:module \
-  //903-decision-module:module \
-  //905-access-control-core:module \
-  //908-access-control-admin-client:module \
-  //908-access-control-sdk:module \
-  //909-access-control-commons:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -119,16 +113,23 @@ BAZEL_MODULES="\
   //920-delegate-service-beans/src/main/proto:all \
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
+  //925-access-control-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
+  //935-access-control-decision:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //945-ng-audit-client:module \
+  //946-access-control-aggregator:module \
+  //947-access-control-core:module \
+  //948-access-control-admin-client:module \
+  //948-access-control-sdk:module \
+  //949-access-control-commons:module \
   //949-git-sync-sdk:module \
   //950-command-library-common:module \
   //950-cg-ng-shared-orchestration-beans:module \
@@ -350,7 +351,7 @@ build_bazel_application_module 350-event-server
 build_bazel_application_module 360-cg-manager
 build_bazel_application_module 800-pipeline-service
 build_bazel_application_module 820-platform-service
-build_bazel_application_module 900-access-control-service
+build_bazel_application_module 925-access-control-service
 build_bazel_application_module 940-notification-client
 
 build_bazel_module 125-cd-nextgen
@@ -388,11 +389,6 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
-build_bazel_module 903-decision-module
-build_bazel_module 905-access-control-core
-build_bazel_module 908-access-control-admin-client
-build_bazel_module 908-access-control-sdk
-build_bazel_module 909-access-control-commons
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
@@ -400,11 +396,17 @@ build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 955-delegate-beans
+build_bazel_module 935-access-control-decision
 build_bazel_module 940-feature-flag
 build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
+build_bazel_module 946-access-control-aggregator
+build_bazel_module 947-access-control-core
+build_bazel_module 948-access-control-admin-client
+build_bazel_module 948-access-control-sdk
+build_bazel_module 949-access-control-commons
 build_bazel_module 950-command-library-common
 build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
