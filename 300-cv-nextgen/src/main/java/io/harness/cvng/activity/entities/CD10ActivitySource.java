@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.entities;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
@@ -23,6 +25,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldNameConstants(innerTypeName = "CD10ActivitySourceKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CV)
 public class CD10ActivitySource extends ActivitySource {
   public static final String HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER = "harness_cd10_activity_source";
   private Set<CD10EnvMappingDTO> envMappings;
@@ -44,16 +47,12 @@ public class CD10ActivitySource extends ActivitySource {
 
   @Override
   public ActivitySourceDTO toDTO() {
-    return CD10ActivitySourceDTO.builder()
+    return fillCommon(CD10ActivitySourceDTO.builder())
         .uuid(this.getUuid())
         .createdAt(this.getCreatedAt())
         .lastUpdatedAt(this.getLastUpdatedAt())
         .envMappings(envMappings)
         .serviceMappings(serviceMappings)
-        .identifier(getIdentifier())
-        .orgIdentifier(getOrgIdentifier())
-        .projectIdentifier(getProjectIdentifier())
-        .name(getName())
         .build();
   }
 

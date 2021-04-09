@@ -6,9 +6,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
+import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
@@ -17,7 +20,7 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.CVEventService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -33,11 +36,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private HPersistence hPersistence;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService cvEventService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public String saveActivitySource(
@@ -58,6 +62,8 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
           activitySource = CD10ActivitySource.fromDTO(
               accountId, orgIdentifier, projectIdentifier, (CD10ActivitySourceDTO) activitySourceDTO);
           break;
+        case CDNG:
+          throw new IllegalStateException("CDNG activity can not be created using the API.");
         default:
           throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
       }
@@ -83,6 +89,8 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
         activitySource = CD10ActivitySource.fromDTO(accountId, activitySourceDTO.getOrgIdentifier(),
             activitySourceDTO.getProjectIdentifier(), (CD10ActivitySourceDTO) activitySourceDTO);
         break;
+      case CDNG:
+        throw new IllegalStateException("CDNG activity can not be created using the API.");
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
@@ -126,6 +134,8 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       case HARNESS_CD10:
         CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
         break;
+      case CDNG:
+        throw new IllegalStateException("CDNG activity can not be updated using the API.");
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
@@ -169,6 +179,8 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       case HARNESS_CD10:
         CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
         break;
+      case CDNG:
+        throw new IllegalStateException("CDNG activity can not be updated using the API.");
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
@@ -223,6 +235,22 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
                                         .get();
 
     return getActivitySourceForDeletion(accountId, activitySource);
+  }
+
+  @Override
+  public void createDefaultCDNGActivitySource(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (featureFlagService.isFeatureFlagEnabled(accountIdentifier, "CVNG_CDNG_INTEGRATION")) {
+      ActivitySource activitySource =
+          CDNGActivitySource.getDefaultObject(accountIdentifier, orgIdentifier, projectIdentifier);
+      try {
+        activitySource.validate();
+        hPersistence.save(activitySource);
+      } catch (DuplicateKeyException ex) {
+        // This call is idempotent so ignoring the exception.
+        log.info("Tried to create already existing CDNG activity source ");
+      }
+    }
   }
 
   private boolean getActivitySourceForDeletion(String accountId, ActivitySource activitySource) {

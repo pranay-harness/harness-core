@@ -19,6 +19,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
@@ -48,7 +50,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
+@OwnedBy(HarnessTeam.CV)
 public class VerificationJobServiceImplTest extends CvNextGenTestBase {
   @Mock private NextGenService nextGenService;
   @Mock private CVEventService cvEventService;
@@ -504,8 +506,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     assertThat(verificationJob).isNotNull();
     assertThat(verificationJob.isDefaultJob()).isTrue();
     assertThat(verificationJob.getIdentifier()).isEqualTo(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID);
-    assertThat(verificationJob.getServiceIdentifier()).isEqualTo("${service}");
-    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("${environment}");
+    assertThat(verificationJob.getServiceIdentifier()).isEqualTo("<+input>");
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("<+input>");
     assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(Duration.ofMinutes(15).toMinutes());
   }
 
