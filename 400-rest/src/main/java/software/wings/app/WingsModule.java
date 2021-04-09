@@ -48,8 +48,11 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.cf.CFApi;
 import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
+import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -1579,6 +1582,21 @@ public class WingsModule extends AbstractModule implements ServersModule {
     String apiKey = cfClientConfig.getApiKey();
 
     return new CfClient(apiKey);
+  }
+
+  @Provides
+  @Singleton
+  CFApi providesCfAPI() {
+    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(migrationConfig.getAdminUrl());
+    return new CFApi(apiClient);
+  }
+
+  @Provides
+  @Singleton
+  CfMigrationConfig providesCfMigrationConfig() {
+    return configuration.getCfMigrationConfig();
   }
 
   @Provides

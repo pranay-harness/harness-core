@@ -27,6 +27,7 @@ pub trait JavaClassTraits {
     fn relative_location(&self) -> String;
     fn directory_location(&self) -> String;
     fn team(&self) -> String;
+    fn is_generated(&self) -> bool;
 }
 
 impl JavaClassTraits for &JavaClass {
@@ -46,6 +47,10 @@ impl JavaClassTraits for &JavaClass {
             None => UNKNOWN_TEAM.to_string(),
             Some(team) => team.clone(),
         }
+    }
+
+    fn is_generated(&self) -> bool {
+        self.location.contains("/generated/")
     }
 }
 
