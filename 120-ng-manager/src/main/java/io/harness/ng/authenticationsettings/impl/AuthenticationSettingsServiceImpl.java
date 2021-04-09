@@ -192,7 +192,6 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     }
     return null;
   }
-
   private RequestBody createPartFromString(String string) {
     if (string == null) {
       return null;

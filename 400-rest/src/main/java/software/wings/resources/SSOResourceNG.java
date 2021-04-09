@@ -34,7 +34,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @Api(value = "/ng/sso", hidden = true)
 @Path("/ng/sso")
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
 @Produces(MediaType.APPLICATION_JSON)
 @NextGenManagerAuth
 @Slf4j
