@@ -67,21 +67,17 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
       }
       log.info("{} ACLs created", count);
       return count;
-    } else {
-      log.debug("None of the relevant fields have changed for role: {}", id);
     }
     return 0;
   }
 
   @Override
   public long consumeDeleteEvent(String id) {
-    log.info("Role deleted with id: {}", id);
     return 0;
   }
 
   @Override
   public long consumeCreateEvent(String id, RoleDBO roleDBO) {
-    log.info("New role created with id: {}", id);
     return 0;
   }
 }

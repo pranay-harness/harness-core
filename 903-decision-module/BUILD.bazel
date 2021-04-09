@@ -12,6 +12,7 @@ java_library(
     deps = [
         "//:lombok",
         "//905-access-control-core:module",
+        "//906-decision-commons:module",
         "//930-ng-core-clients:module",
         "//940-feature-flag:module",
         "//948-access-control-sdk:module",

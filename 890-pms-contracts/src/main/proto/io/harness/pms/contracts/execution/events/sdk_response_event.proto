@@ -23,6 +23,7 @@ message SdkResponseEventRequest {
     FacilitatorResponseRequest facilitatorResponseRequest = 7;
     EventErrorRequest eventErrorRequest = 8;
     AdviserResponseRequest adviserResponseRequest = 9;
+    QueueTaskRequestAndExecutableResponseRequest queueTaskRequestAndExecutableResponseRequest = 10;
   }
   string nodeExecutionId = 3;
 }
@@ -31,6 +32,11 @@ message QueueTaskRequest {
   string nodeExecutionId = 1;
   map<string, string> setupAbstractions = 3;
   io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
+}
+
+message QueueTaskRequestAndExecutableResponseRequest {
+  QueueTaskRequest queueTaskRequest = 1;
+  AddExecutableResponseRequest addExecutableResponseRequest = 2;
 }
 
 message QueueNodeExecutionRequest {
@@ -82,4 +88,5 @@ enum SdkResponseEventType {
   HANDLE_FACILITATE_RESPONSE = 5;
   HANDLE_EVENT_ERROR = 6;
   HANDLE_ADVISER_RESPONSE = 7;
+  QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE = 8;
 }

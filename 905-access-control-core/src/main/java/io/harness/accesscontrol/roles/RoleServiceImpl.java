@@ -2,6 +2,7 @@ package io.harness.accesscontrol.roles;
 
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.permissions.Permission;
@@ -14,6 +15,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.roles.persistence.RoleDao;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @ValidateOnExecution
@@ -67,7 +70,7 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
-  public Role update(Role roleUpdate) {
+  public RoleUpdateResult update(Role roleUpdate) {
     ManagedFilter managedFilter = roleUpdate.isManaged() ? ONLY_MANAGED : ONLY_CUSTOM;
     Optional<Role> currentRoleOptional =
         get(roleUpdate.getIdentifier(), roleUpdate.getScopeIdentifier(), managedFilter);
@@ -83,7 +86,8 @@ public class RoleServiceImpl implements RoleService {
     roleUpdate.setVersion(currentRole.getVersion());
     roleUpdate.setCreatedAt(currentRole.getCreatedAt());
     roleUpdate.setLastModifiedAt(currentRole.getLastModifiedAt());
-    return roleDao.update(roleUpdate);
+    Role updatedRole = roleDao.update(roleUpdate);
+    return RoleUpdateResult.builder().originalRole(currentRole).updatedRole(updatedRole).build();
   }
 
   @Override
@@ -119,7 +123,7 @@ public class RoleServiceImpl implements RoleService {
 
   private void validatePermissions(Role role) {
     Set<PermissionStatus> allowedPermissionStatus =
-        Sets.newHashSet(PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
+        Sets.newHashSet(PermissionStatus.EXPERIMENTAL, PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
     PermissionFilter permissionFilter = PermissionFilter.builder()
                                             .identifierFilter(role.getPermissions())
                                             .statusFilter(allowedPermissionStatus)

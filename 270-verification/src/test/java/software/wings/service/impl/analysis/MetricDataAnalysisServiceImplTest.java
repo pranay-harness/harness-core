@@ -2,7 +2,10 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.Misc.*;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -11,7 +14,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.logging.Misc;
+import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.intfc.LearningEngineService;
@@ -35,7 +44,9 @@ import software.wings.sm.StateType;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +57,8 @@ import org.mockito.Mock;
  * @author Praveen
  *
  */
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
   @Mock LearningEngineService learningEngineService;
   @Inject WingsPersistence wingsPersistence;
@@ -217,5 +230,24 @@ public class MetricDataAnalysisServiceImplTest extends WingsBaseTest {
         metricDataAnalysisService.getLatestLocalAnalysisRecord(stateExecutionId);
     assertThat(analysisRecord).isNotNull();
     assertThat(analysisRecord.getUuid()).isEqualTo(record.getUuid());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testSaveMetricTemplates() {
+    Map<String, TimeSeriesMetricDefinition> metricTemplates = new HashMap<>();
+
+    metricTemplates.put("metric.with.dots", TimeSeriesMetricDefinition.builder().build());
+    metricTemplates.put("metricWithoutDots", TimeSeriesMetricDefinition.builder().build());
+    metricDataAnalysisService.saveMetricTemplates(
+        appId, StateType.PROMETHEUS, stateExecutionId, cvConfigId, metricTemplates);
+
+    TimeSeriesMetricTemplates timeSeriesMetricTemplates =
+        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority).get();
+    Map<String, TimeSeriesMetricDefinition> savedMetricTemplates = timeSeriesMetricTemplates.getMetricTemplates();
+    assertThat(savedMetricTemplates).containsKey("metricWithoutDots");
+    assertThat(savedMetricTemplates).containsKey(replaceDotWithUnicode("metric.with.dots"));
+    assertThat(savedMetricTemplates.containsKey("metric.with.dots")).isFalse();
   }
 }

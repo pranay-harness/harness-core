@@ -9,9 +9,9 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
@@ -32,7 +32,8 @@ public interface SdkNodeExecutionService {
   void addExecutableResponseAndResumeNode(String currentNodeExecutionId,
       AddExecutableResponseRequest addExecutableResponseRequest, ResumeNodeExecutionRequest resumeNodeExecutionRequest);
 
-  String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest task);
+  void queueTaskAndAddExecutableResponse(
+      QueueTaskRequest queueTaskRequest, AddExecutableResponseRequest addExecutableResponseRequest);
 
   void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);

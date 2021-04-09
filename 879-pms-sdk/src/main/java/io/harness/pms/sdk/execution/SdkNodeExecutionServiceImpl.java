@@ -14,18 +14,17 @@ import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequestAndExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
-import io.harness.pms.contracts.plan.QueueTaskRequest;
-import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
@@ -129,14 +128,23 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   }
 
   @Override
-  public String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest taskRequest) {
-    QueueTaskResponse response = nodeExecutionProtoServiceBlockingStub.queueTask(
-        QueueTaskRequest.newBuilder()
-            .putAllSetupAbstractions(setupAbstractions == null ? Collections.emptyMap() : setupAbstractions)
-            .setTaskRequest(taskRequest)
-            .setNodeExecutionId(nodeExecutionId)
-            .build());
-    return response.getTaskId();
+  public void queueTaskAndAddExecutableResponse(
+      QueueTaskRequest queueTaskRequest, AddExecutableResponseRequest addExecutableResponseRequest) {
+    SdkResponseEventInternal sdkResponseEventInternal =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setQueueTaskRequestAndExecutableResponseRequest(
+                                             QueueTaskRequestAndExecutableResponseRequest.newBuilder()
+                                                 .setAddExecutableResponseRequest(addExecutableResponseRequest)
+                                                 .setQueueTaskRequest(queueTaskRequest)
+                                                 .build())
+                                         .build())
+            .build();
+
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
+                                       .build());
   }
 
   @Override
