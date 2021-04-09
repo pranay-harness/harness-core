@@ -71,7 +71,6 @@ BAZEL_MODULES="\
   //340-ce-nextgen:module \
   //350-event-xxxxxxxxmodule \
   //360-cg-manager:module \
-  //370-users-syncbridge:module \
   //380-cg-graphql:module \
   //400-rest:module \
   //400-rest:supporter-test \

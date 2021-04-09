@@ -1,8 +1,11 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.cf.CfClientConfig;
@@ -82,6 +85,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
+@OwnedBy(PL)
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =
@@ -96,7 +100,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
-  @JsonProperty(value = "userChangeStreamEnabled") private boolean isUserChangeStreamEnabled;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;

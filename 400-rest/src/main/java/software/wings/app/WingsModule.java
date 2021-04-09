@@ -864,7 +864,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
@@ -880,8 +880,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
                   EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
                   EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
@@ -1317,7 +1317,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
-    // User-Sync Dependencies
+    // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 

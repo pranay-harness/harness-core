@@ -41,7 +41,7 @@ public interface NgUserService {
 
   boolean isUserInAccount(String accountId, String userId);
 
-  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  boolean isUserAtScope(String userId, Scope scope);
 
-  boolean removeUserMembership(String userId);
+  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }
