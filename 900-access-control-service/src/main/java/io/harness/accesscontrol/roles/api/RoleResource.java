@@ -10,6 +10,7 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.roles.RoleUpdateResult;
 import io.harness.accesscontrol.roles.events.RoleCreateEvent;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
@@ -117,7 +118,8 @@ public class RoleResource {
     if (!identifier.equals(roleDTO.getIdentifier())) {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
     }
-    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
+    RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
+    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleUpdateResult.getUpdatedRole()));
   }
 
   @POST

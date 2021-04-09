@@ -22,4 +22,5 @@ public class UserInfo {
   String name;
   String email;
   boolean admin;
+  boolean twoFactorAuthenticationEnabled;
 }

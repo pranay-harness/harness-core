@@ -12,11 +12,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
 import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesActivityDetail;
@@ -24,6 +27,7 @@ import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
+import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -31,6 +35,7 @@ import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceServ
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -43,6 +48,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
 import io.harness.encryption.Scope;
@@ -73,7 +79,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
-
+@OwnedBy(HarnessTeam.CV)
 public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
@@ -899,7 +905,35 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
       }
     });
   }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testCreateDefaultCDNGActivitySource() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+    activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
+    ActivitySourceDTO activitySource = activitySourceService.getActivitySource(
+        accountId, orgIdentifier, projectIdentifier, CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    assertThat(activitySource.getType()).isEqualTo(ActivitySourceType.CDNG);
+    assertThat(activitySource.getIdentifier()).isEqualTo(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    assertThat(activitySource.isEditable()).isEqualTo(false);
+  }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testCreateDefaultCONGActivitySource_idempotent() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+    activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
+    activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
+    ActivitySourceDTO activitySource = activitySourceService.getActivitySource(
+        accountId, orgIdentifier, projectIdentifier, CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    assertThat(activitySource.getType()).isEqualTo(ActivitySourceType.CDNG);
+    assertThat(activitySource.getIdentifier()).isEqualTo(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+  }
   public List<KubernetesActivitySourceDTO> createKubernetesActivitySourceDTOs(int n) {
     return IntStream.range(0, n).mapToObj(index -> createKubernetesActivitySourceDTO()).collect(Collectors.toList());
   }

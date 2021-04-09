@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -44,6 +45,7 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> bucket;
@@ -51,10 +53,11 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "bucket", "sourcePath", "target"})
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "connectorRef", "resources", "bucket", "sourcePath", "target", "runAsUser"})
   public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> bucket, ParameterField<String> sourcePath,
-      ParameterField<String> target) {
+      ParameterField<String> target, ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -63,6 +66,7 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
     this.bucket = bucket;
     this.sourcePath = sourcePath;
     this.target = target;
+    this.runAsUser = runAsUser;
   }
 
   @Override

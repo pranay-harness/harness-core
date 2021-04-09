@@ -1,5 +1,7 @@
 package io.harness.cvng.beans.activity.cd10;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 
@@ -14,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @JsonTypeName("HARNESS_CD10")
+@OwnedBy(HarnessTeam.CV)
 public class CD10ActivitySourceDTO extends ActivitySourceDTO {
   Set<CD10EnvMappingDTO> envMappings;
   Set<CD10ServiceMappingDTO> serviceMappings;
@@ -34,5 +37,10 @@ public class CD10ActivitySourceDTO extends ActivitySourceDTO {
   @Override
   public ActivitySourceType getType() {
     return ActivitySourceType.HARNESS_CD10;
+  }
+
+  @Override
+  public boolean isEditable() {
+    return true;
   }
 }

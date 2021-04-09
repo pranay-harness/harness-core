@@ -4,13 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,17 +17,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
-@NoArgsConstructor
-@AllArgsConstructor
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceGroupDBO> {
-  @Inject private ACLService aclService;
-  @Inject private RoleService roleService;
-  @Inject private ResourceGroupService resourceGroupService;
+  private final ACLService aclService;
 
   @Override
   public long consumeUpdateEvent(String id, ResourceGroupDBO resourceGroupDBO) {

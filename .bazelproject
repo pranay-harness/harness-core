@@ -73,6 +73,7 @@ directories:
   915-pms-delegate-service-driver
   920-delegate-agent-beans
   920-delegate-service-beans
+  920-ng-signup
   930-delegate-tasks
   930-ng-core-clients
   955-alert-beans
@@ -94,7 +95,6 @@ directories:
   950-ng-audit-commons
   950-ng-core
   950-ng-project-n-orgs
-  950-ng-signup
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor

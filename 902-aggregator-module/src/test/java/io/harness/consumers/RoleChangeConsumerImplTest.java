@@ -16,8 +16,6 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.SourceMetadata;
 import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
@@ -38,15 +36,11 @@ import org.junit.experimental.categories.Category;
 public class RoleChangeConsumerImplTest extends CategoryTest {
   private RoleChangeConsumerImpl roleChangeConsumer;
   private ACLService aclService;
-  private ResourceGroupService resourceGroupService;
-  private RoleService roleService;
 
   @Before
   public void setup() {
     aclService = mock(ACLService.class);
-    resourceGroupService = mock(ResourceGroupService.class);
-    roleService = mock(RoleService.class);
-    roleChangeConsumer = new RoleChangeConsumerImpl(aclService, roleService, resourceGroupService);
+    roleChangeConsumer = new RoleChangeConsumerImpl(aclService);
   }
 
   private RoleDBO getRoleWithPermissionsChanged() {

@@ -120,6 +120,7 @@ BAZEL_MODULES="\
   //920-delegate-agent-beans:module \
   //920-delegate-service-beans/src/main/proto:all \
   //920-delegate-service-beans:module \
+  //920-ng-signup:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //955-delegate-beans/src/main/proto:all \
@@ -141,7 +142,6 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
-  //950-ng-signup:module \
   //950-log-client:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \

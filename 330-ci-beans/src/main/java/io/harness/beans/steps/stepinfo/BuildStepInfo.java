@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
+
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -7,9 +9,11 @@ import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Optional;
@@ -37,14 +41,17 @@ public class BuildStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   private List<ScriptInfo> scriptInfos;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "scriptInfos"})
-  public BuildStepInfo(String identifier, String name, Integer retry, List<ScriptInfo> scriptInfos) {
+  @ConstructorProperties({"identifier", "name", "retry", "scriptInfos", "runAsUser"})
+  public BuildStepInfo(
+      String identifier, String name, Integer retry, List<ScriptInfo> scriptInfos, ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.scriptInfos = scriptInfos;
+    this.runAsUser = runAsUser;
   }
 
   @Override
