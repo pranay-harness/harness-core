@@ -15,8 +15,8 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.EngineResumeCallback;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 public class AsyncStrategy implements ExecuteStrategy {
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private AsyncWaitEngine asyncWaitEngine;
 
@@ -42,7 +42,7 @@ public class AsyncStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(nodeExecution, asyncExecutableResponse);
   }
 
@@ -52,8 +52,8 @@ public class AsyncStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    pmsNodeExecutionService.handleStepResponse(
+        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
+    sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
@@ -67,7 +67,7 @@ public class AsyncStrategy implements ExecuteStrategy {
 
     OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     asyncWaitEngine.waitForAllOn(callback, response.getCallbackIdsList().toArray(new String[0]));
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
+    sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }
 

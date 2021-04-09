@@ -9,6 +9,9 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
+import io.harness.pms.contracts.execution.events.EventErrorRequest;
+import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
@@ -19,9 +22,6 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
-import io.harness.pms.contracts.plan.AdviserResponseRequest;
-import io.harness.pms.contracts.plan.EventErrorRequest;
-import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
@@ -30,7 +30,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.execution.SdkResponseEventInternal;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
-public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService {
+public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;
@@ -214,31 +214,57 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   @Override
   public void handleFacilitationResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
-    nodeExecutionProtoServiceBlockingStub.handleFacilitatorResponse(
-        FacilitatorResponseRequest.newBuilder()
-            .setFacilitatorResponse(facilitatorResponseProto)
-            .setNodeExecutionId(nodeExecutionId)
-            .setNotifyId(notifyId)
+    FacilitatorResponseRequest facilitatorResponseRequest = FacilitatorResponseRequest.newBuilder()
+                                                                .setFacilitatorResponse(facilitatorResponseProto)
+                                                                .setNodeExecutionId(nodeExecutionId)
+                                                                .setNotifyId(notifyId)
+                                                                .build();
+
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventInternals(Collections.singletonList(
+                SdkResponseEventInternal.builder()
+                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                                 .setFacilitatorResponseRequest(facilitatorResponseRequest)
+                                                 .build())
+                    .sdkResponseEventType(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE)
+                    .build()))
             .build());
   }
 
   @Override
   public void handleAdviserResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse) {
-    nodeExecutionProtoServiceBlockingStub.handleAdviserResponse(AdviserResponseRequest.newBuilder()
-                                                                    .setAdviserResponse(adviserResponse)
-                                                                    .setNodeExecutionId(nodeExecutionId)
-                                                                    .setNotifyId(notifyId)
-                                                                    .build());
+    SdkResponseEventInternal handleAdviserResponseRequest =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.HANDLE_ADVISER_RESPONSE)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setAdviserResponseRequest(AdviserResponseRequest.newBuilder()
+                                                                        .setAdviserResponse(adviserResponse)
+                                                                        .setNodeExecutionId(nodeExecutionId)
+                                                                        .setNotifyId(notifyId)
+                                                                        .build())
+                                         .build())
+            .build();
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder().sdkResponseEventInternals(Lists.newArrayList(handleAdviserResponseRequest)).build());
   }
 
   @Override
   public void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo) {
-    nodeExecutionProtoServiceBlockingStub.handleEventError(EventErrorRequest.newBuilder()
-                                                               .setEventType(eventType)
-                                                               .setEventNotifyId(eventNotifyId)
-                                                               .setFailureInfo(failureInfo)
-                                                               .build());
+    SdkResponseEventInternal handleEventErrorRequest =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.HANDLE_EVENT_ERROR)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setEventErrorRequest(EventErrorRequest.newBuilder()
+                                                                   .setEventNotifyId(eventNotifyId)
+                                                                   .setEventType(eventType)
+                                                                   .setFailureInfo(failureInfo)
+                                                                   .build())
+                                         .build())
+            .build();
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder().sdkResponseEventInternals(Lists.newArrayList(handleEventErrorRequest)).build());
   }
 
   private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {

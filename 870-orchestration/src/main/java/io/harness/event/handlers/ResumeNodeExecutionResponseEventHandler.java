@@ -7,8 +7,10 @@ import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.execution.SdkResponseEventInternal;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
 public class ResumeNodeExecutionResponseEventHandler implements SdkResponseEventHandler {
   @Inject OrchestrationEngine engine;
 
