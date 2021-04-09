@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.GitFileLocation;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -24,4 +25,8 @@ public interface GitFileLocationRepository
 
   Optional<GitFileLocation> findByEntityGitPathAndGitSyncConfigIdAndAccountId(
       String entityGitPath, String gitSyncConfigId, String accountId);
+
+  List<GitFileLocation> findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId,
+      boolean b);
 }

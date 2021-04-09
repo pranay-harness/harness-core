@@ -84,6 +84,13 @@ public class GitEntityServiceImpl implements GitEntityService {
         searchTerm, size);
   }
 
+  @Override
+  public List<GitFileLocation> getDefaultEntities(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId) {
+    return gitFileLocationRepository.findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+        accountIdentifier, organizationIdentifier, projectIdentifier, yamlGitConfigId, true);
+  }
+
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
       EntityType entityType, Long totalCount, List<GitSyncEntityDTO> gitFileLocations) {
     return GitSyncEntityListDTO.builder()

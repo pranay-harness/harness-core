@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
@@ -9,8 +10,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.YamlFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
+import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -34,19 +37,28 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitSyncConnectorHelper gitSyncConnectorHelper;
   ScmClient scmClient;
   Map<EntityType, Microservice> entityTypeMicroserviceMap;
+  GitEntityService gitEntityService;
 
   @Override
-  public void readFilesFromBranchAndProcess(YamlGitConfigDTO gitSyncConfigDTO, String branch, String accountId) {
+  public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
-        gitSyncConnectorHelper.getConnectorAssociatedWithGitSyncConfig(gitSyncConfigDTO, accountId);
-    FileBatchContentResponse harnessFilesOfBranch = getFilesBelongingToThisBranch(gitSyncConfigDTO, accountId, branch);
-    processTheChangesWeGotFromGit(harnessFilesOfBranch, gitSyncConfigDTO, branch, accountId);
+        gitSyncConnectorHelper.getConnectorAssociatedWithGitSyncConfig(yamlGitConfig, accountId);
+    FileBatchContentResponse harnessFilesOfBranch =
+        getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branch, yamlGitConfig);
+    processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
   }
 
   private FileBatchContentResponse getFilesBelongingToThisBranch(
-      YamlGitConfigDTO gitSyncConfigDTO, String accountId, String branch) {
-    List<String> filesList = getListOfFilesInTheDefaultBranch();
-    return scmClient;
+      ScmConnector connector, String accountId, String branch, YamlGitConfigDTO yamlGitConfig) {
+    // todo @deepak: Later on we won't list the files from the default branch
+    List<String> filesList = getListOfFilesInTheDefaultBranch(yamlGitConfig);
+    return scmClient.listFiles(connector, filesList, branch);
+  }
+
+  private List<String> getListOfFilesInTheDefaultBranch(YamlGitConfigDTO yamlGitConfig) {
+    List<GitFileLocation> gitSyncEntityDTOS = gitEntityService.getDefaultEntities(yamlGitConfig.getAccountIdentifier(),
+        yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getIdentifier());
+    return emptyIfNull(gitSyncEntityDTOS).stream().map(GitFileLocation::getEntityGitPath).collect(Collectors.toList());
   }
 
   private void processTheChangesWeGotFromGit(FileBatchContentResponse harnessFilesOfBranch,

@@ -127,7 +127,7 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch) {
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
     GetBatchFileRequest batchFileRequest = createBatchFileRequest(filePaths, slug, branch, gitProvider);

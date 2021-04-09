@@ -62,7 +62,7 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch) {
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
     return scmServiceGitClient.getHarnessFilesOfBranch(connector, branch);
   }
 

@@ -33,7 +33,7 @@ public interface ScmClient {
 
   FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector connector, String branch);
 
-  FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch);
+  FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch);
 
   FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
