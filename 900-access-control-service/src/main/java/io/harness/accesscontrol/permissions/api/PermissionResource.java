@@ -1,5 +1,10 @@
 package io.harness.accesscontrol.permissions.api;
 
+import static io.harness.accesscontrol.permissions.PermissionStatus.ACTIVE;
+import static io.harness.accesscontrol.permissions.PermissionStatus.DEPRECATED;
+import static io.harness.accesscontrol.permissions.PermissionStatus.EXPERIMENTAL;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
@@ -7,10 +12,12 @@ import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -28,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api("/permissions")
 @Path("/permissions")
 @Produces({"application/json", "application/yaml"})
@@ -85,7 +93,7 @@ public class PermissionResource {
     PermissionFilter query = PermissionFilter.builder()
                                  .allowedScopeLevelsFilter(scopeFilter)
                                  .identifierFilter(new HashSet<>())
-                                 .statusFilter(new HashSet<>())
+                                 .statusFilter(Sets.newHashSet(EXPERIMENTAL, ACTIVE, DEPRECATED))
                                  .build();
     return permissionService.list(query);
   }

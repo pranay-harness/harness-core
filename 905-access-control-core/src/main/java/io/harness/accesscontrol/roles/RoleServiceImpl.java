@@ -123,7 +123,7 @@ public class RoleServiceImpl implements RoleService {
 
   private void validatePermissions(Role role) {
     Set<PermissionStatus> allowedPermissionStatus =
-        Sets.newHashSet(PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
+        Sets.newHashSet(PermissionStatus.EXPERIMENTAL, PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
     PermissionFilter permissionFilter = PermissionFilter.builder()
                                             .identifierFilter(role.getPermissions())
                                             .statusFilter(allowedPermissionStatus)

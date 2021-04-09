@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.acl.services;
 
+import static io.harness.accesscontrol.permissions.PermissionStatus.EXPERIMENTAL;
+import static io.harness.accesscontrol.permissions.PermissionStatus.INACTIVE;
+import static io.harness.accesscontrol.permissions.PermissionStatus.STAGING;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
@@ -10,6 +13,9 @@ import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.permissions.Permission;
+import io.harness.accesscontrol.permissions.PermissionFilter;
+import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -24,17 +30,27 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
 public class ACLServiceImpl implements ACLService {
   private final ACLDAO aclDAO;
   private final AccessControlPreferenceService accessControlPreferenceService;
+  private final Set<String> disabledPermissions;
+
+  @Inject
+  public ACLServiceImpl(ACLDAO aclDAO, AccessControlPreferenceService accessControlPreferenceService,
+      PermissionService permissionService) {
+    this.aclDAO = aclDAO;
+    this.accessControlPreferenceService = accessControlPreferenceService;
+    PermissionFilter permissionFilter =
+        PermissionFilter.builder().statusFilter(Sets.newHashSet(INACTIVE, EXPERIMENTAL, STAGING)).build();
+    disabledPermissions =
+        permissionService.list(permissionFilter).stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+  }
 
   private String validateAndGetAccountIdentifierOrThrow(List<PermissionCheckDTO> permissionCheckDTOList) {
     Set<String> accountIdentifiersWithoutResourceScope =
@@ -127,14 +143,7 @@ public class ACLServiceImpl implements ACLService {
                          .principalIdentifier(principalInContext.getName())
                          .build())
           .accessControlList(permissions.stream()
-                                 .map(permission
-                                     -> AccessControlDTO.builder()
-                                            .resourceType(permission.getResourceType())
-                                            .resourceIdentifier(permission.getResourceIdentifier())
-                                            .permission(permission.getPermission())
-                                            .resourceScope(permission.getResourceScope())
-                                            .permitted(true)
-                                            .build())
+                                 .map(permission -> getAccessControlDTO(permission, true))
                                  .collect(Collectors.toList()))
           .build();
     }
@@ -158,8 +167,13 @@ public class ACLServiceImpl implements ACLService {
     List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
     for (int i = 0; i < permissions.size(); i++) {
       PermissionCheckDTO permissionCheckDTO = permissions.get(i);
-      accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, accessControlList.get(i) != null));
+      if (disabledPermissions.contains(permissionCheckDTO.getPermission())) {
+        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, true));
+      } else {
+        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, accessControlList.get(i) != null));
+      }
     }
+
     return AccessCheckResponseDTO.builder()
         .principal(principalToCheckPermissions)
         .accessControlList(accessControlDTOList)
