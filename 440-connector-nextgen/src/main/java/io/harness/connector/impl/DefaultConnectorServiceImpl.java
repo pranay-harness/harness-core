@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -14,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
@@ -81,6 +83,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
