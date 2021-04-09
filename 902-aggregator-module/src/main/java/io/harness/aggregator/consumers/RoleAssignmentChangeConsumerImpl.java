@@ -20,6 +20,7 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,19 +28,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
-@NoArgsConstructor
-@AllArgsConstructor
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssignmentDBO> {
-  @Inject private ACLService aclService;
-  @Inject private RoleService roleService;
-  @Inject private UserGroupService userGroupService;
-  @Inject private ResourceGroupService resourceGroupService;
-  @Inject private ScopeService scopeService;
+  private final ACLService aclService;
+  private final RoleService roleService;
+  private final UserGroupService userGroupService;
+  private final ResourceGroupService resourceGroupService;
+  private final ScopeService scopeService;
   private static final String DELIMITER = "/";
 
   private List<ACL> getACLs(
