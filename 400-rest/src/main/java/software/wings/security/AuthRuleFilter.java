@@ -90,7 +90,7 @@ import org.apache.commons.lang3.StringUtils;
  * Created by anubhaw on 3/11/16.
  */
 @OwnedBy(PL)
-@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Singleton
 @Priority(AUTHORIZATION)
 @Slf4j
