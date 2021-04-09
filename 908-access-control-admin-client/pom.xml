@@ -14,7 +14,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>909-access-control-sdk</artifactId>
+            <artifactId>948-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

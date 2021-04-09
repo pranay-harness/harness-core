@@ -29,17 +29,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>909-access-control-sdk</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>905-access-control-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>903-decision-module</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>948-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
