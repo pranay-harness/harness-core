@@ -306,6 +306,11 @@ public class WingsApplication extends Application<MainConfiguration> {
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
 
+  static {
+    System.setProperty("javax.net.ssl.trustStore", "/Users/piyushpatel/Desktop/sslmongo-new/truststore");
+    System.setProperty("javax.net.ssl.trustStorePassword", "qwerty");
+  }
+
   /**
    * The entry point of application.
    *
