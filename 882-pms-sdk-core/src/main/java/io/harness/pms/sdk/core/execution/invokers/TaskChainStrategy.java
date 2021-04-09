@@ -9,6 +9,8 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
@@ -26,7 +28,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.serializer.KryoSerializer;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
@@ -122,16 +123,13 @@ public class TaskChainStrategy implements ExecuteStrategy {
           nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
       return;
     }
-
-    String taskId = Preconditions.checkNotNull(sdkNodeExecutionService.queueTask(
-        nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskChainResponse.getTaskRequest()));
-    // Update Execution Node Instance state to TASK_WAITING
     TaskRequest taskRequest = taskChainResponse.getTaskRequest();
-    sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.TASK_WAITING,
+
+    AddExecutableResponseRequest addExecutableResponseRequest = strategyHelper.getAddExecutableResponseRequest(
+        nodeExecution.getUuid(), Status.TASK_WAITING,
         ExecutableResponse.newBuilder()
             .setTaskChain(
                 TaskChainExecutableResponse.newBuilder()
-                    .setTaskId(taskId)
                     .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
                     .setChainEnd(taskChainResponse.isChainEnd())
                     .setPassThroughData(
@@ -142,5 +140,11 @@ public class TaskChainStrategy implements ExecuteStrategy {
                     .build())
             .build(),
         Collections.emptyList());
+    QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
+                                            .setNodeExecutionId(nodeExecution.getUuid())
+                                            .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
+                                            .setTaskRequest(taskChainResponse.getTaskRequest())
+                                            .build();
+    sdkNodeExecutionService.queueTaskAndAddExecutableResponse(queueTaskRequest, addExecutableResponseRequest);
   }
 }

@@ -22,7 +22,6 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.steps.StrategyUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -35,7 +34,7 @@ import java.util.Map;
 public class ChildStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private StrategyUtils strategyUtils;
+  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -82,9 +81,9 @@ public class ChildStrategy implements ExecuteStrategy {
                                                 .build();
 
     QueueNodeExecutionRequest queueNodeExecutionRequest =
-        strategyUtils.getQueueNodeExecutionRequest(childNodeExecution);
+        strategyHelper.getQueueNodeExecutionRequest(childNodeExecution);
     AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
             ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
     sdkNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
         nodeExecution.getUuid(), queueNodeExecutionRequest, addExecutableResponseRequest);
