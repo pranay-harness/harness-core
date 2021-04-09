@@ -23,6 +23,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentUpdateResult;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent;
+import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.api.RoleDTOMapper;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -74,7 +75,6 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.http.Body;
 
-@Slf4j
 @OwnedBy(PL)
 @Api("roleassignments")
 @Path("roleassignments")
@@ -87,6 +87,7 @@ import retrofit2.http.Body;
     })
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
   HarnessResourceGroupService harnessResourceGroupService;
@@ -96,7 +97,7 @@ public class RoleAssignmentResource {
   ResourceGroupService resourceGroupService;
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
-  @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
+  @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
   OutboxService outboxService;
 
   RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
@@ -185,8 +186,16 @@ public class RoleAssignmentResource {
     }
     RoleAssignmentUpdateResult roleAssignmentUpdateResult =
         roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(
-        roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment()));
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentResponseDTO response =
+          roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment());
+      outboxService.save(
+          new RoleAssignmentUpdateEvent(response.getScope().getAccountIdentifier(), response.getRoleAssignment(),
+              roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getOriginalRoleAssignment())
+                  .getRoleAssignment(),
+              response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
   }
 
   /**

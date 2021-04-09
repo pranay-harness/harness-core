@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @OwnedBy(PL)
 @Configuration
 @EnableMongoRepositories(
-    basePackages = {"io.harness.notification"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+    basePackages = {"io.harness.repositories"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @EnableMongoAuditing
 public class OutboxPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;

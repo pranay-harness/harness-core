@@ -6,6 +6,7 @@ import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import io.harness.ModuleType;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent;
+import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
@@ -38,6 +39,8 @@ public class RoleAssignmentEventHandler implements OutboxEventHandler {
       switch (outboxEvent.getEventType()) {
         case "RoleAssignmentCreated":
           return handleRoleAssignmentCreateEvent(outboxEvent);
+        case "RoleAssignmentUpdated":
+          return handleRoleAssignmentUpdateEvent(outboxEvent);
         case "RoleAssignmentDeleted":
           return handleRoleAssignmentDeleteEvent(outboxEvent);
         default:
@@ -57,6 +60,21 @@ public class RoleAssignmentEventHandler implements OutboxEventHandler {
         objectMapper.readValue(outboxEvent.getEventData(), RoleAssignmentCreateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.CREATE)
+                                .module(ModuleType.CORE)
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  private boolean handleRoleAssignmentUpdateEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    RoleAssignmentUpdateEvent roleAssignmentUpdateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), RoleAssignmentUpdateEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.UPDATE)
                                 .module(ModuleType.CORE)
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))

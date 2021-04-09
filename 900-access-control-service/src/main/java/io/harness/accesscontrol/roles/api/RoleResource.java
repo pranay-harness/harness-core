@@ -12,6 +12,7 @@ import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.RoleUpdateResult;
 import io.harness.accesscontrol.roles.events.RoleCreateEvent;
+import io.harness.accesscontrol.roles.events.RoleUpdateEvent;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
@@ -54,7 +55,6 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.http.Body;
 
-@Slf4j
 @OwnedBy(PL)
 @Api("/roles")
 @Path("/roles")
@@ -65,6 +65,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Slf4j
 public class RoleResource {
   private final RoleService roleService;
   private final ScopeService scopeService;
@@ -119,7 +120,12 @@ public class RoleResource {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
     }
     RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
-    return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(roleUpdateResult.getUpdatedRole()));
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleUpdateResult.getUpdatedRole());
+      outboxService.save(new RoleUpdateEvent(response.getScope().getAccountIdentifier(), response.getRole(),
+          roleDTOMapper.toResponseDTO(roleUpdateResult.getOriginalRole()).getRole(), response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
   }
 
   @POST

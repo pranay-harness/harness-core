@@ -6,6 +6,7 @@ import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import io.harness.ModuleType;
 import io.harness.accesscontrol.roles.events.RoleCreateEvent;
 import io.harness.accesscontrol.roles.events.RoleDeleteEvent;
+import io.harness.accesscontrol.roles.events.RoleUpdateEvent;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.beans.AuditEntry;
@@ -38,6 +39,8 @@ public class RoleEventHandler implements OutboxEventHandler {
       switch (outboxEvent.getEventType()) {
         case "RoleCreated":
           return handleRoleCreateEvent(outboxEvent);
+        case "RoleUpdated":
+          return handleRoleUpdateEvent(outboxEvent);
         case "RoleDeleted":
           return handleRoleDeleteEvent(outboxEvent);
         default:
@@ -56,6 +59,20 @@ public class RoleEventHandler implements OutboxEventHandler {
     RoleCreateEvent roleCreateEvent = objectMapper.readValue(outboxEvent.getEventData(), RoleCreateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.CREATE)
+                                .module(ModuleType.CORE)
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return auditClientService.publishAudit(auditEntry, globalContext);
+  }
+
+  private boolean handleRoleUpdateEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    RoleUpdateEvent roleUpdateEvent = objectMapper.readValue(outboxEvent.getEventData(), RoleUpdateEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.UPDATE)
                                 .module(ModuleType.CORE)
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
