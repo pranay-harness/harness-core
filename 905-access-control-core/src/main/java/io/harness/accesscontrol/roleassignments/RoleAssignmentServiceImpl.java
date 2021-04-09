@@ -62,7 +62,7 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public RoleAssignment update(RoleAssignment roleAssignmentUpdate) {
+  public RoleAssignmentUpdateResult update(RoleAssignment roleAssignmentUpdate) {
     Optional<RoleAssignment> currentRoleAssignmentOptional =
         get(roleAssignmentUpdate.getIdentifier(), roleAssignmentUpdate.getScopeIdentifier());
     if (currentRoleAssignmentOptional.isPresent()) {
@@ -81,7 +81,11 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
       }
       roleAssignmentUpdate.setManaged(roleAssignment.isManaged());
       roleAssignmentUpdate.setVersion(roleAssignment.getVersion());
-      return roleAssignmentDao.update(roleAssignmentUpdate);
+      RoleAssignment updatedRoleAssignment = roleAssignmentDao.update(roleAssignmentUpdate);
+      return RoleAssignmentUpdateResult.builder()
+          .updatedRoleAssignment(updatedRoleAssignment)
+          .originalRoleAssignment(roleAssignment)
+          .build();
     }
     throw new InvalidRequestException(
         String.format("Could not find the role assignment in the scope %s", roleAssignmentUpdate.getScopeIdentifier()));
