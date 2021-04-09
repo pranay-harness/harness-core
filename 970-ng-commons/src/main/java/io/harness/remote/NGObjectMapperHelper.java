@@ -26,9 +26,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(DX)
 @UtilityClass
 public class NGObjectMapperHelper {
-  public static final ObjectMapper ngDefaultObjectMapper = configureNGObjectMapper(Jackson.newObjectMapper());
+  public static final ObjectMapper NG_DEFAULT_OBJECT_MAPPER = configureNGObjectMapper(Jackson.newObjectMapper());
 
-  public ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
+  public static ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
     mapper.setSubtypeResolver(subtypeResolver);
@@ -51,9 +51,9 @@ public class NGObjectMapperHelper {
     return mapper;
   }
 
-  public Object clone(Object object) {
+  public static Object clone(Object object) {
     try {
-      return ngDefaultObjectMapper.readValue(ngDefaultObjectMapper.writeValueAsString(object), object.getClass());
+      return NG_DEFAULT_OBJECT_MAPPER.readValue(NG_DEFAULT_OBJECT_MAPPER.writeValueAsString(object), object.getClass());
     } catch (Exception exception) {
       throw new UnexpectedException("Exception occurred while copying object.", exception);
     }

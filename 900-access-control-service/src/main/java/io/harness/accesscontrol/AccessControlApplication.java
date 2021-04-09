@@ -30,6 +30,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.security.NextGenAuthenticationFilter;
@@ -152,6 +153,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(EntityCrudEventListenerService.class));
     }
     environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {

@@ -11,6 +11,7 @@ import io.harness.accesscontrol.scopes.ScopeModule;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.outbox.api.OutboxService;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
@@ -44,6 +45,7 @@ public class AccessControlCoreModule extends AbstractModule {
   }
 
   private void registerRequiredBindings() {
+    requireBinding(OutboxService.class);
     requireBinding(TransactionTemplate.class);
     requireBinding(MongoTemplate.class);
     requireBinding(ScopeParamsFactory.class);

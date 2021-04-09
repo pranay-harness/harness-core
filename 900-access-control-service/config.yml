@@ -146,3 +146,16 @@ enableAuth: ${ENABLE_AUTH:-true}
 defaultServiceSecret: ${DEFAULT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 jwtAuthSecret: ${JWT_AUTH_SECRET:-dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq}
 identityServiceSecret: ${IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU}
+
+enableAudit: ${ENABLE_AUDIT:-false}
+
+auditClientConfig:
+  baseUrl: ${AUDIT_CLIENT_BASE_URL:-http://localhost:9005/api/}
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+
+outboxPollConfig:
+  initialDelayInSeconds: ${OUTBOX_POLL_INITIAL_DELAY:-5}
+  pollingIntervalInSeconds: ${OUTBOX_POLL_INTERVAL:-5}
+  maximumRetryAttemptsForAnEvent: ${OUTBOX_MAX_RETRY_ATTEMPTS:-10}

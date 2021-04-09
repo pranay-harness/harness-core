@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
@@ -35,9 +36,13 @@ import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.lock.PersistentLockModule;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.TransactionOutboxModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.user.UserClientModule;
@@ -106,6 +111,12 @@ public class AccessControlModule extends AbstractModule {
     return config.getIteratorsConfig();
   }
 
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    return config.getOutboxPollConfig();
+  }
+
   @Override
   protected void configure() {
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
@@ -113,6 +124,8 @@ public class AccessControlModule extends AbstractModule {
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
+    install(PersistentLockModule.getInstance());
+    install(new TransactionOutboxModule());
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
@@ -133,6 +146,9 @@ public class AccessControlModule extends AbstractModule {
 
     install(new UserClientModule(config.getUserClientConfiguration().getUserServiceConfig(),
         config.getUserClientConfiguration().getUserServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(new AuditClientModule(config.getAuditClientConfig(), config.getDefaultServiceSecret(),
+        ACCESS_CONTROL_SERVICE.getServiceId(), config.isEnableAudit()));
 
     install(AccessControlPreferenceModule.getInstance(config.getAccessControlPreferenceConfiguration()));
 
