@@ -65,6 +65,7 @@ directories:
   902-aggregator-module
   903-decision-module
   905-access-control-core
+  906-decision-commons
   908-access-control-admin-client
   908-access-control-sdk
   909-access-control-commons

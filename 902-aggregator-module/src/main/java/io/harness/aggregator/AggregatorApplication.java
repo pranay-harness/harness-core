@@ -58,7 +58,7 @@ public class AggregatorApplication {
   private static final String TRANSFORMS = "transforms";
   private static final String TRANSFORMS_UNWRAP_TYPE = "transforms.unwrap.type";
   private static final String TRANSFORMS_UNWRAP_DROP_TOMBSTONES = "transforms.unwrap.drop.tombstones";
-  private static final String TRANSFORMS_UNWRAP_OPERATION_HEADER = "transforms.unwrap.operation.header";
+  private static final String TRANSFORMS_UNWRAP_ADD_HEADERS = "transforms.unwrap.add.headers";
   private static final String DEBEZIUM_CONNECTOR_MONGODB_TRANSFORMS_EXTRACT_NEW_DOCUMENT_STATE =
       "io.debezium.connector.mongodb.transforms.ExtractNewDocumentState";
   private static final String ROLE_ASSIGNMENTS = "roleassignments";
@@ -151,7 +151,7 @@ public class AggregatorApplication {
     props.setProperty(TRANSFORMS, "unwrap");
     props.setProperty(TRANSFORMS_UNWRAP_TYPE, DEBEZIUM_CONNECTOR_MONGODB_TRANSFORMS_EXTRACT_NEW_DOCUMENT_STATE);
     props.setProperty(TRANSFORMS_UNWRAP_DROP_TOMBSTONES, "false");
-    props.setProperty(TRANSFORMS_UNWRAP_OPERATION_HEADER, "true");
+    props.setProperty(TRANSFORMS_UNWRAP_ADD_HEADERS, "op");
 
     return DebeziumEngine.create(Json.class).using(props).notifying(changeConsumer).build();
   }

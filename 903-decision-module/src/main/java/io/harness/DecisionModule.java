@@ -5,13 +5,15 @@ import io.harness.accesscontrol.acl.ACLModule;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.ScopeModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
+@OwnedBy(HarnessTeam.PL)
 public class DecisionModule extends AbstractModule {
   private static DecisionModule instance;
   private final DecisionModuleConfiguration decisionModuleConfiguration;
@@ -40,6 +42,5 @@ public class DecisionModule extends AbstractModule {
   private void registerRequiredBindings() {
     requireBinding(RoleService.class);
     requireBinding(RoleAssignmentService.class);
-    requireBinding(ResourceGroupClient.class);
   }
 }
