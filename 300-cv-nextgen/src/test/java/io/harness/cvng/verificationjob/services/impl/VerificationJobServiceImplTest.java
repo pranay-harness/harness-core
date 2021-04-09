@@ -22,6 +22,7 @@ import io.harness.CvNextGenTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
@@ -348,7 +349,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     testVerificationJobDTO.setJobName(generateUuid());
     testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
     testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
-    testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
@@ -451,6 +451,83 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
     verify(cvEventService, times(0)).sendVerificationJobServiceCreateEvent(argumentCaptor.capture());
     verify(cvEventService, times(0)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEligibleCDNGVerificationJobs_noMatch() {
+    List<VerificationJobDTO> verificationJobDTOList =
+        verificationJobService.eligibleCDNGVerificationJobs(accountId, projectIdentifier, orgIdentifier, null, null);
+    assertThat(verificationJobDTOList).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEligibleCDNGVerificationJobs_activitySourceIdentifierIsNull() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.create(accountId, verificationJobDTO);
+
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.eligibleCDNGVerificationJobs(
+        accountId, verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier(), null, null);
+
+    assertThat(verificationJobDTOList).isNotNull();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    assertThat(verificationJobDTOList.get(0).getIdentifier()).isEqualTo("test-verification-harness");
+    assertThat(verificationJobDTOList.get(0).getJobName()).isEqualTo("job-Name");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEligibleCDNGVerificationJobs_activitySourceIdentifierIsNotCDNG() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobDTO.setActivitySourceIdentifier(generateUuid());
+    verificationJobService.create(accountId, verificationJobDTO);
+
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.eligibleCDNGVerificationJobs(
+        accountId, verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier(), null, null);
+
+    assertThat(verificationJobDTOList).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEligibleCDNGVerificationJobs_whenServiceAndEnvIdentifierAreFixed() {
+    VerificationJobDTO verificationJobDTO = createDTO();
+    verificationJobDTO.setActivitySourceIdentifier(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    verificationJobService.create(accountId, verificationJobDTO);
+
+    assertThat(verificationJobService.eligibleCDNGVerificationJobs(accountId, verificationJobDTO.getOrgIdentifier(),
+                   verificationJobDTO.getProjectIdentifier(), null, null))
+        .isEmpty();
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.eligibleCDNGVerificationJobs(accountId,
+        verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier(),
+        verificationJobDTO.getServiceIdentifier(), verificationJobDTO.getEnvIdentifier());
+    assertThat(verificationJobDTOList).hasSize(1);
+    assertThat(verificationJobDTOList.get(0).getIdentifier()).isEqualTo(verificationJobDTO.getIdentifier());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEligibleCDNGVerificationJobs_whenServiceAndEnvIdentifierFixedAndRuntime() {
+    VerificationJobDTO verificationJobDTO = createDTO();
+    verificationJobDTO.setActivitySourceIdentifier(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    verificationJobService.create(accountId, verificationJobDTO);
+    VerificationJobDTO verificationJobDTORuntime = createDTOWithRuntimeParams();
+    verificationJobDTO.setActivitySourceIdentifier(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
+    verificationJobService.create(accountId, verificationJobDTORuntime);
+    assertThat(verificationJobService.eligibleCDNGVerificationJobs(accountId, verificationJobDTO.getOrgIdentifier(),
+                   verificationJobDTO.getProjectIdentifier(), null, null))
+        .hasSize(1);
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.eligibleCDNGVerificationJobs(accountId,
+        verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier(),
+        verificationJobDTO.getServiceIdentifier(), verificationJobDTO.getEnvIdentifier());
+    assertThat(verificationJobDTOList).hasSize(2);
   }
 
   private VerificationJob createVerificationJob(
