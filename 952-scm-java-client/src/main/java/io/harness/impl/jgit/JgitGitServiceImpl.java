@@ -21,6 +21,7 @@ import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,11 @@ public class JgitGitServiceImpl implements ScmClient {
   @Override
   public FileBatchContentResponse getHarnessFilesOfBranch(
       ScmConnector connectorAssociatedWithGitSyncConfig, String branch) {
+    return null;
+  }
+
+  @Override
+  public FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch) {
     return null;
   }
 

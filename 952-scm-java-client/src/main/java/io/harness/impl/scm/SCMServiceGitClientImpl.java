@@ -127,6 +127,14 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
+  public FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+    GetBatchFileRequest batchFileRequest = createBatchFileRequest(filePaths, slug, branch, gitProvider);
+    return scmBlockingStub.getBatchFile(batchFileRequest);
+  }
+
+  @Override
   public FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     GetLatestFileRequest getLatestFileRequest = getLatestFileRequestObject(scmConnector, gitFilePathDetails);
     return scmBlockingStub.getLatestFile(getLatestFileRequest);

@@ -23,6 +23,7 @@ import io.harness.service.ScmOrchestratorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,11 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector scmConnector, String branch) {
     return scmServiceGitClient.getHarnessFilesOfBranch(scmConnector, branch);
+  }
+
+  @Override
+  public FileBatchContentResponse getFilesInBatch(ScmConnector connector, List<String> filePaths, String branch) {
+    return scmServiceGitClient.getHarnessFilesOfBranch(connector, branch);
   }
 
   @Override
