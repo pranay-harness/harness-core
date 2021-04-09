@@ -44,6 +44,7 @@ import org.mockito.Mock;
 @OwnedBy(CDP)
 public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Mock private EcsContainerService ecsContainerService;
+
   @Inject @InjectMocks private AwsClusterService awsClusterService;
 
   private SettingAttribute cloudProviderSetting =

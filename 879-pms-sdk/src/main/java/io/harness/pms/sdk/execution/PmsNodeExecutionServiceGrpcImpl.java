@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -25,10 +26,10 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
-import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.execution.SdkResponseEventInternal;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -38,6 +39,7 @@ import io.harness.pms.sdk.response.events.SdkResponseEventPublisher;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ResponseData;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -58,8 +60,8 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
 
   @Override
   public void queueNodeExecution(NodeExecutionProto nodeExecution) {
-    sdkResponseEventPublisher.send(
-        SdkResponseEvent.builder()
+    SdkResponseEventInternal sdkResponseEventInternal =
+        SdkResponseEventInternal.builder()
             .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder()
@@ -67,6 +69,62 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                     .setQueueNodeExecutionRequest(
                         QueueNodeExecutionRequest.newBuilder().setNodeExecution(nodeExecution).build())
                     .build())
+            .build();
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
+                                       .build());
+  }
+
+  @Override
+  public void queueNodeExecutionAndAddExecutableResponse(String currentNodeExecutionId,
+      QueueNodeExecutionRequest queueNodeExecutionRequest, AddExecutableResponseRequest addExecutableResponseRequest) {
+    SdkResponseEventInternal queueNodeExecution =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(currentNodeExecutionId)
+                                         .setQueueNodeExecutionRequest(queueNodeExecutionRequest)
+                                         .build())
+            .build();
+
+    SdkResponseEventInternal addExecutionRequestInternal =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(currentNodeExecutionId)
+                                         .setAddExecutableResponseRequest(addExecutableResponseRequest)
+                                         .build())
+            .build();
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventInternals(Lists.newArrayList(queueNodeExecution, addExecutionRequestInternal))
+            .build());
+  }
+
+  @Override
+  public void addExecutableResponseAndResumeNode(String currentNodeExecutionId,
+      AddExecutableResponseRequest addExecutableResponseRequest,
+      ResumeNodeExecutionRequest resumeNodeExecutionRequest) {
+    SdkResponseEventInternal queueNodeExecution =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(currentNodeExecutionId)
+                                         .setAddExecutableResponseRequest(addExecutableResponseRequest)
+                                         .build())
+            .build();
+
+    SdkResponseEventInternal addExecutionRequestInternal =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.RESUME_NODE_EXECUTION)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(currentNodeExecutionId)
+                                         .setResumeNodeExecutionRequest(resumeNodeExecutionRequest)
+                                         .build())
+            .build();
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventInternals(Lists.newArrayList(queueNodeExecution, addExecutionRequestInternal))
             .build());
   }
 
@@ -91,12 +149,15 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
     if (status != null && status != Status.NO_OP) {
       builder.setStatus(status);
     }
-    sdkResponseEventPublisher.send(
-        SdkResponseEvent.builder()
+    SdkResponseEventInternal sdkResponseEventInternal =
+        SdkResponseEventInternal.builder()
             .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(builder.build()).build())
-            .build());
+            .build();
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
+                                       .build());
   }
 
   @Override
@@ -105,22 +166,36 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                                                     .setNodeExecutionId(nodeExecutionId)
                                                     .setStepResponse(stepResponse)
                                                     .build();
-    sdkResponseEventPublisher.send(
-        SdkResponseEvent.builder()
+    SdkResponseEventInternal sdkResponseEventInternal =
+        SdkResponseEventInternal.builder()
             .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(responseRequest).build())
-            .build());
+            .build();
+
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
+                                       .build());
   }
 
   @Override
   public void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
     Map<String, ByteString> responseBytes = responseDataMapper.toResponseDataProto(response);
-    nodeExecutionProtoServiceBlockingStub.resumeNodeExecution(ResumeNodeExecutionRequest.newBuilder()
-                                                                  .setNodeExecutionId(nodeExecutionId)
-                                                                  .putAllResponse(responseBytes)
-                                                                  .setAsyncError(asyncError)
-                                                                  .build());
+    ResumeNodeExecutionRequest resumeNodeExecutionRequest = ResumeNodeExecutionRequest.newBuilder()
+                                                                .setNodeExecutionId(nodeExecutionId)
+                                                                .putAllResponse(responseBytes)
+                                                                .setAsyncError(asyncError)
+                                                                .build();
+    SdkResponseEventInternal sdkResponseEventInternal =
+        SdkResponseEventInternal.builder()
+            .sdkResponseEventType(SdkResponseEventType.RESUME_NODE_EXECUTION)
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder().setResumeNodeExecutionRequest(resumeNodeExecutionRequest).build())
+            .build();
+
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
+                                       .build());
   }
 
   @Override

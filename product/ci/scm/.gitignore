@@ -1,3 +1,5 @@
 proto/scm.pb.go
 scm
 __debug_bin
+test/unix_socket_client/client.log
+test/unix_socket_client/unix_socket_client

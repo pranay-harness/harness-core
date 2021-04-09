@@ -273,7 +273,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
-    ResourceGroup oldResourceGroup = (ResourceGroup) NGObjectMapperHelper.clone(savedResourceGroup);
+    ResourceGroupDTO oldResourceGroup =
+        (ResourceGroupDTO) NGObjectMapperHelper.clone(ResourceGroupMapper.toDTO(savedResourceGroup));
     savedResourceGroup.setName(resourceGroup.getName());
     savedResourceGroup.setColor(resourceGroup.getColor());
     savedResourceGroup.setTags(resourceGroup.getTags());
@@ -285,7 +286,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
       outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
-          ResourceGroupMapper.toDTO(updatedResourceGroup), ResourceGroupMapper.toDTO(oldResourceGroup)));
+          ResourceGroupMapper.toDTO(updatedResourceGroup), oldResourceGroup));
       return updatedResourceGroup;
     }));
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));

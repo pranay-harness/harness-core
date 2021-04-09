@@ -2,13 +2,15 @@ package io.harness.pms.sample.cv;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.pms.sample.cv.creator.CvPipelineServiceInfoProvider;
 import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
 
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CvServiceApplication extends Application<CvServiceConfiguration> {
   private static final String APPLICATION_NAME = "CV Server Application";
 

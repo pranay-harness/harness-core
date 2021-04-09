@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,9 @@ import static software.wings.beans.Log.Builder.aLog;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -70,9 +74,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 
+@OwnedBy(CDC)
 @JsonTypeName("DOWNLOAD_ARTIFACT")
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
+@TargetModule(HarnessModule._950_COMMAND_LIBRARY_COMMON)
 public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private static final String NO_ARTIFACTS_ERROR_STRING = "There are no artifacts to download";
   private static final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
@@ -355,8 +361,9 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             + "    Authorization = \"" + authorizationHeader + "\"\n"
             + "    \"x-amz-content-sha256\" = \"" + EMPTY_BODY_SHA256 + "\"\n"
             + "    \"x-amz-date\" = \"" + dateTimeStamp + "\"\n"
-            + (isEmpty(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n")
-            + "}\n Invoke-WebRequest -Uri \""
+            + (isEmpty(awsToken) ? "" : " \"x-amz-security-token\" = \"" + awsToken + "\"\n") + "}\n"
+            + " $ProgressPreference = 'SilentlyContinue'\n"
+            + " Invoke-WebRequest -Uri \""
             + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true)
             + "\" -Headers $Headers -OutFile (New-Item -Path \"" + getCommandPath() + "\\" + artifactFileName + "\""
             + " -Force)";
@@ -510,14 +517,16 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         break;
       case POWERSHELL:
         if (!artifactoryConfig.hasCredentials()) {
-          command =
-              "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n Invoke-WebRequest -Uri \""
+          command = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n "
+              + "$ProgressPreference = 'SilentlyContinue'\n"
+              + "Invoke-WebRequest -Uri \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -OutFile \""
               + getCommandPath() + "\\" + artifactFileName + "\"";
         } else {
           command = "$Headers = @{\n"
               + "    Authorization = \"" + authHeader + "\"\n"
               + "}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+              + "\n $ProgressPreference = 'SilentlyContinue'"
               + "\n Invoke-WebRequest -Uri \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath))
               + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\" + artifactFileName + "\"";
@@ -619,7 +628,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
               .append("$Headers = @{\n"
                   + "    Authorization = \"")
               .append(authHeader)
-              .append("\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+              .append(
+                  "\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n $ProgressPreference = 'SilentlyContinue'");
           for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
             command.append("\n Invoke-WebRequest -Uri \"")
                 .append(downloadMetadata.getUrl())
@@ -630,7 +640,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
                 .append('"');
           }
         } else {
-          command.append("[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+          command.append(
+              "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n $ProgressPreference = 'SilentlyContinue'");
           for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
             command.append("\n Invoke-WebRequest -Uri \"")
                 .append(downloadMetadata.getUrl())
@@ -735,7 +746,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
             .append("$Headers = @{\n"
                 + "    Authorization = \"")
             .append(authHeader)
-            .append("\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12");
+            .append(
+                "\"\n}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n $ProgressPreference = 'SilentlyContinue'");
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
           command.append("\n Invoke-WebRequest -Uri \"")
               .append(downloadMetadata.getUrl())
@@ -795,6 +807,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         command = "$Headers = @{\n"
             + "    Authorization = \"" + authHeader + "\"\n"
             + "}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+            + "\n $ProgressPreference = 'SilentlyContinue'"
             + "\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\"
             + artifactFileName + "\"";
         break;

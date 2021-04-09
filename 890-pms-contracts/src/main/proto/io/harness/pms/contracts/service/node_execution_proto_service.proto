@@ -16,7 +16,6 @@ import "io/harness/pms/contracts/service/node_execution_event.proto";
 
 service NodeExecutionProtoService {
   rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
-  rpc resumeNodeExecution(ResumeNodeExecutionRequest) returns (ResumeNodeExecutionResponse);
   rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
   rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
   rpc handleAdviserResponse(AdviserResponseRequest) returns (AdviserResponseResponse);
@@ -32,14 +31,6 @@ message QueueTaskRequest {
 message QueueTaskResponse {
   string taskId = 1;
 }
-
-message ResumeNodeExecutionRequest {
-  string nodeExecutionId = 1;
-  map<string, bytes> response = 2;
-  bool asyncError = 3;
-}
-
-message ResumeNodeExecutionResponse {}
 
 message AccumulateResponsesRequest {
   string planExecutionId = 1;

@@ -1,8 +1,9 @@
 package io.harness.pms.sdk;
 
 import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE;
-import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE_IN_PROCESS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
@@ -23,6 +24,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 class PmsSdkProviderModule extends AbstractModule {
   private final PmsSdkConfiguration config;
 
@@ -41,15 +43,12 @@ class PmsSdkProviderModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
+    bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
+    bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
+    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     if (config.getDeploymentMode() == REMOTE) {
       bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
-    }
-
-    if (config.getDeploymentMode() == REMOTE || config.getDeploymentMode() == REMOTE_IN_PROCESS) {
-      bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
-      bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
-      bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
-      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     }
 
     if (config.getExecutionSummaryModuleInfoProviderClass() != null) {
@@ -67,12 +66,6 @@ class PmsSdkProviderModule extends AbstractModule {
   public FilterCreationResponseMerger filterCreationResponseMerger() {
     return config.getFilterCreationResponseMerger();
   }
-  //
-  //  @Provides
-  //  @Singleton
-  //  public ServiceManager serviceManager(Set<Service> services) {
-  //    return new ServiceManager(services);
-  //  }
 
   @Provides
   @Singleton

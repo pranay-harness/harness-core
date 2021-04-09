@@ -2,11 +2,14 @@ package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
 import com.google.common.base.Preconditions;
@@ -26,6 +29,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 public class TestVerificationJob extends VerificationJob {
   private RuntimeParameter sensitivity;
   private String baselineVerificationJobInstanceId;
@@ -56,7 +60,8 @@ public class TestVerificationJob extends VerificationJob {
   public VerificationJobDTO getVerificationJobDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
-    testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    testVerificationJobDTO.setSensitivity(
+        sensitivity.isRuntimeParam() ? CVVerificationJobConstants.RUNTIME_STRING : getSensitivity().name());
     if (baselineVerificationJobInstanceId == null) {
       testVerificationJobDTO.setBaselineVerificationJobInstanceId("LAST");
     } else {

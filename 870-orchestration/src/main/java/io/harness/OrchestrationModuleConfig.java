@@ -1,7 +1,9 @@
 package io.harness;
 
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 
 import lombok.Builder;
@@ -10,6 +12,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationModuleConfig {
   @NonNull String serviceName;
   @NonNull ExpressionEvaluatorProvider expressionEvaluatorProvider;
