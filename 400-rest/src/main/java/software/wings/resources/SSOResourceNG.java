@@ -19,6 +19,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.io.InputStream;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,6 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @Api(value = "/ng/sso", hidden = true)
 @Path("/ng/sso")
@@ -80,5 +82,42 @@ public class SSOResourceNG {
   @ExceptionMetered
   public RestResponse<SSOConfig> deleteOauthSettings(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(ssoService.deleteOauthConfiguration(accountId));
+  }
+
+  @POST
+  @Path("saml-idp-metadata-upload")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+      @FormDataParam("logoutUrl") String logoutUrl) {
+    return new RestResponse<>(ssoService.uploadSamlConfiguration(
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
+  @PUT
+  @Path("saml-idp-metadata-upload")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
+      @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
+      @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
+      @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
+      @FormDataParam("logoutUrl") String logoutUrl) {
+    return new RestResponse<>(ssoService.updateSamlConfiguration(
+        accountId, uploadedInputStream, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl));
+  }
+
+  @DELETE
+  @Path("delete-saml-idp-metadata")
+  @Timed
+  @AuthRule(permissionType = LOGGED_IN)
+  @ExceptionMetered
+  public RestResponse<SSOConfig> deleteSamlMetaData(@QueryParam("accountId") String accountId) {
+    return new RestResponse<SSOConfig>(ssoService.deleteSamlConfiguration(accountId));
   }
 }

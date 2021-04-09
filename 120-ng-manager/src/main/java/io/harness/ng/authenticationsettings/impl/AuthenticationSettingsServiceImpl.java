@@ -26,8 +26,11 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
@@ -88,27 +91,35 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
       LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
       settingsList.add(UsernamePasswordSettings.builder().loginSettings(loginSettings).build());
       if (isOauthEnabled(ssoConfig)) {
-        OauthSettings oAuthSettings = (OauthSettings) (ssoConfig.getSsoSettings().get(0));
+        OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
         settingsList.add(OAuthSettings.builder()
                              .allowedProviders(oAuthSettings.getAllowedProviders())
                              .filter(oAuthSettings.getFilter())
                              .build());
       }
+      if (isSAMLEnabled(ssoConfig)) {
+        SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
+        settingsList.add(SAMLSettings.builder()
+                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                             .logoutUrl(samlSettings.getLogoutUrl())
+                             .origin(samlSettings.getOrigin())
+                             .build());
+      }
     } else if (authenticationMechanism == AuthenticationMechanism.OAUTH) {
-      OauthSettings oAuthSettings = (OauthSettings) (ssoConfig.getSsoSettings().get(0));
+      OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
       settingsList.add(OAuthSettings.builder()
                            .allowedProviders(oAuthSettings.getAllowedProviders())
                            .filter(oAuthSettings.getFilter())
                            .build());
     } else if (authenticationMechanism == AuthenticationMechanism.LDAP) {
-      LdapSettings ldapSettings = (LdapSettings) (ssoConfig.getSsoSettings().get(0));
+      LdapSettings ldapSettings = (LdapSettings) getLDAPSetting(ssoConfig);
       settingsList.add(LDAPSettings.builder()
                            .connectionSettings(ldapSettings.getConnectionSettings())
                            .userSettingsList(ldapSettings.getUserSettingsList())
                            .groupSettingsList(ldapSettings.getGroupSettingsList())
                            .build());
     } else if (authenticationMechanism == AuthenticationMechanism.SAML) {
-      SamlSettings samlSettings = (SamlSettings) (ssoConfig.getSsoSettings().get(0));
+      SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
       settingsList.add(SAMLSettings.builder()
                            .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
                            .logoutUrl(samlSettings.getLogoutUrl())
@@ -120,6 +131,106 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
 
   private boolean isOauthEnabled(SSOConfig ssoConfig) {
     List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
-    return !ssoSettings.isEmpty() && ssoSettings.get(0).getType().equals(SSOType.OAUTH);
+    if (ssoSettings.isEmpty()) {
+      return false;
+    }
+    for (SSOSettings ssoSetting : ssoSettings) {
+      if (ssoSetting.getType().equals(SSOType.OAUTH)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  private boolean isSAMLEnabled(SSOConfig ssoConfig) {
+    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
+    if (ssoSettings.isEmpty()) {
+      return false;
+    }
+    for (SSOSettings ssoSetting : ssoSettings) {
+      if (ssoSetting.getType().equals(SSOType.SAML)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private SSOSettings getOauthSetting(SSOConfig ssoConfig) {
+    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
+    if (ssoSettings.isEmpty()) {
+      return null;
+    }
+    for (SSOSettings ssoSetting : ssoSettings) {
+      if (ssoSetting.getType().equals(SSOType.OAUTH)) {
+        return ssoSetting;
+      }
+    }
+    return null;
+  }
+
+  private SSOSettings getSAMLSetting(SSOConfig ssoConfig) {
+    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
+    if (ssoSettings.isEmpty()) {
+      return null;
+    }
+    for (SSOSettings ssoSetting : ssoSettings) {
+      if (ssoSetting.getType().equals(SSOType.SAML)) {
+        return ssoSetting;
+      }
+    }
+    return null;
+  }
+
+  private SSOSettings getLDAPSetting(SSOConfig ssoConfig) {
+    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
+    if (ssoSettings.isEmpty()) {
+      return null;
+    }
+    for (SSOSettings ssoSetting : ssoSettings) {
+      if (ssoSetting.getType().equals(SSOType.LDAP)) {
+        return ssoSetting;
+      }
+    }
+    return null;
+  }
+
+  private RequestBody createPartFromString(String string) {
+    if (string == null) {
+      return null;
+    }
+    return RequestBody.create(MultipartBody.FORM, string);
+  }
+
+  @Override
+  public SSOConfig uploadSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
+      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
+      String logoutUrl) {
+    RequestBody displayNamePart = createPartFromString(displayName);
+    RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
+    RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
+    RequestBody logoutUrlPart = createPartFromString(logoutUrl);
+
+    SSOConfig ssoConfig = getResponse(managerClient.uploadSAMLMetadata(
+        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    return ssoConfig;
+  }
+
+  @Override
+  public SSOConfig updateSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
+      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
+      String logoutUrl) {
+    RequestBody displayNamePart = createPartFromString(displayName);
+    RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
+    RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
+    RequestBody logoutUrlPart = createPartFromString(logoutUrl);
+
+    SSOConfig ssoConfig = getResponse(managerClient.updateSAMLMetadata(
+        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    return ssoConfig;
+  }
+
+  @Override
+  public SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier) {
+    SSOConfig ssoConfig = getResponse(managerClient.deleteSAMLMetadata(accountIdentifier));
+    return ssoConfig;
   }
 }

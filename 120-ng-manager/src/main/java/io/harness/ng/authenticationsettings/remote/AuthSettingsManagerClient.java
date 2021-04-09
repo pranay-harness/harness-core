@@ -12,13 +12,17 @@ import software.wings.security.authentication.SSOConfig;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -52,4 +56,21 @@ public interface AuthSettingsManagerClient {
   @PUT(API_PREFIX + "login-settings/{loginSettingsId}")
   Call<RestResponse<LoginSettings>> updateLoginSettings(@Path("loginSettingsId") String loginSettingsId,
       @Query("accountId") @NotEmpty String accountId, @Body @NotNull @Valid LoginSettings loginSettings);
+
+  @Multipart
+  @POST(API_PREFIX + "sso/saml-idp-metadata-upload")
+  Call<RestResponse<SSOConfig>> uploadSAMLMetadata(@Query("accountId") String accountId,
+      @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
+      @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
+      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+
+  @Multipart
+  @PUT(API_PREFIX + "sso/saml-idp-metadata-upload")
+  Call<RestResponse<SSOConfig>> updateSAMLMetadata(@Query("accountId") String accountId,
+      @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
+      @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
+      @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
+
+  @DELETE(API_PREFIX + "sso/delete-saml-idp-metadata")
+  Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") @NotEmpty String accountIdentifier);
 }
