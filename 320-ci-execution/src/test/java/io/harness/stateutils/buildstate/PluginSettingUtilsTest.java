@@ -41,7 +41,6 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_TARGET", "repo/wings/software/module/1.0.0-SNAPSHOT");
     expected.put("PLUGIN_SOURCE", "target/libmodule.jar");
-
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
@@ -73,6 +72,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
@@ -103,6 +103,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
@@ -129,6 +130,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }

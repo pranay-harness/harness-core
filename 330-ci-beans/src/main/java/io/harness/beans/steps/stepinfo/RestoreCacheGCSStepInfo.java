@@ -1,6 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -45,6 +46,7 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
@@ -54,10 +56,11 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket",
-      "failIfKeyNotFound", "archiveFormat"})
+      "failIfKeyNotFound", "archiveFormat", "runAsUser"})
   public RestoreCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> key, ParameterField<String> bucket,
-      ParameterField<Boolean> failIfKeyNotFound, ParameterField<ArchiveFormat> archiveFormat) {
+      ParameterField<Boolean> failIfKeyNotFound, ParameterField<ArchiveFormat> archiveFormat,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -67,6 +70,7 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
     this.bucket = bucket;
     this.failIfKeyNotFound = failIfKeyNotFound;
     this.archiveFormat = archiveFormat;
+    this.runAsUser = runAsUser;
   }
 
   @Override

@@ -26,6 +26,8 @@ public abstract class ContainerParams implements NestedAnnotationResolver {
   @Expression(ALLOW_SECRETS) private Map<String, String> volumeToMountPath;
   private ContainerResourceParams containerResourceParams;
   private ContainerSecrets containerSecrets;
+  private Integer runAsUser;
+  private boolean privileged;
 
   public abstract ContainerParams.Type getType();
 
