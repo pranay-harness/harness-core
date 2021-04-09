@@ -36,6 +36,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
@@ -116,9 +117,9 @@ public abstract class BaseContainerSpecBuilder {
                                             .withPorts(containerPorts)
                                             .withVolumeMounts(volumeMounts);
 
-    if (isPrivilegedImage(imageDetails)) {
-      containerBuilder.withSecurityContext(new SecurityContextBuilder().withPrivileged(true).build());
-    }
+    boolean isPrivilegedImage = isPrivilegedImage(imageDetails);
+    containerBuilder.withSecurityContext(
+        getSecurityContext(containerParams.isPrivileged() || isPrivilegedImage, containerParams.getRunAsUser()));
 
     if (isNotEmpty(containerParams.getWorkingDir())) {
       containerBuilder.withWorkingDir(containerParams.getWorkingDir());
@@ -129,6 +130,14 @@ public abstract class BaseContainerSpecBuilder {
         .imageSecret(imageSecret)
         .volumes(volumes)
         .build();
+  }
+
+  private SecurityContext getSecurityContext(boolean privileged, Integer runAsUser) {
+    SecurityContextBuilder builder = new SecurityContextBuilder().withPrivileged(privileged);
+    if (runAsUser != null) {
+      builder.withRunAsUser((long) runAsUser);
+    }
+    return builder.build();
   }
 
   private boolean isPrivilegedImage(ImageDetails imageDetails) {

@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
+
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -7,9 +9,11 @@ import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -36,17 +40,20 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
   @NotNull private String gitConnectorIdentifier;
   @NotNull private String branchName;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName"})
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName", "runAsUser"})
   public BuildEnvSetupStepInfo(String identifier, String name, Integer retry, BuildJobEnvInfo buildJobEnvInfo,
-      String gitConnectorIdentifier, String branchName) {
+      String gitConnectorIdentifier, String branchName, ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.buildJobEnvInfo = buildJobEnvInfo;
     this.gitConnectorIdentifier = gitConnectorIdentifier;
     this.branchName = branchName;
+    this.runAsUser = runAsUser;
   }
 
   @Override

@@ -16,6 +16,7 @@ import lombok.NonNull;
 public abstract class PodParams<T extends ContainerParams> implements NestedAnnotationResolver {
   @NonNull private String name;
   @Expression(ALLOW_SECRETS) @NonNull private String namespace;
+  @Expression(ALLOW_SECRETS) private Map<String, String> annotations;
   @Expression(ALLOW_SECRETS) private Map<String, String> labels;
   @Expression(ALLOW_SECRETS) private List<T> containerParamsList;
   private List<T> initContainerParamsList;

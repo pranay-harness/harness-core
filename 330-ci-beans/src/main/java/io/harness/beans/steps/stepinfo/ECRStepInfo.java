@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
@@ -64,15 +66,18 @@ public class ECRStepInfo implements PluginCompatibleStep {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> buildArgs;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "account", "region", "imageName",
-      "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
+      "tags", "context", "dockerfile", "target", "labels", "buildArgs", "runAsUser", "optimize"})
   public ECRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> account, ParameterField<String> region,
       ParameterField<String> imageName, ParameterField<List<String>> tags, ParameterField<String> context,
       ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
-      ParameterField<Map<String, String>> buildArgs) {
+      ParameterField<Map<String, String>> buildArgs, ParameterField<Integer> runAsUser,
+      ParameterField<Boolean> optimize) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -87,6 +92,8 @@ public class ECRStepInfo implements PluginCompatibleStep {
     this.target = target;
     this.labels = labels;
     this.buildArgs = buildArgs;
+    this.runAsUser = runAsUser;
+    this.optimize = optimize;
   }
 
   @Override
