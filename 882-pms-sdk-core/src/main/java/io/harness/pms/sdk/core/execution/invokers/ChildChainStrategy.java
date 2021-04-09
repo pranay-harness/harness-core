@@ -33,7 +33,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StrategyUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
@@ -50,7 +49,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private StrategyUtils strategyUtils;
+  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -124,9 +123,9 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                                 .build();
 
     QueueNodeExecutionRequest queueNodeExecutionRequest =
-        strategyUtils.getQueueNodeExecutionRequest(childNodeExecution);
+        strategyHelper.getQueueNodeExecutionRequest(childNodeExecution);
     AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
             ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
             Collections.singletonList(childInstanceId));
     sdkNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
@@ -136,11 +135,11 @@ public class ChildChainStrategy implements ExecuteStrategy {
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
     AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyUtils.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
+        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
             ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
     PlanNodeProto planNode = nodeExecution.getNode();
     ResumeNodeExecutionRequest resumeNodeExecutionRequest =
-        strategyUtils.getResumeNodeExecutionRequest(nodeExecution.getUuid(),
+        strategyHelper.getResumeNodeExecutionRequest(nodeExecution.getUuid(),
             Collections.singletonMap(ignoreNotifyId,
                 StepResponseNotifyData.builder()
                     .nodeUuid(planNode.getUuid())

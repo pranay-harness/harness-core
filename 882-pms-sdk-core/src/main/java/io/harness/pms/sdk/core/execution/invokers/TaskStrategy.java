@@ -12,6 +12,8 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
+import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -26,7 +28,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 import lombok.NonNull;
@@ -94,15 +95,11 @@ public class TaskStrategy implements ExecuteStrategy {
       return;
     }
 
-    String taskId = Preconditions.checkNotNull(
-        sdkNodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
-
-    // Update Execution Node Instance state to TASK_WAITING
-    sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
+    AddExecutableResponseRequest addExecutableResponseRequest = strategyHelper.getAddExecutableResponseRequest(
+        nodeExecution.getUuid(), TASK_WAITING,
         ExecutableResponse.newBuilder()
             .setTask(
                 TaskExecutableResponse.newBuilder()
-                    .setTaskId(taskId)
                     .setTaskCategory(taskRequest.getTaskCategory())
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
@@ -110,5 +107,11 @@ public class TaskStrategy implements ExecuteStrategy {
                     .build())
             .build(),
         Collections.emptyList());
+    QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
+                                            .setNodeExecutionId(nodeExecution.getUuid())
+                                            .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
+                                            .setTaskRequest(taskRequest)
+                                            .build();
+    sdkNodeExecutionService.queueTaskAndAddExecutableResponse(queueTaskRequest, addExecutableResponseRequest);
   }
 }
