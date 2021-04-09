@@ -101,7 +101,6 @@ public class SecretEventHandler implements OutboxEventHandler {
                                 .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
                                 .insertId(outboxEvent.getId())
                                 .build();
-
     return auditClientService.publishAudit(auditEntry, globalContext);
   }
 }
