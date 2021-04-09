@@ -60,23 +60,17 @@ directories:
   888-pms-client
   890-pms-contracts
   890-sm-core
-  900-access-control-service
-  902-aggregator-module
-  903-decision-module
-  905-access-control-core
-  906-decision-commons
-  908-access-control-admin-client
-  908-access-control-sdk
-  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
   920-delegate-agent-beans
   920-delegate-service-beans
   920-ng-signup
+  925-access-control-service
   930-delegate-tasks
   930-ng-core-clients
   955-alert-beans
   955-delegate-beans
+  935-access-control-decision
   940-feature-flag
   940-ng-audit-service
   940-notification-client
@@ -84,6 +78,12 @@ directories:
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  946-access-control-aggregator
+  947-access-control-core
+  947-access-control-decision-commons
+  948-access-control-admin-client
+  948-access-control-sdk
+  949-access-control-commons
   950-cg-ng-shared-orchestration-beans
   950-command-library-common
   950-log-client
