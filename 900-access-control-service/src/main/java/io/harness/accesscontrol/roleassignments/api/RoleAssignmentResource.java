@@ -19,6 +19,7 @@ import io.harness.accesscontrol.resources.resourcegroups.api.ResourceGroupDTOMap
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentUpdateResult;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.api.RoleDTOMapper;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -158,8 +159,10 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
-    RoleAssignment updatedRoleAssignment = roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(updatedRoleAssignment));
+    RoleAssignmentUpdateResult roleAssignmentUpdateResult =
+        roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
+    return ResponseDTO.newResponse(
+        roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment()));
   }
 
   /**
