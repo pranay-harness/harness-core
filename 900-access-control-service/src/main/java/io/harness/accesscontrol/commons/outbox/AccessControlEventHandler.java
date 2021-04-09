@@ -33,7 +33,7 @@ public class AccessControlEventHandler implements OutboxEventHandler {
         case ROLE_ASSIGNMENT:
           return roleAssignmentEventHandler.handle(outboxEvent);
         default:
-          return true;
+          return false;
       }
     } catch (Exception exception) {
       log.error(

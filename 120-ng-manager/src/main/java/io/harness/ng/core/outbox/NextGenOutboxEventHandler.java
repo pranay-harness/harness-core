@@ -50,7 +50,7 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
         case SECRET:
           return secretEventHandler.handle(outboxEvent);
         default:
-          return true;
+          return false;
       }
     } catch (Exception exception) {
       log.error(
