@@ -13,12 +13,15 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -67,25 +70,100 @@ public class ACLServiceImpl implements ACLService {
         .build();
   }
 
+  private boolean serviceContextAndNoPrincipalInBody(io.harness.security.dto.Principal principalInContext,
+      io.harness.accesscontrol.Principal principalToCheckPermissions) {
+    /*
+     bypass access control check if principal in context is SERVICE and principalToCheckPermissions is either null or
+     the same service principal
+     */
+    Optional<io.harness.security.dto.Principal> serviceCall =
+        Optional.ofNullable(principalInContext).filter(x -> PrincipalType.SERVICE.equals(x.getType()));
+
+    return serviceCall.isPresent()
+        && (principalToCheckPermissions == null
+            || Objects.equals(serviceCall.get().getName(), principalToCheckPermissions.getPrincipalIdentifier()));
+  }
+
+  private boolean userContextAndDifferentPrincipalInBody(io.harness.security.dto.Principal principalInContext,
+      io.harness.accesscontrol.Principal principalToCheckPermissions) {
+    /* apply access control checks if a principal of type other than SERVICE is trying to check permissions for any
+       other principal */
+    Optional<io.harness.security.dto.Principal> nonServiceCall =
+        Optional.ofNullable(principalInContext).filter(x -> !PrincipalType.SERVICE.equals(x.getType()));
+    return nonServiceCall.isPresent()
+        && (principalToCheckPermissions != null
+            && !Objects.equals(principalInContext.getName(), principalToCheckPermissions.getPrincipalIdentifier()));
+  }
+
+  private void checkForValidContextOrThrow(io.harness.security.dto.Principal principalInContext) {
+    if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
+      throw new InvalidRequestException("Missing principal in context.", USER);
+    }
+  }
+
+  private boolean notPresent(io.harness.accesscontrol.Principal principal) {
+    return !Optional.ofNullable(principal).map(Principal::getPrincipalIdentifier).filter(x -> !x.isEmpty()).isPresent();
+  }
+
   @Override
-  public AccessCheckResponseDTO checkAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
-    String accountIdentifier = validateAndGetAccountIdentifierOrThrow(permissionCheckDTOList);
+  public AccessCheckResponseDTO checkAccess(io.harness.security.dto.Principal principalInContext,
+      Principal principalToCheckPermissions, List<PermissionCheckDTO> permissions) {
+    String accountIdentifier = validateAndGetAccountIdentifierOrThrow(permissions);
     if (!accessControlPreferenceService.isAccessControlEnabled(accountIdentifier)) {
       return AccessCheckResponseDTO.builder()
-          .accessControlList(permissionCheckDTOList.stream()
+          .accessControlList(permissions.stream()
                                  .map(permissionCheckDTO -> getAccessControlDTO(permissionCheckDTO, true))
                                  .collect(Collectors.toList()))
-          .principal(principal)
+          .principal(principalToCheckPermissions)
           .build();
     }
 
-    List<ACL> accessControlList = aclDAO.get(principal, permissionCheckDTOList);
+    checkForValidContextOrThrow(principalInContext);
+
+    if (serviceContextAndNoPrincipalInBody(principalInContext, principalToCheckPermissions)) {
+      return AccessCheckResponseDTO.builder()
+          .principal(Principal.builder()
+                         .principalType(io.harness.accesscontrol.principals.PrincipalType.SERVICE)
+                         .principalIdentifier(principalInContext.getName())
+                         .build())
+          .accessControlList(permissions.stream()
+                                 .map(permission
+                                     -> AccessControlDTO.builder()
+                                            .resourceType(permission.getResourceType())
+                                            .resourceIdentifier(permission.getResourceIdentifier())
+                                            .permission(permission.getPermission())
+                                            .resourceScope(permission.getResourceScope())
+                                            .permitted(true)
+                                            .build())
+                                 .collect(Collectors.toList()))
+          .build();
+    }
+
+    if (userContextAndDifferentPrincipalInBody(principalInContext, principalToCheckPermissions)) {
+      // a user principal needs elevated permissions to check for permissions of another principal
+      // TODO{phoenikx} Apply access check here
+      log.debug("checking for access control checks here...");
+    }
+
+    if (notPresent(principalToCheckPermissions)) {
+      principalToCheckPermissions =
+          Principal.builder()
+              .principalIdentifier(principalInContext.getName())
+              .principalType(io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType(
+                  principalInContext.getType()))
+              .build();
+    }
+
+    List<ACL> accessControlList = aclDAO.get(principalToCheckPermissions, permissions);
     List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
-    for (int i = 0; i < permissionCheckDTOList.size(); i++) {
-      PermissionCheckDTO permissionCheckDTO = permissionCheckDTOList.get(i);
+    for (int i = 0; i < permissions.size(); i++) {
+      PermissionCheckDTO permissionCheckDTO = permissions.get(i);
       accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, accessControlList.get(i) != null));
     }
-    return AccessCheckResponseDTO.builder().principal(principal).accessControlList(accessControlDTOList).build();
+    return AccessCheckResponseDTO.builder()
+        .principal(principalToCheckPermissions)
+        .accessControlList(accessControlDTOList)
+        .build();
   }
 
   @Override
