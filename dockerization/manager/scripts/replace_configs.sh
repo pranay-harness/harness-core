@@ -102,6 +102,36 @@ if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
   yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 fi
 
+if [[ "" != "$CF_MIGRATION_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.enabled "$CF_MIGRATION_ENABLED"
+fi
+
+if [[ "" != "$CF_MIGRATION_ADMIN_URL" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.adminUrl "$CF_MIGRATION_ADMIN_URL"
+fi
+
+if [[ "" != "$CF_MIGRATION_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.apiKey "$CF_MIGRATION_API_KEY"
+fi
+
+if [[ "" != "$CF_MIGRATION_ACCOUNT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.account "$CF_MIGRATION_ACCOUNT"
+fi
+
+if [[ "" != "$CF_MIGRATION_ORG" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.org "$CF_MIGRATION_ORG"
+fi
+
+if [[ "" != "$CF_MIGRATION_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.project "$CF_MIGRATION_PROJECT"
+fi
+
+if [[ "" != "$CF_MIGRATION_ENVIRONMENT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.environment "$CF_MIGRATION_ENVIRONMENT"
+fi
+
+
+
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
 fi

@@ -24,6 +24,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
@@ -329,6 +330,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .build());
 
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
   }
 

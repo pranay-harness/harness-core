@@ -879,7 +879,15 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
         return results;
     }
 
+    if class.is_generated() {
+        return results;
+    }
+
     if UNKNOWN_LOCATION.eq(&class.location) {
+        return results;
+    }
+
+    if class.name.eq("io.harness.annotations.dev.HarnessTeam"){
         return results;
     }
 

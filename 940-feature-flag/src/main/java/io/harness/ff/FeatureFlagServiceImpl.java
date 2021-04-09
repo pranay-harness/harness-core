@@ -21,6 +21,17 @@ import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
+import io.harness.cf.CFApi;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.cf.openapi.api.PatchInstruction;
+import io.harness.cf.openapi.api.PatchOperation;
+import io.harness.cf.openapi.model.Feature;
+import io.harness.cf.openapi.model.FeatureState;
+import io.harness.cf.openapi.model.Features;
+import io.harness.cf.openapi.model.InlineObject;
+import io.harness.cf.openapi.model.InlineObject.KindEnum;
+import io.harness.cf.openapi.model.ServingRule;
+import io.harness.cf.openapi.model.Variation;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
@@ -51,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -68,7 +80,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       Lists.newArrayList(ImmutableList.of(NG_ACCESS_CONTROL_MIGRATION, NG_RBAC_ENABLED, NEXT_GEN_ENABLED));
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
-
+  @Inject private CFApi cfApi;
+  @Inject private CfMigrationConfig cfMigrationConfig;
   @Override
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     synchronized (cache) {
@@ -309,6 +322,193 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
             persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
+    syncWithCFServer();
+  }
+
+  private void syncWithCFServer() {
+    if (!cfMigrationConfig.isEnabled()) {
+      log.debug("Not initializing with CF Server since CF Migration is disabled");
+      return;
+    }
+    try {
+      String cfAccount = cfMigrationConfig.getAccount();
+      String cfOrg = cfMigrationConfig.getOrg();
+      String cfProject = cfMigrationConfig.getProject();
+      String cfEnvironment = cfMigrationConfig.getEnvironment();
+      Set<String> cfFeatures = new HashSet<>();
+      Features features = cfApi.getAllFeatures(cfAccount, cfOrg, cfProject, cfEnvironment, 0, Integer.MAX_VALUE);
+      Map<String, Feature> featureMap = new HashMap<>();
+      for (Feature feature : features.getFeatures()) {
+        log.info("Feature Name " + feature.getName());
+        featureMap.put(feature.getName(), feature);
+        cfFeatures.add(feature.getName());
+      }
+
+      /**
+       * For every feature flag in Harness, do the following
+       */
+      for (FeatureName featureName : FeatureName.values()) {
+        Optional<FeatureFlag> featureFlag = getFeatureFlag(featureName);
+        /**
+         * If featureFlag is not present in db, something is wrong on the Harness side. We will not sync this
+         * featureFlag in CF
+         */
+        if (!featureFlag.isPresent()) {
+          log.warn("CF-SYNC FeatureFlag [{}] is not present in Harness DB, skipping it ", featureName.name());
+          continue;
+        }
+        /**
+         * If Harness CF does not contain this featureFlag, go ahead and create it
+         */
+        if (!cfFeatures.contains(featureName.name())) {
+          try {
+            cfApi.createFeatureFlag(cfAccount, cfOrg, createCFFeatureFlag(featureName.name(), featureName.getScope()));
+            Feature feature = cfApi.getFeatureFlag(featureName.name(), cfAccount, cfOrg, cfProject, cfEnvironment);
+            featureMap.put(featureName.name(), feature);
+            log.info("CF-SYNC Created featureFlag [{}] in CF", featureName);
+          } catch (Exception e) {
+            log.error("CF-SYNC Failed to create featureFlag in CF", e);
+            continue;
+          }
+        } else {
+          log.info("CF-SYNC FeatureFlag [{}] already present in CF, not creating it again", featureName.name());
+        }
+
+        List<PatchInstruction> instructions = new ArrayList<>();
+
+        Feature cfFeature = featureMap.get(featureName.name());
+        /**
+         * If for the given environment, this featureFlag has state off, go ahead and turn it on
+         * Turn featureFlag on if it is off
+         */
+        if (cfFeature.getEnvProperties().getState().getValue().equals(FeatureState.OFF.getValue())) {
+          /*
+           * Turn featureFlag on
+           * */
+          log.info("CF-SYNC FeatureFlag [{}] in CF has state OFF, turning it on", featureName.name());
+          PatchInstruction turnOnPatchInstruction = cfApi.getFeatureFlagOnPatchInstruction(true);
+          instructions.add(turnOnPatchInstruction);
+        } else {
+          log.info("CF-SYNC FeatureFlag [{}] in CF has state ON", featureName.name());
+        }
+
+        /**
+         * If the featureFlag is enabled on Harness side, then we should turn the defaultServe to on
+         * This is based on the logic in isEnabled
+         *
+         * If featureFlag is enabled, then
+         * turn defaultOnVariation to true if it is set to false
+         *
+         */
+        final String defaultServeVariation = cfFeature.getEnvProperties().getDefaultServe().getVariation();
+        if (featureFlag.get().isEnabled()) {
+          if (defaultServeVariation.equals("false")) {
+            PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(true);
+            instructions.add(patchInstruction);
+            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe OFF, turning it ON", featureName.name());
+          } else {
+            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, not turning it ON again", featureName.name());
+          }
+        } else {
+          if (defaultServeVariation.equals("true")) {
+            PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(false);
+            instructions.add(patchInstruction);
+            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, turning it OFF", featureName.name());
+          }
+        }
+        /**
+         * If featureFlag list of accounts is present, add custom rule for each accountID and serveVariation to
+         * true
+         */
+        Set<String> accountIds = featureFlag.get().getAccountIds();
+        Set<String> rulesTobeDeleted = new HashSet<>();
+        Set<String> tobeAddedAccountIds = new HashSet<>();
+        final List<ServingRule> rules = cfFeature.getEnvProperties().getRules();
+        int maxPriority = 0;
+        if (accountIds != null && accountIds.size() > 0) {
+          tobeAddedAccountIds.addAll(accountIds);
+          if (rules != null && rules.size() > 0) {
+            for (ServingRule rule : rules) {
+              if (rule.getClauses().size() > 0) {
+                final String accountId = rule.getClauses().get(0).getValues().get(0);
+                if (tobeAddedAccountIds.contains(accountId)) {
+                  tobeAddedAccountIds.remove(accountId);
+                } else {
+                  rulesTobeDeleted.add(rule.getRuleId());
+                }
+              } else {
+                log.warn(
+                    "CF-SYNC Invalid rule [{}] for FF[{}], environment [{}] , does not contain any clause, marking for deletion",
+                    rule.getRuleId(), featureName.name(), cfEnvironment);
+                rulesTobeDeleted.add(rule.getRuleId());
+              }
+
+              maxPriority = Math.max(maxPriority, rule.getPriority());
+            }
+          }
+
+        } else {
+          /**
+           * If there are no accounts set for this rule, delete all rules for the featureFlag
+           */
+          if (rules.size() > 0) {
+            rules.forEach(rule -> rulesTobeDeleted.add(rule.getRuleId()));
+          }
+        }
+
+        if (tobeAddedAccountIds.size() > 0) {
+          log.info(
+              "CF-SYNC Creating Rules for AccountIDs for FF[{}], environment [{}]", featureName.name(), cfEnvironment);
+          List<PatchInstruction> accountToBeAddedPatchInstruction =
+              cfApi.getFeatureFlagRulesForTargetingAccounts(tobeAddedAccountIds, maxPriority + 100);
+          instructions.addAll(accountToBeAddedPatchInstruction);
+        }
+
+        if (rulesTobeDeleted.size() > 0) {
+          for (String rule : rulesTobeDeleted) {
+            log.info("CF-SYNC Deleting unwanted rule for FF[{}], environment [{}], ruleID : [{}]", featureName.name(),
+                cfEnvironment, rule);
+            instructions.add(cfApi.removeRule(rule));
+          }
+        }
+
+        if (instructions.size() > 0) {
+          PatchOperation patchOperation = PatchOperation.builder().instructions(instructions).build();
+          cfFeature =
+              cfApi.patchFeature(featureName.name(), cfAccount, cfOrg, cfProject, cfEnvironment, patchOperation);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Failed to sync with Harness CF", e);
+    }
+  }
+
+  @NotNull
+  private InlineObject createCFFeatureFlag(String featureName, Scope scope) {
+    InlineObject inlineObject = new InlineObject();
+    inlineObject.setProject("project1");
+    inlineObject.setIdentifier(featureName);
+    inlineObject.setName(featureName);
+    inlineObject.setKind(KindEnum.BOOLEAN);
+    Variation trueVariation = new Variation();
+    trueVariation.setIdentifier("true");
+    trueVariation.setName("true");
+    trueVariation.setValue("true");
+
+    Variation falseVariation = new Variation();
+    falseVariation.setIdentifier("false");
+    falseVariation.setName("false");
+    falseVariation.setValue("false");
+
+    List<Variation> variations = new ArrayList<>();
+    variations.add(trueVariation);
+    variations.add(falseVariation);
+
+    inlineObject.setVariations(variations);
+    inlineObject.setDefaultOffVariation(falseVariation.getIdentifier());
+    inlineObject.setDefaultOnVariation(falseVariation.getIdentifier());
+
+    return inlineObject;
   }
 
   /**

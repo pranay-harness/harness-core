@@ -5,10 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
 import io.harness.config.GcpMarketplaceConfig;
@@ -82,6 +85,7 @@ import lombok.EqualsAndHashCode;
  *
  * @author Rishi
  */
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -174,6 +178,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
 
   private int applicationPort;
   private boolean sslEnabled;
