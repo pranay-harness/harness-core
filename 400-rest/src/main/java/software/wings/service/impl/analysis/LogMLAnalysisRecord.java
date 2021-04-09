@@ -7,9 +7,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -62,6 +67,8 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "LogMLAnalysisRecordKeys")
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class LogMLAnalysisRecord extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -100,8 +107,8 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
   }
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;
-  private String workflowExecutionId;
-  private String accountId;
+  @FdIndex private String workflowExecutionId;
+  @FdIndex private String accountId;
 
   @NotEmpty private StateType stateType;
 
