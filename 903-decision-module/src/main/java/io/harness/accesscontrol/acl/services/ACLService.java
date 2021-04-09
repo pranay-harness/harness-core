@@ -9,13 +9,11 @@ import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 public interface ACLService {
-  AccessCheckResponseDTO checkAccess(
-      @NotNull @Valid Principal principal, List<PermissionCheckDTO> permissionCheckDTOList);
+  AccessCheckResponseDTO checkAccess(io.harness.security.dto.Principal principalInContext, Principal principal,
+      List<PermissionCheckDTO> permissionCheckDTOList);
 
   long insertAllIgnoringDuplicates(List<ACL> acls);
 
