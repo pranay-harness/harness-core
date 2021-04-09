@@ -446,7 +446,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	}
 
 	// move nodes from destBranch to sourceBranch
-	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$nin": allNIds}}
+	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$nin": allNIds}, "vcs_info.repo": repo}
 	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
 	_, err = mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
 	if err != nil {
@@ -479,7 +479,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merge relations from destBranch to sourceBranch
 	relToMerge := []Relation{}
-	filter = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$nin": allRIds}}
+	filter = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$nin": allRIds}, "vcs_info.repo": repo}
 	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
 	if err != nil {
 		return formatError(err, "failed to get records in relations collection", repo, branch, commit)
@@ -490,7 +490,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	var operations []mongo.WriteModel
 	for _, relation := range relToMerge {
 		operation := mongo.NewUpdateOneModel()
-		operation.SetFilter(bson.M{"source": relation.Source})
+		operation.SetFilter(bson.M{"source": relation.Source, "vcs_info.repo": repo})
 		operation.SetUpdate(bson.M{"$set": bson.M{"tests": merge(relation.Tests, relMap[relation.Source].Tests)}})
 		operations = append(operations, operation)
 	}
@@ -510,7 +510,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	// condition for fetching nids of nodes which are deleted
 	cond := []interface{}{}
 	for _, v := range n {
-		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class})
+		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.repo": repo})
 		//cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
 	}
 	filter = bson.M{"$or": cond}
@@ -530,13 +530,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", nids), "branch", branch, "repo", repo)
 
 	// delete nodes with id in nids
-	delFilter = bson.M{"id": bson.M{"$in": nids}}
+	delFilter = bson.M{"id": bson.M{"$in": nids}, "vcs_info.repo": repo}
 	r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, fmt.Sprintf("failed to delete records from nodes coll nids: %v", nids), repo, branch, commit)
 	}
 	// delete relations with source in nids
-	delFilter = bson.M{"source": bson.M{"$in": nids}}
+	delFilter = bson.M{"source": bson.M{"$in": nids}, "vcs_info.repo": repo}
 	r1, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, fmt.Sprintf("failed to delete records from relns coll nids: %v", nids), repo, branch, commit)
@@ -544,7 +544,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	mdb.Log.Infow(fmt.Sprintf("deleted %d, %d records from nodes, relations collection for deleted files",
 		r.DeletedCount, r1.DeletedCount), "branch", branch, "repo", repo)
 	// update tests fields which containers nids in relations
-	filter = bson.M{"tests": bson.M{"$in": nids}}
+	filter = bson.M{"tests": bson.M{"$in": nids}, "vcs_info.repo": repo}
 	update = bson.M{"$pull": bson.M{"tests": bson.M{"$in": nids}}}
 	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
 	if err != nil {
