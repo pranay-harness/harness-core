@@ -108,6 +108,9 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
+
+    syncFeatureFlagWithCF(featureFlag);
+
     log.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
   }
 
@@ -167,6 +170,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
+    syncFeatureFlagWithCF(featureFlag);
+
     log.info("Enabled feature name :[{}] globally", featureName.name());
   }
 
@@ -322,12 +327,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
             persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
-    syncWithCFServer();
+    syncAllFlagsWithCFServer();
   }
 
-  private void syncWithCFServer() {
+  private void syncAllFlagsWithCFServer() {
     if (!cfMigrationConfig.isEnabled()) {
-      log.debug("Not initializing with CF Server since CF Migration is disabled");
+      log.debug("Not syncing all flags with CF Server since CF Migration is disabled");
       return;
     }
     try {
@@ -374,112 +379,144 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
           log.info("CF-SYNC FeatureFlag [{}] already present in CF, not creating it again", featureName.name());
         }
 
-        List<PatchInstruction> instructions = new ArrayList<>();
-
-        Feature cfFeature = featureMap.get(featureName.name());
-        /**
-         * If for the given environment, this featureFlag has state off, go ahead and turn it on
-         * Turn featureFlag on if it is off
-         */
-        if (cfFeature.getEnvProperties().getState().getValue().equals(FeatureState.OFF.getValue())) {
-          /*
-           * Turn featureFlag on
-           * */
-          log.info("CF-SYNC FeatureFlag [{}] in CF has state OFF, turning it on", featureName.name());
-          PatchInstruction turnOnPatchInstruction = cfApi.getFeatureFlagOnPatchInstruction(true);
-          instructions.add(turnOnPatchInstruction);
-        } else {
-          log.info("CF-SYNC FeatureFlag [{}] in CF has state ON", featureName.name());
-        }
-
-        /**
-         * If the featureFlag is enabled on Harness side, then we should turn the defaultServe to on
-         * This is based on the logic in isEnabled
-         *
-         * If featureFlag is enabled, then
-         * turn defaultOnVariation to true if it is set to false
-         *
-         */
-        final String defaultServeVariation = cfFeature.getEnvProperties().getDefaultServe().getVariation();
-        if (featureFlag.get().isEnabled()) {
-          if (defaultServeVariation.equals("false")) {
-            PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(true);
-            instructions.add(patchInstruction);
-            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe OFF, turning it ON", featureName.name());
-          } else {
-            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, not turning it ON again", featureName.name());
-          }
-        } else {
-          if (defaultServeVariation.equals("true")) {
-            PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(false);
-            instructions.add(patchInstruction);
-            log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, turning it OFF", featureName.name());
-          }
-        }
-        /**
-         * If featureFlag list of accounts is present, add custom rule for each accountID and serveVariation to
-         * true
-         */
-        Set<String> accountIds = featureFlag.get().getAccountIds();
-        Set<String> rulesTobeDeleted = new HashSet<>();
-        Set<String> tobeAddedAccountIds = new HashSet<>();
-        final List<ServingRule> rules = cfFeature.getEnvProperties().getRules();
-        int maxPriority = 0;
-        if (accountIds != null && accountIds.size() > 0) {
-          tobeAddedAccountIds.addAll(accountIds);
-          if (rules != null && rules.size() > 0) {
-            for (ServingRule rule : rules) {
-              if (rule.getClauses().size() > 0) {
-                final String accountId = rule.getClauses().get(0).getValues().get(0);
-                if (tobeAddedAccountIds.contains(accountId)) {
-                  tobeAddedAccountIds.remove(accountId);
-                } else {
-                  rulesTobeDeleted.add(rule.getRuleId());
-                }
-              } else {
-                log.warn(
-                    "CF-SYNC Invalid rule [{}] for FF[{}], environment [{}] , does not contain any clause, marking for deletion",
-                    rule.getRuleId(), featureName.name(), cfEnvironment);
-                rulesTobeDeleted.add(rule.getRuleId());
-              }
-
-              maxPriority = Math.max(maxPriority, rule.getPriority());
-            }
-          }
-
-        } else {
-          /**
-           * If there are no accounts set for this rule, delete all rules for the featureFlag
-           */
-          if (rules.size() > 0) {
-            rules.forEach(rule -> rulesTobeDeleted.add(rule.getRuleId()));
-          }
-        }
-
-        if (tobeAddedAccountIds.size() > 0) {
-          log.info(
-              "CF-SYNC Creating Rules for AccountIDs for FF[{}], environment [{}]", featureName.name(), cfEnvironment);
-          List<PatchInstruction> accountToBeAddedPatchInstruction =
-              cfApi.getFeatureFlagRulesForTargetingAccounts(tobeAddedAccountIds, maxPriority + 100);
-          instructions.addAll(accountToBeAddedPatchInstruction);
-        }
-
-        if (rulesTobeDeleted.size() > 0) {
-          for (String rule : rulesTobeDeleted) {
-            log.info("CF-SYNC Deleting unwanted rule for FF[{}], environment [{}], ruleID : [{}]", featureName.name(),
-                cfEnvironment, rule);
-            instructions.add(cfApi.removeRule(rule));
-          }
-        }
-
-        if (instructions.size() > 0) {
-          PatchOperation patchOperation = PatchOperation.builder().instructions(instructions).build();
-          cfFeature =
-              cfApi.patchFeature(featureName.name(), cfAccount, cfOrg, cfProject, cfEnvironment, patchOperation);
-        }
+        updateFeatureFlagInCF(featureFlag.get(), featureMap.get(featureName.name()));
       }
     } catch (Exception e) {
       log.error("Failed to sync with Harness CF", e);
+    }
+  }
+
+  private void syncFeatureFlagWithCF(FeatureFlag featureFlag) {
+    if (!cfMigrationConfig.isEnabled()) {
+      log.debug("Not syncing flag [{}] with CF Server since CF Migration is disabled", featureFlag.getName());
+      return;
+    }
+    try {
+      Feature cfFeature = cfApi.getFeatureFlag(featureFlag.getName(), cfMigrationConfig.getAccount(),
+          cfMigrationConfig.getOrg(), cfMigrationConfig.getProject(), cfMigrationConfig.getEnvironment());
+      if (cfFeature == null) {
+        log.error("CF-SYNC Did not find featureFlag in CF Server, cannot update this featureFlag");
+        return;
+      }
+      updateFeatureFlagInCF(featureFlag, cfFeature);
+    } catch (Exception e) {
+      log.error("CF-SYNC Failed to sync featureFlag [{}] in environment [{}]", featureFlag.getName(),
+          cfMigrationConfig.getEnvironment(), e);
+    }
+  }
+
+  private void updateFeatureFlagInCF(FeatureFlag featureFlag, Feature cfFeature) {
+    try {
+      String cfAccount = cfMigrationConfig.getAccount();
+      String cfOrg = cfMigrationConfig.getOrg();
+      String cfProject = cfMigrationConfig.getProject();
+      String cfEnvironment = cfMigrationConfig.getEnvironment();
+      List<PatchInstruction> instructions = new ArrayList<>();
+
+      /**
+       * If for the given environment, this featureFlag has state off, go ahead and turn it on
+       * Turn featureFlag on if it is off
+       */
+      if (cfFeature.getEnvProperties().getState().getValue().equals(FeatureState.OFF.getValue())) {
+        /*
+         * Turn featureFlag on
+         * */
+        log.info("CF-SYNC FeatureFlag [{}] in CF has state OFF, turning it on", featureFlag.getName());
+        PatchInstruction turnOnPatchInstruction = cfApi.getFeatureFlagOnPatchInstruction(true);
+        instructions.add(turnOnPatchInstruction);
+      } else {
+        log.info("CF-SYNC FeatureFlag [{}] in CF has state ON", featureFlag.getName());
+      }
+
+      /**
+       * If the featureFlag is enabled on Harness side, then we should turn the defaultServe to on
+       * This is based on the logic in isEnabled
+       *
+       * If featureFlag is enabled, then
+       * turn defaultOnVariation to true if it is set to false
+       *
+       */
+      final String defaultServeVariation = cfFeature.getEnvProperties().getDefaultServe().getVariation();
+      if (featureFlag.isEnabled()) {
+        if (defaultServeVariation.equals("false")) {
+          PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(true);
+          instructions.add(patchInstruction);
+          log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe OFF, turning it ON", featureFlag.getName());
+        } else {
+          log.info(
+              "CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, not turning it ON again", featureFlag.getName());
+        }
+      } else {
+        if (defaultServeVariation.equals("true")) {
+          PatchInstruction patchInstruction = cfApi.getFeatureFlagDefaultServePatchInstruction(false);
+          instructions.add(patchInstruction);
+          log.info("CF-SYNC CF FeatureFlag [{}] is has defaultServe ON, turning it OFF", featureFlag.getName());
+        }
+      }
+      /**
+       * If featureFlag list of accounts is present, add custom rule for each accountID and serveVariation to
+       * true
+       */
+      Set<String> accountIds = featureFlag.getAccountIds();
+      Set<String> rulesTobeDeleted = new HashSet<>();
+      Set<String> tobeAddedAccountIds = new HashSet<>();
+      final List<ServingRule> rules = cfFeature.getEnvProperties().getRules();
+      int maxPriority = 0;
+      if (accountIds != null && accountIds.size() > 0) {
+        tobeAddedAccountIds.addAll(accountIds);
+        if (rules != null && rules.size() > 0) {
+          for (ServingRule rule : rules) {
+            if (rule.getClauses().size() > 0) {
+              final String accountId = rule.getClauses().get(0).getValues().get(0);
+              if (tobeAddedAccountIds.contains(accountId)) {
+                tobeAddedAccountIds.remove(accountId);
+              } else {
+                rulesTobeDeleted.add(rule.getRuleId());
+              }
+            } else {
+              log.warn(
+                  "CF-SYNC Invalid rule [{}] for FF[{}], environment [{}] , does not contain any clause, marking for deletion",
+                  rule.getRuleId(), featureFlag.getName(), cfEnvironment);
+              rulesTobeDeleted.add(rule.getRuleId());
+            }
+
+            maxPriority = Math.max(maxPriority, rule.getPriority());
+          }
+        }
+
+      } else {
+        /**
+         * If there are no accounts set for this rule, delete all rules for the featureFlag
+         */
+        if (rules.size() > 0) {
+          rules.forEach(rule -> rulesTobeDeleted.add(rule.getRuleId()));
+        }
+      }
+
+      if (tobeAddedAccountIds.size() > 0) {
+        log.info(
+            "CF-SYNC Creating Rules for AccountIDs for FF[{}], environment [{}]", featureFlag.getName(), cfEnvironment);
+        List<PatchInstruction> accountToBeAddedPatchInstruction =
+            cfApi.getFeatureFlagRulesForTargetingAccounts(tobeAddedAccountIds, maxPriority + 100);
+        instructions.addAll(accountToBeAddedPatchInstruction);
+      }
+
+      if (rulesTobeDeleted.size() > 0) {
+        for (String rule : rulesTobeDeleted) {
+          log.info("CF-SYNC Deleting unwanted rule for FF[{}], environment [{}], ruleID : [{}]", featureFlag.getName(),
+              cfEnvironment, rule);
+          instructions.add(cfApi.removeRule(rule));
+        }
+      }
+
+      if (instructions.size() > 0) {
+        PatchOperation patchOperation = PatchOperation.builder().instructions(instructions).build();
+        cfFeature =
+            cfApi.patchFeature(featureFlag.getName(), cfAccount, cfOrg, cfProject, cfEnvironment, patchOperation);
+      }
+    } catch (Exception e) {
+      log.error("CF-SYNC Failed to sync featureFlag [{}] in environment [{}]", featureFlag.getName(),
+          cfMigrationConfig.getEnvironment(), e);
     }
   }
 
@@ -550,6 +587,8 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
     }
+
+    syncFeatureFlagWithCF(featureFlag);
     return Optional.of(featureFlag);
   }
 
