@@ -17,10 +17,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PL)
-public class UserInfo {
-  @EqualsAndHashCode.Include String uuid;
-  String name;
+public class TwoFactorAuthSettingsInfo {
+  String userId;
   String email;
-  boolean admin;
   boolean twoFactorAuthenticationEnabled;
+  TwoFactorAuthMechanismInfo mechanism;
+  String totpSecretKey;
+  String totpqrurl;
 }

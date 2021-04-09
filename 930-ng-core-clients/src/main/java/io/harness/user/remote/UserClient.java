@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
+import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 
@@ -26,7 +28,10 @@ public interface UserClient {
   String USER_BATCH_LIST_API = "ng/user/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
   String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
-  String UPDATE_USER_API = "ng/users/user";
+  String UPDATE_USER_API = "ng/user/user";
+  String USER_TWO_FACTOR_AUTH_SETTINGS = "ng/user/two-factor-auth/{auth-mechanism}";
+  String USER_ENABLE_TWO_FACTOR_AUTH = "ng/user/enable-two-factor-auth";
+  String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
@@ -54,4 +59,16 @@ public interface UserClient {
   @DELETE(USER_SAFE_DELETE)
   Call<RestResponse<Boolean>> safeDeleteUser(
       @Path(value = "userId") String userId, @Query(value = "accountId") String accountId);
+
+  @GET(USER_TWO_FACTOR_AUTH_SETTINGS)
+  Call<RestResponse<Optional<TwoFactorAuthSettingsInfo>>> getUserTwoFactorAuthSettings(
+      @Path(value = "auth-mechanism") TwoFactorAuthMechanismInfo authMechanism,
+      @Query(value = "emailId") String emailId);
+
+  @PUT(USER_ENABLE_TWO_FACTOR_AUTH)
+  Call<RestResponse<Optional<UserInfo>>> updateUserTwoFactorAuthInfo(
+      @Query(value = "emailId") String emailId, @Body TwoFactorAuthSettingsInfo settings);
+
+  @PUT(USER_DISABLE_TWO_FACTOR_AUTH)
+  Call<RestResponse<Optional<UserInfo>>> disableUserTwoFactorAuth(@Query(value = "emailId") String emailId);
 }
