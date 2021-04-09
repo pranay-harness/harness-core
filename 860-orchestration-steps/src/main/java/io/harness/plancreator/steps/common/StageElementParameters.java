@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
 import lombok.Builder;
@@ -15,43 +16,40 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@TypeAlias("stepElementParameters")
+@TypeAlias("stageElementParameters")
 @OwnedBy(CDC)
-public class StepElementParameters implements StepParameters {
+public class StageElementParameters implements StepParameters {
   String uuid;
   String identifier;
   String name;
-  String description;
-  ParameterField<String> timeout;
-  List<FailureStrategyConfig> failureStrategies;
+  ParameterField<String> description;
 
   ParameterField<String> skipCondition;
   ParameterField<String> when;
 
+  List<FailureStrategyConfig> failureStrategies;
+  List<NGVariable> originalVariables;
   String type;
   SpecParameters spec;
 
-  ParameterField<List<String>> delegateSelectors;
-
   @Override
   public String toViewJson() {
-    StepElementParameters stepElementParameters = cloneParameters();
-    stepElementParameters.setSpec(spec.getViewJsonObject());
-    return RecastOrchestrationUtils.toDocumentJson(stepElementParameters);
+    StageElementParameters stageElementParameters = cloneParameters();
+    stageElementParameters.setSpec(spec.getViewJsonObject());
+    return RecastOrchestrationUtils.toDocumentJson(stageElementParameters);
   }
 
-  public StepElementParameters cloneParameters() {
-    return StepElementParameters.builder()
+  public StageElementParameters cloneParameters() {
+    return StageElementParameters.builder()
         .uuid(this.uuid)
         .type(this.type)
         .name(this.name)
         .description(this.description)
         .identifier(this.identifier)
-        .timeout(this.timeout)
         .failureStrategies(this.failureStrategies)
         .when(this.when)
         .skipCondition(this.skipCondition)
-        .delegateSelectors(this.delegateSelectors)
+        .originalVariables(this.originalVariables)
         .build();
   }
 }

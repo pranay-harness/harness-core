@@ -4,9 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @OwnedBy(PIPELINE)
-public interface StepSpecParameters {
-  default StepSpecParameters getViewJsonObject() {
+public interface SpecParameters {
+  @JsonIgnore
+  default SpecParameters getViewJsonObject() {
     return this;
   }
 }
