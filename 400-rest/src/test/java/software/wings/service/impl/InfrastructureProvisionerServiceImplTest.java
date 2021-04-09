@@ -433,13 +433,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(workflowVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(workflowVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(workflowVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(
             properties, contextMap, true, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
 
-    verify(evaluator, times(1)).evaluate(workflowVariable, contextMap);
+    verify(evaluator, times(1)).substitute(workflowVariable, contextMap);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -452,7 +452,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
@@ -820,7 +820,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn("VAL");
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn("VAL");
 
     Map<String, Object> resolveExpressions = infrastructureProvisionerService.resolveExpressions(
         infrastructureDefinition, contextMap, ShellScriptInfrastructureProvisioner.builder().build());
