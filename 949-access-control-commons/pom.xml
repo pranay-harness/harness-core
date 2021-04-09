@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>909-access-control-commons</artifactId>
+    <artifactId>949-access-control-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

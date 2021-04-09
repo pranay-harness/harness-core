@@ -110,8 +110,6 @@ BAZEL_MODULES="\
   //903-decision-module:module \
   //905-access-control-core:module \
   //908-access-control-admin-client:module \
-  //908-access-control-sdk:module \
-  //909-access-control-commons:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -123,6 +121,8 @@ BAZEL_MODULES="\
   //920-ng-signup:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //948-access-control-sdk:module \
+  //949-access-control-commons:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
   //940-feature-flag:module \
@@ -393,8 +393,6 @@ build_bazel_module 890-sm-core
 build_bazel_module 903-decision-module
 build_bazel_module 905-access-control-core
 build_bazel_module 908-access-control-admin-client
-build_bazel_module 908-access-control-sdk
-build_bazel_module 909-access-control-commons
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 915-pms-delegate-service-driver
@@ -408,6 +406,8 @@ build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
+build_bazel_module 948-access-control-sdk
+build_bazel_module 949-access-control-commons
 build_bazel_module 950-command-library-common
 build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
