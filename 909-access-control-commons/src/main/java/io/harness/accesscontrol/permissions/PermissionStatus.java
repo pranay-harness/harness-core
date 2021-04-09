@@ -1,3 +1,7 @@
 package io.harness.accesscontrol.permissions;
 
-public enum PermissionStatus { EXPERIMENTAL, ACTIVE, DEPRECATED }
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL) public enum PermissionStatus { STAGING, EXPERIMENTAL, ACTIVE, DEPRECATED, INACTIVE }
