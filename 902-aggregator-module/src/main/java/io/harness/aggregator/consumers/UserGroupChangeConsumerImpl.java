@@ -62,22 +62,17 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
       }
       log.info("{} ACLs created", count);
       return count;
-
-    } else {
-      log.debug("None of the relevant fields have changed for the user group");
     }
     return 0;
   }
 
   @Override
   public long consumeDeleteEvent(String id) {
-    log.info("User Group deleted with id: {}", id);
     return 0;
   }
 
   @Override
   public long consumeCreateEvent(String id, UserGroupDBO accessControlEntity) {
-    log.info("User Group created with id: {}", id);
     return 0;
   }
 }

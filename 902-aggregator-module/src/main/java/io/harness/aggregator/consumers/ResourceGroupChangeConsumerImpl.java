@@ -66,21 +66,17 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
       }
       log.info("{} ACLs created", count);
       return count;
-    } else {
-      log.debug("None of the relevant fields have changed for resource group: {}", id);
     }
     return 0;
   }
 
   @Override
   public long consumeDeleteEvent(String id) {
-    log.info("Received resource group deletion event for id: {}", id);
     return 0;
   }
 
   @Override
   public long consumeCreateEvent(String id, ResourceGroupDBO accessControlEntity) {
-    log.info("Received resource group creation event for id: {}", id);
     return 0;
   }
 }
