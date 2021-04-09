@@ -1,6 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -46,6 +47,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
@@ -59,11 +61,12 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket", "region",
-      "endpoint", "pathStyle", "failIfKeyNotFound", "archiveFormat"})
+      "endpoint", "pathStyle", "failIfKeyNotFound", "archiveFormat", "runAsUser"})
   public RestoreCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> key, ParameterField<String> bucket,
       ParameterField<String> region, ParameterField<String> endpoint, ParameterField<Boolean> pathStyle,
-      ParameterField<Boolean> failIfKeyNotFound, ParameterField<ArchiveFormat> archiveFormat) {
+      ParameterField<Boolean> failIfKeyNotFound, ParameterField<ArchiveFormat> archiveFormat,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -77,6 +80,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
     this.pathStyle = pathStyle;
     this.failIfKeyNotFound = failIfKeyNotFound;
     this.archiveFormat = archiveFormat;
+    this.runAsUser = runAsUser;
   }
 
   @Override

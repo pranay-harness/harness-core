@@ -23,7 +23,7 @@ import java.util.Map;
 import lombok.NonNull;
 
 @OwnedBy(CDC)
-public interface PmsNodeExecutionService {
+public interface SdkNodeExecutionService {
   void queueNodeExecution(NodeExecutionProto nodeExecution);
 
   void queueNodeExecutionAndAddExecutableResponse(String currentNodeExecutionId,

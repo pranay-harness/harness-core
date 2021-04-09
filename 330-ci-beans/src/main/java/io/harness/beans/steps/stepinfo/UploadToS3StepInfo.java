@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -42,6 +43,7 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> endpoint;
@@ -52,10 +54,11 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "endpoint", "region", "bucket",
-      "sourcePath", "target"})
+      "sourcePath", "target", "runAsUser"})
   public UploadToS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> endpoint, ParameterField<String> region,
-      ParameterField<String> bucket, ParameterField<String> sourcePath, ParameterField<String> target) {
+      ParameterField<String> bucket, ParameterField<String> sourcePath, ParameterField<String> target,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -67,6 +70,7 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
     this.bucket = bucket;
     this.sourcePath = sourcePath;
     this.target = target;
+    this.runAsUser = runAsUser;
   }
 
   @Override

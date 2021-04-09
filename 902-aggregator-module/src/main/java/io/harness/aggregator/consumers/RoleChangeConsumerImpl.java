@@ -4,31 +4,30 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
-@NoArgsConstructor
-@AllArgsConstructor
 @Slf4j
+@Singleton
 public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
-  @Inject private ACLService aclService;
-  @Inject private RoleService roleService;
-  @Inject private ResourceGroupService resourceGroupService;
+  private final ACLService aclService;
+
+  @Inject
+  public RoleChangeConsumerImpl(ACLService aclService) {
+    this.aclService = aclService;
+  }
 
   @Override
   public long consumeUpdateEvent(String id, RoleDBO roleDBO) {

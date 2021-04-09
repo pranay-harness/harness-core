@@ -57,7 +57,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(CV)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

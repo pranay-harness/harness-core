@@ -11,19 +11,10 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
-import io.harness.pms.contracts.plan.AdviserResponseRequest;
-import io.harness.pms.contracts.plan.AdviserResponseResponse;
-import io.harness.pms.contracts.plan.EventErrorRequest;
-import io.harness.pms.contracts.plan.EventErrorResponse;
-import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
-import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
-import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
-import io.harness.tasks.BinaryResponseData;
-import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
@@ -79,38 +70,6 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
         invocationHelper.accumulateResponses(request.getPlanExecutionId(), request.getNotifyId());
     Map<String, ByteString> response = responseDataMapper.toResponseDataProto(responseDataMap);
     responseObserver.onNext(AccumulateResponsesResponse.newBuilder().putAllResponse(response).build());
-    responseObserver.onCompleted();
-  }
-
-  @Override
-  public void handleFacilitatorResponse(
-      FacilitatorResponseRequest request, StreamObserver<FacilitatorResponseResponse> responseObserver) {
-    waitNotifyEngine.doneWith(request.getNotifyId(),
-        BinaryResponseData.builder().data(request.getFacilitatorResponse().toByteArray()).build());
-
-    responseObserver.onNext(FacilitatorResponseResponse.newBuilder().build());
-    responseObserver.onCompleted();
-  }
-
-  @Override
-  public void handleAdviserResponse(
-      AdviserResponseRequest request, StreamObserver<AdviserResponseResponse> responseObserver) {
-    waitNotifyEngine.doneWith(
-        request.getNotifyId(), BinaryResponseData.builder().data(request.getAdviserResponse().toByteArray()).build());
-    responseObserver.onNext(AdviserResponseResponse.newBuilder().build());
-    responseObserver.onCompleted();
-  }
-
-  @Override
-  public void handleEventError(EventErrorRequest request, StreamObserver<EventErrorResponse> responseObserver) {
-    waitNotifyEngine.doneWith(request.getEventNotifyId(),
-        FailureResponseData.builder()
-            .errorMessage(request.getFailureInfo().getErrorMessage())
-            .failureTypes(
-                EngineExceptionUtils.transformToWingsFailureTypes(request.getFailureInfo().getFailureTypesList()))
-            .build());
-
-    responseObserver.onNext(EventErrorResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 }

@@ -812,7 +812,7 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 

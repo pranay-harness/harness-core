@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
@@ -64,14 +66,17 @@ public class DockerStepInfo implements PluginCompatibleStep {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> buildArgs;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "repo", "tags", "context",
-      "dockerfile", "target", "labels", "buildArgs"})
+      "dockerfile", "target", "labels", "buildArgs", "runAsUser", "optimize"})
   public DockerStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> repo, ParameterField<List<String>> tags,
       ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
-      ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs) {
+      ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs,
+      ParameterField<Integer> runAsUser, ParameterField<Boolean> optimize) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -85,6 +90,8 @@ public class DockerStepInfo implements PluginCompatibleStep {
     this.target = target;
     this.labels = labels;
     this.buildArgs = buildArgs;
+    this.runAsUser = runAsUser;
+    this.optimize = optimize;
   }
 
   @Override

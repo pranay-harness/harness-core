@@ -17,9 +17,11 @@ public class CIK8PodParams<T extends ContainerParams> extends PodParams<T> {
 
   @Builder
   public CIK8PodParams(ConnectorDetails gitConnector, String branchName, String commitId, String stepExecVolumeName,
-      String stepExecWorkingDir, String name, String namespace, Map<String, String> labels, List<T> containerParamsList,
-      List<T> initContainerParamsList, List<PVCParams> pvcParamList, List<HostAliasParams> hostAliasParamsList) {
-    super(name, namespace, labels, containerParamsList, initContainerParamsList, pvcParamList, hostAliasParamsList);
+      String stepExecWorkingDir, String name, String namespace, Map<String, String> annotations,
+      Map<String, String> labels, List<T> containerParamsList, List<T> initContainerParamsList,
+      List<PVCParams> pvcParamList, List<HostAliasParams> hostAliasParamsList) {
+    super(name, namespace, annotations, labels, containerParamsList, initContainerParamsList, pvcParamList,
+        hostAliasParamsList);
     this.gitConnector = gitConnector;
     this.branchName = branchName;
     this.commitId = commitId;

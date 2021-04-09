@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
@@ -43,10 +44,12 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -398,5 +401,35 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     }
     job.fromDTO(verificationJobDTO);
     return job;
+  }
+
+  @Override
+  public List<VerificationJobDTO> eligibleCDNGVerificationJobs(String accountId, String orgIdentifier,
+      String projectIdentifier, String serviceIdentifier, String envIdentifier) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Query<VerificationJob> query = hPersistence.createQuery(VerificationJob.class)
+                                       .filter(VerificationJobKeys.accountId, accountId)
+                                       .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+                                       .filter(VerificationJobKeys.projectIdentifier, projectIdentifier);
+    query.or(query.criteria(VerificationJobKeys.activitySourceIdentifier)
+                 .equal(CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER),
+        query.criteria(VerificationJobKeys.activitySourceIdentifier).doesNotExist());
+    if (serviceIdentifier != null) {
+      query.or(query.criteria(VerificationJob.SERVICE_IDENTIFIER_IS_RUNTIME_PARAM_KEY).equal(true),
+          query.criteria(VerificationJob.SERVICE_IDENTIFIER_VALUE_KEY).equal(serviceIdentifier));
+    } else {
+      query = query.filter(VerificationJob.SERVICE_IDENTIFIER_IS_RUNTIME_PARAM_KEY, true);
+    }
+
+    if (envIdentifier != null) {
+      query.or(query.criteria(VerificationJob.ENV_IDENTIFIER_IS_RUNTIME_PARAM_KEY).equal(true),
+          query.criteria(VerificationJob.ENV_IDENTIFIER_VALUE_KEY).equal(envIdentifier));
+    } else {
+      query = query.filter(VerificationJob.ENV_IDENTIFIER_IS_RUNTIME_PARAM_KEY, true);
+    }
+
+    return query.asList().stream().map(VerificationJob::getVerificationJobDTO).collect(Collectors.toList());
   }
 }

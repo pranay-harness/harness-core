@@ -281,6 +281,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "IntegrationStageConfig": {
       "type": "object",
       "properties": {
@@ -352,8 +368,14 @@
     "K8sDirectInfraYamlSpec": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
+        },
         "connectorRef": {
           "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
         },
         "namespace": {
           "type": "string"
@@ -558,6 +580,63 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
           }
         }
       },

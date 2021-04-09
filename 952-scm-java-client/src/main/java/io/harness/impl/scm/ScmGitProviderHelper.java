@@ -18,9 +18,9 @@ public class ScmGitProviderHelper {
     if (scmConnector instanceof GithubConnectorDTO) {
       return getSlugFromUrl(((GithubConnectorDTO) scmConnector).getUrl());
     } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return getSlugFromUrl(((GithubConnectorDTO) scmConnector).getUrl());
+      return getSlugFromUrl(((GitlabConnectorDTO) scmConnector).getUrl());
     } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return getSlugFromUrl(((GithubConnectorDTO) scmConnector).getUrl());
+      return getSlugFromUrl(((BitbucketConnectorDTO) scmConnector).getUrl());
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
