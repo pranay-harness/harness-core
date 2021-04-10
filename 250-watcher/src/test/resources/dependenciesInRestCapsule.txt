@@ -124,8 +124,8 @@ junit:junit:jar:4.12:test
 net.java.dev.jna:jna-platform:jar:5.5.0
 net.java.dev.jna:jna:jar:5.5.0
 net.jcip:jcip-annotations:jar:1.0
-net.minidev:accessors-smart:jar:1.1
-net.minidev:json-smart:jar:2.2.1
+net.minidev:accessors-smart:jar:1.2
+net.minidev:json-smart:jar:2.3
 net.openhft:affinity:jar:3.2.2
 net.openhft:chronicle-bytes:jar:2.19.0
 net.openhft:chronicle-core:jar:2.19.0

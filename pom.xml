@@ -1291,6 +1291,16 @@
                 <version>0.5.7</version>
             </dependency>
             <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>accessors-smart</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>2.3</version>
+            </dependency>
+            <dependency>
                 <groupId>net.openhft</groupId>
                 <artifactId>chronicle-queue</artifactId>
                 <version>5.19.2</version>
