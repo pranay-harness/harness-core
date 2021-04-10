@@ -47,7 +47,7 @@ com.google.cloud:google-cloud-logging:jar:1.93.0
 com.google.code.findbugs:annotations:jar:3.0.0
 com.google.code.findbugs:jsr305:jar:3.0.2
 com.google.code.gson:gson:jar:2.8.0
-com.google.errorprone:error_prone_annotations:jar:2.3.4
+com.google.errorprone:error_prone_annotations:jar:2.4.0
 com.google.guava:guava:jar:21.0
 com.google.http-client:google-http-client-jackson2:jar:1.36.0
 com.google.http-client:google-http-client:jar:1.36.0

@@ -136,7 +136,7 @@ com.google.cloud:google-cloud-storage:jar:1.52.0
 com.google.code.findbugs:annotations:jar:3.0.0
 com.google.code.findbugs:jsr305:jar:3.0.2
 com.google.code.gson:gson:jar:2.8.0
-com.google.errorprone:error_prone_annotations:jar:2.3.3
+com.google.errorprone:error_prone_annotations:jar:2.4.0
 com.google.guava:failureaccess:jar:1.0.1
 com.google.guava:guava:jar:21.0
 com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava

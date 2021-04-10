@@ -1370,7 +1370,7 @@ maven_install(
         "com.google.code.findbugs:annotations:3.0.0",
         "com.google.code.findbugs:jsr305:3.0.2",
         "com.google.code.gson:gson:2.8.0",
-        "com.google.errorprone:error_prone_annotations:2.3.3",
+        "com.google.errorprone:error_prone_annotations:2.4.0",
         "com.google.guava:guava:21.0",
         "com.google.http-client:google-http-client-apache-v2:1.38.0",
         "com.google.http-client:google-http-client-appengine:1.36.0",
