@@ -1,15 +1,24 @@
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
 
+use crate::java_module::JavaModule;
 use crate::repo::GIT_REPO_ROOT_DIR;
+use crate::team::UNKNOWN_TEAM;
 
-pub const UNKNOWN_TEAM: &str = "UNK";
 pub const UNKNOWN_LOCATION: &str = "n/a";
+
+lazy_static! {
+    pub static ref PACKAGE_PATTERN: Regex = Regex::new(r"package ([a-zA-z.]+);").unwrap();
+    pub static ref TEAM_OWNER_PATTERN: Regex = Regex::new(r"@OwnedBy\((HarnessTeam.)?([A-Z]+)\)").unwrap();
+    pub static ref TARGET_MODULE_PATTERN: Regex =
+        Regex::new(r"@TargetModule\((HarnessModule.)?_([0-9A-Z_]+)\)").unwrap();
+    pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
+}
 
 #[derive(Debug)]
 pub struct JavaClass {
@@ -26,8 +35,10 @@ pub struct JavaClass {
 pub trait JavaClassTraits {
     fn relative_location(&self) -> String;
     fn directory_location(&self) -> String;
-    fn team(&self) -> String;
+    fn simple_team(&self) -> String;
+    fn team(&self, module: &JavaModule, target_module_team: &Option<String>) -> String;
     fn is_generated(&self) -> bool;
+    fn target_module_team(&self, modules: &HashMap<String, JavaModule>) -> Option<String>;
 }
 
 impl JavaClassTraits for &JavaClass {
@@ -42,15 +53,38 @@ impl JavaClassTraits for &JavaClass {
         self.location[..self.location.rfind('/').unwrap()].to_string()
     }
 
-    fn team(&self) -> String {
+    fn simple_team(&self) -> String {
         match &self.team {
             None => UNKNOWN_TEAM.to_string(),
             Some(team) => team.clone(),
         }
     }
 
+    fn team(&self, module: &JavaModule, target_module_team: &Option<String>) -> String {
+        match &self.team {
+            None => match target_module_team {
+                None => match &module.team {
+                    None => UNKNOWN_TEAM.to_string(),
+                    Some(team) => team.clone(),
+                },
+                Some(team) => team.clone(),
+            },
+            Some(team) => team.clone(),
+        }
+    }
+
     fn is_generated(&self) -> bool {
         self.location.contains("/generated/")
+    }
+
+    fn target_module_team(&self, modules: &HashMap<String, JavaModule>) -> Option<String>{
+        match &self.target_module {
+            None => None,
+            Some(module_name) =>  match modules.get(module_name) {
+                None => None,
+                Some(module) => module.team.clone()
+            }
+        }
     }
 }
 
@@ -66,14 +100,6 @@ impl Hash for JavaClass {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state);
     }
-}
-
-lazy_static! {
-    pub static ref PACKAGE_PATTERN: Regex = Regex::new(r"package ([a-zA-z.]+);").unwrap();
-    pub static ref TEAM_OWNER_PATTERN: Regex = Regex::new(r"@OwnedBy\((HarnessTeam.)?([A-Z]+)\)").unwrap();
-    pub static ref TARGET_MODULE_PATTERN: Regex =
-        Regex::new(r"@TargetModule\((HarnessModule.)?_([0-9A-Z_]+)\)").unwrap();
-    pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
 pub fn populate_internal_info(
