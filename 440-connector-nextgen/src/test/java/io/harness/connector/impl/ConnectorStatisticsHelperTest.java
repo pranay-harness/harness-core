@@ -1,7 +1,10 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DX)
 public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
   @Inject ConnectorRepository connectorRepository;
   @Inject ConnectorStatisticsHelper connectorStatisticsHelper;

@@ -1,7 +1,9 @@
 package io.harness.ng.core.entitydetail;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
 import io.harness.encryption.Scope;
@@ -18,6 +20,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 
 @Singleton
+@OwnedBy(DX)
 public class EntityDetailRestToProtoMapper {
   public EntityDetailProtoDTO createEntityDetailDTO(EntityDetail entityDetail) {
     final EntityTypeProtoEnum entityTypeProto =
