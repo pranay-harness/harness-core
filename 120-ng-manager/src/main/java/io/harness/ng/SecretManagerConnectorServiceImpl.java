@@ -185,9 +185,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
                             .and(ConnectorKeys.identifier)
                             .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
 
-    Query query = new Query(criteria);
     Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
-    connectorRepository.update(query, update, ChangeType.NONE, projectIdentifier, orgIdentifier, accountIdentifier);
+    connectorRepository.update(criteria, update, ChangeType.NONE, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override

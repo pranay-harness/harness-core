@@ -26,8 +26,8 @@ public interface ConnectorCustomRepository {
   Page<Connector> findAll(
       Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier);
 
-  Connector update(Query query, Update update, ChangeType changeType, String projectIdentifier, String orgIdentifier,
-      String accountIdentifier);
+  Connector update(Criteria criteria, Update update, ChangeType changeType, String projectIdentifier,
+      String orgIdentifier, String accountIdentifier);
 
   UpdateResult updateMultiple(Query query, Update update);
 

@@ -32,4 +32,6 @@ public class SampleBean1 implements UuidAware, PersistentEntity, GitSyncableEnti
   String identifier;
   String name;
   String objectIdOfYaml;
+  Boolean isFromDefaultBranch;
+  String yamlGitConfigId;
 }

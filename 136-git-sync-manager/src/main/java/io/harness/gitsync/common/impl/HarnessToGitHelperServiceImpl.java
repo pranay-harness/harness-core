@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -55,6 +56,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   @Override
   public InfoForGitPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
       EntityReference entityReference, EntityType entityType) {
+    final InfoForGitPush.InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
     final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
         entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
     final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType);
@@ -62,26 +64,13 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       if (filePath != null) {
         if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
           throw new InvalidRequestException("Incorrect file path");
-        } else {
-          // todo(abhinav): Set is default based on entity.
-          return InfoForGitPush.builder()
-              .scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
-              .filePath(filePath)
-              .branch(branch)
-              .isDefault(true)
-              .yamlGitConfigId(yamlGitConfig.getIdentifier())
-              .accountId(accountId)
-              .orgIdentifier(entityReference.getOrgIdentifier())
-              .projectIdentifier(entityReference.getProjectIdentifier())
-              .build();
         }
       }
     }
-    return InfoForGitPush.builder()
-        .scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
+    return infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
         .filePath(filePath)
         .branch(branch)
-        .isDefault(true)
+        .isDefault(branch.equals(yamlGitConfig.getBranch()))
         .yamlGitConfigId(yamlGitConfig.getIdentifier())
         .accountId(accountId)
         .orgIdentifier(entityReference.getOrgIdentifier())
@@ -91,9 +80,10 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   private ScmConnector getDecryptedScmConnector(String accountId, YamlGitConfigDTO yamlGitConfig) {
     final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
-    final String identifier = IdentifierRefHelper.getIdentifier(gitConnectorId);
-    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(
-        accountId, yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), identifier);
+    final IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitConnectorId, accountId,
+        yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), null);
+    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountId,
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     return connectorResponseDTO
         .map(connector
             -> decryptScmApiAccess.decryptScmApiAccess((ScmConnector) connector.getConnector().getConnectorConfig(),

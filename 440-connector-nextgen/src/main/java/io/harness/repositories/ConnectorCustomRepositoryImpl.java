@@ -2,9 +2,6 @@ package io.harness.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
@@ -48,20 +45,19 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public Page<Connector> findAll(
       Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    Query query = new Query(criteria).with(pageable);
-    List<Connector> connectors =
-        gitAwarePersistence.find(query, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+    List<Connector> connectors = gitAwarePersistence.find(
+        criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
     return PageableExecutionUtils.getPage(connectors, pageable,
         ()
-            -> gitAwarePersistence.count(Query.of(query).limit(-1).skip(-1), projectIdentifier, orgIdentifier,
-                accountIdentifier, Connector.class));
+            -> gitAwarePersistence.count(
+                criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class));
   }
 
   @Override
-  public Connector update(Query query, Update update, ChangeType changeType, String projectIdentifier,
+  public Connector update(Criteria criteria, Update update, ChangeType changeType, String projectIdentifier,
       String orgIdentifier, String accountIdentifier) {
     return gitAwarePersistence.findAndModify(
-        query, update, changeType, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+        criteria, update, changeType, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
   }
 
   @Override
@@ -77,21 +73,18 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier,
       String projectIdentifier, String orgIdentifier, String accountIdentifier, boolean notDeleted) {
-    return Optional
-        .ofNullable(gitAwarePersistence.find(query(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier)
-                                                       .is(fullyQualifiedIdentifier)
-                                                       .and(ConnectorKeys.deleted)
-                                                       .is(!notDeleted))
-                                                 .limit(1),
-            projectIdentifier, orgIdentifier, accountIdentifier, Connector.class))
-        .map(l -> isEmpty(l) ? null : l.get(0));
+    return gitAwarePersistence.findOne(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier)
+                                           .is(fullyQualifiedIdentifier)
+                                           .and(ConnectorKeys.deleted)
+                                           .is(!notDeleted),
+        projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
   }
 
   @Override
   public boolean existsByFullyQualifiedIdentifier(
       String fullyQualifiedIdentifier, String projectIdentifier, String orgIdentifier, String accountId) {
     return gitAwarePersistence.exists(
-        query(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier)), projectIdentifier,
+        Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier), projectIdentifier,
         orgIdentifier, accountId, Connector.class);
   }
 

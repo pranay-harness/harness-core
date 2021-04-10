@@ -55,7 +55,8 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
           .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
           .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
           .setAccountId(infoForPush.getAccountId())
-          .setYamlGitConfigId(infoForPush.getYamlGitConfigId());
+          .setYamlGitConfigId(infoForPush.getYamlGitConfigId())
+          .setIsDefault(infoForPush.isDefault());
 
     } catch (WingsException e) {
       final ByteString exceptionBytes =

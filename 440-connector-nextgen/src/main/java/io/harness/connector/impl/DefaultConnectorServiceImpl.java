@@ -2,7 +2,6 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
-import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -80,7 +79,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
@@ -514,8 +512,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       criteria.and(ConnectorKeys.fullyQualifiedIdentifier).is(fqn);
       Update update = new Update();
       update.set(ConnectorKeys.heartbeatPerpetualTaskId, perpetualTaskId);
-      connectorRepository.update(new Query(criteria), update, ChangeType.NONE, connectorProjectIdentifier,
-          connectorOrgIdentifier, accountIdentifier);
+      connectorRepository.update(
+          criteria, update, ChangeType.NONE, connectorProjectIdentifier, connectorOrgIdentifier, accountIdentifier);
     } catch (Exception ex) {
       log.info("{} Exception while saving perpetual task id for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
           String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,
