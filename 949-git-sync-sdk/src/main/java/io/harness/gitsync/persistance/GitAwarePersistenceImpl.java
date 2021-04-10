@@ -26,6 +26,7 @@ import io.harness.ng.core.utils.NGYamlUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,8 +55,14 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    updateCriteriaIfGitSyncEnabled(criteria, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
-    Query query = new Query(criteria).with(pageable).limit(-1).skip(-1);
+    final Criteria gitSyncCriteria =
+        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query = new Query()
+                      .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
+                      .with(pageable)
+                      .limit(-1)
+                      .skip(-1);
 
     // todo(abhinav): do we have to do anything extra if git sync is not there?
     return mongoTemplate.count(query, entityClass);
@@ -71,30 +78,36 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(@NotNull Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    updateCriteriaIfGitSyncEnabled(criteria, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    final Criteria gitSyncCriteria =
+        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
     // todo(abhinav): do we have to do anything extra if git sync is not there?
-    Query query = new Query(criteria).with(pageable);
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query = new Query()
+                      .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
+                      .with(pageable);
     return mongoTemplate.find(query, entityClass);
   }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Criteria criteria, Update update,
       ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    updateCriteriaIfGitSyncEnabled(criteria, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
-    Query query = new Query(criteria);
+    final Criteria gitSyncCriteria =
+        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
     // todo(abhinav): do we have to do anything extra if git sync is not there?
     final B object = mongoTemplate.findOne(query, entityClass);
     if (object == null) {
       return null;
     }
-    return update(criteria, update, changeType, projectIdentifier, orgIdentifier, accountId, entityClass);
+    return update(query, update, changeType, projectIdentifier, orgIdentifier, accountId, entityClass);
   }
 
   // In this method it is assumed that project id, org id and account id will not be updated for the entity and criteria
   // object has been updated.
-  private <B extends GitSyncableEntity, Y extends YamlDTO> B update(Criteria criteria, Update update,
-      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    Query query = new Query(criteria);
+  private <B extends GitSyncableEntity, Y extends YamlDTO> B update(Query query, Update update, ChangeType changeType,
+      String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     // todo(abhinav): do we have to do anything extra if git sync is not there?
     final B objectToUpdate = mongoTemplate.findOne(query, entityClass);
     if (objectToUpdate == null) {
@@ -131,14 +144,17 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    updateCriteriaIfGitSyncEnabled(criteria, projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    final Criteria gitSyncCriteria =
+        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
     // todo(abhinav): do we have to do anything extra if git sync is not there?
-    Query query = new Query(criteria);
     return mongoTemplate.exists(query, entityClass);
   }
 
-  private void updateCriteriaIfGitSyncEnabled(@NotNull Criteria criteria, String projectIdentifier,
-      String orgIdentifier, String accountId, EntityType entityType) {
+  private Criteria updateCriteriaIfGitSyncEnabled(
+      String projectIdentifier, String orgIdentifier, String accountId, EntityType entityType) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       //
       final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
@@ -146,15 +162,16 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
           || gitBranchInfo.getYamlGitConfigId().equals(GitSyncConstants.DEFAULT_BRANCH)
           || gitBranchInfo.getBranch().equals(GitSyncConstants.DEFAULT_BRANCH)) {
-        criteria.orOperator(
-            Criteria.where("isFromDefaultBranch").is(true), Criteria.where("isFromDefaultBranch").exists(false));
+        return new Criteria().andOperator(new Criteria().orOperator(
+            Criteria.where("isFromDefaultBranch").is(true), Criteria.where("isFromDefaultBranch").exists(false)));
       } else {
         objectId = gitBranchingHelper.getObjectIdForYamlGitConfigBranchAndScope(gitBranchInfo.getYamlGitConfigId(),
             gitBranchInfo.getBranch(), projectIdentifier, orgIdentifier, accountId, entityType);
         // todo(abhinav): find way to not hardcode objectId;
-        criteria.and("objectId").is(objectId);
+        return new Criteria().and("objectId").is(objectId);
       }
     }
+    return new Criteria();
   }
 
   @Override
