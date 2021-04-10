@@ -19,7 +19,9 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 
 import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
@@ -59,6 +61,7 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class AuthenticationManager {
