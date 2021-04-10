@@ -127,9 +127,6 @@ def junit_package_test_suites(directory, srcs):
 
         code_filepath = directory + "/" + test_class + ".java"
 
-        if (hash(code_filepath) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
-            continue
-
         suite = package + ".AllTests" + index + "-gen"
         suites[suite] = {
             SUITE_CODE_FILEPATH: code_filepath,
@@ -150,6 +147,9 @@ EOF""" % code,
     return suites
 
 def junit_package_test(combined_tests_target_index, package, index, test_class):
+    if (hash(package) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
+        return
+
     native.java_test(
         name = package + ".tests" + index,
         test_class = package + "." + test_class,

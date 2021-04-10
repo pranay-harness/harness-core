@@ -4,7 +4,10 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/generated/**/*.java",
+    ]),
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",

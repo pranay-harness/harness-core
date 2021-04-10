@@ -21,7 +21,7 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef("", request.GetBranch())
+	ref, err := gitclient.GetValidRef(*request.Provider, "", request.GetBranch())
 	if err != nil {
 		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", *request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
@@ -77,7 +77,7 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(request.GetRef(), request.GetBranch())
+	ref, err := gitclient.GetValidRef(*request.Provider, request.GetRef(), request.GetBranch())
 	if err != nil {
 		log.Errorw("ListCommits failure, bad ref/branch", "provider", *request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err

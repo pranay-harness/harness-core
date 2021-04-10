@@ -235,7 +235,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
         resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
             identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     if (!resourceGroupOpt.isPresent() && identifier.equals(DEFAULT_RESOURCE_GROUP_IDENTIFIER)) {
-      Optional.ofNullable(createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
+      return Optional.ofNullable(createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
   }
@@ -349,9 +349,9 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                             .is(resourcePrimaryKey.getAccountIdentifier())
                             .and(ResourceGroupKeys.orgIdentifier)
                             .is(resourcePrimaryKey.getOrgIdentifier())
-                            .and(ResourceGroupKeys.deleted)
                             .and(ResourceGroupKeys.projectIdentifier)
                             .is(resourcePrimaryKey.getProjectIdentifer())
+                            .and(ResourceGroupKeys.deleted)
                             .is(false);
 
     if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {

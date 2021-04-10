@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -351,6 +352,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
   }
 

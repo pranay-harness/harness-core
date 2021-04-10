@@ -1,7 +1,9 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -27,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @YamlSchemaIgnoreSubtype
 @TypeAlias("CleanupStepInfo")
+@OwnedBy(CI)
 public class CleanupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
@@ -61,11 +64,6 @@ public class CleanupStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   public int getRetry() {

@@ -15,7 +15,6 @@ public class K8sDeleteStepInfoVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    K8sDeleteStepInfo k8sScaleStepInfo = (K8sDeleteStepInfo) originalElement;
-    return K8sDeleteStepInfo.infoBuilder().identifier(k8sScaleStepInfo.getIdentifier()).build();
+    return K8sDeleteStepInfo.infoBuilder().build();
   }
 }

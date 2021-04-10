@@ -109,11 +109,6 @@ public class RunTestsStepInfo implements CIStepInfo {
   }
 
   @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
   public StepType getStepType() {
     return STEP_TYPE;
   }

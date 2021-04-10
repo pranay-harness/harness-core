@@ -235,7 +235,7 @@ public class NextGenModule extends AbstractModule {
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 

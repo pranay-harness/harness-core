@@ -1,11 +1,13 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -35,6 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Plugin")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("pluginStepInfo")
+@OwnedBy(CI)
 public class PluginStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
 
@@ -81,11 +84,6 @@ public class PluginStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
