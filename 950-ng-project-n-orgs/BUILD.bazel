@@ -10,7 +10,6 @@ java_library(
     deps = [
         "//:lombok",
         "//940-notification-client:module",
-        "//948-access-control-admin-client:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
