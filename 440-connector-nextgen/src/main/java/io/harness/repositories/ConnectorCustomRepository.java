@@ -44,10 +44,4 @@ public interface ConnectorCustomRepository {
   Connector save(Connector objectToSave, ChangeType changeType);
 
   Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType);
-  //
-  //  Connector save(Connector objectToSave, ConnectorDTO yaml);
-  //
-  //  Connector save(Connector objectToSave, ChangeType changeType);
-  //
-  //  Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType);
 }
