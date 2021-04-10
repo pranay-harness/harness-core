@@ -1491,7 +1491,7 @@ maven_install(
         "commons-digester:commons-digester:2.1",
         "commons-io:commons-io:2.6",
         "commons-lang:commons-lang:2.3",
-        "commons-logging:commons-logging:1.1.1",
+        "commons-logging:commons-logging:1.2",
         "commons-net:commons-net:3.6",
         "commons-pool:commons-pool:1.5.4",
         "commons-validator:commons-validator:1.7",
