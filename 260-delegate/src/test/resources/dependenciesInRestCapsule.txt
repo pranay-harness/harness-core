@@ -142,10 +142,10 @@ com.google.guava:guava:jar:21.0
 com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava
 com.google.http-client:google-http-client-apache-v2:jar:1.38.0
 com.google.http-client:google-http-client-appengine:jar:1.36.0
-com.google.http-client:google-http-client-jackson2:jar:1.34.1
+com.google.http-client:google-http-client-jackson2:jar:1.38.0
 com.google.http-client:google-http-client-jackson:jar:1.20.0
 com.google.http-client:google-http-client-protobuf:jar:1.20.0
-com.google.http-client:google-http-client:jar:1.34.1
+com.google.http-client:google-http-client:jar:1.38.0
 com.google.inject.extensions:guice-assistedinject:jar:4.2.3
 com.google.inject.extensions:guice-multibindings:jar:4.2.3
 com.google.inject:guice:jar:4.2.3

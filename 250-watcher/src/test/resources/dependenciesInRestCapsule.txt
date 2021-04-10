@@ -49,8 +49,8 @@ com.google.code.findbugs:jsr305:jar:3.0.2
 com.google.code.gson:gson:jar:2.8.0
 com.google.errorprone:error_prone_annotations:jar:2.4.0
 com.google.guava:guava:jar:21.0
-com.google.http-client:google-http-client-jackson2:jar:1.36.0
-com.google.http-client:google-http-client:jar:1.36.0
+com.google.http-client:google-http-client-jackson2:jar:1.38.0
+com.google.http-client:google-http-client:jar:1.38.0
 com.google.inject.extensions:guice-multibindings:jar:4.2.3
 com.google.inject:guice:jar:4.2.3
 com.google.j2objc:j2objc-annotations:jar:1.3
