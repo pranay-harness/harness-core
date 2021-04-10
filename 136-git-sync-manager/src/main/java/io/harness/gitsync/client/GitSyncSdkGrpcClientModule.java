@@ -3,10 +3,10 @@ package io.harness.gitsync.client;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.Microservice;
-import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitToHarnessServiceGrpc;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub;
+import io.harness.gitsync.sdk.GitSyncGrpcConstants;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
 
@@ -67,7 +67,8 @@ public class GitSyncSdkGrpcClientModule extends AbstractModule {
       @Named("GitSyncGrpcClientConfigs") GitSyncClientConfigs clientConfigs) throws SSLException {
     Map<Microservice, GitToHarnessServiceBlockingStub> map = new HashMap<>();
     map.put(GmsClientConstants.moduleType,
-        GitToHarnessServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("gmsSdkInternal").build()));
+        GitToHarnessServiceGrpc.newBlockingStub(
+            InProcessChannelBuilder.forName(GitSyncGrpcConstants.GitSyncSdkInternalService).build()));
     for (Map.Entry<Microservice, GrpcClientConfig> entry : clientConfigs.getGitSyncGrpcClients().entrySet()) {
       map.put(entry.getKey(), GitToHarnessServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
