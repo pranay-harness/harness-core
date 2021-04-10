@@ -26,8 +26,8 @@ public interface GitAwarePersistence {
   /**
    * Count returns count with limit -1 and skip -1
    **/
-  <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, Pageable pageable,
-      String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
+  <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, String projectIdentifier,
+      String orgIdentifier, String accountId, Class<B> entityClass);
 
   <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);

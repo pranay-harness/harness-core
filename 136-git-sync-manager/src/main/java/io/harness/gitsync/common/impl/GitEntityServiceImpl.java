@@ -134,7 +134,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
-        .entityGitPath(getEntityPath(entity))
+        .entityGitPath(entity.getEntityGitPath())
         .accountId(entity.getAccountId())
         .build();
   }
@@ -223,7 +223,7 @@ public class GitEntityServiceImpl implements GitEntityService {
     final Optional<GitFileLocation> gitFileLocation =
         gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
             filePath, yamlGitConfig.getIdentifier(), accountId);
-
+    // todo(abhinav): changeisDefault to value which comes when
     final GitFileLocation fileLocation = GitFileLocation.builder()
                                              .accountId(accountId)
                                              .entityIdentifier(entityDetail.getEntityRef().getIdentifier())
@@ -239,6 +239,8 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityIdentifierFQN(entityDetail.getEntityRef().getFullyQualifiedName())
                                              .entityReference(entityDetail.getEntityRef())
                                              .lastCommitId(commitId)
+                                             .gitSyncConfigId(yamlGitConfig.getIdentifier())
+                                             .isDefault(true)
                                              .build();
     gitFileLocation.ifPresent(location -> fileLocation.setUuid(location.getUuid()));
     gitFileLocationRepository.save(fileLocation);

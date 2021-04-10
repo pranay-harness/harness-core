@@ -53,14 +53,13 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Inject private GitSyncMsvcHelper gitSyncMsvcHelper;
 
   @Override
-  public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, Pageable pageable,
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     final Criteria gitSyncCriteria =
         updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
-                      .with(pageable)
                       .limit(-1)
                       .skip(-1);
 
@@ -71,8 +70,14 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final List<B> list = find(criteria, null, projectIdentifier, orgIdentifier, accountId, entityClass);
-    return Optional.ofNullable(list).map(l -> isEmpty(l) ? null : l.get(0));
+    final Criteria gitSyncCriteria =
+        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, getEntityType(entityClass));
+    // todo(abhinav): do we have to do anything extra if git sync is not there?
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
+    final B object = mongoTemplate.findOne(query, entityClass);
+    return Optional.ofNullable(object);
   }
 
   @Override

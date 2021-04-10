@@ -50,7 +50,7 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
     return PageableExecutionUtils.getPage(connectors, pageable,
         ()
             -> gitAwarePersistence.count(
-                criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class));
+                criteria, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class));
   }
 
   @Override
