@@ -102,10 +102,10 @@ com.google.api.grpc:proto-google-cloud-secretmanager-v1:jar:1.2.8
 com.google.api.grpc:proto-google-cloud-secretmanager-v1beta1:jar:1.2.8
 com.google.api.grpc:proto-google-common-protos:jar:1.17.0
 com.google.api.grpc:proto-google-iam-v1:jar:0.13.0
-com.google.api:api-common:jar:1.8.1
-com.google.api:gax-grpc:jar:1.57.1
+com.google.api:api-common:jar:1.10.1
+com.google.api:gax-grpc:jar:1.60.1
 com.google.api:gax-httpjson:jar:0.70.1
-com.google.api:gax:jar:1.53.1
+com.google.api:gax:jar:1.60.1
 com.google.apis:google-api-services-bigquery:jar:v2-rev20191211-1.30.3
 com.google.apis:google-api-services-cloudbilling:jar:v1-rev56-1.25.0
 com.google.apis:google-api-services-cloudcommerceprocurement:jar:v1-rev20190531-1.25.0
@@ -117,8 +117,8 @@ com.google.apis:google-api-services-logging:jar:v2-rev631-1.25.0
 com.google.apis:google-api-services-monitoring:jar:v3-rev477-1.25.0
 com.google.apis:google-api-services-servicecontrol:jar:v1-rev142-1.25.0
 com.google.apis:google-api-services-storage:jar:v1-rev131-1.22.0
-com.google.auth:google-auth-library-credentials:jar:0.18.0
-com.google.auth:google-auth-library-oauth2-http:jar:0.20.0
+com.google.auth:google-auth-library-credentials:jar:0.22.2
+com.google.auth:google-auth-library-oauth2-http:jar:0.22.2
 com.google.auto.value:auto-value-annotations:jar:1.7
 com.google.cloud.datastore:datastore-v1-proto-client:jar:1.6.0
 com.google.cloud:google-cloud-bigquery:jar:1.106.0
