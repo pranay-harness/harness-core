@@ -4,6 +4,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
@@ -47,5 +48,20 @@ public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService
                        .projectIdentifier(entity.getProjectIdentifier())
                        .build())
         .build();
+  }
+
+  @Override
+  public ConnectorDTO save(ConnectorDTO yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public ConnectorDTO update(ConnectorDTO yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public boolean delete(EntityReference entityReference) {
+    return false;
   }
 }

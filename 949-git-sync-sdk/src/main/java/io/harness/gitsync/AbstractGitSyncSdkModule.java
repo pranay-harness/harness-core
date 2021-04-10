@@ -2,6 +2,8 @@ package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
 import io.harness.SCMGrpcClientModule;
@@ -34,8 +36,11 @@ import com.google.inject.name.Names;
 import com.google.inject.util.Types;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
@@ -133,5 +138,14 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   @Named("git-msvc")
   public AuthorizationServiceHeader getAuthorizationServiceHeader() {
     return getGitSyncSdkConfiguration().getServiceHeader();
+  }
+
+  @Provides
+  @Singleton
+  @Named("GitSyncEntityConfigurations")
+  public Map<EntityType, GitSyncEntitiesConfiguration> getGitSyncEntityConfigurations() {
+    return emptyIfNull(getGitSyncSdkConfiguration().getGitSyncEntitiesConfiguration())
+        .stream()
+        .collect(Collectors.toMap(GitSyncEntitiesConfiguration::getEntityType, Function.identity()));
   }
 }

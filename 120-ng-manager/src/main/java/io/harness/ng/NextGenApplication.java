@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.EntityType.CONNECTORS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
@@ -237,9 +238,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
-    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(CONNECTORS);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .entityType(CONNECTORS)
                                           .yamlClass(ConnectorDTO.class)
                                           .entityClass(Connector.class)
                                           .entityHelperClass(ConnectorGitSyncHelper.class)
