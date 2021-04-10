@@ -3,11 +3,12 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kamva/mgm/v3"
 	"github.com/mattn/go-zglob"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/product/ci/addon/ti"
-	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -372,24 +373,206 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 	// query for partial callgraph for the filter -(repo + branch) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
-	r1, err := mdb.Database.Collection("nodes").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
+	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for"+
+				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	// this will delete all the relations create by older commits for current pull request
-	r2, err := mdb.Database.Collection("relations").DeleteMany(context.TODO(), bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}, &options.DeleteOptions{})
+	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to delete old records from relations collection while uploading partial callgraph for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
+				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection and %d records from relns collection", r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+	mdb.Log.Infow(
+		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
+			r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
 	// dump new relations and nodes to db
-	mdb.Log.Infow(fmt.Sprintf("writing %d records in nodes collections and %d records in relations collection", len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
-	mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
-	mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
+	mdb.Log.Infow(
+		fmt.Sprintf("writing %d records in nodes and %d records in relations collection",
+			len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+	_, err = mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to write partial cg in nodes collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+	}
+	_, err = mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
+	if err != nil {
+		return errors.Wrap(
+			err,
+			fmt.Sprintf("failed to write partial cg in relns collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+	}
 	return nil
 }
 
+// todo(Aman): Figure out a way to automatically update updatedBy and updatedAt fields. Manually updating it is not scalable.
+// todo aman -- ["vcs_info.repo" : repo] this filter needs to be added to all the queries. Currently it will not work as we
+// don't have repo and branch populated in master callgraph uploaded in db
+// MergePartialCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
+// It also cleans up the nodes which have been deleted in the PR from nodes and relations collections.
 func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
-	fmt.Println("running")
+	commit := req.Diff.Sha
+	branch := req.TargetBranch
+	repo := req.Repo
+	files := req.Diff.Files
+
+	// get all the nids which are already present in dest branch.
+	var allNodes []Node
+	filter := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, filter)
+	if err != nil {
+		return formatError(err, "failed to get all records in nodes collection", repo, branch, commit)
+	}
+	if err = cur.All(ctx, &allNodes); err != nil {
+		return formatError(err, "failed to iterate on records using cursor in nodes collection", repo, branch, commit)
+	}
+	var allNIds []int
+	for _, v := range allNodes {
+		allNIds = append(allNIds, v.Id)
+	}
+
+	// delete nodes from source branch which are already present in dest branch
+	delFilter := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "id": bson.M{"$in": allNIds}}
+	_, err = mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
+	}
+
+	// move nodes from destBranch to sourceBranch
+	filter = bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$nin": allNIds}}
+	update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+	_, err = mdb.Database.Collection(nodeColl).UpdateMany(ctx, filter, update)
+	if err != nil {
+		return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
+	}
+
+	// get all the source ids which are already present in dest branch.
+	var allRel []Relation
+	filter = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
+	if err != nil {
+		return formatError(err, "failed to get all records in relations collection", repo, branch, commit)
+	}
+	if err = cur.All(ctx, &allRel); err != nil {
+		return formatError(err, "failed to get all records in relations collection", repo, branch, commit)
+	}
+	var allRIds []int
+	relMap := make(map[int]Relation)
+	for _, v := range allRel {
+		allRIds = append(allRIds, v.Source)
+		relMap[v.Source] = v
+	}
+
+	// delete relations from source branch which are already present in dest branch
+	delFilter = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "source": bson.M{"$in": allRIds}}
+	_, err = mdb.Database.Collection(relnsColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return formatError(err, "failed to delete records in relations collection for", repo, branch, commit)
+	}
+
+	// merge relations from destBranch to sourceBranch
+	relToMerge := []Relation{}
+	filter = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$nin": allRIds}}
+	cur, err = mdb.Database.Collection(relnsColl).Find(ctx, filter)
+	if err != nil {
+		return formatError(err, "failed to get records in relations collection", repo, branch, commit)
+	}
+	if err = cur.All(ctx, &relToMerge); err != nil {
+		return formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
+	}
+	var operations []mongo.WriteModel
+	for _, relation := range relToMerge {
+		operation := mongo.NewUpdateOneModel()
+		operation.SetFilter(bson.M{"source": relation.Source})
+		operation.SetUpdate(bson.M{"$set": bson.M{"tests": merge(relation.Tests, relMap[relation.Source].Tests)}})
+		operations = append(operations, operation)
+	}
+	_, err = mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+	if err != nil {
+		return formatError(err, "failed to merge relations collection", repo, branch, commit)
+	}
+
+	// handle deletion of files and corresponding entries from nodes and relations table.
+	deletedF := []string{}
+	for _, f := range files {
+		if f.Status == types.FileDeleted {
+			deletedF = append(deletedF, f.Name)
+		}
+	}
+	n, err := utils.ParseFileNames(deletedF)
+	// condition for fetching nids of nodes which are deleted
+	cond := []interface{}{}
+	for _, v := range n {
+		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class})
+		//cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
+	}
+	filter = bson.M{"$or": cond}
+	cur, err = mdb.Database.Collection(nodeColl).Find(ctx, filter, &options.FindOptions{})
+	if err != nil {
+		return formatError(err, "failed to query nodes coll for deleted files", repo, branch, commit)
+	}
+	nids := []int{} // nids is list of ids of nodes which are deleted
+	for cur.Next(ctx) {
+		var node Node
+		err = cur.Decode(&node)
+		if err != nil {
+			return formatError(err, "failed to fetch node for deleted files", repo, branch, commit)
+		}
+		nids = append(nids, node.Id)
+	}
+	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", nids), "branch", branch, "repo", repo)
+
+	// delete nodes with id in nids
+	delFilter = bson.M{"id": bson.M{"$in": nids}}
+	r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return formatError(err, fmt.Sprintf("failed to delete records from nodes coll nids: %v", nids), repo, branch, commit)
+	}
+	// delete relations with source in nids
+	delFilter = bson.M{"source": bson.M{"$in": nids}}
+	r1, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, delFilter, &options.DeleteOptions{})
+	if err != nil {
+		return formatError(err, fmt.Sprintf("failed to delete records from relns coll nids: %v", nids), repo, branch, commit)
+	}
+	mdb.Log.Infow(fmt.Sprintf("deleted %d, %d records from nodes, relations collection for deleted files",
+		r.DeletedCount, r1.DeletedCount), "branch", branch, "repo", repo)
+	// update tests fields which containers nids in relations
+	filter = bson.M{"tests": bson.M{"$in": nids}}
+	update = bson.M{"$pull": bson.M{"tests": bson.M{"$in": nids}}}
+	_, err = mdb.Database.Collection(relnsColl).UpdateMany(ctx, filter, update)
+	if err != nil {
+		return formatError(err, "failed to get records in relations collection", repo, branch, commit)
+	}
 	return nil
+}
+
+func formatError(err error, msg, repo, branch, commit string) error {
+	return errors.Wrap(
+		err,
+		fmt.Sprintf("%s, repo: %s, in branch: %s, commit: %v",
+			msg, repo, branch, commit))
+}
+
+func merge(tests []int, tests2 []int) []int {
+	relMap := make(map[int]bool)
+	for _, test := range tests {
+		relMap[test] = true
+	}
+	for _, test := range tests2 {
+		relMap[test] = true
+	}
+	keys := make([]int, len(relMap))
+	i := 0
+	for k := range relMap {
+		keys[i] = k
+		i++
+	}
+	return keys
 }

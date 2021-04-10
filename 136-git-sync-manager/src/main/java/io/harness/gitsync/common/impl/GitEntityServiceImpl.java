@@ -79,9 +79,10 @@ public class GitEntityServiceImpl implements GitEntityService {
   public List<GitSyncEntityListDTO> listSummaryByRepoAndBranch(String projectIdentifier, String organizationIdentifier,
       String accountIdentifier, ModuleType moduleType, String searchTerm, String gitSyncConfigIdentifier, String branch,
       List<EntityType> entityTypeList, int size) {
-    return gitFileLocationRepository.getByProjectIdAndOrganizationIdAndAccountIdAndRepoUrlAndEntityTypeListAndBranch(
-        projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch, entityTypeList,
-        searchTerm, size);
+    return gitFileLocationRepository
+        .getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
+            projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch,
+            entityTypeList, searchTerm, size);
   }
 
   @Override

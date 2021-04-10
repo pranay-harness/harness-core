@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.plancreator.steps.common.StepSpecParameters;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 
 import java.util.List;
@@ -22,7 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("httpStepParameters")
-public class HttpStepParameters extends HttpBaseStepInfo implements StepSpecParameters {
+public class HttpStepParameters extends HttpBaseStepInfo implements SpecParameters {
   Map<String, Object> outputVariables;
   Map<String, String> headers;
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;

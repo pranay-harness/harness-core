@@ -188,7 +188,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     if (connectorDTO.isPresent()) {
       ConnectorInfoDTO connectorInfo = connectorDTO.get().getConnector();
       if (connectorInfo.getConnectorType() == ConnectorType.GIT) {
-        return connectorDTO.map(connectorResponse -> connectorResponse.getConnector());
+        return connectorDTO.map(ConnectorResponseDTO::getConnector);
       }
     }
     return Optional.empty();

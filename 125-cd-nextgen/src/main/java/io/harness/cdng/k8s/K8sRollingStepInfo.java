@@ -17,7 +17,6 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -35,27 +34,12 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = K8sRollingStepInfoVisitorHelper.class)
 @TypeAlias("k8sRollingStepInfo")
 public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore private String name;
-  @JsonIgnore private String identifier;
-
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepInfo(ParameterField<Boolean> skipDryRun, String name, String identifier) {
+  public K8sRollingStepInfo(ParameterField<Boolean> skipDryRun) {
     super(skipDryRun);
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  public K8sRollingStepInfo(String name, String identifier) {
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

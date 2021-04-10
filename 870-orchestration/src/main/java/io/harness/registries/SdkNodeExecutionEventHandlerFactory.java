@@ -3,8 +3,12 @@ package io.harness.registries;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handlers.AddExecutableResponseEventHandler;
+import io.harness.event.handlers.AdviserEventResponseHandler;
+import io.harness.event.handlers.ErrorEventResponseHandler;
+import io.harness.event.handlers.FacilitateResponseRequestHandler;
 import io.harness.event.handlers.HandleStepResponseEventHandler;
 import io.harness.event.handlers.QueueNodeExecutionEventHandler;
+import io.harness.event.handlers.QueueTaskAndAddExecutableResponseHandler;
 import io.harness.event.handlers.ResumeNodeExecutionResponseEventHandler;
 import io.harness.event.handlers.SdkResponseEventHandler;
 import io.harness.exception.InvalidRequestException;
@@ -29,6 +33,14 @@ public class SdkNodeExecutionEventHandlerFactory {
         return injector.getInstance(HandleStepResponseEventHandler.class);
       case RESUME_NODE_EXECUTION:
         return injector.getInstance(ResumeNodeExecutionResponseEventHandler.class);
+      case HANDLE_FACILITATE_RESPONSE:
+        return injector.getInstance(FacilitateResponseRequestHandler.class);
+      case HANDLE_EVENT_ERROR:
+        return injector.getInstance(ErrorEventResponseHandler.class);
+      case HANDLE_ADVISER_RESPONSE:
+        return injector.getInstance(AdviserEventResponseHandler.class);
+      case QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE:
+        return injector.getInstance(QueueTaskAndAddExecutableResponseHandler.class);
       default:
         throw new InvalidRequestException("Unknown sdkResponseEventType.");
     }

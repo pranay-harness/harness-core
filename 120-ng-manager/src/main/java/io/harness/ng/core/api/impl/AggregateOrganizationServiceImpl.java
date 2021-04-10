@@ -97,13 +97,13 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
 
   private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
       String accountIdentifier, String identifier) {
-    Criteria userOrganizationMapCriteria = Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
-                                               .is(accountIdentifier)
-                                               .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
-                                               .is(identifier)
-                                               .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
-                                               .is(null);
-    List<UserMembership> userMemberships = ngUserService.listUserMemberships(userOrganizationMapCriteria);
+    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
+                                          .is(accountIdentifier)
+                                          .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
+                                          .is(identifier)
+                                          .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
+                                          .is(null);
+    List<UserMembership> userMemberships = ngUserService.listUserMemberships(userMembershipCriteria);
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
     Map<String, UserSearchDTO> userMap = getUserMap(userIds, accountIdentifier);
     List<UserSearchDTO> collaborators = new ArrayList<>(userMap.values());
@@ -195,14 +195,18 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private Map<String, List<UserSearchDTO>> getOrgCollaboratorMap(
       List<UserMembership> userMemberships, Map<String, UserSearchDTO> userMap) {
     Map<String, List<UserSearchDTO>> orgProjectUserMap = new HashMap<>();
-    userMemberships.forEach(userMembership -> userMembership.getScopes().forEach(scope -> {
-      if (!orgProjectUserMap.containsKey(scope.getOrgIdentifier())) {
-        orgProjectUserMap.put(scope.getOrgIdentifier(), new ArrayList<>());
-      }
-      if (userMap.containsKey(userMembership.getUserId())) {
-        orgProjectUserMap.get(scope.getOrgIdentifier()).add(userMap.get(userMembership.getUserId()));
-      }
-    }));
+    userMemberships.forEach(userMembership
+        -> userMembership.getScopes()
+               .stream()
+               .filter(scope -> scope.getOrgIdentifier() != null)
+               .map(UserMembership.Scope::getOrgIdentifier)
+               .distinct()
+               .forEach(orgIdentifier -> {
+                 orgProjectUserMap.computeIfAbsent(orgIdentifier, arg -> new ArrayList<>());
+                 if (userMap.containsKey(userMembership.getUserId())) {
+                   orgProjectUserMap.get(orgIdentifier).add(userMap.get(userMembership.getUserId()));
+                 }
+               }));
     return orgProjectUserMap;
   }
 }

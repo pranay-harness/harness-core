@@ -8,6 +8,8 @@ import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
@@ -18,6 +20,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.TestUtils;
@@ -54,6 +57,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AccountGenerator {
   private static final String adminUserUuid = "lv0euRhKRCyiXWzS7pOg6g";
   private static final String adminUserName = "Admin";
@@ -128,6 +132,7 @@ public class AccountGenerator {
                                         .withUuid(ACCOUNT_ID)
                                         .withAccountName("Harness")
                                         .withCompanyName("Harness")
+                                        .withDefaultExperience(DefaultExperience.CG)
                                         .withLicenseInfo(LicenseInfo.builder()
                                                              .accountType(AccountType.PAID)
                                                              .accountStatus(AccountStatus.ACTIVE)
@@ -193,6 +198,7 @@ public class AccountGenerator {
                     .withUuid(accountId)
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
+                    .withDefaultExperience(DefaultExperience.CG)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)

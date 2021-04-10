@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+Deprecated = True
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",

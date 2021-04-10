@@ -6,10 +6,13 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.event.EventsModule;
@@ -82,6 +85,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -140,6 +144,13 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
   }
 

@@ -1,4 +1,3 @@
-timeout: 10m
 shell: Bash
 onDelegate: true
 source:
