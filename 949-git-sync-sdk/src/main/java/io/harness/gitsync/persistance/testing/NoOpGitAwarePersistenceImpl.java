@@ -1,7 +1,6 @@
 package io.harness.gitsync.persistance.testing;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
@@ -52,8 +51,8 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final List<B> list = find(criteria, null, projectIdentifier, orgIdentifier, accountId, entityClass);
-    return Optional.ofNullable(list).map(l -> isEmpty(l) ? null : l.get(0));
+    final B object = mongoTemplate.findOne(Query.query(criteria), entityClass);
+    return Optional.ofNullable(object);
   }
 
   @Override

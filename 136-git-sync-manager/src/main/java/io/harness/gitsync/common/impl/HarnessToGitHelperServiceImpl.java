@@ -15,6 +15,7 @@ import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.common.beans.InfoForGitPush;
+import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
@@ -56,7 +57,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   @Override
   public InfoForGitPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
       EntityReference entityReference, EntityType entityType) {
-    final InfoForGitPush.InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
+    final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
     final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
         entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
     final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType);
