@@ -1928,7 +1928,7 @@ maven_install(
         "org.springframework:spring-jcl:5.2.9.RELEASE",
         "org.springframework:spring-tx:5.2.9.RELEASE",
         "org.springframework:spring-web:5.2.9.RELEASE",
-        "org.threeten:threetenbp:1.4.1",
+        "org.threeten:threetenbp:1.5.0",
         "org.webjars.npm:viz.js-for-graphviz-java:2.1.3",
         "org.xmlunit:xmlunit-core:2.3.0",
         "org.xmlunit:xmlunit-matchers:2.3.0",
