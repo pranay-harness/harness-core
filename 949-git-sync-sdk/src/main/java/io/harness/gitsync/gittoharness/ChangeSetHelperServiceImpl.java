@@ -16,6 +16,7 @@ import io.harness.ng.core.event.EventProtoToEntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -24,11 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class ChangeSetHelperServiceImpl implements ChangeSetHelperService {
+  @Inject
+  @Named("GitSyncEntityConfigurations")
   Map<EntityType, GitSyncEntitiesConfiguration> gitSyncEntityConfigurationsMap;
-  ObjectMapper objectMapper;
-  Map<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMap;
+  @Inject ObjectMapper objectMapper;
+  @Inject Map<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMap;
 
   @Override
   public void process(ChangeSet changeSet) {

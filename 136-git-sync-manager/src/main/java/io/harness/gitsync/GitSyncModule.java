@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
@@ -64,6 +65,7 @@ public class GitSyncModule extends AbstractModule {
   @Override
   protected void configure() {
     install(SCMJavaClientModule.getInstance());
+    install(GitSyncSdkGrpcClientModule.getInstance());
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);

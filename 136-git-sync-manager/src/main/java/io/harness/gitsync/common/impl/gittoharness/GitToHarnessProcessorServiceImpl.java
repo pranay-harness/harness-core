@@ -28,17 +28,16 @@ import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(DX)
 public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorService {
@@ -47,6 +46,17 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   Map<EntityType, Microservice> entityTypeMicroserviceMap;
   GitEntityService gitEntityService;
   Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient;
+
+  @Inject
+  public GitToHarnessProcessorServiceImpl(GitSyncConnectorHelper gitSyncConnectorHelper, ScmClient scmClient,
+      Map<EntityType, Microservice> entityTypeMicroserviceMap, GitEntityService gitEntityService,
+      Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient) {
+    this.gitSyncConnectorHelper = gitSyncConnectorHelper;
+    this.scmClient = scmClient;
+    this.entityTypeMicroserviceMap = entityTypeMicroserviceMap;
+    this.gitEntityService = gitEntityService;
+    this.gitToHarnessServiceGrpcClient = gitToHarnessServiceGrpcClient;
+  }
 
   @Override
   public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId) {
