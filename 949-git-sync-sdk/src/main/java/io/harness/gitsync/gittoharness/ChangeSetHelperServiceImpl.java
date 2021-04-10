@@ -39,17 +39,21 @@ public class ChangeSetHelperServiceImpl implements ChangeSetHelperService {
     EntityGitPersistenceHelperService entityGitPersistenceHelperService =
         gitPersistenceHelperServiceMap.get(entityHelperClass.getCanonicalName());
     String yaml = changeSet.getYaml();
-    // todo @deepak: Write the method to get the git sync helper class
     switch (changeSet.getChangeType()) {
       case ADD:
         Class<? extends YamlDTO> yamlClass = gitSyncEntitiesConfiguration.getYamlClass();
         YamlDTO yamlDTO = convertStringToDTO(yaml, yamlClass);
         entityGitPersistenceHelperService.save(yamlDTO, changeSet.getAccountId());
+        break;
       case DELETE:
         // todo @deepak : add the function to get the entity reference for this connector
         entityGitPersistenceHelperService.delete(null);
+        break;
       case MODIFY:
-        entityGitPersistenceHelperService.update(null, changeSet.getAccountId());
+        Class<? extends YamlDTO> yamlClassForUpdate = gitSyncEntitiesConfiguration.getYamlClass();
+        YamlDTO updatedYamlDTO = convertStringToDTO(yaml, yamlClassForUpdate);
+        entityGitPersistenceHelperService.update(updatedYamlDTO, changeSet.getAccountId());
+        break;
       case UNRECOGNIZED:
         throw new UnexpectedException(String.format("Got unrecognized change set type for changeset [{}]", changeSet));
     }

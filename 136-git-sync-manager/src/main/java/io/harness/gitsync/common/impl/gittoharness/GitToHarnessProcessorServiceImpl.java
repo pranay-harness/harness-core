@@ -13,7 +13,9 @@ import io.harness.beans.YamlFileDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.ChangeSet;
+import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.ChangeType;
+import io.harness.gitsync.GitToHarnessServiceGrpc;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
@@ -44,6 +46,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   ScmClient scmClient;
   Map<EntityType, Microservice> entityTypeMicroserviceMap;
   GitEntityService gitEntityService;
+  Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient;
 
   @Override
   public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId) {
@@ -73,8 +76,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent = createMapOfEntityTypeAndFileContent(fileContentsList);
     Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices =
         groupFilesByMicroservices(mapOfEntityTypeAndContent);
-
-    // todo @deepak : Add the logic to call each microservice and get the files processed
+    for (Map.Entry<Microservice, List<ChangeSet>> entry : groupedFilesByMicroservices.entrySet()) {
+      GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub =
+          gitToHarnessServiceGrpcClient.get(entry.getKey());
+      gitToHarnessServiceBlockingStub.process(
+          ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build());
+    }
   }
 
   private List<ChangeSet> convertFileListFromSCMToChangeSetList(

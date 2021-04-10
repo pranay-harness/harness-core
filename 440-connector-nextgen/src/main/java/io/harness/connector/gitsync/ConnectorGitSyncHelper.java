@@ -6,21 +6,31 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
+import io.harness.connector.services.ConnectorService;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.ng.core.EntityDetail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.function.Supplier;
-import lombok.AllArgsConstructor;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.DX)
 public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService<Connector, ConnectorDTO> {
-  private final ConnectorMapper connectorMapper;
+  ConnectorMapper connectorMapper;
+  ConnectorService connectorService;
+
+  @Inject
+  public ConnectorGitSyncHelper(
+      @Named("connectorDecoratorService") ConnectorService connectorService, ConnectorMapper connectorMapper) {
+    this.connectorService = connectorService;
+    this.connectorMapper = connectorMapper;
+  }
 
   @Override
   public Supplier<ConnectorDTO> getYamlFromEntity(Connector entity) {
@@ -52,16 +62,21 @@ public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService
 
   @Override
   public ConnectorDTO save(ConnectorDTO yaml, String accountIdentifier) {
-    return null;
+    ConnectorResponseDTO connectorResponseDTO = connectorService.create(yaml, accountIdentifier);
+    ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
   @Override
   public ConnectorDTO update(ConnectorDTO yaml, String accountIdentifier) {
-    return null;
+    ConnectorResponseDTO connectorResponseDTO = connectorService.update(yaml, accountIdentifier);
+    ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
   @Override
   public boolean delete(EntityReference entityReference) {
-    return false;
+    return connectorService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
+        entityReference.getProjectIdentifier(), entityReference.getIdentifier());
   }
 }

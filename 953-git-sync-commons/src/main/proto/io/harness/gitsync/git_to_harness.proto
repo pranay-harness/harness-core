@@ -10,6 +10,7 @@ import "google/protobuf/wrappers.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
+  rpc process(ChangeSets) returns (ProcessingResponse);
 }
 
 message ChangeSets {
