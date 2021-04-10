@@ -1484,7 +1484,7 @@ maven_install(
         "com.typesafe:config:1.3.4",
         "com.zaxxer:HikariCP-java7:2.4.13",
         "commons-beanutils:commons-beanutils:1.9.4",
-        "commons-cli:commons-cli:1.2",
+        "commons-cli:commons-cli:1.4",
         "commons-codec:commons-codec:1.10",
         "commons-collections:commons-collections:3.2.2",
         "commons-dbcp:commons-dbcp:1.4",
