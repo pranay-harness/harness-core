@@ -104,7 +104,7 @@ com.google.api.grpc:proto-google-common-protos:jar:1.17.0
 com.google.api.grpc:proto-google-iam-v1:jar:0.13.0
 com.google.api:api-common:jar:1.10.1
 com.google.api:gax-grpc:jar:1.60.1
-com.google.api:gax-httpjson:jar:0.70.1
+com.google.api:gax-httpjson:jar:0.74.1
 com.google.api:gax:jar:1.60.1
 com.google.apis:google-api-services-bigquery:jar:v2-rev20191211-1.30.3
 com.google.apis:google-api-services-cloudbilling:jar:v1-rev56-1.25.0
@@ -123,8 +123,8 @@ com.google.auto.value:auto-value-annotations:jar:1.7.4
 com.google.cloud.datastore:datastore-v1-proto-client:jar:1.6.0
 com.google.cloud:google-cloud-bigquery:jar:1.106.0
 com.google.cloud:google-cloud-core-grpc:jar:1.93.7
-com.google.cloud:google-cloud-core-http:jar:1.92.4
-com.google.cloud:google-cloud-core:jar:1.92.4
+com.google.cloud:google-cloud-core-http:jar:1.93.7
+com.google.cloud:google-cloud-core:jar:1.93.7
 com.google.cloud:google-cloud-datastore:jar:1.79.0
 com.google.cloud:google-cloud-iamcredentials:jar:1.0.2
 com.google.cloud:google-cloud-kms:jar:1.32.0
@@ -141,7 +141,7 @@ com.google.guava:failureaccess:jar:1.0.1
 com.google.guava:guava:jar:21.0
 com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava
 com.google.http-client:google-http-client-apache-v2:jar:1.38.0
-com.google.http-client:google-http-client-appengine:jar:1.34.1
+com.google.http-client:google-http-client-appengine:jar:1.36.0
 com.google.http-client:google-http-client-jackson2:jar:1.34.1
 com.google.http-client:google-http-client-jackson:jar:1.20.0
 com.google.http-client:google-http-client-protobuf:jar:1.20.0
