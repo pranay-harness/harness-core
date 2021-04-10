@@ -2,6 +2,8 @@ package io.harness.gitsync.persistance.testing;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.beans.YamlDTO;
@@ -51,7 +53,7 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final B object = mongoTemplate.findOne(Query.query(criteria), entityClass);
+    final B object = mongoTemplate.findOne(query(criteria), entityClass);
     return Optional.ofNullable(object);
   }
 
