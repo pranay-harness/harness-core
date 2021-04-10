@@ -1,7 +1,10 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
@@ -10,6 +13,9 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
+import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -29,7 +35,6 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
@@ -62,6 +67,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
 
@@ -92,11 +98,12 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
             .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
       }
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceTestModule());
+    modules.add(new GitSyncablePersistenceTestModule());
     modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());

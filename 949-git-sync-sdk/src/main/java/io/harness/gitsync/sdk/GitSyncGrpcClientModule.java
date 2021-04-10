@@ -3,6 +3,7 @@ package io.harness.gitsync.sdk;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -58,7 +59,13 @@ public class GitSyncGrpcClientModule extends AbstractModule {
   @Provides
   @Singleton
   public HarnessToGitPushInfoServiceBlockingStub gitToHarnessServiceClient(
-      @Named("GitSyncGrpcClientConfig") GrpcClientConfig clientConfig) throws SSLException {
+      @Named("GitSyncGrpcClientConfig") GrpcClientConfig clientConfig, GitSyncSdkConfiguration config)
+      throws SSLException {
+    //    if (config.getDeployMode() == GitSyncSdkConfiguration.DeployMode.IN_PROCESS) {
+    //      return
+    //      HarnessToGitPushInfoServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(GitSyncGrpcConstants.GitSyncSdkInternalService).build());
+    //    }
+
     return HarnessToGitPushInfoServiceGrpc.newBlockingStub(getChannel(clientConfig));
   }
 }

@@ -1,10 +1,16 @@
 package io.harness.repositories;
 
-import io.harness.annotation.HarnessRepo;
-import io.harness.connector.entities.Connector;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.entities.Connector;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
+
+import org.springframework.data.repository.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-@HarnessRepo
+@GitSyncableHarnessRepo
 @Transactional
-public interface ConnectorRepository extends ConnectorBaseRepository<Connector>, ConnectorCustomRepository {}
+//@RepositoryDefinition(domainClass = Connector.class, idClass = String.class)
+@OwnedBy(DX)
+public interface ConnectorRepository extends Repository<Connector, String>, ConnectorCustomRepository {}

@@ -120,7 +120,7 @@ gitSyncServerConfig:
       certFilePath: cert.pem
     - port: 13002
 
-shouldDeployWithGitSync: false
+shouldDeployWithGitSync: true
 
 eventsFramework:
   redis:
@@ -242,6 +242,10 @@ gitGrpcClientConfigs:
   pms:
     target: localhost:12011
     authority: localhost
+  CORE:
+    target: localhost:13001
+    authority: localhost
+
 
 scmConnectionConfig:
   url: localhost:8091

@@ -7,17 +7,42 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.beans.YamlDTO;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(DX)
-public interface GitAwarePersistence<B extends GitSyncableEntity, Y extends YamlDTO> {
-  List<B> find(@NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId);
-
-  B save(B objectToSave, Y yaml, ChangeType changeType);
+public interface GitAwarePersistence {
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
 
   /**
    * Default save which will treat changeType as ADD on git.
    */
-  B save(B objectToSave, Y yaml);
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass);
+
+  /**
+   * Count returns count with limit -1 and skip -1
+   **/
+  <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, String projectIdentifier,
+      String orgIdentifier, String accountId, Class<B> entityClass);
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
+      String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(@NotNull Criteria criteria, Pageable pageable,
+      String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
+
+  /**
+   * finds and modify first.
+   */
+  <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Criteria criteria, Update update,
+      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(@NotNull Criteria criteria, String projectIdentifier,
+      String orgIdentifier, String accountId, Class<B> entityClass);
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, ChangeType changeType, Class<B> entityClass);
 }

@@ -18,7 +18,11 @@ public class ScmUserHelper {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
-      return EmbeddedUser.builder().uuid(userPrincipal.getName()).email(userPrincipal.getEmail()).build();
+      return EmbeddedUser.builder()
+          .uuid(userPrincipal.getName())
+          .name(userPrincipal.getUsername())
+          .email(userPrincipal.getEmail())
+          .build();
     }
     return EmbeddedUser.builder()
         .email(GitSyncConstants.DEFAULT_USER_EMAIL_ID)

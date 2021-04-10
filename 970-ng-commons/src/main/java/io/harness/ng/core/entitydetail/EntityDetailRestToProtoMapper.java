@@ -1,7 +1,9 @@
 package io.harness.ng.core.entitydetail;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
 import io.harness.encryption.Scope;
@@ -18,6 +20,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 
 @Singleton
+@OwnedBy(DX)
 public class EntityDetailRestToProtoMapper {
   public EntityDetailProtoDTO createEntityDetailDTO(EntityDetail entityDetail) {
     final EntityTypeProtoEnum entityTypeProto =
@@ -36,11 +39,10 @@ public class EntityDetailRestToProtoMapper {
   private IdentifierRefProtoDTO createIdentifierRef(IdentifierRef identifierRef) {
     return IdentifierRefProtoDTO.newBuilder()
         .setAccountIdentifier(StringValue.newBuilder().setValue(identifierRef.getAccountIdentifier()).build())
-        .setOrgIdentifier(StringValue.newBuilder().setValue(nullIfEmpty(identifierRef.getOrgIdentifier())).build())
-        .setProjectIdentifier(
-            StringValue.newBuilder().setValue(nullIfEmpty(identifierRef.getProjectIdentifier())).build())
+        .setOrgIdentifier(StringValue.of(nullIfEmpty(identifierRef.getOrgIdentifier())))
+        .setProjectIdentifier(StringValue.of(nullIfEmpty(identifierRef.getProjectIdentifier())))
         .setScope(mapToScopeProtoEnum(identifierRef.getScope()))
-        .setIdentifier(StringValue.newBuilder().setValue(identifierRef.getIdentifier()).build())
+        .setIdentifier(StringValue.of(identifierRef.getIdentifier()))
         .build();
   }
 
@@ -61,12 +63,11 @@ public class EntityDetailRestToProtoMapper {
 
   private InputSetReferenceProtoDTO createInputSetRef(InputSetReference inputSetReference) {
     return InputSetReferenceProtoDTO.newBuilder()
-        .setAccountIdentifier(StringValue.newBuilder().setValue(inputSetReference.getAccountIdentifier()).build())
-        .setIdentifier(StringValue.newBuilder().setValue(inputSetReference.getIdentifier()).build())
-        .setOrgIdentifier(StringValue.newBuilder().setValue(nullIfEmpty(inputSetReference.getOrgIdentifier())).build())
-        .setProjectIdentifier(
-            StringValue.newBuilder().setValue(nullIfEmpty(inputSetReference.getProjectIdentifier())).build())
-        .setPipelineIdentifier(StringValue.newBuilder().setValue(inputSetReference.getPipelineIdentifier()).build())
+        .setAccountIdentifier(StringValue.of(inputSetReference.getAccountIdentifier()))
+        .setIdentifier(StringValue.of(inputSetReference.getIdentifier()))
+        .setOrgIdentifier(StringValue.of(nullIfEmpty(inputSetReference.getOrgIdentifier())))
+        .setProjectIdentifier(StringValue.of(nullIfEmpty(inputSetReference.getProjectIdentifier())))
+        .setPipelineIdentifier(StringValue.of(inputSetReference.getPipelineIdentifier()))
         .build();
   }
 }

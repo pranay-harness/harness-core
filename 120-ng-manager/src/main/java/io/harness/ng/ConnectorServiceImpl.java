@@ -47,6 +47,7 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.git.model.ChangeType;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -231,8 +232,8 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
       String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      Optional<Connector> connectorOptional =
-          connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+      Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
       if (connectorOptional.isPresent()) {
         Connector connector = connectorOptional.get();
         boolean isConnectorHeartbeatDeleted = deleteConnectorHeartbeatTask(
@@ -372,7 +373,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       Connector connector =
           getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
       setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.NONE);
     } catch (Exception ex) {
       log.error("Error saving the connector status for the connector {}",
           String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
@@ -385,8 +386,8 @@ public class ConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
 
-    Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
 
     return connectorOptional.orElseThrow(
         ()
@@ -449,7 +450,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (connectorValidationResult != null) {
       setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
     }
-    connectorRepository.save(connector);
+    connectorRepository.save(connector, ChangeType.NONE);
   }
 
   private void setActivityDetailInTheConnector(Connector connector, long activityTime) {
