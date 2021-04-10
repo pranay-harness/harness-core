@@ -59,19 +59,16 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public PageResponse<UserAggregateDTO> getUsers(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, PageRequest pageRequest,
-      io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter aclAggregateFilter) {
+      String projectIdentifier, String searchTerm, PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter) {
     validateRequest(searchTerm, aclAggregateFilter);
-    if (io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
+    if (ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
       return getFilteredUsers(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, aclAggregateFilter);
     }
     return getUnfilteredUsersPage(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest);
   }
 
-  private void validateRequest(
-      String searchTerm, io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter aclAggregateFilter) {
-    if (!isBlank(searchTerm)
-        && io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
+  private void validateRequest(String searchTerm, ACLAggregateFilter aclAggregateFilter) {
+    if (!isBlank(searchTerm) && ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
       log.error("Search term and filter on role/resourcegroup identifiers can't be applied at the same time");
       throw new InvalidRequestException(
           "Search term and filter on role/resourcegroup identifiers can't be applied at the same time");
@@ -79,8 +76,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private PageResponse<UserAggregateDTO> getFilteredUsers(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, PageRequest pageRequest,
-      io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter aclAggregateFilter) {
+      String projectIdentifier, PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter) {
     RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO =
         getRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, aclAggregateFilter);
     Map<String, List<RoleBinding>> userRoleAssignmentsMap =
@@ -262,6 +258,7 @@ public class UserServiceImpl implements UserService {
             -> roleAssignment.getPrincipal().getIdentifier(),
             mapping(roleAssignment
                 -> RoleBinding.builder()
+                       .identifier(roleAssignment.getIdentifier())
                        .roleIdentifier(roleAssignment.getRoleIdentifier())
                        .resourceGroupIdentifier(roleAssignment.getResourceGroupIdentifier())
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())

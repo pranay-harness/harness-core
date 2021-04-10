@@ -5,12 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.inject.Singleton;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 @OwnedBy(PL)
+@Singleton
 public class DefaultOrganizationInterceptor implements MethodInterceptor {
   @Override
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {

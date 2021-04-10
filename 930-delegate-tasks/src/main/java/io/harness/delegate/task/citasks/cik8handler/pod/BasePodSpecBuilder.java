@@ -61,6 +61,7 @@ public abstract class BasePodSpecBuilder {
         .withNewMetadata()
         .withName(podParams.getName())
         .withLabels(podParams.getLabels())
+        .withAnnotations(podParams.getAnnotations())
         .withNamespace(podParams.getNamespace())
         .endMetadata()
         .withNewSpec()

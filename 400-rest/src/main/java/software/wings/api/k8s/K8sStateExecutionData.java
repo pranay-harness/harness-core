@@ -1,5 +1,10 @@
 package software.wings.api.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
@@ -28,6 +33,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
 public class K8sStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String releaseName;
@@ -45,6 +52,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   @Builder.Default private Set<String> namespaces = new HashSet<>();
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
+  private Set<String> delegateSelectors;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -90,6 +98,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .namespaces(namespaces)
         .helmChartInfo(helmChartInfo)
         .blueGreenStageColor(blueGreenStageColor)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

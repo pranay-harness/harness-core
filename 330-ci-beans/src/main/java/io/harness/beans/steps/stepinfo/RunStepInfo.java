@@ -1,10 +1,14 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -35,6 +39,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Run")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("runStepInfo")
+@OwnedBy(CI)
 public class RunStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
 
@@ -57,14 +62,17 @@ public class RunStepInfo implements CIStepInfo {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
-      "image", "connectorRef", "resources"})
+      "image", "connectorRef", "resources", "privileged", "runAsUser"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
       ParameterField<List<String>> outputVariables, UnitTestReport reports,
       ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
-      ParameterField<String> connectorRef, ContainerResource resources) {
+      ParameterField<String> connectorRef, ContainerResource resources, ParameterField<Boolean> privileged,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -75,16 +83,13 @@ public class RunStepInfo implements CIStepInfo {
     this.image = image;
     this.connectorRef = connectorRef;
     this.resources = resources;
+    this.privileged = privileged;
+    this.runAsUser = runAsUser;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

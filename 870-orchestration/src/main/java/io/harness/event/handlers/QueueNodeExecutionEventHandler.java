@@ -8,7 +8,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.execution.SdkResponseEventInternal;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,7 +23,7 @@ public class QueueNodeExecutionEventHandler implements SdkResponseEventHandler {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void handleEvent(SdkResponseEvent event) {
+  public void handleEvent(SdkResponseEventInternal event) {
     NodeExecutionProto nodeExecutionProto =
         event.getSdkResponseEventRequest().getQueueNodeExecutionRequest().getNodeExecution();
     NodeExecution nodeExecution = NodeExecutionMapper.fromNodeExecutionProto(nodeExecutionProto);

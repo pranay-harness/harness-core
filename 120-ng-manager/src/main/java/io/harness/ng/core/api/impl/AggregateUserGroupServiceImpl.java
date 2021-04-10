@@ -202,6 +202,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
             -> roleAssignment.getPrincipal().getIdentifier(),
             Collectors.mapping(roleAssignment
                 -> RoleAssignmentMetadataDTO.builder()
+                       .identifier(roleAssignment.getIdentifier())
                        .roleIdentifier(roleAssignment.getRoleIdentifier())
                        .resourceGroupIdentifier(roleAssignment.getResourceGroupIdentifier())
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())

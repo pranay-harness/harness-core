@@ -3,6 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
@@ -11,8 +14,6 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 )
 
 const (

@@ -9,7 +9,6 @@ connector:
   projectIdentifier: "Harness Sample App"
   type: K8sCluster
   spec:
+    delegateSelectors: ["K8s_in_cluster"]
     credential:
       type: InheritFromDelegate
-      spec:
-        delegateSelectors: ["K8s_in_cluster"]

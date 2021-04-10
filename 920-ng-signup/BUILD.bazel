@@ -1,0 +1,22 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//:lombok",
+    "//930-ng-core-clients:module",
+    "//960-ng-core-beans:module",
+]
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+checkstyle()
+
+pmd()

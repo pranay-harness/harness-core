@@ -273,8 +273,6 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-userChangeStreamEnabled: false
-
 searchEnabled: false
 
 elasticsearch:
@@ -326,6 +324,15 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
 
 featuresEnabled: ""
 

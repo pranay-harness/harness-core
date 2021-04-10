@@ -17,7 +17,9 @@ import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
@@ -88,6 +90,7 @@ import org.apache.commons.lang3.StringUtils;
  * Created by anubhaw on 3/11/16.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Singleton
 @Priority(AUTHORIZATION)
 @Slf4j
@@ -112,6 +115,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";
+  private static final String DELIMITER = "::";
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
@@ -205,10 +209,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-    if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
-      if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
-        String apiKey = requestContext.getHeaderString("X-Api-Key");
-        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+    if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
+      if (isEmpty(accountId)) {
+        accountId = apiKeyService.getAccountIdFromApiKey(requestContext.getHeaderString("X-Api-Key"));
+      }
+      if (isNotEmpty(accountId) && featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(requestContext.getHeaderString("X-Api-Key"), accountId, true);
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
       }
     }

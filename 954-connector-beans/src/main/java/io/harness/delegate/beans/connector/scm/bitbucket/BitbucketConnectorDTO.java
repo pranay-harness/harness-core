@@ -33,11 +33,11 @@ import org.hibernate.validator.constraints.NotBlank;
 @ApiModel("BitbucketConnector")
 @OwnedBy(HarnessTeam.DX)
 public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
-  @NotNull @JsonProperty("type") GitConnectionType connectionType;
-  @NotNull @NotBlank String url;
-  @Valid @NotNull BitbucketAuthenticationDTO authentication;
-  @Valid BitbucketApiAccessDTO apiAccess;
-  Set<String> delegateSelectors;
+  @NotNull @JsonProperty("type") private GitConnectionType connectionType;
+  @NotNull @NotBlank private String url;
+  @Valid @NotNull private BitbucketAuthenticationDTO authentication;
+  @Valid private BitbucketApiAccessDTO apiAccess;
+  private Set<String> delegateSelectors;
 
   @Builder
   public BitbucketConnectorDTO(GitConnectionType connectionType, String url, BitbucketAuthenticationDTO authentication,

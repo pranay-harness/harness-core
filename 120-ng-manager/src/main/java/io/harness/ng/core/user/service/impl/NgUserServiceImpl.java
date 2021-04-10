@@ -2,7 +2,6 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.toList;
@@ -15,6 +14,12 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.schemas.usermembership.UserMembershipDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
@@ -28,8 +33,10 @@ import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserSearchFilter;
 import io.harness.utils.ScopeUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,13 +59,16 @@ public class NgUserServiceImpl implements NgUserService {
   private final UserClient userClient;
   private final UserMembershipRepository userMembershipRepository;
   private final AccessControlAdminClient accessControlAdminClient;
+  private final Producer eventProducer;
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
-      AccessControlAdminClient accessControlAdminClient) {
+      AccessControlAdminClient accessControlAdminClient,
+      @Named(EventsFrameworkConstants.USERMEMBERSHIP) Producer producer) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
+    this.eventProducer = producer;
   }
 
   @Override
@@ -86,12 +96,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembershipRepository.findAll(criteria);
   }
 
-  public Optional<UserInfo> getUserFromEmail(String email, String accountIdentifier) {
-    List<UserInfo> users = getUsersFromEmail(Collections.singletonList(email), accountIdentifier);
-    if (isEmpty(users)) {
-      return Optional.empty();
-    }
-    return Optional.of(users.get(0));
+  public Optional<UserInfo> getUserFromEmail(String email) {
+    return RestClientUtils.getResponse(userClient.getUserByEmailId(email));
   }
 
   @Override
@@ -121,12 +127,12 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public void addUserToScope(UserInfo user, Scope scope) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, getDefaultRoleIdentifier(scope), true);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, String roleIdentifier, boolean postCreation) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, roleIdentifier, postCreation);
+  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation);
   }
 
   @Override
@@ -136,20 +142,7 @@ public class NgUserServiceImpl implements NgUserService {
       return;
     }
     UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, roleIdentifier, true);
-  }
-
-  private void addUserToScope(
-      String userId, String emailId, Scope scope, String roleIdentifier, boolean addUserToParentScope) {
-    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
-    UserMembership userMembership = userMembershipOptional.orElseGet(
-        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
-    if (!userMembership.getScopes().contains(scope)) {
-      userMembership.getScopes().add(scope);
-      //    Adding user to the account for signin flow to work
-      addUserToAccount(userId, scope);
-    }
-    userMembership = userMembershipRepository.save(userMembership);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
     if (!StringUtils.isBlank(roleIdentifier)) {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .roleIdentifier(roleIdentifier)
@@ -167,19 +160,22 @@ public class NgUserServiceImpl implements NgUserService {
             ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
       }
     }
+  }
+
+  private void addUserToScope(String userId, String emailId, Scope scope, boolean addUserToParentScope) {
+    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
+    UserMembership userMembership = userMembershipOptional.orElseGet(
+        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
+    if (!userMembership.getScopes().contains(scope)) {
+      userMembership.getScopes().add(scope);
+      //    Adding user to the account for signin flow to work
+      addUserToAccount(userId, scope);
+    }
+    userMembership = userMembershipRepository.save(userMembership);
+    publishEvent(userId, scope, EventsFrameworkMetadataConstants.CREATE_ACTION);
     if (addUserToParentScope) {
       addUserToParentScope(userMembership, userId, scope);
     }
-  }
-
-  private String getDefaultRoleIdentifier(Scope scope) {
-    if (!StringUtils.isBlank(scope.getProjectIdentifier())) {
-      return PROJECT_VIEWER;
-    }
-    if (!StringUtils.isBlank(scope.getOrgIdentifier())) {
-      return ORGANIZATION_VIEWER;
-    }
-    return ACCOUNT_VIEWER;
   }
 
   private void addUserToParentScope(UserMembership userMembership, String userId, Scope scope) {
@@ -191,6 +187,8 @@ public class NgUserServiceImpl implements NgUserService {
                            .build();
       if (!userMembership.getScopes().contains(orgScope)) {
         userMembership.getScopes().add(orgScope);
+        userMembership = userMembershipRepository.save(userMembership);
+        publishEvent(userId, orgScope, EventsFrameworkMetadataConstants.CREATE_ACTION);
       }
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
@@ -211,6 +209,8 @@ public class NgUserServiceImpl implements NgUserService {
       Scope accountScope = Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build();
       if (!userMembership.getScopes().contains(accountScope)) {
         userMembership.getScopes().add(accountScope);
+        userMembershipRepository.save(userMembership);
+        publishEvent(userId, accountScope, EventsFrameworkMetadataConstants.CREATE_ACTION);
       }
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
@@ -226,7 +226,6 @@ public class NgUserServiceImpl implements NgUserService {
         log.error("Couldn't add user to the account scope", e);
       }
     }
-    userMembershipRepository.save(userMembership);
   }
 
   private void addUserToAccount(String userId, Scope scope) {
@@ -254,6 +253,15 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
+  public boolean isUserAtScope(String userId, Scope scope) {
+    Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
+    if (!userMembershipOpt.isPresent()) {
+      return false;
+    }
+    return userMembershipOpt.get().getScopes().contains(scope);
+  }
+
+  @Override
   public void removeUserFromScope(
       String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
@@ -272,6 +280,7 @@ public class NgUserServiceImpl implements NgUserService {
     }
     scopes.remove(scope);
     userMembershipRepository.save(userMembership);
+    publishEvent(userId, scope, EventsFrameworkMetadataConstants.DELETE_ACTION);
     boolean isUserRemovedFromAccount =
         scopes.stream().noneMatch(scope1 -> scope1.getAccountIdentifier().equals(accountIdentifier));
     if (isUserRemovedFromAccount) {
@@ -279,8 +288,26 @@ public class NgUserServiceImpl implements NgUserService {
     }
   }
 
-  @Override
-  public boolean removeUserMembership(String userId) {
-    return userMembershipRepository.deleteUserMembershipByUserId(userId) > 0;
+  private void publishEvent(String userId, Scope scope, String action) {
+    try {
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", scope.getAccountIdentifier(),
+                                 EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkConstants.USERMEMBERSHIP,
+                                 EventsFrameworkMetadataConstants.ACTION, action))
+                             .setData(UserMembershipDTO.newBuilder()
+                                          .setAction(action)
+                                          .setUserId(userId)
+                                          .setScope(io.harness.eventsframework.schemas.usermembership.Scope.newBuilder()
+                                                        .setAccountIdentifier(scope.getAccountIdentifier())
+                                                        .setOrgIdentifier(scope.getOrgIdentifier())
+                                                        .setProjectIdentifier(scope.getProjectIdentifier())
+                                                        .build())
+                                          .build()
+                                          .toByteString())
+                             .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework for {} on user {} and scope {}: ", action, userId,
+          ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()), e);
+    }
   }
 }

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.usermembership;
+
+option java_multiple_files = true;
+option go_package = "950_events_api";
+
+message UserMembershipDTO {
+  string action = 1;
+  string userId = 2;
+  Scope scope = 3;
+}
+
+message Scope {
+  string accountIdentifier = 4;
+  string orgIdentifier = 5;
+  string projectIdentifier = 6;
+}

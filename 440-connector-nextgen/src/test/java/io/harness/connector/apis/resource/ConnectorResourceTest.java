@@ -11,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorCatalogueItem;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
@@ -44,6 +46,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(HarnessTeam.DX)
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @InjectMocks private ConnectorResource connectorResource;

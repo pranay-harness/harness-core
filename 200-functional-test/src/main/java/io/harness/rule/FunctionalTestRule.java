@@ -5,9 +5,12 @@ import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -58,7 +61,6 @@ import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
-import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
@@ -116,6 +118,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private ClosingFactory closingFactory;
 
@@ -285,7 +288,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
-    modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
@@ -350,6 +352,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
   }
 

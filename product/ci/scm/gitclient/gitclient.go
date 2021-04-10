@@ -63,30 +63,35 @@ func defaultTransport(skip bool) http.RoundTripper {
 	}
 }
 
-func GetValidRef(inputRef string, inputBranch string) (string, error) {
+func GetValidRef(p pb.Provider, inputRef string, inputBranch string) (string, error) {
 	if inputRef != "" {
 		return inputRef, nil
 	} else if inputBranch != "" {
-		return scm.ExpandRef(inputBranch, "refs/heads"), nil
+		switch p.GetHook().(type) {
+		case *pb.Provider_BitbucketCloud:
+			return inputBranch, nil
+		default:
+			return scm.ExpandRef(inputBranch, "refs/heads"), nil
+		}
 	} else {
 		return "", status.Error(codes.InvalidArgument, "Must provide a ref or a branch")
 	}
 }
 
 func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, err error) {
-	switch p.Hook.(type) {
+	switch p.GetHook().(type) {
 	case *pb.Provider_Github:
-		if p.Endpoint == "" {
+		if p.GetEndpoint() == "" {
 			client = github.NewDefault()
 		} else {
-			client, err = github.New(p.Endpoint)
+			client, err = github.New(p.GetEndpoint())
 			if err != nil {
-				log.Errorw("GetGitClient failure Github", "endpoint", p.Endpoint, zap.Error(err))
+				log.Errorw("GetGitClient failure Github", "endpoint", p.GetEndpoint(), zap.Error(err))
 				return nil, err
 			}
 		}
 		var token string
-		switch p.GetGithub().Provider.(type) {
+		switch p.GetGithub().GetProvider().(type) {
 		case *pb.GithubProvider_AccessToken:
 			token = p.GetGithub().GetAccessToken()
 		default:
@@ -94,28 +99,27 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 			return nil, status.Errorf(codes.Unimplemented, "Github Application not implemented yet")
 		}
 		client.Client = &http.Client{
-			Transport: oauthTransport(token, p.SkipVerify),
+			Transport: oauthTransport(token, p.GetSkipVerify()),
 		}
 	case *pb.Provider_Gitlab:
-		if p.Endpoint == "" {
+		if p.GetEndpoint() == "" {
 			client = gitlab.NewDefault()
 		} else {
-			client, err = gitlab.New(p.Endpoint)
+			client, err = gitlab.New(p.GetEndpoint())
 			if err != nil {
-				log.Errorw("GetGitClient failure Gitlab", "endpoint", p.Endpoint, zap.Error(err))
+				log.Errorw("GetGitClient failure Gitlab", "endpoint", p.GetEndpoint(), zap.Error(err))
 				return nil, err
 			}
 		}
 		var token string
-		switch p.GetGitlab().Provider.(type) {
+		switch p.GetGitlab().GetProvider().(type) {
 		case *pb.GitlabProvider_AccessToken:
 			token = p.GetGitlab().GetAccessToken()
-
 		default:
 			return nil, status.Errorf(codes.Unimplemented, "Gitlab personal token not implemented yet")
 		}
 		client.Client = &http.Client{
-			Transport: oauthTransport(token, p.SkipVerify),
+			Transport: oauthTransport(token, p.GetSkipVerify()),
 		}
 	case *pb.Provider_Gitea:
 		if p.Endpoint == "" {
@@ -129,22 +133,22 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 			}
 		}
 		client.Client = &http.Client{
-			Transport: giteaTransport(p.GetGitea().GetAccessToken(), p.SkipVerify),
+			Transport: giteaTransport(p.GetGitea().GetAccessToken(), p.GetSkipVerify()),
 		}
 	case *pb.Provider_BitbucketCloud:
 		client = bitbucket.NewDefault()
 		client.Client = &http.Client{
-			Transport: bitbucketCloudTransport(p.GetBitbucketCloud().Username, p.GetBitbucketCloud().AppPassword, p.SkipVerify),
+			Transport: bitbucketCloudTransport(p.GetBitbucketCloud().GetUsername(), p.GetBitbucketCloud().GetAppPassword(), p.GetSkipVerify()),
 		}
 	default:
-		log.Errorw("GetGitClient unsupported git provider", "endpoint", p.Endpoint)
+		log.Errorw("GetGitClient unsupported git provider", "endpoint", p.GetEndpoint())
 		return nil, status.Errorf(codes.InvalidArgument, "Unsupported git provider")
 	}
 	if p.Debug {
 		client.DumpResponse = func(resp *http.Response, body bool) ([]byte, error) {
 			out, err := httputil.DumpResponse(resp, body)
 			if err != nil {
-				log.Errorw("GetGitClient debug dump failed", "endpoint", p.Endpoint)
+				log.Errorw("GetGitClient debug dump failed", "endpoint", p.GetEndpoint())
 			}
 			log.Infow("GetGitClient debug", "dump", string(out))
 			return nil, nil

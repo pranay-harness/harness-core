@@ -1,5 +1,10 @@
 package io.harness.gitsync.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(DX)
 public class GitSyncApiConstants {
   public static final String BRANCH_KEY = "branch";
   public static final String REPO_IDENTIFIER_KEY = "repoIdentifier";

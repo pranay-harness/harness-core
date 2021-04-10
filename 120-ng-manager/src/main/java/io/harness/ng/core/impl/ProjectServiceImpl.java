@@ -149,8 +149,8 @@ public class ProjectServiceImpl implements ProjectService {
         Project updatedProject = projectRepository.save(project);
         log.info(String.format(
             "Project with identifier %s and orgIdentifier %s was successfully updated", identifier, orgIdentifier));
-        outboxService.save(new ProjectUpdateEvent(
-            project.getAccountIdentifier(), ProjectMapper.writeDTO(updatedProject), ProjectMapper.writeDTO(project)));
+        outboxService.save(new ProjectUpdateEvent(project.getAccountIdentifier(),
+            ProjectMapper.writeDTO(updatedProject), ProjectMapper.writeDTO(existingProject)));
         return updatedProject;
       }));
     }
