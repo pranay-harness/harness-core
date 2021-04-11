@@ -151,6 +151,7 @@ BAZEL_MODULES="\
   //953-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
   //955-filters-sdk:module \
+  //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //952-scm-java-client:module \
   //960-api-services:module \
@@ -424,6 +425,7 @@ build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
+build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 952-scm-java-client
 build_bazel_module 960-api-services

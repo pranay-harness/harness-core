@@ -22,11 +22,11 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;

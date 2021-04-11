@@ -1,12 +1,12 @@
 package io.harness.pms.expressions;
 
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ngpipeline.expressions.functors.EventPayloadFunctor;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
