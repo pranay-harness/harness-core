@@ -42,7 +42,7 @@ public class IdentifierRefHelper {
     }
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
-      throw new InvalidRequestException("Empty identifier ref cannot be given");
+      throw new InvalidRequestException("Identifier reference should not be empty");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
 
