@@ -31,10 +31,10 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
-@OwnedBy(PL)
 public class AccountResourceValidatorImpl implements ResourceValidator {
   AccountClient accountClient;
 
