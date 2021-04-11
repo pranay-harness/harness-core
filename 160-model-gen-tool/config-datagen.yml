@@ -88,7 +88,7 @@ logging:
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
 
 mongo:
-  uri: mongodb://localhost:27017/harness
+  uri: mongodb://localhost:27017/harness123
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
@@ -255,3 +255,16 @@ timescaledb:
   loggerLevel: OFF
   instanceDataRetentionDays: 210
   isHealthCheckNeeded: false
+
+
+cfClientConfig:
+  apiKey: ""
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl: "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
