@@ -29,6 +29,8 @@ import io.harness.gitsync.gitfileactivity.impl.GitSyncServiceImpl;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
+import io.harness.gitsync.impl.HarnessShortlistedBranchServiceImpl;
+import io.harness.gitsync.service.HarnessShortlistedBranchService;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.persistence.HPersistence;
 
@@ -80,6 +82,7 @@ public class GitSyncModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
+    bind(HarnessShortlistedBranchService.class).to(HarnessShortlistedBranchServiceImpl.class);
     registerRequiredBindings();
   }
 

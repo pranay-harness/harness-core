@@ -21,6 +21,8 @@ import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.entity.HarnessShortListedBranch;
+import io.harness.gitsync.service.HarnessShortlistedBranchService;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -28,7 +30,6 @@ import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,16 +47,19 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   Map<EntityType, Microservice> entityTypeMicroserviceMap;
   GitEntityService gitEntityService;
   Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient;
+  HarnessShortlistedBranchService harnessShortlistedBranchService;
 
   @Inject
   public GitToHarnessProcessorServiceImpl(GitSyncConnectorHelper gitSyncConnectorHelper, ScmClient scmClient,
       Map<EntityType, Microservice> entityTypeMicroserviceMap, GitEntityService gitEntityService,
-      Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient) {
+      Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient,
+      HarnessShortlistedBranchService harnessShortlistedBranchService) {
     this.gitSyncConnectorHelper = gitSyncConnectorHelper;
     this.scmClient = scmClient;
     this.entityTypeMicroserviceMap = entityTypeMicroserviceMap;
     this.gitEntityService = gitEntityService;
     this.gitToHarnessServiceGrpcClient = gitToHarnessServiceGrpcClient;
+    this.harnessShortlistedBranchService = harnessShortlistedBranchService;
   }
 
   @Override
@@ -65,6 +69,18 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     FileBatchContentResponse harnessFilesOfBranch =
         getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branch, yamlGitConfig);
     processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
+    saveTheShortListedBranch(yamlGitConfig, branch);
+  }
+
+  private void saveTheShortListedBranch(YamlGitConfigDTO yamlGitConfig, String branch) {
+    final HarnessShortListedBranch shortlistedBranch = HarnessShortListedBranch.builder()
+                                                           .accountIdentifier(yamlGitConfig.getAccountIdentifier())
+                                                           .orgIdentifier(yamlGitConfig.getOrganizationIdentifier())
+                                                           .projectIdentifier(yamlGitConfig.getProjectIdentifier())
+                                                           .branchName(branch)
+                                                           .yamlGitConfigId(yamlGitConfig.getIdentifier())
+                                                           .build();
+    harnessShortlistedBranchService.save(shortlistedBranch);
   }
 
   private FileBatchContentResponse getFilesBelongingToThisBranch(
